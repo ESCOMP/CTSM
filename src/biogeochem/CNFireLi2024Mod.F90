@@ -151,11 +151,9 @@ contains
     real(r8) :: afuel    !weight for arh and arh30
     real(r8) :: btran_col(bounds%begc:bounds%endc)
     logical  :: transient_landcover  ! whether this run has any prescribed transient landcover
-    real(r8), target  :: prec60_col_target(bounds%begc:bounds%endc)
-    real(r8), target  :: prec10_col_target(bounds%begc:bounds%endc)
+    real(r8), target  :: prec30_col_target(bounds%begc:bounds%endc)
     real(r8), target  :: rh30_col_target(bounds%begc:bounds%endc)
-    real(r8), pointer :: prec60_col(:)
-    real(r8), pointer :: prec10_col(:)
+    real(r8), pointer :: prec30_col(:)
     real(r8), pointer :: rh30_col(:)
     !-----------------------------------------------------------------------
 
@@ -177,6 +175,11 @@ contains
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
          pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
          boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
+         max_rh30_affecting_fuel  => cnfire_const%max_rh30_affecting_fuel      , & ! Input:  [real(r8)         ]  (%) Value above which 30-day running relative humidity has no effect on fuel combustibility
+         defo_fire_precip_thresh_bet  => cnfire_const%defo_fire_precip_thresh_bet, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf evergreen trees
+         defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
+         borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
+         nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
 
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -194,9 +197,8 @@ contains
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
-         prec60             => wateratm2lndbulk_inst%prec60_patch              , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation
-         prec10             => wateratm2lndbulk_inst%prec10_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
-         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. relative humidity
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
          gdp_lf             => this%gdp_lf_col                                 , & ! Input:  [real(r8) (:)     ]  gdp data
@@ -246,15 +248,11 @@ contains
       transient_landcover = run_has_transient_landcover()
 
       !pft to column average
-      prec10_col =>prec10_col_target
+      prec30_col =>prec30_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
-           prec10(bounds%begp:bounds%endp), &
-           prec10_col(bounds%begc:bounds%endc))
+           prec30(bounds%begp:bounds%endp), &
+           prec30_col(bounds%begc:bounds%endc))
 
-      prec60_col =>prec60_col_target
-      call p2c(bounds, num_soilc, filter_soilc, &
-           prec60(bounds%begp:bounds%endp), &
-           prec60_col(bounds%begc:bounds%endc))
 
       rh30_col =>rh30_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
@@ -304,9 +302,9 @@ contains
         if( patch%itype(p) > nc4_grass )then
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
-        ! For natural vegetation (non-crop and non-bare-soil)
-        if( patch%itype(p) >= ndllf_evr_tmp_tree .and. patch%itype(p) <= nc4_grass )then
-           lfwt(c) = lfwt(c) + patch%wtcol(p)
+        ! For natural vegetation
+        if (patch%itype(p) <= nc4_grass ) then
+           lfwt(c) = lfwt(c) + patch%wtgcell(p)
         end if
      end do
      !
@@ -545,11 +543,14 @@ contains
         c = filter_soilc(fc)
         g= col%gridcell(c)
         if(grc%latdeg(g) < cnfire_const%borealat )then
-           baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
-                min(1._r8,(4.0_r8-prec60_col(c)*secspday)/ &
-                4.0_r8))**2*peatf_lf(c)*(1._r8-fsat(c))
+            if ((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
+               baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
+                     min(1._r8,(1._r8-prec30_col(c)*secspday/nonborpeat_fire_precip_denom)))*peatf_lf(c)
+            else
+               baf_peatf(c) = 0._r8
+            end if
         else
-           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/0.3_r8))* &
+           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/borpeat_fire_soilmoist_denom))* &
                 max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
                 (1._r8-fsat(c))
         end if
@@ -592,32 +593,36 @@ contains
               end do
            end if
            fuelc(c) = fuelc(c)/(1._r8-cropf_col(c))
-           fb       = max(0.0_r8,min(1.0_r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
-           if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
-              afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
-              arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
-              if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
-                fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
-                             *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
-              else
-                fire_m   = 0._r8
-              end if
-              lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
-              fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
-                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
-              nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
-              Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
-              spread_m = fire_m**0.5_r8
-              farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
-                   fd_col(c)/1000._r8)**2*lgdp1_col(c)* &
-                   lpop_col(c)*nfire(c)*SHR_CONST_PI*Lb_lf+ &
-                   baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
+           fb = max(0.0_r8,min(1.0_r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
+           afuel = min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
+           arh = 1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
+           arh30 = 1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/max_rh30_affecting_fuel))
+           if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
+              fire_m = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
+                       *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
            else
-             farea_burned(c)=min(1._r8,baf_crop(c)+baf_peatf(c))
+              fire_m   = 0._r8
            end if
+           lh = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
+           fs = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
+           if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
+              ig = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                   cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                   cnfire_params%ignition_efficiency)*(1._r8-fs)* &
+                   (lfwt(c)**0.5)
+           else
+              ig = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                   cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                   cnfire_params%ignition_efficiency*(1._r8-fs)*  &
+                   (lfwt(c)**0.5)
+           end if
+           nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
+           Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
+           spread_m = fire_m**0.5_r8
+           fd_col(c) = (lfwt(c)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
+           farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
+                fd_col(c)/1000._r8)**2*nfire(c)*SHR_CONST_PI*Lb_lf+ &
+                baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
            !
            ! if landuse change data is used, calculate deforestation fires and
            ! add it in the total of burned area fraction
@@ -629,17 +634,21 @@ contains
                     fbac1(c)        = 0._r8
                     farea_burned(c) = baf_crop(c)+baf_peatf(c)
                  else
-                    cri = (4.0_r8*trotr1_col(c)+1.8_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
-                    cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
-                         (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
+                    ! Calculate the precip threshold as the area-weighted mean of that for BET and BDT
+                    cri = (defo_fire_precip_thresh_bet * trotr1_col(c) &
+                         + defo_fire_precip_thresh_bdt * trotr2_col(c)) &
+                         / (trotr1_col(c) + trotr2_col(c))
+
+                    cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
                          (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
-                    farea_burned(c) = fb*cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
+
+                    farea_burned(c) = farea_burned(c)+fb*cli*(0.01_r8/secspday)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)
                  end if
                  ! total burned area out of conversion
-                 fbac(c) = fbac1(c)+baf_crop(c)+baf_peatf(c)
+                 fbac(c) = farea_burned(c) + fbac1(c)
               else
                  fbac(c) = farea_burned(c)
               end if
