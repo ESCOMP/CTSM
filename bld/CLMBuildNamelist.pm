@@ -5665,7 +5665,7 @@ sub check_megan_spec {
     foreach my $spec ( @megan_spec_list ) {
        $megan_spec = remove_leading_and_trailing_quotes($spec);
        # Do simple validation of the expressions to just check for valid characters
-       if ( ! $megan_spec =~ /[\s=A-Za-z0-9_\+\.\*\(\)-]+/ ) {
+       if ( $megan_spec !~ /^([\s=A-Za-z0-9_\+\.\*\(\)-]+)$/ ) {
           $log->fatal_error("Bad format for megan_specifier = $megan_spec");
        }
     }
