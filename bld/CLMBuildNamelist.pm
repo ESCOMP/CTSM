@@ -5666,7 +5666,7 @@ sub check_megan_spec {
        $megan_spec = remove_leading_and_trailing_quotes($spec);
        # Do simple validation of the expressions to just check for valid characters
        if ( $megan_spec !~ /^([\s=A-Za-z0-9_\+\.\*\(\)-]+)$/ ) {
-          $log->fatal_error("Bad format for megan_specifier = $megan_spec");
+          $log->warning("Bad format for megan_specifier = $megan_spec");
        }
     }
 }
