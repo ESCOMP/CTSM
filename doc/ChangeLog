@@ -1,4 +1,65 @@
 ===============================================================
+Tag name: ctsm5.2.025
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Aug 23 12:27:51 MDT 2024
+One-line Summary: Minor fixes to li2024 fire methods
+
+Purpose and description of changes
+----------------------------------
+
+- Allow non-agricultural fire in tropical closed forests in the last timestep of the month
+- li2024 fire now fully obeys cli_scale (b4b change because default parameter matched the magic number)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves ESCOMP/CTSM#2725: Minor bugs in li2024 fire (https://github.com/ESCOMP/CTSM/issues/2725)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  Note that some Derecho tests did not complete. However, all the fire tests did, and none
+  of the other tests use the code that was modified here.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2726: Bug fixes to li2024 fire (https://github.com/ESCOMP/CTSM/pull/2726)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.024
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Thu Aug 22 11:07:11 MDT 2024

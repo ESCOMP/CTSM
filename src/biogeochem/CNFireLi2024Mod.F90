@@ -632,8 +632,7 @@ contains
                  if(( kmo == 1 .and. kda == 1 .and. mcsec == 0) .or. &
                       dtrotr_col(c) <=0._r8 )then
                     fbac1(c)        = 0._r8
-                    farea_burned(c) = baf_crop(c)+baf_peatf(c)
-                 else
+                 else  ! SSR: Why are the code blocks above and below this else mutually exclusive?
                     ! Calculate the precip threshold as the area-weighted mean of that for BET and BDT
                     cri = (defo_fire_precip_thresh_bet * trotr1_col(c) &
                          + defo_fire_precip_thresh_bdt * trotr2_col(c)) &
@@ -643,7 +642,7 @@ contains
                          (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
 
-                    farea_burned(c) = farea_burned(c)+fb*cli*(0.01_r8/secspday)
+                    farea_burned(c) = farea_burned(c)+fb*cli*(cli_scale/secspday)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)
                  end if
