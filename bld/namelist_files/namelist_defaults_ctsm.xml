@@ -1389,7 +1389,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm6_0_GSWP3v1"
+         lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
