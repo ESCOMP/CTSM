@@ -632,7 +632,6 @@ contains
                  if(( kmo == 1 .and. kda == 1 .and. mcsec == 0) .or. &
                       dtrotr_col(c) <=0._r8 )then
                     fbac1(c)        = 0._r8
-                    farea_burned(c) = baf_crop(c)+baf_peatf(c)
                  else
                     ! Calculate the precip threshold as the area-weighted mean of that for BET and BDT
                     cri = (defo_fire_precip_thresh_bet * trotr1_col(c) &
