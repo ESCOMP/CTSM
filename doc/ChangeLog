@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.2.026
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 23 Aug 2024 01:23:43 PM MDT
+One-line Summary: Turn on excess ice, explicit AC, Leung_2023 for clm6
+
+Purpose and description of changes
+----------------------------------
+
+ Turn on excess ice, explicit AC, Leung_2023 for clm6.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2466 Turn excess ice on by default in CESM3
+Fixes #2568 Turn on explicit AC, Leung_2023, and excess ice by default
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Namelist defaults changed to turn on excess ice, explicit AC, Leung_2023
+ in clm6; also to pick up new finidat files for clm6.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ CLM6 cases need new finidat files. We use 1850 finidat files for
+ all clm6 cases because that's all that we have generated for now.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ CLM6 cases need new finidat files. We use 1850 finidat files for
+ all clm6 cases because that's all that we have generated for now.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK, expected FAIL> <Test Id: 379> <Desc: LeungDust_WO_Prigent
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- IN PROG
+    izumi ------- IN PROG
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6, clm51
+    - what platforms/compilers: all
+    - nature of change: more than roundoff
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2724
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.025
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Fri Aug 23 12:27:51 MDT 2024
