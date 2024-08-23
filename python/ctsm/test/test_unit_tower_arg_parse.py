@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Unit tests for neon_arg_parse
+Unit tests for tower_arg_parse
 
 You can run this by:
-    python -m unittest test_unit_neon_arg_parse.py
+    python -m unittest test_unit_tower_arg_parse.py
 """
 
 import unittest
@@ -19,15 +19,15 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from python.ctsm.site_and_regional.tower_arg_parse import get_parser
+from ctsm.site_and_regional.tower_arg_parse import get_parser
 from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name
 
 
-class Test_neon_arg_parse(unittest.TestCase):
+class Test_tower_arg_parse(unittest.TestCase):
     """
-    Basic class for testing neon_arg_parse.py.
+    Basic class for testing tower_arg_parse.py.
     """
 
     def setUp(self):
@@ -44,12 +44,12 @@ class Test_neon_arg_parse(unittest.TestCase):
         os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
-    def test_function(self):
+    def test_neon(self):
         """
-        Test that neon_arg_parse is properly reading arguments...
+        Test that tower_arg_parse is properly reading arguments for neon...
         """
         sys.argv = [
-            "neon_arg_parse",
+            "tower_arg_parse",
             "--neon-sites",
             "ABBY",
             "--experiment",
@@ -60,22 +60,46 @@ class Test_neon_arg_parse(unittest.TestCase):
         description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
         )
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
         valid_plumber_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER", "[!Fd]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
         )
         valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
         parsed_arguments = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
 
         self.assertEqual(parsed_arguments[0][0], "ABBY", "arguments not processed as expected")
-        self.assertEqual(parsed_arguments[3], "test", "arguments not processed as expected")
-        self.assertEqual(parsed_arguments[4], False, "arguments not processed as expected")
-        self.assertEqual(parsed_arguments[2], "ad", "arguments not processed as expected")
-        # TODO: self.assertEqual(parsed_arguments[x], "SOME PLUMBER-VAL", "arguments not processed as expected")
+        self.assertEqual(parsed_arguments[4], "test", "arguments not processed as expected")
+        self.assertEqual(parsed_arguments[5], False, "arguments not processed as expected")
+        self.assertEqual(parsed_arguments[3], "ad", "arguments not processed as expected")
+
+    def test_plumber(self):
+        """
+        Test that tower_arg_parse is properly reading arguments for plumber...
+        """
+        sys.argv = [
+            "tower_arg_parse",
+            "--plumber-sites",
+            "AU-Emr",
+        ]
+        description = ""
+        cesmroot = path_to_ctsm_root()
+        
+        valid_neon_sites = glob.glob(
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
+        )
+        valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
+
+        valid_plumber_sites = glob.glob(
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
+        )
+        valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
+
+        parsed_arguments = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
+        self.assertEqual(parsed_arguments[1][0], "AU-Emr", "arguments not processed as expected")
 
 
 if __name__ == "__main__":
