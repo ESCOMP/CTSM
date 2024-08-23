@@ -73,6 +73,10 @@ module CropType
      ! achieved before the GDD threshold for grain fill has been reached; see CropPhenology().
      real(r8), pointer :: hui_patch               (:)   ! crop patch heat unit index (ddays)
      real(r8), pointer :: gddaccum_patch          (:)   ! patch growing degree-days from planting (air) (ddays)
+     ! added by SdR as part of HS implementation (20-08-24)
+     real(r8) , pointer :: HS_ndays_patch           (:)   ! patch day count for heat stress
+     real(r8) , pointer :: heatwave_crop_patch      (:)   ! check if heatwave is activated
+    !real(r8) , pointer :: HS_factor_patch          (:)   ! patch day count for heat stress
 
    contains
      ! Public routines
@@ -255,6 +259,11 @@ contains
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
 
+    ! added by SdR as part of heat stress implementation (22-08-24)
+    allocate(this%HS_ndays_patch           (begp:endp))                      ; this%HS_ndays_patch           (:)   = 0.0_r8
+    !allocate(this%HS_factor_patch         (begp:endp))                      ; this%HS_factor_patch          (:)   = 1
+    allocate(this%heatwave_crop_patch      (begp:endp))                      ; this%heatwave_crop_patch      (:)   = 0.0_r8
+
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -363,6 +372,17 @@ contains
          type2d='mxharvests', &
          avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
+
+    ! added by SdR for heat stress implementation
+    this%HS_ndays_patch(begp:endp) = spval
+    call hist_addfld1d (fname='HS_NDAYS', units='ndays', &
+         avgflag='X', long_name='number of days with daily crop temperature above critical', &
+         ptr_patch=this%HS_ndays_patch, default='inactive')
+
+    this%heatwave_crop_patch(begp:endp) = spval
+    call hist_addfld1d (fname='HW', units='boolean', &
+         avgflag='I', long_name='crop heatwave activated', &
+         ptr_patch=this%heatwave_crop_patch, default='inactive')
 
     this%gdd20_baseline_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDD20_BASELINE', units='ddays', &
@@ -634,6 +654,12 @@ contains
           end do
        end if
        deallocate(temp1d)
+
+       ! added by SdR as part of heatstress implementation
+       call restartvar(ncid=ncid, flag=flag,  varname='HS_ndays_patch',xtype=ncd_double, &
+            dim1name='pft', long_name='number of heatstressed days crop', &
+            units='ndays', &
+            interpinic_flag='interp', readvar=readvar, data=this%HS_ndays_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='harvdate', xtype=ncd_int,  &
             dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), &
