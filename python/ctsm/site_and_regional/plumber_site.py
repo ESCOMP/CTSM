@@ -76,8 +76,8 @@ class Plumber2Site(TowerSite):
             transient, post_ad, or ad case, default ad
         prism: bool, opt (ad case is default because PLUMBER requires spinup)
             if True, use PRISM precipitation, default False
-        user_version: str, opt  # TODO: is there an equivalent for PLUMBER?
-            default 'latest'
+        user_version: str, opt
+            default 'latest'; this could be useful later
         overwrite: bool, opt
             default False
         setup_only: bool, opt
