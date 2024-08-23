@@ -87,7 +87,7 @@ class Test_tower_arg_parse(unittest.TestCase):
         ]
         description = ""
         cesmroot = path_to_ctsm_root()
-        
+
         valid_neon_sites = glob.glob(
             os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
         )

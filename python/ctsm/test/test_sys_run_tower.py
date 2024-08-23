@@ -12,7 +12,7 @@ import shutil
 import sys
 
 from ctsm import unit_testing
-from python.ctsm.site_and_regional.run_tower import main
+from ctsm.site_and_regional.run_tower import main
 from ctsm.path_utils import path_to_ctsm_root
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -21,7 +21,14 @@ from ctsm.path_utils import path_to_ctsm_root
 
 
 class TestSysRunTower(unittest.TestCase):
-    """System tests for run_tower"""
+    """
+    System tests for run_tower
+
+    TODO: Would also be useful to test the following items:
+    Ensure the log files are working as expected?
+    Test use of base case root.
+    Test for using prism
+    """
 
     def setUp(self):
         """
@@ -46,19 +53,23 @@ class TestSysRunTower(unittest.TestCase):
         """
 
         # run the run_tower tool
+        print("about to run tower tool")
         sys.argv = [
             os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
             "--neon-sites",
             "BART",
             "--setup-only",
+            "--experiment",
+            "TEST",
             "--output-root",
-            "--experiment TEST",
             self._tempdir,
         ]
+        print(sys.argv)
         main("")
 
         # assert that BART directories were created during setup
         self.assertTrue("BART" in glob.glob(self._tempdir + "/BART*")[0])
+        print(glob.glob(self._tempdir))
 
     def test_ad_site(self):
         """
@@ -72,20 +83,15 @@ class TestSysRunTower(unittest.TestCase):
             "--neon-sites",
             "ABBY",
             "--setup-only",
+            "--run-type",
+            "ad",
             "--output-root",
-            "--run-type ad",
             self._tempdir,
         ]
         main("")
 
         # assert that ABBY directories were created during setup
         self.assertTrue("ABBY" in glob.glob(self._tempdir + "/ABBY*")[0])
-
-        # TODO: Would also be useful to test the following items:
-        # It might be good to ensure the log files are working as expected?
-        # Test running transient, ad and post ad cases.
-        # Test use of base case root.
-        # Test for using prism?
 
     def test_plumber_site(self):
         """
@@ -99,8 +105,9 @@ class TestSysRunTower(unittest.TestCase):
             "--plumber-sites",
             "AR-SLu",
             "--setup-only",
+            "--experiment",
+            "TEST",
             "--output-root",
-            "--experiment TEST",
             self._tempdir,
         ]
         main("")
