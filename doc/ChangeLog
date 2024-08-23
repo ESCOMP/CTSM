@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.2.026
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 23 Aug 2024 01:23:43 PM MDT
+Date: Fri 23 Aug 2024 05:17:56 PM MDT
 One-line Summary: Turn on excess ice, explicit AC, Leung_2023 for clm6
 
 Purpose and description of changes
@@ -38,17 +38,17 @@ Fixes #2568 Turn on explicit AC, Leung_2023, and excess ice by default
 Notes of particular relevance for users
 ---------------------------------------
 Changes made to namelist defaults (e.g., changed parameter values):
- Namelist defaults changed to turn on excess ice, explicit AC, Leung_2023
- in clm6; also to pick up new finidat files for clm6.
+ Namelist defaults now turn on excess ice, explicit AC, Leung_2023
+ in clm6; they also pick up new finidat files for clm6.
 
 Changes to the datasets (e.g., parameter, surface or initial files):
- CLM6 cases need new finidat files. We use 1850 finidat files for
+ CLM6 cases need new finidat files. We use a f09 1850 finidat for
  all clm6 cases because that's all that we have generated for now.
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
- CLM6 cases need new finidat files. We use 1850 finidat files for
+ CLM6 cases need new finidat files. We use a f09 1850 finidat for
  all clm6 cases because that's all that we have generated for now.
 
 Testing summary:
@@ -62,8 +62,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- IN PROG
-    izumi ------- IN PROG
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -75,6 +75,8 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: all
     - nature of change: more than roundoff
 
+ Details about the diffs from excess ice and explicit AC may be found in
+ the earlier entries of this ChangeLog for ctsm5.2.018 and ctsm5.2.010.
 
 Other details
 -------------
