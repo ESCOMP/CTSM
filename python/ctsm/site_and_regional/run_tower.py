@@ -7,8 +7,8 @@
 This is a wrapper script for running CTSM simulation for one or more
 tower (neon or plumber) sites.
 
-This script is only for tower sites and we will develop a more general
-code later.
+This script is only for supported tower sites and we will develop a
+more general code later.
 
 This script first creates and builds a generic base case.
 Next, it will clone the base_case for different tower sites and run

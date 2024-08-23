@@ -74,10 +74,12 @@ class Plumber2Site(TowerSite):
             file path of base case
         run_type: str, opt
             transient, post_ad, or ad case, default ad
-        prism: bool, opt (ad case is default because PLUMBER requires spinup)
+            (ad case is default because PLUMBER requires spinup)
+        prism: bool, opt
             if True, use PRISM precipitation, default False
         user_version: str, opt
             default 'latest'; this could be useful later
+            This is currently only implemented with neon (not plumber) sites
         overwrite: bool, opt
             default False
         setup_only: bool, opt
@@ -110,15 +112,3 @@ class Plumber2Site(TowerSite):
     def set_ref_case(self, case):
         super().set_ref_case(case)
         return True  ### Check if super returns false, if this will still return True?
-
-    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
-        """
-        This function can be used to include any plumber-specific user namelist lines
-        """
-        # This is just an example currently. TODO: remove?
-        if site_lines is None:
-            site_lines = [
-                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
-                                 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO',"""
-            ]
-        super().modify_user_nl(case_root, run_type, rundir, site_lines)
