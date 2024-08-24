@@ -161,10 +161,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <calc_human_stress_indices phys="clm4_5" >NONE</calc_human_stress_indices>
 
 <!-- Explicit, time-varying urban air conditioning adoption rate scheme -->
-<urban_explicit_ac phys="clm6_0" >.false.</urban_explicit_ac>
-<urban_explicit_ac phys="clm5_1" >.false.</urban_explicit_ac>
-<urban_explicit_ac phys="clm5_0" >.false.</urban_explicit_ac>
-<urban_explicit_ac phys="clm4_5" >.false.</urban_explicit_ac>
+<urban_explicit_ac>.false.</urban_explicit_ac>
+<urban_explicit_ac phys="clm6_0" >.true.</urban_explicit_ac>
 
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
@@ -930,12 +928,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 1850 for CLM5.1/CLM6.0 -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm5_1"
->hgrid=ne30np4.pg3 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm5_1_GSWP3v1
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
->hgrid=ne30np4.pg3 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1
 </init_interp_attributes>
+
 
 <!-- present day -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_GSWP3v1"
@@ -1337,13 +1336,19 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
-<!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at ne30pg3_mg17 for all clm5_1/clm6_0 options -->
-<!-- use_init_interp true because even though this is a ctsm5.2 dataset it was with early fsurfdat files -->
-<finidat hgrid="ne30np4.pg3" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+<!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at f09 for all clm5_1/clm6_0 options -->
+<!-- use_init_interp true because the file was created with ctsm5.3 datasets -->
+<finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         lnd_tuning_mode="clm5_1_GSWP3v1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
+</finidat>
+<finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm60BgcCrop-ciso.1361-01-01.ne30pg3_mg17_c240317.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!--
@@ -1380,11 +1385,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          lnd_tuning_mode="clm5_1_GSWP3v1"
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm6_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm52BgcCrop.2000-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240515.nc
+         lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 
@@ -1464,19 +1470,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!-- clm5_1 and cam7.0 -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- clm6_0 and cam7.0 -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- clm5_0 and cam7.0 -->
@@ -1536,11 +1544,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
@@ -1599,11 +1608,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
@@ -1673,18 +1683,20 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
 </finidat>
 
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
@@ -1744,11 +1756,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
@@ -1808,11 +1821,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52018_f09_xsiceON_acON_pSASU.clm2.r.0201-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
@@ -2449,15 +2463,15 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <stream_fldfilename_urbantv phys="clm6_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm6_0"  hgrid="0.9x1.25" urban_explicit_ac=".true."
->/glade/work/xinchang/02_Explicit_AC_Adoption/02_data_present_day/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_1" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25" urban_explicit_ac=".true."
->/glade/work/xinchang/02_Explicit_AC_Adoption/02_data_present_day/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".true."
->/glade/work/xinchang/02_Explicit_AC_Adoption/02_data_present_day/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
@@ -2695,6 +2709,8 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- =========================================  -->
 
 <use_excess_ice>.false.</use_excess_ice>
+<use_excess_ice phys="clm6_0">.true.</use_excess_ice>
+
 <excess_ice_coldstart_temp>-1.0</excess_ice_coldstart_temp>
 <excess_ice_coldstart_depth>0.5</excess_ice_coldstart_depth>
 <excess_ice_coldstart_temp use_excess_ice=".true.">-3.15</excess_ice_coldstart_temp>
