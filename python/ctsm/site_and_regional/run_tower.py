@@ -167,10 +167,11 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
-def check_plumber_data(valid_plumber_sites):
+def setup_plumber_data(valid_plumber_sites):
     """
-    A function to find plumber sites with the dates
-    where data is available.
+    A function to set up plumber site objects
+    with dummy start and end years and months.
+    This allows us to use the list of plumber site objects.
 
     Returns:
         available_list :
@@ -182,8 +183,8 @@ def check_plumber_data(valid_plumber_sites):
     for site_name in valid_plumber_sites:
 
         # start_year and end_year are set in shell commands, so these get overwritten
-        start_year = 2018
-        end_year = 2022
+        start_year = 8888
+        end_year = 9999
         start_month = 1
         end_month = 12
 
@@ -280,7 +281,7 @@ def main(description):
                 )
 
     # -- check for available plumber data:
-    available_plumber_list = check_plumber_data(valid_plumber_sites)
+    available_plumber_list = setup_plumber_data(valid_plumber_sites)
 
     # --  Looping over plumber sites
     if plumber_site_list:

@@ -188,6 +188,8 @@ class TowerSite:
                     "finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(rundir, self.finidat)
                 ]
         else:
+            if not site_lines:
+                site_lines=[]
             user_nl_lines = [
                 "hist_fincl2 = ''",
                 "hist_mfilt = 20",
@@ -384,6 +386,7 @@ class TowerSite:
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
+                # this case.setup() is necessary to create the case.run batch job
                 case.case_setup()
 
             else:
