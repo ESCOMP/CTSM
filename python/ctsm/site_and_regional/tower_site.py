@@ -189,7 +189,7 @@ class TowerSite:
                 ]
         else:
             if not site_lines:
-                site_lines=[]
+                site_lines = []
             user_nl_lines = [
                 "hist_fincl2 = ''",
                 "hist_mfilt = 20",
