@@ -14,7 +14,7 @@ module CropHeatStress
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use shr_sys_mod       , only : shr_sys_flush
-  use shr_infnan_mod    , only : isnan => shr_infnan_isnan, isinf => shr_infnan_isinf
+  use shr_infnan_mod    , only : nan => shr_infnan_nan, isnan => shr_infnan_isnan, assignment(=), isinf => shr_infnan_isinf
   !
   implicit none
   save
@@ -22,6 +22,7 @@ module CropHeatStress
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: crop_heatstress_ndays       ! SdR: checks for number of days above Tcrit for crop heat stress
+  public  :: calc_HS_factor              ! SdR: calculates heat stress magnitude affecting leaf area decline (grainfill phase) 
 
 
   character(len=*), parameter, private :: sourcefile = &
@@ -31,7 +32,7 @@ module CropHeatStress
 contains
 
   !------------------------------------------------------------------------
-  subroutine crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day)
+  subroutine crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
 
     ! !DESCRIPTION:
     ! added by SdR for heat stress implementation
@@ -39,10 +40,10 @@ contains
     ! needs a minimum of 3 consecutive days before heat stress is activated
 
     ! !ARGUMENTS:
-    real(r8),        intent(inout)    :: HS_ndays         ! number of crop heat stress days (ndays) should be integer at final implementation
+    real(r8),        intent(inout)    :: HS_ndays              ! number of crop heat stress days (ndays) should be integer at final implementation
     real(r8),        intent(inout)    :: heatwave_crop         ! keep track if heatwave is activated
     real(r8),        intent(in)       :: t_veg_day
-
+    logical,         intent(in)       :: croplive              ! crop between sowing and harvest
 
     ! !LOCAL VARIABLES:
     real(r8) :: tcrit				! placeholder for for inputparameter
@@ -61,16 +62,12 @@ contains
     end if
 
     ! check if a heatwave is occurring
-    if (isnan(HS_ndays)) then
-         heatwave_crop = 4.0_r8
-    else if (isinf(HS_ndays)) then
+    if (isinf(HS_ndays)) then
          heatwave_crop = 3.0_r8
-    else if (HS_ndays >= 100) then
-             heatwave_crop = 2.5_r8
-    else if (HS_ndays >= 10) then
-             heatwave_crop = 2.0_r8
-    else if (HS_ndays >= (HS_ndays_min + 0.2_r8) .and. &
-                                                   .not. isinf(HS_ndays)) then
+    else if (HS_ndays > 1000000000) then
+             heatwave_crop = 4.0_r8
+    else if (HS_ndays >= (HS_ndays_min - 0.2_r8) .and. &
+                                                   croplive) then
          heatwave_crop = 1.0_r8 
     else
          heatwave_crop = 0.0_r8
@@ -78,42 +75,42 @@ contains
 
   end subroutine crop_heatstress_ndays
 
-  subroutine calc_HS_factor(HS_ndays, HS_factor, t_veg_day)
+  subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
 
-    ! !DESCRIPTION:
-    ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
+!     ! !DESCRIPTION:
+!     ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
 
     ! !ARGUMENTS:
     real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
-    real(r8),        intent(in)        :: t_veg_day         ! daily vegetation temperature (Kelvin)
     real(r8),        intent(in)        :: HS_ndays          ! number of crop heat stress days (ndays) should be integer at final implementation
+    real(r8),        intent(in)        :: t_veg_day         ! daily vegetation temperature (Kelvin)
+    logical,         intent(in)        :: croplive              ! crop between sowing and harvest
 
-
-    ! !LOCAL VARIABLES:
-    real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
+!     ! !LOCAL VARIABLES:
+!     real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
     integer  :: day_min, day_max
 
-    !-----------------------------------------------------------------------
+!     !-----------------------------------------------------------------------
 
-    tcrit = 300
-    tmax  = 310
+!     tcrit = 300
+!     tmax  = 310
     day_min = 3
     day_max = 14
 
-    !check  if stress occurs
-    if (HS_ndays < day_min) then
-       HS_factor = 1._r8
-    else if (HS_ndays == day_min) then
+!     !check  if stress occurs
+    if (HS_ndays == day_min) then
        ! onset heatwave
-         HS_factor = 1.05_r8
-    else if (HS_ndays > day_min) then
+       HS_factor = 1.05_r8
+    else if (HS_ndays > day_min .and. croplive) then
        if (t_veg_day < tmax .and. t_veg_day > tcrit) then
-            HS_factor = 1._r8 + 0.5_r8 * ((t_veg_day - tcrit) / (tmax - tcrit))
-         else if (t_veg_day > tmax .and. HS_ndays < day_max) then
-               HS_factor = 1.5_r8
-         else if (t_veg_day > tmax .and. HS_ndays > day_max) then
-               HS_factor = 1.7_r8
-         end if
+          HS_factor = 1._r8 + 0.5_r8 * ((t_veg_day - tcrit) / (tmax - tcrit))
+       else if (t_veg_day > tmax .and. HS_ndays < day_max) then
+          HS_factor = 1.5_r8
+       else if (t_veg_day > tmax .and. HS_ndays > day_max) then
+          HS_factor = 1.7_r8
+       end if
+     else
+       HS_factor = 1._r8
     end if
 
 end subroutine calc_HS_factor 
