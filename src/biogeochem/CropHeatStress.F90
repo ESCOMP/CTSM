@@ -85,11 +85,7 @@ contains
     end if
 
     ! check if a heatwave is occurring
-    if (isinf(HS_ndays)) then
-         heatwave_crop = 3.0_r8
-    else if (HS_ndays > 1000000000) then
-             heatwave_crop = 4.0_r8
-    else if (HS_ndays >= (HS_ndays_min - 0.2_r8)) then
+    if (HS_ndays >= (HS_ndays_min - 0.2_r8)) then
          heatwave_crop = 1.0_r8 
     else
          heatwave_crop = 0.0_r8
