@@ -15,6 +15,7 @@ module CropHeatStress
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use shr_sys_mod       , only : shr_sys_flush
   use shr_infnan_mod    , only : isnan => shr_infnan_isnan, isinf => shr_infnan_isinf, nan => shr_infnan_nan, assignment(=)
+  use clm_varcon, only : spval
   !
   implicit none
   save
@@ -53,6 +54,11 @@ contains
 
     tcrit = 306.0_r8
     HS_ndays_min = 3.0_r8
+
+    ! Don't do anything if it's not a real temperature
+    if (t_veg_day > spval / 1000._r8) then
+       return
+    end if
 
     ! check if tcrit is exceeded and count days
     if (t_veg_day >= tcrit) then
