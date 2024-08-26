@@ -2163,7 +2163,7 @@ contains
 
          ! added by SdR
          if (is_beg_curr_day()) then
-            call crop_heatstress_ndays(HS_ndays(p), heatwave_crop(p), t_veg_day(p))
+            call crop_heatstress_ndays(HS_ndays(p), heatwave_crop(p), t_veg_day(p), croplive(p))
          end if
 
          ! background litterfall and transfer rates; long growing season factor

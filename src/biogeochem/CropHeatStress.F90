@@ -14,7 +14,7 @@ module CropHeatStress
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use shr_sys_mod       , only : shr_sys_flush
-  use shr_infnan_mod    , only : isnan => shr_infnan_isnan, isinf => shr_infnan_isinf
+  use shr_infnan_mod    , only : isnan => shr_infnan_isnan, isinf => shr_infnan_isinf, nan => shr_infnan_nan, assignment(=)
   !
   implicit none
   save
@@ -31,7 +31,7 @@ module CropHeatStress
 contains
 
   !------------------------------------------------------------------------
-  subroutine crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day)
+  subroutine crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day,croplive)
 
     ! !DESCRIPTION:
     ! added by SdR for heat stress implementation
@@ -39,9 +39,10 @@ contains
     ! needs a minimum of 3 consecutive days before heat stress is activated
 
     ! !ARGUMENTS:
-    real(r8),        intent(inout)    :: HS_ndays         ! number of crop heat stress days (ndays) should be integer at final implementation
+    real(r8),        intent(inout)    :: HS_ndays              ! number of crop heat stress days (ndays) should be integer at final implementation
     real(r8),        intent(inout)    :: heatwave_crop         ! keep track if heatwave is activated
     real(r8),        intent(in)       :: t_veg_day
+    logical,        intent(in)        :: croplive              !check if crop is alive
 
 
     ! !LOCAL VARIABLES:
@@ -61,16 +62,12 @@ contains
     end if
 
     ! check if a heatwave is occurring
-    if (isnan(HS_ndays)) then
-         heatwave_crop = 4.0_r8
-    else if (isinf(HS_ndays)) then
-         heatwave_crop = 3.0_r8
-    else if (HS_ndays >= 100) then
-             heatwave_crop = 2.5_r8
-    else if (HS_ndays >= 10) then
-             heatwave_crop = 2.0_r8
+    if (isinf(HS_ndays)) then
+        heatwave_crop = 4.0_r8
+    else if (HS_ndays > 1000000000000) then
+        heatwave_crop = nan
     else if (HS_ndays >= (HS_ndays_min + 0.2_r8) .and. &
-                                                   .not. isinf(HS_ndays)) then
+                                                   croplive) then
          heatwave_crop = 1.0_r8 
     else
          heatwave_crop = 0.0_r8
