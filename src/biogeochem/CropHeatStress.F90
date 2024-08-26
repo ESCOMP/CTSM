@@ -72,7 +72,7 @@ contains
         heatwave_crop = 4.0_r8
     else if (HS_ndays > 1000000000000) then
         heatwave_crop = nan
-    else if (HS_ndays >= (HS_ndays_min + 0.2_r8) .and. &
+    else if (HS_ndays >= (HS_ndays_min - 0.2_r8) .and. &
                                                    croplive) then
          heatwave_crop = 1.0_r8 
     else
