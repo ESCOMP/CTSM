@@ -2017,6 +2017,7 @@ contains
     use clm_time_manager , only : is_doy_in_interval, is_end_curr_day, is_beg_curr_day
     use clm_time_manager , only : get_doy_tomorrow
     use CropHeatStress   , only : crop_heatstress_ndays, calc_HS_factor     !added by SdR
+    use CropHeatStress   , only : crop_heatstress_reset     !added by SdR
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -2615,6 +2616,9 @@ contains
               else ! continue same fert application every timestep
                  fert_counter(p) = fert_counter(p) - dt
               end if
+
+            ! Reset heat-stress variables
+            call crop_heatstress_reset(HS_ndays(p), heatwave_crop(p))
 
          else   ! crop not live
             ! next 2 lines conserve mass if leaf*_xfer > 0 due to interpinic.

@@ -426,25 +426,25 @@ contains
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
 
-    this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVMAX', units='K',  &
          avgflag='X', long_name='vegetation maximum temperature', &
          ptr_patch=this%t_veg_patch, default='inactive')
 
-    this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVMIN', units='K',  &
          avgflag='M', long_name='vegetation minimum temperature', &
          ptr_patch=this%t_veg_patch, default='inactive')
 
-    this%t_veg_day_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TVDAY', units='K',  &
-         avgflag='A', long_name='average daytime vegetation temperature', &
-         ptr_patch=this%t_veg_day_patch, default='inactive')
+    if (use_luna) then
+       this%t_veg_day_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVDAY', units='K',  &
+            avgflag='A', long_name='average daytime vegetation temperature', &
+            ptr_patch=this%t_veg_day_patch, default='inactive')
 
-    this%t_veg_night_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TVNIGHT', units='K',  &
-         avgflag='A', long_name='average nighttime vegetation temperature', &
-         ptr_patch=this%t_veg_night_patch, default='inactive')
+       this%t_veg_night_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVNIGHT', units='K',  &
+            avgflag='A', long_name='average nighttime vegetation temperature', &
+            ptr_patch=this%t_veg_night_patch, default='inactive')
+    end if
 
     this%t_skin_patch(begp:endp) = spval
     call hist_addfld1d(fname='TSKIN', units='K',  &
