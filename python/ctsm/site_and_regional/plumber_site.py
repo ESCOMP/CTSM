@@ -77,6 +77,7 @@ class Plumber2Site(TowerSite):
             (ad case is default because PLUMBER requires spinup)
         prism: bool, opt
             if True, use PRISM precipitation, default False
+            Note: only supported for NEON sites
         user_version: str, opt
             default 'latest'; this could be useful later
             This is currently only implemented with neon (not plumber) sites
