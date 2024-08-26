@@ -23,7 +23,10 @@ module CropHeatStress
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: crop_heatstress_ndays       ! SdR: checks for number of days above Tcrit for crop heat stress
-
+  !
+  ! !PUBLIC FOR UNIT TESTING
+  real(r8), public, parameter :: tcrit = 306._r8
+  real(r8), public, parameter :: HS_ndays_min = 3._r8
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -45,15 +48,7 @@ contains
     real(r8),        intent(in)       :: t_veg_day
     logical,        intent(in)        :: croplive              !check if crop is alive
 
-
-    ! !LOCAL VARIABLES:
-    real(r8) :: tcrit				! placeholder for for inputparameter
-    real(r8) :: HS_ndays_min            ! minimum required number of heat stress days
-
     !----------------------------------------------------------------------
-
-    tcrit = 306.0_r8
-    HS_ndays_min = 3.0_r8
 
     ! Don't do anything if it's not a real temperature
     if (t_veg_day > spval / 1000._r8) then

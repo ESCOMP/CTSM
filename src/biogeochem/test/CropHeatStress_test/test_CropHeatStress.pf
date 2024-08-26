@@ -16,8 +16,6 @@ module test_CropHeatStress
 
   @TestCase
   type, extends(TestCase) :: TestCropHeatStress
-     real(r8) :: tcrit = 306._r8
-     real(r8) :: HS_ndays_min = 3._r8
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -66,7 +64,7 @@ contains
     ! Yesterday was the first day with tcrit exceeded
     HS_ndays = 0
     heatwave_crop = 0
-    t_veg_day = this%tcrit + 1._r8
+    t_veg_day = tcrit + 1._r8
     croplive = .true.
 
     call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
@@ -85,14 +83,14 @@ contains
     logical :: croplive
 
     ! Yesterday was the third day with tcrit exceeded
-    HS_ndays = this%HS_ndays_min - 1._r8
+    HS_ndays = HS_ndays_min - 1._r8
     heatwave_crop = 0._r8
-    t_veg_day = this%tcrit + 1._r8
+    t_veg_day = tcrit + 1._r8
     croplive = .true.
 
     call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
 
-    @assertEqual(this%HS_ndays_min, HS_ndays)
+    @assertEqual(HS_ndays_min, HS_ndays)
     @assertEqual(1._r8, heatwave_crop)
   end subroutine now_heatwave
 
