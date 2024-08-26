@@ -426,12 +426,10 @@ contains
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
 
-    this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVMAX', units='K',  &
          avgflag='X', long_name='vegetation maximum temperature', &
          ptr_patch=this%t_veg_patch, default='inactive')
 
-    this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TVMIN', units='K',  &
          avgflag='M', long_name='vegetation minimum temperature', &
          ptr_patch=this%t_veg_patch, default='inactive')
