@@ -1,0 +1,120 @@
+module test_CropHeatStress
+
+  ! Tests of CropHeatStress module
+
+  use funit
+  use unittestSubgridMod
+  use CropHeatStress
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use pftconMod
+  use clm_varcon, only : spval
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCropHeatStress
+     real(r8) :: tcrit = 306._r8
+     real(r8) :: HS_ndays_min = 3._r8
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: is_close
+  end type TestCropHeatStress
+
+  real(r8), parameter :: tol = 1.e-6_r8
+
+contains
+
+  subroutine setUp(this)
+    use clm_varcon, only: secspday
+    class(TestCropHeatStress), intent(inout) :: this
+
+    ! Setup time manager
+    call unittest_timemgr_setup(dtime=1800)
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCropHeatStress), intent(inout) :: this
+
+    call unittest_timemgr_teardown()
+
+  end subroutine tearDown
+
+
+  function is_close(this, expected, actual)
+    class(TestCropHeatStress), intent(inout) :: this
+    real(r8) :: expected, actual
+    logical :: is_close
+
+    is_close = abs(expected - actual) <= tol
+
+  end function is_close
+
+
+  @Test
+  subroutine after_first_day(this)
+    class(TestCropHeatStress), intent(inout) :: this
+    real(r8) :: HS_ndays
+    real(r8) :: heatwave_crop
+    real(r8) :: t_veg_day
+    logical :: croplive
+
+    ! Yesterday was the first day with tcrit exceeded
+    HS_ndays = 0
+    heatwave_crop = 0
+    t_veg_day = this%tcrit + 1._r8
+    croplive = .true.
+
+    call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
+
+    @assertEqual(1._r8, HS_ndays)
+    @assertEqual(0._r8, heatwave_crop)
+  end subroutine after_first_day
+
+
+  @Test
+  subroutine now_heatwave(this)
+    class(TestCropHeatStress), intent(inout) :: this
+    real(r8) :: HS_ndays
+    real(r8) :: heatwave_crop
+    real(r8) :: t_veg_day
+    logical :: croplive
+
+    ! Yesterday was the third day with tcrit exceeded
+    HS_ndays = this%HS_ndays_min - 1._r8
+    heatwave_crop = 0._r8
+    t_veg_day = this%tcrit + 1._r8
+    croplive = .true.
+
+    call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
+
+    @assertEqual(this%HS_ndays_min, HS_ndays)
+    @assertEqual(1._r8, heatwave_crop)
+  end subroutine now_heatwave
+
+
+  @Test
+  subroutine spval_heatwave(this)
+    class(TestCropHeatStress), intent(inout) :: this
+    real(r8) :: HS_ndays
+    real(r8) :: heatwave_crop
+    real(r8) :: t_veg_day
+    logical :: croplive
+
+    ! Yesterday was the third day with tcrit exceeded
+    HS_ndays = 0._r8
+    heatwave_crop = 0._r8
+    t_veg_day = spval
+    croplive = .true.
+
+    call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
+
+    @assertEqual(0._r8, HS_ndays)
+    @assertEqual(0._r8, heatwave_crop)
+  end subroutine spval_heatwave
+
+end module test_CropHeatStress
