@@ -290,7 +290,15 @@ sub print_sumperline {
    }
 }
 
-
+sub expectedFails {
+   my ($key, $message, @failfiles) = @_;
+   my $expect = "";
+   foreach my $expectedfailfile ( @failfiles ) {
+      `grep $key $expectedfailfile > /dev/null`;
+      if ( $? == 0 ) { $expect = $message; }
+   }
+   return( $expect );
+}
 
 sub print_categories {
    # Seperate tests into categories
@@ -341,11 +349,7 @@ sub print_categories {
       print( "These tests passed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @passes ) {
-         my $expect = ""; 
-         foreach my $expectedfailfile ( @failfiles ) {
-            `grep $key $expectedfailfile > /dev/null`;
-            if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
-         }
+         my $expect = &expectedFails( $key, "FAILED PREVIOUSLY", @failfiles );
          print( "$key\t\t\t$expect\n" );
       }
    }
@@ -370,26 +374,19 @@ sub print_categories {
       print( "These tests are pending (some tests may fail in the pending state)\n" );
       print( "================================================================================\n" );
       foreach my $key ( @pendings ) {
-         my $expect = ""; 
-         foreach my $expectedfailfile ( @failfiles ) {
-            `grep $key $expectedfailfile > /dev/null`;
-            if ( $? == 0 ) { $expect = "EXPECTED"; }
-         }
+         my $expect = &expectedFails( $key, "EXPECTED", @failfiles );
          print( "$key\t\t$expect\n" );
       }
    }
    if ( $#fails >= 0 ) {
       print( "================================================================================\n" );
       print( "These tests failed\n" );
+      print( "Test (what Failed) If expected\n" );
       print( "================================================================================\n" );
       foreach my $key ( @fails ) {
-         my $expect = ""; 
+         my $expect = &expectedFails( $key, "EXPECTED", @failfiles );
          my $fails = $csstatus{$key}{'FAIL'};
-         foreach my $expectedfailfile ( @failfiles ) {
-            `grep $key $expectedfailfile > /dev/null`;
-            if ( $? == 0 ) { $expect = "EXPECTED"; }
-         }
-         print( "$key\t$fails\t\t$expect\n" );
+         print( "$key\t($fails)\t\t$expect\n" );
       }
    }
 }
