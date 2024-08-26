@@ -76,7 +76,7 @@ module CropType
      ! added by SdR as part of HS implementation (20-08-24)
      real(r8) , pointer :: HS_ndays_patch           (:)   ! patch day count for heat stress
      real(r8) , pointer :: heatwave_crop_patch      (:)   ! check if heatwave is activated
-    !real(r8) , pointer :: HS_factor_patch          (:)   ! patch day count for heat stress
+     real(r8) , pointer :: HS_factor_patch          (:)   ! patch day count for heat stress
 
    contains
      ! Public routines
@@ -261,7 +261,7 @@ contains
 
     ! added by SdR as part of heat stress implementation (22-08-24)
     allocate(this%HS_ndays_patch           (begp:endp))                      ; this%HS_ndays_patch           (:)   = 0.0_r8
-    !allocate(this%HS_factor_patch         (begp:endp))                      ; this%HS_factor_patch          (:)   = 1
+    allocate(this%HS_factor_patch          (begp:endp))                      ; this%HS_factor_patch          (:)   = 1._0_r8
     allocate(this%heatwave_crop_patch      (begp:endp))                      ; this%heatwave_crop_patch      (:)   = 0.0_r8
 
   end subroutine InitAllocate
@@ -383,6 +383,11 @@ contains
     call hist_addfld1d (fname='HW', units='boolean', &
          avgflag='I', long_name='crop heatwave activated', &
          ptr_patch=this%heatwave_crop_patch, default='inactive')
+
+    this%HS_factor_patch(begp:endp) = spval
+    call hist_addfld1d (fname='HSF', units='unitless', &
+         avgflag='A', long_name='crop stress factor', &
+         ptr_patch=this%HS_factor_patch, default='inactive')
 
     this%gdd20_baseline_patch(begp:endp) = spval
     call hist_addfld1d (fname='GDD20_BASELINE', units='ddays', &
@@ -660,6 +665,10 @@ contains
             dim1name='pft', long_name='number of heatstressed days crop', &
             units='ndays', &
             interpinic_flag='interp', readvar=readvar, data=this%HS_ndays_patch)
+       call restartvar(ncid=ncid, flag=flag,  varname='HS_factor_patch',xtype=ncd_double, &
+            dim1name='pft', long_name='heat stress factor', &
+            units='unitless', &
+            interpinic_flag='interp', readvar=readvar, data=this%HS_factor_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='harvdate', xtype=ncd_int,  &
             dim1name='pft', long_name='harvest date', units='jday', nvalid_range=(/1,366/), &

@@ -2113,6 +2113,7 @@ contains
          sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          HS_ndays          =>    crop_inst%HS_ndays_patch                      , & ! Input:  [real(r8) (:) ]  number of crop heat stressed days; added by SdR
+         HS_factor         =>    crop_inst%HS_factor_patch                     , & ! Input:  [real(r8) (:) ]  heat stress factor ; added by SdR
          heatwave_crop     =>    crop_inst%heatwave_crop_patch                 , & ! Input:  [real(r8) (:) ]  check if heatwave condition is true; added by SdR
          peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     

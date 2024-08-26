@@ -78,5 +78,45 @@ contains
 
   end subroutine crop_heatstress_ndays
 
+  subroutine calc_HS_factor(HS_ndays, HS_factor, t_veg_day)
+
+    ! !DESCRIPTION:
+    ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
+
+    ! !ARGUMENTS:
+    real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
+    real(r8),        intent(in)        :: t_veg_day         ! daily vegetation temperature (Kelvin)
+    real(r8),        intent(in)        :: HS_ndays          ! number of crop heat stress days (ndays) should be integer at final implementation
+
+
+    ! !LOCAL VARIABLES:
+    real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
+    integer  :: day_min, day_max
+
+    !-----------------------------------------------------------------------
+
+    tcrit = 300
+    tmax  = 310
+    day_min = 3
+    day_max = 14
+
+    !check  if stress occurs
+    if (HS_ndays < day_min) then
+       HS_factor = 1._r8
+    else if (HS_ndays == day_min) then
+       ! onset heatwave
+         HS_factor = 1.05_r8
+    else if (HS_ndays > day_min) then
+       if (t_veg_day < tmax .and. t_veg_day > tcrit) then
+            HS_factor = 1._r8 + 0.5_r8 * ((t_veg_day - tcrit) / (tmax - tcrit))
+         else if (t_veg_day > tmax .and. HS_ndays < day_max) then
+               HS_factor = 1.5_r8
+         else if (t_veg_day > tmax .and. HS_ndays > day_max) then
+               HS_factor = 1.7_r8
+         end if
+    end if
+
+end subroutine calc_HS_factor 
+
 
 end module CropHeatStress
