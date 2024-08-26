@@ -374,12 +374,12 @@ contains
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
 
     ! added by SdR for heat stress implementation
-    this%HS_ndays_patch(begp:endp) = spval
+    this%HS_ndays_patch(begp:endp) = 0._r8
     call hist_addfld1d (fname='HS_NDAYS', units='ndays', &
          avgflag='X', long_name='number of days with daily crop temperature above critical', &
          ptr_patch=this%HS_ndays_patch, default='inactive')
 
-    this%heatwave_crop_patch(begp:endp) = spval
+    this%heatwave_crop_patch(begp:endp) = 0._r8
     call hist_addfld1d (fname='HW', units='boolean', &
          avgflag='I', long_name='crop heatwave activated', &
          ptr_patch=this%heatwave_crop_patch, default='inactive')
