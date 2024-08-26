@@ -115,4 +115,25 @@ contains
     @assertEqual(0._r8, heatwave_crop)
   end subroutine spval_heatwave
 
+
+  @Test
+  subroutine crop_not_alive(this)
+    class(TestCropHeatStress), intent(inout) :: this
+    real(r8) :: HS_ndays
+    real(r8) :: heatwave_crop
+    real(r8) :: t_veg_day
+    logical :: croplive
+
+    ! We've had a lot of heat-stressed days, including yesterday, but the crop isn't alive anymore
+    HS_ndays = HS_ndays_min + 100
+    heatwave_crop = 1._r8
+    t_veg_day = tcrit + 1._r8
+    croplive = .false.
+
+    call crop_heatstress_ndays(HS_ndays, heatwave_crop, t_veg_day, croplive)
+
+    @assertEqual(0._r8, HS_ndays)
+    @assertEqual(0._r8, heatwave_crop)
+  end subroutine crop_not_alive
+
 end module test_CropHeatStress
