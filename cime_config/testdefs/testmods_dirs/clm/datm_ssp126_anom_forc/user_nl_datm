@@ -1,1 +1,1 @@
-anomaly_forcing = 'Anomaly.Forcing.Temperature'
+anomaly_forcing = 'Anomaly.Forcing.cmip6.ssp126'
