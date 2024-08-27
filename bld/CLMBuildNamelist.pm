@@ -159,16 +159,20 @@ OPTIONS
                               This turns on the namelist variable: use_crop
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
-     -drydep                  Produce a drydep_inparm namelist that will go into the
+     -drydep                  Produce a drydep_inparm namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              This populates the namelist with valid drydep settings for testing.
                               Default: -no-drydep
+                              Note: Can always add drydep fields to user_nl_clm even with --no-drydep
                               (Note: buildnml copies the file for use by the driver)
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'bgc')
                               This turns on the namelist variable: use_cndv
                               (Deprecated, this will be removed)
-     -fire_emis               Produce a fire_emis_nl namelist that will go into the
+     -fire_emis               Produce a fire_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
+                              This populates the namelist with valid fire-emiss settings for testing.
+                              Note: Can always add fire_emis fields to user_nl_clm even with --no-fire_emis
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
@@ -204,9 +208,11 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
+     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
+                              This removes setting default values for testing MEGAN fields
+                              Note: Can always add megan fields to user_nl_clm even with --no-megan
                               (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
