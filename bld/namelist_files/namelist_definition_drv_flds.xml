@@ -35,10 +35,14 @@
 	 group="megan_emis_nl"
 	 valid_values="" >
     MEGAN specifier. This is in the form of: Chem-compound = megan_compound(s)
-    where megan_compound(s) can be the sum of megan compounds with a "+" between them.
+    where megan_compound(s) can be an equation with megan compounds added or subtracted together with multiplication
     In each equation, the item to the left of the equal sign is a CAM chemistry compound, the
     items to the right are compounds known to the MEGAN model (single or combinations).
+    Long lines for equations can be split into multiple specifiers
     For example: megan_specifier = 'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a'
+    or...        megan_specifier = 'SOAE = 0.5954*isoprene + 5.1004*(carene_3 + pinene_a + thujene_a + bornene +',
+                                   ' terpineol_4 + terpineol_a + terpinyl_ACT_a + myrtenal + sabinene + pinene_b + camphene +',
+    and etcetera...
   </entry>
 
   <entry id="megan_mapped_emisfctrs"
