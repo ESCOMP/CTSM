@@ -8,7 +8,7 @@
 
          <test name="...">
            <phase name="...">
-             <status>...</status>
+             <status>...</stSMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydroatus>
            </phase>
          </test>
 
@@ -49,13 +49,6 @@
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the preceding ERP failure.</comment>
-    </phase>
-  </test>
-
-  <test name="SMS_D_Ld10.f10_f10_mg37.I2000Clm50BgcCrop.izumi_intel.clm-tracer_consistency">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2444</issue>
     </phase>
   </test>
 
@@ -110,20 +103,6 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2310</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
     </phase>
   </test>
 
