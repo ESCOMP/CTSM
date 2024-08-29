@@ -68,7 +68,12 @@ module CNFireBaseMod
 
       real(r8) :: cmb_cmplt_fact_litter = 0.5_r8       ! combustion completion factor for litter (unitless)
       real(r8) :: cmb_cmplt_fact_cwd    = 0.25_r8      ! combustion completion factor for CWD (unitless)
-  end type
+      real(r8) :: max_rh30_affecting_fuel = 90._r8     ! Value above which 30-day running relative humidity has no effect on fuel combustibility (%)
+      real(r8) :: defo_fire_precip_thresh_bet = 4.0_r8     ! Max running mean daily precip (mm/d) allowing deforestation fire for broadleaf evergreen trees
+      real(r8) :: defo_fire_precip_thresh_bdt = 1.8_r8     ! Max running mean daily precip (mm/d) allowing deforestation fire for broadleaf deciduous trees
+      real(r8) :: borpeat_fire_soilmoist_denom = 0.3  ! Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
+      real(r8) :: nonborpeat_fire_precip_denom = 1.0  ! Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
+      end type
 
   type, public :: params_type
      real(r8) :: prh30                ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
@@ -343,11 +348,17 @@ contains
     real(r8) :: non_boreal_peatfire_c, cropfire_a1
     real(r8) :: rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
     real(r8) :: lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
+    real(r8) :: max_rh30_affecting_fuel
+    real(r8) :: defo_fire_precip_thresh_bet, defo_fire_precip_thresh_bdt
+    real(r8) :: borpeat_fire_soilmoist_denom, nonborpeat_fire_precip_denom
 
     namelist /lifire_inparm/ cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha, &
                              non_boreal_peatfire_c, cropfire_a1,                &
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
-                             lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
+                             lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd, &
+                             max_rh30_affecting_fuel, &
+                             defo_fire_precip_thresh_bet, defo_fire_precip_thresh_bdt, &
+                             borpeat_fire_soilmoist_denom, nonborpeat_fire_precip_denom
 
     if ( this%need_lightning_and_popdens() ) then
        cli_scale                 = cnfire_const%cli_scale
@@ -364,6 +375,11 @@ contains
        occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
        cmb_cmplt_fact_litter     = cnfire_const%cmb_cmplt_fact_litter
        cmb_cmplt_fact_cwd        = cnfire_const%cmb_cmplt_fact_cwd
+       max_rh30_affecting_fuel   = cnfire_const%max_rh30_affecting_fuel
+       defo_fire_precip_thresh_bet = cnfire_const%defo_fire_precip_thresh_bet
+       defo_fire_precip_thresh_bdt = cnfire_const%defo_fire_precip_thresh_bdt
+       borpeat_fire_soilmoist_denom = cnfire_const%borpeat_fire_soilmoist_denom
+       nonborpeat_fire_precip_denom = cnfire_const%nonborpeat_fire_precip_denom
        ! Initialize options to default values, in case they are not specified in
        ! the namelist
 
@@ -397,6 +413,11 @@ contains
        call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
        call shr_mpi_bcast (cmb_cmplt_fact_litter   , mpicom)
        call shr_mpi_bcast (cmb_cmplt_fact_cwd      , mpicom)
+       call shr_mpi_bcast (max_rh30_affecting_fuel , mpicom)
+       call shr_mpi_bcast (defo_fire_precip_thresh_bet, mpicom)
+       call shr_mpi_bcast (defo_fire_precip_thresh_bdt, mpicom)
+       call shr_mpi_bcast (borpeat_fire_soilmoist_denom, mpicom)
+       call shr_mpi_bcast (nonborpeat_fire_precip_denom, mpicom)
 
        cnfire_const%cli_scale                 = cli_scale
        cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
@@ -412,6 +433,11 @@ contains
        cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
        cnfire_const%cmb_cmplt_fact_litter     = cmb_cmplt_fact_litter
        cnfire_const%cmb_cmplt_fact_cwd        = cmb_cmplt_fact_cwd
+       cnfire_const%max_rh30_affecting_fuel   = max_rh30_affecting_fuel
+       cnfire_const%defo_fire_precip_thresh_bet = defo_fire_precip_thresh_bet
+       cnfire_const%defo_fire_precip_thresh_bdt = defo_fire_precip_thresh_bdt
+       cnfire_const%borpeat_fire_soilmoist_denom = borpeat_fire_soilmoist_denom
+       cnfire_const%nonborpeat_fire_precip_denom = nonborpeat_fire_precip_denom
 
        if (masterproc) then
           write(iulog,*) ' '

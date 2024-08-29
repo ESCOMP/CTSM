@@ -1,5 +1,6 @@
 list(APPEND clm_sources
   ExcessIceStreamType.F90
+  PrigentRoughnessStreamType.F90
   ZenderSoilErodStreamType.F90
   )
 

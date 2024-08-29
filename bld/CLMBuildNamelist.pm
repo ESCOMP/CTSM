@@ -97,7 +97,7 @@ OPTIONS
 				        CENTURY or MIMICS decomposition
                                         This toggles on the namelist variables:
 				        use_fates. use_lch4 and use_nitrif_denitrif are optional
-				 
+
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -159,16 +159,20 @@ OPTIONS
                               This turns on the namelist variable: use_crop
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
-     -drydep                  Produce a drydep_inparm namelist that will go into the
+     -drydep                  Produce a drydep_inparm namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              This populates the namelist with valid drydep settings for testing.
                               Default: -no-drydep
+                              Note: Can always add drydep fields to user_nl_clm even with --no-drydep
                               (Note: buildnml copies the file for use by the driver)
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'bgc')
                               This turns on the namelist variable: use_cndv
                               (Deprecated, this will be removed)
-     -fire_emis               Produce a fire_emis_nl namelist that will go into the
+     -fire_emis               Produce a fire_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
+                              This populates the namelist with valid fire-emiss settings for testing.
+                              Note: Can always add fire_emis fields to user_nl_clm even with --no-fire_emis
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
@@ -204,9 +208,11 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
+     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
+                              This removes setting default values for testing MEGAN fields
+                              Note: Can always add megan fields to user_nl_clm even with --no-megan
                               (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
@@ -521,6 +527,7 @@ sub read_namelist_defaults {
                             "$cfgdir/namelist_files/namelist_defaults_ctsm.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drv.xml",
                             "$cfgdir/namelist_files/namelist_defaults_fire_emis.xml",
+                            "$cfgdir/namelist_files/namelist_defaults_dust_emis.xml",
                             "$cfgdir/namelist_files/namelist_defaults_drydep.xml" );
 
   # Add the location of the use case defaults files to the options hash
@@ -1041,7 +1048,7 @@ sub setup_cmdl_fire_light_res {
      if ( ! &value_is_true($nl_flags->{'neon'}) ) {
          if ( defined($opts->{'clm_usr_name'}) ) {
             $log->warning("The NEON lightning dataset does NOT cover the entire globe, make sure it covers the region for your grid");
-         } else { 
+         } else {
             $log->fatal_error("The NEON lightning dataset can NOT be used for global grids or regions or points outside of its area as it does NOT cover the entire globe.");
          }
      }
@@ -1448,7 +1455,7 @@ sub setup_cmdl_vichydro {
 
 sub process_namelist_commandline_namelist {
   # Process the commandline '-namelist' arg.
-  my ($opts, $definition, $nl, $envxml_ref) = @_;
+  my ($opts, $definition, $nl, $envxml_ref, %settings) = @_;
 
   if (defined $opts->{'namelist'}) {
     # Parse commandline namelist
@@ -1469,6 +1476,32 @@ sub process_namelist_commandline_namelist {
   }
 }
 
+sub process_namelist_infile {
+   my ($definition, $nl, $envxml_ref, $infile, %settings) = @_;
+
+   # Make sure a valid file was found
+   if (    -f "$infile" ) {
+      # Otherwise abort as a valid file doesn't exist
+   } else {
+      $log->fatal_error("input namelist file does NOT exist $infile.\n $@");
+   }
+   # Parse namelist input from the next file
+   my $nl_infile = Build::Namelist->new($infile);
+
+   # Validate input namelist -- trap exceptions
+   my $nl_infile_valid;
+   eval { $nl_infile_valid = $definition->validate($nl_infile); };
+   if ($@) {
+      $log->fatal_error("Invalid namelist variable in '-infile' $infile.\n $@");
+   }
+   # Go through all variables and expand any XML env settings in them
+   expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
+
+   # Merge input values into namelist.  Previously specified values have higher precedence
+   # and are not overwritten.
+   $nl->merge_nl($nl_infile_valid, %settings);
+}
+
 #-------------------------------------------------------------------------------
 
 sub process_namelist_commandline_infile {
@@ -1478,27 +1511,7 @@ sub process_namelist_commandline_infile {
   if (defined $opts->{'infile'}) {
     my @infiles = split( /,/, $opts->{'infile'} );
     foreach my $infile ( @infiles ) {
-      # Make sure a valid file was found
-      if (    -f "$infile" ) {
-        # Otherwise abort as a valid file doesn't exist
-      } else {
-        $log->fatal_error("input namelist file does NOT exist $infile.\n $@");
-      }
-      # Parse namelist input from the next file
-      my $nl_infile = Build::Namelist->new($infile);
-
-      # Validate input namelist -- trap exceptions
-      my $nl_infile_valid;
-      eval { $nl_infile_valid = $definition->validate($nl_infile); };
-      if ($@) {
-        $log->fatal_error("Invalid namelist variable in '-infile' $infile.\n $@");
-      }
-      # Go through all variables and expand any XML env settings in them
-      expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
-
-      # Merge input values into namelist.  Previously specified values have higher precedence
-      # and are not overwritten.
-      $nl->merge_nl($nl_infile_valid);
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile );
     }
   }
 }
@@ -1749,24 +1762,29 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lightning_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  #################################
-  # namelist group: drydep_inparm #
-  #################################
+  ############################################################################################
+  # namelist options for dust emissions
+  # NOTE: This MUST be done before other drv_flds_in settings (megan, drydep, fire_emis etc.)
+  ############################################################################################
+  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
+  setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #####################################
+  # namelist group: drydep_inparm     #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
   setup_logic_dry_deposition($opts, $nl_flags, $definition, $defaults, $nl);
 
-  #################################
-  # namelist group: fire_emis_nl  #
-  #################################
+  #####################################
+  # namelist group: fire_emis_nl      #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
   setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ######################################
-  # namelist options for dust emissions
-  ######################################
-  setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl);
-
-  #################################
-  # namelist group: megan_emis_nl #
-  #################################
+  #####################################
+  # namelist group: megan_emis_nl     #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
   setup_logic_megan($opts, $nl_flags, $definition, $defaults, $nl);
 
   ##################################
@@ -1873,10 +1891,15 @@ sub process_namelist_inline_logic {
   #########################################
   setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ###############################
-  # namelist group: exice_streams   #
-  ###############################
-  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl);
+  #################################
+  # namelist group: exice_streams #
+  #################################
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ##########################################
+  # namelist group: clm_temperature_inparm #
+  ##########################################
+  setup_logic_coldstart_temp($opts,$nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -1903,9 +1926,10 @@ sub setup_logic_site_specific {
      $nl->set_variable_value($group, $var, $val);
   }
 
-  if ($nl_flags->{'res'} eq "1x1_smallvilleIA") {
+  my $res = $nl_flags->{'res'};
+  if ($res eq "1x1_smallvilleIA" or $res eq "1x1_cidadinhoBR") {
     if (! &value_is_true($nl_flags->{'use_cn'}) || ! &value_is_true($nl_flags->{'use_crop'})) {
-      $log->fatal_error("1x1_smallvilleIA grids must use a compset with CN and CROP turned on.");
+      $log->fatal_error("${res} grids must use a compset with CN and CROP turned on.");
     }
   }
 
@@ -2258,7 +2282,9 @@ sub setup_logic_cnfire {
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
                       "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel",
-                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd" );
+                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd", "max_rh30_affecting_fuel",
+                      "defo_fire_precip_thresh_bet", "defo_fire_precip_thresh_bdt",
+                      "borpeat_fire_soilmoist_denom", "nonborpeat_fire_precip_denom" );
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! &value_is_true($nl_flags->{'cnfireson'} ) ) {
@@ -2334,7 +2360,7 @@ sub setup_logic_crop_inparm {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "initial_seed_at_planting",
                  'use_crop'=>$nl->get_value('use_crop') );
-     
+
      my $crop_residue_removal_frac = $nl->get_value('crop_residue_removal_frac');
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'crop_residue_removal_frac' );
      if ( $crop_residue_removal_frac < 0.0 or $crop_residue_removal_frac > 1.0 ) {
@@ -2379,7 +2405,6 @@ sub setup_logic_soilstate {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'organic_frac_squared' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_bedrock',
               'use_fates'=>$nl_flags->{'use_fates'}, 'vichydro'=>$nl_flags->{'vichydro'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice'); # excess ice flag should be read before stream vars
 
   my $var1 = "soil_layerstruct_predefined";
   my $var2 = "soil_layerstruct_userdefined";
@@ -2675,8 +2700,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 if ( defined($use_init_interp_default) ) {
                    $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
                 } else {
-                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " . 
-                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " . 
+                   my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " .
+                              $physv->as_string() . " hgrid = " . $nl_flags->{'res'} . " sim_year = " .
                               $settings{'sim_year'} . " lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'} .
                               "use_fates = " . $nl_flags->{'use_fates'};
                    $log->fatal_error($err_msg." but the default setting of $useinitvar is false, so set both $var to a startup file and $useinitvar==TRUE, or developers should modify the namelist_defaults file".$set);
@@ -3219,7 +3244,6 @@ sub setup_logic_supplemental_nitrogen {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
 		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
   }
-  
   #
   # Error checking for suplnitro
   #
@@ -3726,10 +3750,10 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_taxmode', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndep_varlist', 'phys'=>$nl_flags->{'phys'},
-		'use_cn'=>$nl_flags->{'use_cn'}, 
+		'use_cn'=>$nl_flags->{'use_cn'},
 		'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'sim_year'=>$nl_flags->{'sim_year'},
@@ -3986,17 +4010,18 @@ sub setup_logic_lightning_streams {
 sub setup_logic_dry_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "drydep_list", "dep_data_file");
   if ($opts->{'drydep'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-       $log->warning("DryDeposition can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
-                     "   Use the '--no-drydep' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
-  } else {
-    if ( defined($nl->get_value('drydep_list')) ) {
-      $log->fatal_error("drydep_list defined, but drydep option NOT set");
-    }
+  }
+  if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+                         "   Use the '--no-drydep' option when '-bgc fates' is activated");
+        }
+     }
   }
 }
 
@@ -4005,69 +4030,91 @@ sub setup_logic_dry_deposition {
 sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "fire_emis_eleveated", "fire_emis_factors_file", "fire_emis_specifier");
+
   if ($opts->{'fire_emis'} ) {
-     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
-                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
-  } else {
-    if ( defined($nl->get_value('fire_emis_elevated'))     ||
-         defined($nl->get_value('fire_emis_factors_file')) ||
-         defined($nl->get_value('fire_emis_specifier')) ) {
-      $log->fatal_error("fire_emission setting defined: fire_emis_elevated, fire_emis_factors_file, or fire_emis_specifier, but fire_emis option NOT set");
-    }
   }
+  foreach my $var ( @list ) {
+     if ( defined($nl->get_value($var)) ) {
+        if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+          $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
+                      "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
+       }
+     }
+   }
 }
 
 #-------------------------------------------------------------------------------
 
 sub setup_logic_dust_emis {
-  # Logic to handle the dust emissions
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Logic to handle the dust emissions namelists, both drv_flds_in and lnd_in files
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
-  # First get the dust emission method
-  my $var = "dust_emis_method";
-  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+  # Only set dust emission settings -- if not connected to CAM
+  # Longer term plan is to remove this logic and have CTSM just set it and for CAM to use what CLM decides
+  # See: https://github.com/ESCOMP/CTSM/issues/2713
+  my $lnd_sets_dust = logical_to_fortran($envxml_ref->{'LND_SETS_DUST_EMIS_DRV_FLDS'});
+  if ( &value_is_true( $lnd_sets_dust)) {
 
-  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+      # First get the dust emission method
+      my $var = "dust_emis_method";
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+      my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value($var) );
 
-  my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
-                                   "zendersoilerod_mapalgo" );
-  if ( $dust_emis_method eq "Zender_2003" ) {
-     # get the zender_soil_erod_source
-     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
+      my @zender_files_in_lnd_opts = ( "stream_fldfilename_zendersoilerod", "stream_meshfile_zendersoilerod",
+                                       "zendersoilerod_mapalgo" );
+      if ( $dust_emis_method eq "Zender_2003" ) {
+         # get the zender_soil_erod_source
+         add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                     "zender_soil_erod_source", 'dust_emis_method'=>$dust_emis_method );
 
-     my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
-     if ( $zender_source eq "lnd" ) {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
-                       'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
-                       'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
-        }
-     } else {
-        foreach my $option ( @zender_files_in_lnd_opts ) {
-           if ( defined($nl->get_value($option)) ) {
-             $log->fatal_error("zender_soil_erod_source is NOT lnd, but the file option $option is being set" .
-                               " and should NOT be unless you want it handled here in the LAND model, " .
-                               "otherwise the equivalent option is set in CAM" );
-           }
-        }
-     }
+         my $zender_source = remove_leading_and_trailing_quotes( $nl->get_value('zender_soil_erod_source') );
+         if ( $zender_source eq "lnd" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $option,
+                           'dust_emis_method'=>$dust_emis_method, 'zender_soil_erod_source'=>$zender_source,
+                           'hgrid'=>$nl_flags->{'res'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
+            }
+         } elsif ( $zender_source eq "atm" ) {
+            foreach my $option ( @zender_files_in_lnd_opts ) {
+               if ( defined($nl->get_value($option)) ) {
+                  $log->fatal_error("zender_soil_erod_source is atm, and the file option $option is being set" .
+                                    " which should NOT be unless you want it handled here in the LAND model, " .
+                                    "otherwise the equivalent option is set in CAM" );
+               }
+            }
+         } elsif ( $zender_source eq "none" ) {
+            $log->fatal_error("zender_soil_erod_source is set to none and only atm or lnd should be used when $var is Zender_2002" );
+         }
+      } else {
+         # Verify that NONE of the Zender options are being set if Zender is NOT being used
+         push @zender_files_in_lnd_opts, "zender_soil_erod_source";
+         foreach my $option ( @zender_files_in_lnd_opts ) {
+            if ( defined($nl->get_value($option)) ) {
+               $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
+                                 "$option is being set, need to change one or the other" );
+            }
+         }
+      }
+  # Otherwise make sure dust settings are NOT being set in CLM
   } else {
-     # Verify that NONE of the Zender options are being set if Zender is NOT being used
-     push @zender_files_in_lnd_opts, "zender_soil_erod_source";
-     foreach my $option ( @zender_files_in_lnd_opts ) {
-        if ( defined($nl->get_value($option)) ) {
-          $log->fatal_error("dust_emis_method is NOT set to Zender_2003, but one of it's options " .
-                            "$option is being set, need to change one or the other" );
-        }
-     }
-     if ( $dust_emis_method eq "Leung_2023" ) {
-        $log->warning("dust_emis_method is Leung_2023 and that option has NOT been brought into CTSM yet");
-     }
+      my @vars = ( "dust_emis_method", "zender_soil_erod_source" );
+      foreach my $option ( @vars ) {
+         if ( defined($nl->get_value($option)) ) {
+            $log->fatal_error("Dust emission variable is being set in CTSM, which should NOT be done when" .
+                              " connected to CAM as CAM should set them");
+         }
+      }
+      # Now process the CAM drv_flds_in to get the dust settings
+      # This requires that the CAM drv_flds_in namelist be created BEFORE CLM
+      # and that the path below NOT be changed. Hence, there's some fragility here
+      # to future changes.
+      my $infile = $opts->{'envxml_dir'} . "/Buildconf/camconf/drv_flds_in";
+      $log->verbose_message("Read in the drv_flds_in file generated by CAM's build-namelist");
+      # When merging the CAM namelist in -- die with an error if there's a conflict between CAM and CLM
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile, 'die_on_conflict'=>1 );
   }
 }
 
@@ -4088,17 +4135,15 @@ sub setup_logic_megan {
   }
 
   if ($nl_flags->{'megan'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                   "   Use the '-no-megan' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
-    check_megan_spec( $opts, $nl, $definition );
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');
-  } else {
-    if ( defined($nl->get_value('megan_specifier')) ||
+  }
+  if ( defined($nl->get_value('megan_specifier')) ||
          defined($nl->get_value('megan_factors_file')) ) {
-      $log->fatal_error("megan_specifier or megan_factors_file defined, but megan option NOT set");
+    check_megan_spec( $opts, $nl, $definition );
+    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
+                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
   }
 }
@@ -4208,52 +4253,137 @@ sub setup_logic_lai_streams {
 sub setup_logic_cropcal_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  # Set first and last stream years
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
-              'sim_year'=>$nl_flags->{'sim_year'},
-              'sim_year_range'=>$nl_flags->{'sim_year_range'});
-
-  # Set align year, if first and last years are different
-  if ( $nl->get_value('stream_year_first_cropcal') !=
-      $nl->get_value('stream_year_last_cropcal') ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
-                'sim_year_range'=>$nl_flags->{'sim_year_range'});
-  }
-
   # Set up other crop calendar parameters
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcals_rx_adapt');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_gdd20_seasons');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flush_gdd20');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'generate_crop_gdds');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_mxmat');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal');
 
-  # Option checks
-  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
-  my $use_mxmat = $nl->get_value('use_mxmat') ;
+  # These can't both be true
+  my $cropcals_rx = $nl->get_value('cropcals_rx') ;
+  my $cropcals_rx_adapt = $nl->get_value('cropcals_rx_adapt') ;
+  if (&value_is_true($cropcals_rx) and &value_is_true($cropcals_rx_adapt)) {
+    $log->fatal_error("cropcals_rx and cropcals_rx_adapt may not both be true" );
+  }
+
+  # Add defaults if reading gdd20 seasons from stream files
+  my $stream_gdd20_seasons = $nl->get_value('stream_gdd20_seasons') ;
+  if ( &value_is_true($stream_gdd20_seasons)) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_season_end');
+
+    # Check
+    my $gdd20_season_start_file = $nl->get_value('stream_fldFileName_gdd20_season_start') ;
+    my $gdd20_season_end_file = $nl->get_value('stream_fldFileName_gdd20_season_end') ;
+    if ( &string_is_undef_or_empty($gdd20_season_start_file) or &string_is_undef_or_empty($gdd20_season_end_file) ) {
+      $log->message($gdd20_season_start_file);
+      $log->message($gdd20_season_end_file);
+      $log->fatal_error("If stream_gdd20_seasons is true, gdd20 season start and end files must be provided." );
+    }
+  }
+
+  # Add defaults if using prescribed crop calendars
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds');
+    if ( &value_is_true($cropcals_rx_adapt) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline', 'stream_gdd20_seasons'=>$stream_gdd20_seasons);
+    }
+  }
+
+  # Add defaults if using any crop calendar input files
   my $swindow_start_file = $nl->get_value('stream_fldFileName_swindow_start') ;
   my $swindow_end_file = $nl->get_value('stream_fldFileName_swindow_end') ;
   my $gdd_file = $nl->get_value('stream_fldFileName_cultivar_gdds') ;
+  my $gdd20_baseline_file = $nl->get_value('stream_fldFileName_gdd20_baseline') ;
   my $mesh_file = $nl->get_value('stream_meshfile_cropcal') ;
-  if ( ($swindow_start_file eq '' and $swindow_start_file ne '') or ($swindow_start_file ne '' and $swindow_start_file eq '') ) {
-    $log->fatal_error("When specifying sowing window dates, you must provide both swindow_start_file and swindow_end_file. To specify exact sowing dates, use the same file." );
+  if ( !&string_is_undef_or_empty($swindow_start_file) or !&string_is_undef_or_empty($swindow_end_file) or !&string_is_undef_or_empty($gdd_file) or !&string_is_undef_or_empty($gdd20_baseline_file)) {
+
+    # User gave an input file without specifying cropcals_rx or cropcals_rx_adapt = .true.
+    # Requiring this means nothing to the code, but helps namelist make more sense
+    if ( !&value_is_true($cropcals_rx) and !&value_is_true($cropcals_rx_adapt) ){
+      $log->fatal_error("If providing any crop calendar input file(s), cropcals_rx or cropcals_rx_adapt must be true" );
+    }
+
+    # User set cropcals_rx_adapt to true but set stream_fldFileName_gdd20_baseline to empty
+    if ( &value_is_true($cropcals_rx_adapt) and &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true, stream_fldFileName_gdd20_baseline must be provided" );
+    }
+
+    # cropcals_rx_adapt is false but user provided stream_fldFileName_gdd20_baseline
+    if ( !&value_is_true($cropcals_rx_adapt) and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If stream_fldFileName_gdd20_baseline provided, cropcals_rx_adapt must be true" );
+    }
+
+    # User provided an input file but set mesh file to empty
+    if ( &string_is_undef_or_empty($mesh_file) ) {
+      $log->fatal_error("If providing any crop calendar input file(s), you must provide stream_meshfile_cropcal" );
+    }
+
+    # Set stream years
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_swindows',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_cropcal_cultivar_gdds',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+
+    # Do not allow maturity requirements to change over time if stream_fldFileName_gdd20_baseline is provided. That would be nonsensical.
+    if ( $nl->get_value('stream_year_first_cropcal_cultivar_gdds') !=
+        $nl->get_value('stream_year_last_cropcal_cultivar_gdds')
+        and !&string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If cropcals_rx_adapt is true (i.e., stream_fldFileName_gdd20_baseline is provided), baseline maturity requirements are allowed to vary over time (i.e., stream_year_first_cropcal_cultivar_gdds and stream_year_last_cropcal_cultivar_gdds must be the same)." );
+    }
   }
-  if ( $generate_crop_gdds eq '.true.' ) {
-      if ( $use_mxmat eq '.true.' ) {
+
+  # If running with prescribed crop calendars, certain files must be provided
+  my $generate_crop_gdds = $nl->get_value('generate_crop_gdds') ;
+  if ( &value_is_true($cropcals_rx) or &value_is_true($cropcals_rx_adapt) ) {
+    if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true, sowing window start and end files must be provided. To specify exact sowing dates, use the same file." );
+    }
+    if ( &string_is_undef_or_empty($gdd_file) and (! &value_is_true($generate_crop_gdds)) ){
+      $log->fatal_error("If cropcals_rx or cropcals_rx_adapt is true and generate_crop_gdds is false, maturity requirement file stream_fldFileName_cultivar_gdds must be provided" );
+    }
+  }
+
+  # Option checks
+  if ( &string_is_undef_or_empty($gdd_file) and ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+      $log->fatal_error("If not providing stream_fldFileName_cultivar_gdds, don't provide stream_fldFileName_gdd20_baseline");
+  }
+  if ( &value_is_true($generate_crop_gdds) ) {
+      my $use_mxmat = $nl->get_value('use_mxmat') ;
+      if ( &value_is_true($use_mxmat) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must also set use_mxmat to false" );
       }
-      if ( $swindow_start_file eq '' or $swindow_end_file eq '' ) {
+      if ( &string_is_undef_or_empty($swindow_start_file) or &string_is_undef_or_empty($swindow_end_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify stream_fldFileName_swindow_start and stream_fldFileName_swindow_end")
       }
       if ( $swindow_start_file ne $swindow_end_file ) {
           $log->fatal_error("If generate_crop_gdds is true, you must specify exact sowing dates by setting stream_fldFileName_swindow_start and stream_fldFileName_swindow_end to the same file")
       }
-      if ( $gdd_file ne '' ) {
+      if ( ! &string_is_undef_or_empty($gdd_file) ) {
           $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_cultivar_gdds")
       }
-  }
-  if ( $mesh_file eq '' and ( $swindow_start_file ne '' or $gdd_file ne '' ) ) {
-      $log->fatal_error("If prescribing crop sowing dates and/or maturity requirements, you must specify stream_meshfile_cropcal")
+      if ( ! &string_is_undef_or_empty($gdd20_baseline_file) ) {
+          $log->fatal_error("If generate_crop_gdds is true, do not specify stream_fldFileName_gdd20_baseline")
+      }
   }
 }
 
@@ -4575,8 +4705,8 @@ sub setup_logic_fates {
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
         if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " . 
-                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" . 
+          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
+                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" .
                             "Change suplnitro back to ALL");
         }
 
@@ -4829,13 +4959,31 @@ sub setup_logic_exice {
   #
   # excess ice streams
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
-  # IF excess ice streams is on
+  my $finidat = $nl->get_value('finidat');
+  # If coldstart and use_excess_ice is on:
+  if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+     $use_exice_streams = '.true.';
+     # if excess ice is turned off
+  } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
+     $use_exice_streams = '.false.';
+  # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
+  # These cases are handled in the restart routines in the model
+  } elsif ( defined($use_exice_streams) && (not value_is_true($use_exice_streams)) && value_is_true($use_exice) &&
+          ( $nl_flags->{'clm_start_type'} eq "'cold'" || $nl_flags->{'clm_start_type'} eq "'arb_ic'" )) {
+     $log->fatal_error("use_excess_ice_streams can NOT be FALSE when use_excess_ice is TRUE on the cold start" );
+  }
+
+  # Put use_exice_streams into nl_flags so can be referenced later
+  $nl_flags->{'use_excice_streams'} = $use_exice_streams;
+  # If excess ice streams is on
   if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
      # Can only be true if excess ice is also on, otherwise fail
-     if (defined($use_exice) && not value_is_true($use_exice)) {
+     if ( defined($use_exice) && (not value_is_true($use_exice)) ) {
         $log->fatal_error("use_excess_ice_streams can NOT be TRUE when use_excess_ice is FALSE" );
      }
   # Otherwise if ice streams are off
@@ -4871,6 +5019,46 @@ sub setup_logic_exice {
 
 
 } # end exice streams
+
+sub setup_logic_coldstart_temp {
+
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  # set initial temperatures for excess ice gridcells: needs to be set whether excess ice is on or not
+
+  my $use_exice = $nl->get_value( 'use_excess_ice' );
+  my $finidat = $nl->get_value('finidat');
+
+  my @list = ( "excess_ice_coldstart_temp", "excess_ice_coldstart_depth" );
+
+  # Only needs to be set by the user if it's a coldstart
+  if ( ! string_is_undef_or_empty($finidat) ) {
+     foreach my $var ( @list ) {
+        my $val = $nl->get_value( $var );
+        if ( defined($val) ) {
+           $log->warning("$var only needs to be set if this is a cold-start, although InitCold is always called");
+        }
+     }
+  }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_temp',
+             'use_excess_ice'=>$use_exice);
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'excess_ice_coldstart_depth',
+             'use_excess_ice'=>$use_exice);
+
+  my $use_exice_streams = $nl_flags->{'use_excice_streams'};
+  my $exice_cs_temp = $nl->get_value( 'excess_ice_coldstart_temp' );
+  my $exice_cs_depth = $nl->get_value( 'excess_ice_coldstart_depth' );
+
+  if (defined($use_exice_streams) && value_is_true($use_exice_streams)) {
+     if (defined($exice_cs_depth) && $exice_cs_depth <= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_depth is <= 0.0" );
+     }
+     if (defined($exice_cs_temp) && $exice_cs_temp >= 0.0 ) {
+       $log->fatal_error("excess_ice_coldstart_temp is >= 0.0, no excess ice will be present in this run" );
+     }
+  }
+}
 
 #-------------------------------------------------------------------------------
 
@@ -4914,6 +5102,33 @@ sub setup_logic_misc {
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_use_repr_structure_pool');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_no_crop_seed_replenishment');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_fields_list_file');
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_prigent_roughness {
+  #
+  # The Prigent roughness stream data set read in if needed
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  my $var = "use_prigent_roughness";
+  my $dust_emis_method = remove_leading_and_trailing_quotes( $nl->get_value('dust_emis_method') );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              'dust_emis_method'=>$dust_emis_method );
+  my $use_prigent = $nl->get_value($var);
+  if ( &value_is_true($use_prigent) ) {
+     if ( $dust_emis_method ne "Leung_2023" ) {
+       # The Prigent dataset could be used for other purposes
+       # (such as roughness as in https://github.com/ESCOMP/CTSM/issues/2349)
+       $log->warning( "$var does NOT need to on without dust_emis_method being Leung_2023, it simply won't be used" );
+     }
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_prigentroughness' );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_prigentroughness' );
+  } elsif ( $dust_emis_method eq "Leung_2023" ) {
+    # In the future we WILL allow it to be turned off for testing and Paleo work
+    # see: https://github.com/ESCOMP/CTSM/issues/2381)
+    $log->fatal_error("variable \"$var\" MUST be true when Leung_2023 dust emission method is being used" );
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -4967,8 +5182,10 @@ sub write_output_files {
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
   push @groups, "exice_streams";
+  push @groups, "clm_temperature_inparm";
   push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
+  push @groups, "prigentroughness";
   push @groups, "zendersoilerod";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
@@ -4980,7 +5197,7 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm);
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");
@@ -5453,27 +5670,11 @@ sub check_megan_spec {
 
     my $megan_spec      = $nl->get_value('megan_specifier');
     my @megan_spec_list = split( /\s*,\s*/, $megan_spec );
-    foreach $megan_spec ( @megan_spec_list ) {
-       if ( $megan_spec =~ /^['"]+[A-Za-z0-9]+\s*\=\s*([\sA-Za-z0-9+_-]+)["']+$/ ) {
-          my $megan_list = $1;
-          my @megan_cmpds = split( /\s*\+\s*/, $megan_list );
-          my $var = "megan_cmpds";
-          my $warn = 0;
-          foreach my $megan_cmpd ( @megan_cmpds ) {
-             if (  ! $definition->is_valid_value( $var, $megan_cmpd, 'noquotes'=>1 ) ) {
-                $log->warning("megan_compound $megan_cmpd NOT found in list" );
-                $warn++;
-             }
-          }
-          if ( $warn > 0 ) {
-             my @valid_values   = $definition->get_valid_values( $var, 'noquotes'=>1 );
-             $log->warning("list of megan compounds includes:\n" .
-                     "@valid_values\n" .
-                     "Does your megan_factors_file include more compounds?\n" .
-                     "If NOT your simulation will fail." );
-          }
-       } else {
-          $log->fatal_error("Bad format for megan_specifier = $megan_spec");
+    foreach my $spec ( @megan_spec_list ) {
+       $megan_spec = remove_leading_and_trailing_quotes($spec);
+       # Do simple validation of the expressions to just check for valid characters
+       if ( $megan_spec !~ /^([\s=A-Za-z0-9_\+\.\*\(\)-]+)$/ ) {
+          $log->warning("Bad format for megan_specifier = $megan_spec");
        }
     }
 }
