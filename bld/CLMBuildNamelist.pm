@@ -159,16 +159,20 @@ OPTIONS
                               This turns on the namelist variable: use_crop
      -csmdata "dir"           Root directory of CESM input data.
                               Can also be set by using the CSMDATA environment variable.
-     -drydep                  Produce a drydep_inparm namelist that will go into the
+     -drydep                  Produce a drydep_inparm namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              This populates the namelist with valid drydep settings for testing.
                               Default: -no-drydep
+                              Note: Can always add drydep fields to user_nl_clm even with --no-drydep
                               (Note: buildnml copies the file for use by the driver)
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
                               (can ONLY be turned on when BGC type is 'bgc')
                               This turns on the namelist variable: use_cndv
                               (Deprecated, this will be removed)
-     -fire_emis               Produce a fire_emis_nl namelist that will go into the
+     -fire_emis               Produce a fire_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass fire emissions to the atm.
+                              This populates the namelist with valid fire-emiss settings for testing.
+                              Note: Can always add fire_emis fields to user_nl_clm even with --no-fire_emis
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
@@ -204,9 +208,11 @@ OPTIONS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
+     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
+                              This removes setting default values for testing MEGAN fields
+                              Note: Can always add megan fields to user_nl_clm even with --no-megan
                               (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
@@ -1449,7 +1455,7 @@ sub setup_cmdl_vichydro {
 
 sub process_namelist_commandline_namelist {
   # Process the commandline '-namelist' arg.
-  my ($opts, $definition, $nl, $envxml_ref) = @_;
+  my ($opts, $definition, $nl, $envxml_ref, %settings) = @_;
 
   if (defined $opts->{'namelist'}) {
     # Parse commandline namelist
@@ -1470,6 +1476,32 @@ sub process_namelist_commandline_namelist {
   }
 }
 
+sub process_namelist_infile {
+   my ($definition, $nl, $envxml_ref, $infile, %settings) = @_;
+
+   # Make sure a valid file was found
+   if (    -f "$infile" ) {
+      # Otherwise abort as a valid file doesn't exist
+   } else {
+      $log->fatal_error("input namelist file does NOT exist $infile.\n $@");
+   }
+   # Parse namelist input from the next file
+   my $nl_infile = Build::Namelist->new($infile);
+
+   # Validate input namelist -- trap exceptions
+   my $nl_infile_valid;
+   eval { $nl_infile_valid = $definition->validate($nl_infile); };
+   if ($@) {
+      $log->fatal_error("Invalid namelist variable in '-infile' $infile.\n $@");
+   }
+   # Go through all variables and expand any XML env settings in them
+   expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
+
+   # Merge input values into namelist.  Previously specified values have higher precedence
+   # and are not overwritten.
+   $nl->merge_nl($nl_infile_valid, %settings);
+}
+
 #-------------------------------------------------------------------------------
 
 sub process_namelist_commandline_infile {
@@ -1479,27 +1511,7 @@ sub process_namelist_commandline_infile {
   if (defined $opts->{'infile'}) {
     my @infiles = split( /,/, $opts->{'infile'} );
     foreach my $infile ( @infiles ) {
-      # Make sure a valid file was found
-      if (    -f "$infile" ) {
-        # Otherwise abort as a valid file doesn't exist
-      } else {
-        $log->fatal_error("input namelist file does NOT exist $infile.\n $@");
-      }
-      # Parse namelist input from the next file
-      my $nl_infile = Build::Namelist->new($infile);
-
-      # Validate input namelist -- trap exceptions
-      my $nl_infile_valid;
-      eval { $nl_infile_valid = $definition->validate($nl_infile); };
-      if ($@) {
-        $log->fatal_error("Invalid namelist variable in '-infile' $infile.\n $@");
-      }
-      # Go through all variables and expand any XML env settings in them
-      expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
-
-      # Merge input values into namelist.  Previously specified values have higher precedence
-      # and are not overwritten.
-      $nl->merge_nl($nl_infile_valid);
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile );
     }
   }
 }
@@ -1750,25 +1762,29 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lightning_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  #################################
-  # namelist group: drydep_inparm #
-  #################################
-  setup_logic_dry_deposition($opts, $nl_flags, $definition, $defaults, $nl);
-
-  #################################
-  # namelist group: fire_emis_nl  #
-  #################################
-  setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
-
-  ######################################
+  ############################################################################################
   # namelist options for dust emissions
-  ######################################
+  # NOTE: This MUST be done before other drv_flds_in settings (megan, drydep, fire_emis etc.)
+  ############################################################################################
   setup_logic_dust_emis($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_prigent_roughness($opts, $nl_flags, $definition, $defaults, $nl);
 
-  #################################
-  # namelist group: megan_emis_nl #
-  #################################
+  #####################################
+  # namelist group: drydep_inparm     #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
+  setup_logic_dry_deposition($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #####################################
+  # namelist group: fire_emis_nl      #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
+  setup_logic_fire_emis($opts, $nl_flags, $definition, $defaults, $nl);
+
+  #####################################
+  # namelist group: megan_emis_nl     #
+  # NOTE: After setup_logic_dust_emis #
+  #####################################
   setup_logic_megan($opts, $nl_flags, $definition, $defaults, $nl);
 
   ##################################
@@ -3994,17 +4010,18 @@ sub setup_logic_lightning_streams {
 sub setup_logic_dry_deposition {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "drydep_list", "dep_data_file");
   if ($opts->{'drydep'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-       $log->warning("DryDeposition can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
-                     "   Use the '--no-drydep' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
-  } else {
-    if ( defined($nl->get_value('drydep_list')) ) {
-      $log->fatal_error("drydep_list defined, but drydep option NOT set");
-    }
+  }
+  if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+     foreach my $var ( @list ) {
+        if ( defined($nl->get_value($var)) ) {
+           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+                         "   Use the '--no-drydep' option when '-bgc fates' is activated");
+        }
+     }
   }
 }
 
@@ -4013,20 +4030,20 @@ sub setup_logic_dry_deposition {
 sub setup_logic_fire_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  my @list = ( "fire_emis_eleveated", "fire_emis_factors_file", "fire_emis_specifier");
+
   if ($opts->{'fire_emis'} ) {
-     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("Fire emission can NOT be on when FATES is also on.\n" .
-                   "  DON'T use the '-fire_emis' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_factors_file');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_emis_specifier');
-  } else {
-    if ( defined($nl->get_value('fire_emis_elevated'))     ||
-         defined($nl->get_value('fire_emis_factors_file')) ||
-         defined($nl->get_value('fire_emis_specifier')) ) {
-      $log->fatal_error("fire_emission setting defined: fire_emis_elevated, fire_emis_factors_file, or fire_emis_specifier, but fire_emis option NOT set");
-    }
   }
+  foreach my $var ( @list ) {
+     if ( defined($nl->get_value($var)) ) {
+        if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+          $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
+                      "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
+       }
+     }
+   }
 }
 
 #-------------------------------------------------------------------------------
@@ -4036,6 +4053,8 @@ sub setup_logic_dust_emis {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
   # Only set dust emission settings -- if not connected to CAM
+  # Longer term plan is to remove this logic and have CTSM just set it and for CAM to use what CLM decides
+  # See: https://github.com/ESCOMP/CTSM/issues/2713
   my $lnd_sets_dust = logical_to_fortran($envxml_ref->{'LND_SETS_DUST_EMIS_DRV_FLDS'});
   if ( &value_is_true( $lnd_sets_dust)) {
 
@@ -4088,6 +4107,14 @@ sub setup_logic_dust_emis {
                               " connected to CAM as CAM should set them");
          }
       }
+      # Now process the CAM drv_flds_in to get the dust settings
+      # This requires that the CAM drv_flds_in namelist be created BEFORE CLM
+      # and that the path below NOT be changed. Hence, there's some fragility here
+      # to future changes.
+      my $infile = $opts->{'envxml_dir'} . "/Buildconf/camconf/drv_flds_in";
+      $log->verbose_message("Read in the drv_flds_in file generated by CAM's build-namelist");
+      # When merging the CAM namelist in -- die with an error if there's a conflict between CAM and CLM
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile, 'die_on_conflict'=>1 );
   }
 }
 
@@ -4108,17 +4135,15 @@ sub setup_logic_megan {
   }
 
   if ($nl_flags->{'megan'} ) {
-    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                   "   Use the '-no-megan' option when '-bgc fates' is activated");
-    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
-    check_megan_spec( $opts, $nl, $definition );
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');
-  } else {
-    if ( defined($nl->get_value('megan_specifier')) ||
+  }
+  if ( defined($nl->get_value('megan_specifier')) ||
          defined($nl->get_value('megan_factors_file')) ) {
-      $log->fatal_error("megan_specifier or megan_factors_file defined, but megan option NOT set");
+    check_megan_spec( $opts, $nl, $definition );
+    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
+      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
+                    "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
   }
 }
@@ -5645,27 +5670,11 @@ sub check_megan_spec {
 
     my $megan_spec      = $nl->get_value('megan_specifier');
     my @megan_spec_list = split( /\s*,\s*/, $megan_spec );
-    foreach $megan_spec ( @megan_spec_list ) {
-       if ( $megan_spec =~ /^['"]+[A-Za-z0-9]+\s*\=\s*([\sA-Za-z0-9+_-]+)["']+$/ ) {
-          my $megan_list = $1;
-          my @megan_cmpds = split( /\s*\+\s*/, $megan_list );
-          my $var = "megan_cmpds";
-          my $warn = 0;
-          foreach my $megan_cmpd ( @megan_cmpds ) {
-             if (  ! $definition->is_valid_value( $var, $megan_cmpd, 'noquotes'=>1 ) ) {
-                $log->warning("megan_compound $megan_cmpd NOT found in list" );
-                $warn++;
-             }
-          }
-          if ( $warn > 0 ) {
-             my @valid_values   = $definition->get_valid_values( $var, 'noquotes'=>1 );
-             $log->warning("list of megan compounds includes:\n" .
-                     "@valid_values\n" .
-                     "Does your megan_factors_file include more compounds?\n" .
-                     "If NOT your simulation will fail." );
-          }
-       } else {
-          $log->fatal_error("Bad format for megan_specifier = $megan_spec");
+    foreach my $spec ( @megan_spec_list ) {
+       $megan_spec = remove_leading_and_trailing_quotes($spec);
+       # Do simple validation of the expressions to just check for valid characters
+       if ( $megan_spec !~ /^([\s=A-Za-z0-9_\+\.\*\(\)-]+)$/ ) {
+          $log->warning("Bad format for megan_specifier = $megan_spec");
        }
     }
 }

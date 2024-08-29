@@ -53,7 +53,6 @@ module CNFUNMod
   public:: CNFUN                 ! Run FUN
   
   type, private :: params_type
-     real(r8) :: ndays_on        ! number of days to complete leaf onset
      real(r8) :: ndays_off       ! number of days to complete leaf offset
   end type params_type   
  
@@ -64,7 +63,6 @@ module CNFUNMod
   !
   ! !PRIVATE DATA MEMBERS:
   real(r8) :: dt              ! decomp timestep (seconds)
-  real(r8) :: ndays_on        ! number of days to complete onset
   real(r8) :: ndays_off       ! number of days to complete offset
   
   integer, private, parameter :: COST_METHOD = 2 !new way of doing the N uptake
@@ -103,11 +101,6 @@ module CNFUNMod
   !---
 
   ! read in parameters
-
-    tString='ndays_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_on=tempr
 
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
@@ -172,7 +165,6 @@ module CNFUNMod
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
 
-  ndays_on     = params_inst%ndays_on
   ndays_off    = params_inst%ndays_off
 
   !--------------------------------------------------------------------

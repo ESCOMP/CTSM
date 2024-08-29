@@ -551,10 +551,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c240208.nc</paramfile>
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240208.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240208.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240208.nc</paramfile>
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c240814.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240814.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240814.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240814.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -1092,12 +1092,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
                         hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
@@ -1177,6 +1177,26 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
 <!-- clm5_1 physics -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_cam6.0"
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
@@ -1226,12 +1246,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!-- If an exact match for these grids and start years -->
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="0.9x1.25" use_cn=".false." maxpft="17"
 >hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="1.9x2.5" use_cn=".false." maxpft="17"
 >hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
@@ -1242,6 +1262,26 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
