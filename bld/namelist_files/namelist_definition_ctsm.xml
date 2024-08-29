@@ -252,14 +252,15 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,li2024gswpfrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,li2024gswpfrc,li2024crujra" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
-li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
-li2024gswpfrc: No reference paper yet
+li2021gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
+li2024gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
+li2024crujra:  No reference paper yet, tuned with CRU-JRA forcing
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -330,6 +331,31 @@ Combustion completeness factor for litter (unitless)
 <entry id="cmb_cmplt_fact_cwd" type="real" category="clm_physics"
        group="lifire_inparm" >
 Combustion completeness factor for CWD[Course Woody Debris] (unitless)
+</entry>
+
+<entry id="max_rh30_affecting_fuel" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value above which 30-day running relative humidity has no effect on fuel combustibility
+</entry>
+
+<entry id="defo_fire_precip_thresh_bet" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf evergreen tropical trees but no broadleaf deciduous tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="defo_fire_precip_thresh_bdt" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf deciduous tropical trees but no broadleaf evergreen tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="nonborpeat_fire_precip_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of precipitation in equation relating that to non-boreal peat fire (unitless). Eq. 9 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="borpeat_fire_soilmoist_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless). Eq. 10 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
 </entry>
 
 <entry id="ncrit" type="real" category="clm_physics"
