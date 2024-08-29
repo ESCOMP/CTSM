@@ -105,6 +105,7 @@ contains
     character(len= 10)   :: time               ! temporary
     character(len=  5)   :: zone               ! temporary
     integer              :: rcode
+    real(r4), parameter  :: data_version = 5.3   !  Compatibility version number of the datasets to create
     character(len=*), parameter :: subname = 'mkfile_define_atts'
     !-----------------------------------------------------------------------
 
@@ -126,6 +127,7 @@ contains
     str = 'Community Land Model: CLM5'
     rcode = pio_put_att (pioid, pio_global, 'Source', trim(str))
     rcode = pio_put_att (pioid, pio_global, 'Version', trim(gitdescribe))
+    rcode = pio_put_att (pioid, pio_global, 'Dataset_Version', data_version)
     rcode = pio_put_att (pioid, pio_global, 'Logname', trim(logname))
     rcode = pio_put_att (pioid, pio_global, 'Host', trim(hostname))
     rcode = pio_put_att (pioid, pio_global, 'Number-of-tasks', npes)
