@@ -152,7 +152,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
     </options>
   </test>
