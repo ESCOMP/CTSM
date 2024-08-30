@@ -243,11 +243,11 @@ def main():
             "5x5_amazon",
         ),
         "crop-global-present": (
-            "--start-year 2000 --end-year 2000 --vic                           --res",
+            "--start-year 2000 --end-year 2000                                 --res",
             "standard_res",
         ),
         "crop-global-present-low-res": (
-            "--start-year 2000 --end-year 2000 --vic                           --res",
+            "--start-year 2000 --end-year 2000                                 --res",
             "low_res",
         ),
         "crop-global-present-ne16": (

@@ -167,16 +167,6 @@ def get_parser():
         default="/glade/campaign/cesm/cesmdata/inputdata/",
     )
     parser.add_argument(
-        "--vic",
-        help="""
-            Flag for adding the fields required for the VIC model.
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="vic_flag",
-        default=False,
-    )
-    parser.add_argument(
         "--inlandwet",
         help="""
             Flag for including inland wetlands.
@@ -273,7 +263,6 @@ def main():
     input_path = args.input_path
     nocrop_flag = args.crop_flag
     nosurfdata_flag = args.surfdata_flag
-    vic_flag = args.vic_flag
     inlandwet = args.inlandwet
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
@@ -400,7 +389,6 @@ def main():
             force_model_mesh_file,
             force_model_mesh_nx,
             force_model_mesh_ny,
-            vic_flag,
             rawdata_files,
             landuse_fname,
             mksrf_ftopostats_override,
@@ -413,7 +401,6 @@ def main():
         # -------------------
         write_nml_outdata(
             nosurfdata_flag,
-            vic_flag,
             inlandwet,
             glc_flag,
             hostname,
@@ -573,7 +560,6 @@ def determine_pft_years(start_year, end_year, potveg):
 
 def write_nml_outdata(
     nosurfdata_flag,
-    vic_flag,
     inlandwet,
     glc_flag,
     hostname,
@@ -604,7 +590,6 @@ def write_nml_outdata(
     nlfile.write(f"  numpft = {num_pft} \n")
     nlfile.write(f"  no_inlandwet = .{str(not inlandwet).lower()}. \n")
     nlfile.write(f"  outnc_3dglc = .{str(glc_flag).lower()}. \n")
-    nlfile.write(f"  outnc_vic = .{str(vic_flag).lower()}. \n")
     nlfile.write("  outnc_large_files = .false. \n")
     nlfile.write("  outnc_double = .true. \n")
     nlfile.write(f"  logname = '{logname}' \n")
@@ -617,7 +602,6 @@ def write_nml_rawinput(
     force_model_mesh_file,
     force_model_mesh_nx,
     force_model_mesh_ny,
-    vic_flag,
     rawdata_files,
     landuse_fname,
     mksrf_ftopostats_override,
@@ -643,7 +627,7 @@ def write_nml_rawinput(
     for key, value in rawdata_files.items():
         if key == "mksrf_ftopostats" and mksrf_ftopostats_override != "":
             nlfile.write(f"  mksrf_ftopostats_override = '{mksrf_ftopostats_override}' \n")
-        elif "_fvic" not in key and "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
+        elif "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
             # write everything else
             nlfile.write(f"  {key} = '{value}' \n")
 
@@ -691,12 +675,6 @@ def write_nml_rawinput(
     nlfile.write(f"  mksrf_fhrvtyp_mesh = '{mksrf_fhrvtyp_mesh}' \n")
     nlfile.write(f"  mksrf_fpctlak = '{mksrf_fpctlak}' \n")
     nlfile.write(f"  mksrf_furban = '{mksrf_furban}' \n")
-
-    if vic_flag:
-        mksrf_fvic = rawdata_files["mksrf_fvic"]
-        nlfile.write(f"  mksrf_fvic = '{mksrf_fvic}' \n")
-        mksrf_fvic_mesh = rawdata_files["mksrf_fvic_mesh"]
-        nlfile.write(f"  mksrf_fvic_mesh = '{mksrf_fvic_mesh}' \n")
 
     nlfile.write(f"  mksrf_fdynuse = '{landuse_fname} ' \n")
     return must_run_download_input_data
