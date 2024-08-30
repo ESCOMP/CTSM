@@ -99,7 +99,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
                 "mpasa15",
                 "--glc-nec",
                 "10",
-                "--hires_pft",
                 "--hires_soitex",
             ]
         )

@@ -187,19 +187,6 @@ def get_parser():
         default=False,
     )
     parser.add_argument(
-        "--hires_pft",
-        help="""
-            If you want to use the high-resolution pft dataset rather
-            than the default lower resolution dataset.
-            (Low resolution is at quarter-degree, high resolution at 3-minute)
-            [Note: hires only available for 1850 and 2005.]
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="hres_pft",
-        default=False,
-    )
-    parser.add_argument(
         "--hires_soitex",
         help="""
             If you want to use the high-resolution soil texture dataset rather
@@ -268,7 +255,7 @@ def main():
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
 
-    hires_pft, hires_soitex = process_hires_options(args, start_year, end_year)
+    hires_soitex = process_hires_options(args, start_year, end_year)
 
     if force_model_mesh_file is not None:
         open_mesh_file(force_model_mesh_file, force_model_mesh_nx, force_model_mesh_ny)
@@ -299,7 +286,6 @@ def main():
 
     # create attribute list for parsing xml file
     attribute_list = {
-        "hires_pft": hires_pft,
         "hires_soitex": hires_soitex,
         "pft_years": pft_years,
         "pft_years_ssp": pft_years_ssp,
@@ -427,23 +413,11 @@ def process_hires_options(args, start_year, end_year):
     """
     Process options related to hi-res
     """
-    if args.hres_pft:
-        if (start_year == 1850 and end_year == 1850) or (start_year == 2005 and end_year == 2005):
-            hires_pft = "on"
-        else:
-            error_msg = (
-                "ERROR: for --hires_pft you must set both start-year "
-                "and end-year to 1850 or to 2005"
-            )
-            sys.exit(error_msg)
-    else:
-        hires_pft = "off"
-
     if args.hres_soitex:
         hires_soitex = "on"
     else:
         hires_soitex = "off"
-    return hires_pft, hires_soitex
+    return hires_soitex
 
 
 def check_ssp_years(start_year, end_year):

@@ -267,7 +267,6 @@ def main():
             "mpasa480",
         ),
         "crop-global-present-nldas": (
-            # TODO slevis: --hirespft uses old data for now, so keep out
             "--start-year 2000 --end-year 2000                                 --res",
             "nldas_res",
         ),
