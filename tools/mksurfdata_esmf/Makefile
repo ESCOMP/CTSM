@@ -92,6 +92,7 @@ CROP = \
 	crop-global-present-ne120 \
 	crop-global-present-mpasa480 \
 	crop-global-present-nldas \
+	crop-global-hist-f09 \
 	crop-global-1850 \
 	crop-global-1850-low-res \
 	crop-global-1850-ne16 \
@@ -225,6 +226,10 @@ crop-global-1850-mpasa480 : FORCE
 
 crop-global-hist : FORCE
 	$(MKSURFDATA)  --number-of-nodes 72 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-hist-f09 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-hist-low-res : FORCE
