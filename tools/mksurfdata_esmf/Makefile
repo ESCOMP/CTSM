@@ -164,7 +164,7 @@ crop-tropics-present : FORCE
 	$(SUBSETDATA_POINT_ALLLU) --create-surface $(SUBSETDATA_1X1_BRAZIL)
 
 1x1_brazil-transient : FORCE
-	$(SUBSETDATA_POINT_ALLLU) --create-surface --create-landuse $(SUBSETDATA_1X1_BRAZIL) --cfg-file ../site_and_regional/default_data_1850.cfg
+	$(SUBSETDATA_POINT_ALLLU) --create-surface --create-landuse --surf-year 1850 $(SUBSETDATA_1X1_BRAZIL) --cfg-file ../site_and_regional/default_data_1850.cfg
 
 #
 # crop
@@ -255,7 +255,7 @@ crop-global-hist-ne30 : FORCE
 # Note (slevis): The next line makes the landuse.timeseries from 1850 to 2015, so also run
 # modify_smallville.sh to generate three modified landuse.timeseries files needed for testing.
 1x1-smallville-transient : FORCE
-	$(SUBSETDATA_POINT) --create-landuse $(SUBSETDATA_1X1_SMALLTRANSIENT)
+	$(SUBSETDATA_POINT) --create-surface --create-landuse --surf-year 1850 $(SUBSETDATA_1X1_SMALLTRANSIENT)
 	../modify_input_files/modify_smallville.sh
 
 1x1-cidadinho-present : FORCE

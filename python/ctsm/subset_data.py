@@ -597,10 +597,6 @@ def setup_files(args, defaults, cesmroot):
             clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
         ),
-        "mesh_dir": os.path.join(
-            clmforcingindir,
-            os.path.join(defaults.get("surfdat", "mesh_dir")),
-        ),
         "fluse_dir": os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
@@ -608,7 +604,6 @@ def setup_files(args, defaults, cesmroot):
         "fsurf_in": fsurf_in,
         "fsurf_out": fsurf_out,
         "fluse_in": fluse_in,
-        "mesh_surf": defaults.get("surfdat", "mesh_surf"),
         "datm_tuple": DatmFiles(
             dir_input_datm,
             dir_output_datm,
@@ -735,9 +730,6 @@ def subset_region(args, file_dict: dict):
             args.user_mods_dir,
             specify_fsurf_out=file_dict["fsurf_out"],
         )
-
-    # if region.create_mesh:
-    #    region.create_mesh_at_reg (file_dict["mesh_dir"], file_dict["mesh_surf"])
 
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
