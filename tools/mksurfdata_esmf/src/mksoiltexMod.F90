@@ -35,28 +35,40 @@ module mksoiltexMod
 contains
 !=================================================================================
 
-  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, name, val_neg_4, val_neg_other, data_i, data_o)
+  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i_orig, data_o, data_modifier)
     !
     ! Arguments
     integer, intent(in) :: no
     integer, intent(in) :: lookup_index
-    integer, intent(in) :: n_scid
-    integer, intent(in) :: nlay
+    integer, intent(in) :: n_scid, nlay, n_mapunits
     character(*), intent(in) :: name
     real(r4), intent(in) :: val_neg_4  ! Fallback value if read-in value is -4
     real(r4), intent(in) :: val_neg_other  ! Fallback value if read-in value is negative but not -4
-    real(r4), intent(in) :: data_i(:,:,:)
+    real(r4), intent(in) :: data_i_orig(:,:,:)
     real(r4), intent(out) :: data_o(:,:)
+    real(r4), optional, intent(in) :: data_modifier(:,:,:)
     !
-    ! Locals
+    ! Local variables
     integer :: l
+    integer :: ier
     logical :: is_neg_4
+    real(r4), allocatable  :: data_i(:,:,:)
+
+    allocate(data_i(nlay,n_scid,n_mapunits), stat=ier)
+    if (ier/=0) call shr_sys_abort()
+
+    ! Apply data_modifer, if needed (organic_o OPTION 2)
+    if (present(data_modifier)) then
+       data_i = data_i_orig * data_modifier
+    else
+       data_i = data_i_orig
+    end if
 
     ! Fill first layer of output array with first positive value on SCID dim of input array
     data_o(no,1) = data_i(1,1,lookup_index)
     if (data_o(no,1) < 0._r4) then
        do l = 2,n_scid
-          if (data_i(1,l,lookup_index) >= 0._r4) then
+          if (data_i_orig(1,l,lookup_index) >= 0._r4) then
              data_o(no,1) = data_i(1,l,lookup_index)
              exit
           end if
@@ -386,18 +398,23 @@ contains
           lookup_index = mapunit_lookup(mapunit_o(no))
 
           ! Fill output arrays
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "sand", 99._r4, 43._r4, float(sand_i(:,:,:)), sand_o)
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "clay", 1._r4, 18._r4, float(clay_i(:,:,:)), clay_o)
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
-               "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "cfrag", 1._r4, 0._r4, float(cfrag_i(:,:,:)), cfrag_o)
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "bulk", 1.5_r4, 1.5_r4, bulk_i, bulk_o)  ! TODO: 1.5 ok for sand dunes and -7?
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, &
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "phaq", 7._r4, 7._r4, phaq_i, phaq_o)
+          ! organic_o OPTION 1
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
+          ! organic_o OPTION 2
+         !  call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+         !       "orgc", 1._r4, 0._r4, orgc_i, orgc_o, &
+         !       orgc_i * bulk_i * float(100 - cfrag_i) * 0.01_r4 / 0.58_r4)
 
           ! ---------------------------------------------------------------
           ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
