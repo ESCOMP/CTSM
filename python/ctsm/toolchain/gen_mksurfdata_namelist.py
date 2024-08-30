@@ -255,7 +255,7 @@ def main():
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
 
-    hires_soitex = process_hires_options(args, start_year, end_year)
+    hires_soitex = process_hires_options(args)
 
     if force_model_mesh_file is not None:
         open_mesh_file(force_model_mesh_file, force_model_mesh_nx, force_model_mesh_ny)
@@ -409,7 +409,7 @@ def main():
     print(f"Successfully created input namelist file {nlfname}")
 
 
-def process_hires_options(args, start_year, end_year):
+def process_hires_options(args):
     """
     Process options related to hi-res
     """
