@@ -58,7 +58,7 @@ contains
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
     use clm_varctl           , only: fsurdat, version
-    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb
+    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb, surfrd_check_file
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
     use initGridCellsMod     , only: initGridCells
@@ -100,6 +100,7 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
+    call surfrd_check_file(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
