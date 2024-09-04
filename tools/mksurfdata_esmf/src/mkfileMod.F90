@@ -105,6 +105,10 @@ contains
     character(len= 10)   :: time               ! temporary
     character(len=  5)   :: zone               ! temporary
     integer              :: rcode
+    ! Surface dataset version these datasets are compatible with:
+    ! - Only update this when the new surface datasets will be incompatible with the previous verison
+    ! - Since whenever we update surface datasets we update to a new minor version this always corresponds
+    !   to a CTSM minor version: 5.3, i6.1, 6.5 etcetera
     real(r4), parameter  :: data_version = 5.3   !  Compatibility version number of the datasets to create
     character(len=*), parameter :: subname = 'mkfile_define_atts'
     !-----------------------------------------------------------------------
