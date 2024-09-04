@@ -35,7 +35,7 @@ module mksoiltexMod
 contains
 !=================================================================================
 
-  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i_orig, data_o, data_modifier)
+  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o, data_modifier, organic_o)
     !
     ! Arguments
     integer, intent(in) :: no
@@ -44,32 +44,42 @@ contains
     character(*), intent(in) :: name
     real(r4), intent(in) :: val_neg_4  ! Fallback value if read-in value is -4
     real(r4), intent(in) :: val_neg_other  ! Fallback value if read-in value is negative but not -4
-    real(r4), intent(in) :: data_i_orig(:,:,:)
+    real(r4), intent(in) :: data_i(:,:,:)
     real(r4), intent(out) :: data_o(:,:)
     real(r4), optional, intent(in) :: data_modifier(:,:,:)
+    real(r4), optional, intent(out) :: organic_o(:,:)
     !
     ! Local variables
     integer :: l
     integer :: ier
     logical :: is_neg_4
-    real(r4), allocatable  :: data_i(:,:,:)
-
-    allocate(data_i(nlay,n_scid,n_mapunits), stat=ier)
-    if (ier/=0) call shr_sys_abort()
+    logical :: organic2
+    real(r4), allocatable  :: organic_i(:,:,:)
 
     ! Apply data_modifer, if needed (organic_o OPTION 2)
+    organic2 = .false.
     if (present(data_modifier)) then
-       data_i = data_i_orig * data_modifier
-    else
-       data_i = data_i_orig
+       if (.not. present(organic_o)) then
+          call shr_sys_abort('mksoiltex_i_to_o: data_modifier not needed if not providing organic_o')
+       else if (trim(name) /= 'orgc') then
+          call shr_sys_abort('mksoiltex_i_to_o: organic_o should only be provided along with orgc')
+       end if
+       organic2 = .true.
+       allocate(organic_i(nlay,n_scid,n_mapunits), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+       organic_i = data_i * data_modifier
+    else if (present(organic_o)) then
+       call shr_sys_abort('mksoiltex_i_to_o: If providing organic_o, also provide data_modifier')
     end if
 
     ! Fill first layer of output array with first positive value on SCID dim of input array
     data_o(no,1) = data_i(1,1,lookup_index)
+    if (organic2) organic_o(no,1) = organic_i(1,1,lookup_index)
     if (data_o(no,1) < 0._r4) then
        do l = 2,n_scid
-          if (data_i_orig(1,l,lookup_index) >= 0._r4) then
+          if (data_i(1,l,lookup_index) >= 0._r4) then
              data_o(no,1) = data_i(1,l,lookup_index)
+             if (organic2) organic_o(no,1) = organic_i(1,l,lookup_index)  ! TODO: This should probably be under a conditional looking at organic_i instead of data_i, but that's not how it was in the original
              exit
           end if
        end do
@@ -80,13 +90,16 @@ contains
        is_neg_4 = int(data_o(no,1)) == -4  ! TODO: Rename. Maybe indicates sand dune?
        if (is_neg_4) then
           data_o(no,:) = val_neg_4
+          if (organic2) organic_o(no,:) = val_neg_4  ! TODO: This should probably be under conditionals looking at organic_o instead of data_o, but that's not how it was in the original
        else
           data_o(no,:) = val_neg_other
+          if (organic2) organic_o(no,:) = val_neg_other  ! TODO: This should probably be under conditionals looking at organic_o instead of data_o, but that's not how it was in the original
        end if
     end if
 
     ! Ensure negative values are handled
     ! TODO: Remove as unnecessary?
+    ! TODO: Also handle organic_o? Not handled in original
     if (data_o(no,1) < 0._r4 .and. trim(name) /= "sand") then
        write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
        call shr_sys_abort('could not find a value >= 0 for '//name)
@@ -95,10 +108,12 @@ contains
     ! Top soil layer is filled above. Here, we fill the other layers.
     do l = 2,nlay
        data_o(no,l) = data_i(l,1,lookup_index)
+       if (organic2) organic_o(no,l) = organic_i(l,1,lookup_index)
 
        ! If a layer is negative, fill it with the previous layer's value
        if (data_o(no,l) < 0._r4) then
           data_o(no,l) = data_o(no,l-1)
+          if (organic2) organic_o(no,l) = organic_o(no,l-1)  ! TODO: This should probably be under a conditional looking at organic_o instead of data_o, but that's not how it was in the original
        end if
     end do
 
@@ -163,6 +178,7 @@ contains
     type(var_desc_t)       :: pio_varid_bulk
     type(var_desc_t)       :: pio_varid_phaq
     type(var_desc_t)       :: pio_varid_organic
+    integer, parameter     :: organic_o_option = 1
     integer                :: starts(3)     ! starting indices for reading lookup table
     integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
@@ -178,6 +194,10 @@ contains
        write(ndiag,'(a)') ' Input mapunit file is '//trim(file_mapunit_i)
        write(ndiag,'(a)') ' Input lookup table file is '//trim(file_lookup_i)
        write(ndiag,'(a)') ' Input mesh/grid file is '//trim(file_mesh_i)
+    end if
+
+    if (organic_o_option < 1 .or. organic_o_option > 2) then
+       call shr_sys_abort('organic_o_option must be 1 or 2')
     end if
 
     ! Determine ns_o and allocate output data
@@ -408,13 +428,15 @@ contains
                "bulk", 1.5_r4, 1.5_r4, bulk_i, bulk_o)  ! TODO: 1.5 ok for sand dunes and -7?
           call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
                "phaq", 7._r4, 7._r4, phaq_i, phaq_o)
-          ! organic_o OPTION 1
-          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
-               "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
-          ! organic_o OPTION 2
-         !  call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
-         !       "orgc", 1._r4, 0._r4, orgc_i, orgc_o, &
-         !       orgc_i * bulk_i * float(100 - cfrag_i) * 0.01_r4 / 0.58_r4)
+          if (organic_o_option == 1) then
+             call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+                  "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
+          else
+             call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+                  "orgc", 1._r4, 0._r4, orgc_i, orgc_o, &
+                  orgc_i * bulk_i * float(100 - cfrag_i) * 0.01_r4 / 0.58_r4, &
+                  organic_o)
+          end if
 
           ! ---------------------------------------------------------------
           ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
@@ -427,11 +449,13 @@ contains
           ! (calculated from orgc_i, cfrag_i, and bulk_i) to organic_o. This
           ! approach first calculates organic_i and then regrids to organic_o
           ! rather than regridding all the terms first and then calculating
-          ! organic_o. Commented out code above belongs to that option.
-          do l = 1, nlay
-             organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
-                               (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
-          end do
+          ! organic_o. That would be organic_o_option 2.
+          if (organic_o_option == 1) then
+             do l = 1, nlay
+                organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
+                                  (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
+             end do
+          end if
 
        end if
 
