@@ -5,7 +5,7 @@
 ==============================
  Running with anomaly forcing
 ==============================
-Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called 'anomaly forcing'.  The anomaly forcing method uses a previously completed fully coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes.  These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity.  Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
+Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called "anomaly forcing." The anomaly forcing method uses a previously-completed, fully-coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes. These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity. Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
 
 Anomaly climate forcings are automatically enabled for ``ISSP`` compsets (e.g., ``ISSP585``). To disable anomaly forcing in such compsets, the following can be added to the ``user_nl_datm`` file:
 
@@ -64,10 +64,14 @@ To use alternative data, add a ``user_nl_datm_streams`` namelist file to your ca
 
 Note that other inputs are also set automatically for ``ISSP`` compsets, including CO2 (``co2tseries``), ozone (``preso3``), N deposition (``presndep``), and aerosols (``presaero``).
 
-For single point simulations, the global anomaly forcing files can be used, but the map_algo namelist variable should be appended with nearest neighbor values for each of the anomaly forcing fields, e.g.
+For single-point simulations, the global anomaly forcing files can be used, but the ``mapalgo`` namelist variable should be appended with nearest neighbor values for each of the anomaly forcing fields. I.e.:
 
-TODO: IN WHAT NAMELIST? DOES THIS NEED TO BE UPDATED?
+TODO: IN WHAT NAMELIST? DOES THIS NEED TO BE UPDATED? IMPROVE CLARITY OF NOTE: HOW CAN USER CALCULATE NUMBER NEEDED?
 
-    mapalgo = 'nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn' (the number of 'nn' values will depend on the number of original streams plus the number of anomaly forcing streams)
+::
+
+  ! The number of 'nn' values will depend on the number of original streams
+  ! plus the number of anomaly forcing streams
+  mapalgo = 'nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn' 
 
 The first and last years over which the present-day (base) climate should cycle are set through the ``DATM_YR_START`` and ``DATM_YR_END`` XML variables.
