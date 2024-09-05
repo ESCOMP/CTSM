@@ -61,14 +61,13 @@ To instead disable anomaly forcing in ``ISSP`` compsets, the following can be ad
 
 Note that other inputs are also set automatically for ``ISSP`` compsets, including CO2 (``co2tseries``), ozone (``preso3``), N deposition (``presndep``), and aerosols (``presaero``).
 
-For single-point simulations, the global anomaly forcing files can be used, but the ``mapalgo`` namelist variable should be appended with nearest neighbor values for each of the anomaly forcing fields. I.e.:
+For single-point simulations, the global anomaly forcing files can be used, but the map should be nearest-neighbor interpolated by putting the following in ``user_nl_datm_streams``:
 
-TODO: IN WHAT NAMELIST? DOES THIS NEED TO BE UPDATED? IMPROVE CLARITY OF NOTE: HOW CAN USER CALCULATE NUMBER NEEDED?
+TODO: IS THIS ACTUALLY NEEDED?
 
 ::
 
-  ! The number of 'nn' values will depend on the number of original streams
-  ! plus the number of anomaly forcing streams
-  mapalgo = 'nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn' 
+  ! Replace "ssp585" if needed
+  Anomaly.Forcing.cmip6.ssp585:mapalgo = nn
 
 The first and last years over which the present-day (base) climate should cycle are set through the ``DATM_YR_START`` and ``DATM_YR_END`` XML variables.
