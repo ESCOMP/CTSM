@@ -7,15 +7,7 @@
 ==============================
 Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called "anomaly forcing." The anomaly forcing method uses a previously-completed, fully-coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes. These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity. Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
 
-Anomaly climate forcings are automatically enabled for ``ISSP`` compsets (e.g., ``ISSP585``). To disable anomaly forcing in such compsets, the following can be added to the ``user_nl_datm`` file:
-
-TODO: WHAT WOULD THIS DO?
-
-::
-
-  anomaly_forcing = ''
-
-After the namelist has been created, ``CaseDocs/datm.streams.xml`` will have an entry like this pointing to the anomaly forcing file being used:
+Anomaly climate forcings are automatically enabled for ``ISSP`` compsets (e.g., ``ISSP585``). After the namelist has been created, ``CaseDocs/datm.streams.xml`` will have an entry like this pointing to the anomaly forcing file being used:
 
 ::
 
@@ -61,6 +53,11 @@ To use alternative data, add a ``user_nl_datm_streams`` namelist file to your ca
                                           rsds  Faxa_swdn_af, \
                                           rlds  Faxa_lwdn_af
 
+To instead disable anomaly forcing in ``ISSP`` compsets, the following can be added to the ``user_nl_datm`` file:
+
+::
+
+  anomaly_forcing = 'none'
 
 Note that other inputs are also set automatically for ``ISSP`` compsets, including CO2 (``co2tseries``), ozone (``preso3``), N deposition (``presndep``), and aerosols (``presaero``).
 
