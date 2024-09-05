@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.028   rgknox 09/05/2024 FATES history flushing update
+       ctsm5.2.027     erik 08/28/2024 Merge b4b-dev
        ctsm5.2.026   slevis 08/23/2024 Turn on excess ice, explicit AC, Leung_2023 for clm6
        ctsm5.2.025 samrabin 08/23/2024 Minor fixes to li2024 fire methods
        ctsm5.2.024 samrabin 08/22/2024 Improve li2024 fire methods

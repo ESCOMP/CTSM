@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3339;
+my $ntests = 3349;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1999;
+   $ntests += 2007;
 }
 plan( tests=>$ntests );
 
@@ -447,7 +447,32 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
       &cleanup();
    }
 }
-
+print "\n===============================================================================\n";
+print "Test setting drv_flds_in fields in CAM";
+print "=================================================================================\n";
+foreach my $phys ( "clm5_0", "clm6_0" ) {
+   $mode = "-phys $phys CAM_SETS_DRV_FLDS";
+   &make_config_cache($phys);
+   foreach my $options (
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                     ) {
+      &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
+      eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", $mode );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
 print "\n==============================================================\n";
 print "Test several use_cases and specific configurations for clm5_0\n";
 print "==============================================================\n";
@@ -518,7 +543,7 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
-                                     namelst=>"use_prigent_roughness=.false.",
+                                     namelst=>"use_prigent_roughness=.true.",
                                      phys=>"clm5_1",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
@@ -1068,14 +1093,6 @@ my %failtest = (
                                      namelst=>"use_hydrstress=.true.",
                                      phys=>"clm5_0",
                                    },
-     "specWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
-                                     namelst=>"fire_emis_specifier='bc_a1 = BC'",
-                                     phys=>"clm5_0",
-                                   },
-     "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
-                                     namelst=>"fire_emis_elevated=.false.",
-                                     phys=>"clm5_0",
-                                   },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1261,7 +1278,7 @@ my %warntest = (
                                      phys=>"clm5_0",
                                    },
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
-                                     namelst=>"megan_specifier='ZZTOP=zztop'",
+                                     namelst=>"megan_specifier='ZZTOP=zztop%'",
                                      phys=>"clm4_5",
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
