@@ -27,7 +27,7 @@ module surfrdMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: surfrd_check_file       ! Check that this surface dataset is compatible
+  public :: surfrd_compat_check     ! Check that this surface dataset is compatible
   public :: surfrd_get_data         ! Read surface dataset and determine subgrid weights
   public :: surfrd_get_num_patches  ! Read surface dataset to determine maxsoil_patches and numcft
   public :: surfrd_get_nlevurb      ! Read surface dataset to determine nlevurb
@@ -47,7 +47,7 @@ module surfrdMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine surfrd_check_file ( lfsurdat )
+  subroutine surfrd_compat_check ( lfsurdat )
     !
     ! !DESCRIPTION:
     ! Check compatability for this surface dataset and abort with an error if it's not
@@ -77,11 +77,11 @@ contains
        if (exists) then
          version = 5.2_r4
        else
-         call check_var( ncid, 'PCT_CFT', exists)
+         call check_var( ncid, 'CONST_HARVEST_SH1', exists)
          if (exists) then
             version = 5.0_r4
          else
-            call check_var( ncid, 'PCT_GLC_MEC_GIC', exists)
+            call check_var( ncid, 'GLACIER_REGION', exists)
             if (exists) then
                version = 4.5_r4
             else
@@ -101,14 +101,14 @@ contains
       end if
       if ( masterproc )then
          write(iulog,*) 'Input surface dataset is: ', trim(lfsurdat)
-         write(iulog,'(3a)') 'This surface dataset is ', trim(description), ' and incompatable with this version of CTSM'
+         write(iulog,'(3a)') 'This surface dataset is ', trim(description), ' and incompatible with this version of CTSM'
          write(iulog,'(a,f3.1,a,f3.1)') 'Dataset version = ', version, ' Version expected = ', expected_version
          write(iulog,*) errMsg(sourcefile, __LINE__)
       end if
-      call endrun(msg="ERROR: Incompatble surface dataset")
+      call endrun(msg="ERROR: Incompatible surface dataset")
     end if
 
-  end subroutine surfrd_check_file
+  end subroutine surfrd_compat_check
 
   !-----------------------------------------------------------------------
   subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, actual_numcft)
