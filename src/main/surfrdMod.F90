@@ -7,7 +7,7 @@ module surfrdMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod    , only : r8 => shr_kind_r8
+  use shr_kind_mod    , only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
   use clm_varpar      , only : nlevsoifl
@@ -27,6 +27,7 @@ module surfrdMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public :: surfrd_compat_check     ! Check that this surface dataset is compatible
   public :: surfrd_get_data         ! Read surface dataset and determine subgrid weights
   public :: surfrd_get_num_patches  ! Read surface dataset to determine maxsoil_patches and numcft
   public :: surfrd_get_nlevurb      ! Read surface dataset to determine nlevurb
@@ -44,6 +45,70 @@ module surfrdMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine surfrd_compat_check ( lfsurdat )
+    !
+    ! !DESCRIPTION:
+    ! Check compatability for this surface dataset and abort with an error if it's not
+    !
+    ! !USES:
+    use ncdio_pio, only : check_att
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
+    ! !LOCAL VARIABLES:
+    type(file_desc_t) :: ncid  ! netcdf id
+    logical :: exists          ! If attribute or variable was found on the file
+    integer :: status          ! Status return code
+    real(r4) :: version        ! Version number on the dataset
+    ! NOTE: Only increment the expected_version when surface datasets are incompatible with the previous version
+    !       If datasets are just updated data and backwards compatble leave the expected version alone
+    real(r4), parameter :: expected_version = 5.3_r4
+    character(len=50) :: description
+    character(len=*), parameter :: version_name = 'Dataset_Version'
+
+    call ncd_pio_openfile (ncid, trim(lfsurdat), 0)
+    call check_att(ncid, pio_global, version_name, exists)
+    if (exists) then
+       status = pio_get_att(ncid, pio_global, version_name, version)
+    else
+       ! For a few previous versions guess on the compatability version based on existence of variables
+       call check_var( ncid, 'PCT_OCEAN', exists)
+       if (exists) then
+         version = 5.2_r4
+       else
+         call check_var( ncid, 'CONST_HARVEST_SH1', exists)
+         if (exists) then
+            version = 5.0_r4
+         else
+            call check_var( ncid, 'GLACIER_REGION', exists)
+            if (exists) then
+               version = 4.5_r4
+            else
+               ! This is a version before the main clm4_5 dataseta so marking it as 0 for unknown
+               version = 0.0_r4
+            end if
+         end if
+       end if
+    end if
+    call ncd_pio_closefile(ncid)
+    if ( (version /= expected_version) )then
+      if ( version < expected_version )then
+         description = 'older'
+         if ( version == 0.0_r4 ) description = trim(description)//' than 4.5'
+      else if ( version > expected_version )then
+         description = 'newer'
+      end if
+      if ( masterproc )then
+         write(iulog,*) 'Input surface dataset is: ', trim(lfsurdat)
+         write(iulog,'(3a)') 'This surface dataset is ', trim(description), ' and incompatible with this version of CTSM'
+         write(iulog,'(a,f3.1,a,f3.1)') 'Dataset version = ', version, ' Version expected = ', expected_version
+         write(iulog,*) errMsg(sourcefile, __LINE__)
+      end if
+      call endrun(msg="ERROR: Incompatible surface dataset")
+    end if
+
+  end subroutine surfrd_compat_check
 
   !-----------------------------------------------------------------------
   subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, actual_numcft)

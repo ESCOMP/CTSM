@@ -167,16 +167,6 @@ def get_parser():
         default="/glade/campaign/cesm/cesmdata/inputdata/",
     )
     parser.add_argument(
-        "--vic",
-        help="""
-            Flag for adding the fields required for the VIC model.
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="vic_flag",
-        default=False,
-    )
-    parser.add_argument(
         "--inlandwet",
         help="""
             Flag for including inland wetlands.
@@ -194,19 +184,6 @@ def get_parser():
             """,
         action="store_true",
         dest="glc_flag",
-        default=False,
-    )
-    parser.add_argument(
-        "--hires_pft",
-        help="""
-            If you want to use the high-resolution pft dataset rather
-            than the default lower resolution dataset.
-            (Low resolution is at quarter-degree, high resolution at 3-minute)
-            [Note: hires only available for 1850 and 2005.]
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="hres_pft",
         default=False,
     )
     parser.add_argument(
@@ -273,13 +250,12 @@ def main():
     input_path = args.input_path
     nocrop_flag = args.crop_flag
     nosurfdata_flag = args.surfdata_flag
-    vic_flag = args.vic_flag
     inlandwet = args.inlandwet
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
 
-    hires_pft, hires_soitex = process_hires_options(args, start_year, end_year)
+    hires_soitex = process_hires_options(args)
 
     if force_model_mesh_file is not None:
         open_mesh_file(force_model_mesh_file, force_model_mesh_nx, force_model_mesh_ny)
@@ -310,7 +286,6 @@ def main():
 
     # create attribute list for parsing xml file
     attribute_list = {
-        "hires_pft": hires_pft,
         "hires_soitex": hires_soitex,
         "pft_years": pft_years,
         "pft_years_ssp": pft_years_ssp,
@@ -400,7 +375,6 @@ def main():
             force_model_mesh_file,
             force_model_mesh_nx,
             force_model_mesh_ny,
-            vic_flag,
             rawdata_files,
             landuse_fname,
             mksrf_ftopostats_override,
@@ -413,7 +387,6 @@ def main():
         # -------------------
         write_nml_outdata(
             nosurfdata_flag,
-            vic_flag,
             inlandwet,
             glc_flag,
             hostname,
@@ -436,27 +409,15 @@ def main():
     print(f"Successfully created input namelist file {nlfname}")
 
 
-def process_hires_options(args, start_year, end_year):
+def process_hires_options(args):
     """
     Process options related to hi-res
     """
-    if args.hres_pft:
-        if (start_year == 1850 and end_year == 1850) or (start_year == 2005 and end_year == 2005):
-            hires_pft = "on"
-        else:
-            error_msg = (
-                "ERROR: for --hires_pft you must set both start-year "
-                "and end-year to 1850 or to 2005"
-            )
-            sys.exit(error_msg)
-    else:
-        hires_pft = "off"
-
     if args.hres_soitex:
         hires_soitex = "on"
     else:
         hires_soitex = "off"
-    return hires_pft, hires_soitex
+    return hires_soitex
 
 
 def check_ssp_years(start_year, end_year):
@@ -573,7 +534,6 @@ def determine_pft_years(start_year, end_year, potveg):
 
 def write_nml_outdata(
     nosurfdata_flag,
-    vic_flag,
     inlandwet,
     glc_flag,
     hostname,
@@ -604,7 +564,6 @@ def write_nml_outdata(
     nlfile.write(f"  numpft = {num_pft} \n")
     nlfile.write(f"  no_inlandwet = .{str(not inlandwet).lower()}. \n")
     nlfile.write(f"  outnc_3dglc = .{str(glc_flag).lower()}. \n")
-    nlfile.write(f"  outnc_vic = .{str(vic_flag).lower()}. \n")
     nlfile.write("  outnc_large_files = .false. \n")
     nlfile.write("  outnc_double = .true. \n")
     nlfile.write(f"  logname = '{logname}' \n")
@@ -617,7 +576,6 @@ def write_nml_rawinput(
     force_model_mesh_file,
     force_model_mesh_nx,
     force_model_mesh_ny,
-    vic_flag,
     rawdata_files,
     landuse_fname,
     mksrf_ftopostats_override,
@@ -643,7 +601,7 @@ def write_nml_rawinput(
     for key, value in rawdata_files.items():
         if key == "mksrf_ftopostats" and mksrf_ftopostats_override != "":
             nlfile.write(f"  mksrf_ftopostats_override = '{mksrf_ftopostats_override}' \n")
-        elif "_fvic" not in key and "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
+        elif "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
             # write everything else
             nlfile.write(f"  {key} = '{value}' \n")
 
@@ -691,12 +649,6 @@ def write_nml_rawinput(
     nlfile.write(f"  mksrf_fhrvtyp_mesh = '{mksrf_fhrvtyp_mesh}' \n")
     nlfile.write(f"  mksrf_fpctlak = '{mksrf_fpctlak}' \n")
     nlfile.write(f"  mksrf_furban = '{mksrf_furban}' \n")
-
-    if vic_flag:
-        mksrf_fvic = rawdata_files["mksrf_fvic"]
-        nlfile.write(f"  mksrf_fvic = '{mksrf_fvic}' \n")
-        mksrf_fvic_mesh = rawdata_files["mksrf_fvic_mesh"]
-        nlfile.write(f"  mksrf_fvic_mesh = '{mksrf_fvic_mesh}' \n")
 
     nlfile.write(f"  mksrf_fdynuse = '{landuse_fname} ' \n")
     return must_run_download_input_data

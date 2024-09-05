@@ -407,8 +407,7 @@ contains
                glacier_region_behavior(i) = BEHAVIOR_SINGLE_AT_ATM_TOPO
             case (behavior_str_unset)
                write(iulog,*) ' ERROR: glacier_region_behavior not specified for ID ', i
-               write(iulog,*) 'You may need to extend the glacier_region_behavior namelist array,'
-               write(iulog,*) 'or you may be running with an old/incompatible surface dataset.'
+               write(iulog,*) 'You may need to extend the glacier_region_behavior namelist array.'
                call endrun(msg=' ERROR: glacier_region_behavior not specified for ID '// &
                     errMsg(sourcefile, __LINE__))
             case default
@@ -439,8 +438,7 @@ contains
                glacier_region_melt_behavior(i) = MELT_BEHAVIOR_REMAINS_IN_PLACE
             case (behavior_str_unset)
                write(iulog,*) ' ERROR: glacier_region_melt_behavior not specified for ID ', i
-               write(iulog,*) 'You may need to extend the glacier_region_melt_behavior namelist array,'
-               write(iulog,*) 'or you may be running with an old/incompatible surface dataset.'
+               write(iulog,*) 'You may need to extend the glacier_region_melt_behavior namelist array.'
                call endrun(msg=' ERROR: glacier_region_melt_behavior not specified for ID '// &
                     errMsg(sourcefile, __LINE__))
             case default
@@ -471,8 +469,7 @@ contains
                glacier_region_ice_runoff_behavior(i) = ICE_RUNOFF_BEHAVIOR_MELTED
             case (behavior_str_unset)
                write(iulog,*) ' ERROR: glacier_region_ice_runoff_behavior not specified for ID ', i
-               write(iulog,*) 'You may need to extend the glacier_region_ice_runoff_behavior namelist array,'
-               write(iulog,*) 'or you may be running with an old/incompatible surface dataset.'
+               write(iulog,*) 'You may need to extend the glacier_region_ice_runoff_behavior namelist array.'
                call endrun(msg=' ERROR: glacier_region_ice_runoff_behavior not specified for ID '// &
                     errMsg(sourcefile, __LINE__))
             case default
