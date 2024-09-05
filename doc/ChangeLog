@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.2.028
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Wed Sep  4 23:21:30 MDT 2024
+One-line Summary: FATES history flushing update
+
+Purpose and description of changes
+----------------------------------
+
+This updates the way in which FATES history output is flushed during model initialization
+utilizing a new FATES-side subroutine, flush_all_hvars.  This update also makes corrections
+to a subset of FATES testmods as well as expands the FATES test list by duplicating two
+existing tests to run on different compilers for better coverage.  The FATES submodule tag
+has been updated to the latest scientific tag as well.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2657 Add FATES_TRANSITIONS_MATRIX_LULU to FatesColdLUH2 testmods
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+Adds nvhpc and gnu FatesSatColdPhen smoke tests to the fates list to expand compiler
+coverage.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for FATES tests only
+
+Changes are consistent with differences in FATES_EFFECT_WSPEED due to NGEET/fates#1215
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+   FATES: sci.1.77.2_api.36.0.0 -> sci.1.78.2_api.36.0.0
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2594
+
+===============================================================
+===============================================================
 Tag name: ctsm5.2.027
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 28 Aug 2024 09:13:22 PM MDT
