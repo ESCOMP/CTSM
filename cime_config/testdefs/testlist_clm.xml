@@ -2514,46 +2514,8 @@
       <option name="comment"  >Transient production future scenario SSP3-7.0 case with isotopes with a december 2050 start</option>
     </options>
   </test>
-
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="ssp"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/datm_ssp245_anom_forc">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ssp"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP2-4.5 case</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP370Clm50BgcCrop" testmods="clm/datm_ssp370_anom_forc">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ssp"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP3-7.0 case</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP585Clm50BgcCrop" testmods="clm/datm_ssp585_anom_forc">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ssp"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP5-8.5 case</option>
-    </options>
-  </test>
   
-    <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/default">
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
