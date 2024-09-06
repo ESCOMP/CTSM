@@ -1,4 +1,4 @@
- hist_nhtfrq    = 0,-240,17520
+ hist_nhtfrq    = 0,-240,0
  hist_mfilt     = 1,1,1
 
 ! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
