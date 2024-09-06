@@ -19,10 +19,14 @@
 !----------------------------------------------------------------------------------
 
 soil_decomp_method = 'MIMICSWieder2015'
+fsurdat = "/glade/derecho/scratch/wwieder/neon_AK/mods/surfdata_1x1_NEON_TOOL_test7.nc"
+paramfile='/glade/derecho/scratch/wwieder/neon_AK/mods/ctsm60_params_vint1.3_taumod1.5_beta1.5.c240822.nc'
 
 hist_empty_htapes = .true.
 hist_fincl1 = 'TOTLITC','TOTMICC','TOTSOMC','TOTLITN','TOTMICN','TOTSOMN',
+         'TOTECOSYSC','TOTVEGC','TOTECOSYSN','TOTVEGN',
          'LIT_MET_C_vr','LIT_STR_C_vr','MIC_COP_C_vr','MIC_OLI_C_vr',
          'SOM_AVL_C_vr', 'SOM_CHEM_C_vr', 'SOM_PHYS_C_vr',
-         'TOTVEGC','TOTECOSYSC','GPP','AR','HR','ELAI'
+         'GPP','AR','HR','ELAI','NBP','NEE','NEP',
+         'TLAI','CPOOL','NPP','TWS','H2OSNO'
 
