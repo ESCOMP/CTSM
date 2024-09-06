@@ -13,12 +13,14 @@ module mksoiltexMod
   use mkutilsMod       , only : chkerr
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkfileMod        , only : mkfile_output  
-  use mkvarctl         , only : root_task, ndiag, spval
+  use mkvarctl         , only : root_task, ndiag, spval, mpicom
   use mkvarctl         , only : unsetsoil
   use mkvarpar         , only : nlevsoi
 
   implicit none
   private ! By default make data private
+
+#include <mpif.h>
 
   public :: mksoiltex      ! Set soil texture
 
@@ -61,6 +63,7 @@ contains
     integer                :: k,l,m,n
     integer                :: nlay          ! number of soil layers
     integer                :: n_scid
+    integer                :: mapunit_value_max_local
     integer , allocatable  :: mask_i(:)
     real(r4), pointer      :: dataptr(:)
     integer                :: mapunit       ! temporary igbp soil mapunit
@@ -202,7 +205,8 @@ contains
 
     ! Determine mapunit_value_max (set it as a module variable so that it can be
     ! accessible to gen_dominant_mapunit) - this is needed in the dynamic mask routine
-    mapunit_value_max = maxval(dataptr)
+    mapunit_value_max_local = maxval(dataptr)
+    call mpi_allreduce(mapunit_value_max_local, mapunit_value_max, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
 
     ! Determine values in field_o
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)
