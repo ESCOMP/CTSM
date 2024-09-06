@@ -165,6 +165,8 @@ contains
     do ni = 1,ns_i
        if (mapunit_i(ni) == 0.) then
           mask_i(ni) = 0
+       else
+          mask_i(ni) = 1
        end if
     end do
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
