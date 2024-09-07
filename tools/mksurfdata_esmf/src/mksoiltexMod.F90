@@ -205,6 +205,10 @@ contains
 
     ! Determine mapunit_value_max (set it as a module variable so that it can be
     ! accessible to gen_dominant_mapunit) - this is needed in the dynamic mask routine
+    !
+    ! Note that dataptr (obtained from the input field) contains just a subset of the
+    ! source data, based on the source data decomposition. So we need an mpi_allreduce to
+    ! determine the global maximum value of mapunit.
     mapunit_value_max_local = maxval(dataptr)
     call mpi_allreduce(mapunit_value_max_local, mapunit_value_max, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
 
