@@ -22,12 +22,14 @@ def parse_arguments(argv):
     """
     Parse arguments to script
     """
-    parser = argparse.ArgumentParser(description="Combine files for each chunk into a file for use in CTSM")
+    parser = argparse.ArgumentParser(
+        description="Combine files for each chunk into a file for use in CTSM"
+    )
 
     # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
     # positional) arguments (e.g., --input-file) get shown as optional.
-    required_named = parser.add_argument_group('Required named arguments')
-    optional_named = parser.add_argument_group('Optional named arguments')
+    required_named = parser.add_argument_group("Required named arguments")
+    optional_named = parser.add_argument_group("Optional named arguments")
 
     # Input and output file settings
     required_named.add_argument(
@@ -83,7 +85,9 @@ def parse_arguments(argv):
         default=default_hillslope_form,
     )
 
-    optional_named.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
+    optional_named.add_argument(
+        "-v", "--verbose", help="print info", action="store_true", default=False
+    )
 
     args = parser.parse_args(argv)
 

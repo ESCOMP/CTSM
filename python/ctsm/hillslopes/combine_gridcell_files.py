@@ -23,8 +23,8 @@ def parse_arguments(argv):
 
     # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
     # positional) arguments (e.g., --input-file) get shown as optional.
-    required_named = parser.add_argument_group('Required named arguments')
-    optional_named = parser.add_argument_group('Optional named arguments')
+    required_named = parser.add_argument_group("Required named arguments")
+    optional_named = parser.add_argument_group("Optional named arguments")
 
     required_named.add_argument(
         "-i",
@@ -86,7 +86,9 @@ def parse_arguments(argv):
         default=None,
     )
     optional_named.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
-    optional_named.add_argument("-v", "--verbose", help="print info", action="store_true", default=False)
+    optional_named.add_argument(
+        "-v", "--verbose", help="print info", action="store_true", default=False
+    )
 
     args = parser.parse_args(argv)
 

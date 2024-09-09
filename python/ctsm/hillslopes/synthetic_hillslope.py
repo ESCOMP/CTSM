@@ -22,8 +22,8 @@ def parse_arguments(argv):
 
     # Use these groups to organize --help output. Otherwise, required but named (i.e., non-
     # positional) arguments (e.g., --input-file) get shown as optional.
-    required_named = parser.add_argument_group('Required named arguments')
-    optional_named = parser.add_argument_group('Optional named arguments')
+    required_named = parser.add_argument_group("Required named arguments")
+    optional_named = parser.add_argument_group("Optional named arguments")
 
     # Input and output file settings
     required_named.add_argument(
@@ -238,7 +238,15 @@ def main():
 
     max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
 
-    hillslope_vars = HillslopeVars(max_columns_per_landunit, args.num_hillslopes, n_lat, n_lon, recurse=False, incl_latlon=True, incl_pftndx=True)
+    hillslope_vars = HillslopeVars(
+        max_columns_per_landunit,
+        args.num_hillslopes,
+        n_lat,
+        n_lon,
+        recurse=False,
+        incl_latlon=True,
+        incl_pftndx=True,
+    )
 
     cndx = 0
     for i in range(n_lon):
@@ -273,16 +281,22 @@ def main():
                     if k == 0:
                         hillslope_vars.downhill_column_index[ncol, j, i] = -999
                     else:  # upland columns
-                        hillslope_vars.downhill_column_index[ncol, j, i] = hillslope_vars.column_index[ncol, j, i] - 1
+                        hillslope_vars.downhill_column_index[ncol, j, i] = (
+                            hillslope_vars.column_index[ncol, j, i] - 1
+                        )
 
                     hillslope_vars.h_dist[ncol, j, i] = 0.5 * (uedge + ledge)
                     hillslope_vars.h_area[ncol, j, i] = args.width_reach * (uedge - ledge)
                     hillslope_vars.h_width[ncol, j, i] = args.width_reach
 
                     # numerically integrate to calculate mean elevation
-                    hillslope_vars.h_elev[ncol, j, i] = calc_mean_elevation(args, hhgt, uedge, ledge)
+                    hillslope_vars.h_elev[ncol, j, i] = calc_mean_elevation(
+                        args, hhgt, uedge, ledge
+                    )
 
-                    hillslope_vars.h_slope[ncol, j, i] = (hbins[k + 1] - hbins[k]) / (lbins[k + 1] - lbins[k])
+                    hillslope_vars.h_slope[ncol, j, i] = (hbins[k + 1] - hbins[k]) / (
+                        lbins[k + 1] - lbins[k]
+                    )
                     if 0 <= naspect <= 3:
                         # 0 = north
                         # 1 = east
