@@ -154,30 +154,33 @@ def cosp_height(x, hlen, hhgt, phill):
     """
     Get elevation
     """
+    # pylint: disable=invalid-name
     fx = 0.5 * (1.0 + np.cos(np.pi * (1.0 + (x / hlen))))
-    h = hhgt * np.power(fx, phill)
-    return h
+    height = hhgt * np.power(fx, phill)
+    return height
 
 
-def icosp_height(h, hlen, hhgt, phill):
+def icosp_height(hbin, hlen, hhgt, phill):
     """
     Fill lbins
     """
+    # pylint: disable=invalid-name
     if hhgt <= 0.0:
-        x = 0.0
+        lbin = 0.0
     else:
-        fh = np.arccos(2.0 * np.power((h / hhgt), (1.0 / phill)) - 1)
+        fh = np.arccos(2.0 * np.power((hbin / hhgt), (1.0 / phill)) - 1)
         # np.arccos returns [0,pi]
         # want [pi,2pi] based on cosp_height definition
         fh = 2.0 * np.pi - fh
-        x = hlen * ((1.0 / np.pi) * fh - 1.0)
-    return x
+        lbin = hlen * ((1.0 / np.pi) * fh - 1.0)
+    return lbin
 
 
 def calc_mean_elevation(args, hhgt, uedge, ledge):
     """
     numerically integrate to calculate mean elevation
     """
+    # pylint: disable=invalid-name
     nx = int(uedge - ledge)
     mean_elev = 0.0
     for k in range(nx):
