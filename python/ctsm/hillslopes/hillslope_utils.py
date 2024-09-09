@@ -1,6 +1,7 @@
 """
 Utilities for hillslope scripts to share
 """
+import shutil
 import numpy as np
 import xarray as xr
 
@@ -253,6 +254,7 @@ class HillslopeVars:
         n_lat=None,
         incl_latlon=False,
         incl_chunkmask=False,
+        save_fsurdat=False,
     ):
         """
         Save to netCDF
@@ -260,17 +262,22 @@ class HillslopeVars:
         print("saving")
 
         # Create and open file
-        ds_out = Dataset(output_file, "w", format=NETCDF_FORMAT)
+        if save_fsurdat:
+            shutil.copyfile(input_file, output_file)
+            ds_out = Dataset(output_file, "a")
+        else:
+            ds_out = Dataset(output_file, "w", format=NETCDF_FORMAT)
 
         # Create dimensions
-        if n_lon is None or n_lat is None:
-            if n_lon != n_lat:
-                raise NotImplementedError("Unhandled: Only one of n_lon and n_lat being None")
-            with Dataset(input_file, "r") as fsurdat:
-                n_lat = len(fsurdat.dimensions["lsmlat"])
-                n_lon = len(fsurdat.dimensions["lsmlon"])
-        ds_out.createDimension("lsmlon", n_lon)
-        ds_out.createDimension("lsmlat", n_lat)
+        if not save_fsurdat:
+            if n_lon is None or n_lat is None:
+                if n_lon != n_lat:
+                    raise NotImplementedError("Unhandled: Only one of n_lon and n_lat being None")
+                with Dataset(input_file, "r") as fsurdat:
+                    n_lat = len(fsurdat.dimensions["lsmlat"])
+                    n_lon = len(fsurdat.dimensions["lsmlon"])
+            ds_out.createDimension("lsmlon", n_lon)
+            ds_out.createDimension("lsmlat", n_lat)
         ds_out.createDimension("nhillslope", nhillslope)
         ds_out.createDimension("nmaxhillcol", ncolumns_per_gridcell)
 

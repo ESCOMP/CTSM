@@ -47,6 +47,12 @@ def parse_arguments(argv):
         dest="overwrite",
         action="store_true",
     )
+    optional_named.add_argument(
+        "--fsurdat",
+        help="Save fsurdat file instead of hillslope_file",
+        dest="fsurdat",
+        action="store_true",
+    )
 
     # Synthetic hillslope settings
     default = 1.0
@@ -345,6 +351,7 @@ def main():
     hillslope_vars.h_bedrock = 2.0
     hillslope_vars.hillslope_pftndx[:] = 13
 
+
     # write to file  --------------------------------------------
     hillslope_vars.save(
         args.input_file,
@@ -353,6 +360,7 @@ def main():
         args.num_hillslopes,
         add_bedrock=True,
         add_stream=True,
+        save_fsurdat=args.fsurdat,
     )
 
     # Save settings as global attributes
