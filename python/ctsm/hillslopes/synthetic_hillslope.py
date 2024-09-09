@@ -206,25 +206,10 @@ def create_bins(args, max_columns_per_hillslope, bin_fractions, hhgt):
     return hbins, lbins
 
 
-def main():
+def get_cols_per_info(args):
     """
-    See module description
+    Get information relating to max number of columns
     """
-
-    args = parse_arguments(sys.argv[1:])
-
-    with Dataset(args.input_file, "r") as infile:
-        n_lon = len(infile.dimensions["lsmlon"])
-        n_lat = len(infile.dimensions["lsmlat"])
-        std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
-        lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
-        lmask = lfrac > 0
-        pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
-
-    # are any points in land mask but have zero % natveg?
-    print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
-    lmask = np.where(np.logical_and(lmask == 1, pct_natveg > 0), 1, 0).astype(int)
-
     max_columns_per_hillslope = args.nmaxhillcol // args.num_hillslopes
 
     if max_columns_per_hillslope == 4:
@@ -237,17 +222,15 @@ def main():
         raise RuntimeError(f"Unhandled max_columns_per_hillslope: {max_columns_per_hillslope}")
 
     max_columns_per_landunit = args.num_hillslopes * max_columns_per_hillslope
+    return max_columns_per_hillslope, bin_fractions, max_columns_per_landunit
 
-    hillslope_vars = HillslopeVars(
-        max_columns_per_landunit,
-        args.num_hillslopes,
-        n_lat,
-        n_lon,
-        recurse=False,
-        incl_latlon=True,
-        incl_pftndx=True,
-    )
 
+def loop_over_gridcells(
+    args, n_lon, n_lat, std_elev, lmask, max_columns_per_hillslope, bin_fractions, hillslope_vars
+):
+    """
+    Loop over gridcells to fill most hillslope-related variables
+    """
     cndx = 0
     for i in range(n_lon):
         for j in range(n_lat):
@@ -277,7 +260,7 @@ def main():
 
                     uedge = lbins[k + 1]
                     ledge = lbins[k]
-                    #      lowland column
+                    # lowland column
                     if k == 0:
                         hillslope_vars.downhill_column_index[ncol, j, i] = -999
                     else:  # upland columns
@@ -305,6 +288,50 @@ def main():
                         hillslope_vars.h_aspect[ncol, j, i] = naspect * np.pi / 2
                     else:
                         raise RuntimeError(f"Unhandled naspect: {naspect}")
+    return hillslope_vars
+
+
+def main():
+    """
+    See module description
+    """
+
+    args = parse_arguments(sys.argv[1:])
+
+    with Dataset(args.input_file, "r") as infile:
+        n_lon = len(infile.dimensions["lsmlon"])
+        n_lat = len(infile.dimensions["lsmlat"])
+        std_elev = np.asarray(infile.variables["STD_ELEV"][:, :])
+        lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
+        lmask = lfrac > 0
+        pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
+
+    # are any points in land mask but have zero % natveg?
+    print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
+    lmask = np.where(np.logical_and(lmask == 1, pct_natveg > 0), 1, 0).astype(int)
+
+    max_columns_per_hillslope, bin_fractions, max_columns_per_landunit = get_cols_per_info(args)
+
+    hillslope_vars = HillslopeVars(
+        max_columns_per_landunit,
+        args.num_hillslopes,
+        n_lat,
+        n_lon,
+        recurse=False,
+        incl_latlon=True,
+        incl_pftndx=True,
+    )
+
+    hillslope_vars = loop_over_gridcells(
+        args,
+        n_lon,
+        n_lat,
+        std_elev,
+        lmask,
+        max_columns_per_hillslope,
+        bin_fractions,
+        hillslope_vars,
+    )
 
     # Fill stream geometry variables
     hillslope_vars = calc_stream_geom(hillslope_vars)
