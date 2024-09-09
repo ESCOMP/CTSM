@@ -2016,8 +2016,7 @@ contains
     use clm_time_manager , only : get_prev_date
     use clm_time_manager , only : is_doy_in_interval, is_end_curr_day, is_beg_curr_day
     use clm_time_manager , only : get_doy_tomorrow
-    use CropHeatStress   , only : crop_heatstress_ndays, calc_HS_factor     !added by SdR
-    use CropHeatStress   , only : crop_heatstress_reset     !added by SdR
+    use CropHeatStress   , only : crop_heatstress_reset, crop_heatstress_ndays, calc_HS_factor     !added by SdR
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -2605,7 +2604,7 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
-               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)) 
+               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)) * HS_factor(p)
             end if
 
             ! continue fertilizer application while in phase 2;

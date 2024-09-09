@@ -23,7 +23,8 @@ module CropHeatStress
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: crop_heatstress_ndays       ! SdR: checks for number of days above Tcrit for crop heat stress
-  public  :: calc_HS_factor              ! SdR: calculates heat stress magnitude affecting leaf area decline (grainfill phase) 
+  public  :: calc_HS_factor              ! SdR: calculates heat stress magnitude affecting leaf area decline (grainfill phase)
+  public  :: crop_heatstress_reset 
 
   !
   ! !PUBLIC FOR UNIT TESTING
@@ -95,8 +96,8 @@ contains
 
   subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
 
-!     ! !DESCRIPTION:
-!     ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
+    ! !DESCRIPTION:
+    ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
 
     ! !ARGUMENTS:
     real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
@@ -104,18 +105,18 @@ contains
     real(r8),        intent(in)        :: t_veg_day         ! daily vegetation temperature (Kelvin)
     logical,         intent(in)        :: croplive              ! crop between sowing and harvest
 
-!     ! !LOCAL VARIABLES:
-!     real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
+    ! !LOCAL VARIABLES:
+    real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
     integer  :: day_min, day_max
 
-!     !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
-!     tcrit = 300
-!     tmax  = 310
+    tcrit = 300
+    tmax  = 310
     day_min = 3
     day_max = 14
 
-!     !check  if stress occurs
+    !check  if stress occurs
     if (HS_ndays == day_min) then
        ! onset heatwave
        HS_factor = 1.05_r8
