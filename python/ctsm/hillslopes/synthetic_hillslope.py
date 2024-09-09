@@ -314,7 +314,6 @@ def main():
         lfrac = np.asarray(infile.variables["LANDFRAC_PFT"][:, :])
         lmask = lfrac > 0
         pct_natveg = np.asarray(infile.variables["PCT_NATVEG"][:, :])
-        dataset_version = infile.Dataset_Version
 
     # are any points in land mask but have zero % natveg?
     print("zero natveg pts ", np.sum(np.where(np.logical_and(lmask == 1, pct_natveg == 0), 1, 0)))
@@ -373,4 +372,3 @@ def main():
         outfile.synth_hillslopes_phill = args.phill
         outfile.synth_hillslopes_thresh = args.thresh
         outfile.synth_hillslopes_width_reach = args.width_reach
-        outfile.Dataset_Version = dataset_version
