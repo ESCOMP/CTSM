@@ -19,13 +19,14 @@ TEST=`./xmlquery TEST --value`
 
 # For a transient case run the whole length and don't cycle
 if  [[ $compset =~ ^HIST ]]; then
-  ./xmlchange CALENDAR=GREGORIAN
-  ./xmlchange DATM_YR_END=2022
+  ./xmlchange DATM_YR_END=2023
+  #./xmlchange CALENDAR=GREGORIAN
+  #./xmlchange DATM_YR_END=2022
   ./xmlchange RUN_STARTDATE=2018-01-01
   # Number of months that can be run for the full transient case
   if [[ $TEST != "TRUE" ]]; then
     ./xmlchange STOP_OPTION="nmonths"
-    ./xmlchange STOP_N=51
+    ./xmlchange STOP_N=68 
   fi
   ./xmlchange CLM_NML_USE_CASE="2018-PD_transient"
 else
@@ -46,4 +47,17 @@ fi
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
 
-./xmlchange NEONVERSION="v2"
+
+# specific for MIMICS spinup
+./xmlchange DATM_YR_END=2021
+./xmlchange RUN_STARTDATE=0018-01-01
+./xmlchange RESUBMIT=5
+./xmlchange STOP_N=500
+./xmlchange REST_N=100
+./xmlchange STOP_OPTION=nyears
+./xmlchange CLM_FORCE_COLDSTART=on
+./xmlchange CONTINUE_RUN=False
+# Slow to run in develop queue, and this didn't wrok as intended.
+#./xmlchange JOB_QUEUE=develop
+#./xmlchange JOB_WALLCLOCK_TIME=1:00:00
+

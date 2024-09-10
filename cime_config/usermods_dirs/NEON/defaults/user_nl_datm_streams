@@ -23,18 +23,18 @@
 !------------------------------------------------------------------------
 presaero.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2018-2030_monthly_0.9x1.25_c210826.nc
 presaero.SSP3-7.0:year_first=2018
-presaero.SSP3-7.0:year_last=2022
+presaero.SSP3-7.0:year_last=2023
 presaero.SSP3-7.0:year_align=2018
 presaero.SSP3-7.0:dtlimit=30
 
 presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_2018-2030_monthly_c210826.nc
 presndep.SSP3-7.0:year_first=2018
-presndep.SSP3-7.0:year_last=2022
+presndep.SSP3-7.0:year_last=2023
 presndep.SSP3-7.0:year_align=2018
 presndep.SSP3-7.0:dtlimit=30
 
 preso3.SSP3-7.0:year_first=2018
-preso3.SSP3-7.0:year_last=2022
+preso3.SSP3-7.0:year_last=2023
 preso3.SSP3-7.0:year_align=2018
 preso3.SSP3-7.0:dtlimit=30
 
