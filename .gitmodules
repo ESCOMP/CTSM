@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = ff87ce15012a285513710d995292052c4a3fa5b2  # Refactor calculation of FATES_LBLAYER_COND_AP, FATES_STOMATAL_COND_AP.
+fxtag = b00da773377abbd0c4f1aa12cdd2e7cb7ac234bd  # refactor-history-2: Refactor: Age-class vars to update_history_hifrq2_ageclass()
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
