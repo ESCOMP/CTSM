@@ -21,8 +21,15 @@
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c240908.nc"
 
-! h1 output stream 
-hist_fincl2 = 'AR','ELAI','FCEV','FCTR','FGEV','FIRA','FSA','FSH','GPP','H2OSOI',
-             'HR','SNOW_DEPTH','TBOT','TSOI','SOILC_vr','FV','NET_NMIN_vr'
-hist_mfilt(2) = 48
-hist_nhtfrq(2) = 1  
+soil_decomp_method = 'MIMICSWieder2015'
+!fsurdat = "/glade/derecho/scratch/wwieder/neon_AK/mods/surfdata_1x1_NEON_TOOL_test7.nc"
+paramfile='/glade/derecho/scratch/wwieder/neon_AK/mods/ctsm60_params_vint1.3_taumod1.5_beta1.5.c240822.nc'
+
+hist_empty_htapes = .true.
+hist_fincl1 = 'TOTLITC','TOTMICC','TOTSOMC','TOTLITN','TOTMICN','TOTSOMN',
+         'TOTECOSYSC','TOTVEGC','TOTECOSYSN','TOTVEGN',
+         'LIT_MET_C_vr','LIT_STR_C_vr','MIC_COP_C_vr','MIC_OLI_C_vr',
+         'SOM_AVL_C_vr', 'SOM_CHEM_C_vr', 'SOM_PHYS_C_vr',
+         'GPP','AR','HR','ELAI','NBP','NEE','NEP',
+         'TLAI','CPOOL','NPP','TWS','H2OSNO'
+
