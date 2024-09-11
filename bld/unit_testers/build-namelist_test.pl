@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3859;
+my $ntests = 3994;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2347;
+   $ntests += 2437;
 }
 plan( tests=>$ntests );
 
@@ -393,20 +393,24 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    my $namelistfile = "temp.namelistinfile_$site";
    &cat_and_create_namelistinfile( $neondefaultfile, $neonsitefile, $namelistfile );
    #
-   # Now run  the site
+   # Now run  the site for both bgc and non-FATES
    #
-   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
-   is( $@, '', "options: $options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", $mode );
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
+   foreach my $bgc ( "bgc", "fates") {
+      if ( ($bgc eq "bgc") or ($site ne "STER" and $site ne "KONA")) {
+         my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc $bgc --use_case 2018_control --infile $namelistfile";
+         eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+         is( $@, '', "options: $options" );
+         $cfiles->checkfilesexist( "$options", $mode );
+         $cfiles->shownmldiff( "default", $mode );
+         if ( defined($opts{'compare'}) ) {
+            $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+            $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+            $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         }
+         if ( defined($opts{'generate'}) ) {
+            $cfiles->copyfiles( "$options", $mode );
+         }
+      }
    }
    system( "/bin/rm $namelistfile" );
    &cleanup();
