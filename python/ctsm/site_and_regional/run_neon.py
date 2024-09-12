@@ -41,7 +41,7 @@ To see the available options:
 # - [ ] Case dependency and the ability to check case status
 # - [ ] If Case dependency works we don't need finidat given explicilty for post-ad and transient.
 
-# - [ ] checkout_externals instead of using env varaiable
+# - [ ] "./bin/git-fleximod update" instead of using env variable
 # - [ ] wget the fields available and run for those available
 
 # - [ ] Matrix spin-up if (SASU) Eric merged it in
