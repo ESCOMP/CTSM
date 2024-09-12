@@ -238,7 +238,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <melt_non_icesheet_ice_runoff phys="clm4_5" >.false.</melt_non_icesheet_ice_runoff>
 
 <!-- CN Fire model method defaults -->
-<fire_method               >li2021gswpfrc</fire_method>
+<fire_method               >li2024crujra</fire_method>
 <fire_method phys="clm5_0" >li2016crufrc</fire_method>
 <fire_method phys="clm4_5" >li2014qianfrc</fire_method>
 
