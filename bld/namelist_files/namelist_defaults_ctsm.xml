@@ -2084,7 +2084,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <!-- Note that these transient files only go up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/landuse.timeseries_1x1_smallvilleIA_synth_1850-1855_78pfts_c240912.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/landuse.timeseries_1x1_smallvilleIA_synth_1850-1855_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- Cidadinho test site has no transient data. -->
 <flanduse_timeseries hgrid="1x1_cidadinhoBR" sim_year_range="1850-2000"></flanduse_timeseries>
