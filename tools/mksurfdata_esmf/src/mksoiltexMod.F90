@@ -13,12 +13,14 @@ module mksoiltexMod
   use mkutilsMod       , only : chkerr
   use mkdiagnosticsMod , only : output_diagnostics_index
   use mkfileMod        , only : mkfile_output  
-  use mkvarctl         , only : root_task, ndiag, spval
+  use mkvarctl         , only : root_task, ndiag, spval, mpicom
   use mkvarctl         , only : unsetsoil
   use mkvarpar         , only : nlevsoi
 
   implicit none
   private ! By default make data private
+
+#include <mpif.h>
 
   public :: mksoiltex      ! Set soil texture
 
@@ -61,6 +63,7 @@ contains
     integer                :: k,l,m,n
     integer                :: nlay          ! number of soil layers
     integer                :: n_scid
+    integer                :: mapunit_value_max_local
     integer , allocatable  :: mask_i(:)
     real(r4), pointer      :: dataptr(:)
     integer                :: mapunit       ! temporary igbp soil mapunit
@@ -165,6 +168,8 @@ contains
     do ni = 1,ns_i
        if (mapunit_i(ni) == 0.) then
           mask_i(ni) = 0
+       else
+          mask_i(ni) = 1
        end if
     end do
     call ESMF_MeshSet(mesh_i, elementMask=mask_i, rc=rc)
@@ -200,7 +205,12 @@ contains
 
     ! Determine mapunit_value_max (set it as a module variable so that it can be
     ! accessible to gen_dominant_mapunit) - this is needed in the dynamic mask routine
-    mapunit_value_max = maxval(dataptr)
+    !
+    ! Note that dataptr (obtained from the input field) contains just a subset of the
+    ! source data, based on the source data decomposition. So we need an mpi_allreduce to
+    ! determine the global maximum value of mapunit.
+    mapunit_value_max_local = maxval(dataptr)
+    call mpi_allreduce(mapunit_value_max_local, mapunit_value_max, 1, MPI_INTEGER, MPI_MAX, mpicom, rcode)
 
     ! Determine values in field_o
     call ESMF_FieldGet(field_o, farrayptr=dataptr, rc=rc)

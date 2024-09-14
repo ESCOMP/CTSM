@@ -3583,7 +3583,6 @@
 
   <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/FireLi2024CruJra">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fire"/>
     </machines>
     <options>

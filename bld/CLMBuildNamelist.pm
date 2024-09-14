@@ -2506,8 +2506,9 @@ sub setup_logic_surface_dataset {
   # consistent with it
   # MUST BE AFTER: setup_logic_demand which is where flanduse_timeseries is set
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
+  my ($opts_in, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
 
+  my $opts = $opts_in;
   $nl_flags->{'flanduse_timeseries'} = "null";
   my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
   if (defined($flanduse_timeseries)) {
@@ -2522,6 +2523,11 @@ sub setup_logic_surface_dataset {
 
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
+  }
+  # Turn test option off for NEON until after XML is interpreted
+  my $test_files = $opts->{'test'};
+  if ( &value_is_true($nl_flags->{'neon'})) {
+     $opts->{'test'} = 0;
   }
   #
   # Always get the crop version of the datasets now and let the code turn it into the form desired
@@ -2548,7 +2554,7 @@ sub setup_logic_surface_dataset {
                  'use_crop'=>$nl_flags->{'use_crop'} );
   }
   #
-  # Expand the XML variables for NEON cases so that NEONSITE will be used
+  # Expand the XML variables for NEON cases so that NEONSITE will be used and test for existence
   #
   if ( &value_is_true($nl_flags->{'neon'}) ) {
      my $fsurdat = $nl->get_value($var);
@@ -2557,6 +2563,9 @@ sub setup_logic_surface_dataset {
         my $group = $definition->get_group_name($var);
         $nl->set_variable_value($group, $var, $newval);
         $log->verbose_message( "This is a NEON site and the fsurdat file selected is: $newval" );
+        if ( $test_files and ($newval !~ /null|none/) and (! -f remove_leading_and_trailing_quotes($newval) ) ) {
+          $log->fatal_error("file not found: $var = $newval");
+        }
      }
   }
 }
