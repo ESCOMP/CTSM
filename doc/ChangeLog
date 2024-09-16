@@ -7,8 +7,34 @@ One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, expl
 Purpose and description of changes since ctsm5.2.0
 --------------------------------------------------
 
-Changes to CTSM:
-================
+
+Changes to CTSM Infrastructure:
+===============================
+
+ - manage_externals removed and replaced by git-fleximod
+ - Ability to handle CAM7 in LND_TUNING_MODE
+
+Changes to CTSM Answers:
+========================
+ 
+ Changes to defaults for clm6_0 physics:
+  - Urban explicit A/C turned on
+  - Snow thermal conductivity is now Sturm_1997
+  - New IC file for f09 1850
+  - New crop calendars
+  - Dust emissions is now Leung_2023
+  - Excess ice is turned on
+  - Updates to MEGAN for BVOC's
+  - Updates to BGC fire method
+
+ Changes for all physics versions:
+
+  - Parameter files updated
+  - FATES parameter file updated
+  - Glacier region 1 is now undefined
+  - Update in FATES transient Land use
+  - Pass active glacier (CISM) runoff directly to river model (MOSART)
+  - Add the option for using matrix for Carbon/Nitrogen BGC spinup
 
 
 New surface datasets:
