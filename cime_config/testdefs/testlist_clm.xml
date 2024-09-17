@@ -31,7 +31,7 @@
       <option name="comment"  >Repeat last ERI_D_Ld9...default test with matrixcnOn</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60SpNoAnthro" testmods="clm/decStart1851_noinitial--clm/nofireemisemis">
+  <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60SpNoAnthro" testmods="clm/decStart1851_noinitial--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -91,7 +91,7 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM4 tuning, at 1-degree</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam5LndTuningModeZDustSoilErod--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam5LndTuningModeZDustSoilErod--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
@@ -195,7 +195,7 @@
       <option name="comment"  >CTSM science test list for the half degree grid with latest CLM version for historical</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis"/>
+  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -205,7 +205,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -215,7 +215,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -225,7 +225,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -235,7 +235,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -245,7 +245,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningModeLDust--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningModeLDust--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -255,7 +255,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -347,7 +347,7 @@
       <option name="comment"  >Science support for 1850 with clm6_0 for SP mode at f19</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -357,7 +357,7 @@
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -623,7 +623,7 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -633,7 +633,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -643,7 +643,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -653,7 +653,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -663,7 +663,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -673,7 +673,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -683,7 +683,7 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemisemis">
+  <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
