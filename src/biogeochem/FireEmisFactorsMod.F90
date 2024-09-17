@@ -11,6 +11,7 @@ module FireEmisFactorsMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
+  use clm_varpar,   only : maxveg
 !
   implicit none
   private
@@ -21,7 +22,7 @@ module FireEmisFactorsMod
   public :: fire_emis_factors_get
 
 ! !PRIVATE MEMBERS:
-  integer :: npfts ! number of plant function types
+  integer :: npfts ! number of plant function types on the fire emission factors dataset
 !
   type emis_eff_t
      real(r8), pointer :: eff(:) ! emissions efficiency factor
@@ -73,7 +74,9 @@ contains
        call endrun(errmes)
     endif
 
-    factors(:npfts) = comp_factors_table( ndx )%eff(:npfts)
+    factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
+    ! If fire emissions factor file only includes natural PFT's, but this is a crop case
+    ! Copy the generic crop factors to the crop CFT's from generic crop
     if ( size(factors) > npfts )then
        factors(npfts+1:) = comp_factors_table( ndx )%eff(nc3crop)
     end if
@@ -96,7 +99,6 @@ contains
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
-    use clm_varpar  , only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -127,8 +129,9 @@ contains
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
     npfts = n_pfts
-    if ( npfts /= mxpft .and. npfts /= 16 )then
-       call endrun('Number of PFTs on fire emissions file is NOT correct. Its neither the total number of PFTS nor 16')
+    if ( npfts < maxveg )then
+       write(iulog,*) ' npfts = ', npfts, ' maxveg = ', maxveg
+       call endrun('Number of PFTs on the fire emissions file is less than the number of PFTs from the surface dataset')
     end if
 
     ierr = pio_inq_varid(ncid,'Comp_EF',  comp_ef_vid)
