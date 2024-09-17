@@ -1301,6 +1301,10 @@ my %warntest = (
                                      namelst=>"fsurdat='build-namelist_test.pl'",
                                      phys=>"clm6_0",
                                    },
+     "hillslope with init_interp"=>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.",
+                                     phys=>"clm6_0",
+                                   },
                );
 foreach my $key ( keys(%warntest) ) {
    print( "$key\n" );
