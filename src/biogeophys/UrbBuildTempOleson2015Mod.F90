@@ -16,9 +16,9 @@ module UrbBuildTempOleson2015Mod
   use UrbanTimeVarType  , only : urbantv_type  
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
+  use atm2lndType       , only : atm2lnd_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
-  use atm2lndType       , only : atm2lnd_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -380,7 +380,7 @@ contains
          cp_floori(l) = cp_floor
          ! Intermediate calculation for concrete floor (W m-2 K-1)
          cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
-         ! Density of dry air at standard pressure and t_building (kg m-3)
+         ! Density of dry air at surface pressure and t_building (kg m-3)
          rho_dair(l) = forc_pbot(g) / (rair*t_building_bef(l))
          ! Building height to building width ratio
          building_hwr(l) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/wtlunit_roof(l)
