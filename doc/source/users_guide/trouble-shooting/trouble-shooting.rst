@@ -152,7 +152,7 @@ Here are some other suggestions on how to track down a problem encountered while
 Run with a smaller set of processors
 ------------------------------------
 
-One way to simplify the system is to run with a smaller set of processors. You will need to clean the setup and edit the --env_mach_pes.xml--. For example, to run with four processors:
+One way to simplify the system is to run with a smaller set of processors. You will need to clean the setup and edit ``env_mach_pes.xml``. For example, to run with four processors:
 ::
 
    > ./case.setup -clean
