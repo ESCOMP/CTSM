@@ -148,8 +148,13 @@ def main():
     this_mesh.read_file(ds)
 
     plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
+    file_exists_msg = "File already exists but --overwrite not given: "
+    if os.path.exists(plot_regional) and not args.overwrite:
+        raise FileExistsError(file_exists_msg + plot_regional)
 
     plot_global = os.path.splitext(mesh_out)[0] + "_global" + ".png"
+    if os.path.exists(plot_global) and not args.overwrite:
+        raise FileExistsError(file_exists_msg + plot_global)
 
     this_mesh.make_mesh_plot(plot_regional, plot_global)
 
