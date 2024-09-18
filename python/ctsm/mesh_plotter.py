@@ -62,7 +62,7 @@ def get_parser():
 
     parser.add_argument(
         "--overwrite",
-        help="If plots  xists, overwrite them.",
+        help="If plots exist, overwrite them.",
         action="store_true",
         dest="overwrite",
         required=False,
