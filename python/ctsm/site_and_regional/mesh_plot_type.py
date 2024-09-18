@@ -49,7 +49,7 @@ class MeshPlotType(MeshType):
             plot_type = "regional"
             line_width = 1
             marker = "x"
-            marker_size = 1
+            marker_size = None
         # global settings
         else:
             fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
@@ -58,7 +58,7 @@ class MeshPlotType(MeshType):
             plot_type = "global"
             line_width = 0.5
             marker = "o"
-            marker_size = None
+            marker_size = 0.01
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")

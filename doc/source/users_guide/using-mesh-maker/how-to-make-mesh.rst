@@ -6,7 +6,7 @@
  Creating an ESMF mesh file from a netCDF file
 ===============================================
 
-This page includes instructions for using the  ``mesh_maker`` tool to create and visualize a mesh file from a netCDF file with valid 1D or 2D latitude and longitude coordinates.
+This page includes instructions for using the  ``mesh_maker`` tool to create a mesh file from a netCDF file with valid 1D or 2D latitude and longitude coordinates. It also shows how to use ``mesh_plotter`` to visualize a mesh file.
 
 .. note:: An **ESMF mesh file** is a netCDF file that includes the information about the grid's coordinates and their connectivity to each other in an **Unstructured Grid Format**. Additional information about ESMF mesh files is available `here <https://earthsystemmodeling.org/docs/release/ESMF_8_0_1/ESMF_refdoc/node3.html#SECTION03028200000000000000>`_.
 
@@ -53,12 +53,15 @@ In this example, we will use ``mesh_maker`` to create a mesh file from a netCDF 
 
    input_file="python/ctsm/test/testinputs/surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc"
    output_file="meshfile_5x5_amazon.nc"
+   
+   # Create the file. (Add --verbose for additional debugging information.)
    tools/site_and_regional/mesh_maker --input "${input_file}" --output "${output_file}" --lon LONGXY --lat LATIXY
+   
+   # Visualize the meshes
+   tools/site_and_regional/mesh_plotter --input "${output_file}"
 
-``--verbose`` option also provide additional information for debugging. 
+This produces two figures:
 
-This script will create regional and global mesh plots. For example for the above files, the plots are:
+.. figure:: test_c240918_regional.png
 
-.. figure:: test_mesh_1d_regional.png
-
-.. figure:: test_mesh_1d_global.png
+.. figure:: test_c240918_global.png
