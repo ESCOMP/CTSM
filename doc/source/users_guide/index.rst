@@ -26,5 +26,6 @@
    running-single-points/index.rst
    trouble-shooting/index.rst
    testing/index.rst
+   using-mesh-maker/index.rst
 
 Documentation was built: |today|
