@@ -68,6 +68,13 @@ def get_parser():
         required=False,
     )
 
+    default_dpi = 300
+    parser.add_argument(
+        "--dpi",
+        help=f"Dots per square inch in output; default {default_dpi}",
+        type=float,
+    )
+
     add_logging_args(parser)
     return parser
 
@@ -156,7 +163,7 @@ def main():
     if os.path.exists(plot_global) and not args.overwrite:
         raise FileExistsError(file_exists_msg + plot_global)
 
-    this_mesh.make_mesh_plot(plot_regional, plot_global)
+    this_mesh.make_mesh_plot(plot_regional, plot_global, args.dpi)
 
 
 if __name__ == "__main__":

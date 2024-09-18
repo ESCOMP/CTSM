@@ -24,7 +24,7 @@ class MeshPlotType(MeshType):
     Extend mesh type with some advanced plotting capability
     """
 
-    def make_mesh_plot(self, plot_regional, plot_global):
+    def make_mesh_plot(self, plot_regional, plot_global, dpi):
         """
         Create plots for the ESMF mesh file
 
@@ -36,10 +36,10 @@ class MeshPlotType(MeshType):
             The path to write the ESMF meshfile global plot
         """
 
-        self.mesh_plot(plot_regional, regional=True)
-        self.mesh_plot(plot_global, regional=False)
+        self.mesh_plot(plot_regional, regional=True, dpi=dpi)
+        self.mesh_plot(plot_global, regional=False, dpi=dpi)
 
-    def mesh_plot(self, plot_file, regional):
+    def mesh_plot(self, plot_file, regional, dpi):
         """Make a plot of a mesh file in either a regional or global grid"""
         # -- regional settings
         if regional:
@@ -131,6 +131,6 @@ class MeshPlotType(MeshType):
 
             ax.legend(handles, labels)
 
-        plt.savefig(plot_file, bbox_inches="tight")
+        plt.savefig(plot_file, bbox_inches="tight", dpi=dpi)
 
         logger.info("Successfully created %s plots for ESMF Mesh file : %s", plot_type, plot_file)
