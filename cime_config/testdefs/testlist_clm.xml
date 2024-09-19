@@ -3547,7 +3547,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Add a non-FATES test to aux_clm for 5x5_amazon that fails because of the ccs_config issue, can remove once this passes</option>
+      <option name="comment">Add a non-FATES test to aux_clm for 5x5_amazon that fails because of the ccs_config issue (see #2423); can remove once this passes</option>
     </options>
   </test>
 
