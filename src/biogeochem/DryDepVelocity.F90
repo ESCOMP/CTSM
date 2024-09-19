@@ -381,12 +381,12 @@ CONTAINS
             ! 4 - Winter, snow on ground and subfreezing
             ! 5 - Transitional spring with partially green short annuals
 
-
-            !mlaidiff=jan-feb
-            minlai=minval(annlai(:,pi))
-            maxlai=maxval(annlai(:,pi))
-
-            index_season = -1
+            if(.not. use_fates)then
+               !mlaidiff=jan-feb
+               minlai=minval(annlai(:,pi))
+               maxlai=maxval(annlai(:,pi))
+            endif 
+               index_season = -1
 
             if ( lun%itype(l) /= istsoil )then
                if ( lun%itype(l) == istice ) then
@@ -404,8 +404,12 @@ CONTAINS
                end if
             else if ( snow_depth(c) > 0 ) then
                index_season = 4
-            else if(elai(pi) > 0.5_r8*maxlai) then
+            else if(.not.use_fates .and. elai(pi) > 0.5_r8*maxlai) then
                index_season = 1
+            endif
+
+            if(use_fates)then
+              index_season = canopystate_inst%drydep_season_patch(pi)              
             endif
 
             if (index_season<0) then
