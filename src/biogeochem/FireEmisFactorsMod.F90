@@ -12,6 +12,7 @@ module FireEmisFactorsMod
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
   use clm_varpar,   only : maxveg
+  use pftconMod,    only : nc3crop
 !
   implicit none
   private
@@ -53,7 +54,6 @@ contains
 ! Method for getting FireEmis information for a named compound 
 !
 ! !USES:
-    use pftconMod , only : nc3crop
 ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! FireEmis compound name
     real(r8),        intent(out) :: factors(:)     ! vegetation type factors for the compound of interest
@@ -99,6 +99,7 @@ contains
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
+    use clm_varpar, only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -129,16 +130,20 @@ contains
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
     npfts = n_pfts
-    if ( npfts < maxveg )then
-       write(iulog,*) ' npfts = ', npfts, ' maxveg = ', maxveg
-       call endrun('Number of PFTs on the fire emissions file is less than the number of PFTs from the surface dataset')
+    if ( (npfts < maxveg) .and. (npfts < nc3crop) )then
+       write(iulog,*) ' npfts = ', npfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
+       call endrun('Number of PFTs on the fire emissions file is less than the number of natural PFTs from the surface dataset')
+    end if
+    if ( npfts > mxpft )then
+       write(iulog,*) ' npfts = ', npfts, ' mxpft = ', mxpft
+       call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')
     end if
 
     ierr = pio_inq_varid(ncid,'Comp_EF',  comp_ef_vid)
     ierr = pio_inq_varid(ncid,'Comp_Name',comp_name_vid)
     ierr = pio_inq_varid(ncid,'Comp_MW',  comp_mw_vid)
 
-    allocate( comp_factors(n_pfts) )
+    allocate( comp_factors(maxveg) )
     allocate( comp_names(n_comps) )
     allocate( comp_molecwghts(n_comps) )
 
@@ -149,7 +154,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,npfts/)
+       count=(/1,min(npfts,maxveg)/)
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
 
        call enter_hash_data( trim(comp_names(i)), comp_factors, comp_molecwghts(i)  )
