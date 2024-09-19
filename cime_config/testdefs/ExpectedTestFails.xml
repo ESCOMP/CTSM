@@ -194,7 +194,7 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Ld5.5x5_amazon.I1850Clm51Bgc.derecho_gnu.clm-HillslopeC">
+  <test name="SMS_D_Ld5.5x5_amazon.I2000Clm51Bgc.derecho_gnu.clm-HillslopeC">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2423</issue>
