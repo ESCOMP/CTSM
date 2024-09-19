@@ -208,6 +208,7 @@ CONTAINS
     use pftconMod      , only : nc3_nonarctic_grass, nc4_grass, nc3crop
     use pftconMod      , only : nc3irrig, npcropmin, npcropmax
     use clm_varcon     , only : spval
+    use clm_varctl     , only : use_fates
 
     !
     ! !ARGUMENTS:
@@ -360,7 +361,7 @@ CONTAINS
             end if
 
              if(use_fates)then
-                wesveg = canopystate_inst%wesley_pft_index_patch
+                wesveg = canopystate_inst%wesley_pft_index_patch(pi)
              endif 
 
             ! create seasonality index used to index wesely data tables from LAI,  Bascially
