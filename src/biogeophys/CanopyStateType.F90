@@ -57,6 +57,9 @@ module CanopyStateType
                                                           ! for non-ED/FATES this is the same as pfton%dleaf()
      integer ,  pointer :: wesley_pft_index_patch   (:)   ! Wesley PFT index for FATES drydep calculations
 
+     integer ,  pointer :: drydep_season_patch      (:)   ! Season for dry deposition calculations
+
+
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
@@ -153,6 +156,8 @@ contains
     allocate(this%voc_pftindex_patch       (begp:endp))           ; this%voc_pftindex_patch       (:)   = 0    
 
     allocate(this%wesley_pft_index_patch   (begp:endp))           ; this%wesley_pft_index_patch       (:)   = 0! is an integer so can't be nan
+
+    allocate(this%drydep_season_patch   (begp:endp))           ; this%drydep_season_patch(:) =0! is an integer so can't be nan    
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8
