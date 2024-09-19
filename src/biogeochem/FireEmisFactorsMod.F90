@@ -23,7 +23,6 @@ module FireEmisFactorsMod
   public :: fire_emis_factors_get
 
 ! !PRIVATE MEMBERS:
-  integer :: npfts ! number of plant function types on the fire emission factors dataset
 !
   type emis_eff_t
      real(r8), pointer :: eff(:) ! emissions efficiency factor
@@ -77,8 +76,8 @@ contains
     factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
     ! If fire emissions factor file only includes natural PFT's, but this is a crop case
     ! Copy the generic crop factors to the crop CFT's from generic crop
-    if ( size(factors) > npfts )then
-       factors(npfts+1:) = comp_factors_table( ndx )%eff(nc3crop)
+    if ( size(factors) > nc3crop )then
+       factors(nc3crop+1:) = comp_factors_table( ndx )%eff(nc3crop)
     end if
     molecwght  = comp_factors_table( ndx )%wght
 
@@ -129,13 +128,12 @@ contains
     call ncd_inqdlen( ncid, dimid, n_comps, name='Comp_Num')
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
-    npfts = n_pfts
-    if ( (npfts < maxveg) .and. (npfts < nc3crop) )then
-       write(iulog,*) ' npfts = ', npfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
+    if ( (n_pfts < maxveg) .and. (n_pfts < nc3crop) )then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
        call endrun('Number of PFTs on the fire emissions file is less than the number of natural PFTs from the surface dataset')
     end if
-    if ( npfts > mxpft )then
-       write(iulog,*) ' npfts = ', npfts, ' mxpft = ', mxpft
+    if ( n_pfts > mxpft )then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' mxpft = ', mxpft
        call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')
     end if
 
@@ -154,7 +152,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,min(npfts,maxveg)/)
+       count=(/1,min(n_pfts,maxveg)/)
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
 
        call enter_hash_data( trim(comp_names(i)), comp_factors, comp_molecwghts(i)  )
