@@ -24,7 +24,7 @@ class MeshPlotType(MeshType):
     Extend mesh type with some advanced plotting capability
     """
 
-    def make_mesh_plot(self, plot_regional, plot_global, dpi):
+    def make_mesh_plot(self, plot_regional, plot_global, args):
         """
         Create plots for the ESMF mesh file
 
@@ -36,10 +36,10 @@ class MeshPlotType(MeshType):
             The path to write the ESMF meshfile global plot
         """
 
-        self.mesh_plot(plot_regional, regional=True, dpi=dpi)
-        self.mesh_plot(plot_global, regional=False, dpi=dpi)
+        self.mesh_plot(plot_regional, args, regional=True)
+        self.mesh_plot(plot_global, args, regional=False)
 
-    def mesh_plot(self, plot_file, regional, dpi):
+    def mesh_plot(self, plot_file, args, regional):
         """Make a plot of a mesh file in either a regional or global grid"""
         # -- regional settings
         if regional:
@@ -59,6 +59,8 @@ class MeshPlotType(MeshType):
             line_width = 0.5
             marker = "o"
             marker_size = 0.1
+        if args.no_center_coords:
+            marker_size = 0
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")
@@ -129,8 +131,9 @@ class MeshPlotType(MeshType):
                 *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v in lc_colors.items()]
             )
 
-            ax.legend(handles, labels)
+            if not args.no_center_coords:
+                ax.legend(handles, labels)
 
-        plt.savefig(plot_file, bbox_inches="tight", dpi=dpi)
+        plt.savefig(plot_file, bbox_inches="tight", dpi=args.dpi)
 
         logger.info("Successfully created %s plots for ESMF Mesh file : %s", plot_type, plot_file)

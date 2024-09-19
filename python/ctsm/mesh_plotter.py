@@ -68,6 +68,13 @@ def get_parser():
         required=False,
     )
 
+    parser.add_argument(
+        "--no-center-coords",
+        help="Do not include red Xs at center of grid cells.",
+        action="store_true",
+        required=False,
+    )
+
     default_dpi = 300
     parser.add_argument(
         "--dpi",
@@ -163,7 +170,7 @@ def main():
     if os.path.exists(plot_global) and not args.overwrite:
         raise FileExistsError(file_exists_msg + plot_global)
 
-    this_mesh.make_mesh_plot(plot_regional, plot_global, args.dpi)
+    this_mesh.make_mesh_plot(plot_regional, plot_global, args)
 
 
 if __name__ == "__main__":
