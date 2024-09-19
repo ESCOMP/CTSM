@@ -152,7 +152,7 @@ contains
 
     allocate(this%voc_pftindex_patch       (begp:endp))           ; this%voc_pftindex_patch       (:)   = 0    
 
-    allocate(this%wesley_pft_index_patch   (begp:endp))           ; this%wesley_pft_index_patch   (:)   = nan
+    allocate(this%wesley_pft_index_patch   (begp:endp))           ; this%wesley_pft_index_patch       (:)   = 0! is an integer so can't be nan
 
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8

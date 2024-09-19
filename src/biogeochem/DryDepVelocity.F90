@@ -359,6 +359,10 @@ CONTAINS
                     errMsg(sourcefile, __LINE__))
             end if
 
+             if(use_fates)then
+                wesveg = canopystate_inst%wesley_pft_index_patch
+             endif 
+
             ! create seasonality index used to index wesely data tables from LAI,  Bascially
             !if elai is between max lai from input data and half that max the index_season=1
 
