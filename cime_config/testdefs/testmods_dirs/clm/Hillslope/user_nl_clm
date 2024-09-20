@@ -6,6 +6,4 @@ hillslope_transmissivity_method = 'LayerSum'
 hillslope_pft_distribution_method = 'PftLowlandUpland'
 hillslope_soil_profile_method = 'Uniform'
 
-hillslope_file = '$DIN_LOC_ROOT/lnd/clm2/testdata/synthetic_cosphill_1.3.nc'
-
 use_ssre = .false.
