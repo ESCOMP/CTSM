@@ -62,6 +62,17 @@ class SysTestMeshMaker(unittest.TestCase):
         if not plotfiles:
             self.fail("plot files were NOT created as they should have")
 
+    def test_dpi(self):
+        """Test setting dpi"""
+        sys.argv = self.test_basic_argv + [
+            "--dpi",
+            "198.7",
+        ]
+        main()
+        plotfiles = glob.glob(os.path.join(self._tempdir, "*.png"))
+        if not plotfiles:
+            self.fail("plot files were NOT created as they should have")
+
     def test_need_overwrite(self):
         """Ensure failure if output file exists but --overwrite not given"""
         sys.argv = self.test_basic_argv
