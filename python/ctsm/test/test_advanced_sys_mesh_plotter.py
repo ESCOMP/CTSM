@@ -77,7 +77,9 @@ class SysTestMeshMaker(unittest.TestCase):
         """Ensure failure if output file exists but --overwrite not given"""
         sys.argv = self.test_basic_argv
         main()
-        with self.assertRaisesRegex(FileExistsError, "File already exists but --overwrite not given"):
+        with self.assertRaisesRegex(
+            FileExistsError, "File already exists but --overwrite not given"
+        ):
             main()
 
     def test_outdir(self):
