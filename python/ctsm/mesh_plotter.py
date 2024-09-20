@@ -112,9 +112,10 @@ def process_and_check_args(args):
 
         today = datetime.today()
         today_string = today.strftime("%y%m%d")
+        input_filename = os.path.basename(args.input)
         args.output = os.path.join(
             args.out_dir,
-            os.path.splitext(args.input)[0] + "_c" + today_string,
+            os.path.splitext(input_filename)[0] + "_c" + today_string,
         )
 
     if not os.path.isfile(args.input):
