@@ -39,7 +39,7 @@ Running FORTRAN tools with namelists
 
    ./program < namelist
 
-There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/mksurfdata_esmf.namleist`` that shows you what the namelist should look like. **mksurfdata_esmf** also has a script that creates the namelist and runs the program for you. Namelists that you create should be similar to the example namelist. The namelist values are also documented along with the other namelists in the:
+There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml`` that shows you what the namelist should look like. **mksurfdata_esmf** also has a script that creates the namelist and runs the program for you. Namelists that you create should be similar to the example namelist. The namelist values are also documented along with the other namelists in the:
 ::
 
    $CTSMROOT/bld/namelist_files/namelist_definition.xml`` file
