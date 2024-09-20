@@ -79,7 +79,7 @@ If the geogrid step finishes successfully, you should see the following message 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 The basic difference here with a non-nested case is the namelist.wps should
-have a column for each domain with `max_dom=2`. For example::
+have a column for each domain with `max_dom=2`. For example:
 
     &share
      wrf_core = 'ARW',

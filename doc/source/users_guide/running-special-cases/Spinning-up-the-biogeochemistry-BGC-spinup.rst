@@ -43,7 +43,7 @@ If you use the default initial file and you signficantly change model behavior o
 **1. |version| accelerated-decomposition (AD) spinup**
      For the first step of running 200+ years in ``-bgc_spinup on`` mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
 
-Example:: AD_SPINUP Simulation for |version|-BGC
+Example: AD_SPINUP Simulation for |version|-BGC
 --------------------------------------------------------
 ::
 
