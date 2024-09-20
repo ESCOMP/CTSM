@@ -12,21 +12,21 @@ The tools produce files that can be used for CLM4.5 and |version|. They do **NOT
 
 The list of generally important scripts and programs are as follows.
 
-1. *./mkmapgrids* to create SCRIP grid data files from old CLM format grid files that can then be used to create new CLM datasets (deprecated). There is also a NCL script (``./mkmapgrids/mkscripgrid.ncl`` to create SCRIP grid files for regular latitude/longitude grids.
+1. ``./mkmapgrids`` to create SCRIP grid data files from old CLM format grid files that can then be used to create new CLM datasets (deprecated). There is also a NCL script (``./mkmapgrids/mkscripgrid.ncl``) to create SCRIP grid files for regular latitude/longitude grids.
 
-#. *./mkmapdata* to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
+#. ``./mkmapdata`` to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
 
-#. *mksurfdata_esmf* to create surface datasets from grid datasets (clm4_0 and |version| versions).
+#. ``mksurfdata_esmf`` to create surface datasets from grid datasets (clm4_0 and |version| versions).
 
-#. *./mkprocdata_map* to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or |version|.
+#. ``./mkprocdata_map`` to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or |version|.
 
-#. *$CIMEROOT/tools/mapping/gen_domain_files/gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
+#. ``$CIMEROOT/tools/mapping/gen_domain_files/gen_domain`` to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
 
-#. *$CIMEROOT/tools/cprnc* to compare two NetCDF files.
+#. ``$CIMEROOT/tools/cprnc`` to compare two NetCDF files.
 
 In the sections to come we will go into detailed description of how to use each of these tools in turn. First, however we will discuss the common environment variables and options that are used by all of the FORTRAN tools. Second, we go over the outline of the entire file creation process for all input files needed by CLM for a new resolution, then we turn to each tool. In the last section we will discuss how to customize files for particular observational sites.
 
-The FORTRAN tools (mksurfdata_esmf and mkprocdata_map) run, with a namelist (mksurfdata_esmf) to provide options, or with command line arguments (mkprocdata_map).
+The FORTRAN tools (``mksurfdata_esmf`` and ``mkprocdata_map``) run, with a namelist (``mksurfdata_esmf``) to provide options, or with command line arguments (``mkprocdata_map``).
 
 In the following sections, we will outline how to make these files available for build-namelist so that you can easily create simulations that include them. In the chapter on single-point and regional datasets we also give an alternative way to enter new datasets without having to edit files.
 
@@ -34,12 +34,12 @@ In the following sections, we will outline how to make these files available for
 Running FORTRAN tools with namelists
 ------------------------------------
 
-**mksurfdata_esmf** runs with a namelist that is read from standard input. Hence, you create a namelist and then run them by redirecting the namelist file into standard input as follows:
+``mksurfdata_esmf`` runs with a namelist that is read from standard input. Hence, you create a namelist and then run them by redirecting the namelist file into standard input as follows:
 ::
 
    ./program < namelist
 
-There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml`` that shows you what the namelist should look like. **mksurfdata_esmf** also has a script that creates the namelist and runs the program for you. Namelists that you create should be similar to the example namelist. The namelist values are also documented along with the other namelists in the:
+There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml`` that shows you what the namelist should look like. ``mksurfdata_esmf`` also has a script that creates the namelist and runs the program for you. Namelists that you create should be similar to the example namelist. The namelist values are also documented along with the other namelists in the:
 ::
 
    $CTSMROOT/bld/namelist_files/namelist_definition.xml`` file
@@ -50,7 +50,7 @@ There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfda
 Running FORTRAN tools with command line options
 -----------------------------------------------
 
-**gen_domain**, mkprocdata_map, and **cprnc** run with command line arguments. The detailed sections below will give you more information on the command line arguments specific to each tool. Also running the tool without any arguments will give you a general synopsis on how to run the tool.
+``gen_domain``, ``mkprocdata_map``, and ``cprnc`` run with command line arguments. The detailed sections below will give you more information on the command line arguments specific to each tool. Also running the tool without any arguments will give you a general synopsis on how to run the tool.
 
 -----------------------------------------
 Running FORTRAN tools built with SMP=TRUE

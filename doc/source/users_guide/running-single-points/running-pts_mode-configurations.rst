@@ -8,7 +8,7 @@ Running a single point using global data - PTS_MODE
 
 ``PTS_MODE`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
 
-To setup a ``PTS_MODE`` simulation you use the "-pts_lat" and "-pts_lon" arguments to **create_newcase** to give the latitude and longitude of the point you want to simulate for (the code will pick the point on the global grid nearest to the point you give. Here's an example to setup a simulation for the nearest point at 2-degree resolution to Boulder Colorado.
+To setup a ``PTS_MODE`` simulation you use the ``-pts_lat`` and ``-pts_lon`` arguments to ``create_newcase`` to give the latitude and longitude of the point you want to simulate for (the code will pick the point on the global grid nearest to the point you give. Here's an example to setup a simulation for the nearest point at 2-degree resolution to Boulder Colorado.
 ::
 
    > cd scripts

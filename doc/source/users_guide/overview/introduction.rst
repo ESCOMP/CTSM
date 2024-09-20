@@ -107,7 +107,7 @@ The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
 A CTSM versus a CESM checkout
 =============================
 
-The directory structure for |version| is different depending on if it's checked out from |release| or |cesmrelease|. If |version| is checked out from |ctsm_gh| the CLM source code is directly under the top level directory. If |cesmrelease| is checkout out from |cesm_gh| then the CLM source directories are under "components/clm" from the top level directory. We will refer to this directory for the CLM source directories in the User's Guide as "$CTSMROOT".
+The directory structure for |version| is different depending on if it's checked out from |release| or |cesmrelease|. If |version| is checked out from |ctsm_gh| the CLM source code is directly under the top level directory. If |cesmrelease| is checkout out from |cesm_gh| then the CLM source directories are under ``components/clm`` from the top-level directory. We will refer to this directory for the CLM source directories in the User's Guide as ``$CTSMROOT``.
 
 .. _how-to-use-this-document:
 
