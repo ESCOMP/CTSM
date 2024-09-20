@@ -2,7 +2,7 @@
 
 .. _trouble-shooting:
 
-*************
+***************
 Troubleshooting
 ***************
 
