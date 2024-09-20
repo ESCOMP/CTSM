@@ -256,34 +256,33 @@ CLM_BLDNML_OPTS
              (i.e.  CLM_NML_USE_CASE env_run variable)
       6. values from the namelist defaults file.
 
-The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and mask as well as the CLM ``configure`` file, and defines an input namelist and namelist input file, and the output namelist directory, and sets the start-type (from ``RUN_TYPE``), namelist options (from ``CLM_NAMELIST_OPTS``), co2_ppmv (from ``CCSM_CO2_PPMV``, co2_type (from ``CLM_CO2_TYPE``), lnd_frac (from ``LND_DOMAIN_PATH`` and ``LND_DOMAIN_FILE``), l_ncpl (from ``LND_NCPL``, glc_grid, glc_smb, glc_nec (from ``GLC_GRID``, ``GLC_SMB``, and ``GLC_NEC``), and "clm_usr_name" is set (to ``CLM_USRDAT_NAME >``when the grid is set to ``CLM_USRDAT_NAME``. Hence only the following different options can be set:
+The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and mask as well as the CLM ``configure`` file, and defines an input namelist and namelist input file, and the output namelist directory, and sets the: start-type (from ``RUN_TYPE``); namelist options (from ``CLM_NAMELIST_OPTS``); ``co2_ppmv`` (from ``CCSM_CO2_PPMV``); ``co2_type`` (from ``CLM_CO2_TYPE``); ``lnd_frac`` (from ``LND_DOMAIN_PATH`` and ``LND_DOMAIN_FILE``); ``l_ncpl`` (from ``LND_NCPL``); ``glc_grid``, ``glc_smb``, ``glc_nec`` (from ``GLC_GRID``, ``GLC_SMB``, and ``GLC_NEC``); and ``clm_usr_name`` (to ``CLM_USRDAT_NAME``). Hence only the following different options can be set:
 
-1.
--bgc_spinup
+#. ``-bgc_spinup``
 
-#. -chk_res
+#. ``-chk_res``
 
-#. -clm_demand
+#. ``-clm_demand``
 
-#. -drydep
+#. ``-drydep``
 
-#. -fire_emis
+#. ``-fire_emis``
 
-#. -ignore_ic_date
+#. ``-ignore_ic_date``
 
-#. -ignore_ic_year
+#. ``-ignore_ic_year``
 
-#. -irrig
+#. ``-irrig``
 
-#. -no-megan
+#. ``-no-megan``
 
-#. -note
+#. ``-note``
 
-#. -rcp
+#. ``-rcp``
 
-#. -sim_year
+#. ``-sim_year``
 
-#. -verbose
+#. ``-verbose``
 
 ``-bgc_spinup`` is an option only available for |version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See :ref:`spinning-up-clm-bgc` for an example using this option.
 
@@ -308,9 +307,9 @@ To see a list of valid variables that you could set do this:
 
 ``-ignore_ic_year`` ignores the Initial Conditions (IC) year for finding initial condition files to startup from. The date is used, but the year is ignored. Without this option or the ``-ignore_ic_date`` option below, the date and year of the file comes into play.
 
-When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets that have the irrigation model enabled (when running with Sattellitte Phenology). When running with the prognostic crop model on, ``-irrig on`` will turn irrigate crops on, while ``-irrig off`` will manage all crop areas as rain-fed without irrigation.
+When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets that have the irrigation model enabled (when running with Sattellitte Phenology). When running with the prognostic crop model on, ``-irrig on`` will turn crop irrigation on, while ``-irrig off`` will manage all crop areas as rain-fed without irrigation.
 
-``no-megan`` means do NOT add a MEGAN model Biogenic Volatile Organic Compounds (BVOC) testing namelist to the driver. This namelist is created by default, so normally this WILL be done. This is a driver namelist, so unless ``no-megan`` is specified the CLM ``build-namelist`` will create the ``drv_flds_in`` file that the driver will copy over and use (if you are running with CAM and CAM produces this file as well, it's file will have precedence).
+``no-megan`` means do NOT add a MEGAN model Biogenic Volatile Organic Compounds (BVOC) testing namelist to the driver. This namelist is created by default, so normally this WILL be done. This is a driver namelist, so unless ``no-megan`` is specified the CLM ``build-namelist`` will create the ``drv_flds_in`` file that the driver will copy over and use. (If you are running with CAM and CAM produces this file as well, its file will have precedence).
 
 ``-note`` adds a note to the bottom of the namelist file, that gives the details of how ``build-namelist`` was called, giving the specific command-line options given to it.
 
@@ -463,7 +462,7 @@ The first option is to setup a hybrid simulation and give a ``RUN_REFCASE`` and 
 
 ``./xmlchange RUN_TYPE=hybrid,RUN_REFCASE=b.e20.B1850.f09_g17.pi_control.all.297,RUN_REFDATE=0130-01-01,GET_REFCASE=TRUE``
 
-Setting the ``GET_REFCASE`` option to ``TRUE means`` it will copy the files from the RUN_REFDIR usually under: ``$DIN_LOC_ROOT/cesm2_init/$RUN_REFCASE/$RUN_REFDATE`` directory. Note, that the ``RUN_REFCASE`` and ``RUN_REFDATE`` variables are expanded to get the directory name above. If you do NOT set ``GET_REFCASE`` to ``TRUE`` then you will need to have placed the file in your run directory yourself. In either case, the file is expected to be named: ``$RUN_REFCASE.clm2.r.$RUN_REFDATE-00000.nc`` with the variables expanded of course.
+Setting the ``GET_REFCASE`` option to ``TRUE`` means it will copy the files from the RUN_REFDIR usually under: ``$DIN_LOC_ROOT/cesm2_init/$RUN_REFCASE/$RUN_REFDATE`` directory. Note, that the ``RUN_REFCASE`` and ``RUN_REFDATE`` variables are expanded to get the directory name above. If you do NOT set ``GET_REFCASE`` to ``TRUE`` then you will need to have placed the file in your run directory yourself. In either case, the file is expected to be named: ``$RUN_REFCASE.clm2.r.$RUN_REFDATE-00000.nc`` with the variables expanded of course.
 
 .. _doing-a-branch-sim-for-init-conds:
 

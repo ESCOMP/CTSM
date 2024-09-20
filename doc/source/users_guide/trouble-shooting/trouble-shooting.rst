@@ -71,20 +71,26 @@ So here we know that it is either leaf nitrogen (leafn) or leaf carbon (leafc) t
 
 At this point it is useful as a next step to identify the particular patch index and perhaps the pft type that is triggering the error. In this case, the endrun call is already written to provide this information: the patch index and pft type causing the error, along with some other information, are printed in the lines beginning with ``iam``. The ``iam`` value gives the CTSM processor number (this can be obtained in the code via the ``iam`` variable defined in ``spmdMod``). The local patch index is the value of ``p`` in the current patch loop; "local" implies that it refers to this processor's indexing. However, this same value of ``p`` may appear on other processors, since the local indexing on each processor starts with 1. So, to get the unique patch causing the problem, you either need to use the processor's ``iam`` index (there is only one patch with local index 482 on processor 362), or use the global indices printed below the local index. The "global" term here refers to the global index space across all processors (there is only one patch with a global index of 163723 across all processors). See below for how to use the ``get_global_index`` function to translate from local to global indices.
 
-If you are writing your own ``endrun`` call, you can get this additional information by specifying the ``subgrid_index`` and ``subgrid_level`` arguments; for example::
+If you are writing your own ``endrun`` call, you can get this additional information by specifying the ``subgrid_index`` and ``subgrid_level`` arguments; for example:
 
+::
+  
   call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
 
 (The ``subgrid_level_patch`` constant, and similar constants for the other subgrid levels, are defined in ``decompMod``, so can be accessed via ``use decompMod, only : subgrid_level_patch``.)
 
-You can get this same information without aborting the run via a call to ``write_point_context``, which is also defined in the ``abortutils`` module; e.g.::
+You can get this same information without aborting the run via a call to ``write_point_context``, which is also defined in the ``abortutils`` module; e.g.:
 
-   if (abs(carbon_patch(p)) < ccrit) then
-      call write_point_context(subgrid_index=p, subgrid_level=subgrid_level_patch)
-   end if
+::
+  
+  if (abs(carbon_patch(p)) < ccrit) then
+     call write_point_context(subgrid_index=p, subgrid_level=subgrid_level_patch)
+  end if
 
-Or, if all you want is the global index of ``p`` for the sake of writing extra diagnostic prints like the example below, then you can use the ``get_global_index`` function defined in ``decompMod``, like::
+Or, if all you want is the global index of ``p`` for the sake of writing extra diagnostic prints like the example below, then you can use the ``get_global_index`` function defined in ``decompMod``, like:
 
+::
+   
    if (abs(carbon_patch(p)) < ccrit) then
       write(iulog,*) 'carbon patch significantly negative at local, global p = ', &
            p, get_global_index(subgrid_index=p, subgrid_level=subgrid_level_patch)
@@ -92,8 +98,10 @@ Or, if all you want is the global index of ``p`` for the sake of writing extra d
 
 In all of these cases, the output will appear in either the cesm or lnd log file. In the above example, we see that the local patch index is 482 on processor 362 and the global patch index is 163723. From there, one can use this patch index to write out variables that are used in updating leafc, for example, leafc is updated a number of times in CNCStateUpdate1Mod.F90.
 
-There are two equivalent methods to write a conditional statement to provide more output for the problem patch within a loop over all patches. The first method is to translate the local index to a global index::
+There are two equivalent methods to write a conditional statement to provide more output for the problem patch within a loop over all patches. The first method is to translate the local index to a global index:
 
+::
+   
    use decompMod, only : get_global_index, subgrid_level_patch
    ...
    if (get_global_index(p, subgrid_level_patch) == 163723) then
@@ -101,8 +109,10 @@ There are two equivalent methods to write a conditional statement to provide mor
       write(iulog,*)'CNCStateUpdate1Mod +leafc_xfer_to_leafc: ',cf_veg%leafc_xfer_to_leafc_patch(p)*dt
    end if
 
-The second method is to use the local index along with the processor number::
+The second method is to use the local index along with the processor number:
 
+::
+   
    use spmdMod, only : iam
    ...
    if (p == 482 .and. iam == 362) then
@@ -127,7 +137,7 @@ It is common, when debugging, to want to print the values of various variables f
 
 The example function in ``point_of_interest.F90`` is ``poi_c``. It finds columns with a given landunit type (in this case, the natural vegetated landunit). That function can be used in a column-level loop to find columns with that landunit within the grid cell of interest. Its typical use in CTSM code is
 ::
-
+   
    do fc = 1, num_nolakec
       c = filter_nolakec(fc)
       ! Various code here, maybe setting foo and bar variables
@@ -136,7 +146,7 @@ The example function in ``point_of_interest.F90`` is ``poi_c``. It finds columns
       end if
    end do
 
-You will also need a ``use`` statement in the module from which you are calling poi_c
+You will also need a ``use`` statement in the module from which you are calling ``poi_c``
 ::
 
    use point_of_interest, only : poi_c
