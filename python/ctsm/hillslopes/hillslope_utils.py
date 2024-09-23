@@ -2,6 +2,9 @@
 Utilities for hillslope scripts to share
 """
 import shutil
+import os
+import glob
+import re
 import numpy as np
 import xarray as xr
 
@@ -721,3 +724,24 @@ def add_variable_xr(
     dataset[name] = data_array
 
     return dataset
+
+
+def get_chunks_to_process(args):
+    """
+    Get list of chunks to process
+    """
+    if not hasattr(args, "cndx") or args.cndx is None:
+        # List of gridcell files
+        file_list = glob.glob(os.path.join(args.input_dir, "chunk_[0-9]*nc"))
+        # Extract the chunk number from the file names
+        chunk_list = [re.search(r"chunk_\d+", x).group() for x in file_list]
+        chunk_list = [x.replace("chunk_", "") for x in chunk_list]
+        # Get the list of unique chunk numbers
+        chunks_to_process = [int(x) for x in list(set(chunk_list))]
+        chunks_to_process.sort()
+    else:
+        chunks_to_process = [int(cndx) for cndx in args.cndx[0].split(",")]
+        for cndx in chunks_to_process:
+            if cndx < 1 or cndx > args.n_chunks:
+                raise RuntimeError("All cndx must be 1-{:d}".format(args.n_chunks))
+    return chunks_to_process

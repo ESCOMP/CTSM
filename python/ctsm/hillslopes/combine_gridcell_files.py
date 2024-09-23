@@ -6,14 +6,12 @@ import os
 import argparse
 import glob
 import datetime
-import re
-import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no
 # member Dataset, even though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
-from ctsm.hillslopes.hillslope_utils import HillslopeVars
+from ctsm.hillslopes.hillslope_utils import HillslopeVars, get_chunks_to_process
 
 
 def parse_arguments(argv):
@@ -109,20 +107,7 @@ def main():
     args = parse_arguments(sys.argv[1:])
     verbose = args.verbose
 
-    if args.cndx is None:
-        # List of gridcell files
-        file_list = glob.glob(os.path.join(args.input_dir, "chunk_[0-9]*nc"))
-        # Extract the chunk number from the file names
-        chunk_list = [re.search(r"chunk_\d+", x).group() for x in file_list]
-        chunk_list = [x.replace("chunk_", "") for x in chunk_list]
-        # Get the list of unique chunk numbers
-        chunks_to_process = [int(x) for x in list(set(chunk_list))]
-        chunks_to_process.sort()
-    else:
-        chunks_to_process = [int(cndx) for cndx in args.cndx[0].split(",")]
-        for cndx in chunks_to_process:
-            if cndx < 1 or cndx > args.n_chunks:
-                raise RuntimeError("All cndx must be 1-{:d}".format(args.n_chunks))
+    chunks_to_process = get_chunks_to_process(args)
 
     nhillslope = None
     nmaxhillcol = None
@@ -186,6 +171,8 @@ def main():
             add_bedrock,
             do_add_stream_channel_vars,
         )
+
+
 
 
 def write_to_file(
