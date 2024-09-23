@@ -1,5 +1,5 @@
 """
-Combine chunk files into single surface data file
+Combine chunk files into a file for use in CTSM
 """
 import argparse
 import sys
