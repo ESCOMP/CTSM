@@ -1,5 +1,5 @@
 """
-Combine gridcell files into single file
+For each chunk in HAND analysis, combine all gridcell files into file.
 """
 import sys
 import os
