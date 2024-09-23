@@ -733,7 +733,6 @@ def get_chunks_to_process(args, prefix):
     if not hasattr(args, "cndx") or args.cndx is None:
         # List of gridcell files
         file_list = glob.glob(os.path.join(args.input_dir, prefix + "_[0-9]*nc"))
-        print(f"file_list: {file_list}")
         # Extract the chunk number from the file names
         chunk_list = [re.search(r"chunk_\d+", x).group() for x in file_list]
         chunk_list = [x.replace("chunk_", "") for x in chunk_list]
