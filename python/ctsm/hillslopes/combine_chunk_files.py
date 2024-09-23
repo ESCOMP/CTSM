@@ -124,6 +124,9 @@ def finish_saving(args):
 
 
 def get_mask_var(surface_ds):
+    """
+    Get the variable to be used as a mask
+    """
     mask_var = None
     mask_var_options = ["PFTDATA_MASK", "LANDFRAC_PFT"]
     for mask_var_option in mask_var_options:
