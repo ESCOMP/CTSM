@@ -103,17 +103,20 @@ def finish_saving(args):
     with Dataset(args.input_file, "r") as ds_in:
         lon2d = ds_in.variables["LONGXY"][:]
         lat2d = ds_in.variables["LATIXY"][:]
-        area = ds_in.variables["AREA"][:]
+        has_area = "AREA" in ds_in.variables
+        if has_area:
+            area = ds_in.variables["AREA"][:]
     with Dataset(args.output_file, "a", format=NETCDF_FORMAT) as ds_out:
         add_longxy_latixy_nc(lon2d, lat2d, ds_out)
-        add_variable_nc(
-            name="AREA",
-            units="km^2",
-            long_name="area",
-            data=area,
-            dataset=ds_out,
-            dims=["lsmlat", "lsmlon"],
-        )
+        if has_area:
+            add_variable_nc(
+                name="AREA",
+                units="km^2",
+                long_name="area",
+                data=area,
+                dataset=ds_out,
+                dims=["lsmlat", "lsmlon"],
+            )
         ds_out.setncattr("input_file", args.input_file)
         now = dt.datetime.now()
         datestr = now.strftime("%Y-%m-%d")
