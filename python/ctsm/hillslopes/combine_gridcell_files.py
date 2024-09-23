@@ -107,7 +107,7 @@ def main():
     args = parse_arguments(sys.argv[1:])
     verbose = args.verbose
 
-    chunks_to_process = get_chunks_to_process(args)
+    chunks_to_process = get_chunks_to_process(args, "chunk")
 
     nhillslope = None
     nmaxhillcol = None

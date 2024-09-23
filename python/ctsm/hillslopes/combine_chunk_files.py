@@ -139,7 +139,7 @@ def main():
     surface_ds.close()
 
     arrays_uninitialized = True
-    chunks_to_process = get_chunks_to_process(args)
+    chunks_to_process = get_chunks_to_process(args, "combined_chunk")
     for cndx in chunks_to_process:
         print(f"Chunk {cndx}...")
         cstr = "{:02d}".format(cndx)
