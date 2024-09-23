@@ -85,7 +85,12 @@ def parse_arguments(argv):
         type=str,
         default=None,
     )
-    optional_named.add_argument("--overwrite", help="overwrite", action="store_true", default=False)
+    optional_named.add_argument(
+        "--overwrite",
+        help="Overwrite existing output files? If not given, will skip existing files.",
+        action="store_true",
+        default=False,
+    )
     optional_named.add_argument(
         "-v", "--verbose", help="print info", action="store_true", default=False
     )
