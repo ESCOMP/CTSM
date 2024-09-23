@@ -6,6 +6,7 @@ import os
 import argparse
 import glob
 import datetime
+import re
 import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no
@@ -50,14 +51,6 @@ def parse_arguments(argv):
         help=f"DEM to use (default: {dem_source_default})",
         type=str,
         default=dem_source_default,
-    )
-    default_n_chunks = 36
-    optional_named.add_argument(
-        "--n-chunks",
-        help=f"Number of chunks (default: {default_n_chunks})",
-        nargs=1,
-        type=int,
-        default=default_n_chunks,
     )
     default_n_bins = 4
     optional_named.add_argument(
@@ -117,7 +110,14 @@ def main():
     verbose = args.verbose
 
     if args.cndx is None:
-        chunks_to_process = 1 + np.arange(args.n_chunks)
+        # List of gridcell files
+        file_list = glob.glob(os.path.join(args.input_dir, "chunk_[0-9]*nc"))
+        # Extract the chunk number from the file names
+        chunk_list = [re.search(r"chunk_\d+", x).group() for x in file_list]
+        chunk_list = [x.replace("chunk_", "") for x in chunk_list]
+        # Get the list of unique chunk numbers
+        chunks_to_process = [int(x) for x in list(set(chunk_list))]
+        chunks_to_process.sort()
     else:
         chunks_to_process = [int(cndx) for cndx in args.cndx[0].split(",")]
         for cndx in chunks_to_process:
