@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import datetime as dt
+import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
@@ -119,6 +120,24 @@ def finish_saving(args):
         ds_out.setncattr("creation_date", datestr)
 
 
+def get_mask_var(surface_ds):
+    mask_var = None
+    mask_var_options = ["PFTDATA_MASK", "LANDFRAC_PFT"]
+    for mask_var_option in mask_var_options:
+        if mask_var_option in surface_ds.variables.keys():
+            mask_var = mask_var_option
+    if mask_var is None:
+        raise KeyError(
+            f"No variable found in sfcfile that looks like a mask ({mask_var_options})"
+        )
+    landmask = np.asarray(
+        surface_ds.variables[mask_var][
+            :,
+        ]
+    )
+    return mask_var, landmask
+
+
 def main():
     """
     See module description
@@ -133,10 +152,10 @@ def main():
     )
 
     surface_ds = Dataset(args.input_file, "r")
-    landmask = surface_ds.variables["PFTDATA_MASK"][
-        :,
-    ]
+    mask_var, landmask = get_mask_var(surface_ds)
     surface_ds.close()
+    if mask_var == "LANDFRAC_PFT":
+        landmask[np.where(landmask > 0)] = 1
 
     arrays_uninitialized = True
     chunks_to_process = get_chunks_to_process(args, "combined_chunk")
