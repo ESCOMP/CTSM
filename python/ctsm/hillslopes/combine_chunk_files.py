@@ -5,7 +5,6 @@ import argparse
 import sys
 import os
 import datetime as dt
-import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
@@ -15,6 +14,7 @@ from ctsm.hillslopes.hillslope_utils import (
     add_longxy_latixy_nc,
     HillslopeVars,
     NETCDF_FORMAT,
+    get_chunks_to_process,
 )
 
 
@@ -60,13 +60,6 @@ def parse_arguments(argv):
         default=dem_source_default,
     )
 
-    default_n_chunks = 36
-    optional_named.add_argument(
-        "--n-chunks",
-        help=f"Number of chunks (default: {default_n_chunks})",
-        type=int,
-        default=default_n_chunks,
-    )
     default_n_bins = 4
     optional_named.add_argument(
         "--n-bins",
@@ -146,8 +139,9 @@ def main():
     surface_ds.close()
 
     arrays_uninitialized = True
-    for cndx in 1 + np.arange(args.n_chunks):
-        print(f"{cndx} / {args.n_chunks}")
+    chunks_to_process = get_chunks_to_process(args)
+    for cndx in chunks_to_process:
+        print(f"Chunk {cndx}...")
         cstr = "{:02d}".format(cndx)
         chunk_file = cfile0.replace("ChunkIndex", cstr)
         file_exists = os.path.exists(chunk_file)
