@@ -174,6 +174,9 @@ def main():
             for j in range(n_lat):
                 hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
+    if arrays_uninitialized:
+        raise FileNotFoundError("No files found")
+
     # -- Write data to file ------------------
     hillslope_vars.save(
         args.input_file,
