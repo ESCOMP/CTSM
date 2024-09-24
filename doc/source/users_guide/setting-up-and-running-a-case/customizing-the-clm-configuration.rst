@@ -286,6 +286,9 @@ The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and ma
 
 ``-bgc_spinup`` is an option only available for |version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See :ref:`spinning-up-clm-bgc` for an example using this option.
 
+.. todo::
+    Update the above.
+
 ``-chk_res`` ensures that the resolution chosen is supported by CLM. If the resolution is NOT supported it will cause the CLM ``build-namelist`` to abort when run. So when either ``preview_namelist``, ``case.build`` or ``case.run`` is executed it will abort early. Since, the CESM scripts only support certain resolutions anyway, in general this option is NOT needed in the context of running CESM cases.
 
 ``-clm_demand`` asks the ``build-namelist`` step to require that the list of variables entered be set. Typically, this is used to require that optional filenames be used and ensure they are set before continuing. For example, you may want to require that fpftdyn be set to get dynamically changing vegetation types. To do this you would do the following.
