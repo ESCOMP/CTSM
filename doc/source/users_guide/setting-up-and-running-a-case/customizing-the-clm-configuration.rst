@@ -361,7 +361,7 @@ When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets 
    An example of using ``CLM_USRDAT_NAME`` for a simulation is given in Example :numref:`creating-your-own-singlepoint-dataset`.
 
 ``CLM_CO2_TYPE``
-   sets the type of input CO2 for either "constant", "diagnostic" or prognostic". If "constant" the value from ``CCSM_CO2_PPMV`` will be used. If "diagnostic" or "prognostic" the values MUST be sent from the atmosphere model. See :ref:`running-with-historical-co2-forcing` for more information on how to send CO2 from the data atmosphere model.
+   sets the type of input CO2 for either "constant", "diagnostic" or prognostic". If "constant" the value from ``CCSM_CO2_PPMV`` will be used. If "diagnostic" or "prognostic" the values MUST be sent from the atmosphere model.
 
 ===============
  User Namelist
