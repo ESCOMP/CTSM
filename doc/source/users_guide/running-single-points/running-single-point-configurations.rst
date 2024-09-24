@@ -74,6 +74,9 @@ Supported single-point runs for sites with their own atmospheric forcing
 
 Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked. If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
+.. todo::
+    Update the below, as ``queryDefaultNamelist.pl`` no longer exists.
+
 When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the ``queryDefaultNamelist.pl`` script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
 
 Example: Use site-specific atmospheric forcings

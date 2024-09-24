@@ -345,6 +345,9 @@ When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets 
 ``CLM_FORCE_COLDSTART``
    when set to on, *requires* that your simulation do a cold start from arbitrary initial conditions. If this is NOT set, it will use an initial condition file if it can find an appropriate one, and otherwise do a cold start. ``CLM_FORCE_COLDSTART`` is a good way to ensure that you are doing a cold start if that is what you want to do.
 
+.. todo::
+    Update the below, as ``queryDefaultNamelist.pl`` no longer exists.
+
 ``CLM_USRDAT_NAME``
    Provides a way to enter your own datasets into the namelist. The files you create must be named with specific naming conventions outlined in :ref:`creating-your-own-singlepoint-dataset`. To see what the expected names of the files are, use the ``queryDefaultNamelist.pl`` to see what the names will need to be. For example if your ``CLM_USRDAT_NAME`` will be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850, the following will list what your filenames should be:
    ::
