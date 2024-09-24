@@ -52,6 +52,9 @@ is described in here.
 
      ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
 
+.. todo::
+    Update the below, as ``mksurfdata.pl`` no longer exists.
+
 6. Create surface datasets in ``tools/mksurfdata_esmf``::
 
      ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_esmf" -no-crop

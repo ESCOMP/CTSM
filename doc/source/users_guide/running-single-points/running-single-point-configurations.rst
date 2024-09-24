@@ -145,6 +145,9 @@ The first step is to create the domain and surface datasets using the process ou
 
 Example: Creating a surface dataset for a single point
 ---------------------------------------------------------------------
+.. todo::
+    Update the below, as ``mksurfdata.pl`` no longer exists.
+
 ::
 
    # set the GRIDNAME and creation date that will be used later
