@@ -17,8 +17,6 @@ To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_fil
 
 Other ``fsurdat`` files are distinguished from this one by their resolution (``hgrid``), simulation year (``sim_year``) and prognostic crop (``use_crop``) attributes.
 
-To add or change the default filenames for CLM tools, edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_|version|_tools.xml`` and either change an existing filename or add a new one. Editing this file is similar to the ``namelist_definition_ctsm.xml`` talked about above.
-
 ----------------------------
 What are the required files?
 ----------------------------
