@@ -22,7 +22,7 @@ Example: Transient Simulation with Historical CO2
 --------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case DATM_CO2_TSERIES -res f19_g17_gl4 -compset IHistClm50BgcCrop
    > cd DATM_CO2_TSERIES
 

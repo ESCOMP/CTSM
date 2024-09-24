@@ -45,7 +45,7 @@ Example: Use global forcings at a site without its own special forcings
 This example uses the single-point site in Brazil.
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > set SITE=1x1_brazil
    > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs
    > cd testSPDATASET
@@ -59,7 +59,7 @@ The urban Mexico City test site has its own atmosphere forcing data (see Sect. :
 
 ::
 
-   > cd scripts
+   > cd cime/scripts
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_mexicocityMEX
    > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs
@@ -81,7 +81,7 @@ Example: Use site-specific atmospheric forcings
 In this example, we show how to use the atmospheric forcings specific to the Vancouver, Canada point.
 ::
 
-   > cd scripts
+   > cd cime/scripts
 
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_vancouverCAN
@@ -121,7 +121,7 @@ Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a spe
 -----------------------------------------------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case my_userdataset_test -res CLM_USRDAT -compset I2000Clm50BgcCruGs
    > cd my_userdataset_test/
    > set GRIDNAME=13x12pt_f19_alaskaUSA
@@ -176,6 +176,10 @@ The next step is to create a case that points to the files you created above. We
 
 Example: Setting up a case from the single-point surface dataset just created
 --------------------------------------------------------------------------------------------
+
+.. todo::
+    Change this to provide instructions for a CTSM checkout instead of a CESM one.
+
 ::
 
    # First setup an environment variable that points to the top of the CESM directory.
@@ -188,7 +192,7 @@ Example: Setting up a case from the single-point surface dataset just created
    # naming convention (leave off the creation date)
    > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_esmf/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
-   > cd $CESMROOT/scripts
+   > cd $CESMROOT/cime/scripts
    > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
    -mach cheyenne_intel
    > cd my_usernldatasets_test

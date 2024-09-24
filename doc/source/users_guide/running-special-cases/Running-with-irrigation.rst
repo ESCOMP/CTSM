@@ -13,7 +13,7 @@ Example: Irrigation Simulation
 ::
 
    # Note here we do a CLMSP simulation as that is what has been validated
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case IRRIG -res f19_g17_gl4 -compset I1850Clm50BgcCrop
    > cd IRRIG
 

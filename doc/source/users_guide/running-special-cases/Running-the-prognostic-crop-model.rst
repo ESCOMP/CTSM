@@ -12,7 +12,7 @@ Example: Crop Simulation
 ------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case CROP -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd CROP
 

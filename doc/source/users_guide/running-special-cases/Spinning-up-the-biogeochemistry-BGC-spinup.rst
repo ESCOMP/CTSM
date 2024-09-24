@@ -47,7 +47,7 @@ Example: AD_SPINUP Simulation for |version|-BGC
 --------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_spinup
    # Change accelerated spinup mode
@@ -75,7 +75,7 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
 ------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_finalspinup
    # Now, Copy the last CLM restart file from the earlier case into your run directory
