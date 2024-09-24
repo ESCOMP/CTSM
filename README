@@ -130,8 +130,6 @@ cime_config/usermods_dirs -------- Directories of sets of user-modification subd
 
 tools/mksurfdata_esmf --------- Directory to build program to create surface dataset 
                                 at any resolution.
-tools/mkprocdata_map ---------- Process history data from unstructed grids to a gridded 
-                                format.
 tools/mkmapgrids -------------- NCL script to create a SCRIP grid file for a regular lat/lon grid (deprecated)
 tools/crop_calendars ---------- Tools to process and process and create crop calendar datasets for CTSM
 tools/modify_input_files ------ Script to modify existing CTSM input datasets in standard ways
