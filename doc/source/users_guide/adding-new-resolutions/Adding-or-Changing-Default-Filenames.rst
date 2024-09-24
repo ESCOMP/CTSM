@@ -6,7 +6,7 @@
  Changing Default Filenames
 ============================
 
-To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_clm4_5.xml`` and either change an existing filename or add a new one. Most entries in the default namelist files, include different attributes that describe the different properties that describe the differences in the datasets. Attributes include the resolution, year to simulation, range of years to simulate for transient datafiles, the land-mask, the representative concentration pathway (RCP) for future scenarios, and the type of biogeochemistry (BGC) model used. For example the surface dataset (``fsurdat``) for the 1.9x2.5 resolution is as follows:
+To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_files/namelist_definition_ctsm.xml`` and either change an existing filename or add a new one. Most entries in the default namelist files, include different attributes that describe the different properties that describe the differences in the datasets. Attributes include the resolution, year to simulation, range of years to simulate for transient datafiles, the land-mask, the representative concentration pathway (RCP) for future scenarios, and the type of biogeochemistry (BGC) model used. For example the surface dataset (``fsurdat``) for the 1.9x2.5 resolution is as follows:
 
 ::
   
@@ -17,7 +17,7 @@ To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_fil
 
 Other ``fsurdat`` files are distinguished from this one by their resolution (``hgrid``), simulation year (``sim_year``) and prognostic crop (``use_crop``) attributes.
 
-To add or change the default filenames for CLM tools, edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_|version|_tools.xml`` and either change an existing filename or add a new one. Editing this file is similar to the ``namelist_defaults_clm4_5.xml`` talked about above.
+To add or change the default filenames for CLM tools, edit the ``$CTSMROOT/bld/namelist_files/namelist_defaults_|version|_tools.xml`` and either change an existing filename or add a new one. Editing this file is similar to the ``namelist_definition_ctsm.xml`` talked about above.
 
 ----------------------------
 What are the required files?
