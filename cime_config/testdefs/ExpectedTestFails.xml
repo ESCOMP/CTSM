@@ -29,7 +29,7 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
+  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq--clm-nofireemis">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>CDEPS/#243</issue>
