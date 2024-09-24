@@ -35,6 +35,9 @@ Creating a Complete Set of Files for Input to CLM
 
    First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: ``$CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc``. The ``mkmapgrids`` and ``mkscripgrid.ncl`` NCL script in the ``$CTSMROOT/tools/mkmapgrids`` directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
 
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
 2. Create domain dataset (if NOT already done)
 
    Next use ``gen_domain`` to create a domain file for use by DATM and CLM. This is required, unless a domain file was already created. See the Section called Creating a domain file for CLM and DATM for more information on this.

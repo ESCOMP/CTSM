@@ -23,6 +23,9 @@ The list of generally important scripts and programs are as follows.
 
 #. ``./mkprocdata_map`` to interpolate output unstructured grids (such as the CAM HOMME dy-core "ne" grids like ne30np4) into a 2D regular lat/long grid format that can be plotted easily. Can be used by either clm4_0 or |version|.
 
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
 #. ``$CIMEROOT/tools/mapping/gen_domain_files/gen_domain`` to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
 
 #. ``$CIMEROOT/tools/cprnc`` to compare two NetCDF files.
@@ -50,6 +53,9 @@ Running FORTRAN tools with command line options
 
 .. todo::
     Remove reference to mkprocdata_map?
+
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
 
 ``gen_domain``, ``mkprocdata_map``, and ``cprnc`` run with command line arguments. The detailed sections below will give you more information on the command line arguments specific to each tool. Also running the tool without any arguments will give you a general synopsis on how to run the tool.
 

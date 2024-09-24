@@ -146,7 +146,7 @@ The first step is to create the domain and surface datasets using the process ou
 Example: Creating a surface dataset for a single point
 ---------------------------------------------------------------------
 .. todo::
-    Update the below, as ``mksurfdata.pl`` no longer exists.
+    Update the below, as ``mksurfdata.pl`` no longer exists and domain files aren't needed with nuopc.
 
 ::
 
@@ -185,6 +185,9 @@ Example: Setting up a case from the single-point surface dataset just created
 
 .. todo::
     Change this to provide instructions for a CTSM checkout instead of a CESM one.
+
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
 
 ::
 

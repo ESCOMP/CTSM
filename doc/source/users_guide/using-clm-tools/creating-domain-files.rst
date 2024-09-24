@@ -2,6 +2,9 @@
 
 .. _creating-domain-files:
 
+.. todo::
+    Delete this page? Domain files aren't needed with nuopc.
+
 *****************************
  Creating CLM domain files
 *****************************
