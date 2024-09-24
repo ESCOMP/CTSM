@@ -2,12 +2,12 @@
 
 .. _creating-domain-files:
 
-.. todo::
-    Delete this page? Domain files aren't needed with nuopc.
-
 *****************************
  Creating CLM domain files
 *****************************
+
+.. todo::
+    Delete this page? Domain files aren't needed with nuopc.
 
 ``gen_domain`` to create a domain file for datm from a mapping file. ``gen_domain`` is a tool that is a part of CIME. The domain file is then used by BOTH DATM AND CLM to define the grid and land-mask. The general data flow is shown in two figures. :numref:`Figure mkmapdata.sh` shows the general flow for a general global case (or for a regional grid that DOES include ocean). :numref:`Figure mknoocnmap.pl` shows the use of ``mknoocnmap.pl`` (see :ref:`using-mkocnmap`) to create a regional or single-point map file that is then run through ``gen_domain`` to create the domain file for it. As stated before :numref:`Figure Data_Flow_Legend` is the legend for both of these figures. See `the $CIMEROOT/tools/mapping/gen_domain_files/README <https://github.com/ESMCI/cime/blob/master/tools/mapping/gen_domain_files/README>`_ file for more help on ``gen_domain``.
 
