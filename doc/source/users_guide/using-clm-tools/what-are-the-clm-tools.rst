@@ -6,6 +6,9 @@
  What are the CLM tools
 ========================
 
+.. todo::
+    Remove references to mkprocdata_map?
+
 There are several tools provided with CLM that allow you to create your own input datasets at resolutions you choose, or to interpolate initial conditions to a different resolution, or used to compare CLM history files between different cases. The tools are all available in the ``$CTSMROOT/tools`` directory. Most of the tools are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL scripts in the ``$CTSMROOT/tools//ncl_scripts`` directory, and some of the tools are scripts that may also call the ESMF regridding program. Some of the NCL scripts are very specialized and not meant for general use, and we won't document them here. They still contain documentation in the script itself and the README file in the tools directory.
 
 The tools produce files that can be used for CLM4.5 and |version|. They do **NOT** produce files that can be used for CLM4.0. If you need files for CLM4.0, you'll need to use a previous version of CLM.
@@ -44,6 +47,9 @@ There is a sample namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfda
 -----------------------------------------------
 Running FORTRAN tools with command line options
 -----------------------------------------------
+
+.. todo::
+    Remove reference to mkprocdata_map?
 
 ``gen_domain``, ``mkprocdata_map``, and ``cprnc`` run with command line arguments. The detailed sections below will give you more information on the command line arguments specific to each tool. Also running the tool without any arguments will give you a general synopsis on how to run the tool.
 

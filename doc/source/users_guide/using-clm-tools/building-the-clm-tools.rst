@@ -6,6 +6,9 @@
 
 The CLM FORTRAN tools all have similar makefiles, and similar options for building. The tools ``cprnc`` and ``gen_domain`` use the CIME configure/build system which is described in the next section.
 
+.. todo::
+    Remove references to mkprocdata_map?
+
 The Makefiles (for ``mksurfdata_esmf`` and ``mkprocdata_map``) use GNU Make extensions and thus require that you use GNU make to use them. They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. There are also environment variables that can be set to set things that must be customized. All the tools use NetCDF and hence require the path to the NetCDF libraries and include files. On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used. The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. Finally the tools allow you to turn optimization on (which is off by default but on for ``mksurfdata_esmf``) with the OPT flag so that the tool will run faster.
 
 Options used by all:  ``mksurfdata_esmf``
@@ -70,6 +73,9 @@ More details on each environment variable.
 
 ``OPT``
   This variable flags if compiler optimization should be used when compiling the tool. It can be set to either ``TRUE`` or ``FALSE``, by default it is set to for both ``mksurfdata_esmf`` and ``mkprocdata_map``. Turning this on should make the tool run much faster.
+
+.. todo::
+    Remove reference to mkprocdata_map above?
 
 .. warning:: Note, you should expect that answers will be different when ``OPT`` is activated.
 
