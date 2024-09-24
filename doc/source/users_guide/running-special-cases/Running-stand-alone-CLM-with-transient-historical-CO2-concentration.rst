@@ -6,7 +6,10 @@
  Running with historical CO2 forcing
 =====================================
 
-In this case you want to run a simulation with stand-alone CLM responding to changes in CO2 for a historical period. For this example, we will start with the ``I_1850-2000_CN`` compset that has transient land-use, Nitrogen and Aerosol deposition already. You could also use another compset if you didn't want these other features to be transient. In order to get CO2 to be transient we need to add a new streams file and add it to the list of streams in the ``user_nl_datm`` file. You also need a NetCDF datafile that datm can read that gives the variation. You could supply your own file, but we have a standard file that is used by CAM for this and our example will make use of this file.
+In this case you want to run a simulation with stand-alone CLM responding to changes in CO2 for a historical period. For this example, we will start with the ``IHistClm50BgcCrop`` compset that has transient land-use, Nitrogen and Aerosol deposition already. You could also use another compset if you didn't want these other features to be transient. In order to get CO2 to be transient we need to add a new streams file and add it to the list of streams in the ``user_nl_datm`` file. You also need a NetCDF datafile that datm can read that gives the variation. You could supply your own file, but we have a standard file that is used by CAM for this and our example will make use of this file.
+
+.. todo::
+    ``user_nl_datm`` or ``user_nl_datm_streams``?
 
 .. note:: Most everything here has to do with changing datm rather than CLM to allow this to happen. As such the user that wishes to do this should first become more familiar with datm and read the `CESM Data Model User's Guide <https://esmci.github.io/cime/versions/cesm2.2/html/data_models/index.html>`_ especially as it pertains to the datm.
 
