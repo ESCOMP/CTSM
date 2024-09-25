@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.0
 Originator(s): multiple (see below)
-Date: Fri 06 Sep 2024 02:21:22 AM MDT
+Date: Tue 24 Sep 2024 11:34:58 PM MDT
 One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
 
 Purpose and description of changes since ctsm5.2.005
@@ -43,7 +43,6 @@ Changes to CTSM Answers:
 New surface datasets:
 =====================
 
-- New surface datasets because of updates in PFT/LAI/soil-color raw datasets (now from the TRENDY2024 timeseries that ends in 2023), as well as two fire datasets (AG fire, peatland), and the glacier behavior dataset.
 - With new surface datasets the following GLC fields have region "1" set to UNSET:
      glacier_region_behavior, glacier_region_melt_behavior, glacier_region_ice_runoff_behavior
 - Updates to allow creating transient landuse timeseries files going back to 1700.
@@ -56,6 +55,7 @@ New surface datasets:
 New input datasets to mksurfdata_esmf:
 ======================================
 
+- Updates in PFT/LAI/soil-color raw datasets (now from the TRENDY2024 timeseries that ends in 2023), as well as two fire datasets (AG fire, peatland), and the glacier behavior dataset.
 
 Contributors (alphabetical order by github handle)
 ------------
@@ -84,33 +84,98 @@ Contributors (alphabetical order by github handle)
     @rgknox
     @samsrabin
     @slevis-lmwg
+    @TeaganKing
     @wwieder
 
-Significant changes to scientifically-supported configurations since ctsm5.2.0
-------------------------------------------------------------------------------
+Significant changes to scientifically-supported configurations since ctsm5.2.005
+--------------------------------------------------------------------------------
 
-Notes of particular relevance for users for ctsm5.2.0 to ctsm5.3.0
-------------------------------------------------------------------
+glacier_behavior namelist items changed for clm4_5 and clm5_0 physics
+parameter and surface datasets updated for all physics options
+
+Notes of particular relevance for users for ctsm5.2.005 to ctsm5.3.0
+--------------------------------------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+   With the updated surface datasets all finidat files being used will need to
+   be run with use_init_interp = TRUE
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items or options:
+     fire_method -- new options: li2024gswpfrc,li2024crujra
+
+      new fire options:
+        max_rh30_affecting_fuel
+        defo_fire_precip_thresh_bet
+        defo_fire_precip_thresh_bdt
+        nonborpeat_fire_precip_denom
+        borpeat_fire_soilmoist_denom
+
+      new fates options:
+        fates_harvest_mode
+        use_fates_lupft
+        use_fates_potentialveg
+        flandusepftdat
+
+      new physics options:
+        hillslope_fsat_equals_zero
+        urban_explicit_ac
+        use_prigent_roughness
+        stream_fldfilename_prigentroughness
+        stream_meshfile_prigentroughness
+        excess_ice_coldstart_temp
+        excess_ice_coldstart_depth
+
+      new cropcal options:
+        stream_year_last_cropcal_swindows
+        model_year_align_cropcal_swindows
+        stream_year_first_cropcal_cultivar_gdds
+        stream_year_last_cropcal_cultivar_gdds
+        model_year_align_cropcal_cultivar_gdds
+        stream_fldFileName_gdd20_baseline
+        stream_gdd20_seasons
+        flush_gdd20
+        allow_invalid_gdd20_season_inputs
+        stream_fldFileName_gdd20_season_start
+        stream_fldFileName_gdd20_season_end
+
+      cropcal options with names changed:
+        stream_year_first_cropcal => cropcals_rx
+        stream_year_last_cropcal => cropcals_rx_adapt
+        model_year_align_cropcal => stream_year_first_cropcal_swindows
+
+      new CN matrix options:
+        use_matrixcn
+        use_soil_matrixcn
+        hist_wrt_matrixcn_diag
+        spinup_matrixcn
+        nyr_forcing
+        nyr_sasu
+        iloop_avg
+
+   Namelist items removed:
+     use_fates_logging
+     use_dynroot
+
+   Changes to XML options:
+
+   LND_TUNING_MODE:             New forcing options for cam4.0, cam5.0, and cam7.0
+   CLM_BLDNML_OPTS:             "-bgc cn" option removed
+   CLM_ACCELERATED_SPINUP:      sasu option added
+   LND_SETS_DUST_EMIS_DRV_FLDS: New option to determine if CAM or CTSM set dust emission options
+   PLUMBER2SITE:                New option to run for PLUMBER2 tower site locations
 
 Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
-
-Changes to documentation:
+   parameter files updated
+   surface datasets updated
+   many finidat files updated
 
 Things being deprecated (which will be removed):
-
-Notes of particular relevance for developers for ctsm5.2.0 to ctsm5.3.0:
-------------------------------------------------------------------------
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing:
-
+   Running with VIC hydrology being deprecated with testing removed
+   mkprocdata_map was removed
+   test/tools testing framework was removed
 
 Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_esmf python)
 ----------------
@@ -118,7 +183,7 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS
+    derecho - PASS (1710 namelists differ from ctsm5.2.005)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -136,8 +201,8 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
   any other testing (give details below):
 
   mksurfdata_esmf
-     derecho ---- run "make all" to create all datasets (completes in XXX hours)
-     (crop-global-SSP2-4.5-ne30 was longest at 6 hr, most completed in XXX hours)
+     derecho ---- run "make all" to create all datasets (completes in 6 hours)
+     (crop-global-SSP2-4.5-ne30 was longest at 6 hr)
 
   ctsm_sci
      derecho ---- OK
@@ -150,34 +215,33 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
      derecho ---- OK
 
 
-Answer changes ctsm5.2.0 to ctsm5.3.0
--------------------------------------
+Simulations to go with ctsm5.3.0:
+---------------------------------
 
-Changes answers relative to baseline: Yes! New surface datasets so answers change for ALL simulations!
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations: ALL
-    - what platforms/compilers: ALL
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
-      new climate
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename:
-
-   URL for LMWG diagnostics output used to validate new climate:
-
+   https://github.com/NCAR/LMWG_dev/issues/69
+   https://github.com/NCAR/LMWG_dev/issues/65
 
 Other details
 -------------
 
-List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+List git submodules:
+
+fates      = sci.1.78.2_api.36.0.0
+cism       = cismwrap_2_2_002
+rtm        = rtm1_0_80
+mosart     = mosart1.1.02
+mizuRoute  = cesm-coupling.n02_v2.1.2
+ccs_config = ccs_config_cesm1.0.0
+cime       = cime6.0.246
+cmeps      = cmeps0.14.77
+cdeps      = cdeps1.0.48
+share      = share1.0.19
 
 ===============================================================
 ===============================================================
 Tag name: ctsm5.2.029
 Originator(s): multiple (see contributors below)
-Date: 10 Sep 2024
+Date: Tue 24 Sep 2024 11:34:58 PM MDT
 One-line Summary: Update surface datasets: double tag of ctsm5.3.0
 
 Purpose and description of changes
