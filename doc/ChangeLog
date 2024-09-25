@@ -1,12 +1,16 @@
 ===============================================================
 Tag name: ctsm5.3.0
-Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Originator(s): multiple (see below)
 Date: Fri 06 Sep 2024 02:21:22 AM MDT
 One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
 
 Purpose and description of changes since ctsm5.2.005
 ----------------------------------------------------
 
+Bring in updates needed for the CESM3.0 science capability/functionality "chill". Most importantly bringing
+in: CN Matrix to speed up spinup for the BGC model, updated surface datasets, updated Leung 2023 dust emissions,
+explicit Air Conditioning for the Urban model, updates to crop calendars. For clm6_0 physics these options are now
+default turned on in addition to Sturm snow, and excess ice.
 
 Changes to CTSM Infrastructure:
 ===============================
@@ -16,7 +20,7 @@ Changes to CTSM Infrastructure:
 
 Changes to CTSM Answers:
 ========================
- 
+
  Changes to defaults for clm6_0 physics:
   - Urban explicit A/C turned on
   - Snow thermal conductivity is now Sturm_1997
@@ -36,28 +40,51 @@ Changes to CTSM Answers:
   - Pass active glacier (CISM) runoff directly to river model (MOSART)
   - Add the option for using matrix for Carbon/Nitrogen BGC spinup
 
-
 New surface datasets:
 =====================
 
-- New surface datasets because of updates in PFT/LAI/soil-color raw datasets (now from the TRENDY2024 timeseries that ends in 2023), as well as two fire datasets (AG fire, peatland), and the glacier behavior dataset. 
+- New surface datasets because of updates in PFT/LAI/soil-color raw datasets (now from the TRENDY2024 timeseries that ends in 2023), as well as two fire datasets (AG fire, peatland), and the glacier behavior dataset.
 - With new surface datasets the following GLC fields have region "1" set to UNSET:
      glacier_region_behavior, glacier_region_melt_behavior, glacier_region_ice_runoff_behavior
-- Updates to allow creating transient landuse timeseries files going back to 1700. 
-- Fix an important bug on soil fields that was there since ctsm5.2.0. This results in mksurfdata_esmf now giving identical answers with a change in number of processors, as it should. 
+- Updates to allow creating transient landuse timeseries files going back to 1700.
+- Fix an important bug on soil fields that was there since ctsm5.2.0. This results in mksurfdata_esmf now giving identical answers with a change in number of processors, as it should.
 - Add in creation of ne0np4.POLARCAP.ne30x4 surface datasets.
-- Add version to the surface datasets. 
+- Add version to the surface datasets.
 - Remove the --hires_pft option from mksurfdata_esmf as we don't have the datasets for it.
 - Remove VIC fields from surface datasets.
+
 New input datasets to mksurfdata_esmf:
 ======================================
 
 
-Contributors
+Contributors (alphabetical order by github handle)
 ------------
 
-    @slevis-lmwg @ekluzek @lawrencepj1 @wwieder @adrifoster @samsrabin @billsacks @lifang0209 @linniahawkins @olyson
-
+    @adrifoster
+    @billsacks
+    @cathyxinchangli
+    @chrislxj
+    @dmleung
+    @ekluzek
+    @Face2sea
+    @fang-bowen
+    @glemieux
+    @HuiWangWanderInGitHub
+    @jedwards
+    @jenniferholm
+    @jfkok
+    @KateC
+    @keerzhang1
+    @lawrencepj1
+    @lifang0209
+    @linniahawkins
+    @mvdebolskiy
+    @mvertens
+    @olyson
+    @rgknox
+    @samsrabin
+    @slevis-lmwg
+    @wwieder
 
 Significant changes to scientifically-supported configurations since ctsm5.2.0
 ------------------------------------------------------------------------------
@@ -91,20 +118,20 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - PASS
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
@@ -113,14 +140,14 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
      (crop-global-SSP2-4.5-ne30 was longest at 6 hr, most completed in XXX hours)
 
   ctsm_sci
-     derecho ----
+     derecho ---- OK
 
   mosart
-     derecho ----
-     izumi ------
+     derecho ---- OK
+     izumi ------ PASS
 
   rtm
-     derecho ----
+     derecho ---- OK
 
 
 Answer changes ctsm5.2.0 to ctsm5.3.0
@@ -240,7 +267,7 @@ Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_e
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS
+    derecho - PASS (1433 namelists differ compared to ctsm5.2.028)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -374,7 +401,7 @@ Bring b4b-dev branch to main CTSM development.
 
 Update cs.status parsing script to make expected BASELINE fails more obvious
 
-Fix some issues with finding IC files for certain lnd_tuning_modes: all for cam7, 
+Fix some issues with finding IC files for certain lnd_tuning_modes: all for cam7,
    clm5_0_cam6.0, and clm6_0_cam6.0
 
 Significant changes to scientifically-supported configurations
