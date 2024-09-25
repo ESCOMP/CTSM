@@ -4,8 +4,8 @@ Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri 06 Sep 2024 02:21:22 AM MDT
 One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
 
-Purpose and description of changes since ctsm5.2.0
---------------------------------------------------
+Purpose and description of changes since ctsm5.2.005
+----------------------------------------------------
 
 
 Changes to CTSM Infrastructure:
@@ -47,6 +47,8 @@ New input datasets to mksurfdata_esmf:
 
 Contributors
 ------------
+
+    @slevis-lmwg @ekluzek @lawrencepj1 @wwieder @adrifoster @samsrabin @billsacks @lifang0209 @linniahawkins @olyson
 
 
 Significant changes to scientifically-supported configurations since ctsm5.2.0
@@ -139,7 +141,7 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.2.029
-Originator(s): multiple
+Originator(s): multiple (see contributors below)
 Date: 10 Sep 2024
 One-line Summary: Update surface datasets: double tag of ctsm5.3.0
 
@@ -148,7 +150,7 @@ Purpose and description of changes
 
 New surface datasets because of updates in PFT/LAI/soil-color datasets, as well as two fire datasets (AG fire, pearland and the glacier behavior dataset. Also bring in an updated "PPE informed, hand-tuned" parameter file. And turn on Li2024 fire method. Also updates to allow creating transient landuse timeseries files going back to 1700. Fix an important bug on soil fields that was there since ctsm5.2.0. This results in mkaurfdata_esmf giving identical answers with a change in number of processors. Add in creation of ne0np4.POLARCAP.ne30x4 surface datasets.
 
-Asides: Remove VIC fields from surface datasets and testing. Add version to the surface datasets. Update the fire emissions factor dataset for the fire emissions testing in CTSM. Remove the --hires_pft option from mksurfdata_esmf as we don't have the datasets for it.
+Asides: Remove VIC fields from surface datasets and testing. Add version to the surface datasets. Update the fire emissions factor dataset for the fire emissions testing in CTSM. Remove the --hires_pft option from mksurfdata_esmf as we don't have the datasets for it. Also delete mkprocdata_map.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -175,7 +177,8 @@ Bugs fixed
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
    Fixes #2723 -- Version string on CTSM surface datasets to check for compatability
    Partly addressed #2752 -- NEON surface datasets are defined in two places -- should just be one in namelist_defaults_ctsm.xml
-   Partly addresses #2720 -- Make polarcap surface datasets in ctsm5.3.0, remove VR 1850 datasets
+   Partly addressed #2672 -- Excess ice testing
+   Fixes #2720 -- Make polarcap surface datasets in ctsm5.3.0, remove VR 1850 datasets
    Fixes #2452 -- Run mksurfdata_esmf with the new vegetation raw data
    Fixes #2570 -- Historical configuration for CLM6
    Fixes #2618 -- Update fire variables on surface dataset
@@ -184,6 +187,11 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
    Fixes #2744 -- Soil level clm surface input data for clm5.2.0 have missing values in large domains
    Fixes #2502 -- fsurdat: PCT_SAND, PCT_CLAY, ORGANIC differ with different PE layouts on derecho
    Fixes #2748 -- Update hillslope datasets for 5.3
+   Fixes #2773 -- Deprecate and remove mkprocdata_map
+
+Contributors
+------------
+    @slevis-lmwg @ekluzek @lawrencepj1 @wwieder @adrifoster @samsrabin @billsacks @lifang0209 @linniahawkins @olyson
 
 Notes of particular relevance for users
 ---------------------------------------
