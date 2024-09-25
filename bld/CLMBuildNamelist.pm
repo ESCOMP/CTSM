@@ -1665,6 +1665,7 @@ sub process_namelist_inline_logic {
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
@@ -1894,7 +1895,7 @@ sub process_namelist_inline_logic {
   #################################
   # namelist group: exice_streams #
   #################################
-  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_exice_streams($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ##########################################
   # namelist group: clm_temperature_inparm #
@@ -2506,8 +2507,9 @@ sub setup_logic_surface_dataset {
   # consistent with it
   # MUST BE AFTER: setup_logic_demand which is where flanduse_timeseries is set
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
+  my ($opts_in, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
 
+  my $opts = $opts_in;
   $nl_flags->{'flanduse_timeseries'} = "null";
   my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
   if (defined($flanduse_timeseries)) {
@@ -2522,6 +2524,11 @@ sub setup_logic_surface_dataset {
 
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
+  }
+  # Turn test option off for NEON until after XML is interpreted
+  my $test_files = $opts->{'test'};
+  if ( &value_is_true($nl_flags->{'neon'})) {
+     $opts->{'test'} = 0;
   }
   #
   # Always get the crop version of the datasets now and let the code turn it into the form desired
@@ -2548,7 +2555,7 @@ sub setup_logic_surface_dataset {
                  'use_crop'=>$nl_flags->{'use_crop'} );
   }
   #
-  # Expand the XML variables for NEON cases so that NEONSITE will be used
+  # Expand the XML variables for NEON cases so that NEONSITE will be used and test for existence
   #
   if ( &value_is_true($nl_flags->{'neon'}) ) {
      my $fsurdat = $nl->get_value($var);
@@ -2557,6 +2564,9 @@ sub setup_logic_surface_dataset {
         my $group = $definition->get_group_name($var);
         $nl->set_variable_value($group, $var, $newval);
         $log->verbose_message( "This is a NEON site and the fsurdat file selected is: $newval" );
+        if ( $test_files and ($newval !~ /null|none/) and (! -f remove_leading_and_trailing_quotes($newval) ) ) {
+          $log->fatal_error("file not found: $var = $newval");
+        }
      }
   }
 }
@@ -2571,10 +2581,12 @@ sub setup_logic_initial_conditions {
   #
   # MUST BE AFTER: setup_logic_demand   which is where flanduse_timeseries is set
   #         AFTER: setup_logic_irrigate which is where irrigate is set
+  #         AFTER: setup_logic_exice    which is where use_excess_ice is set
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $var = "finidat";
   my $finidat = $nl->get_value($var);
+  $nl_flags->{'excess_ice_on_finidat'} = "unknown";
   if ( $nl_flags->{'clm_start_type'} =~ /cold/ ) {
     if (defined $finidat ) {
       $log->warning("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incomptable with using a cold start" .
@@ -2623,7 +2635,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv",
-                       "use_fates",
+                       "use_fates", "use_excess_ice",
                        "lnd_tuning_mode",
                      ) {
        $settings{$item}    = $nl_flags->{$item};
@@ -2644,6 +2656,7 @@ sub setup_logic_initial_conditions {
     my $done = 2;
     do {
        $try++;
+       $nl_flags->{'excess_ice_on_finidat'} = $settings{'use_excess_ice'};
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
        # If couldn't find a matching finidat file, check if can turn on interpolation and try to find one again
        $finidat = $nl->get_value($var);
@@ -4957,18 +4970,39 @@ sub setup_logic_cnmatrix {
 #-------------------------------------------------------------------------------
 sub setup_logic_exice {
   #
-  # excess ice streams
+  # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
+  # Put use_exice into nl_flags so can be referenced later
+  if ( value_is_true($use_exice) ) {
+     $nl_flags->{'use_excess_ice'} = ".true.";
+  } else {
+     $nl_flags->{'use_excess_ice'} = ".false.";
+  }
+}
+
+#-------------------------------------------------------------------------------
+sub setup_logic_exice_streams {
+  #
+  # excess ice streams
+  # Run after initial conditions found as well as after setup_logic_exice
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  my $use_exice = $nl_flags->{'use_excess_ice'};
+  my $excess_ice_on_finidat = $nl_flags->{'excess_ice_on_finidat'};
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   my $finidat = $nl->get_value('finidat');
   # If coldstart and use_excess_ice is on:
   if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
      $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
      $use_exice_streams = '.true.';
-     # if excess ice is turned off
+  # If an finidat file was selected and use_excess_ice is on:
+  } elsif ( (not defined($use_exice_streams)) && value_is_true($use_exice) && (not value_is_true($excess_ice_on_finidat)) ) {
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+     $use_exice_streams = '.true.';
+  # if excess ice is turned off
   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
      $use_exice_streams = '.false.';
   # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
