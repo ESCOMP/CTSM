@@ -40,7 +40,15 @@ Changes to CTSM Answers:
 New surface datasets:
 =====================
 
-
+- New surface datasets because of updates in PFT/LAI/soil-color raw datasets (now from the TRENDY2024 timeseries that ends in 2023), as well as two fire datasets (AG fire, peatland), and the glacier behavior dataset. 
+- With new surface datasets the following GLC fields have region "1" set to UNSET:
+     glacier_region_behavior, glacier_region_melt_behavior, glacier_region_ice_runoff_behavior
+- Updates to allow creating transient landuse timeseries files going back to 1700. 
+- Fix an important bug on soil fields that was there since ctsm5.2.0. This results in mksurfdata_esmf now giving identical answers with a change in number of processors, as it should. 
+- Add in creation of ne0np4.POLARCAP.ne30x4 surface datasets.
+- Add version to the surface datasets. 
+- Remove the --hires_pft option from mksurfdata_esmf as we don't have the datasets for it.
+- Remove VIC fields from surface datasets.
 New input datasets to mksurfdata_esmf:
 ======================================
 
