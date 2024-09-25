@@ -71,7 +71,7 @@ url = https://github.com/NorESMhub/ccs_config_noresm.git
 fxtag = ccs_config_noresm0.0.32
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
+fxDONOTUSEurl = https://github.com/NorESMhub/ccs_config_noresm
 
 [submodule "cime"]
 path = cime
