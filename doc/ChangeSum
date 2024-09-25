@@ -1,5 +1,33 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+         ctsm5.3.0 multiple 09/24/2024 Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
+       ctsm5.2.029 multiple 09/24/2024 New surface datasets: double tag of ctsm5.3.0
+       ctsm5.2.028   rgknox 09/05/2024 FATES history flushing update
+       ctsm5.2.027     erik 08/28/2024 Merge b4b-dev
+       ctsm5.2.026   slevis 08/23/2024 Turn on excess ice, explicit AC, Leung_2023 for clm6
+       ctsm5.2.025 samrabin 08/23/2024 Minor fixes to li2024 fire methods
+       ctsm5.2.024 samrabin 08/22/2024 Improve li2024 fire methods
+       ctsm5.2.023 samrabin 08/16/2024 Merge b4b-dev
+       ctsm5.2.022 samrabin 08/14/2024 Rework crop_calendars suite and cropMonthOutput
+       ctsm5.2.021   rgknox 08/13/2024 Adding on-the-fly parameter settings for prescribed N and P in FATES
+       ctsm5.2.020   slevis 08/12/2024 MEGAN updates (MEGAN-CLM6)
+       ctsm5.2.019     erik 08/11/2024 Add in an additional dust emission method Leung_2023, by default off
+       ctsm5.2.018 mvdebols 08/02/2024 Fix/excess ice cold start
+       ctsm5.2.017     erik 07/30/2024 Dust emissions control moved to cmeps
+       ctsm5.2.016 samrabin 07/27/2024 Enable new crop calendars for clm60 compsets
+       ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
+       ctsm5.2.014 multiple 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
+       ctsm5.2.013 glemieux 07/18/2024 FATES Land Use V2
+       ctsm5.2.012    sacks 07/16/2024 Relax tolerance for truncating small snocan values in CanopyFluxes
+       ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
+       ctsm5.2.010 multiple 07/11/2024 Explicit A/C adoption
+       ctsm5.2.009     erik 07/10/2024 Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
+       ctsm5.2.008     erik 06/28/2024 Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+tmp-240620.n03.ctsm5.2.007  06/27/2024 Set upland hillslope column fsat values to zero (samrabin)
+tmp-240620.n02.ctsm5.2.007  06/21/2024 Another update of git-fleximod (erik)
+tmp-240620.n01.ctsm5.2.007  06/21/2024 Merge b4b-dev (slevis)
+       ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly
+       ctsm5.2.006   slevis 05/28/2024 Update externals to cesm2_3_beta17, remove mct, retire /test/tools
        ctsm5.2.005     erik 05/13/2024 Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
        ctsm5.2.004 multiple 05/09/2024 CTSM5.2 1979 fsurdat and 1979-2026 landuse ne0np4 files + two fixes
        ctsm5.2.003 samrabin 05/02/2024 Merge b4b-dev

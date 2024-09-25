@@ -50,6 +50,28 @@ def buildnml(case, caseroot, compname):
     clm_force_coldstart = case.get_value("CLM_FORCE_COLDSTART")
     lnd_tuning_mode = case.get_value("LND_TUNING_MODE")
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
+    comp_interface = case.get_value("COMP_INTERFACE")
+    lilac_mode = case.get_value("LILAC_MODE")
+    if comp_interface == "nuopc":
+        yr_start = case.get_value("DATM_YR_START")
+        yr_end = case.get_value("DATM_YR_END")
+    else:
+        yr_start = case.get_value("DATM_CLMNCEP_YR_START")
+        yr_end = case.get_value("DATM_CLMNCEP_YR_END")
+
+    if yr_start != None and yr_start < 0:
+        yr_start = case.get_value("DATM_CPLHIST_YR_START")
+        yr_end = case.get_value("DATM_CPLHIST_YR_END")
+
+    # For LILAC
+    if yr_start == None or lilac_mode == "on":
+        yr_start = "0"
+        yr_end = "0"
+
+    yr_start = int(yr_start)
+    yr_end = int(yr_end)
+
+    clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     ninst_lnd = case.get_value("NINST_LND")
@@ -59,6 +81,7 @@ def buildnml(case, caseroot, compname):
     run_refcase = case.get_value("RUN_REFCASE")
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
+    start_tod = case.get_value("START_TOD")
     glc_nec = case.get_value("GLC_NEC")
     cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
     dglc_use_antarctica = case.get_value("DGLC_USE_ANTARCTICA")
@@ -204,11 +227,24 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         clmusr = " -clm_usr_name %s " % clm_usrdat_name
         # Write warning about initial condition data
-        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
-            if ("_transient" in clm_nml_use_case) and (
-                re.fullmatch(r"\w\w\w\w\.transient", casename) is None
-                or clm_usrdat_name is "NEON.PRISM"
-            ):
+        if (
+            "NEON" in clm_usrdat_name
+            or "PLUMBER2" in clm_usrdat_name
+            and clm_force_coldstart == "off"
+        ):
+            warning_init_conditions = False
+            if "NEON" in clm_usrdat_name:
+                if ("_transient" in clm_nml_use_case) and (
+                    re.fullmatch(r"\w\w\w\w\.transient", casename) is None
+                    or clm_usrdat_name is "NEON.PRISM"
+                ):
+                    warning_init_conditions = True
+            if "PLUMBER2" in clm_usrdat_name:
+                if ("_transient" in clm_nml_use_case) and (
+                    re.fullmatch(r"\w\w-\w\w\w\.transient", casename) is None
+                ):
+                    warning_init_conditions = True
+            if warning_init_conditions == True:
                 logger.warning(
                     "WARNING: Do you have appropriate initial conditions for this simulation?"
                     + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
@@ -262,7 +298,21 @@ def buildnml(case, caseroot, compname):
 
     tuning = "-lnd_tuning_mode %s " % lnd_tuning_mode
 
+    #
+    # Spinup settings and specifics for SASU spinup
+    #
     spinup = "-clm_accelerated_spinup %s " % clm_accelerated_spinup
+    if clm_accelerated_spinup == "sasu":
+        if (yr_start != None) and (yr_end != None):
+            nyr = yr_end - yr_start + 1
+            if (yr_end <= 0) or (yr_start <= 0):
+                logger.error("ERROR: Year start and end are both negative and should not be")
+            clm_namelist_opts = "nyr_forcing={} {}".format(nyr, clm_namelist_opts)
+        else:
+            logger.warning(
+                "WARNING: It does not make sense to do a SASU spinup with a prognostic atmosphere model"
+            )
+            logger.warning("         as it expects regular atmosphere forcing that is cycled over")
 
     infile = os.path.join(ctsmconf, "namelist")
 
@@ -315,12 +365,19 @@ def buildnml(case, caseroot, compname):
         if run_type == "hybrid" or run_type == "branch":
             compnames = ["clm4", "clm5", "clm2"]
             for comp in compnames:
+                if "PLUMBER2" in clm_usrdat_name:
+                    # start_tod is supplied for PLUMBER cases
+                    tod = start_tod
+                else:
+                    # run_reftod is supplied for other cases
+                    tod = run_reftod
+
                 clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
                     run_refcase,
                     comp,
                     inst_string,
                     run_refdate,
-                    run_reftod,
+                    tod,
                 )
                 if os.path.exists(os.path.join(rundir, clm_startfile)):
                     break
@@ -339,7 +396,7 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+                logger.warning("WARNING: Could NOT find a start file named " + clm_startfile)
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""

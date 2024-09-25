@@ -252,13 +252,15 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,li2024gswpfrc,li2024crujra" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
-li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
+li2021gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
+li2024gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
+li2024crujra:  No reference paper yet, tuned with CRU-JRA forcing
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -329,6 +331,31 @@ Combustion completeness factor for litter (unitless)
 <entry id="cmb_cmplt_fact_cwd" type="real" category="clm_physics"
        group="lifire_inparm" >
 Combustion completeness factor for CWD[Course Woody Debris] (unitless)
+</entry>
+
+<entry id="max_rh30_affecting_fuel" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value above which 30-day running relative humidity has no effect on fuel combustibility
+</entry>
+
+<entry id="defo_fire_precip_thresh_bet" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf evergreen tropical trees but no broadleaf deciduous tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="defo_fire_precip_thresh_bdt" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Value (mm/d) above which running mean daily precipitation (10 or 60 days) does not allow deforestation fire for a column with broadleaf deciduous tropical trees but no broadleaf evergreen tropical trees. "PFT-dependent thresholds of P60d and P10d" in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="nonborpeat_fire_precip_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of precipitation in equation relating that to non-boreal peat fire (unitless). Eq. 9 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
+</entry>
+
+<entry id="borpeat_fire_soilmoist_denom" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless). Eq. 10 in Li et al. (2013, doi:10.5194/bg-10-2293-2013).
 </entry>
 
 <entry id="ncrit" type="real" category="clm_physics"
@@ -550,7 +577,7 @@ Only works when running with a non-stub glacier model.
 
 <entry id="glacier_region_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="multiple,virtual,single_at_atm_topo" >
+       valid_values="multiple,virtual,single_at_atm_topo,UNSET" >
 Behavior of each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -563,12 +590,21 @@ Allowed values are:
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
-Behavior of 'virtual' is required in the region where we have an ice sheet model
+'UNSET': place-holder for non-existent regions
+Most (if not all) of the region where there is an ice sheet model should have a behavior
+of 'virtual': This behavior is needed to compute surface mass balance (SMB) in all
+elevation classes for the sake of vertical downscaling, and is needed to allow two-way
+feedbacks of glacier areas. You are allowed to have gridcells with non-virtual behavior in
+this domain, but this should be minimized: SMB cannot be computed there, and CLM subgrid
+areas will not remain in sync with the GLC model. (Within the icemask - i.e., the active
+glc domain - you are NOT allowed to have gridcells with non-virtual behavior that also
+have glacier_region_melt_behavior='replaced_by_ice': within the icemask, you're only
+allowed to have non-virtual behavior in places where you are not computing SMB).
 </entry>
 
 <entry id="glacier_region_melt_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="replaced_by_ice,remains_in_place" >
+       valid_values="replaced_by_ice,remains_in_place,UNSET" >
 Treatment of ice melt for each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -577,17 +613,18 @@ Allowed values are:
    this results in positive liquid runoff and negative ice runoff
 'remains_in_place': any melted ice remains in place as liquid until it refreezes;
    thus, ice melt does not result in any runoff
-IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
-compute SMB (because negative SMB would be pretty much meaningless in
-those regions). Thus, you cannot use this behavior where GLC is
-operating.
-Regions with the 'replaced_by_ice' behavior also compute SMB for the
-vegetated column.
+'UNSET': place-holder for non-existent regions
+IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not compute SMB
+(because negative SMB would be pretty much meaningless in those regions). Thus, most (if
+not all) of the region where there is an ice sheet model should have the 'replaced_by_ice'
+behavior; the SMB sent to the GLC model will be 0 in any gridcells with the
+'remains_in_place' behavior.
+Regions with the 'replaced_by_ice' behavior also compute SMB for the vegetated column.
 </entry>
 
 <entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="remains_ice,melted" >
+       valid_values="remains_ice,melted,UNSET" >
 Treatment of ice runoff for each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -598,7 +635,13 @@ Allowed values are:
 'melted': ice runoff generated by the CLM physics (primarily due to snow capping) is melted
    (generating a negative sensible heat flux) and runs off as liquid; this is appropriate in
    regions that have little iceberg calving in reality. This can be important to avoid unrealistic
-   cooling of the ocean and consequent runaway sea ice growth.
+   cooling of the ocean and consequent runaway sea ice growth. This option cannot be
+   combined with glacier_region_melt_behavior='replaced_by_ice': While there is nothing
+   fundamentally wrong with this combination, it can result in problematic, non-physical
+   fluxes (particularly, a large positive sensible heat flux during glacial melt in
+   regions where the ice sheet is not fully dynamic and two-way-coupled; see
+   https://github.com/ESCOMP/ctsm/issues/423 for details).
+'UNSET': place-holder for non-existent regions
 Only applies when melt_non_icesheet_ice_runoff is .true.
 </entry>
 
@@ -734,10 +777,17 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).                        
 </entry>
 
-<entry id="use_fates_logging" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the logging module
-(Only relevant if FATES is on)
+<entry id="fates_harvest_mode" type="char*18" category="physics"
+        group="clm_inparm" valid_values="no_harvest,event_code,landuse_timeseries,luhdata_area,luhdata_mass">
+Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
+Allowed values are:
+ no_harvest: no fates harvesting of any kind
+ event_code: fates logging via fates logging event codes (see fates parameter file) only
+ landuse_timeseries: fates harvest driven by CLM flanduse_timeseries file (dynHarvestMod)**
+ luhdata_area: fates harvest driven by LUH2 raw harvest data, area-based (dynFATESLandUseChangeMod)
+ luhdata_mass: fates harvest driven by LUH2 raw harvest data, mass-based (dynFATESLandUseChangeMod)
+**Note that the landuse_timeseries option is not the same as the FATES fluh_timeseries data file.
+This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"
@@ -794,7 +844,25 @@ Full pathname to the inventory initialization control file.
 <entry id="use_fates_luh" type="logical" category="physics"
        group="clm_inparm" valid_values="" >
 If TRUE, enable use of land use harmonization (LUH) state and transition data from luh_timeseries file.
+This is enabled by default if fates_harvest_mode is set to use the raw LUH2 harvest data
 (Also, only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<entry id="use_fates_lupft" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+If TRUE, enable use of FATES land use with no competition and fixed biogeography.  This mode
+requires the use of the land use x pft association static data map file.  See the
+flandusepftdat definition entry in this file for more information.
+(Only valid for use_fates = true and is incompatible with transient runs currently.)
+</entry>
+
+<entry id="use_fates_potentialveg" type="logical" category="physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, ignore the land-use state vector and transitions, and assert that all lands
+are primary, and that there is no harvest.  This mode is only relevant for FATES
+spin-up workflows that are intending to use the spin-up restart output to start a
+FATES land use transient case using the use_fates_lupft namelist option.  The option
+should be set to true for the spin-up case and false for the transient case.
 </entry>
 
 <!-- This could eventually be included in the "dynamic_subgrid" -->
@@ -804,6 +872,18 @@ Full pathname of unified land use harmonization (LUH) data file. This causes the
 types to vary over time.
 (Required, if use_fates_luh=T)
 (Only relevant if FATES is on).
+</entry>
+
+<entry id="flandusepftdat" type="char*256" category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of fates landuse x pft association static data map.  
+The file associates land use types with pfts across a static global map.
+This file is necessary for running FATES with use_fates_luh, 
+use_fates_nocomp, and use_fates_fixedbiogeo engaged (note that use_fates_lupft
+is provided as a namelist option to engage all necessary options).  The file is output
+by the FATES land use data tool (https://github.com/NGEET/tools-fates-landusedata)
+which processes the raw land use data from the THEMIS tool data sets
+(https://doi.org/10.5065/29s7-7b41)
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"
@@ -826,6 +906,11 @@ Toggle to turn on meteorological downscaling in hillslope model
 <entry id="use_hillslope_routing" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on surface water routing in the hillslope hydrology model
+</entry>
+
+<entry id="hillslope_fsat_equals_zero" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+If true, set fsat to zero for hillslope columns
 </entry>
 
 <entry id="hillslope_head_gradient_method" type="char*256" category="physics"
@@ -1070,6 +1155,11 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
     ON_WASTEHEAT = Air conditioning/heating is ON and waste-heat sent to urban canyon
 </entry>
 
+<entry id="urban_explicit_ac" type="logical" category="clm_physics"
+       group="clmu_inparm" valid_values="" >
+If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux and interior building temperature calculations.
+</entry>
+
 <entry id="urban_traffic" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
 If TRUE, urban traffic flux will be activated (Currently NOT implemented).
@@ -1134,6 +1224,50 @@ tests of the infrastructure to support the AgSys crop model integration.
 This option can be dropped if/when we stop doing this software testing,
 e.g., because we have integrated AgSys and have tests of it that make
 these software infrastructure tests obsolete.
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- CN Matrix solution                                                                        -->
+<!-- ========================================================================================  -->
+<entry id="use_matrixcn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on the Matrix solution for above ground biogeochemistry, requires CN to be on
+</entry>
+
+<entry id="use_soil_matrixcn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on the Matrix solution for soil biogeochemistry
+</entry>
+
+<entry id="hist_wrt_matrixcn_diag" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on extra output for the matrix solution
+</entry>
+
+<entry id="spinup_matrixcn" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Turn on semi-analytic spinup solution for the CN/Soil matrix, requires soil matrix to be on
+This will drive the solution to equilibrium
+</entry>
+
+<entry id="nyr_forcing" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="1">
+Number of years to average the storage capacitance over for the soil Matrix solution during semi-analytic spinup (spinup_matrixcn=T)
+Normally should be the same as the number of years the atmospheric forcing is run over
+</entry>
+
+<entry id="nyr_sasu" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="1">
+length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
+nyr_SASU=1: the fastest SASU, but inaccurate; nyr_SASU=nyr_forcing(eg. 20): the lowest SASU but accurate
+</entry>
+
+<entry id="iloop_avg" type="integer" category="bgc"
+       group="clm_inparm" valid_values="" value="-999">
+The restart file will be based on the average of all analytic solutions within the iloop_avg^th loop. 
+eg. if nyr_forcing = 20, iloop_avg = 8, the restart file in yr 160 will be based on analytic solutions from yr 141 to 160.
+The number of the analytic solutions within one loop depends on ratio between nyr_forcing and nyr_SASU.
+eg. if nyr_forcing = 20, nyr_SASU = 5, number of analytic solutions is 20/5=4
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1362,11 +1496,6 @@ Percentage threshold above which the model keeps the wetland landunit. Selecting
        group="clm_inparm">
 Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
-</entry>
-
-<entry id="use_dynroot" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the dynamic root model
 </entry>
 
 <entry id="use_SSRE" type="logical" category="physics"
@@ -1609,22 +1738,27 @@ Mapping method from Nitrogen deposition input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
-<!-- Dust namelist and Zender soil erodibility stream                                          -->
+<!-- Prigent roughness stream -->
 <!-- ========================================================================================  -->
 
-<entry id="dust_emis_method" type="char*12" category="physics"
-       group="clm_inparm" valid_values="Zender_2003,Leung_2023" >
-Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023
-scheme.
-(NOTE: The Leung 2023 method is NOT currently available)
+<entry id="use_prigent_roughness" type="logical" category="clm_physics"
+        group="prigentroughness" valid_values="" >
+If TRUE use the Prigent roughness dataset
 </entry>
 
-<entry id="zender_soil_erod_source" type="char*3" category="physics"
-       group="zendersoilerod" valid_values="lnd,atm" >
-Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
-here in CTSM, or in the ATM model.
-(only used when dust_emis_method is Zender_2003)
+<entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
+
+<entry id="stream_meshfile_prigentroughness" type="char*256" category="datasets"
+       input_pathname="abs" group="prigentroughness" valid_values="" >
+mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Dust namelist and Zender soil erodibility stream                                          -->
+<!-- ========================================================================================  -->
 
 <entry id="zendersoilerod_mapalgo" type="char*256" category="physics"
        group="zendersoilerod" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
@@ -1711,6 +1845,7 @@ If true, will ignore the prescribed soilm data for that point and let the model 
 prescribed data.
 </entry>
 
+
 <!-- ========================================================================================  -->
 <!-- lai_streams streams Namelist (when phys = CLM4_5)                              -->
 <!-- ========================================================================================  -->
@@ -1773,19 +1908,44 @@ Mapping method from LAI input file to the model resolution
 <!-- ========================================================================================  -->
 
 <!-- Crop calendars -->
-<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+<entry id="cropcals_rx" type="logical" category="datasets"
        group="cropcal_streams" valid_values="" >
-First year to loop over for crop calendar data
+Flag to enable prescribed crop calendars (sowing window dates and maturity requirement)
 </entry>
 
-<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+<entry id="cropcals_rx_adapt" type="logical" category="datasets"
        group="cropcal_streams" valid_values="" >
-Last year to loop over for crop calendar data
+Flag to enable prescribed crop calendars (sowing window dates and maturity requirement), with maturity requirement adaptive based on recent climate
 </entry>
 
-<entry id="model_year_align_cropcal" type="integer" category="datasets"
+<entry id="stream_year_first_cropcal_swindows" type="integer" category="datasets"
        group="cropcal_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_cropcal value
+First year to loop over for crop sowing windows
+</entry>
+
+<entry id="stream_year_last_cropcal_swindows" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop sowing windows
+</entry>
+
+<entry id="model_year_align_cropcal_swindows" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal_swindows value
+</entry>
+
+<entry id="stream_year_first_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop maturity requirements
+</entry>
+
+<entry id="stream_year_last_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop maturity requirements
+</entry>
+
+<entry id="model_year_align_cropcal_cultivar_gdds" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal_cultivar_gdds value
 </entry>
 
 <entry id="allow_invalid_swindow_inputs" type="logical" category="datasets"
@@ -1806,6 +1966,36 @@ Filename of input stream data for date (day of year) of end of sowing window. Ce
 <entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for cultivar growing degree-day targets
+</entry>
+
+<entry id="stream_fldFileName_gdd20_baseline" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for baseline GDD20 values
+</entry>
+
+<entry id="stream_gdd20_seasons" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Set this to true to read gdd20 accumulation season start and end dates from stream files, rather than using hard-coded hemisphere-specific "warm seasons."
+</entry>
+
+<entry id="flush_gdd20" type="logical" category="datasets"
+       group="clm_inparm" valid_values="" >
+Set this to true to flush the accumulated GDD20 variables as soon as possible.
+</entry>
+
+<entry id="allow_invalid_gdd20_season_inputs" type="logical" category="datasets"
+       group="cropcal_streams" valid_values="" >
+By default, a value in stream_fldFileName_gdd20_season_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead have such cells fall back to the hard-coded hemisphere-specific "warm seasons."
+</entry>
+
+<entry id="stream_fldFileName_gdd20_season_start" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of start of gdd20 accumulation season.
+</entry>
+
+<entry id="stream_fldFileName_gdd20_season_end" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for date (day of year) of end of gdd20 accumulation season.
 </entry>
 
 <entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
@@ -2035,10 +2225,10 @@ hist means do NOT use a future scenario, just use historical data.
 Land mask description
 </entry> 
 
-<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, and cam6.0 for each valid physics option -->
+<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, cam6.0, and cam7.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam7.0,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
@@ -2096,21 +2286,21 @@ How close in years to use when looking for an initial condition file (finidat) i
 Simulation years you can look for in initial condition files (finidat) if interpolation is turned on (use_init_interp is .true.)
 </entry>
 
-<entry id="clm_accelerated_spinup" type="char*3" category="default_settings"
-       group="default_settings" valid_values="on,off" >
+<entry id="clm_accelerated_spinup" type="char*4" category="default_settings"
+       group="default_settings" valid_values="on,sasu,off" >
 Command line argument for setting up your simulation in a mode for faster
 throughput. By default turns off some options, and sets up for a lower level
 of output. When bgc_mode is some level of prognostic BGC (so NOT Satellite Phenology)
-it also sets up for accelerated decomposition.
+it also sets up for accelerated decomposition. The "sasu" mode sets up
+for using the CN-matrix mode with Semi-Analytic Spin Up.
 NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
       Set the env_run variable, rather than setting this directly.
 </entry>
 
 <entry id="bgc_mode" type="char*5" category="default_settings"
-       group="default_settings" valid_values="sp,cn,bgc,fates" >
+       group="default_settings" valid_values="sp,bgc,fates" >
 Command line arguement for biogeochemistry mode for CLM4.5
    sp  = Satellitte Phenology
-   cn  = Carbon Nitrogen model
    bgc = CLM4.5 BGC model with: 
         CENTURY model pools 
         Nitrification/De-nitrification
@@ -2818,6 +3008,18 @@ use case.)
         group="clm_inparm" valid_values="" >
 If TRUE turn on the excess ice physics, (Lee et al., 2014; Cai et al., 2020)
 </entry>
+
+<entry id="excess_ice_coldstart_temp" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Initial soil temperature to use for gridcells with excess ice present during a run starting with coldstart (deg C). Value only applys if use_excess_ice is true.
+</entry>
+
+<entry id="excess_ice_coldstart_depth" type="real" category="clm_physics"
+       group="clm_temperature_inparm" >
+Soil depth below which initial excess ice concentration will be applied during a run starting with coldstart (m). Value only applys if use_excess_ice is true. 
+If this is set below depth of the soil depth, only the last soil layer will get excess ice.
+</entry>
+
 
 <entry id="use_excess_ice_streams" type="logical" category="clm_physics"
         group="exice_streams" valid_values="" >

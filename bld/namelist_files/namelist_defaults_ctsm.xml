@@ -47,11 +47,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <clm_accelerated_spinup>off</clm_accelerated_spinup>
 
 <!-- Spinup state for BGC -->
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_cn=".true." phys="clm4_5"    >1</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               >2</spinup_state>
-<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
-<spinup_state clm_accelerated_spinup="off"                                  >0</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."                  use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_cn=".true."    phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true."               use_soil_matrixcn=".false.">2</spinup_state>
+<spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" use_soil_matrixcn=".false.">1</spinup_state>
+<spinup_state clm_accelerated_spinup="sasu"                                                            >0</spinup_state>
+<spinup_state                                                               use_soil_matrixcn=".true." >0</spinup_state>
+<spinup_state clm_accelerated_spinup="off"                                                             >0</spinup_state>
 
 <!-- Reseeding of dead plants normally only done for AD spinup -->
 <reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
@@ -66,7 +68,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fields_list_file>.false.</hist_fields_list_file>
 
 <!-- In accelerated spinup mode reduce the amount of history output -->
-<hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="on"  >.true.</hist_empty_htapes>
+<hist_empty_htapes clm_accelerated_spinup="sasu">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
@@ -75,8 +78,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS'</hist_fincl1>
-<hist_nhtfrq clm_accelerated_spinup="on">-8760</hist_nhtfrq>
-<hist_mfilt  clm_accelerated_spinup="on">20</hist_mfilt>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','NPP','TWS','TSAI','HTOP','HBOT'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
+>'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
+>'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS'</hist_fincl1>
+<hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".false."
+>'TLAI','TWS'</hist_fincl1>
+<hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
+<hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
+<hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
+<hist_mfilt  clm_accelerated_spinup="sasu">20</hist_mfilt>
 
 <!-- Root and stem acclimation (could depend on the physics version) -->
 <rootstem_acc               >.false.</rootstem_acc>
@@ -124,9 +137,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
 
 <!-- MEGAN model -->
-<megan                             >1</megan>
-<megan clm_accelerated_spinup="on" >0</megan>
-<megan configuration="nwp"         >0</megan>
+<megan                              >1</megan>
+<megan clm_accelerated_spinup="on"  >0</megan>
+<megan clm_accelerated_spinup="sasu">0</megan>
+<megan configuration="nwp"          >0</megan>
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
@@ -145,6 +159,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <calc_human_stress_indices               >FAST</calc_human_stress_indices>
 <calc_human_stress_indices phys="clm4_5" >NONE</calc_human_stress_indices>
+
+<!-- Explicit, time-varying urban air conditioning adoption rate scheme -->
+<urban_explicit_ac>.false.</urban_explicit_ac>
+<urban_explicit_ac phys="clm6_0" >.true.</urban_explicit_ac>
 
 <!-- Default urban traffic flux -->
 <urban_traffic>.false.</urban_traffic>
@@ -220,9 +238,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <melt_non_icesheet_ice_runoff phys="clm4_5" >.false.</melt_non_icesheet_ice_runoff>
 
 <!-- CN Fire model method defaults -->
-<fire_method               >li2021gswpfrc</fire_method>
+<fire_method               >li2024crujra</fire_method>
 <fire_method phys="clm5_0" >li2016crufrc</fire_method>
 <fire_method phys="clm4_5" >li2014qianfrc</fire_method>
+
+<max_rh30_affecting_fuel>90.d00</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet>4.0d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt>1.8d00</defo_fire_precip_thresh_bdt>
+<borpeat_fire_soilmoist_denom>0.3d00</borpeat_fire_soilmoist_denom>
+<nonborpeat_fire_precip_denom>1.0d00</nonborpeat_fire_precip_denom>
 
 <rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
@@ -243,17 +267,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >30.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_CRUv7"
 >30.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam7.0"
+>20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam6.0"
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
 >20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam7.0"
+>20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam5.0"
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam4.0"
+>20.0d00</rh_low>
+<rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam7.0"
 >20.0d00</rh_low>
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam6.0"
 >20.0d00</rh_low>
@@ -274,17 +304,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >0.010d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_CRUv7"
 >0.010d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam7.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam6.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam5.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_cam4.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam7.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam6.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam5.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm5_1_cam4.0"
+>0.008d00</pot_hmn_ign_counts_alpha>
+<pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam7.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
 <pot_hmn_ign_counts_alpha fire_method="li2016crufrc" lnd_tuning_mode="clm6_0_cam6.0"
 >0.008d00</pot_hmn_ign_counts_alpha>
@@ -318,6 +354,49 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <ufuel                    fire_method="li2021gswpfrc" >1050.d00</ufuel>
 <cmb_cmplt_fact_litter    fire_method="li2021gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
 <cmb_cmplt_fact_cwd       fire_method="li2021gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
+<max_rh30_affecting_fuel  fire_method="li2021gswpfrc" >90.d00</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2021gswpfrc" >4.0d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2021gswpfrc" >1.8d00</defo_fire_precip_thresh_bdt>
+
+<rh_low                   fire_method="li2024gswpfrc" >30.0d00</rh_low>
+<rh_hgh                   fire_method="li2024gswpfrc" >80.0d00</rh_hgh>
+<bt_min                   fire_method="li2024gswpfrc" >0.85d00</bt_min>
+<bt_max                   fire_method="li2024gswpfrc" >0.98d00</bt_max>
+<cli_scale                fire_method="li2024gswpfrc" >0.01d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2024gswpfrc" >0.28d-4</boreal_peatfire_c>
+<pot_hmn_ign_counts_alpha fire_method="li2024gswpfrc" >0.010d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2024gswpfrc" >0.71d-4</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2024gswpfrc" >0.3d00</cropfire_a1>
+<occur_hi_gdp_tree        fire_method="li2024gswpfrc" >0.33d00</occur_hi_gdp_tree>
+<lfuel                    fire_method="li2024gswpfrc" >75.d00</lfuel>
+<ufuel                    fire_method="li2024gswpfrc" >825.d00</ufuel>
+<cmb_cmplt_fact_litter    fire_method="li2024gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2024gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
+<max_rh30_affecting_fuel  fire_method="li2024gswpfrc" >90.d00</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2024gswpfrc" >1.4d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2024gswpfrc" >0.5d00</defo_fire_precip_thresh_bdt>
+<nonborpeat_fire_precip_denom fire_method="li2024gswpfrc" >6.0d00</nonborpeat_fire_precip_denom>
+
+<rh_low                   fire_method="li2024crujra" >30.0d00</rh_low>
+<rh_hgh                   fire_method="li2024crujra" >85.0d00</rh_hgh>
+<bt_min                   fire_method="li2024crujra" >0.85d00</bt_min>
+<bt_max                   fire_method="li2024crujra" >0.98d00</bt_max>
+<cli_scale                fire_method="li2024crujra" >0.01d00</cli_scale>
+<boreal_peatfire_c        fire_method="li2024crujra" >0.28d-4</boreal_peatfire_c>
+<pot_hmn_ign_counts_alpha fire_method="li2024crujra" >0.010d00</pot_hmn_ign_counts_alpha>
+<non_boreal_peatfire_c    fire_method="li2024crujra" >0.71d-4</non_boreal_peatfire_c>
+<cropfire_a1              fire_method="li2024crujra" >0.3d00</cropfire_a1>
+<occur_hi_gdp_tree        fire_method="li2024crujra" >0.33d00</occur_hi_gdp_tree>
+<lfuel                    fire_method="li2024crujra" >75.d00</lfuel>
+<ufuel                    fire_method="li2024crujra" >825.d00</ufuel>
+<cmb_cmplt_fact_litter    fire_method="li2024crujra" >0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2024crujra" >0.28d00</cmb_cmplt_fact_cwd>
+<max_rh30_affecting_fuel  fire_method="li2024crujra" >95.</max_rh30_affecting_fuel>
+<defo_fire_precip_thresh_bet fire_method="li2024crujra" >1.8d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bdt fire_method="li2024crujra" >0.6d00</defo_fire_precip_thresh_bdt>
+<borpeat_fire_soilmoist_denom fire_method="li2024crujra" > 0.35d00</borpeat_fire_soilmoist_denom>
+<nonborpeat_fire_precip_denom fire_method="li2024crujra" >6.5d00</nonborpeat_fire_precip_denom>
+
 
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability               >.false.</use_undercanopy_stability>
@@ -434,30 +513,30 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
-     Greenland - inside CISM grid but outside Greenland itself: virtual
-     Greenland itself: virtual
+     Currently-unused region 1: UNSET
+     Greenland: virtual
      Antarctica: multiple
 
      If CISM is running over Antarctica, then we change the Antarctica
      behavior to virtual. Note that the Greenland behavior is always
      virtual, even if Greenland isn't included in this run.
 -->
-<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
-<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','virtual','virtual','virtual' </glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','UNSET','virtual','multiple'</glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','UNSET','virtual','virtual' </glacier_region_behavior>
 
 <!-- Default glacier melt behavior is:
      Mountain glaciers: remains_in_place
-     Greenland - inside CISM grid but outside Greenland itself: replaced_by_ice
-     Greenland itself: replaced_by_ice
+     Currently-unused region 1: UNSET
+     Greenland: replaced_by_ice
      Antarctica: replaced_by_ice -->
-<glacier_region_melt_behavior>'remains_in_place','replaced_by_ice','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
+<glacier_region_melt_behavior>'remains_in_place','UNSET','replaced_by_ice','replaced_by_ice'</glacier_region_melt_behavior>
 
 <!-- Default glacier ice runoff behavior is:
      Mountain glaciers: melted
-     Greenland - inside CISM grid but outside Greenland itself: melted
-     Greenland itself: remains_ice
+     Currently-unused region 1: UNSET
+     Greenland: remains_ice
      Antarctica: remains_ice -->
-<glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
+<glacier_region_ice_runoff_behavior>'melted','UNSET','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
 
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small
@@ -472,16 +551,16 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c240208.nc</paramfile>
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240208.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240208.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240208.nc</paramfile>
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c240822.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240814.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240814.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240814.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.35.0.0_12pft_c240326.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.0.0_12pft_c240517.nc</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
@@ -568,9 +647,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Whether to use subgrid fluxes for snow -->
 <use_subgrid_fluxes>.true.</use_subgrid_fluxes>
 
-<!-- dynamic roots -->
-<use_dynroot >.false.</use_dynroot>
-
 <!-- Guardrail for ensuring leaf-Nitrogen doesn't go too small or negative on updates -->
 <use_nguardrail                use_cn=".false.">.false.</use_nguardrail>
 <use_nguardrail                use_cn=".true." >.true.</use_nguardrail>
@@ -596,11 +672,35 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hillslope_pft_distribution_method           >Standard</hillslope_pft_distribution_method>
 <hillslope_soil_profile_method               >Uniform</hillslope_soil_profile_method>
 <downscale_hillslope_meteorology             >.true.</downscale_hillslope_meteorology>
+<hillslope_fsat_equals_zero>.false.</hillslope_fsat_equals_zero>
+<hillslope_fsat_equals_zero use_hillslope=".true.">.true.</hillslope_fsat_equals_zero>
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                       >.false.</use_hydrstress>
 <use_hydrstress                use_fates=".false." configuration="clm">.true.</use_hydrstress>
 <use_hydrstress phys="clm4_5"  use_fates=".false." configuration="clm">.false.</use_hydrstress>
+
+
+<!-- CN Matrix options -->
+<use_matrixcn>.false.</use_matrixcn>
+<use_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="bgc" >.true.</use_matrixcn>
+
+<use_soil_matrixcn>.false.</use_soil_matrixcn>
+<use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." soil_decomp_method="CENTURYKoven2013" >.true.</use_soil_matrixcn>
+
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="on"                             >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="sasu"                           >.false.</hist_wrt_matrixcn_diag>
+<hist_wrt_matrixcn_diag clm_accelerated_spinup="off"                            >.false.</hist_wrt_matrixcn_diag>
+<spinup_matrixcn     clm_accelerated_spinup="on"   use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="sasu" use_soil_matrixcn=".true.">.true.</spinup_matrixcn>
+<spinup_matrixcn     clm_accelerated_spinup="off"                            >.false.</spinup_matrixcn>
+<nyr_forcing                                                          >1</nyr_forcing>
+<nyr_forcing  spinup_matrixcn=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
+<!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
+<nyr_sasu                                                             >1</nyr_sasu>
+<iloop_avg                                                            >-999</iloop_avg>
+<iloop_avg    spinup_matrixcn=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
+
 
 <!-- General CN options -->
 <!-- Turn this on all of the time, eventually this namelist item should be removed -->
@@ -634,7 +734,66 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      For an exact match for these grids
 ======================================== -->
 <!--
-     clm5_0 physics with CAM6.0 grids...
+     clm5_0 physics with CAM7.0 grids...
+-->
+<!-- These first five are for SP mode and CLM5.0 only -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="0.9x1.25"            >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4"    >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
+<!-- 2003 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2003" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"                 >.true.</use_init_interp>
+
+<!-- 2013 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
+<!--
+     clm5_1 physics with CAM7.0 grids...
+-->
+<!-- These first five are for SP mode and CLM5.1 only -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="0.9x1.25"            >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4"    >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
+<!-- 2003 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2003" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"                 >.true.</use_init_interp>
+
+<!-- 2013 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_1_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
+
+<!--
+     clm6_0 physics with CAM7.0 grids...
+-->
+<!-- These first five are for SP mode and CLM6.0 only -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="0.9x1.25"            >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4"    >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
+<!-- 2003 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2003" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"                 >.true.</use_init_interp>
+
+<!-- 2013 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
+
+<!--
+     clm5_0 physics with CAM6.0 grids (Duplicates the above CAM7.0 section)...
 -->
 <!-- These first five are for SP mode and CLM5.0 only -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam6.0"
@@ -653,7 +812,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
 <!--
-     clm5_1 physics with CAM6.0 grids...
+     clm5_1 physics with CAM6.0 grids (duplicates above)
 -->
 <!-- These first five are for SP mode and CLM5.1 only -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_1_cam6.0"
@@ -700,6 +859,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_GSWP3v1"  >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_CRUv7"    >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979"  lnd_tuning_mode="clm4_5_cam7.0"   >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979"  lnd_tuning_mode="clm4_5_cam6.0"   >.true.</use_init_interp>
 <!-- Let CAM4 and CAM5 lnd_tuning mode be FALSE (so do a coldstart) -->
 <!-- Yes, the phys setting is essentially duplicated here but it is needed to ensure this is used and isn't matched above -->
@@ -726,219 +886,392 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_GSWP3v1"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.true. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.true. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_CRUv7"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.true. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.true. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam7.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".false."
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1" use_cn=".true."
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- These first two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".true."
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7" use_cn=".false."
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- 1850 for CLM5.1/CLM6.0 -->
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm5_1"
->hgrid=ne30np4.pg3 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm5_1_GSWP3v1 use_excess_ice=.true.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
->hgrid=ne30np4.pg3 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.false. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1 use_excess_ice=.true.
 </init_interp_attributes>
+
 
 <!-- present day -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_GSWP3v1"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_CRUv7"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam7.0"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_GSWP3v1"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." phys="clm5_1"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm5_1_GSWP3v1 use_excess_ice=.true.
+</init_interp_attributes>
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." phys="clm6_0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nex=10 do_transient_pfts=.false. lnd_tuning_mode=clm6_0_GSWP3v1 use_excess_ice=.true.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_CRUv7"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_GSWP3v1"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_GSWP3v1"
->hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
-</init_interp_attributes>
 <!-- specific low resolution grids should use the 1-degree file for just CLM5.0 -->
+<!-- matches for clm5_0 physics with CAM7.0 -->
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="0.9x1.25"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="4x5"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="10x15"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="1.9x2.5"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne3np4.pg3"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne5np4.pg3"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne16np4"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne16np4.pg3"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne30np4"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="C24"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="C48"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="C96"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<!-- MPAS -->
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="mpasa480"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="mpasa240"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="mpasa120"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="mpasa60"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+            hgrid="mpasa30"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+            hgrid="mpasa15"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+
+<!-- Anything else should use the high resolution file, but just for CLM5.0 -->
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+>hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+
+<!-- If an exact match for these grids and start years -->
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<!-- 2003 -->
+<init_interp_attributes sim_year="2003" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<!-- 2013 IC's - exact match for CONUS grid ... -->
+<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
+			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+
+
 <!-- matches for clm5_0 physics with CAM6.0 -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="0.9x1.25"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="4x5"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="10x15"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="1.9x2.5"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne3np4.pg3"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne5np4.pg3"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne16np4"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne16np4.pg3"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne30np4"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="C24"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="C48"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="C96"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<!-- clm5_1 physics -->
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<!-- clm6_0 physics -->
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- MPAS -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="mpasa480"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="mpasa240"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="mpasa120"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="mpasa60"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
             hgrid="mpasa30"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
             hgrid="mpasa15"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 
 <!-- Anything else should use the high resolution file, but just for CLM5.0 -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
->hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 
 <!-- If an exact match for these grids and start years -->
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="0.9x1.25" use_cn=".false." maxpft="17"
->hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="1.9x2.5" use_cn=".false." maxpft="17"
->hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
->hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
->hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- 2003 -->
-<init_interp_attributes sim_year="2003" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="2003" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
                         hgrid="1.9x2.5" use_cn=".false." maxpft="17"
->hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- 2013 IC's - exact match for CONUS grid ... -->
-<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
+<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
 			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
->hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+>hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!--
@@ -947,21 +1280,28 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 -->
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         lnd_tuning_mode="clm4_5_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.B1850Clm45BgcGs.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
+</finidat>
+
+<finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm4_5_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.B1850Clm45BgcGs.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
@@ -969,7 +1309,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
@@ -977,42 +1317,54 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/clmi.interp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm5_0_CRUv7"
+         lnd_tuning_mode="clm5_0_CRUv7" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm50BgcCropCru-ciso.1526-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 
+<finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
+</finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false."
+         ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
-<!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at ne30pg3_mg17 for all clm5_1/clm6_0 options -->
-<!-- use_init_interp true because even though this is a ctsm5.2 dataset it was with early fsurfdat files -->
-<finidat hgrid="ne30np4.pg3" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false."
+<!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at f09 for all clm5_1/clm6_0 options -->
+<!-- use_init_interp true because the file was created with ctsm5.3 datasets -->
+<finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm6_0_GSWP3v1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I1850Clm60BgcCrop-ciso.1361-01-01.ne30pg3_mg17_c240317.nc
+         phys="clm5_1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+</finidat>
+<finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
 <!--
@@ -1022,52 +1374,67 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day crop spinup at 2-degree with irrigation on -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm4_5_GSWP3v1"
+         lnd_tuning_mode="clm4_5_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm4_5_CRUv7"
+         lnd_tuning_mode="clm4_5_CRUv7" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_0_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
+         lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".false."
+>lnd/clm2/initdata_esmf/ctsm5.3/clmi.f19_interp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_1_GSWP3v1"
->lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
+         lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/clmi.f19_interp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
 </finidat>
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm6_0_GSWP3v1"
+         lnd_tuning_mode="clm5_1_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
+</finidat>
+<!-- NB: This pSASU finidat is from an f09 1850 (rather than f19 2000) spin-up -->
+<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_0_CRUv7"
+         lnd_tuning_mode="clm5_0_CRUv7" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
 <!-- Present day no crop spinup f09/f19 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm4_5_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup f09/f19 grid with irrigation on -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
@@ -1076,16 +1443,231 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!--
      finidat files for CAM resolutions for being coupled to CAM
 -->
-<!-- clm5_0 -->
+<!-- clm5_0 and cam7.0 -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
+<finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
+</finidat>
+
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+</finidat>
+
+
+<!-- clm5_1 and cam7.0 -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
+<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm5_1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+</finidat>
+
+<!-- clm6_0 and cam7.0 -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
+<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+</finidat>
+
+<!-- clm5_0 and cam7.0 -->
+<!-- 2003 -->
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
+</finidat>
+
+
+<!-- 2013 -->
+<finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+</finidat>
+<!-- Repeat above for clm5_1 -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
+<finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
+</finidat>
+
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
+<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm5_1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+</finidat>
+
+<!-- 2003 -->
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
+</finidat>
+
+
+<!-- 2013 -->
+<finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+</finidat>
+<!-- Repeat above for clm6_0 -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+</finidat>
+
+<!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
+<finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
+</finidat>
+
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
+<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+</finidat>
+
+<!-- 2003 -->
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
+</finidat>
+
+
+<!-- 2013 -->
+<finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+</finidat>
+
+<!--
+     finidat files for CAM resolutions for being coupled to CAM
+-->
+<!-- clm5_0 and cam6.0-->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
@@ -1093,7 +1675,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
@@ -1101,7 +1683,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
@@ -1109,37 +1691,39 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
 </finidat>
 
-<!-- Present day for coupled cases at low resolution -->
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
 </finidat>
 
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+         phys="clm5_1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
@@ -1148,21 +1732,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
 <!-- Repeat above for clm5_1 -->
+<!-- clm5_1 and cam6.0-->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
@@ -1170,7 +1755,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
@@ -1178,7 +1763,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
@@ -1186,23 +1771,24 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
 </finidat>
 
-<!-- Present day for coupled cases at low resolution -->
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+         phys="clm5_1" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
@@ -1211,21 +1797,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
 <!-- Repeat above for clm6_0 -->
+<!-- clm6_0 and cam6.0-->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
@@ -1233,7 +1820,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
@@ -1241,7 +1828,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
@@ -1249,23 +1836,24 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
 </finidat>
 
-<!-- Present day for coupled cases at low resolution -->
+<!-- Present day for coupled cases at 1-degree or lower resolutions  -->
+<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
 </finidat>
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false."
+         ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
@@ -1274,7 +1862,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false."
+         ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
@@ -1285,156 +1873,154 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- fsurdat files with 16 PFTS for use with FATES -->
 <fsurdat hgrid="0.9x1.25"  sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"       sim_year="2000" use_crop=".false." >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="mpasa60"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa60_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa60_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="mpasa15"   sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15_hist_2000_16pfts_c240216.nc</fsurdat>
-<!--
-<fsurdat hgrid="mpasa15-3" sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa15-3_hist_2000_16pfts_c240216.nc</fsurdat>
--->
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa15_hist_2000_16pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="mpasa3p75" sim_year="2000" use_crop=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa3p75_hist_2000_16pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa3p75_hist_2000_16pfts_c240908.nc</fsurdat>
 
 <!-- fsurdat files with 78 PFTS -->
 <!-- The same files can be used with use_vichydro='.true.' or '.false' -->
 <fsurdat hgrid="0.9x1.25"     sim_year="2000" use_crop=".true." use_vichydro=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="2000" use_crop=".true." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="2000" use_crop=".true." use_vichydro=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="2000" use_crop=".true." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="2000" use_crop=".true." use_vichydro=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="2000" use_crop=".true." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"          sim_year="2000" use_crop=".true." use_vichydro=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"          sim_year="2000" use_crop=".true." use_vichydro=".false.">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="1x1_brazil"    sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_2000_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_brazil_hist_2000_78pfts_c240912.nc</fsurdat>
 <fsurdat hgrid="5x5_amazon"    sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_5x5_amazon_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <!-- Crop versions of the surface datasets that can be used for both crop on and off -->
 <fsurdat hgrid="ne30np4"     sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg2" sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4.pg2_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg2_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg3" sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4.pg3_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg3_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne16np4.pg3" sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne16np4.pg3_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne16np4.pg3_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="0.125nldas2" sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.125nldas2_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.125nldas2_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="64x128"      sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_T42_hist_2000_78pfts_c240425.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_T42_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="360x720cru"  sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_360x720cru_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_360x720cru_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="C96"          sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_C96_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="1x1_numaIA"   sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_numaIA_hist_2000_78pfts_c240221.nc
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_numaIA_hist_2000_78pfts_c240912.nc
 </fsurdat>
 
 <fsurdat hgrid="mpasa480"  sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa480_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa480_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="mpasa120"  sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa120_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa120_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"              sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne120np4.pg3"             sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne120np4.pg3_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne120np4.pg3_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTICGRIS.ne30x8_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4.ARCTICGRIS.ne30x8_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4.ARCTIC.ne30x4"     sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTIC.ne30x4_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4.ARCTIC.ne30x4_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4CONUS.ne30x8"       sim_year="2000">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4CONUS.ne30x8_hist_2000_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4CONUS.ne30x8_hist_2000_78pfts_c240908.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_vancouverCAN_hist_2000_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_vancouverCAN_hist_2000_78pfts_c240912.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c240912.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/surfdata_1x1_urbanc_alpha_synth_hist_2000_78pfts_c240912.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 
 <fsurdat hgrid="360x720cru"  sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_360x720cru_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_360x720cru_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"      sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1.9x2.5_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"          sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_4x5_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_1850_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="mpasa480"     sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa480_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa480_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="mpasa120"     sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_mpasa120_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa120_hist_1850_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"      sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg2"  sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4.pg2_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg2_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg3"  sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"   sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 
 <fsurdat hgrid="C96"  sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_C96_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_C96_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="1x1_smallvilleIA" sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_smallvilleIA_hist_1850_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/surfdata_1x1_smallvilleIA_synth_hist_1850_78pfts_c240912.nc</fsurdat>
+<fsurdat hgrid="1x1_cidadinhoBR" sim_year="2000" >
+lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/surfdata_1x1_cidadinhoBR_synth_hist_2000_78pfts_c240912.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_1x1_brazil_hist_1850_78pfts_c240221.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_brazil_hist_1850_78pfts_c240912.nc</fsurdat>
 
 <fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne16np4.pg3"              sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne16np4.pg3_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne16np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne120np4.pg3"             sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne120np4.pg3_hist_1850_78pfts_c240216.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne120np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTICGRIS.ne30x8_hist_1979_78pfts_c240425.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4.ARCTICGRIS.ne30x8_hist_1979_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4.ARCTIC.ne30x4"     sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4.ARCTIC.ne30x4_hist_1979_78pfts_c240425.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4.ARCTIC.ne30x4_hist_1979_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne0np4CONUS.ne30x8"       sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_ne0np4CONUS.ne30x8_hist_1979_78pfts_c240425.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne0np4CONUS.ne30x8_hist_1979_78pfts_c240908.nc</fsurdat>
 
 <!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
 <fsurdat hgrid="0.9x1.25" sim_year="PtVg" use_crop=".false."
->lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_PtVeg_nourb_1850_16pfts_c240216.nc</fsurdat>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_PtVeg_nourb_1850_16pfts_c240908.nc</fsurdat>
 
 <!-- for NEON sites present day simulations - year 2000 -->
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
-lnd/clm2/surfdata_esmf/NEON/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c240206.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c240912.nc</fsurdat>
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
-lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c240206.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c240912.nc</fsurdat>
 <!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
 <!-- for example to override the above for the TOOL site do something like this...
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
-lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c230699.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c240912.nc</fsurdat>
 -->
 
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
@@ -1442,101 +2028,104 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- When NEON landuse datasets are available uncomment the following for something like this...
      Also change the setting for clm_demand in the namelist_defaults_overall.xml file
 <flanduse_timeseries hgrid="CLM_USRDAT" neon=".true." sim_year_range="1850-2100">
->lnd/clm2/surfdata_esmf/NEON/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/landuse.timeseries_NEON_${NEONSITE}_hist_78pfts_simyr2018-2023_c230931.nc</flanduse_timeseries>
 -->
 
 <!-- Historical 1850-2000 -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <!-- Do we need both use_crop=".false." and ".true." for FATES transient? -->
 <!-- As of 2024/02/02 the Grids Support spreadsheet includes no 16-pft landuse files. -->
 <flanduse_timeseries hgrid="4x5"           sim_year_range="1850-2000"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_4x5_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_4x5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000" 
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="360x720cru"    sim_year_range="1850-2000" 
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_360x720cru_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_360x720cru_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_brazil_SSP2-4.5_1850-2100_78pfts_c240221.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1x1_brazil_SSP2-4.5_1850-2100_78pfts_c240912.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne3np4.pg3"    sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4.pg3"   sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 
-<!-- Note that this transient file only goes up to year 1855.
+<!-- Note that these transient files only go up to year 1855.
      This is sufficient for testing purposes, but could cause problems if you try to run beyond 1855. -->
 <flanduse_timeseries hgrid="1x1_smallvilleIA" sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_c240221.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/landuse.timeseries_1x1_smallvilleIA_synth_1850-1855_78pfts_c240908.nc</flanduse_timeseries>
+
+<!-- Cidadinho test site has no transient data. -->
+<flanduse_timeseries hgrid="1x1_cidadinhoBR" sim_year_range="1850-2000"></flanduse_timeseries>
 
 <!-- Future scenarios - landuse time series files with crop on -->
 
 <!-- SSP1-RCP2.6 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP1-2.6"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP1-2.6_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP1-2.6_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- SSP2-RCP4.5 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <!-- Do we need both use_crop=".false." and ".true." for FATES transient? -->
 <!-- As of 2024/02/02 the Grids Support spreadsheet includes no 16-pft landuse files. -->
 <flanduse_timeseries hgrid="4x5"           sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_4x5_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_4x5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
- >lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="360x720cru"    sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_360x720cru_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_360x720cru_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_brazil_SSP2-4.5_1850-2100_78pfts_c240221.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1x1_brazil_SSP2-4.5_1850-2100_78pfts_c240912.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne3np4.pg3"    sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4.pg3"   sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4CONUS.ne30x8" sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_ne0np4CONUS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240425.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4CONUS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- SSP3-RCP7.0 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP3-7.0"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP3-7.0_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP3-7.0_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- SSP4-RCP6.0 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP4-6.0"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP4-6.0_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP4-6.0_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- SSP5-RCP8.5 - relative to {csmdata}) -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2100" ssp_rcp="SSP5-8.5"
->lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP5-8.5_1850-2100_78pfts_c240216.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP5-8.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
 <!-- SSP1-RCP1.9 - relative to {csmdata}) -->
 <!--- currently empty until needed, we can't test because of lack of ndep files for this SSP -->
@@ -1547,14 +2136,17 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- SSP5-RCP3.4 - relative to {csmdata}) -->
 <!--- currently empty until needed, we can't test because of lack of ndep files for this SSP -->
 
-<!-- Land Use Harmonization unified data sets for dynamic FATES land use change -->
+<!-- Land Use Harmonization unified timeseries data sets for dynamic FATES land use change -->
 
 <fluh_timeseries hgrid="4x5" sim_year_range="1850-2000" use_fates=".true."
  >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
 
+<!-- Land Use Harmonization static landuse x pft mapping data sets for FATES land use change -->
+<flandusepftdat hgrid="4x5" use_fates=".true." >lnd/clm2/surfdata_map/fates-sci.1.77.0_api.36.0.0/fates_landuse_pft_map_4x5_240206.nc</flandusepftdat>
+
 <!-- This one is just for testing until Issue #2304 is resolved -->
 <fluh_timeseries hgrid="4x5" sim_year_range="constant" use_fates=".true."
- >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr1850-2015_c231101.nc</fluh_timeseries>
+ >lnd/clm2/surfdata_map/fates-sci.1.68.3_api.31.0.0_tools.1.0.1/LUH2_states_transitions_management.timeseries_4x5_hist_simyr0850-2015_c240216.nc</fluh_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun                                                            >.false.</use_fun>
@@ -1686,10 +2278,34 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
-<!-- crop calendar streams namelist defaults -->
-<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
-<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
-<model_year_align_cropcal   >1850</model_year_align_cropcal>
+<!-- crop calendars: default settings -->
+<cropcals_rx>.false.</cropcals_rx>
+<cropcals_rx_adapt>.true.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm4_5">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_0">.false.</cropcals_rx_adapt>
+<cropcals_rx_adapt phys="clm5_1">.false.</cropcals_rx_adapt>
+<stream_gdd20_seasons>.false.</stream_gdd20_seasons>
+<flush_gdd20>.false.</flush_gdd20>
+<stream_year_first_cropcal_swindows  >2000</stream_year_first_cropcal_swindows>
+<stream_year_last_cropcal_swindows   >2000</stream_year_last_cropcal_swindows>
+<model_year_align_cropcal_swindows   >2000</model_year_align_cropcal_swindows>
+<stream_year_first_cropcal_cultivar_gdds  >2000</stream_year_first_cropcal_cultivar_gdds>
+<stream_year_last_cropcal_cultivar_gdds   >2000</stream_year_last_cropcal_cultivar_gdds>
+<model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
+
+<!-- crop calendars: default input files -->
+<stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_meshfile_cropcal cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
+<stream_fldFileName_swindow_start cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
+<stream_fldFileName_swindow_end cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".false.">lnd/clm2/cropdata/calendars/processed/20230714_cropcals_pr2_1deg.actually2deg.1980-2009.from_GDDB20.interpd_halfdeg.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/gdd20bl.copied_from.gdds_20230829_161011.v2.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
+<stream_fldFileName_gdd20_season_start stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_start>
+<stream_fldFileName_gdd20_season_end stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_end>
+<stream_meshfile_cropcal cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
 
 <!-- lightning streams namelist defaults -->
 
@@ -1862,12 +2478,18 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <stream_year_first_urbantv sim_year="constant" sim_year_range="1850-2000" >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
 
-<stream_fldfilename_urbantv phys="clm6_0"  hgrid="0.9x1.25"
+<stream_fldfilename_urbantv phys="clm6_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
-<stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25"
+<stream_fldfilename_urbantv phys="clm6_0"  hgrid="0.9x1.25" urban_explicit_ac=".true."
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_1" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
-<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25"
+<stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25" urban_explicit_ac=".true."
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".true."
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
@@ -1947,54 +2569,93 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- Defaults for Zender's soil erodibility data  -->
 <!-- ===========================================  -->
 
-<dust_emis_method>Zender_2003</dust_emis_method>
-<zender_soil_erod_source dust_emis_method="Zender_2003">atm</zender_soil_erod_source>
 <zendersoilerod_mapalgo>bilinear</zendersoilerod_mapalgo>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam5.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam7.0"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam6.0"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam6.0"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam6.0"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam5.0"
 >lnd/clm2/dustemisdata/dst_source2x2_cam5.4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_cam5.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam5.0"
 >lnd/clm2/dustemisdata/dst_source2x2_cam5.4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_cam5.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam5.0"
 >lnd/clm2/dustemisdata/dst_source2x2_cam5.4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam4.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam5.0"
+>lnd/clm2/dustemisdata/dst_source2x2_cam5.4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_cam4.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_cam4.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam4.0" hgrid="0.9x1.25"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0"
+>lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam4.0" hgrid="0.9x1.25"
 >lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_cam4.0" hgrid="0.9x1.25"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam4.0" hgrid="0.9x1.25"
 >lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_cam4.0" hgrid="0.9x1.25"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam4.0" hgrid="0.9x1.25"
 >lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0" hgrid="0.9x1.25"
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_cam6.0"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_CRUv7"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_CRUv7"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam6.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_CRUv7"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam45_GSWP3v1"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_cam6.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam50_GSWP3v1"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam6.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
-<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="cam51_GSWP3v1"
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_CRUv7"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_CRUv7"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_CRUv7"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_CRUv7"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_GSWP3v1"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_GSWP3v1"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_1_GSWP3v1"
+>lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
+<stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_GSWP3v1"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
 
 <stream_meshfile_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd"
 >lnd/clm2/dustemisdata/dust_2x2_ESMFmesh_cdf5_c230730.nc</stream_meshfile_zendersoilerod>
+
+<!-- =========================================  -->
+<!-- Defaults for Prigent's roughness data      -->
+<!-- =========================================  -->
+
+<use_prigent_roughness dust_emis_method="Leung_2023">.true.</use_prigent_roughness>
+<use_prigent_roughness                              >.false.</use_prigent_roughness>
+<stream_fldfilename_prigentroughness
+>lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
+<stream_meshfile_prigentroughness
+>lnd/clm2/dustemisdata/dust_0.25x0.25_ESMFmesh_cdf5_c240222.nc</stream_meshfile_prigentroughness>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC/decomp modes    -->
@@ -2012,22 +2673,31 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
+<fates_harvest_mode            use_fates=".true.">no_harvest</fates_harvest_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
-<use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
 <use_fates_sp                  use_fates=".true.">.false.</use_fates_sp>
-<use_fates_luh                 use_fates=".true.">.false.</use_fates_luh>
+<use_fates_lupft               use_fates=".true.">.false.</use_fates_lupft>
+<use_fates_potentialveg        use_fates=".true.">.false.</use_fates_potentialveg>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_area"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." fates_harvest_mode="luhdata_mass"  >.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true." use_fates_potentialveg=".true.">.true.</use_fates_luh>
+<use_fates_luh                 use_fates=".true."                                >.false.</use_fates_luh>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence        use_fates=".true.">0</fates_seeddisp_cadence>
+<use_fates_nocomp              use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_nocomp>
+<use_fates_nocomp              use_fates=".true."                         >.false.</use_fates_nocomp>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_fixed_biogeog>
+<use_fates_fixed_biogeog       use_fates=".true."                         >.false.</use_fates_fixed_biogeog>
 <fates_history_dimlevel        use_fates=".true.">2,2</fates_history_dimlevel>
-<use_fates_nocomp              use_fates=".true." use_fates_sp=".true.">.true.</use_fates_nocomp>
-<use_fates_nocomp              use_fates=".true."                      >.false.</use_fates_nocomp>
-<use_fates_fixed_biogeog       use_fates=".true." use_fates_sp=".true.">.true.</use_fates_fixed_biogeog>
-<use_fates_fixed_biogeog       use_fates=".true."                      >.false.</use_fates_fixed_biogeog>
+
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->
@@ -2057,7 +2727,12 @@ lnd/clm2/surfdata_esmf/NEON/surfdata_1x1_NEON_TOOL_hist_78pfts_CMIP6_simyr2000_c
 <!-- =========================================  -->
 
 <use_excess_ice>.false.</use_excess_ice>
+<use_excess_ice phys="clm6_0">.true.</use_excess_ice>
 
+<excess_ice_coldstart_temp>-1.0</excess_ice_coldstart_temp>
+<excess_ice_coldstart_depth>0.5</excess_ice_coldstart_depth>
+<excess_ice_coldstart_temp use_excess_ice=".true.">-3.15</excess_ice_coldstart_temp>
+<excess_ice_coldstart_depth use_excess_ice=".true.">0.5</excess_ice_coldstart_depth>
 <stream_fldfilename_exice use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_c20220516.nc</stream_fldfilename_exice>
 <stream_meshfile_exice    use_excess_ice=".true.">lnd/clm2/paramdata/exice_init_0.125x0.125_ESMFmesh_cdf5_c20220802.nc</stream_meshfile_exice>
 <stream_mapalgo_exice     use_excess_ice=".true.">bilinear</stream_mapalgo_exice>
