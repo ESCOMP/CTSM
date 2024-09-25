@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.0
 Originator(s): multiple (see below)
-Date: Tue 24 Sep 2024 11:34:58 PM MDT
+Date: Wed 25 Sep 2024 01:22:06 AM MDT
 One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
 
 Purpose and description of changes since ctsm5.2.005
@@ -241,7 +241,7 @@ share      = share1.0.19
 ===============================================================
 Tag name: ctsm5.2.029
 Originator(s): multiple (see contributors below)
-Date: Tue 24 Sep 2024 11:34:58 PM MDT
+Date: Wed 25 Sep 2024 01:22:06 AM MDT
 One-line Summary: Update surface datasets: double tag of ctsm5.3.0
 
 Purpose and description of changes
