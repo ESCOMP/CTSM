@@ -6,7 +6,7 @@
 
 The Community Terrestrial Systems Model.
 
-This includes the Community Land Model (CLM5.0 and CLM4.5) of the Community Earth System Model.
+This includes the Community Land Model of the Community Earth System Model.
 
 For documentation, quick start, diagnostics, model output and
 references, see
@@ -43,7 +43,7 @@ CTSM code management is provided primarily by:
 Software engineering team:
 - [Erik Kluzek](https://github.com/ekluzek)
 - [Bill Sacks](https://github.com/billsacks)
-- [Sam Levis](https://github.com/slevisconsulting)
+- [Sam Levis](https://github.com/slevis-lmwg)
 - [Adrianna Foster](https://github.com/adrifoster)
 - [Sam Rabin](https://github.com/samsrabin)
 - [Greg Lemieux](https://github.com/glemieux)
