@@ -13,9 +13,5 @@ else
 fi
 echo -e "hillslope_file = '${hillslope_file}'\n" >> user_nl_clm
 
-# Set mesh file
-meshfile=$DIN_LOC_ROOT/lnd/clm2/testdata/ESMFmesh_10x15_synthetic_cosphill_1.0.nc
-./xmlchange ATM_DOMAIN_MESH=${meshfile},LND_DOMAIN_MESH=${meshfile}
-
 # -ignore_warnings is needed as long as we don't allow use_hillslope and use_init_interp together
 ./xmlchange --append CLM_BLDNML_OPTS=-ignore_warnings
