@@ -4,17 +4,23 @@
 
 .. include:: ../substitutions.rst
 
-The CLM FORTRAN tools all have similar makefiles, and similar options for building. The tools **cprnc** and **gen_domain** use the CIME configure/build system which is described in the next section.
+.. todo::
+  Update the below, as domain files aren't needed with nuopc.
 
-The Makefiles (for **mksurfdata_esmf** and **mkprocdata_map**) use GNU Make extensions and thus require that you use GNU make to use them. They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. There are also environment variables that can be set to set things that must be customized. All the tools use NetCDF and hence require the path to the NetCDF libraries and include files. On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used. The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. Finally the tools allow you to turn optimization on (which is off by default but on for **mksurfdata_esmf**) with the OPT flag so that the tool will run faster.
+The CLM FORTRAN tools all have similar makefiles, and similar options for building. The tools ``cprnc`` and ``gen_domain`` use the CIME configure/build system which is described in the next section.
 
-Options used by all:  **mksurfdata_esmf**
+.. todo::
+    Remove references to mkprocdata_map?
+
+The Makefiles (for ``mksurfdata_esmf`` and ``mkprocdata_map``) use GNU Make extensions and thus require that you use GNU make to use them. They also auto detect the type of platform you are on, using "uname -s" and set the compiler, compiler flags and such accordingly. There are also environment variables that can be set to set things that must be customized. All the tools use NetCDF and hence require the path to the NetCDF libraries and include files. On some platforms (such as Linux) multiple compilers can be used, and hence there are env variables that can be set to change the FORTRAN and/or "C" compilers used. The tools also allow finer control, by also allowing the user to add compiler flags they choose, for both FORTRAN and "C", as well as picking the compiler, linker and and add linker options. Finally the tools allow you to turn optimization on (which is off by default but on for ``mksurfdata_esmf``) with the OPT flag so that the tool will run faster.
+
+Options used by all:  ``mksurfdata_esmf``
 
 - ``LIB_NETCDF`` -- sets the location of the NetCDF library.
 - ``INC_NETCDF`` -- sets the location of the NetCDF include files.
 - ``USER_FC`` -- sets the name of the FORTRAN compiler.
 
-Options used by: **mkprocdata_map**, and **mksurfdata_esmf**
+Options used by: ``mkprocdata_map``, and ``mksurfdata_esmf``
 
 - ``MOD_NETCDF`` -- sets the location of the NetCDF FORTRAN module.
 - ``USER_LINKER`` -- sets the name of the linker to use.
@@ -40,7 +46,7 @@ More details on each environment variable.
   This variable sets the path to the NetCDF include directory (in order to find the include file ``netcdf.inc``). if not set it defaults to ``/usr/local/include``.
 
 ``MOD_NETCDF``
-  This variable sets the path to the NetCDF module directory (in order to find the NetCDF FORTRAN-90 module file when NetCDF is used with a FORTRAN-90 **use statement**. When not set it defaults to the ``LIB_NETCDF`` value.
+  This variable sets the path to the NetCDF module directory (in order to find the NetCDF FORTRAN-90 module file when NetCDF is used with a FORTRAN-90 ``use statement``. When not set it defaults to the ``LIB_NETCDF`` value.
 
 ``USER_FC``
   This variable sets the command name to the FORTRAN-90 compiler to use when compiling the tool. The default compiler to use depends on the platform. And for example, on the AIX platform this variable is NOT used
@@ -69,7 +75,10 @@ More details on each environment variable.
 .. warning:: Note, that depending on the compiler answers may be different when SMP is activated.
 
 ``OPT``
-  This variable flags if compiler optimization should be used when compiling the tool. It can be set to either ``TRUE`` or ``FALSE``, by default it is set to for both **mksurfdata_esmf** and **mkprocdata_map**. Turning this on should make the tool run much faster.
+  This variable flags if compiler optimization should be used when compiling the tool. It can be set to either ``TRUE`` or ``FALSE``, by default it is set to for both ``mksurfdata_esmf`` and ``mkprocdata_map``. Turning this on should make the tool run much faster.
+
+.. todo::
+    Remove reference to mkprocdata_map above?
 
 .. warning:: Note, you should expect that answers will be different when ``OPT`` is activated.
 
@@ -90,7 +99,7 @@ More details on each environment variable.
 
 .. note:: There are several files that are copies of the original files. By having copies the tools can all be made stand-alone, but any changes to the originals will have to be put into the tool directories as well.
 
-The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated here.
+The ``README.filecopies`` (which can be found in ``$CTSMROOT/tools``) is repeated here.
 
 .. include:: ../../../../tools/README.filecopies
    :literal:
@@ -99,7 +108,10 @@ The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated 
  Building the CLM tools that use the CIME configure/build system
 ================================================================
 
-**cprnc** and *gen_domain** both use the CIME configure/build system rather than the CLM specific version described above.
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
 
-See `CIME documentation on adding grids <http://esmci.github.io/cime/users_guide/grids.html?highlight=gen_domain#adding-grids>`_ for more information on adding grids, creating mapping files, and running **gen_domain**. Also see the CIME file: ``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build **gen_domain**.
+``cprnc`` and ``gen_domain`` both use the CIME configure/build system rather than the CLM specific version described above.
+
+See `CIME documentation on adding grids <http://esmci.github.io/cime/users_guide/grids.html?highlight=gen_domain#adding-grids>`_ for more information on adding grids, creating mapping files, and running ``gen_domain``. Also see the CIME file: ``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build ``gen_domain``.
 
