@@ -124,12 +124,13 @@ contains
   end subroutine initialize1
 
   !-----------------------------------------------------------------------
-  subroutine initialize2(ni,nj)
+  subroutine initialize2(ni,nj, currtime)
     !
     ! !DESCRIPTION:
     ! CLM initialization second phase
     !
     ! !USES:
+    use ESMF                          , only : ESMF_Time
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
     use clm_varpar                    , only : surfpft_lb, surfpft_ub
@@ -185,6 +186,7 @@ contains
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
+    type(ESMF_Time), intent(in) :: currtime
     !
     ! !LOCAL VARIABLES:
     integer            :: c,g,i,j,k,l,n,p ! indices
@@ -344,10 +346,12 @@ contains
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
 
+    
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()
     else
+       call timemgr_init(curr_date_in=currtime)
        call restFile_getfile(file=fnamer, path=pnamer)
        call restFile_open( flag='read', file=fnamer, ncid=ncid )
        call timemgr_restart_io( ncid=ncid, flag='read' )

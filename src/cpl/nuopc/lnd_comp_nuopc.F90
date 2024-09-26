@@ -656,7 +656,10 @@ contains
     ! ---------------------
     ! Finish initializing ctsm
     ! ---------------------
-    call initialize2(ni, nj)
+    call ESMF_ClockGet(clock, currTime=currtime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call initialize2(ni, nj, currtime)
 
     !--------------------------------
     ! Create land export state
