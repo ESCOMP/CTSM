@@ -35,7 +35,7 @@ module glc2lndMod
      ! Public data
      ! ------------------------------------------------------------------------
 
-     ! Where we should do runoff routing that is appropriate for having a dynamic icesheet underneath.
+     ! Where we should do SMB-related runoff routing that is appropriate for having a dynamic icesheet underneath.
      real(r8), pointer :: glc_dyn_runoff_routing_grc (:) => null()
 
      ! ------------------------------------------------------------------------
@@ -383,32 +383,32 @@ contains
 
        if (this%icemask_grc(g) > 0._r8) then
 
-          ! Ensure that icemask is a subset of has_virtual_columns. This is needed because
-          ! we allocated memory based on has_virtual_columns, so it is a problem if the
-          ! ice sheet tries to expand beyond the area defined by has_virtual_columns.
-          if (.not. this%glc_behavior%has_virtual_columns_grc(g)) then
-             write(iulog,'(a)') subname//' ERROR: icemask must be a subset of has_virtual_columns.'
-             write(iulog,'(a)') 'Ensure that the glacier_region_behavior namelist item is set correctly.'
-             write(iulog,'(a)') '(It should specify "virtual" for the region corresponding to the GLC domain.)'
-             write(iulog,'(a)') 'If glacier_region_behavior is set correctly, then you can fix this problem'
-             write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
-             write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
-             write(iulog,'(a)') '- i.e., the region specified as "virtual" in glacier_region_behavior.)'
-             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
-          end if
-
-          ! Ensure that icemask is a subset of melt_replaced_by_ice. This is needed
-          ! because we only compute SMB in the region given by melt_replaced_by_ice
-          ! (according to the logic for building the do_smb filter), and we need SMB
-          ! everywhere inside the icemask.
-          if (.not. this%glc_behavior%melt_replaced_by_ice_grc(g)) then
-             write(iulog,'(a)') subname//' ERROR: icemask must be a subset of melt_replaced_by_ice.'
-             write(iulog,'(a)') 'Ensure that the glacier_region_melt_behavior namelist item is set correctly.'
-             write(iulog,'(a)') '(It should specify "replaced_by_ice" for the region corresponding to the GLC domain.)'
-             write(iulog,'(a)') 'If glacier_region_behavior is set correctly, then you can fix this problem'
-             write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
-             write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
-             write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
+          ! Ensure that, within the icemask, there are no points that have (non-virtual
+          ! and compute-SMB). This is important for two reasons:
+          !
+          ! (1) To ensure that, in grid cells where we're producing SMB, we have SMB for
+          !     all elevation classes, so that the downscaling / vertical interpolation
+          !     can be done correctly.
+          !
+          ! (2) To avoid conservation issues, we want to ensure that, in grid cells where
+          !     we're producing SMB and are dynamically coupled to the ice sheet (if 2-way
+          !     coupling is enabled), glacier areas are remaining in-sync with glc. (Note
+          !     that has_virtual_columns_grc dictates where we're able to keep glacier
+          !     areas in sync with glc.) (In principle, I think this one could check
+          !     icemask_coupled_fluxes rather than icemask; we check icemask because we
+          !     needed to check icemask for the other reason anyway; this is okay because
+          !     icemask_coupled_fluxes is a subset of icemask.)
+          if (this%glc_behavior%melt_replaced_by_ice_grc(g) .and. &
+               .not. this%glc_behavior%has_virtual_columns_grc(g)) then
+             write(iulog,'(a)') subname//' ERROR: Within the icemask, there cannot be any points that have'
+             write(iulog,'(a)') '(non-virtual and compute-SMB).'
+             write(iulog,'(a)') 'Ensure that GLACIER_REGION on the surface dataset and the namelist items,'
+             write(iulog,'(a)') 'glacier_region_behavior and glacier_region_melt_behavior are all set correctly:'
+             write(iulog,'(a)') 'Typically, the region encompassing the active GLC domain should specify'
+             write(iulog,'(a)') 'glacier_region_behavior="virtual" and glacier_region_melt_behavior="replaced_by_ice".'
+             write(iulog,'(a)') '(But it is also okay for part of the GLC domain to have'
+             write(iulog,'(a)') 'glacier_region_melt_behavior="remains_in_place"; this part of the domain can have'
+             write(iulog,'(a)') 'any setting for glacier_region_behavior.)'
              call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
 
@@ -437,10 +437,12 @@ contains
 
     do g = bounds%begg, bounds%endg
 
-       ! Ensure that icemask_coupled_fluxes is a subset of icemask. Although there
-       ! currently is no code in CLM that depends on this relationship, it seems helpful
-       ! to ensure that this intuitive relationship holds, so that code developed in the
-       ! future can rely on it.
+       ! Ensure that icemask_coupled_fluxes is a subset of icemask. This is helpful to
+       ! ensure that the consistency checks that are done on glc behaviors within the
+       ! icemask (in check_glc2lnd_icemask) also apply within the icemask_coupled_fluxes
+       ! region. Other than that convenience, there currently is no code in CLM that
+       ! depends on this relationship, but it seems helpful to ensure that this intuitive
+       ! relationship holds, so that code developed in the future can rely on it.
        if (this%icemask_coupled_fluxes_grc(g) > 0._r8 .and. this%icemask_grc(g) == 0._r8) then
           write(iulog,*) subname//' ERROR: icemask_coupled_fluxes must be a subset of icemask.'
           call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
@@ -477,70 +479,73 @@ contains
     ! where CISM is running in diagnostic-only mode and therefore is not sending a calving flux -
     ! we have glc_dyn_runoff_routing = 0, and the snowcap flux goes to the runoff model.
     ! This is needed to conserve water correctly in the absence of a calving flux.
+    !
+    ! In places where we are not computing SMB, we also have glc_dyn_runoff_routing = 0.
+    ! Currently glc_dyn_runoff_routing is only used where we're computing SMB, but if it
+    ! were ever used elsewhere, it seems best to have it set to 0 there: this seems
+    ! consistent with the fact that we zero out the SMB flux sent to GLC in that region.
+    ! (However, it's possible that, once we start actually using glc_dyn_runoff_routing
+    ! for some purpose outside the do_smb filter, we'll discover that this logic should
+    ! be changed.)
 
     do g = bounds%begg, bounds%endg
 
-       ! Set glc_dyn_runoff_routing_grc(g) to a value in the range [0,1].
-       !
-       ! This value gives the grid cell fraction that is deemed to be coupled to the
-       ! dynamic ice sheet model. For this fraction of the grid cell, snowcap fluxes are
-       ! sent to the ice sheet model. The remainder of the grid cell sends snowcap fluxes
-       ! to the runoff model.
-       !
-       ! Note: The coupler (in prep_glc_mod.F90) assumes that the fraction coupled to the
-       !       dynamic ice sheet model is min(lfrac, Sg_icemask_l), where lfrac is the
-       !       "frac" component of fraction_lx, and Sg_icemask_l is obtained by mapping
-       !       Sg_icemask_g from the glc to the land grid. Here, ldomain%frac is
-       !       equivalent to lfrac, and this%icemask_grc is equivalent to Sg_icemask_l.
-       !       However, here we use icemask_coupled_fluxes_grc, so that we route all snow
-       !       capping to runoff in areas where the ice sheet is not generating calving
-       !       fluxes. In addition, here we need to divide by lfrac, because the coupler
-       !       multiplies by it later (and, for example, if lfrac = 0.1 and
-       !       icemask_coupled_fluxes = 1, we want all snow capping to go to the ice
-       !       sheet model, not to the runoff model).
-       !
-       ! Note: In regions where CLM overlaps the CISM domain, this%icemask_grc(g) typically
-       !       is nearly equal to ldomain%frac(g). So an alternative would be to simply set
-       !       glc_dyn_runoff_routing_grc(g) = icemask_grc(g).
-       !       The reason to cap glc_dyn_runoff_routing at lfrac is to avoid sending the
-       !       ice sheet model a greater mass of water (in the form of snowcap fluxes)
-       !       than is allowed to fall on a CLM grid cell that is part ocean.
+       if (this%glc_behavior%melt_replaced_by_ice_grc(g)) then
+          ! As noted in the comments at the top of this routine, we only set
+          ! glc_dyn_runoff_routing where we are computing SMB
 
-       ! TODO(wjs, 2017-05-08) Ideally, we wouldn't have this duplication in logic
-       ! between the coupler and CLM. The best solution would be to have the coupler
-       ! itself do the partitioning of the snow capping flux between the ice sheet model
-       ! and the runoff model. A next-best solution would be to have the coupler send a
-       ! field to CLM telling it what fraction of snow capping should go to the runoff
-       ! model in each grid cell.
+          ! Set glc_dyn_runoff_routing_grc(g) to a value in the range [0,1].
+          !
+          ! This value gives the grid cell fraction that is deemed to be coupled to the
+          ! dynamic ice sheet model. For this fraction of the grid cell, snowcap fluxes are
+          ! sent to the ice sheet model. The remainder of the grid cell sends snowcap fluxes
+          ! to the runoff model.
+          !
+          ! Note: The coupler (in prep_glc_mod.F90) assumes that the fraction coupled to the
+          !       dynamic ice sheet model is min(lfrac, Sg_icemask_l), where lfrac is the
+          !       "frac" component of fraction_lx, and Sg_icemask_l is obtained by mapping
+          !       Sg_icemask_g from the glc to the land grid. Here, ldomain%frac is
+          !       equivalent to lfrac, and this%icemask_grc is equivalent to Sg_icemask_l.
+          !       However, here we use icemask_coupled_fluxes_grc, so that we route all snow
+          !       capping to runoff in areas where the ice sheet is not generating calving
+          !       fluxes. In addition, here we need to divide by lfrac, because the coupler
+          !       multiplies by it later (and, for example, if lfrac = 0.1 and
+          !       icemask_coupled_fluxes = 1, we want all snow capping to go to the ice
+          !       sheet model, not to the runoff model).
+          !
+          ! Note: In regions where CLM overlaps the CISM domain, this%icemask_grc(g) typically
+          !       is nearly equal to ldomain%frac(g). So an alternative would be to simply set
+          !       glc_dyn_runoff_routing_grc(g) = icemask_grc(g).
+          !       The reason to cap glc_dyn_runoff_routing at lfrac is to avoid sending the
+          !       ice sheet model a greater mass of water (in the form of snowcap fluxes)
+          !       than is allowed to fall on a CLM grid cell that is part ocean.
 
-       if (ldomain%frac(g) == 0._r8) then
-          ! Avoid divide by 0; note that, in this case, the amount going to runoff isn't
-          ! important for system-wide conservation, so we could really choose anything we
-          ! want.
-          this%glc_dyn_runoff_routing_grc(g) = this%icemask_coupled_fluxes_grc(g)
-       else
-          this%glc_dyn_runoff_routing_grc(g) = &
-               min(ldomain%frac(g), this%icemask_coupled_fluxes_grc(g)) / &
-               ldomain%frac(g)
-       end if
+          ! TODO(wjs, 2017-05-08) Ideally, we wouldn't have this duplication in logic
+          ! between the coupler and CLM. The best solution would be to have the coupler
+          ! itself do the partitioning of the snow capping flux between the ice sheet model
+          ! and the runoff model. A next-best solution would be to have the coupler send a
+          ! field to CLM telling it what fraction of snow capping should go to the runoff
+          ! model in each grid cell.
 
-       if (this%glc_dyn_runoff_routing_grc(g) > 0.0_r8) then
-
-          ! Ensure that glc_dyn_runoff_routing is a subset of melt_replaced_by_ice. This
-          ! is needed because glacial melt is only sent to the runoff stream in the region
-          ! given by melt_replaced_by_ice (because the latter is used to create the do_smb
-          ! filter, and the do_smb filter controls where glacial melt is computed).
-          if (.not. this%glc_behavior%melt_replaced_by_ice_grc(g)) then
-             write(iulog,'(a)') subname//' ERROR: icemask_coupled_fluxes must be a subset of melt_replaced_by_ice.'
-             write(iulog,'(a)') 'Ensure that the glacier_region_melt_behavior namelist item is set correctly.'
-             write(iulog,'(a)') '(It should specify "replaced_by_ice" for the region corresponding to the GLC domain.)'
-             write(iulog,'(a)') 'If glacier_region_behavior is set correctly, then you can fix this problem'
-             write(iulog,'(a)') 'by modifying GLACIER_REGION on the surface dataset.'
-             write(iulog,'(a)') '(Expand the region that corresponds to the GLC domain'
-             write(iulog,'(a)') '- i.e., the region specified as "replaced_by_ice" in glacier_region_melt_behavior.)'
-             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
+          if (ldomain%frac(g) == 0._r8) then
+             ! Avoid divide by 0; note that, in this case, the amount going to runoff isn't
+             ! important for system-wide conservation, so we could really choose anything we
+             ! want.
+             this%glc_dyn_runoff_routing_grc(g) = this%icemask_coupled_fluxes_grc(g)
+          else
+             this%glc_dyn_runoff_routing_grc(g) = &
+                  min(ldomain%frac(g), this%icemask_coupled_fluxes_grc(g)) / &
+                  ldomain%frac(g)
           end if
+
+       else  ! .not. this%glc_behavior%melt_replaced_by_ice_grc(g)
+          ! As noted in the comments at the top of this routine, we set
+          ! glc_dyn_runoff_routing to 0 where we are not computing SMB. (This assumes that
+          ! gridcells where we compute SMB are the same as gridcells for which
+          ! melt_replaced_by_ice is true.)
+          this%glc_dyn_runoff_routing_grc(g) = 0._r8
        end if
+          
     end do
 
   end subroutine update_glc2lnd_dyn_runoff_routing
@@ -578,8 +583,15 @@ contains
 
     if (glc_do_dynglacier) then
        do g = bounds%begg, bounds%endg
-          ! Values from GLC are only valid within the icemask, so we only update CLM's areas there
-          if (this%icemask_grc(g) > 0._r8) then
+          ! Values from GLC are only valid within the icemask, so we only update CLM's
+          ! areas there. Also, we only update areas where the glacier region behavior is
+          ! 'virtual', because that's the only region where we are guaranteed to have all
+          ! of the elevation classes we need in order to remain in sync. (Note that, for
+          ! conservation purposes, it's important that we update areas in all regions
+          ! where we're fully-two-way-coupled to the icesheet and we're computing SMB;
+          ! this requirement is checked in check_glc2lnd_icemask.) (This conditional
+          ! should be kept consistent with the conditional in update_glc2lnd_topo.)
+          if (this%icemask_grc(g) > 0._r8 .and. this%glc_behavior%has_virtual_columns_grc(g)) then
 
              ! Set total ice landunit area
              area_ice = sum(this%frac_grc(g, 1:maxpatch_glc))
@@ -623,7 +635,7 @@ contains
                         msg="at least one glc column has non-zero area from cpl but has no slot in memory")
                 end if  ! error
              end if  ! area_ice > 0
-          end if  ! this%icemask_grc(g) > 0
+          end if  ! this%icemask_grc(g) > 0 .and. this%glc_behavior%has_virtual_columns_grc(g)
        end do  ! g
     end if  ! glc_do_dynglacier
 
@@ -667,8 +679,12 @@ contains
           l = col%landunit(c)
           g = col%gridcell(c)
 
-          ! Values from GLC are only valid within the icemask, so we only update CLM's topo values there
-          if (this%icemask_grc(g) > 0._r8) then
+          ! Values from GLC are only valid within the icemask, so we only update CLM's
+          ! topo values there. Also, consistently with the conditional in
+          ! update_glc2lnd_fracs, we only update topo values where the glacier region
+          ! behavior is 'virtual': it could be problematic to update topo values in a
+          ! grid cell where we're not updating areas.
+          if (this%icemask_grc(g) > 0._r8 .and. this%glc_behavior%has_virtual_columns_grc(g)) then
              if (lun%itype(l) == istice) then
                 ice_class = col_itype_to_ice_class(col%itype(c))
              else
