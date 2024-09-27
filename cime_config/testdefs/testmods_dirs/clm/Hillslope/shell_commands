@@ -4,7 +4,7 @@ DIN_LOC_ROOT=$(./xmlquery --value DIN_LOC_ROOT)
 # Set hillslope_file. Needed for any grids without default hillslope_file already set by CTSM.
 lnd_grid=$(./xmlquery --value LND_GRID)
 if [[ ${lnd_grid} == "10x15" ]]; then
-    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/synthetic_cosphill_1.3.nc'
+    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/synthetic_cosphill_10x15_1.3.nc'
 elif [[ ${lnd_grid} == "5x5_amazon" ]]; then
     hillslope_file='/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global/combined/hilldata_5x5_amazon_hist_2000_78pfts_c240216.nc'
 else
