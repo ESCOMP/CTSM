@@ -95,6 +95,13 @@
       <comment>This failure relates to the preceding ERP failure.</comment>
     </phase>
   </test>
+  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+    <phase name="BASELINE">
+      <status>FAIL</status>
+      <issue>#2619</issue>
+      <comment>This failure relates to the preceding ERP failure.</comment>
+    </phase>
+  </test>
 
   <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam7LndTuningMode">
     <phase name="COMPARE_base_modpes">
