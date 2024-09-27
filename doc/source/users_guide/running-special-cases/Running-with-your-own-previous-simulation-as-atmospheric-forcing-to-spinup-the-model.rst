@@ -14,7 +14,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
 ----------------------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case myB1850 -res f09_g17_gl4 -compset B1850
    > cd myB1850
    > ./case.setup
@@ -44,7 +44,7 @@ Example: Simulation Forced with Data from the Previous Simulation
 ------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case frcwmyB1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd frcWmyB1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)

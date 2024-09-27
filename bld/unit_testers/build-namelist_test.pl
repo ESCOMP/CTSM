@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3994;
+my $ntests = 3997;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2437;
@@ -1357,6 +1357,10 @@ my %warntest = (
                                    },
      "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",
                                      namelst=>"fsurdat='build-namelist_test.pl'",
+                                     phys=>"clm6_0",
+                                   },
+     "hillslope with init_interp"=>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.",
                                      phys=>"clm6_0",
                                    },
                );
