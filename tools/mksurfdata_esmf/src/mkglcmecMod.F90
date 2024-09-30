@@ -100,6 +100,7 @@ contains
        call shr_sys_abort()
     end if
 
+    allocate(elevclass_o(size(elevclass)))
     elevclass_o(:) = elevclass(:)
 
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
