@@ -384,14 +384,16 @@ contains
     real(r8) :: wnd_frc_thr_slt_it  ! [m/s] created for impact threshold friction velocity
     real(r8) :: wnd_frc_thr_slt     ! [m/s] used for wet fluid threshold friction velocity
     real(r8) :: K_length            ! [dimless] normalized mean interobstacle distance, or called gap length (Okin, 2008)
+    ! dmleung has these variables and will change them into pointers and prepare for their history outputs. 30 Sep 2024
     real(r8) :: bare_frc            ! LUH2 bare soil land cover fraction
-    real(r8) :: veg_frc             ! LUH2 natural vegetation + crop land cover fraction
+    real(r8) :: natveg_frc          ! LUH2 natural vegetation cover fraction
+    real(r8) :: crop_frc            ! LUH2 crop cover fraction.
     !
     ! constants
     !
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
-    real(r8), parameter :: vai_mbl_thr = 1.0_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests 1, and Zender's scheme uses 0.3
+    real(r8), parameter :: vai_mbl_thr = 0.5_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests something between 0.6 and 1 for tuning. Zender's scheme uses 0.3. Simone Tilmes might want this as a namelist variable for easier CESM tuning. dmleung 30 Sep 2024.
 
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient
     real(r8), parameter :: Ca = 2.7_r8                 ! [dimless] proportionality constant in scaling of dust emission exponent
@@ -407,7 +409,7 @@ contains
     real(r8), parameter :: D_p = 130e-6_r8             ! [m] Medium soil particle diameter, assuming a global constant of ~130 um following Leung et al. (2023). dmleung 16 Feb 2024
     real(r8), parameter :: gamma_Shao = 1.65e-4_r8     ! [kg s-2] interparticle cohesion: fitting parameter in Shao and Lu (2000) (S&L00). dmleung 16 Feb 2024
     real(r8), parameter :: A_Shao = 0.0123_r8          ! [dimless] coefficient for aerodynamic force: fitting parameter in Shao and Lu (2000). dmleung 16 Feb 2024
-    real(r8), parameter :: frag_expt_thr = 5.0_r8      ! [dimless] threshold for fragmentation exponent defined in Leung et al. (2023), somewhere within 3 to 5. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024
+    real(r8), parameter :: frag_expt_thr = 2.5_r8      ! [dimless] Maximum value or threshold for fragmentation exponent defined in Leung et al. (2023). Danny M. Leung suggested it to be somewhere between 3 and 5 for tuning. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024. Update: Simone Tilmes might want this as a namelist variable for easier CESM tuning. 30 Sep 2024.
     real(r8), parameter :: z0a_glob = 1e-4_r8          ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
     real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
     real(r8), parameter :: vai0_Okin = 0.1_r8          ! [m2/m2] minimum VAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.

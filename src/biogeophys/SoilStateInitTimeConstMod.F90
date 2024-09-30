@@ -765,12 +765,14 @@ contains
   !------------------------------------------------------------------------------
       real(r8), intent(IN) :: clay ! Fraction of clay in the soil (%)
 
+      real(r8), parameter :: a = 0.5_r8   ! Tuning factor for the soil moisture effect. This parameter could also be added into ThresholdSoilMoistKok2014. Simone Tilmes suggested to change this parameter into a namelist variable for easier CESM tuning. dmleung 30 Sep 2024.
+
       if ( clay < 0.0_r8 .or. clay > 100.0_r8 )then
          ThresholdSoilMoistZender2003 = nan
          call endrun( 'Clay fraction is out of bounds (0 to 100)')
          return
       end if
-      ThresholdSoilMoistZender2003 = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
+      ThresholdSoilMoistZender2003 = a * ( 0.17_r8 + 0.14_r8 * (clay*0.01_r8) )
   end function ThresholdSoilMoistZender2003
 
   !------------------------------------------------------------------------------
