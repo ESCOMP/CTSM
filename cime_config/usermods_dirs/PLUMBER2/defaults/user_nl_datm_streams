@@ -21,7 +21,7 @@
 !   foo:year_first = 1950
 ! would change the stream year_first stream_entry to 1950 for the foo stream block
 !------------------------------------------------------------------------
-! This will come out when cdeps externals are updated
+! This will come out when the cdeps submodule are updated
 CLM_USRDAT.PLUMBER2:datavars = ZBOT     Sa_z, \
         TBOT     Sa_tbot, \
         QBOT     Sa_shum, \

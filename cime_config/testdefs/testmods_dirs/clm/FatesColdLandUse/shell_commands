@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./xmlchange CLM_BLDNML_OPTS="-i-clm_demand -flanduse_timeseries" --append

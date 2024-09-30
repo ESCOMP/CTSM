@@ -1,7 +1,3 @@
-# ignore svn directories
-**/.svn/**
-.svn/
-
 # netcdf files
 *.nc
 # but don't ignore netcdf files here:
@@ -88,9 +84,6 @@ ctsm.input_data_list.previous
 
 # mksurfdata unit tests
 unit_test_build
-
-# Tools executables
-/tools/mkprocdata_map/mkprocdata_map
 
 # run_neon output directories
 /tools/site_and_regional/listing.csv

@@ -1,5 +1,0 @@
-stream_fldFileName_swindow_start = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc'
-stream_fldFileName_swindow_end = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.nc'
-stream_meshfile_cropcal = '$DIN_LOC_ROOT/share/meshes/360x720_120830_ESMFmesh_c20210507_cdf5.nc'
-stream_year_first_cropcal = 2000
-stream_year_last_cropcal = 2000

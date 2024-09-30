@@ -91,6 +91,7 @@ contains
 
   subroutine create_water_type(this, water_inst, &
        t_soisno_col, watsat_col, &
+       exice_coldstart_depth, exice_init_conc_col, &
        enable_consistency_checks, enable_isotopes)
     ! Initialize water_inst
     !
@@ -113,6 +114,13 @@ contains
     ! 1..nlevgrnd. If not provided, we use arbitrary values for this variable.
     real(r8), intent(in), optional :: watsat_col( bounds%begc: , 1: )
 
+    ! Depth below which excess ice is present on coldstart.
+    ! If not provided, we use an arbitrary value.
+    real(r8), intent(in), optional :: exice_coldstart_depth
+    ! Excess initial concentration for each column.
+    ! If not provided, is set to 0.
+    real(r8), intent(in), optional :: exice_init_conc_col(bounds%begc:)
+
     logical, intent(in), optional :: enable_consistency_checks
     logical, intent(in), optional :: enable_isotopes
 
@@ -121,6 +129,8 @@ contains
     type(water_params_type) :: params
     real(r8) :: l_watsat_col(bounds%begc:bounds%endc, nlevgrnd)
     real(r8) :: l_t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd)
+    real(r8) :: l_exice_coldstart_depth
+    real(r8) :: l_exice_init_conc_col(bounds%begc:bounds%endc)
 
     if (present(t_soisno_col)) then
        SHR_ASSERT_ALL_FL((ubound(t_soisno_col) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
@@ -128,6 +138,10 @@ contains
     if (present(watsat_col)) then
        SHR_ASSERT_ALL_FL((ubound(watsat_col) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
     end if
+
+    if (present(exice_init_conc_col)) then
+       SHR_ASSERT_ALL_FL((ubound(exice_init_conc_col,1) == bounds%endc), sourcefile, __LINE__)
+    endif
 
     if (present(enable_consistency_checks)) then
        l_enable_consistency_checks = enable_consistency_checks
@@ -157,12 +171,24 @@ contains
        l_t_soisno_col(:,:) = 275._r8
     end if
 
+    if (present(exice_coldstart_depth)) then
+       l_exice_coldstart_depth = exice_coldstart_depth
+    else
+       l_exice_coldstart_depth = 0.5_r8
+    endif
+    if (present(exice_init_conc_col)) then
+       l_exice_init_conc_col(:) = exice_init_conc_col
+    else
+       l_exice_init_conc_col(:) = 0.0_r8
+    endif
+
     call water_inst%InitForTesting(bounds, params, &
          h2osno_col = col_array(0._r8), &
          snow_depth_col = col_array(0._r8), &
          watsat_col = l_watsat_col, &
          t_soisno_col = l_t_soisno_col, &
-         NLFilename = ' ')
+         exice_coldstart_depth = l_exice_coldstart_depth, &
+         exice_init_conc_col = l_exice_init_conc_col)
   end subroutine create_water_type
 
   subroutine teardown(this, water_inst)
