@@ -14,7 +14,7 @@ Example: Simulation with MOAR Data on cheyenne
 -------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case MOARforce1850 -res f19_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd MOARforce1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)

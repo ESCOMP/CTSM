@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: ctsm5.3.001
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 26 Sep 2024 03:10:40 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+- Keith fixed comments on urban thermal variables.
+- Sam R removed references to PTCLM*.
+- Sam R made updates to the documentation.
+- Sam R made improvements to mesh_plotter.
+- Matvey and Sam R worked on hillslope hydrology warnings.
+- Matvey added a test and a warning.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+PR #2770 documentation fixes and improvements
+PR #2772 mesh_plotter improvements
+PR #2765 fix comments on urban thermal variables
+PR #2703 add a namelist warning
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Yes, see "bugs fixed" above.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Test(s) added to bld/unit_testers/build-namelist_test.pl
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2792
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.0
 Originator(s): multiple (see below)
 Date: Wed 25 Sep 2024 01:22:06 AM MDT
