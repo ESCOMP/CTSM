@@ -195,7 +195,7 @@
       <option name="comment"  >CTSM science test list for the half degree grid with latest CLM version for historical</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ln9" grid="C96_t232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
