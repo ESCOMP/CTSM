@@ -60,7 +60,7 @@ contains
     character(len=*), intent(in) :: info  ! information to include in messages
     !
     ! !LOCAL VARIABLES
-    type(domain_type) :: surfdata_domain  ! local domain associated with dataset
+    type(domain_type) :: inputdata_domain  ! local domain associated with input dataset
     logical :: readvar  ! true => variable is on dataset
     logical :: istype_domain  ! true => input file is of type domain
     character(len=16) :: lon_var, lat_var  ! names of lat/lon on dataset
@@ -94,33 +94,33 @@ contains
     end if
 
     call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
-    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
+    call domain_init(inputdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
 
-    call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=surfdata_domain%lonc, &
+    call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=inputdata_domain%lonc, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: lon var NOT on '//info//' dataset---'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io(ncid=ncid, varname=lat_var, flag='read', data=surfdata_domain%latc, &
+    call ncd_io(ncid=ncid, varname=lat_var, flag='read', data=inputdata_domain%latc, &
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: lat var NOT on '//info//' dataset---'//errMsg(sourcefile, __LINE__))
 
     rmaxlon = 0.0_r8
     rmaxlat = 0.0_r8
     do n = begg,endg
-       if (ldomain%lonc(n)-surfdata_domain%lonc(n) > 300.) then
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)-360._r8))
-       elseif (ldomain%lonc(n)-surfdata_domain%lonc(n) < -300.) then
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)+360._r8))
+       if (ldomain%lonc(n)-inputdata_domain%lonc(n) > 300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)-360._r8))
+       elseif (ldomain%lonc(n)-inputdata_domain%lonc(n) < -300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)+360._r8))
        else
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)))
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)))
        endif
-       rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-surfdata_domain%latc(n)))
+       rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-inputdata_domain%latc(n)))
     enddo
     if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
        write(iulog,*)' ERROR: '//info//' dataset vs. land domain lon/lat mismatch error', rmaxlon,rmaxlat
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    call domain_clean(surfdata_domain)
+    call domain_clean(inputdata_domain)
   end subroutine check_domain_attributes
 
   !-----------------------------------------------------------------------
