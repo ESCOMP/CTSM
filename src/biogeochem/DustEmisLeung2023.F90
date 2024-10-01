@@ -387,7 +387,7 @@ contains
     !
     ! constants
     !
-    real(r8), parameter :: vai_mbl_thr = 0.5_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests something between 0.6 and 1 for tuning. Zender's scheme uses 0.3. Simone Tilmes might want this as a namelist variable for easier CESM tuning. dmleung 30 Sep 2024.
+    real(r8), parameter :: vai_mbl_thr = 0.6_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests something between 0.6 and 1 for tuning. Zender's scheme uses 0.3. Simone Tilmes might want this as a namelist variable for easier CESM tuning. dmleung 30 Sep 2024.
 
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient
     real(r8), parameter :: Ca = 2.7_r8                 ! [dimless] proportionality constant in scaling of dust emission exponent
@@ -403,11 +403,12 @@ contains
     real(r8), parameter :: D_p = 130e-6_r8             ! [m] Medium soil particle diameter, assuming a global constant of ~130 um following Leung et al. (2023). dmleung 16 Feb 2024
     real(r8), parameter :: gamma_Shao = 1.65e-4_r8     ! [kg s-2] interparticle cohesion: fitting parameter in Shao and Lu (2000) (S&L00). dmleung 16 Feb 2024
     real(r8), parameter :: A_Shao = 0.0123_r8          ! [dimless] coefficient for aerodynamic force: fitting parameter in Shao and Lu (2000). dmleung 16 Feb 2024
-    real(r8), parameter :: frag_expt_thr = 2.5_r8      ! [dimless] Maximum value or threshold for fragmentation exponent defined in Leung et al. (2023). Danny M. Leung suggested it to be somewhere between 3 and 5 for tuning. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024. Update: Simone Tilmes might want this as a namelist variable for easier CESM tuning. 30 Sep 2024.
+    real(r8), parameter :: frag_expt_thr = 3.0_r8      ! [dimless] Maximum value or threshold for fragmentation exponent defined in Leung et al. (2023). Danny M. Leung suggested it to be somewhere between 3 and 5 for tuning. It is used to prevent a local AOD blowup (over Patagonia, Argentina), but one can test larger values and relax the threshold if wanted. dmleung 16 Feb 2024. Update: Simone Tilmes might want this as a namelist variable for easier CESM tuning. 30 Sep 2024.
     real(r8), parameter :: z0a_glob = 1e-4_r8          ! [m] assumed globally constant aeolian roughness length value in Leung et al. (2023), for the log law of the wall for Comola et al. (2019) intermittency scheme. dmleung 20 Feb 2024
     real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
     real(r8), parameter :: vai0_Okin = 0.1_r8          ! [m2/m2] minimum VAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
     real(r8), parameter :: zii = 1000.0_r8             ! [m] convective boundary layer height added by dmleung 20 Feb 2024, following other CTSM modules (e.g., CanopyFluxesMod). Should we transfer PBL height (PBLH) from CAM?
+    real(r8), parameter :: dust_veg_part_fact = 0.7_r8 ! [dimless] dmleung added a tuning factor for Greg Okin's vegetation drag partition effect. dmleung suggested a smaller vegetation drag partition effect given an increase in vegetation roughness after CTSM switched from using ZengWang2007 to Meier2022. This is simply because the drag partition effect should decrease with increasing roughness, but Okin's scheme is only a function of LAI. One might want to change this factor to 1_r8 when using ZengWang2007. dmleung 30 Sep 2024
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !------------------------------------------------------------------------
@@ -646,8 +647,8 @@ contains
 
 
             ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
-            K_length = 2.0_r8 * (1.0_r8/vai_Okin(p) - 1.0_r8)   ! Here LAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
-            ssr(p) = (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation.
+            K_length = 2.0_r8 * (1.0_r8/vai_Okin(p) - 1.0_r8)   ! Here VAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
+            ssr(p) = dust_veg_part_fact * (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation. dmleung added a tuning factor for Okin's vegetation drag partition effect (SSR) on 30 Sep 2024.
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
