@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = cc911f0a56f47c55e34bae3aaf96c85f1f301ff9  # refactor-history-2-dev: TESTING ONLY: Add non-per-ageclass versions of history vars.
+fxtag = 612d1a5c79c7387a320c7f3934708f6c10711af7  # refactor-history-2-dev: Fix weighting of FATES_NCL, FATES_SCORCH_HEIGHT_PF.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
