@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3338;
+my $ntests = 3339;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 1999;
@@ -517,6 +517,10 @@ my %failtest = (
                                      namelst=>"use_crop=.true.",
                                      phys=>"clm4_5",
                                    },
+     "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"use_prigent_roughness=.false.",
+                                     phys=>"clm5_1",
+                                   },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
                                      phys=>"clm5_0",
@@ -539,17 +543,14 @@ my %failtest = (
                                    },
      "coldstart exice on wo stream"=>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "coldstart exice on bad temp" =>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .true., excess_ice_coldstart_temp=0.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "coldstart exice on bad depth" =>{ options=>"-res 0.9x1.25 -envxml_dir . --clm_start_type cold",
                                      namelst=>"use_excess_ice=.true., use_excess_ice_streams = .true., excess_ice_coldstart_depth=0.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15 -ignore_warnings",
@@ -1242,10 +1243,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "dustemisLeung"             =>{ options=>"-envxml_dir .",
-                                     namelst=>"dust_emis_method = 'Leung_2023'",
-                                     phys=>"clm5_1",
-                                   },
      "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
                                      namelst=>"finidat = 'testfile.nc'",
                                      phys=>"clm5_0",
@@ -1280,12 +1277,14 @@ my %warntest = (
                                    },
      "Set coldtemp wo coldstart" =>{ options=>"-envxml_dir . --clm_start_type startup",
                                      namelst=>"use_excess_ice=.true.,excess_ice_coldstart_temp=-10.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm6_0",
                                    },
      "Set colddepth wo coldstart" =>{ options=>"-envxml_dir . --clm_start_type startup",
                                      namelst=>"use_excess_ice=.true.,excess_ice_coldstart_depth=0.5",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm6_0",
+                                   },
+     "PrigentOnWOLeung"          =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_prigent_roughness=.true.,dust_emis_method='Zender_2003'",
                                      phys=>"clm6_0",
                                    },
      "NotNEONbutNEONlightres"    =>{ options=>"--res CLM_USRDAT --clm_usr_name regional --envxml_dir . --bgc bgc --light_res 106x174",

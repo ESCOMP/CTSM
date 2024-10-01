@@ -1,5 +1,10 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.2.023 samrabin 08/16/2024 Merge b4b-dev
+       ctsm5.2.022 samrabin 08/14/2024 Rework crop_calendars suite and cropMonthOutput
+       ctsm5.2.021   rgknox 08/13/2024 Adding on-the-fly parameter settings for prescribed N and P in FATES
+       ctsm5.2.020   slevis 08/12/2024 MEGAN updates (MEGAN-CLM6)
+       ctsm5.2.019     erik 08/11/2024 Add in an additional dust emission method Leung_2023, by default off
        ctsm5.2.018 mvdebols 08/02/2024 Fix/excess ice cold start
        ctsm5.2.017     erik 07/30/2024 Dust emissions control moved to cmeps
        ctsm5.2.016 samrabin 07/27/2024 Enable new crop calendars for clm60 compsets

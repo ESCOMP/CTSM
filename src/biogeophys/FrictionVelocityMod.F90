@@ -262,12 +262,10 @@ contains
             ptr_patch=this%ram1_patch, default='inactive')
     end if
 
-    if (use_cn) then
        this%fv_patch(begp:endp) = spval
        call hist_addfld1d (fname='FV', units='m/s', &
             avgflag='A', long_name='friction velocity', &
-            ptr_patch=this%fv_patch)
-    end if
+            ptr_patch=this%fv_patch, default='inactive')
 
        call hist_addfld1d (fname='RAH1', units='s/m', &
             avgflag='A', long_name='aerodynamical resistance ', &
@@ -454,6 +452,11 @@ contains
          dim1name='column', &
          long_name='ground momentum roughness length', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%z0mg_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='OBU', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='Monin-Obukhov length', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%obu_patch)
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, varname='rb10', xtype=ncd_double,  &

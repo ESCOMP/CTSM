@@ -35,10 +35,10 @@ contains
     ! Allocate and initialize the test object for input objects dust-emission needs
     character(len=5) :: NLFilename = 'none'
 
+    call dust_emis_set_options( 'Zender_2003', 'atm')
     call this%input%setUp()
  
     ! Create the dust emission object last
-    call dust_emis_set_options( 'Zender_2003', 'atm')
     allocate(this%dust_emis, source = create_dust_emissions(bounds, NLFilename))
   end subroutine setUp
 
