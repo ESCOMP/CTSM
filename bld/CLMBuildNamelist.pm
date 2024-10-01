@@ -2746,8 +2746,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
 
   # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
   if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
-     $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values" .
-                   " from initial conditions. If you are sure you want this behaviour:")
+     $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values from initial conditions, even if the initial conditions (finidat) file has hillslope information. If you are sure you want this behaviour, add -ignore_warnings to CLM_BLDNML_OPTS.")
   }
 
 } # end initial conditions
