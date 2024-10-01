@@ -51,7 +51,7 @@ contains
     ! Checks for mismatches between the land domain and a surface or similar dataset's domain.
     !
     ! !USES:
-    use domainMod, only : domain_type, domain_init
+    use domainMod, only : domain_type, domain_init, domain_clean
     !
     ! !ARGUMENTS
     type(file_desc_t), intent(inout) :: ncid ! netcdf id for input file
@@ -120,6 +120,7 @@ contains
        write(iulog,*)' ERROR: '//info//' dataset vs. land domain lon/lat mismatch error', rmaxlon,rmaxlat
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+    call domain_clean(surfdata_domain)
   end subroutine check_domain_attributes
 
   !-----------------------------------------------------------------------
