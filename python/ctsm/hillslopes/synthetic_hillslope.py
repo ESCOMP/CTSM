@@ -7,12 +7,16 @@ import os
 import sys
 from datetime import datetime
 import numpy as np
+import xarray as xr
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm.hillslopes.hillslope_utils import HillslopeVars
+
+# HillslopeVars.save() doesn't work right with synthetic data, so instead we'll copy using xarray
+INCL_LATLON = False
 
 
 def parse_arguments(argv):
@@ -330,7 +334,7 @@ def main():
         n_lat,
         n_lon,
         recurse=False,
-        incl_latlon=True,
+        incl_latlon=INCL_LATLON,
         incl_pftndx=True,
     )
 
@@ -363,6 +367,7 @@ def main():
         add_bedrock=True,
         add_stream=True,
         save_fsurdat=args.fsurdat,
+        incl_latlon=INCL_LATLON,
     )
 
     # Save settings as global attributes
@@ -375,3 +380,10 @@ def main():
         outfile.synth_hillslopes_phill = args.phill
         outfile.synth_hillslopes_thresh = args.thresh
         outfile.synth_hillslopes_width_reach = args.width_reach
+
+    # Copy domain information
+    ds_in = xr.open_dataset(args.input_file)
+    ds_out = xr.open_dataset(args.output_file)
+    for var in ["LONGXY", "LATIXY"]:
+        ds_out[var] = ds_in[var]
+    ds_out.to_netcdf(args.output_file, mode="a")
