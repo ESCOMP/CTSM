@@ -9,7 +9,7 @@
 # Explicitly set the MPI library to mpi-serial so won't have the build/run complexity of a full MPI library
 ./xmlchange MPILIB=mpi-serial
 # Set years to run forcing data over
-./xmlchange DATM_YR_ALIGN=2018,DATM_YR_END=2021,DATM_YR_START=2018
+./xmlchange DATM_YR_ALIGN=2020,DATM_YR_END=2020,DATM_YR_START=2020
 #
 # Save some variables that may be used later
 #
@@ -49,10 +49,10 @@ fi
 
 
 # specific for MIMICS spinup
-./xmlchange DATM_YR_END=2021
-./xmlchange RUN_STARTDATE=0018-01-01
-./xmlchange RESUBMIT=5
-./xmlchange STOP_N=500
+./xmlchange DATM_YR_END=2020
+./xmlchange RUN_STARTDATE=0001-01-01
+./xmlchange RESUBMIT=0
+./xmlchange STOP_N=100
 ./xmlchange REST_N=100
 ./xmlchange STOP_OPTION=nyears
 ./xmlchange CLM_FORCE_COLDSTART=on
