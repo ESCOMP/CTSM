@@ -5,6 +5,7 @@
 import argparse
 import os
 import sys
+from datetime import datetime
 import numpy as np
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
@@ -32,11 +33,12 @@ def parse_arguments(argv):
         help="Input surface dataset",
         required=True,
     )
+    out_suffix = ".synth_hillslopes_" + datetime.today().strftime("%y%m%d")
     optional_named.add_argument(
         "-o",
         "--output-file",
         help=(
-            "Output surface dataset (default: append .synth_hillslopes before extension of "
+            f"Output surface dataset (default: append {out_suffix} before extension of "
             + "--input-file)"
         ),
         default=None,
@@ -120,10 +122,11 @@ def parse_arguments(argv):
 
     if args.output_file is None:
         stem, ext = os.path.splitext(args.input_file)
-        args.output_file = stem + ".synth_hillslopes" + ext
+        args.output_file = stem + out_suffix + ext
 
     if os.path.exists(args.output_file) and not args.overwrite:
         raise FileExistsError(f"Output file already exists: {args.output_file}")
+    print(f"Saving to {args.output_file}")
 
     return args
 
