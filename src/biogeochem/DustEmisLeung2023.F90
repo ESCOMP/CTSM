@@ -358,10 +358,6 @@ contains
     ! !LOCAL VARIABLES
     integer  :: fp,p,c,l,g,m,n      ! indices
     real(r8) :: liqfrac             ! fraction of total water that is liquid
-    real(r8) :: wnd_frc_rat         ! [frc] Wind friction threshold over wind friction
-    real(r8) :: wnd_frc_slt_dlt     ! [m s-1] Friction velocity increase from saltatn
-    real(r8) :: wnd_rfr_dlt         ! [m s-1] Reference windspeed excess over threshld
-    real(r8) :: dst_slt_flx_rat_ttl
     real(r8) :: flx_mss_hrz_slt_ttl
     real(r8) :: flx_mss_vrt_dst_ttl(bounds%begp:bounds%endp)
     real(r8) :: frc_thr_wet_fct
@@ -391,8 +387,6 @@ contains
     !
     ! constants
     !
-    real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
-    real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.5_r8        ! [m2 m-2] new VAI threshold; Danny M. Leung suggests something between 0.6 and 1 for tuning. Zender's scheme uses 0.3. Simone Tilmes might want this as a namelist variable for easier CESM tuning. dmleung 30 Sep 2024.
 
     real(r8), parameter :: Cd0 = 4.4e-5_r8             ! [dimless] proportionality constant in calculation of dust emission coefficient
