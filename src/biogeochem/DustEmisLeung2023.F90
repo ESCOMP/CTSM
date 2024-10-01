@@ -408,7 +408,7 @@ contains
     real(r8), parameter :: hgt_sal = 0.1_r8            ! [m] saltation height used by Comola et al. (2019) intermittency scheme for the log law of the wall. dmleung 20 Feb 2024
     real(r8), parameter :: vai0_Okin = 0.1_r8          ! [m2/m2] minimum VAI needed for Okin-Pierre's vegetation drag partition equation. lai=0 in the equation will lead to infinity, so a small value is added into this lai dmleung defined.
     real(r8), parameter :: zii = 1000.0_r8             ! [m] convective boundary layer height added by dmleung 20 Feb 2024, following other CTSM modules (e.g., CanopyFluxesMod). Should we transfer PBL height (PBLH) from CAM?
-    real(r8), parameter :: dust_veg_part_fact = 0.7_r8 ! [dimless] dmleung added a tuning factor for Greg Okin's vegetation drag partition effect. dmleung suggested a smaller vegetation drag partition effect given an increase in vegetation roughness after CTSM switched from using ZengWang2007 to Meier2022. This is simply because the drag partition effect should decrease with increasing roughness, but Okin's scheme is only a function of LAI. One might want to change this factor to 1_r8 when using ZengWang2007. dmleung 30 Sep 2024
+    real(r8), parameter :: dust_veg_drag_fact = 0.7_r8 ! [dimless] dmleung added a tuning factor for Greg Okin's vegetation drag partition effect. dmleung suggested a smaller vegetation drag partition effect given an increase in vegetation roughness after CTSM switched from using ZengWang2007 to Meier2022. This is simply because the drag partition effect should decrease with increasing roughness, but Okin's scheme is only a function of LAI. One might want to change this factor to 1_r8 when using ZengWang2007. dmleung 30 Sep 2024
     real(r8) :: numer                                  ! Numerator term for threshold crossing rate
     real(r8) :: denom                                  ! Denominator term for threshold crossing rate
     !------------------------------------------------------------------------
@@ -648,7 +648,7 @@ contains
 
             ! calculate Okin's shear stress ratio (SSR, which is vegetation drag partition factor) using Pierre's equation
             K_length = 2.0_r8 * (1.0_r8/vai_Okin(p) - 1.0_r8)   ! Here VAI has to be non-zero to avoid blowup, and < 1 to avoid -ve K_length. See this equation in Leung et al. (2023). This line is Okin's formulation
-            ssr(p) = dust_veg_part_fact * (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation. dmleung added a tuning factor for Okin's vegetation drag partition effect (SSR) on 30 Sep 2024.
+            ssr(p) = dust_veg_drag_fact * (K_length+f_0*c_e)/(K_length+c_e) ! see this equation in Caroline Pierre et al. (2014) or Leung et al. (2023). This line is Pierre's formulation. dmleung added a tuning factor for Okin's vegetation drag partition effect (SSR) on 30 Sep 2024.
 
             ! calculation of the hybrid/total drag partition effect considering both rock and vegetation drag partitioning using LUH2 bare and veg fractions within a grid
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
