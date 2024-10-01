@@ -1376,7 +1376,7 @@ foreach my $key ( keys(%warntest) ) {
 
    my $var;
    foreach $var ( "phys" , "options", "namelst" ) {
-      if ( not exists $failtest{$key}{$var} ) {
+      if ( not exists $warntest{$key}{$var} ) {
          die  "ERROR: Subkey $var does not exist for warntest $key\nERROR:Check if you spelled $var correctly\n"
       }
    }
@@ -1613,7 +1613,7 @@ foreach my $key ( keys(%finidat_files) ) {
 
    my $var;
    foreach $var ( "phys" , "atm_forc", "res", "bgc", "crop", "use_case", "start_ymd", "namelist" ) {
-      if ( not exists $failtest{$key}{$var} ) {
+      if ( not exists $finidat_files{$key}{$var} ) {
          die  "ERROR: Subkey $var does not exist for finidat_file $key\nERROR:Check if you spelled $var correctly\n"
       }
    }
