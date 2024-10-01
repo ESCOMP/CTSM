@@ -179,6 +179,10 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  make all-subset
 ```
 
+ As of 2024/9/12 one needs to generate NEON and PLUMBER2 fsurdat files by
+ running ./neon_surf_wrapper and ./plumber2_surf_wrapper manually in the
+ /tools/site_and_regional directory.
+
 <!-- = -->
 ## NOTES
 <!-- = -->

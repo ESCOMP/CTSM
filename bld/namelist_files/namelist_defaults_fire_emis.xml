@@ -17,6 +17,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <fire_emis_specifier>'bc_a1 = BC','pom_a1 = 1.4*OC','SO2 = SO2'</fire_emis_specifier>
 
-<fire_emis_factors_file>lnd/clm2/firedata/fire_emis_factors_c140116.nc</fire_emis_factors_file>
+<fire_emis_factors_file>lnd/clm2/firedata/fire_emission_factors_78PFTs_c20240624.nc</fire_emis_factors_file>
 
 </namelist_defaults>
