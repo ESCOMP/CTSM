@@ -271,11 +271,6 @@ contains
        call check_domain_attributes(ncid_hillslope, begg, endg, ldomain, 'hillslope')
     end if
 
-    !~! TODO(SPM, 022015) - if we deallocate and clean ldomain here, then you
-    !~! get errors in htape_timeconst where the information is needed to write
-    !~! the *.h0* file
-    !~!call domain_clean(surfdata_domain)
-
     ! Obtain special landunit info
 
     call surfrd_special(begg, endg, ncid, ldomain%ns)
