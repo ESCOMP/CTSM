@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 46bcd0c9bab583f6166724e3709393d52d00b152  # refactor-history-2-dev: Move reset_history_dyn2() call to after both update_history_dyn2*().
+fxtag = 22b1ce9d9bb2d080099c4d09e66465455e95a73e  # refactor-history-2-dev: Revert "Add mortality component outputs."
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
