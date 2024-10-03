@@ -18,8 +18,6 @@
 #
 import os
 import sys
-# Note that we need a specific version of sphinx_rtd_theme. This can be obtained with:
-# pip install git+https://github.com/esmci/sphinx_rtd_theme.git@version-dropdown-with-fixes
 import sphinx_rtd_theme
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -190,3 +188,17 @@ numfig_secnum_depth = 2
 
 def setup(app):
     app.add_css_file('css/custom.css')
+
+try:
+    html_context
+except NameError:
+    html_context = dict()
+
+html_context["display_lower_left"] = True
+
+html_context["current_language"] = language
+
+current_version = "master"
+
+html_context["current_version"] = current_version
+html_context["version"] = current_version
