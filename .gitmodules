@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = c8b04d41c0a3881555490156e52f1e20e0e929b8  # refactor-history-2-dev: Add SumMortForHistory() function to fates_cohort_type.
+fxtag = 7134803f1e13f6291bfa41385931d0bf85ecff47  # refactor-history-2-dev: Fix FATES_MORTALITY_D_*_SZAP outputs.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
