@@ -94,6 +94,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
+          external_repository: ${{github.triggering_actor}}/ctsm
           publish_branch: gh-pages-sidnfueriu
           publish_dir: './_build/html'
           destination_dir: './branch/${{ github.event.pull_request.head.ref }}/html'
