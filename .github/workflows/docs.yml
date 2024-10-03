@@ -94,6 +94,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
+          publish_branch: gh-pages-sidnfueriu
           publish_dir: './_build/html'
           destination_dir: './branch/${{ github.event.pull_request.head.ref }}/html'
           user_name: 'github-actions[bot]'
