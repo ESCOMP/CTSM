@@ -91,7 +91,7 @@ jobs:
       - name: Push PR preview
         if: |
           github.event_name == 'pull_request'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           publish_dir: './_build/html'
@@ -122,7 +122,7 @@ jobs:
             }
       - name: Push new docs
         if: ${{ github.event_name == 'push' }}
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           publish_dir: './_build/html'
