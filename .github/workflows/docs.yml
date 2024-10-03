@@ -56,10 +56,6 @@ jobs:
 
           echo "Done cleaning branches"
   test-build:
-    permissions:
-      contents: write  #  for peaceiris/actions-gh-pages to push
-      pull-requests: write  #  to comment on pull requests
-      pages: write
     needs: cleanup
     if: ${{ always() }}
     name: Test building documentation
