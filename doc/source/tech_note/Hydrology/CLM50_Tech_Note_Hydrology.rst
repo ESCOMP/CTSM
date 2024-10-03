@@ -939,4 +939,4 @@ where :math:`W_{b}^{n}` and :math:`W_{b}^{n+1}` are the water balances at the be
 
    W_{b} =W_{can} +W_{sno} +\sum _{i=1}^{N}\left(w_{ice,i} +w_{liq,i} \right) .
 
-Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
+Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_MOSART`).
