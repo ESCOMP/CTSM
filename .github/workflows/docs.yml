@@ -118,7 +118,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: 'You can preview documentation at https://esmci.github.io/cime/branch/${{ github.event.pull_request.head.ref }}/html/index.html'
+                body: 'You can preview documentation at https://escomp.github.io/ctsm/branch/${{ github.event.pull_request.head.ref }}/html/index.html'
               })
             }
       - name: Push new docs
