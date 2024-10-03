@@ -2,17 +2,17 @@
 Tag name: ctsm5.3.003
 Originator(s): rgknox (Ryan Knox, LBNL, rgknox@lbl.gov)
                glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
-Date: Thu Oct  3 10:20:00 MDT 2024
+Date: Thu Oct 03 10:20:00 MDT 2024
 One-line Summary: FATES default parameter file update
 
 Purpose and description of changes
 ----------------------------------
 
 This tag updates the default parameter file for FATES bringing in a number of updates:
-	- adds two new arctic shrub pfts
-	- updates the default sapwood allometry mode for grass pfts
-	- updates understory leaf turnover specifications for longer turnover rates
-	- changes the default behavior of nutrient uptake
+   - adds two new arctic shrub pfts
+   - updates the default sapwood allometry mode for grass pfts
+   - updates understory leaf turnover specifications for longer turnover rates
+   - changes the default behavior of nutrient uptake
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
