@@ -18,45 +18,7 @@ on:
 permissions:
   contents: read
 jobs:
-  cleanup:
-    permissions:
-      contents: write  #  for git push
-    name: Cleanup branch previews
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: 'gh-pages'
-          fetch-depth: 0
-          lfs: true
-          path: gh-pages
-      - name: Remove branch previews
-        run: |
-          pushd $GITHUB_WORKSPACE/gh-pages
-
-          if [[ -e "$GITHUB_WORKSPACE/gh-pages/branch" ]]; then
-            ls -la "$GITHUB_WORKSPACE/gh-pages/branch"
-
-            for name in `ls branch/`
-            do
-              if [[ -z "$(git show-ref --quiet ${name})" ]]
-              then
-                git rm -rf branch/${name}
-
-                echo "Removed $GITHUB_WORKSPACE/gh-pages/branch/${name}"
-              fi
-            done
-
-            git config user.name github-actions[bot]
-            git config user.email github-actions[bot]@users.noreply.github.com
-            git commit -m "Clean up branch previews"
-            git push
-          fi
-
-          echo "Done cleaning branches"
   test-build:
-    needs: cleanup
     if: ${{ always() }}
     name: Test building documentation
     runs-on: ubuntu-latest
