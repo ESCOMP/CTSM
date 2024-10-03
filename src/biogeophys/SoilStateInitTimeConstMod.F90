@@ -721,7 +721,8 @@ contains
        !soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
        if ( is_dust_emis_leung() )then
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay3d(g,1) )
-          dust_moist_fact = 0.9_r8   ! change this into a namelist variable later.
+          !dust_moist_fact = 0.9_r8   ! change this into a namelist variable later.
+          dust_moist_fact = 1.0_r8   ! change this into a namelist variable later.
           soilstate_inst%gwc_thr_col(c) = dust_moist_fact * ThresholdSoilMoistZender2003( clay3d(g,1) )
        else
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
