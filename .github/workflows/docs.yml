@@ -77,7 +77,7 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with doc-builder
         run: |
-          ./build_docs -b ${PWD}/_build -c
+          cd doc && ./build_docs -b ${PWD}/_build -c
 
 # The following jobs will only run if the PR branch is in ESCOMP/CTSM, not a fork.
 
