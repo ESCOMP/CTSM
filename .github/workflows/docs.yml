@@ -184,13 +184,13 @@ jobs:
                 body: 'You can preview documentation at https://escomp.github.io/ctsm/branch/${{ github.event.pull_request.head.ref }}/html/index.html'
               })
             }
-      - name: Push new docs
-        if: ${{ github.event_name == 'push' }}
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          publish_dir: './_build/html'
-          destination_dir: './versions/master/html'
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+    #   - name: Push new docs
+    #     if: ${{ github.event_name == 'push' }}
+    #     uses: peaceiris/actions-gh-pages@v3
+    #     with:
+    #       github_token: ${{secrets.GITHUB_TOKEN}}
+    #       publish_dir: './_build/html'
+    #       destination_dir: './versions/master/html'
+    #       user_name: 'github-actions[bot]'
+    #       user_email: 'github-actions[bot]@users.noreply.github.com'
 
