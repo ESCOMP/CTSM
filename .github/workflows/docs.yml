@@ -19,10 +19,10 @@ permissions:
   contents: read
 jobs:
 
-  # The test-build job will run only if the PR branch is from a fork, not ESCOMP/CTSM.
+  # The test-build job will run regardless of whether the PR branch is from ESCOMP/CTSM or a fork.
 
   test-build:
-    if: github.event.pull_request.head.repo.full_name != github.repository
+    if: ${{ always() }}
     name: Test building documentation
     runs-on: ubuntu-latest
     steps:
