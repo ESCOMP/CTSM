@@ -122,7 +122,7 @@ jobs:
     permissions:
       contents: write  #  for peaceiris/actions-gh-pages to push
       pull-requests: write  #  to comment on pull requests
-    needs: cleanup
+    # needs: cleanup
     if: github.event.pull_request.head.repo.full_name == github.repository
     name: Build and deploy documentation
     runs-on: ubuntu-latest
