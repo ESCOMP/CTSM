@@ -48,7 +48,7 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs
         run: |
-          make BUILDDIR=${PWD}/_build -C doc/ html
+          make SPHINXOPTS=-W --keep-going BUILDDIR=${PWD}/_build -C doc/ html
 
 # The following jobs will only run if the PR branch is in ESCOMP/CTSM, not a fork.
 
@@ -120,7 +120,7 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs
         run: |
-          make BUILDDIR=${PWD}/_build -C doc/ html
+          make SPHINXOPTS=-W --keep-going BUILDDIR=${PWD}/_build -C doc/ html
       - name: Push PR preview
         if: |
           github.event_name == 'pull_request' &&
