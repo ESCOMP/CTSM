@@ -19,11 +19,11 @@ permissions:
   contents: read
 jobs:
 
-  # The test-build job will run regardless of whether the PR branch is from ESCOMP/CTSM or a fork.
+  # These first jobs will run regardless of whether the PR branch is from ESCOMP/CTSM or a fork.
 
-  test-build:
+  test-build-makefile:
     if: ${{ always() }}
-    name: Test building documentation
+    name: Test building documentation with makefile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -46,9 +46,38 @@ jobs:
         run: |
           pip install -r doc/requirements.txt
       # Build documentation under ${PWD}/_build
-      - name: Build Sphinx docs
+      - name: Build Sphinx docs with makefile
         run: |
           make SPHINXOPTS=-W --keep-going BUILDDIR=${PWD}/_build -C doc/ html
+
+  test-doc-builder:
+    if: ${{ always() }}
+    name: Test building documentation with doc-builder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Install python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          pip install -r doc/requirements.txt
+      # Build documentation under ${PWD}/_build
+      - name: Build Sphinx docs with doc-builder
+        run: |
+          ./build_docs -b ${PWD}/_build -c
 
 # The following jobs will only run if the PR branch is in ESCOMP/CTSM, not a fork.
 
