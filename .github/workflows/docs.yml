@@ -48,7 +48,7 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with makefile
         run: |
-          make SPHINXOPTS=-W --keep-going BUILDDIR=${PWD}/_build -C doc/ html
+          make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
 
   test-doc-builder:
     if: ${{ always() }}
