@@ -1,4 +1,4 @@
-.. _rst_MOwererSART:
+.. _rst_MOSART:
 
 Model for Scale Adaptive River Transport (MOSART)
 ====================================================
