@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.003 multiple 10/07/2024 FATES default parameter file update
+       ctsm5.3.002 multiple 09/26/2024 Duplicate tag (same as 5.3.001)
        ctsm5.3.001 multiple 09/26/2024 Merge b4b-dev
          ctsm5.3.0 multiple 09/24/2024 Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
        ctsm5.2.029 multiple 09/24/2024 New surface datasets: double tag of ctsm5.3.0
