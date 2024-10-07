@@ -1273,6 +1273,13 @@ my %failtest = (
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );
+   my $var;
+   foreach $var ( "phys" , "options", "namelst" ) {
+      if ( not exists $failtest{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for failtest $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    &make_config_cache($failtest{$key}{"phys"});
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
@@ -1352,6 +1359,14 @@ my %warntest = (
                );
 foreach my $key ( keys(%warntest) ) {
    print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "options", "namelst" ) {
+      if ( not exists $warntest{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for warntest $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    &make_config_cache($warntest{$key}{"phys"});
    my $options  = $warntest{$key}{"options"};
    my $namelist = $warntest{$key}{"namelst"};
@@ -1581,6 +1596,14 @@ my %finidat_files = (
 
 foreach my $key ( keys(%finidat_files) ) {
    print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "atm_forc", "res", "bgc", "crop", "use_case", "start_ymd", "namelist" ) {
+      if ( not exists $finidat_files{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for finidat_file $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    my $phys = $finidat_files{$key}{'phys'};
    print "physics = $phys\n";
    &make_config_cache($phys);
