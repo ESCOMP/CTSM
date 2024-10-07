@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - master
+      - b4b-dev
     paths:
       - 'doc/**'
 
   pull_request:
     branches:
       - master
+      - b4b-dev
     paths:
       - 'doc/**'
 
