@@ -52,11 +52,11 @@ Testing summary:
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi -------
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     derecho ----- OK
-    izumi -------
+    izumi ------- OK
 
 Answer changes
 --------------
