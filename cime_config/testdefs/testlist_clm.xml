@@ -3332,7 +3332,7 @@
       <option name="tput_tolerance">0.1</option>
     </options>
   </test>
-  <test name="PFS_Ld10_PS" grid="f19_g17" compset="I2000Clm50BgcCrop" testmods="clm/matrixcnOn">
+  <test name="PFS_Ld10_PS" grid="f19_g17" compset="I2000Clm50BgcCrop" testmods="clm/default--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
