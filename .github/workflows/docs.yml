@@ -26,17 +26,17 @@ jobs:
     name: Test building documentation with makefile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout
         with:
           fetch-depth: 0
           lfs: true
       - name: Install python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python
         with:
           python-version: '3.x'
       # https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('doc/requirements.txt') }}
@@ -55,17 +55,17 @@ jobs:
     name: Test building documentation with doc-builder
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout
         with:
           fetch-depth: 0
           lfs: true
       - name: Install python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python
         with:
           python-version: '3.x'
       # https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip
-        uses: actions/cache@v3
+        uses: actions/cache
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('doc/requirements.txt') }}
