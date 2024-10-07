@@ -781,7 +781,7 @@ contains
          call endrun( 'Clay fraction is out of bounds (0 to 100)')
          return
       end if
-      ThresholdSoilMoistZender2003 = 0.17_r8 + 0.14_r8 * (clay*0.01_r8) 
+      ThresholdSoilMoistZender2003 = 0.17_r8 + 0.14_r8 * clay * 0.01_r8
   end function ThresholdSoilMoistZender2003
 
   !------------------------------------------------------------------------------
