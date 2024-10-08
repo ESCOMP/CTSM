@@ -14,6 +14,12 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
+  use clm_varpar                      , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                               ilivestem,ilivestem_st,ilivestem_xf,&
+                                               ideadstem,ideadstem_st,ideadstem_xf,&
+                                               ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                               ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                               igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn
   use clm_varpar                      , only : maxveg, nlevdecomp_full, mxsowings, mxharvests
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
@@ -42,6 +48,8 @@ module CNPhenologyMod
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
   use atm2lndType                     , only : atm2lnd_type             
+  use CNVegMatrixMod                  , only : matrix_update_phc, matrix_update_phn
+  use CNVegMatrixMod                  , only : matrix_update_gmc, matrix_update_gmn
   !
   implicit none
   private
@@ -86,7 +94,6 @@ module CNPhenologyMod
      real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) 
                                        ! (Birch et. all 2021 it was 720 see line below)
                                        ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude (Birch et. al 2021)
-     real(r8) :: ndays_on              ! number of days to complete leaf onset
      real(r8) :: ndays_off             ! number of days to complete leaf offset
      real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
      real(r8) :: crit_onset_fdd        ! critical number of freezing days to set gdd counter
@@ -105,7 +112,6 @@ module CNPhenologyMod
   real(r8) :: dt                            ! time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
-  real(r8) :: ndays_on                      ! number of days to complete onset
   real(r8) :: ndays_off                     ! number of days to complete offset
   real(r8) :: fstor2tran                    ! fraction of storage to move to transfer on each onset
   real(r8) :: crit_onset_fdd                ! critical number of freezing days
@@ -132,16 +138,17 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
-  ! Two matrix check parameters that will be invoked when the matrix solution
-  ! comes in (use_matrixcn)
-  logical,parameter :: matrixcheck_ph = .True.                   ! Matrix solution check
-  logical,parameter :: acc_ph = .False.                          ! Another matrix solution check
+  logical,parameter :: matrixcheck_ph = .True.                   ! Matrix check
+  logical,parameter :: acc_ph = .False.                          ! Another matrix check
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
   real(r8)         :: min_gddmaturity = 1._r8     ! Weird things can happen if gddmaturity is tiny
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
+
+  ! For use with adapt_cropcal_rx_cultivar_gdds .true.
+  real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
 
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
@@ -270,7 +277,6 @@ contains
     params_inst%crit_dayl             = 39200._r8     ! Seconds
     params_inst%crit_dayl_at_high_lat = 54000._r8     ! Seconds
     params_inst%crit_dayl_lat_slope   = 720._r8       ! Seconds / degree
-    params_inst%ndays_on              = 15._r8        ! Days
     params_inst%ndays_off             = 30._r8        ! Days
     params_inst%fstor2tran            = 0.5           ! Fraction
     params_inst%crit_onset_fdd        = 15._r8        ! Days
@@ -304,7 +310,6 @@ contains
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
     call readNcdioScalar(ncid, 'crit_dayl_at_high_lat', subname, params_inst%crit_dayl_at_high_lat)
     call readNcdioScalar(ncid, 'crit_dayl_lat_slope', subname, params_inst%crit_dayl_lat_slope)
-    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
     call readNcdioScalar(ncid, 'crit_onset_fdd', subname, params_inst%crit_onset_fdd)
@@ -465,7 +470,6 @@ contains
     crit_dayl=params_inst%crit_dayl
 
     ! Set constants for CNSeasonDecidPhenology and CNStressDecidPhenology
-    ndays_on=params_inst%ndays_on
     ndays_off=params_inst%ndays_off
 
     ! set transfer parameters
@@ -674,8 +678,47 @@ contains
    		           
    		 bglfr                               => cnveg_state_inst%bglfr_patch , & ! Output: [real(r8) (:) ]  background litterfall rate (1/s)                  
    		 bgtr                                => cnveg_state_inst%bgtr_patch  , & ! Output: [real(r8) (:) ]  background transfer growth rate (1/s)             
-   		 lgsf                                => cnveg_state_inst%lgsf_patch    & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
+   		 lgsf                                => cnveg_state_inst%lgsf_patch  , & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
 
+   		 ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+   		 ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+   		 ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+   		 ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+   		 ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+   		 ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+   		 ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+   		 ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+   		 ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+   		 ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+   		 ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+   		 ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+   		 ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+   		 ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+   		 ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+   		 ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+   		 ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+   		 igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+   		 ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+   		 ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+   		 ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+   		 ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+   		 ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+   		 ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+   		 ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+   		 ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+   		 ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+   		 ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+   		 ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+   		 ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+   		 ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+   		 ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+   		 ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+   		 ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+   		 ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+   		 ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+   		 ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+   		 ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+   		 igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       avg_dayspyr = get_average_days_per_year()
@@ -697,22 +740,38 @@ contains
    
          tranr=0.0002_r8   
          ! set carbon fluxes for shifting storage pools to transfer pools    
-         if (.not. use_matrixcn) then
-            leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt
-            frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt
-            if (woody(ivt(p)) == 1.0_r8) then
-               livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt
-               deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt
-               livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt
-               deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt
-               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt
+         if (use_matrixcn) then    
+            leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+            frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+            if (woody(ivt(p)) == 1.0_r8) then   
+               livestemc_storage_to_xfer(p)   = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc,tranr/dt ,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               deadstemc_storage_to_xfer(p)   = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc,tranr/dt ,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               livecrootc_storage_to_xfer(p)  = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               deadcrootc_storage_to_xfer(p)  = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
             end if
          else
             ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-         end if !not use_matrixcn
+            leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
+            frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt
+            if (woody(ivt(p)) == 1.0_r8) then    
+               livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
+               deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
+               livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
+               deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt   
+               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt        
+            end if    
+         end if !use_matrixcn
 
         ! set nitrogen fluxes for shifting storage pools to transfer pools    
         if (use_matrixcn) then    
+           leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           if (woody(ivt(p)) == 1.0_r8) then   
+              livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,tranr/dt ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,tranr/dt ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           end if
         else
            ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
            leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
@@ -728,6 +787,22 @@ contains
         t1 = 1.0_r8 / dt   
 
         if (use_matrixcn) then
+           leafc_xfer_to_leafc(p)   = leafc_xfer(p)  * matrix_update_phc(p,ileafxf_to_ileaf_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+           frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+           leafn_xfer_to_leafn(p)   = leafn_xfer(p)  * matrix_update_phn(p,ileafxf_to_ileaf_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           if (woody(ivt(p)) == 1.0_r8) then
+              livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+              livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           end if
         else
            ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
            !                                        and CNNStateUpdate1::NStateUpdate1
@@ -805,6 +880,8 @@ contains
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          soila10                             =>    temperature_inst%soila10_col                                , & ! Input:  [real(r8) (:)   ] 
@@ -880,7 +957,46 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)   ]   
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]   
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       ! start patch loop
@@ -900,7 +1016,8 @@ contains
             lgsf(p) = 0._r8
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
 
             ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
             if (dayl(g) >= prev_dayl(g)) then
@@ -993,7 +1110,8 @@ contains
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
                   do_onset = .false.
-                  onset_counter(p) = ndays_on * secspday
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
+
 
                   ! move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.
@@ -1002,6 +1120,25 @@ contains
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
                   if(use_matrixcn)then
+                     leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+                     if (woody(ivt(p)) == 1.0_r8) then
+                       livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc ,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc ,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                     end if
+                     leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn ,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn ,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
@@ -1264,7 +1401,10 @@ contains
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
          leafcn                              =>    pftcon%leafcn                                               , & ! Input:  leaf C:N (gC/gN)
          frootcn                             =>    pftcon%frootcn                                              , & ! Input:  fine root C:N (gC/gN) 
-         
+
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days)
+
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
@@ -1340,7 +1480,46 @@ contains
          livestemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%livestemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
-         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch      & ! Output:  [real(r8) (:)		 ] 
+         deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)		 ] 
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       avg_dayspyr = get_average_days_per_year()
@@ -1358,8 +1537,8 @@ contains
             psi = soilpsi(c, phenology_soil_layer)
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
-
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
 
             ! update offset_counter and test for the end of the offset period
             if (offset_flag(p) == 1._r8) then
@@ -1499,7 +1678,7 @@ contains
                   onset_fdd(p) = 0._r8
                   onset_gdd(p) = 0._r8
                   onset_swi(p) = 0._r8
-                  onset_counter(p) = ndays_on * secspday
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
 
                   ! call subroutine to move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.
@@ -1508,6 +1687,23 @@ contains
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
                   if (use_matrixcn) then 
+                     leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     end if
+
+                     leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
@@ -1631,9 +1827,26 @@ contains
                ! between leafc and leafc_store in the flux. RosieF, Nov5 2015. 
                leafc_storage_to_xfer(p)  = max(0.0_r8,(leafc_storage(p)-leafc(p))) * bgtr(p)
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
-
                if (use_matrixcn) then
-               else
+                  if(leafc_storage(p) .gt. 0)then
+                     leafc_storage_to_xfer(p) = leafc_storage(p) * matrix_update_phc(p,ileafst_to_ileafxf_phc,&
+                                                leafc_storage_to_xfer(p) / leafc_storage(p), dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     leafc_storage_to_xfer(p) = 0
+                  end if
+                  if(frootc_storage(p) .gt. 0)then
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,&
+                                                 frootc_storage_to_xfer(p) / frootc_storage(p), dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     frootc_storage_to_xfer(p) = 0   
+                  end if
+                if (woody(ivt(p)) == 1.0_r8) then
+                     livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc ,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc ,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                 end if
+              else
                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                  !                                        and CNNStateUpdate1::NStateUpdate1
                  if (woody(ivt(p)) == 1.0_r8) then
@@ -1647,9 +1860,17 @@ contains
 
                ! set nitrogen fluxes for shifting storage pools to transfer pools
                if (use_matrixcn) then 
+                  leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  if (woody(ivt(p)) == 1.0_r8) then
+                     livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,bgtr(p) ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,bgtr(p) ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-                  !                                        and CNNStateUpdate1::NStateUpdate11
+                  !                                        and CNNStateUpdate1::NStateUpdate1
                   leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
                   frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
                   if (woody(ivt(p)) == 1.0_r8) then
@@ -1808,7 +2029,7 @@ contains
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_swindows
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -1973,7 +2194,7 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
-               crop_inst%sowing_reason_perharv_patch = -1._r8
+               crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
                   cnveg_carbonflux_inst%repr_grainc_to_food_perharv_patch(p,s,k) = 0._r8
@@ -2242,7 +2463,7 @@ contains
                 do_harvest = .true.
                 fake_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWNBADDEC31
-            else if (use_cropcal_streams .and. do_plant .and. .not. did_plant) then
+            else if (use_cropcal_rx_swindows .and. do_plant .and. .not. did_plant) then
                 ! Today was supposed to be the planting day, but the previous crop still hasn't been harvested.
                 do_harvest = .true.
                 harvest_reason = HARVEST_REASON_SOWTODAY
@@ -2559,7 +2780,7 @@ contains
 
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, use_cropcal_streams
+    use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, adapt_cropcal_rx_cultivar_gdds
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
@@ -2590,6 +2811,7 @@ contains
     ! LOCAL VARAIBLES:
     integer s              ! growing season index
     integer k              ! grain pool index
+    real(r8) gdd20         ! GDD*20 value for this crop type
     real(r8) gdd_target    ! cultivar GDD target this growing season
     real(r8) this_sowing_reason ! number representing sowing reason(s)
     logical did_rx_gdds    ! did this patch use a prescribed harvest requirement?
@@ -2668,42 +2890,71 @@ contains
          endif
       endif
 
+      ! which GDD*20 variable does this crop use?
+      if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
+            ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
+         gdd20 = gdd1020(p)
+      else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+            ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
+            ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+            ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+            ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
+         gdd20 = gdd820(p)
+      else if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+            ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat .or. &
+            ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+            ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+         gdd20 = gdd020(p)
+      else
+         write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for gdd20: ',ivt(p)
+         call endrun(msg="Stopping")
+      end if
+
       ! set GDD target
       did_rx_gdds = .false.
       if (use_cropcal_rx_cultivar_gdds .and. crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p)) .ge. 0._r8) then
          gddmaturity(p) = crop_inst%rx_cultivar_gdds_thisyr_patch(p,sowing_count(p))
          did_rx_gdds = .true.
+         if (adapt_cropcal_rx_cultivar_gdds .and. crop_inst%gdd20_baseline_patch(p) > min_gdd20_baseline) then
+            gddmaturity(p) = gddmaturity(p) * gdd20 / crop_inst%gdd20_baseline_patch(p)
+            !TODO Sam Rabin: Set maximum and minimum gddmaturity
+         end if
       else if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
          gddmaturity(p) = hybgdd(ivt(p))
       else
          if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-            gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
-         end if
-         if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
+               ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean .or. &
+               ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
+               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
+               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
+            gddmaturity(p) = min(gdd20, hybgdd(ivt(p)))
+         else if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-            gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
+            gddmaturity(p) = max(950._r8, min(gdd20*0.85_r8, hybgdd(ivt(p))))
             if (do_plant_normal) then
                gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
             end if
-         end if
-         if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-               ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-               ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-            gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
+         else
+            write(iulog, *) 'ERROR: PlantCrop(): unrecognized ivt for GDD target: ',ivt(p)
+            call endrun(msg="Stopping")
          end if
 
       endif
 
-      if (use_cropcal_streams .and. gddmaturity(p) < min_gddmaturity) then
-          if (did_rx_gdds) then
-              write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
-          endif
-          gddmaturity(p) = min_gddmaturity
-      endif
+      if (gddmaturity(p) < min_gddmaturity) then
+         if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
+             if (did_rx_gdds) then
+                 write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
+             end if
+             gddmaturity(p) = min_gddmaturity
+         else
+            write(iulog, *) 'ERROR: PlantCrop(): gddmaturity < minimum for ivt ',ivt(p)
+            call endrun(msg="Stopping")
+         end if
+      end if
 
       ! Initialize allocation coefficients.
       ! Because crops have no live carbon pools when planted but not emerged, this shouldn't
@@ -2961,7 +3212,46 @@ contains
          livestemn_xfer_to_livestemn         =>    cnveg_nitrogenflux_inst%livestemn_xfer_to_livestemn_patch   , & ! Output:  [real(r8) (:) ]                                                    
          deadstemn_xfer_to_deadstemn         =>    cnveg_nitrogenflux_inst%deadstemn_xfer_to_deadstemn_patch   , & ! Output:  [real(r8) (:) ]                                                    
          livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch , & ! Output:  [real(r8) (:) ]                                                    
-         deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch   & ! Output:  [real(r8) (:) ]
+         deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch , & ! Output:  [real(r8) (:) ]
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       ! patch loop
@@ -2980,6 +3270,22 @@ contains
                t1 = 2.0_r8 / (onset_counter(p))
             end if
             if (use_matrixcn)then
+               leafc_xfer_to_leafc(p)   = leafc_xfer(p) * matrix_update_phc(p,ileafxf_to_ileaf_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               leafn_xfer_to_leafn(p)   = leafn_xfer(p) * matrix_update_phn(p,ileafxf_to_ileaf_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               if (woody(ivt(p)) == 1.0_r8) then
+
+                  livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+                  livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               end if
             else
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3006,7 +3312,26 @@ contains
          ! pools should be moved to displayed growth in each timestep.
 
          if (bgtr(p) > 0._r8) then
-            if(.not. use_matrixcn)then
+            if(use_matrixcn)then
+               leafc_xfer_to_leafc(p)   = leafc_xfer(p)  * matrix_update_phc(p,ileafxf_to_ileaf_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               leafn_xfer_to_leafn(p)   = leafn_xfer(p)  * matrix_update_phn(p,ileafxf_to_ileaf_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               if (woody(ivt(p)) == 1.0_r8) then
+
+                  livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p)  * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p)  * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+                  livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p)  * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p)  * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               end if
+            else
+               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+               !                                        and CNNStateUpdate1::NStateUpdate1
                leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
                frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
                leafn_xfer_to_leafn(p)   = leafn_xfer(p) / dt
@@ -3021,7 +3346,7 @@ contains
                   livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
                   deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
                end if
-            end if !not use_matrixcn
+            end if !use_matrixcn
          end if ! end if bgtr
 
       end do ! end patch loop
@@ -3143,8 +3468,51 @@ contains
          paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch, & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          frootn_to_litter      =>    cnveg_nitrogenflux_inst%frootn_to_litter_patch    , & ! Output: [real(r8) (:) ]  fine root N litterfall (gN/m2/s)                  
          leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
-         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch                & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
+         leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
 
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ileaf_to_iout_gmc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_gm                      , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
+         ileaf_to_iout_gmn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_gm                    , & ! Input: [integer (:)] Index of gap mortality related N transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ilivestem_to_iout_gmc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_gm                  , & ! Input: [integer (:)] Index of gap mortality related C transfer from live stem pool to outside of vegetation pools
+         ilivestem_to_iout_gmn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_gm                , & ! Input: [integer (:)] Index of gap mortality related N transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       ! The litterfall transfer rate starts at 0.0 and increases linearly
@@ -3159,14 +3527,18 @@ contains
             if (abs(offset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
-               
-               ! leafc_litter and frootc_to_litter for matrix
+
+               ! frootc_to_litter for matrix
                if (use_matrixcn) then
+                  if(frootc(p) .gt. 0)then
+                     frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     frootc_to_litter(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   !                                        and CNNStateUpdate1::NStateUpdate1
                end if ! use_matrixcn
-
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
@@ -3269,8 +3641,55 @@ contains
                   ! as well as leaf C:N ratio (unaffected by biofuel harvest). It thus does not
                   ! need to be updated here.
 
-                  ! Matrix for grain, livestem to litter and biofuel
+                  ! Matrix for grain
+                  ! Matrix for livestem/leaf to litter, biofuel, and removed residue
                   if(use_matrixcn)then
+                     if(reproductivec(p,1) > 0._r8)then
+                        grainc_to_out = reproductivec(p,1) * matrix_update_phc(p,igrain_to_iout_phc,(repr_grainc_to_seed(p,1) + repr_grainc_to_food(p,1)) / reproductivec(p,1),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        repr_grainc_to_seed(p,1) = 0._r8
+                        repr_grainc_to_food(p,1) = 0._r8
+                     end if
+                     if(reproductiven(p,1) > 0._r8)then
+                        grainn_to_out = reproductiven(p,1) * matrix_update_phn(p,igrain_to_iout_phn,(repr_grainn_to_seed(p,1) + repr_grainn_to_food(p,1)) / reproductiven(p,1),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        repr_grainn_to_seed(p,1) = 0._r8
+                        repr_grainn_to_food(p,1) = 0._r8
+                     end if
+                     if(livestemc(p) > 0._r8)then
+                        livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livestemc_to_removedresiduec(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_removedresiduec(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                     else
+                        livestemc_to_litter(p) = 0._r8
+                        livestemc_to_removedresiduec(p) = 0._r8
+                        livestemc_to_biofuelc(p) = 0._r8
+                     end if
+                     if(livestemn(p) > 0._r8)then
+                        livestemn_to_biofueln(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        livestemn_to_removedresiduen(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_removedresiduen(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p)))/dt, dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        livestemn_to_biofueln(p) = 0._r8
+                        livestemn_to_removedresiduen(p) = 0._r8
+                        livestemn_to_litter(p) = 0._r8
+                     end if
+                     if(leafn(p) > 0._r8)then
+                        leafn_to_biofueln(p) =  leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                        leafn_to_removedresiduen(p) = leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_removedresiduen(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                     else
+                        leafn_to_biofueln(p) = 0._r8
+                        leafn_to_removedresiduen(p) = 0._r8
+                     end if
+                     if (leafc(p) > 0._r8)then
+                        leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_removedresiduec(p) = leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_removedresiduec(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        leafc_to_biofuelc(p) = 0._r8
+                        leafc_to_removedresiduec(p) = 0._r8
+                        leafc_to_litter(p) = 0._r8
+                     end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3281,8 +3700,17 @@ contains
                leafc_to_litter(p)  = prev_leafc_to_litter(p)  + t1*(leafc(p)  - prev_leafc_to_litter(p)*offset_counter(p))
                frootc_to_litter(p) = prev_frootc_to_litter(p) + t1*(frootc(p) - prev_frootc_to_litter(p)*offset_counter(p))
 
-               ! Matrix for leafc and frootc to litter
                if (use_matrixcn) then
+                  if(leafc(p) .gt. 0)then
+                     leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     leafc_to_litter(p) = 0
+                  end if
+                  if(frootc(p) .gt. 0)then
+                     frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     frootc_to_litter(p) = 0  ! TODO slevis here and elsewhere
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3292,18 +3720,24 @@ contains
             if ( use_fun ) then
                if(leafc_to_litter(p)*dt.gt.leafc(p))then
                    leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
-
-                   ! Matrix for leafc to litter
-                   if (use_matrixcn) then
-                   else
-                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-                   end if !use_matrixcn 
+                  if (use_matrixcn) then
+                     if(leafc(p) .gt. 0)then
+                        leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        leafc_to_litter(p) = 0
+                     end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                  end if !use_matrixcn 
                endif
                if(frootc_to_litter(p)*dt.gt.frootc(p))then
                    frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
-
-                   ! Matrix update for frootc to litter
                   if (use_matrixcn) then
+                     if(frootc(p) .gt. 0)then
+                        frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        frootc_to_litter(p) = 0
+                     end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   end if !use_matrixcn
@@ -3325,9 +3759,14 @@ contains
                end if
                leafn_to_litter(p)          =  leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
                leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
-
-               ! Matrix update for leafn to litter and retrans
                if (use_matrixcn) then   
+                  if(leafn(p) .gt. 0)then
+                      leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                   !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3350,8 +3789,14 @@ contains
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
 
-               ! Matrix update for leafn to litter and retrans
                if (use_matrixcn) then   
+                  if(leafn(p) .gt. 0)then
+                      leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
@@ -3359,9 +3804,12 @@ contains
 
             ! calculate fine root N litterfall (no retranslocation of fine root N)
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
-
-            ! Matrix update for frootn to litter
             if (use_matrixcn) then   
+               if(frootn(p) .gt. 0)then
+                  frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               else
+                  frootn_to_litter(p) = 0
+               end if
             else
                ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
             end if !use_matrixcn
@@ -3375,19 +3823,26 @@ contains
            
                leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
-
-               ! Matrix update for leafn to litter and retrans
                if (use_matrixcn) then   
-               else
+                  if(leafn(p) .gt. 0)then
+                      leafn_to_litter(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                      leafn_to_litter(p)   = 0
+                      leafn_to_retransn(p) = 0
+                  end if
                end if !use_matrixcn
                if (frootc(p) == 0.0_r8) then    
                    frootn_to_litter(p) = 0.0_r8    
-               else    
+                else    
                    frootn_to_litter(p) = frootc_to_litter(p) * (frootn(p) / frootc(p))   
-               end if   
-
-               ! Matrix update for frootn to litter
+                end if   
                if (use_matrixcn) then   
+                  if(frootn(p) .gt. 0)then
+                     frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     frootn_to_litter(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
@@ -3395,12 +3850,10 @@ contains
             
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-
-                  ! Send all frootn to litter
                   if (.not. use_matrixcn) then   
                      frootn_to_litter(p) = frootn(p)/dt
                   else
-                     ! Matrix update for frootn to litter
+                     frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,1._r8/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                endif    
             end if
@@ -3470,8 +3923,47 @@ contains
          leafc_to_litter_fun   => cnveg_carbonflux_inst%leafc_to_litter_fun_patch, & ! Output:  [real(r8) (:) ] leaf C litterfall used by FUN (gC/m2/s)
          leafcn_offset         => cnveg_state_inst%leafcn_offset_patch           , & ! Output:  [real(r8) (:) ] Leaf C:N used by FUN
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
-         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch     & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)
+         paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)
 
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
       ! patch loop
@@ -3483,10 +3975,9 @@ contains
             ! units for bglfr are already 1/s
             leafc_to_litter(p)  = bglfr(p) * leafc(p)
             frootc_to_litter(p) = bglfr(p) * frootc(p)
-
-            ! Matrix update for leafc and frootc to litter
             if (use_matrixcn) then
-            else
+               leafc_to_litter(p)  = leafc(p)  * matrix_update_phc(p,ileaf_to_iout_phc,bglfr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,bglfr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
             end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
@@ -3502,9 +3993,11 @@ contains
                end if
                leafn_to_litter(p)         = leafc_to_litter(p)/leafcn_offset(p) - leafn_to_retransn(p)
                leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
-
-               ! Matrix update for leafn to litter and retrans
                if(use_matrixcn)then
+                  if(leafn(p) .ne. 0._r8)then
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
@@ -3527,8 +4020,11 @@ contains
                leafn_to_litter(p)   = leafc_to_litter(p)  / lflitcn(ivt(p))
                leafn_to_retransn(p) = (leafc_to_litter(p) / leafcn(ivt(p))) - leafn_to_litter(p)
 
-               ! Matrix update for leafn to litter and retrans
                if (use_matrixcn) then   
+                  if(leafn(p) .ne. 0)then
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
@@ -3546,9 +4042,14 @@ contains
            
                leafn_to_litter(p)   = fr_leafn_to_litter * ntovr_leaf
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
-
-               ! Matrix update for leafn to litter and retrans
                if (use_matrixcn) then   
+                  if(leafn(p) .gt. 0)then
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     leafn_to_litter(p)   = 0
+                     leafn_to_retransn(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
@@ -3565,8 +4066,10 @@ contains
                endif
             end if
 
-            ! Matrix update for frootn to litter
             if (use_matrixcn) then   
+               if(frootn(p) .ne. 0)then
+                  frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               end if
             else
                ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
             end if !use_matrixcn
@@ -3624,7 +4127,47 @@ contains
          livestemn_to_retransn    =>    cnveg_nitrogenflux_inst%livestemn_to_retransn_patch    , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
-         free_retransn_to_npool   =>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch     & ! Input:  [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
+         free_retransn_to_npool   =>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch   , & ! Input:  [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
+         ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phc              =>    cnveg_carbonflux_inst%ifrootxf_to_ifroot_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phc      =>    cnveg_carbonflux_inst%ilivestemst_to_ilivestemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phc        =>    cnveg_carbonflux_inst%ilivestemxf_to_ilivestem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phc      =>    cnveg_carbonflux_inst%ideadstemst_to_ideadstemxf_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phc        =>    cnveg_carbonflux_inst%ideadstemxf_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phc    =>    cnveg_carbonflux_inst%ilivecrootst_to_ilivecrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phc      =>    cnveg_carbonflux_inst%ilivecrootxf_to_ilivecroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phc    =>    cnveg_carbonflux_inst%ideadcrootst_to_ideadcrootxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phc      =>    cnveg_carbonflux_inst%ideadcrootxf_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
+         ileafst_to_ileafxf_phn              =>    cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
+         ileafxf_to_ileaf_phn                =>    cnveg_nitrogenflux_inst%ileafxf_to_ileaf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
+         ifrootst_to_ifrootxf_phn            =>    cnveg_nitrogenflux_inst%ifrootst_to_ifrootxf_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
+         ifrootxf_to_ifroot_phn              =>    cnveg_nitrogenflux_inst%ifrootxf_to_ifroot_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root transfer pool to fine root pool
+         ilivestemst_to_ilivestemxf_phn      =>    cnveg_nitrogenflux_inst%ilivestemst_to_ilivestemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live stem storage pool to live stem transfer pool
+         ilivestemxf_to_ilivestem_phn        =>    cnveg_nitrogenflux_inst%ilivestemxf_to_ilivestem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live stem transfer pool to live stem pool
+         ideadstemst_to_ideadstemxf_phn      =>    cnveg_nitrogenflux_inst%ideadstemst_to_ideadstemxf_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem storage pool to dead stem transfer pool
+         ideadstemxf_to_ideadstem_phn        =>    cnveg_nitrogenflux_inst%ideadstemxf_to_ideadstem_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from dead stem transfer pool to dead stem pool
+         ilivecrootst_to_ilivecrootxf_phn    =>    cnveg_nitrogenflux_inst%ilivecrootst_to_ilivecrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root storage pool to live coarse root transfer pool
+         ilivecrootxf_to_ilivecroot_phn      =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_ilivecroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root transfer pool to live coarse root pool
+         ideadcrootst_to_ideadcrootxf_phn    =>    cnveg_nitrogenflux_inst%ideadcrootst_to_ideadcrootxf_ph     , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root storage pool to dead coarse root transfer pool
+         ideadcrootxf_to_ideadcroot_phn      =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_ideadcroot_ph       , & ! Input: [integer (:)] Index of phenology related C transfer from dead coarse root transfer pool to dead coarse root pool
+         ilivestem_to_ideadstem_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_phn        =>    cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_ph         , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
+         ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
+         ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
+         ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
+         ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         iretransn_to_iout                   =>    cnveg_nitrogenflux_inst%iretransn_to_iout_ph                , & ! Input: [integer    ]
+         igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
 
@@ -3642,9 +4185,13 @@ ptch: do fp = 1,num_soilp
             ntovr = ctovr / livewdcn(ivt(p))
             livestemc_to_deadstemc(p) = ctovr
             livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))
-
-            ! Matrix update for livestemc to deadstem
             if( use_matrixcn)then
+               livestemc_to_deadstemc(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_ideadstem_phc,lwtop,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               if (livestemn(p) .gt. 0.0_r8) then
+                  livestemn_to_deadstemn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_ideadstem_phn,livestemn_to_deadstemn(p)/livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               else
+                  livestemn_to_deadstemn(p) = 0
+               end if
             else
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3653,13 +4200,18 @@ ptch: do fp = 1,num_soilp
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
                    livestemn_to_deadstemn(p) = 0.0_r8 
-               else    
+                else    
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
                    livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) 
-               end if   
+                end if   
 
-               ! Matrix update for livestemn to deadstem 
                if (use_matrixcn)then 
+                  if (livestemn(p) .gt. 0.0_r8) then
+                     livestemn_to_deadstemn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_ideadstem_phn,&
+                                                 livestemn_to_deadstemn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  else
+                     livestemn_to_deadstemn(p) = 0
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if
@@ -3672,14 +4224,14 @@ ptch: do fp = 1,num_soilp
 
             ctovr = livecrootc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
-
             if(.not. use_matrixcn)then
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
                livecrootc_to_deadcrootc(p) = ctovr
                livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
             else
-               ! Matrix update for livecroot to deadcroot
+               livecrootc_to_deadcrootc(p) = livecrootc(p) * matrix_update_phc(p,ilivecroot_to_ideadcroot_phc,lwtop,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               livecrootn_to_deadcrootn(p) = livecrootn(p) * matrix_update_phn(p,ilivecroot_to_ideadcroot_phn,lwtop/deadwdcn(ivt(p)),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
@@ -3691,20 +4243,48 @@ ptch: do fp = 1,num_soilp
                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
-               ! Matrix update for livecroot to deadcroot
                if (use_matrixcn)then 
+                  if (livecrootn(p) .ne.0.0_r8 )then
+                     livecrootn_to_deadcrootn(p) = matrix_update_phn(p,ilivecroot_to_ideadcroot_phn,&
+                                                   livecrootn_to_deadcrootn(p) / livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
+                  end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             end if
 
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-
-            ! Matrix update for livecrootn and livestemn to retrans as well as free retransn to npool with FUN
-            if(use_matrixcn)then
-            else
-               ! The non-matrix version of this is in NStateUpdate1
-            end if !use_matrixcn
+               if(use_matrixcn)then
+                  if(livecrootn(p) .gt. 0.0_r8) then
+                     livecrootn_to_retransn(p) = matrix_update_phn(p,ilivecroot_to_iretransn_phn,&
+                                                 livecrootn_to_retransn(p) / livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
+                  else
+                     livecrootn_to_retransn(p) = 0
+                  end if
+                  if(livestemn(p) .gt. 0.0_r8) then
+                     livestemn_to_retransn(p) = matrix_update_phn(p,ilivestem_to_iretransn_phn,&
+                                                livestemn_to_retransn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livestemn(p)
+                  else
+                     livestemn_to_retransn(p)  = 0
+                  end if
+                  ! WW change logic so livestem_retrans goes to npool (via
+                  ! free_retrans flux)
+                  ! this should likely be done more cleanly if it works, i.e. not
+                  ! update fluxes w/ states
+                  ! additional considerations for crop?
+                  ! The non-matrix version of this is in NStateUpdate1
+                  if (use_fun) then
+                     if (retransn(p) .gt. 0._r8) then
+                        ! The acc matrix check MUST be turned on, or this will
+                        ! fail with Nitrogen balance error EBK 03/11/2021
+                        free_retransn_to_npool(p) = free_retransn_to_npool(p) + retransn(p) * matrix_update_phn(p,iretransn_to_iout, &
+                                                    (livestemn_to_retransn(p) + livecrootn_to_retransn(p)) / retransn(p),dt,         &
+                                                    cnveg_nitrogenflux_inst, matrixcheck_ph, acc=.true.)
+                     else
+                        free_retransn_to_npool(p) = 0._r8
+                     end if
+                  end if
+               end if !use_matrixcn
 
          end if
 

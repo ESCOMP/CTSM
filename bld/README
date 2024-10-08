@@ -4,16 +4,16 @@ CLM build and configure directory and scripts. Scripts to help
 you prepare to build CLM as a component within CESM, and setup
 a namelist for it.
 
+This is a lower level script called from with CESM/CIME.
+
 Important files/directories:
 
---------- Configure and build scripts
---------- (These scripts are also used by the cesm/cime scripts)
+--------- Namelist build scripts
 
 config_files/clm_phys_vers.pm ------------- Perl module to handle different CLM versions
-config_files/config_definition_ctsm.xml --- XML file defining all CTSM configuration items
+config_files/config_definition_ctsm.xml --- XML file defining CTSM configuration items (mainly physics version)
 
 --------- Scripts to build the namelists
---------- (These scripts are also used by the cesm/cime scripts)
 build-namelist --- Build the namelists needed
 
 
@@ -26,17 +26,17 @@ unit_testers --- Directory of scripts to test scipts in this directory
 ---------- XML Files describing namelists in namelist_files
 namelist_files/namelist_defaults_ctsm.xml --------- List of default values for the ctsm namelist
 namelist_files/namelist_defaults_overall.xml ------ List of default values for overall settings
-namelist_files/namelist_defaults_usr_files.xml ---- List of default values for the user-files
-namelist_files/namelist_definition_ctsm.xml -------- Definition of all namelist items for ctsm
+namelist_files/namelist_defaults_usr_files.xml ---- List of default values for the user-files (deprecated)
+namelist_files/namelist_definition_ctsm.xml ------- Definition of all namelist items for ctsm
 namelist_files/namelist_definition.xsl ------------ Describes how to view the xml file as html
-namelist_files/namelist_defaults_drydep.xml ------- List of default values for the dry deposition module.
 namelist_files/use_cases -------------------------- Specific configurations that build-namelist uses
 namelist_files/use_cases/README ------------------- File explaining the naming convention for use_cases
 
 ---------- Driver namelist files, duplicated information from cime/driver/cime_config
 namelist_files/namelist_defaults_drv.xml ---------- List of default values for driver namelist defaults
-namelist_files/namelist_defaults_drydep.xml ------- List of default values for dry deposition fields 
+namelist_files/namelist_defaults_drydep.xml ------- List of default values for dry deposition and MEGAN fields 
 namelist_files/namelist_defaults_fire_emis.xml ---- List of default values for fire emission fields
+namelist_files/namelist_defaults_dust_emis.xml ---- List of default values for the dust emissions module.
 namelist_files/namelist_definition_drv.xml -------- Definition of all driver namelist items
 namelist_files/namelist_definition_drv_flds.xml --- Definition of add driver fieldsnamelist items
 

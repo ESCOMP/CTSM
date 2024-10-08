@@ -146,9 +146,6 @@ MOSART
 PFT
   Plant Function Type (PFT). A type of vegetation that CLM parameterizes.
 
-PTCLM
-  PoinT CLM (PTCLM) a python script that operates on top of CLM for |version| to run single point simulations for CLM.
-
 ROF
   River runOff Model to route flow of surface water over land out to the ocean. |cesmrelease| has two components options for this
   the new model MOSART and previous model RTM.
