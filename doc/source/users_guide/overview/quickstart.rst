@@ -11,12 +11,12 @@ Running the CLM requires a suite of UNIX utilities and programs and you should m
 List of utilities required for CESM in the `Software/OS Prerequisites <https://www2.cesm.ucar.edu/models/cesm1.2/cesm/doc/usersguide/x32.html#software_system_prerequisites>`_ section of the CESM User's Guide.
 
 - UNIX bash shell (for some of the CLM tools scripts)
-- NCL (for some of the offline tools for creating/modifying CLM input datasets; see :ref:`using-ncl` for more information)
+- NCL (for some of the offline tools for creating/modifying CLM input datasets)
 - Python
 
 Before working with |version| read the `CESM QuickStart Guide <https://escomp.github.io/CESM/versions/cesm2.2/html/>`_. Once you are familiar with how to setup cases for any type of simulation with CESM you will want to direct your attention to the specifics of using CLM.
 
-For some of the details of setting up cases for |version| read the README and text files available from the "$CTSMROOT/doc" directory (see the "CLM Web pages" section for a link to the list of these files). Here are the important ones that you should be familiar with:
+For some of the details of setting up cases for |version| read the README and text files available from the ``$CTSMROOT/doc`` directory (see the "CLM Web pages" section for a link to the list of these files). Here are the important ones that you should be familiar with:
 
 - :ref:`readme` describing the directory structure.
 - The IMPORTANT_NOTES file talks about important things for users to know about using the model scientifically. It content is given in the next chapter on :ref:`scientific-validiation`.

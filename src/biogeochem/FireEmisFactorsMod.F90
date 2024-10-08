@@ -11,6 +11,8 @@ module FireEmisFactorsMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
+  use clm_varpar,   only : maxveg
+  use pftconMod,    only : nc3crop
 !
   implicit none
   private
@@ -21,7 +23,6 @@ module FireEmisFactorsMod
   public :: fire_emis_factors_get
 
 ! !PRIVATE MEMBERS:
-  integer :: npfts ! number of plant function types
 !
   type emis_eff_t
      real(r8), pointer :: eff(:) ! emissions efficiency factor
@@ -52,7 +53,6 @@ contains
 ! Method for getting FireEmis information for a named compound 
 !
 ! !USES:
-    use pftconMod , only : nc3crop
 ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! FireEmis compound name
     real(r8),        intent(out) :: factors(:)     ! vegetation type factors for the compound of interest
@@ -73,9 +73,11 @@ contains
        call endrun(errmes)
     endif
 
-    factors(:npfts) = comp_factors_table( ndx )%eff(:npfts)
-    if ( size(factors) > npfts )then
-       factors(npfts+1:) = comp_factors_table( ndx )%eff(nc3crop)
+    factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
+    ! If fire emissions factor file only includes natural PFT's, but this is a crop case
+    ! Copy the generic crop factors to the crop CFT's from generic crop
+    if ( size(factors) > nc3crop )then
+       factors(nc3crop+1:) = comp_factors_table( ndx )%eff(nc3crop)
     end if
     molecwght  = comp_factors_table( ndx )%wght
 
@@ -96,7 +98,7 @@ contains
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
-    use clm_varpar  , only : mxpft
+    use clm_varpar, only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -126,16 +128,20 @@ contains
     call ncd_inqdlen( ncid, dimid, n_comps, name='Comp_Num')
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
-    npfts = n_pfts
-    if ( npfts /= mxpft .and. npfts /= 16 )then
-       call endrun('Number of PFTs on fire emissions file is NOT correct. Its neither the total number of PFTS nor 16')
+    if ( (n_pfts < maxveg) .and. (n_pfts < nc3crop) )then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
+       call endrun('Number of PFTs on the fire emissions file is less than the number of natural PFTs from the surface dataset')
+    end if
+    if ( n_pfts > mxpft )then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' mxpft = ', mxpft
+       call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')
     end if
 
     ierr = pio_inq_varid(ncid,'Comp_EF',  comp_ef_vid)
     ierr = pio_inq_varid(ncid,'Comp_Name',comp_name_vid)
     ierr = pio_inq_varid(ncid,'Comp_MW',  comp_mw_vid)
 
-    allocate( comp_factors(n_pfts) )
+    allocate( comp_factors(maxveg) )
     allocate( comp_names(n_comps) )
     allocate( comp_molecwghts(n_comps) )
 
@@ -146,7 +152,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,npfts/)
+       count=(/1,min(n_pfts,maxveg)/)
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
 
        call enter_hash_data( trim(comp_names(i)), comp_factors, comp_molecwghts(i)  )

@@ -75,6 +75,8 @@ def main(argv):
         "HARVEST_REASON_PERHARV",
     ]
 
+    any_bad = False
+
     annual_outfiles = glob.glob(os.path.join(args.directory, "*.clm2.h1.*.nc"))
 
     # These should be constant in a Prescribed Calendars (rxboth) run, as long as the inputs were
@@ -85,13 +87,19 @@ def main(argv):
         "rx_gdds_file": args.rx_gdds_file,
     }
 
-    case["ds"] = cc.import_output(
+    case["ds"], any_bad_import_output = cc.import_output(
         annual_outfiles,
         my_vars=my_vars,
         year_1=args.first_usable_year,
         year_n=args.last_usable_year,
+        throw_errors=False,
     )
-    check_constant_vars(case["ds"], case, ignore_nan=True, verbose=True, throw_error=True)
+    any_bad = any_bad or any_bad_import_output
+
+    _, any_bad_check_const_vars = check_constant_vars(
+        case["ds"], case, ignore_nan=True, verbose=True, throw_error=True
+    )
+    any_bad = any_bad or any_bad_check_const_vars
 
     # Import GGCMI sowing and harvest dates, and check sims
     casename = "Prescribed Calendars"
@@ -128,15 +136,16 @@ def main(argv):
 
         # Check
         if case["rx_sdates_file"]:
-            check_rx_obeyed(
+            sdate_not_obeyed = check_rx_obeyed(
                 case["ds"].vegtype_str.values,
                 case["rx_sdates_ds"].isel(time=0),
                 case["ds"],
                 casename,
                 "SDATES",
             )
+            any_bad = any_bad or sdate_not_obeyed
         if case["rx_gdds_file"]:
-            check_rx_obeyed(
+            gdds_not_obeyed = check_rx_obeyed(
                 case["ds"].vegtype_str.values,
                 case["rx_gdds_ds"].isel(time=0),
                 case["ds"],
@@ -144,6 +153,19 @@ def main(argv):
                 "GDDHARV",
                 gdd_min=gdd_min,
             )
+            any_bad = any_bad or gdds_not_obeyed
+
+    if any_bad:
+        msg = "\n   ".join(
+            [
+                "Unexpected behavior in rxboth run:",
+                f"any_bad_import_output:    {any_bad_import_output}",
+                f"any_bad_check_const_vars: {any_bad_check_const_vars}",
+                f"sdate_not_obeyed:         {sdate_not_obeyed}",
+                f"gdds_not_obeyed:          {gdds_not_obeyed}",
+            ]
+        )
+        raise RuntimeError(msg)
 
 
 if __name__ == "__main__":
