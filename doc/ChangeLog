@@ -1,4 +1,57 @@
 ===============================================================
+Tag name: ctsm5.3.004
+Originator(s): samrabin (Sam Rabin)
+Date: Mon Oct  7 21:25:20 MDT 2024
+One-line Summary: Move hillslope data off surface datasets
+
+Purpose and description of changes
+----------------------------------
+
+Moves hillslope data off surface datasets onto its own separate hillslope_file. This makes it so we don't need to generate new surface datasets specifically for hillslope testing whenever the surface datasets are updated.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Not in real runs, only our testing.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2434 (https://github.com/ESCOMP/CTSM/pull/2434)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.003
 Originator(s): rgknox (Ryan Knox, LBNL, rgknox@lbl.gov)
                glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
