@@ -123,8 +123,16 @@ fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
 
 [submodule "doc-builder"]
 path = doc/doc-builder
-url = https://github.com/ESMCI/doc-builder
-fxtag = v1.0.8
+url = https://github.com/samsrabin/doc-builder
+fxtag = c51795f65d230803418c932bfd8639c85c33a19a
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
+
+[submodule "representative-hillslopes"]
+path = tools/external/representative-hillslopes
+url = https://github.com/samsrabin/Representative_Hillslopes
+fxtag = 2126ffe018b2268ed479469421763cbb45d9c264
+fxrequired = ToplevelOptional
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/swensosc/Representative_Hillslopes

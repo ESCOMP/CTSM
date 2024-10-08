@@ -263,7 +263,7 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. Glacier processes (Chapter :numref:`rst_Glaciers`)
 
-#. River routing and river flow (Chapter :numref:`rst_River Transport Model (RTM)`)
+#. River routing and river flow (Chapter :numref:`rst_MOSART`)
 
 #. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 
