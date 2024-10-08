@@ -1,4 +1,144 @@
 ===============================================================
+Tag name: ctsm5.3.004
+Originator(s): samrabin (Sam Rabin)
+Date: Mon Oct  7 21:25:20 MDT 2024
+One-line Summary: Move hillslope data off surface datasets
+
+Purpose and description of changes
+----------------------------------
+
+Moves hillslope data off surface datasets onto its own separate hillslope_file. This makes it so we don't need to generate new surface datasets specifically for hillslope testing whenever the surface datasets are updated.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Not in real runs, only our testing.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2434 (https://github.com/ESCOMP/CTSM/pull/2434)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.003
+Originator(s): rgknox (Ryan Knox, LBNL, rgknox@lbl.gov)
+               glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Mon Oct 07 10:33:14 AM MDT 2024
+One-line Summary: FATES default parameter file update
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the default parameter file for FATES bringing in a number of updates:
+   - adds two new arctic shrub pfts
+   - updates the default sapwood allometry mode for grass pfts
+   - updates understory leaf turnover specifications for longer turnover rates
+   - changes the default behavior of nutrient uptake
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #2783 -- Error in FatescoldLandUse testmod
+   Fixes FATES#1211 -- Switching the default fates_cnp_prescribed_* parameters from 1 to 0
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+   FatesColdLandUse build has been added to the list of expected failures due to #2810
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES mode
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.78.2_api.36.0.0 -> sci.1.78.3_api.36.1.0
+
+Pull Requests that document the changes (include PR ids):
+   https://github.com/ESCOMP/CTSM/pull/2700
+   https://github.com/NGEET/fates/pull/1255
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.002
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 26 Sep 2024 03:10:40 PM MDT
+One-line Summary: Duplicate tag of ctsm5.3.001
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.001
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 26 Sep 2024 03:10:40 PM MDT
