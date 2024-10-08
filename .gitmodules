@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 7134803f1e13f6291bfa41385931d0bf85ecff47  # refactor-history-2-dev: Fix FATES_MORTALITY_D_*_SZAP outputs.
+fxtag = c17a4e1072ea23fddcbcceb039937f5399ce8ee3  # refactor-history-2-dev: Per-ageclass termination mortality now * days_per_year.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
