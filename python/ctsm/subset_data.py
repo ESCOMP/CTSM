@@ -743,7 +743,7 @@ def subset_region(args, file_dict: dict):
 
         print("\nFor running this regional case with the created user_mods : ")
         print(
-            "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm51BgcCrop",
+            "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm60BgcCrop",
             "--run-unsupported --user-mods-dirs ",
             args.user_mods_dir,
             "\n\n",
