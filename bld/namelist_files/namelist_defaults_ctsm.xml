@@ -1354,18 +1354,32 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at f09 for all clm5_1/clm6_0 options -->
-<!-- use_init_interp true because the file was created with ctsm5.3 datasets -->
+<!-- TODO slevis VALID COMMENT? use_init_interp true because the file was created with ctsm5.3 datasets -->
 <finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          phys="clm5_1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_pSASU.clm2.r.0161-01-01-00000.nc
+</finidat>
+<!-- Corresponding ne30 -->
+<finidat hgrid="ne30np4" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_ne30pg3t232_pSASU.clm2.r.0121-01-01-00000.nc
+</finidat>
+<!-- Corresponding f19 -->
+<finidat hgrid="1.9x2.5" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm530_f19_PPE_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 
 <!--
@@ -1408,12 +1422,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          lnd_tuning_mode="clm5_1_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
-<!-- NB: This pSASU finidat is from an f09 1850 (rather than f19 2000) spin-up -->
+<!-- NB: This pSASU finidat is from an f09 2000 spin-up -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 
@@ -1493,21 +1507,25 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!-- clm5_1 and cam7.0 -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm5_1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 <!-- clm6_0 and cam7.0 -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.2000-01-01-00000.nc
+</finidat>
+<finidat hgrid="ne30np4"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 <!-- clm5_0 and cam7.0 -->
@@ -1532,7 +1550,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1567,13 +1585,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm5_1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1596,7 +1607,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+</finidat>
+<finidat hgrid="ne30np4"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1631,13 +1648,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1706,22 +1716,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
 </finidat>
 
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm5_1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
-
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
-
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
@@ -1744,7 +1738,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1779,14 +1773,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm5_1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
-
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
@@ -1809,7 +1795,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+</finidat>
+<finidat hgrid="ne30np4"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
+>lnd/clm2/initdata_map/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1844,14 +1836,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- Present day for coupled cases at 1-degree or lower resolutions  -->
-<!-- NB: This pSASU finidat is from an 1850 spin-up -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm52026_f09_pSASU.clm2.r.0421-01-01-00000.nc
-</finidat>
-
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
