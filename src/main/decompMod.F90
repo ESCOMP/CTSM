@@ -114,6 +114,19 @@ module decompMod
   !--- gdc = 1d global dc ordered compressed
   type decomp_type
      integer,pointer :: gdc2glo(:)    ! 1d gdc to 1d glo
+     integer,pointer :: ixy(:)        ! FFelfelani Comment: i and j indices
+     integer,pointer :: jxy(:)        ! relative to the grid cell vector
+     integer,pointer :: gtop(:)       ! gridcell index of the top neighbor
+     integer,pointer :: gbot(:)       ! gridcell index of the bottom neighbor
+     integer,pointer :: glft(:)       ! gridcell index of the left neighbor
+     integer,pointer :: grgt(:)       ! gridcell index of the right neighbor
+     integer,pointer :: gtoplft(:)       ! gridcell index of the right neighbor
+     integer,pointer :: gtoprgt(:)       ! gridcell index of the right neighbor
+     integer,pointer :: gbotlft(:)       ! gridcell index of the right neighbor
+     integer,pointer :: gbotrgt(:)       ! gridcell index of the right neighbor
+     real(r8),pointer:: gneighbors(:) ! total number of neighbors
+     real(r8),pointer:: glat(:)       ! latitude of the the cell g --- global array
+     real(r8),pointer::	glon(:)       ! longitude of the the cell g --- global array 
   end type decomp_type
   public decomp_type
   type(decomp_type),public,target :: ldecomp

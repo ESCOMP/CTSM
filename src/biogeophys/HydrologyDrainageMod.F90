@@ -49,7 +49,7 @@ contains
     use landunit_varcon  , only : istwet, istsoil, istice_mec, istcrop
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
-    use clm_varctl       , only : use_vichydro
+    use clm_varctl       , only : use_vichydro, use_pumping
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
@@ -83,6 +83,7 @@ contains
     associate(                                                         & ! Input: layer thickness depth (m)  
          dz                 => col%dz                                , & ! Input: column type
          ctype              => col%itype                             , & ! Input: gridcell flux of flood water from RTM            
+         GW_ratio           => col%GW_ratio                          , & ! Input:  [real(r8) (:)   ]  USGS GW ratio as irrigation source  
          qflx_floodg        => atm2lnd_inst%forc_flood_grc           , & ! Input: rain rate [mm/s]   
          forc_rain          => atm2lnd_inst%forc_rain_downscaled_col , & ! Input: snow rate [mm/s]
          forc_snow          => atm2lnd_inst%forc_snow_downscaled_col , & ! Input: water mass begining of the time step     
@@ -208,7 +209,11 @@ contains
          qflx_runoff(c) = qflx_drain(c) + qflx_surf(c)  + qflx_h2osfc_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
          if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
-            qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+            if (use_pumping == .true.) then
+               qflx_runoff(c) = qflx_runoff(c) - (1._r8 - GW_ratio(c)) * qflx_irrig(c)
+            else
+               qflx_runoff(c) = qflx_runoff(c) - qflx_irrig(c)
+            end if
          end if
          if (lun%urbpoi(l)) then
             qflx_runoff_u(c) = qflx_runoff(c)

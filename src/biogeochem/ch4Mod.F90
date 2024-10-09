@@ -3941,7 +3941,7 @@ contains
             ch4_surf_diff(c) = ch4_surf_diff(c) - errch4(c)/dtime
          else ! errch4 > 1e-8 mol / m^2 / timestep
             write(iulog,*)'CH4 Conservation Error in CH4Mod during diffusion, nstep, c, errch4 (mol /m^2.timestep)', &
-                 nstep,c,errch4(c)
+                 nstep,c,errch4(c), ch4_surf_aere(c) , ch4_surf_ebul(c) , ch4_surf_diff(c)
             g = col%gridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun(msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&

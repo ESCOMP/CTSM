@@ -76,7 +76,9 @@ contains
     real(r8) ,pointer  :: organic3d  (:,:) ! read in - organic matter: kg/m3 
     real(r8) ,pointer  :: zisoifl    (:)   ! original soil interface depth 
     real(r8) ,pointer  :: zsoifl     (:)   ! original soil midpoint 
-    real(r8) ,pointer  :: dzsoifl    (:)   ! original soil thickness 
+    real(r8) ,pointer  :: dzsoifl    (:)   ! original soil thickness
+	
+    real(r8) ,pointer  :: wtd_Fan    (:)   ! read in - WTD	
     !-----------------------------------------------------------------------
     ! -----------------------------------------------------------------
     ! Initialize frost table
@@ -84,8 +86,26 @@ contains
 
     soilhydrology_inst%wa_col(bounds%begc:bounds%endc)  = aquifer_water_baseline
     soilhydrology_inst%zwt_col(bounds%begc:bounds%endc) = 0._r8
+    soilhydrology_inst%Qgw_lateral_col(bounds%begc:bounds%endc) = 0._r8
+    soilhydrology_inst%AqTransmiss_col(bounds%begc:bounds%endc) = 0._r8
+    soilhydrology_inst%Pump_wa_col(bounds%begc:bounds%endc) = 0._r8
 
+    allocate(wtd_Fan(bounds%begg:bounds%endg))
+    call getfil (fsurdat, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
+
+    call ncd_io(ncid=ncid, varname='WTD', flag='read', data=wtd_Fan, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: WTD NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+    end if	
+    !do c = bounds%begc, bounds%endc
+    !   g = col%gridcell(c)
+    !   soilstate_inst%wtdFan_col(c) = wtd_Fan(g)
+    !end do
+    !deallocate(wtd_Fan)
+	
     do c = bounds%begc,bounds%endc
+       g = col%gridcell(c)
        l = col%landunit(c)
        if (.not. lun%lakpoi(l)) then  !not lake
           if (lun%urbpoi(l)) then
@@ -93,7 +113,8 @@ contains
                 ! Note that the following hard-coded constants (on the next two lines)
                 ! seem implicitly related to aquifer_water_baseline
                 soilhydrology_inst%wa_col(c)  = 4800._r8
-                soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+                !soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+                soilhydrology_inst%zwt_col(c) = wtd_Fan(g)
              else
                 soilhydrology_inst%wa_col(c)  = spval
                 soilhydrology_inst%zwt_col(c) = spval
@@ -105,14 +126,18 @@ contains
              ! Note that the following hard-coded constants (on the next two lines) seem
              ! implicitly related to aquifer_water_baseline
              soilhydrology_inst%wa_col(c)  = 4000._r8
-             soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+             !soilhydrology_inst%zwt_col(c) = (25._r8 + col%zi(c,nlevsoi)) - soilhydrology_inst%wa_col(c)/0.2_r8 /1000._r8  ! One meter below soil column
+             soilhydrology_inst%zwt_col(c) = wtd_Fan(g)
+             !write(*,*) 'Felfelani      WTD Fan et al soilhydrology_inst%zwt_col(c), wtd_Fan(g)', soilhydrology_inst%zwt_col(c), wtd_Fan(g)
+			 
              ! initialize frost_table, zwt_perched to bottom of soil column
              soilhydrology_inst%zwt_perched_col(c) = col%zi(c,nlevsoi)
              soilhydrology_inst%frost_table_col(c) = col%zi(c,nlevsoi)
           end if
        end if
     end do
-
+    deallocate(wtd_Fan)
+	
     ! Initialize VIC variables
 
     if (use_vichydro) then

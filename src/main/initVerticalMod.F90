@@ -123,7 +123,8 @@ contains
     integer               :: dimid             ! dimension id
     character(len=256)    :: locfn             ! local filename
     real(r8) ,pointer     :: std (:)           ! read in - topo_std 
-    real(r8) ,pointer     :: tslope (:)        ! read in - topo_slope 
+    real(r8) ,pointer     :: tslope (:)        ! read in - topo_slope
+    real(r8) ,pointer     :: GWratio (:)       ! FFelfelani Comment: read in - USGS GW ratio
     real(r8)              :: slope0            ! temporary
     real(r8)              :: slopebeta         ! temporary
     real(r8)              :: slopemax          ! temporary
@@ -131,6 +132,7 @@ contains
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
     real(r8) ,pointer     :: zbedrock_in(:)   ! read in - z_bedrock
+    real(r8) ,pointer     :: bedrock_depth_dummy(:) ! read in - z_bedrock
     real(r8) ,pointer     :: lakedepth_in(:)   ! read in - lakedepth 
     real(r8), allocatable :: zurb_wall(:,:)    ! wall (layer node depth)
     real(r8), allocatable :: zurb_roof(:,:)    ! roof (layer node depth)
@@ -477,6 +479,17 @@ contains
     !-----------------------------------------------
 
     allocate(zbedrock_in(bounds%begg:bounds%endg))
+    allocate(bedrock_depth_dummy(bounds%begg:bounds%endg))
+
+    !  FFElfelani Comment: Determine gridcell bedrock
+    call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=bedrock_depth_dummy, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       if (masterproc) then
+          call endrun( 'ERROR:: zbedrock not found on surface data set, and use_bedrock is true.'//errmsg(sourcefile, __LINE__) )
+       end if
+    end if
+
+
     if (use_bedrock) then
        call ncd_io(ncid=ncid, varname='zbedrock', flag='read', data=zbedrock_in, dim1name=grlnd, readvar=readvar)
        if (.not. readvar) then
@@ -517,8 +530,22 @@ contains
        col%nbedrock(c) = grc%nbedrock(g) 
     end do
 
-    deallocate(zbedrock_in)
+	
+    !  FFElfelani Comment: Determine gridcell bedrock
+    do g = bounds%begg,bounds%endg
+         grc%bedrock_depth(g) = bedrock_depth_dummy(g)
+    end do
 
+    !  Set column bedrock index
+    do c = begc, endc
+       g = col%gridcell(c)
+       col%bedrock_depth(c) = grc%bedrock_depth(g) 
+    end do
+	
+	
+	
+    deallocate(zbedrock_in)
+    deallocate(bedrock_depth_dummy)
     !-----------------------------------------------
     ! Set lake levels and layers (no interfaces)
     !-----------------------------------------------
@@ -703,6 +730,31 @@ contains
     end do
     deallocate(std)
 
+    !-----------------------------------------------
+    ! FFelfelani Comment: Read in USGS GW ratio
+    !-----------------------------------------------
+
+    allocate(GWratio(bounds%begg:bounds%endg))
+    call ncd_io(ncid=ncid, varname='USGS_mean', flag='read', data=GWratio, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call shr_sys_abort(' ERROR: USGS GW ratio NOT on surfdata file'//&
+            errMsg(sourcefile, __LINE__)) 
+    end if
+	
+    !  Determine gridcell USGS GW Ratio
+    do g = bounds%begg,bounds%endg
+       grc%GW_ratio(g) = max(GWratio(g), 0.0_r8)
+    end do
+
+    ! Set Column USGS GW ratio	
+    do c = begc,endc
+       g = col%gridcell(c)
+       ! check for near zero slopes, set minimum value
+       col%GW_ratio(c) = max(GWratio(g), 0.0_r8)
+    end do
+    deallocate(GWratio)
+	
+	
     !-----------------------------------------------
     ! SCA shape function defined
     !-----------------------------------------------

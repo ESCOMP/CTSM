@@ -262,7 +262,7 @@ contains
           ! want to do it for CLM5 physics: there, wa stays fixed at 5000 for
           ! hydrologically-active columns, yet this apparently doesn't interact with the
           ! system, so we don't want to count that water mass in the total column water.
-          liquid_mass(c) = liquid_mass(c) + (wa(c) - aquifer_water_baseline)
+          liquid_mass(c) = liquid_mass(c) + (wa(c) - aquifer_water_baseline) 
        end if
 
        if (col%itype(c) == icol_roof .or. col%itype(c) == icol_sunwall &

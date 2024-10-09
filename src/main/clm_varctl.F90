@@ -243,7 +243,8 @@ module clm_varctl
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
   character(len=16), public :: soil_layerstruct = '10SL_3.5m'
-
+  integer          , public :: groundwater_scheme = 0
+  logical,           public :: use_pumping = .false. ! true => use spatially variable pumping
   !----------------------------------------------------------
   ! plant hydraulic stress switch
   !----------------------------------------------------------

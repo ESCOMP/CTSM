@@ -52,6 +52,8 @@ module ColumnType
      real(r8), pointer :: micro_sigma          (:)   ! microtopography pdf sigma (m)
      real(r8), pointer :: n_melt               (:)   ! SCA shape parameter
      real(r8), pointer :: topo_slope           (:)   ! gridcell topographic slope
+     real(r8), pointer :: GW_ratio             (:)   ! FFelfelani Comment: column USGS GW ratio
+     real(r8), pointer :: bedrock_depth        (:)   ! FFelfelani Comment: column bedrock_depth
      real(r8), pointer :: topo_std             (:)   ! gridcell elevation standard deviation
 
      ! vertical levels
@@ -123,11 +125,13 @@ contains
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
     allocate(this%z_lake      (begc:endc,nlevlak))             ; this%z_lake      (:,:) = nan
 
-    allocate(this%nbedrock   (begc:endc))                     ; this%nbedrock   (:)   = ispval  
+    allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
     allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%n_melt      (begc:endc))                     ; this%n_melt      (:)   = nan 
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
+    allocate(this%GW_ratio    (begc:endc))                     ; this%GW_ratio    (:)   = nan
+    allocate(this%bedrock_depth    (begc:endc))                ; this%bedrock_depth    (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
 
     allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
@@ -162,6 +166,8 @@ contains
     deallocate(this%micro_sigma)
     deallocate(this%n_melt     )
     deallocate(this%topo_slope )
+    deallocate(this%GW_ratio )
+    deallocate(this%bedrock_depth )
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)

@@ -7,7 +7,7 @@ module SoilHydrologyMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro
+  use clm_varctl        , only : iulog, use_vichydro, groundwater_scheme
   use clm_varcon        , only : e_ice, denh2o, denice, rpi, aquifer_water_baseline
   use EnergyFluxType    , only : energyflux_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -17,7 +17,8 @@ module SoilHydrologyMod
   use TemperatureType   , only : temperature_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
-  use PatchType         , only : patch                
+  use PatchType         , only : patch
+  use IrrigationMod     , only : irrigation_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -39,6 +40,13 @@ module SoilHydrologyMod
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
 
+  ! FFelfelani Comment: Groundwater Scheme
+  integer, parameter :: gw_default  = 0
+  integer, parameter :: gw_FanLat_Pump  = 1
+  integer, parameter :: gw_FanLat_TheimPump  = 2
+  integer, parameter :: gw_Theim_GleesonTransmiss  = 3
+  integer, parameter :: gw_Fan  = 4 
+  
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -567,18 +575,28 @@ contains
    end subroutine Infiltration
 
    !-----------------------------------------------------------------------
-   subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-        soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+   subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc,num_urbanc, filter_urbanc, &
+        soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst, irrigation_inst) 
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
+     use clm_time_manager , only : get_step_size, get_prev_date, get_curr_date
      use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
+     use clm_varctl       , only : iulog,use_pumping
+     !use shr_sys_mod      , only : shr_sys_flush
      use clm_varpar       , only : nlevsoi
      use column_varcon    , only : icol_roof, icol_road_imperv
+     use decompMod        , only : get_proc_bounds
+     use GridcellType     , only : grc   
+     use GroundwaterMod   , only : groundwater_type
+     use abortutils       , only : endrun
+     use spmdMod        , only : masterproc
      !
+
+     type(groundwater_type)                   :: groundwater_inst
+
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
@@ -590,6 +608,7 @@ contains
      type(temperature_type)   , intent(in)    :: temperature_inst
      type(waterstate_type)    , intent(inout) :: waterstate_inst
      type(waterflux_type)     , intent(inout) :: waterflux_inst
+     type(irrigation_type)     , intent(in)   :: irrigation_inst	
      !
      ! !LOCAL VARIABLES:
      integer  :: c,j,fc,i                                ! indices
@@ -628,6 +647,18 @@ contains
      real(r8) :: q_perch
      real(r8) :: q_perch_max
      real(r8) :: dflag=0._r8
+!     real(r8), pointer :: londeg(:)      ! longitude (degrees) (for calculation of local time)
+!     real(r8), pointer :: latdeg(:)      ! latitude (degrees) (for calculation of local time)
+     integer  :: g                               !indices	 
+     integer  :: yr                       ! year at start of time step
+     integer  :: mon                      ! month at start of time step
+     integer  :: day                      ! day at start of time step
+     integer  :: time                     ! time at start of time step (seconds after 0Z)
+
+     integer :: year       ! year (0, ...) for nstep
+     integer :: month      ! month (1, ..., 12) for nstep
+     integer :: secs       ! seconds into current date for nstep
+     character(*), parameter    :: subname = "('WaterTable')"
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -666,10 +697,29 @@ contains
           qflx_rsub_sat      =>    waterflux_inst%qflx_rsub_sat_col        & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]                 
           )
 
+!          londeg             =>  grc%londeg
+!          latdeg             =>  grc%latdeg
+
+       ! FFelfelani Get the time
+       !call get_prev_date(yr, mon, day, time)  ! get time as of beginning of time step
+       !!!call get_proc_bounds (begg, endg, begl, endl, begc, endc, begp, endp)
+
+       !do fc = 1, num_hydrologyc
+       !   c = filter_hydrologyc(fc)
+       !   g = col%gridcell(c)
+ 
+          !!!!if (grc%latdeg(g) < 35.0 .and. grc%latdeg(g) > 34.7 .and. grc%londeg(g) > 257.0 .and. grc%londeg(g) < 257.3) then
+       !   if (g .eq. 447319) then 
+       !       write(*,*) 'FFelfelani: lat, lon, yr, mon, day, time, g, c, zwt(c)', grc%latdeg(g), grc%londeg(g), yr, mon, day, time, g, c, zwt(c)
+       !   end if 
+ 
+       !end do 
+       !!!!!call shr_sys_flush(iulog)
+
        ! Get time step
 
        dtime = get_step_size()
-
+       call get_curr_date (year, month, day, secs)
        ! Convert layer thicknesses from m to mm
 
        do j = 1,nlevsoi
@@ -686,6 +736,10 @@ contains
           qflx_drain_perched(c)  = 0._r8       
        end do
 
+
+
+       !============================== QCHARGE =========================================
+
        ! The layer index of the first unsaturated layer, i.e., the layer right above
        ! the water table
 
@@ -695,13 +749,14 @@ contains
           ! allow jwt to equal zero when zwt is in top layer
           do j = 1,nlevsoi
              if(zwt(c) <= zi(c,j)) then
-                jwt(c) = j-1
+                jwt(c) = j-1 
                 exit
              end if
           enddo
        end do
 
-       !============================== QCHARGE =========================================
+
+		  
        ! Water table changes due to qcharge
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
@@ -761,11 +816,47 @@ contains
              do j = 1,nlevsoi
                 if(zwt(c) <= zi(c,j)) then
                    jwt(c) = j-1
-                   exit
+                   exit 
                 end if
              enddo
           endif
        enddo
+       !======= FFelfelani: update zwt based on different GW schemes ===================	   
+       ! compute drainage from the bottom of the soil column
+       select case(groundwater_scheme)
+
+		  ! Groundwater scheme: Default
+          case(gw_default)
+            if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_default groundwater scheme'
+            if (use_pumping == .true.) then
+                if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_default with Pumping groundwater scheme'
+                call groundwater_inst%UpdateGWDefaultPump(bounds, num_hydrologyc, filter_hydrologyc,&
+                     soilhydrology_inst, soilstate_inst,waterstate_inst,irrigation_inst)
+            end if
+
+          ! Groundwater scheme: Pumping + Ying Fan lateral and Transmissivity 
+          case(gw_FanLat_Pump)
+            if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_FanLat_Pump groundwater  scheme  '  
+            call groundwater_inst%UpdateGWFanLatPump(bounds, num_hydrologyc, filter_hydrologyc,&
+                 soilhydrology_inst, soilstate_inst,waterstate_inst,irrigation_inst, waterflux_inst)
+
+          case(gw_FanLat_TheimPump)
+            if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_FanLat_TheimPump groundwater  scheme  '  
+                 call endrun(subname // ':: the groundwater scheme must be specified !')
+				 
+          ! Groundwater scheme: Theim Theory + Gleeson Transmissivity 
+          case(gw_Theim_GleesonTransmiss)
+            if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_Theim_GleesonTransmiss groundwater scheme'
+
+          ! Groundwater scheme: Ying Fan
+          case(gw_Fan)
+            if (masterproc .and. secs == 0) write(iulog,*) 'This is gw_Fan groundwater scheme'
+
+          case default
+             call endrun(subname // ':: the groundwater scheme must be specified !')
+
+       end select  ! case for the lower boundary condition
+	   
 
 
        !==  BASEFLOW ==================================================

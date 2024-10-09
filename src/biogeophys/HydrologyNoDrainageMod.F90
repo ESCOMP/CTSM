@@ -21,7 +21,8 @@ Module HydrologyNoDrainageMod
   use CanopyStateType   , only : canopystate_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
-  use TopoMod, only : topo_type
+  use TopoMod           , only : topo_type
+  use IrrigationMod     , only : irrigation_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -44,7 +45,7 @@ contains
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        waterflux_inst, waterstate_inst, &
        soilhydrology_inst, aerosol_inst, &
-       canopystate_inst, soil_water_retention_curve, topo_inst)
+       canopystate_inst, soil_water_retention_curve, topo_inst, irrigation_inst)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -102,6 +103,7 @@ contains
     type(canopystate_type)   , intent(inout) :: canopystate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     class(topo_type)   , intent(in)    :: topo_inst
+    type(irrigation_type)    , intent(in)    :: irrigation_inst 
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                    ! indices
@@ -210,7 +212,7 @@ contains
 
       if (use_aquifer_layer()) then 
          call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-              soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst) 
+              soilhydrology_inst, soilstate_inst, temperature_inst, waterstate_inst, waterflux_inst, irrigation_inst) 
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
