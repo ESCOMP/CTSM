@@ -354,6 +354,23 @@ lower_boundary_condition = 4 : 11-layer solution w/ aquifer layer               
 TODO(bja, 2015-09) these should be strings so they have meaningful names instead of ints. 
 </entry>
 
+<entry id="groundwater_scheme" type="integer" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="0,1,2,3" >
+Index of lower boundary condition for Richards equation.
+
+groundwater_scheme = 0 : gw_default: default groundwater scheme of CLM5.0                    
+groundwater_scheme = 1 : gw_Theim_FanTransmiss: Well hydraulics w/ aquifer layer + Fan parameterization for transmissivity
+groundwater_scheme = 2 : gw_Theim_GleesonTransmiss: Well hydraulics w/o aquifer layer (w/ bedrock) + Gleeson derived tramissivity
+groundwater_scheme = 3 : gw_Fan: Fan scheme for lateral flow and transmissivity
+
+TODO(bja, 2019-05) these should be strings so they have meaningful names instead of ints. 
+</entry>
+
+<entry id="use_pumping" type="logical" category="clm_physics"
+       group="soilwater_movement_inparm" valid_values="" >
+Activate/deactivate pumping scheme.
+</entry>
+
 <entry id="dtmin" type="real" category="clm_physics"
        group="soilwater_movement_inparm" valid_values="" >
 minimum time step length (seconds) for adaptive time stepping in richards equation
@@ -1749,7 +1766,7 @@ CLM run type.
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
        valid_values=
-"512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
+"Global_1800x3600,Global_720x1440,1x1minNLDAS,3x3minCONUS,512x1024,360x720cru,128x256,64x128,48x96,32x64,8x16,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4,ne60np4,ne120np4,ne240np4,1km-merge-10min">
 Horizontal resolutions
 Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools
 </entry> 

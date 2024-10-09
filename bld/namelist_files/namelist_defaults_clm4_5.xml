@@ -251,6 +251,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lower_boundary_condition soilwater_movement_method="1" use_bedrock=".false." >2</lower_boundary_condition>
 <lower_boundary_condition soilwater_movement_method="1" use_bedrock=".false." vichydro="1" >3</lower_boundary_condition>
 
+<groundwater_scheme phys="clm4_5">0</groundwater_scheme>
+<groundwater_scheme phys="clm5_0">0</groundwater_scheme>
+
+<use_pumping phys="clm4_5">.false.</use_pumping>
+<use_pumping phys="clm5_0">.false.</use_pumping>
+
 <dtmin>60.</dtmin>      
 <verySmall>1.e-8</verySmall>
 <xTolerUpper>1.e-1</xTolerUpper> 
