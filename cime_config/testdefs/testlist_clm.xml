@@ -1773,7 +1773,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock">02:30:00</option>
       <option name="comment"  >Repeat ERS_Ly5_P128x1...cropMonthOutput test with matrixcnOn</option>
     </options>
   </test>
@@ -3511,23 +3511,24 @@
     </options>
   </test>
 
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I1850Clm60Bgc" testmods="clm/HillslopeC">
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60Bgc" testmods="clm/HillslopeC">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Serial test of 5x5_amazon hillslopes</option>
     </options>
   </test>
 
-  <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I1850Clm60Bgc" testmods="clm/HillslopeC">
+  <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I2000Clm60Bgc" testmods="clm/HillslopeC">
     <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="hillslope"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Add a non-FATES test to aux_clm for 5x5_amazon that fails because of the ccs_config issue, can remove once this passes</option>
+      <option name="comment">Parallel test of 5x5_amazon hillslopes</option>
     </options>
   </test>
 
