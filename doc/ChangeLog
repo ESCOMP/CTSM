@@ -1,4 +1,95 @@
 ===============================================================
+Tag name: ctsm5.3.005
+Originator(s): dmleung (Danny Leung)
+Date: Thu 10 Oct 2024 03:15:52 AM MDT
+One-line Summary: Hardcoded tuning adjustments for Leung_2024 dust emissions
+
+Purpose and description of changes
+----------------------------------
+
+Changes to dust emissions when Leung_2024 method is being used.
+
+Tuning was needed since we saw some high biases in dust over semiarid regions given all the updates in CTSM and CAM. The biggest
+changes in CTSM that affects dust is an increase in friction velocity (ustar; fv in CTSM) over vegetated, semiarid regions, mainly
+due to a switch in the roughness scheme from 'ZengWang2007' to 'Meier2022'. Since dust emission is very sensitive to ustar, the dust
+emission scheme magnifies this increase and caused strong high biases over semiarid regions, including Australia and Patagonia (see
+plots in issue #2732). To enhance the robustness of Leung_2023 and reduce the likelihood to see huge changes in answers in the
+future, we tried to limit the sensitivity of dust emissions to ustar. We also tried different methods (see specific notes below) to
+reduce dust emissions from semiarid regions given the high biases over there.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+   Start of work on tuning for #2732
+   Fixes #2826 -- Fix failing warning test
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Dust tuning parameters are hardcoded in FORTRAN and need to be moved to namelists
+
+Testing summary: Regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for clm6_0
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6_0
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+        Just updates dust emissions when Leung_2024 method is used
+
+    Only the dust emission fields are changed all other fields are untouched
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   https://github.com/ESCOMP/CTSM/pull/2803 -- Tuning Leung_2023 dust emissions for clm6_0_cam7.0
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.004
 Originator(s): samrabin (Sam Rabin)
 Date: Mon Oct  7 21:25:20 MDT 2024
