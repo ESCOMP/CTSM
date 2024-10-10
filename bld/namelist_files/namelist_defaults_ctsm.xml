@@ -938,11 +938,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
 			hgrid="1.9x2.5"
->hgrid=1.9x2.5 mask=gx1v7
+>mask=gx1v7 use_cn=.true. do_transient_pfts=.false. use_excess_ice=.true. use_crop=.false. irrigate=.false.
 </init_interp_attributes>
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
 			hgrid="ne30np4.pg3"
->hgrid=ne30np4.pg3 mask=t232
+>mask=t232 use_cn=.true. do_transient_pfts=.false. use_excess_ice=.true. use_crop=.true. irrigate=.false.
 </init_interp_attributes>
 
 <!-- present day -->
@@ -1275,9 +1275,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." phys="clm6_0"
-			hgrid="ne30np4.pg3"
->hgrid=ne30np4.pg3 mask=t232
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="ne30np4.pg3" use_cn=".false." maxpft="17"
+>hgrid=ne30np4.pg3 maxpft=17 mask=t232 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <!-- 2003 -->
@@ -1371,27 +1371,30 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </finidat>
 
 <!-- CTSM6_0 - use clm6_0_GSWP3v1 BgcCrop at f09 for all clm5_1/clm6_0 options -->
-<!-- TODO slevis VALID COMMENT? use_init_interp true because the file was created with ctsm5.3 datasets -->
 <finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         phys="clm5_1" use_init_interp=".true."
+         phys="clm5_1"
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         phys="clm6_0" use_init_interp=".true."
+         phys="clm6_0"
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <!-- Corresponding ne30 -->
-<finidat hgrid="ne30np4.pg3" mask="t232" sim_year="1850"
-         phys="clm6_0" use_init_interp=".true."
+<finidat hgrid="ne30np4.pg3" mask="t232" use_cn=".true." use_cndv=".false." use_fates=".false."
+         sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
+         use_crop=".true." irrigate=".false."
+         phys="clm6_0"
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_ne30pg3t232_pSASU.clm2.r.0121-01-01-00000.nc
 </finidat>
 <!-- Corresponding f19 -->
-<finidat hgrid="1.9x2.5" mask="gx1v7" sim_year="1850"
-         phys="clm6_0" use_init_interp=".true."
+<finidat hgrid="1.9x2.5" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+         sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
+         use_crop=".false." irrigate=".false."
+         phys="clm6_0"
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm530_f19_PPE_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 
@@ -1435,7 +1438,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          lnd_tuning_mode="clm5_1_GSWP3v1" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
-<!-- NB: This pSASU finidat is from an f09 2000 spin-up -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
@@ -1537,7 +1539,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="t232" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         phys="clm6_0" use_init_interp=".true."
+         phys="clm6_0"
 >lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.2000-01-01-00000.nc
 </finidat>
 
@@ -1562,8 +1564,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_1_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+         lnd_tuning_mode="clm5_1_cam7.0"
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1619,12 +1621,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+         lnd_tuning_mode="clm6_0_cam7.0"
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
-<finidat hgrid="ne30np4.pg3"  mask="t232" sim_year="1979"
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_map/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.1979-01-01-00000.nc
+<finidat hgrid="ne30np4.pg3"  maxpft="17"  mask="t232" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_ne30pg3t232_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1748,8 +1752,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_1_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+         lnd_tuning_mode="clm5_1_cam6.0"
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -1805,8 +1809,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
+         lnd_tuning_mode="clm6_0_cam6.0"
+>lnd/clm2/initdata_esmf/ctsm5.3/ctsm53n04ctsm52028_f09_hist.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
