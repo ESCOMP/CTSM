@@ -1,4 +1,87 @@
 ===============================================================
+Tag name: ctsm5.3.007
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 10 Oct 2024 10:12:18 AM MDT
+One-line Summary: Clm60 finidat updates for ne30, f09, f19 grids
+
+Purpose and description of changes
+----------------------------------
+ Updates appear in namelist_defaults_ctsm.xml.
+ As before, I updated clm51, too, to keep it same as clm60 (and clm51 will go away soon).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Relates to (fixes?) #2403; needs more work to close?
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Clm60 and clm51 finidat updates for ne30, f09, f19 grids.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Clm60 and clm51 finidat updates for ne30, f09, f19 grids.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - TODO
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - TODO
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- TODO
+    izumi ------- TODO
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm60 (and clm51 which goes away very soon)
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2821
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.006
+===============================================================
+===============================================================
 Tag name: ctsm5.3.005
 Originator(s): dmleung (Danny Leung)
 Date: Thu 10 Oct 2024 03:15:52 AM MDT
@@ -132,7 +215,14 @@ Testing summary:
 Answer changes
 --------------
 
-Changes answers relative to baseline: Not in real runs, only our testing.
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Hillslope (tests only)
+    - what platforms/compilers: Tests on Izumi and Derecho
+    - nature of change: Larger than roundoff
+
+   Only our tests are affected because I had to make changes to the test setup for compatibility; this included changing mesh file and hillslope data for some tests/testmods.
 
 
 Other details

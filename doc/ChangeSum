@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.007   slevis 10/11/2024 Clm60 finidat updates for ne30, f09, f19 grids
+       ctsm5.3.006
        ctsm5.3.005     erik 10/10/2024 Hardcoded tuning adjustments for Leung_2024 dust emissions
        ctsm5.3.004 samrabin 10/07/2024 Move hillslope data off surface datasets
        ctsm5.3.003 multiple 10/07/2024 FATES default parameter file update
