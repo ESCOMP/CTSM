@@ -361,7 +361,7 @@ CONTAINS
             end if
 
              if(use_fates)then
-                wesveg = canopystate_inst%wesley_pft_index_patch(pi)
+                wesveg = canopystate_inst%wesley_veg_index_patch(pi)
              endif 
 
             ! create seasonality index used to index wesely data tables from LAI,  Bascially
@@ -409,25 +409,28 @@ CONTAINS
             endif
 
             if(use_fates)then
-              index_season = canopystate_inst%drydep_season_patch(pi)              
-            endif
+               write(iulog,*) 'fates season index',pi,canopystate_inst%wesley_season_index_patch(pi) 
+              index_season = canopystate_inst%wesley_season_index_patch(pi)              
+            else
 
-            if (index_season<0) then
-               if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then
-                  index_season = 3
+               if (index_season<0) then
+                  if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then
+                     index_season = 3
+                  endif
                endif
-            endif
 
-            if (index_season<0) then
-               if (mlaidiff(pi) > 0.0_r8) then
-                  index_season = 2
-               elseif (mlaidiff(pi) < 0.0_r8) then
-                  index_season = 5
-               elseif (mlaidiff(pi).eq.0.0_r8) then
-                  index_season = 3
+               if (index_season<0) then
+                  if (mlaidiff(pi) > 0.0_r8) then
+                     index_season = 2
+                  elseif (mlaidiff(pi) < 0.0_r8) then
+                     index_season = 5
+                  elseif (mlaidiff(pi).eq.0.0_r8) then
+                     index_season = 3
+                  endif
                endif
-            endif
-
+               
+            endif ! use_fates
+            
             if (index_season<0) then
                call endrun('ERROR: not able to determine season'//errmsg(sourcefile, __LINE__))
             endif
