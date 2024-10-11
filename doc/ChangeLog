@@ -1,4 +1,72 @@
 ===============================================================
+Tag name: ctsm5.3.006
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Oct 11 07:01:09 MDT 2024
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+- Fix clm-basic tests (resolves ESCOMP/CTSM#2787)
+- Change testlist_clm ne30pg3_t061 tests to ne30pg3_t232 (resolves ESCOMP/CTSM#2702)
+- Remove unused variable elevclass_o in mkglcmecMod.F90 (resolves ESCOMP/CTSM#2802)
+- Add a check in failtest, warntest, finidat_files, so when a new test or finidat file are added and one of the subkeys is misspelled you will get an error and tester will die (resolves ESCOMP/CTSM#2673)
+- Move from deprecated shr_file to shr_log
+- Set eflx_building_lun to spval properly (resolves ESCOMP/CTSM#2793)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- ESCOMP/CTSM#2787 (aux_clm "clm-basic" tests fail as of ctsm5.3.0 because they need c13 in finidat; https://github.com/ESCOMP/CTSM/issues/2787)
+- ESCOMP/CTSM#2702 (Tests failing in ctsm5.2.019 for CESM alpha testing; https://github.com/ESCOMP/CTSM/issues/2702)
+- ESCOMP/CTSM#2802 (Array elevclass_o in mksurfdata_esmf/src/mkglcmecMod.F90 is not allocated before use; https://github.com/ESCOMP/CTSM/issues/2802)
+- ESCOMP/CTSM#2673 (Catch use of namelist attribute in failure testing in perl build-namelist tester; https://github.com/ESCOMP/CTSM/issues/2673)
+- ESCOMP/CTSM#2793 (Potential typo/bug in EnergyFluxType.F90; https://github.com/ESCOMP/CTSM/issues/2793)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- ESCOMP/CTSM#2798: Fix clm-basic tests (https://github.com/ESCOMP/CTSM/pull/2798)
+- ESCOMP/CTSM#2799: Change testlist_clm ne30pg3_t061 tests to ne30pg3_t232 (https://github.com/ESCOMP/CTSM/pull/2799)
+- ESCOMP/CTSM#2804: Remove unused variable elevclass_o in mkglcmecMod.F90 (https://github.com/ESCOMP/CTSM/pull/2804)
+- ESCOMP/CTSM#2678: Add check in build-namelist_test.pl (https://github.com/ESCOMP/CTSM/pull/2678)
+- ESCOMP/CTSM#2627: move from depricated shr_file to shr_log (https://github.com/ESCOMP/CTSM/pull/2627)
+- ESCOMP/CTSM#2806: Set eflx_building_lun to spval properly (https://github.com/ESCOMP/CTSM/pull/2806)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.005
 Originator(s): dmleung (Danny Leung)
 Date: Thu 10 Oct 2024 03:15:52 AM MDT
@@ -91,7 +159,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.3.004
-Originator(s): samrabin (Sam Rabin)
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Oct  7 21:25:20 MDT 2024
 One-line Summary: Move hillslope data off surface datasets
 
