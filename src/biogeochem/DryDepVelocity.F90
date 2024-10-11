@@ -359,10 +359,14 @@ CONTAINS
                     msg='ERROR: Not able to determine Wesley vegetation type'//&
                     errMsg(sourcefile, __LINE__))
             end if
-
+            
              if(use_fates)then
-                wesveg = canopystate_inst%wesley_veg_index_patch(pi)
-             endif 
+                if(patch%is_fates(pi))then
+                   wesveg = canopystate_inst%wesley_veg_index_patch(pi)
+                else
+                   wesveg = 8
+                endif
+             endif   
 
             ! create seasonality index used to index wesely data tables from LAI,  Bascially
             !if elai is between max lai from input data and half that max the index_season=1
@@ -407,11 +411,15 @@ CONTAINS
             else if(.not.use_fates .and. elai(pi) > 0.5_r8*maxlai) then
                index_season = 1
             endif
-
-            if(use_fates)then
-               write(iulog,*) 'fates season index',pi,canopystate_inst%wesley_season_index_patch(pi) 
-              index_season = canopystate_inst%wesley_season_index_patch(pi)              
-            else
+            
+            if(use_fates.and.index_season<1)then
+               if(patch%is_fates(pi))then
+                  index_season = canopystate_inst%wesley_season_index_patch(pi)
+               else
+                  index_season = 1 !set arbitrary seson for bare ground. 
+               endif
+               
+            else ! not fates
 
                if (index_season<0) then
                   if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then
@@ -484,7 +492,6 @@ CONTAINS
 
                ! correction for frost
                cts = 1000._r8*exp( -tc - 4._r8 )
-
                !ground resistance
                rgsx(ispec) = 1._r8/((heff(ispec)/(1.e5_r8*(rgss(index_season,wesveg)+cts))) + &
                     (foxd(ispec)/(rgso(index_season,wesveg)+cts)))
@@ -492,6 +499,7 @@ CONTAINS
                !-------------------------------------------------------------------------------------
                ! special case for H2 and CO;; CH4 is set ot a fraction of dv(H2)
                !-------------------------------------------------------------------------------------
+
                if( ispec == index_h2 .or. ispec == index_co .or. ispec == index_ch4 ) then
 
                   if( ispec == index_co ) then
