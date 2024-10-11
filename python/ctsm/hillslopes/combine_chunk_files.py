@@ -133,9 +133,7 @@ def get_mask_var(surface_ds):
         if mask_var_option in surface_ds.variables.keys():
             mask_var = mask_var_option
     if mask_var is None:
-        raise KeyError(
-            f"No variable found in sfcfile that looks like a mask ({mask_var_options})"
-        )
+        raise KeyError(f"No variable found in sfcfile that looks like a mask ({mask_var_options})")
     landmask = np.asarray(
         surface_ds.variables[mask_var][
             :,

@@ -357,7 +357,6 @@ def main():
     hillslope_vars.h_bedrock = 2.0
     hillslope_vars.hillslope_pftndx[:] = 13
 
-
     # write to file  --------------------------------------------
     hillslope_vars.save(
         args.input_file,

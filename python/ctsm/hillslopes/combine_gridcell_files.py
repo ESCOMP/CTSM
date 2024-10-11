@@ -173,8 +173,6 @@ def main():
         )
 
 
-
-
 def write_to_file(
     outfile_path,
     n_lat,
