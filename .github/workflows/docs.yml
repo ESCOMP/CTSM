@@ -42,7 +42,7 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with makefile
         run: |
-          make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+          bin/git-fleximod update -o && make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
 
   test-doc-builder:
     if: ${{ always() }}
@@ -71,4 +71,4 @@ jobs:
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with doc-builder
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c
+          bin/git-fleximod update -o && cd doc && ./build_docs -b ${PWD}/_build -c
