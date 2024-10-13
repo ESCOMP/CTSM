@@ -39,10 +39,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r doc/requirements.txt
+      - name: Call git-fleximod
+        run: |
+          bin/git-fleximod update -o
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with makefile
         run: |
-          bin/git-fleximod update -o && make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+          make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
 
   test-doc-builder:
     if: ${{ always() }}
@@ -68,7 +71,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r doc/requirements.txt
+      - name: Call git-fleximod
+        run: |
+          bin/git-fleximod update -o
       # Build documentation under ${PWD}/_build
       - name: Build Sphinx docs with doc-builder
         run: |
-          bin/git-fleximod update -o && cd doc && ./build_docs -b ${PWD}/_build -c
+           cd doc && ./build_docs -b ${PWD}/_build -c
