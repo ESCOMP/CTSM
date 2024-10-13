@@ -1,13 +1,17 @@
 ===============================================================
 Tag name: ctsm5.3.007
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 10 Oct 2024 10:12:18 AM MDT
+Date: Mon 13 Oct 2024 10:12:18 AM MDT
 One-line Summary: Clm60 finidat updates for ne30, f09, f19 grids
 
 Purpose and description of changes
 ----------------------------------
  Updates appear in namelist_defaults_ctsm.xml.
- As before, I updated clm51, too, to keep it same as clm60 (and clm51 will go away soon).
+ For the most part I updated clm51, too, to keep it same as clm60, knowing
+ that clm51 will go away soon.
+ I had significant help from Erik Kluzek in disentangling the .xml settings
+ so that cases would pick up the correct finidat settings and other namelist
+ settings.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -31,7 +35,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- Relates to (fixes?) #2403; needs more work to close?
+ Relates to #2403; needs more work to close?
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -48,16 +52,16 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - TODO
+    derecho - PASS
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - TODO
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- TODO
-    izumi ------- TODO
+    derecho ----- OK
+    izumi ------- OK
 
 
 Answer changes
@@ -66,7 +70,7 @@ Answer changes
 Changes answers relative to baseline: Yes.
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: clm60 (and clm51 which goes away very soon)
+    - what code configurations: clm60 and clm51; the latter goes away soon
     - what platforms/compilers: all
     - nature of change: larger than roundoff/same climate
 
