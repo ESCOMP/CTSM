@@ -1,4 +1,72 @@
 ===============================================================
+Tag name: ctsm5.3.008
+Originator(s): olyson (Keith Oleson,UCAR/TSS)
+Date: Mon 14 Oct 2024 11:56:12 AM MDT
+One-line Summary: PPE change to sa_leaf in CanopyFluxesMod.F90
+
+Purpose and description of changes
+----------------------------------
+
+ Add change to sa_leaf that was in PPE branch but did not get on master.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2777
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff/same climate)
+
+ The changes in answers are explained in this post:
+ https://github.com/ESCOMP/CTSM/issues/2777#issuecomment-2371697380
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2788
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.007
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 13 Oct 2024 11:04:18 AM MDT
