@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.008
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
-Date: Mon 14 Oct 2024 01:08:47 PM MDT
+Date: Mon 14 Oct 2024 04:03:26 PM MDT
 One-line Summary: PPE change to sa_leaf in CanopyFluxesMod.F90
 
 Purpose and description of changes
@@ -42,8 +42,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 
 Answer changes
