@@ -364,10 +364,15 @@ CONTAINS
                 if(patch%is_fates(pi))then
                    wesveg = canopystate_inst%wesley_veg_index_patch(pi)
                 else
-                   wesveg = 8
+                   wesveg = 8 !make bare ground for non-fates patches. Some of these are overwritten below.
                 endif
              endif   
 
+             if(wesveg<0 .or. wesveg>1 )then
+                call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &
+                    msg='ERROR: No sensible Wesley vegetation type'//&
+                    errMsg(sourcefile, __LINE__))
+             endif
             ! create seasonality index used to index wesely data tables from LAI,  Bascially
             !if elai is between max lai from input data and half that max the index_season=1
 
@@ -385,11 +390,12 @@ CONTAINS
             ! 4 - Winter, snow on ground and subfreezing
             ! 5 - Transitional spring with partially green short annuals
 
-            if(.not. use_fates)then
+            if(.not. use_fates)then !for non-FATES runs we use satellite phenology to choose the season for the ressistance parameters. 
                !mlaidiff=jan-feb
                minlai=minval(annlai(:,pi))
                maxlai=maxval(annlai(:,pi))
-            endif 
+            endif
+            
                index_season = -1
 
             if ( lun%itype(l) /= istsoil )then
@@ -412,11 +418,11 @@ CONTAINS
                index_season = 1
             endif
             
-            if(use_fates.and.index_season<1)then
+            if(use_fates.and.index_season<1)then 
                if(patch%is_fates(pi))then
                   index_season = canopystate_inst%wesley_season_index_patch(pi)
                else
-                  index_season = 1 !set arbitrary seson for bare ground. 
+                  index_season = 2 !set intermediate spring seson for bare ground. (as for urban)
                endif
                
             else ! not fates
@@ -439,7 +445,7 @@ CONTAINS
                
             endif ! use_fates
             
-            if (index_season<0) then
+            if (index_season<0.or.index_season>5) then
                call endrun('ERROR: not able to determine season'//errmsg(sourcefile, __LINE__))
             endif
 
