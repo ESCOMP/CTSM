@@ -1,17 +1,15 @@
 ===============================================================
 Tag name: ctsm5.3.007
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon 13 Oct 2024 10:12:18 AM MDT
+Date: Mon 13 Oct 2024 11:04:18 AM MDT
 One-line Summary: Clm60 finidat updates for ne30, f09, f19 grids
 
 Purpose and description of changes
 ----------------------------------
  Updates appear in namelist_defaults_ctsm.xml.
- For the most part I updated clm51, too, to keep it same as clm60, knowing
- that clm51 will go away soon.
+ For the most part I updated clm51 to match clm60, though clm51 will go away soon.
  I had significant help from Erik Kluzek in disentangling the .xml settings
- so that cases would pick up the correct finidat settings and other namelist
- settings.
+ so that cases would pick up the correct finidat and other namelist settings.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -35,7 +33,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- Relates to #2403; needs more work to close?
+ Relates to #2403 but may need more work to close the issue
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -76,8 +74,6 @@ Changes answers relative to baseline: Yes.
 
 Other details
 -------------
-List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
-
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2821
 
