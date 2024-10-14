@@ -962,6 +962,11 @@ Full pathname datafile with fates parameters
 Full pathname of surface data file.
 </entry>
 
+<entry id="hillslope_file" type="char*256"     category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of hillslope data file.
+</entry>
+
 <entry id="fsnowoptics" type="char*256" category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name

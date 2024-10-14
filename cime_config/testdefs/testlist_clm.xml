@@ -1732,7 +1732,7 @@
       <option name="comment"       >Repeat ERS_Ly20_Mmpi-serial...cropMonthlyNoinitial test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic">
+  <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I1850Clm60BgcCropCmip6" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1773,7 +1773,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:00</option>
+      <option name="wallclock">02:30:00</option>
       <option name="comment"  >Repeat ERS_Ly5_P128x1...cropMonthOutput test with matrixcnOn</option>
     </options>
   </test>
@@ -1987,7 +1987,7 @@
       <option name="comment"  >Simple test to make sure the basic Fates-SP compset works"</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t061" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -1996,7 +1996,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t061" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist--clm/matrixcnOn">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -2431,7 +2431,7 @@
       <option name="comment"  >include a production intel test of Clm45</option>
     </options>
   </test>
-  <test name="SMS_Ld2_D_PS" grid="f09_g17" compset="I1850Clm50BgcCropCmip6" testmods="clm/basic_interp">
+  <test name="SMS_Ld2_D_PS" grid="f09_g17" compset="I1850Clm60BgcCropCmip6" testmods="clm/basic_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -3262,7 +3262,7 @@
       <option name="comment">12 month exact restart FATES single site debug test covering anthropogenic fire ignition mode.</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">
+  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm60BgcCropCmip6waccm" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -3511,23 +3511,24 @@
     </options>
   </test>
 
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I1850Clm60Bgc" testmods="clm/HillslopeC">
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60Bgc" testmods="clm/HillslopeC">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Serial test of 5x5_amazon hillslopes</option>
     </options>
   </test>
 
-  <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I1850Clm60Bgc" testmods="clm/HillslopeC">
+  <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I2000Clm60Bgc" testmods="clm/HillslopeC">
     <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="hillslope"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Add a non-FATES test to aux_clm for 5x5_amazon that fails because of the ccs_config issue, can remove once this passes</option>
+      <option name="comment">Parallel test of 5x5_amazon hillslopes</option>
     </options>
   </test>
 
