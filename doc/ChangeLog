@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.008
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
-Date: Mon 14 Oct 2024 11:56:12 AM MDT
+Date: Mon 14 Oct 2024 01:08:47 PM MDT
 One-line Summary: PPE change to sa_leaf in CanopyFluxesMod.F90
 
 Purpose and description of changes
@@ -18,15 +18,15 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
-[X] clm6_0
+[ ] clm6_0
 
-[X] clm5_1
+[ ] clm5_1
 
-[X] clm5_0
+[ ] clm5_0
 
-[X] ctsm5_0-nwp
+[ ] ctsm5_0-nwp
 
-[X] clm4_5
+[ ] clm4_5
 
 
 Bugs fixed
@@ -56,8 +56,10 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: All
     - nature of change: larger than roundoff/same climate)
 
- The changes in answers are explained in this post:
+ The changes in answers are explained in this post
  https://github.com/ESCOMP/CTSM/issues/2777#issuecomment-2371697380
+ and the diagnostics are here
+ https://webext.cgd.ucar.edu/I2000/ctsm53n04ctsm52028_f09_saleaf/lnd/ctsm53n04ctsm52028_f09_saleaf_2000_2001_2004-ctsm53n04ctsm52028_f09_2000_2001_2004/setsIndex.html
 
 
 Other details
