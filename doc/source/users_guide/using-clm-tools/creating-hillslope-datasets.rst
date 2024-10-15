@@ -39,9 +39,9 @@ This example can be run on the NSF NCAR Casper machine; it assumes you've activa
 
 .. code-block:: bash
     
-    fsurdat=/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_2000_78pfts_c240216.nc
-    indir=/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global
-    outdir=/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global/combined
+    fsurdat=python/ctsm/test/testinputs/surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc
+    indir=$SCRATCH/hillslopes_5x5_amazon/hand_analysis_global
+    outdir=$SCRATCH/hillslopes_5x5_amazon/hand_analysis_global/combined
     
     python tools/hillslopes/combine_gridcell_files \
         -i $fsurdat \
@@ -67,8 +67,8 @@ This example can be run on the NSF NCAR Casper machine; it assumes you've activa
 
 .. code-block:: bash
     
-    fsurdat=/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_5x5_amazon_hist_2000_78pfts_c240216.nc
-    indir=/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global/combined
+    fsurdat=python/ctsm/test/testinputs/surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc
+    indir=$SCRATCH/hillslopes_5x5_amazon/hand_analysis_global/combined
     outfile=${indir}/$(basename ${fsurdat} | sed "s@surfdata@hilldata@")
     
     python tools/hillslopes/combine_chunk_files \
