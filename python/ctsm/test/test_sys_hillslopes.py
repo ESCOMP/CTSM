@@ -88,17 +88,29 @@ class TestHillslopes(unittest.TestCase):
         outdir_chunkfiles = os.path.join(self._outdir, "chunk_files_out")
         self._combine_gridcell_files(verbose=True, outdir=outdir_chunkfiles)
 
-        # Compare to expected outputs
+        # Make sure every output file matches its counterpart in the comparison directory
+        comparison_dir = os.path.join(self._testinputs_hills_path, "chunk_files")
         output_files = glob.glob(os.path.join(outdir_chunkfiles, "*.nc"))
         output_files.sort()
         for output_file in output_files:
             comparison_file = os.path.join(
-                os.path.join(self._testinputs_hills_path, "chunk_files"),
+                comparison_dir,
                 os.path.basename(output_file),
             )
             output_ds = xr.open_dataset(output_file)
             comparison_ds = xr.open_dataset(comparison_file)
             xr.testing.assert_equal(output_ds, comparison_ds)
+
+        # Make sure the output directory contains every expected file
+        comparison_files = glob.glob(os.path.join(comparison_dir, "*.nc"))
+        comparison_files.sort()
+        for comparison_file in comparison_files:
+            output_file = os.path.join(
+                outdir_chunkfiles,
+                os.path.basename(comparison_file),
+            )
+            if not os.path.exists(output_file):
+                raise RuntimeError(f"Expected output file not found: '{output_file}'")
 
     def test_combine_chunk_files(self):
         """
