@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 if [ -f doc-builder/build_docs ]; then
     echo "Running: make fetch-images"
@@ -6,5 +7,8 @@ if [ -f doc-builder/build_docs ]; then
     echo "Running: ./doc-builder/build_docs $@"
     ./doc-builder/build_docs "$@"
 else
-    echo "Obtain doc-builder by running './bin/git-fleximod update --optional' from the top-level"
+    echo "Obtain doc-builder by running './bin/git-fleximod update --optional' from the top-level" >&2
+    exit 1
 fi
+
+exit 0
