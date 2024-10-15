@@ -1,4 +1,76 @@
 ===============================================================
+Tag name: ctsm5.3.009
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Tue Oct 15 17:35:40 MDT 2024
+One-line Summary: Reduce outputs from matrixcnOn tests
+
+Purpose and description of changes
+----------------------------------
+
+Reduces size and runtime of our tests of the CN Matrix capability. See "Notes of particular relevance for developers" for more details.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves ESCOMP/CTSM#2814: Remove include_user_mods from matrixcnOn testmod (https://github.com/ESCOMP/CTSM/pull/2815)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Removing the include_user_mods file from the matrixcnOn test (and thus also matrixcnOn_ignore_warnings) means that the default outputs no longer overwrite outputs specified by earlier test mods. For example, in LCISO_Lm13.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-ciso_monthly--clm-matrixcnOn_ignore_warnings, it should have been saving monthly (the ciso_monthly test mod) but was actually being saved at much higher frequency (because matrixcnOn_ignore_warnings was after ciso_monthly in the test name). That test goes from 30 to 3 GB after this change.
+- Adds matrixcn test suite, which can be used during Matrix CN development. All tests in this suite are also still run in aux_clm.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- DIFF
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: aux_clm tests only
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+
+  Changes are due to changed history field lists (and some other settings) due to the removal of include_user_mods from the matrixcnOn test mod. No answer changes occurred in any test other than those using matrixcnOn(_ignore_warnings); no answer changes will occur for any non-test run.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- PR ESCOMP/CTSM#2815: Remove include_user_mods from matrixcnOn testmod (https://github.com/ESCOMP/CTSM/pull/2815)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.008
 Originator(s): olyson (Keith Oleson,UCAR/TSS)
 Date: Mon 14 Oct 2024 04:03:26 PM MDT
