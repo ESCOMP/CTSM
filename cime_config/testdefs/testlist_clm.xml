@@ -1361,7 +1361,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:40:01</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Multi-year global test of transient crops together with transient glaciers. Use no-evolve glaciers with ERP test</option>
     </options>
   </test>
@@ -1810,7 +1810,7 @@
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
-      <option name="wallclock">02:30:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Repeat ERS_Ly5_P128x1...cropMonthOutput test with matrixcnOn</option>
     </options>
   </test>
