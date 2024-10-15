@@ -10,6 +10,7 @@ import numpy as np
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+from ctsm import ctsm_logging
 from ctsm.hillslopes.hillslope_utils import (
     add_variable_nc,
     add_longxy_latixy_nc,
@@ -31,6 +32,7 @@ def parse_arguments(argv):
     # positional) arguments (e.g., --input-file) get shown as optional.
     required_named = parser.add_argument_group("Required named arguments")
     optional_named = parser.add_argument_group("Optional named arguments")
+    ctsm_logging.add_logging_args(parser)
 
     # Input and output file settings
     required_named.add_argument(
@@ -79,19 +81,22 @@ def parse_arguments(argv):
         default=default_hillslope_form,
     )
 
-    optional_named.add_argument(
-        "-v", "--verbose", help="print info", action="store_true", default=False
-    )
-
     args = parser.parse_args(argv)
+    ctsm_logging.process_logging_args(args)
 
     # Check arguments
     if not os.path.exists(args.input_file):
-        raise FileNotFoundError(f"Input file not found: {args.input_file}")
+        msg = f"Input file not found: {args.input_file}"
+        ctsm_logging.logger.error(msg)
+        raise FileNotFoundError(msg)
     if not os.path.exists(args.input_dir):
-        raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
+        msg = f"Input directory not found: {args.input_dir}"
+        ctsm_logging.logger.error(msg)
+        raise FileNotFoundError(msg)
     if os.path.exists(args.output_file) and not args.overwrite:
-        raise FileExistsError(f"Output file already exists: {args.output_file}")
+        msg = f"Output file already exists: {args.output_file}"
+        ctsm_logging.logger.error(msg)
+        raise FileExistsError(msg)
 
     return args
 
@@ -133,7 +138,10 @@ def get_mask_var(surface_ds):
         if mask_var_option in surface_ds.variables.keys():
             mask_var = mask_var_option
     if mask_var is None:
-        raise KeyError(f"No variable found in sfcfile that looks like a mask ({mask_var_options})")
+        msg = f"No variable found in sfcfile that looks like a mask ({mask_var_options})"
+        ctsm_logging.logger.error(msg)
+        raise KeyError(msg)
+
     landmask = np.asarray(
         surface_ds.variables[mask_var][
             :,
@@ -146,6 +154,7 @@ def main():
     """
     See module description
     """
+    ctsm_logging.setup_logging_pre_config()
     args = parse_arguments(sys.argv[1:])
 
     # Choose data files to combine and append
@@ -164,7 +173,7 @@ def main():
     arrays_uninitialized = True
     chunks_to_process = get_chunks_to_process(args, "combined_chunk")
     for cndx in chunks_to_process:
-        print(f"Chunk {cndx}...")
+        ctsm_logging.logger.info("Chunk %d...", cndx)
         cstr = "{:02d}".format(cndx)
         chunk_file = cfile0.replace("ChunkIndex", cstr)
         file_exists = os.path.exists(chunk_file)
@@ -186,8 +195,7 @@ def main():
             arrays_uninitialized = False
 
         if not file_exists:
-            if args.verbose:
-                print(f"Skipping; chunk file not found: {chunk_file}")
+            ctsm_logging.logger.info("Skipping; chunk file not found: %s", chunk_file)
             continue
 
         # Read hillslope variables from one chunk file
@@ -198,7 +206,9 @@ def main():
                 hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
     if arrays_uninitialized:
-        raise FileNotFoundError("No files found")
+        msg = f"No files found in '{args.input_dir}'"
+        ctsm_logging.logger.error(msg)
+        raise FileNotFoundError(msg)
 
     # -- Write data to file ------------------
     hillslope_vars.save(
@@ -208,7 +218,8 @@ def main():
         nhillslope,
         add_bedrock,
         add_stream,
+        logger=ctsm_logging.logger,
     )
     finish_saving(args)
 
-    print(args.output_file + " created")
+    ctsm_logging.logger.info("%s created", args.output_file)

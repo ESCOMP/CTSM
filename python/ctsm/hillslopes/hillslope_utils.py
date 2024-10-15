@@ -253,6 +253,7 @@ class HillslopeVars:
         nhillslope,
         add_bedrock,
         add_stream,
+        logger=None,
         n_lon=None,
         n_lat=None,
         incl_latlon=False,
@@ -262,7 +263,11 @@ class HillslopeVars:
         """
         Save to netCDF
         """
-        print("saving")
+        msg = f"Saving to {output_file}"
+        if logger is None:
+            print(msg)
+        else:
+            logger.info(msg)
 
         # Create and open file
         if save_fsurdat:
@@ -733,12 +738,16 @@ def get_chunks_to_process(args, prefix):
     if not hasattr(args, "cndx") or args.cndx is None:
         # List of gridcell files
         file_list = glob.glob(os.path.join(args.input_dir, prefix + "_[0-9]*nc"))
+        if not file_list:
+            raise FileNotFoundError(f"No files found in '{args.input_dir}'")
         # Extract the chunk number from the file names
         chunk_list = [re.search(r"chunk_\d+", x).group() for x in file_list]
         chunk_list = [x.replace("chunk_", "") for x in chunk_list]
         # Get the list of unique chunk numbers
         chunks_to_process = [int(x) for x in list(set(chunk_list))]
         chunks_to_process.sort()
+        if not chunks_to_process:
+            raise FileNotFoundError(f"No MATCHING chunk files found in '{args.input_dir}'")
     else:
         chunks_to_process = [int(cndx) for cndx in args.cndx[0].split(",")]
         for cndx in chunks_to_process:

@@ -11,6 +11,7 @@ import datetime
 # member Dataset, even though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
+from ctsm import ctsm_logging
 from ctsm.hillslopes.hillslope_utils import HillslopeVars, get_chunks_to_process
 
 
@@ -82,17 +83,21 @@ def parse_arguments(argv):
         action="store_true",
         default=False,
     )
-    optional_named.add_argument(
-        "-v", "--verbose", help="print info", action="store_true", default=False
-    )
+
+    ctsm_logging.add_logging_args(parser)
 
     args = parser.parse_args(argv)
+    ctsm_logging.process_logging_args(args)
 
     # Check arguments
     if not os.path.exists(args.input_file):
-        raise FileNotFoundError(f"Input file not found: {args.input_file}")
+        msg = f"Input file not found: {args.input_file}"
+        ctsm_logging.logger.error(msg)
+        raise FileNotFoundError(msg)
     if not os.path.exists(args.input_dir):
-        raise FileNotFoundError(f"Input directory not found: {args.input_dir}")
+        msg = f"Input directory not found: {args.input_dir}"
+        ctsm_logging.logger.error(msg)
+        raise FileNotFoundError(msg)
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
@@ -104,8 +109,8 @@ def main():
     See module description
     """
 
+    ctsm_logging.setup_logging_pre_config()
     args = parse_arguments(sys.argv[1:])
-    verbose = args.verbose
 
     chunks_to_process = get_chunks_to_process(args, "chunk")
 
@@ -136,10 +141,9 @@ def main():
         # Check for output file existence
         if os.path.exists(outfile_path):
             if args.overwrite:
-                if verbose:
-                    print(outfile_path, " exists; overwriting")
+                ctsm_logging.logger.warning("%s exists; overwriting", outfile_path)
             else:
-                print(outfile_path, " exists; skipping")
+                ctsm_logging.logger.warning("%s exists; skipping", outfile_path)
                 continue
 
         # Locate gridcell files
@@ -147,9 +151,9 @@ def main():
         gfiles = glob.glob(gfile)
         gfiles.sort()
         if len(gfiles) == 0:
-            print(f"Chunk {cndx}: Skipping; no files found matching {gfile}")
+            ctsm_logging.logger.info("Chunk %d: Skipping; no files found matching %s", cndx, gfile)
             continue
-        print(f"Chunk {cndx}: Combining {len(gfiles)} files...")
+        ctsm_logging.logger.info("Chunk %d: Combining %d files...", cndx, len(gfiles))
 
         # Read hillslope data dimensions/settings, if not done yet
         if nhillslope is None:
@@ -223,9 +227,10 @@ def write_to_file(
         nhillslope,
         add_bedrock,
         do_add_stream_channel_vars,
+        logger=ctsm_logging.logger,
         n_lon=n_lon,
         n_lat=n_lat,
         incl_latlon=True,
         incl_chunkmask=True,
     )
-    print(outfile_path + " created")
+    ctsm_logging.logger.info("%s created", outfile_path)
