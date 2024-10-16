@@ -83,6 +83,7 @@ STANDARD = \
 	global-potveg \
 	global-present \
 	global-present-low-res \
+	global-hist-1850-f19 \
 
 CROP = \
 	crop-global-future \
@@ -153,6 +154,9 @@ global-present-low-res : FORCE
 	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 64 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
+global-hist-1850-f19 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 8 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
 #
 # Ultra high resolutions (Don't do by default user should select this by hand)
 #
