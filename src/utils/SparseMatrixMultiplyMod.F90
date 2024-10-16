@@ -1243,7 +1243,7 @@ contains
           call endrun( subname//" ERROR: missing required optional arguments" )
           return
        end if
-       SHR_ASSERT_FL((size(filter_actunit_C) > num_actunit_C), sourcefile, __LINE__)
+       SHR_ASSERT_FL((size(filter_actunit_C) >= num_actunit_C), sourcefile, __LINE__)
     end if
 
     if(.not. list_ready)then
