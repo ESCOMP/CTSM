@@ -1992,7 +1992,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
-<flanduse_timeseries hgrid="ne3np4"        sim_year_range="1850-2000" ssp_rcp="SSP2-4.5"
+<flanduse_timeseries hgrid="ne3np4"        sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4_SSP2-4.5_1850-2100_78pfts_c240926.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne3np4.pg3"    sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
