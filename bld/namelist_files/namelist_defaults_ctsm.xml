@@ -1839,11 +1839,16 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/surfdata_1x1_urbanc_alpha_synth_hist_
 
 <!-- for pre-industrial simulations - year 1850 -->
 
+<!-- fsurdat files with 16 PFTS for use with PPE -->
+<fsurdat hgrid="1.9x2.5"   sim_year="1850" use_crop=".false.">
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_16pfts_c240926.nc</fsurdat>
+
+<!-- fsurdat files with 78 PFTS -->
 <fsurdat hgrid="360x720cru"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_360x720cru_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"     sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_1850_78pfts_c240908.nc</fsurdat>
-<fsurdat hgrid="1.9x2.5"      sim_year="1850" >
+<fsurdat hgrid="1.9x2.5"     sim_year="1850" use_crop=".true.">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"        sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_1850_78pfts_c240908.nc</fsurdat>
@@ -1910,12 +1915,15 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 -->
 
 <!-- Historical 1850-2000 -->
+<!-- PPE needs a 16-pft landuse file -->
+<flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000" use_crop=".false."
+ >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_hist_1850-2023_16pfts_c240926.nc</flanduse_timeseries>
+
+<!-- 78-pft landuse files -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
  >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
+<flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000" use_crop=".true."
  >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
-<!-- Do we need both use_crop=".false." and ".true." for FATES transient? -->
-<!-- As of 2024/02/02 the Grids Support spreadsheet includes no 16-pft landuse files. -->
 <flanduse_timeseries hgrid="4x5"           sim_year_range="1850-2000"
  >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_4x5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2000" 
