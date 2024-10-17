@@ -515,6 +515,7 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.ARCTIC.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4CONUS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
                      ) {
       &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
