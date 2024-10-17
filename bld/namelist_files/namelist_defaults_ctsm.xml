@@ -1101,7 +1101,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 
-
 <!-- matches for clm5_0 physics with CAM6.0 -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="0.9x1.25"
@@ -1214,12 +1213,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<!-- 2013 IC's - exact match for CONUS grid ... -->
-<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
-			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
->hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
-</init_interp_attributes>
-
 
 <!-- Anything else should use the high resolution file, but just for CLM5.0 -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
@@ -1246,11 +1239,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
-			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
->hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
@@ -1284,6 +1272,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
+
 
 <!--
      1850 preindustrial IC (if use_init_interp is added and set to .true. then MUST still interpolate even on an exact match)
@@ -2047,6 +2036,8 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
  >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000"
  >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+<flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1850-2000"
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4.ARCTIC.ne30x4_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4CONUS.ne30x8" sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4CONUS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <!-- Do we need both use_crop=".false." and ".true." for FATES transient? -->
