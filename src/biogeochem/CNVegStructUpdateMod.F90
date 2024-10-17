@@ -143,7 +143,7 @@ contains
       dt = real( get_rad_step_size(), r8 )
 
       ! patch loop
-      do fp = 1,num_soilp
+      do_patch:do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
          g = patch%gridcell(p)
@@ -317,7 +317,7 @@ contains
             frac_veg_nosno_alb(p) = 0
          end if
 
-      end do
+      end do do_patch
 
     end associate 
 

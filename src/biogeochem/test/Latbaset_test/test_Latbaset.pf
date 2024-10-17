@@ -1,0 +1,119 @@
+module test_Latbaset
+
+  ! Tests of CropType module: latbaset
+
+  use funit
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod
+  use unittestFilterBuilderMod
+  use CropType, only : latbaset
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestLatbaset
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestLatbaset
+
+  real(r8) :: baset
+  real(r8) :: latdeg
+  real(r8) :: baset_latvary_intercept
+  real(r8) :: baset_latvary_slope
+  real(r8) :: expected
+
+contains
+
+  subroutine setUp(this)
+    class(TestLatbaset), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+  end subroutine tearDown
+
+  real(r8) function latbaset_max_lat(intercept, slope)
+    real(r8), intent(in) :: intercept
+    real(r8), intent(in) :: slope
+
+    latbaset_max_lat = intercept / slope
+  end function latbaset_max_lat
+
+  @Test
+  subroutine too_far_north(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    baset_latvary_intercept = 8.7_r8
+    baset_latvary_slope     = 0.5_r8
+    latdeg = 10._r8 + latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+
+    @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine too_far_north
+
+  @Test
+  subroutine too_far_south(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    baset_latvary_intercept = 8.7_r8
+    baset_latvary_slope     = 0.5_r8
+    latdeg = -10._r8 - latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+
+    @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine too_far_south
+
+  @Test
+  subroutine at_northern_limit(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    baset_latvary_intercept = 12._r8
+    baset_latvary_slope     = 0.4_r8
+    latdeg = latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+
+    @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine at_northern_limit
+
+  @Test
+  subroutine at_southern_limit(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    baset_latvary_intercept = 12._r8
+    baset_latvary_slope     = 0.4_r8
+    latdeg = -latbaset_max_lat(baset_latvary_intercept, baset_latvary_slope)
+
+    @assertEqual(baset, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine at_southern_limit
+
+  @Test
+  subroutine in_nh(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    latdeg = 10._r8
+    baset_latvary_intercept = 13._r8
+    baset_latvary_slope     = 0.3_r8
+
+    @assertEqual(15._r8, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine in_nh
+
+  @Test
+  subroutine in_sh(this)
+    class(TestLatbaset), intent(inout) :: this
+
+    baset = 5._r8
+    latdeg = -10._r8
+    baset_latvary_intercept = 13._r8
+    baset_latvary_slope     = 0.3_r8
+
+    @assertEqual(15._r8, latbaset(baset, latdeg, baset_latvary_intercept, baset_latvary_slope))
+  end subroutine in_sh
+
+end module test_Latbaset
+

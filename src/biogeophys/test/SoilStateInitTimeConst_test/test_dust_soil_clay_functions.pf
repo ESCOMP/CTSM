@@ -1,0 +1,102 @@
+module test_dust_soil_clay_functions
+
+  ! Tests of SoilStateInitTimeConst functions for dust emission in regard to clay content
+
+  use funit
+  use SoilStateInitTimeConstMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDustEmisSoilFunctions
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDustEmisSoilFunctions
+
+  real(r8), parameter :: tol = 1.e-16_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine TestClayOutOfRangeThreshold(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+    character(len=100) :: expected_msg
+
+    value = ThresholdSoilMoistZender2003( -1.e-15_r8 )
+    expected_msg = "ABORTED: Clay fraction is out of bounds (0 to 100)"
+    @assertExceptionRaised(expected_msg)
+    value = ThresholdSoilMoistZender2003( 1._r8 + 1.-15_r8 )
+    @assertExceptionRaised(expected_msg)
+  end subroutine TestClayOutOfRangeThreshold
+
+  @Test
+  subroutine TestThresholdValues(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = ThresholdSoilMoistZender2003( 0.0_r8 )
+    @assertEqual( value, 0.17_r8, tolerance=tol )
+    value = ThresholdSoilMoistZender2003( 100.0_r8 )
+    @assertEqual( value, 0.31_r8, tolerance=tol )
+  end subroutine TestThresholdValues
+
+  @Test
+  subroutine TestThresholdKok2014Values(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = ThresholdSoilMoistKok2014( 0.0_r8 )
+    @assertEqual( value, 0.0_r8, tolerance=tol )
+    value = ThresholdSoilMoistKok2014( 100.0_r8 )
+    @assertEqual( value, 0.31_r8, tolerance=tol )
+    value = ThresholdSoilMoistKok2014( 1.0_r8 )
+    @assertEqual( value, 0.001714_r8, tolerance=tol )
+  end subroutine TestThresholdKok2014Values
+
+  @Test
+  subroutine TestClayMassFracValues(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = MassFracClay( 0.0_r8 )
+    @assertEqual( value, 0.0_r8, tolerance=tol )
+    value = MassFracClay( 10.0_r8 )
+    @assertEqual( value, 0.10_r8, tolerance=tol )
+    value = MassFracClay( 20.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+    ! value after 20% clay should stay at 0.2
+    value = MassFracClay( 25.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+
+  end subroutine TestClayMassFracValues
+
+
+  @Test
+  subroutine TestClayMassFracValuesLeung2023(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = MassFracClayLeung2023( 0.0_r8 )
+    @assertEqual( value, 0.1_r8, tolerance=tol )
+    value = MassFracClayLeung2023( 10.0_r8 )
+    @assertEqual( value, 0.15_r8, tolerance=tol )
+    value = MassFracClayLeung2023( 20.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+    ! value after 20% clay should stay at 0.2
+    value = MassFracClayLeung2023( 25.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+
+  end subroutine TestClayMassFracValuesLeung2023
+  
+end module test_dust_soil_clay_functions

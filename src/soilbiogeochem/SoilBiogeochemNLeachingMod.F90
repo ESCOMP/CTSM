@@ -72,7 +72,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemNLeaching(bounds, num_soilc, filter_soilc, &
+  subroutine SoilBiogeochemNLeaching(bounds, num_bgc_soilc, filter_bgc_soilc, &
        waterstatebulk_inst, waterfluxbulk_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
     !
@@ -86,8 +86,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
-    integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                                 , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                                 , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(in)    :: soilbiogeochem_nitrogenstate_inst
@@ -133,8 +133,8 @@ contains
       ! calculate the total soil water
       tot_water(bounds%begc:bounds%endc) = 0._r8
       do j = 1,nlevsoi
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             tot_water(c) = tot_water(c) + h2osoi_liq(c,j)
          end do
       end do
@@ -143,21 +143,21 @@ contains
       surface_water(bounds%begc:bounds%endc) = 0._r8
       do j = 1,nlevsoi
          if ( zisoi(j) <= depth_runoff_Nloss)  then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                surface_water(c) = surface_water(c) + h2osoi_liq(c,j)
             end do
          elseif ( zisoi(j-1) < depth_runoff_Nloss)  then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                surface_water(c) = surface_water(c) + h2osoi_liq(c,j) * ( (depth_runoff_Nloss - zisoi(j-1)) / col%dz(c,j))
             end do
          endif
       end do
 
       ! Loop through columns
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          drain_tot(c) = qflx_drain(c)
       end do
 
@@ -170,8 +170,8 @@ contains
 
          do j = 1,nlevdecomp
             ! Loop through columns
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
 
                ! calculate the dissolved mineral N concentration (gN/kg water)
                ! assumes that 10% of mineral nitrogen is soluble
@@ -203,8 +203,8 @@ contains
 
          do j = 1,nlevdecomp
             ! Loop through columns
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
 
                ! calculate the dissolved mineral N concentration (gN/kg water)
                ! assumes that 10% of mineral nitrogen is soluble

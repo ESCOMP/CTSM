@@ -26,7 +26,7 @@ module CNFUNMod
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
-  use CNSharedParamsMod               , only : use_matrixcn
+    use CNSharedParamsMod               , only : use_matrixcn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -53,7 +53,6 @@ module CNFUNMod
   public:: CNFUN                 ! Run FUN
   
   type, private :: params_type
-     real(r8) :: ndays_on        ! number of days to complete leaf onset
      real(r8) :: ndays_off       ! number of days to complete leaf offset
   end type params_type   
  
@@ -64,7 +63,6 @@ module CNFUNMod
   !
   ! !PRIVATE DATA MEMBERS:
   real(r8) :: dt              ! decomp timestep (seconds)
-  real(r8) :: ndays_on        ! number of days to complete onset
   real(r8) :: ndays_off       ! number of days to complete offset
   
   integer, private, parameter :: COST_METHOD = 2 !new way of doing the N uptake
@@ -103,11 +101,6 @@ module CNFUNMod
   !---
 
   ! read in parameters
-
-    tString='ndays_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_on=tempr
 
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
@@ -172,7 +165,6 @@ module CNFUNMod
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
 
-  ndays_on     = params_inst%ndays_on
   ndays_off    = params_inst%ndays_off
 
   !--------------------------------------------------------------------
@@ -218,6 +210,7 @@ module CNFUNMod
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
+   use CNVegMatrixMod  , only : matrix_update_phn
 !
 ! !ARGUMENTS: 
    type(bounds_type)                       , intent(in)    :: bounds
@@ -621,6 +614,7 @@ module CNFUNMod
          leafc_change           => cnveg_carbonflux_inst%leafc_change_patch             , & ! Output:  [real(r8)
          !  (:) ]  Used C from the leaf (gC/m2/s)
          leafn_storage_to_xfer  => cnveg_nitrogenflux_inst%leafn_storage_to_xfer_patch  , & ! Output:  [real(r8) (:) ]
+         iretransn_to_iout      => cnveg_nitrogenflux_inst%iretransn_to_iout_ph         , & ! Input:   [integer]
          plant_ndemand          => cnveg_nitrogenflux_inst%plant_ndemand_patch          , & ! Iutput:  [real(r8) (:)
          !  ]  N flux required to support initial GPP (gN/m2/s)
          plant_ndemand_retrans  => cnveg_nitrogenflux_inst%plant_ndemand_retrans_patch  , & ! Output:  [real(r8) (:)
@@ -1451,11 +1445,14 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
-      ! Without matrix solution
       if(.not. use_matrixcn)then
          free_retransn_to_npool(p) = free_nretrans(p)/dt
-      ! With matrix solution (when it comes in)
       else
+         if(retransn(p) .gt. 0)then
+            free_retransn_to_npool(p) = retransn(p) * matrix_update_phn(p,iretransn_to_iout,free_nretrans(p)/dt/retransn(p),dt,cnveg_nitrogenflux_inst,.true.,.true.)
+         else
+            free_retransn_to_npool(p) = 0._r8
+         end if
       end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)

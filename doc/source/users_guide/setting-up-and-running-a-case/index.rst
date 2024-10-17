@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _customizing_section:
-
 .. include:: ../substitutions.rst
+
+.. _customizing_section:
 
 #####################################
 Setting Up and Running a Case
@@ -18,6 +18,6 @@ Setting Up and Running a Case
    customizing-the-clm-configuration.rst
    customizing-the-clm-namelist.rst
    customizing-the-datm-namelist.rst
-   master_list_nofates
-   master_list_fates
+   history_fields_nofates
+   history_fields_fates
 

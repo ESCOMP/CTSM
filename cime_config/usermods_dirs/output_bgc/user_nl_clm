@@ -3,8 +3,8 @@
 !----------------------------------------------------------------------------------
 
 ! h0 stream (monthly average, gridcell-level)
-hist_fexcl1 += 'ACT_SOMC_vr', 'ACT_SOMN_vr', 'SLO_SOMC_vr', 'SLO_SOMN_vr', 'PAS_SOMC_vr', 'PAS_SOMN_vr', 'SOILC_vr','SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr', 'CWDN_vr', 'SMIN_NO3_vr', 'CONC_O2_UNSAT', 'CONC_O2_SAT','SMIN_NH4_vr','SMINN_vr'
-hist_fincl1 += 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER','MET_LITC_TO_ACT_SOMC','MET_LITN_TO_ACT_SOMN','CEL_LITC_TO_ACT_SOMC', 'CEL_LITN_TO_ACT_SOMN','LIG_LITC_TO_SLO_SOMC','LIG_LITN_TO_SLO_SOMN','DWT_WOOD_PRODUCTC_GAIN_PATCH'
+hist_fexcl1 += 'SOM_ACT_C_vr', 'SOM_ACT_N_vr', 'SOM_SLO_C_vr', 'SOM_SLO_N_vr', 'SOM_PAS_C_vr', 'SOM_PAS_N_vr', 'SOILC_vr','SOILN_vr', 'CWD_C_vr', 'LIT_MET_C_vr', 'LIT_CEL_C_vr', 'LIT_LIG_C_vr', 'LIT_MET_N_vr', 'LIT_CEL_N_vr', 'LIT_LIG_N_vr', 'CWD_N_vr', 'SMIN_NO3_vr', 'CONC_O2_UNSAT', 'CONC_O2_SAT','SMIN_NH4_vr','SMINN_vr'
+hist_fincl1 += 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER','LIT_MET_C_TO_SOM_ACT_C','LIT_MET_N_TO_SOM_ACT_N','LIT_CEL_C_TO_SOM_ACT_C', 'LIT_CEL_N_TO_SOM_ACT_N','LIT_LIG_C_TO_SOM_SLO_C','LIT_LIG_N_TO_SOM_SLO_N','DWT_WOOD_PRODUCTC_GAIN_PATCH'
 
 ! h1 stream (monthly average, finest sub-grid)
 hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'AR', 'HR', 'HTOP'
@@ -14,7 +14,7 @@ hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'AR', 'HR', 'HTO
 hist_fincl3 += 'GPP', 'NPP', 'AR', 'HR', 'DWT_CONV_CFLUX_PATCH', 'WOOD_HARVESTC', 'DWT_WOOD_PRODUCTC_GAIN_PATCH', 'SLASH_HARVESTC', 'COL_FIRE_CLOSS', 'FROOTC:I', 'HTOP'
 
 ! h3 stream (yearly average, gridcell-level)
-hist_fincl4 += 'SOILC_vr', 'SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr','CWDN_vr', 'TOTLITC:I', 'TOT_WOODPRODC:I', 'TOTSOMC:I','TOTVEGC:I'
+hist_fincl4 += 'SOILC_vr', 'SOILN_vr', 'CWD_C_vr', 'LIT_MET_C_vr', 'LIT_CEL_C_vr', 'LIT_LIG_C_vr', 'LIT_MET_N_vr', 'LIT_CEL_N_vr', 'LIT_LIG_N_vr','CWD_N_vr', 'TOTLITC:I', 'TOT_WOODPRODC:I', 'TOTSOMC:I','TOTVEGC:I'
 
 ! h4 stream (yearly average, landunit-level)
 hist_fincl5 += 'TOTSOMC:I', 'TOTSOMC_1m:I', 'TOTECOSYSC:I', 'TOTVEGC:I', 'WOODC:I', 'TOTLITC:I', 'LIVECROOTC:I', 'DEADCROOTC:I', 'FROOTC:I'

@@ -1,0 +1,54 @@
+module test_tillage
+
+  ! Tests of the functions in TillageMod
+
+  use funit
+
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use TillageMod, only : get_fraction_tilled
+
+  implicit none
+  save
+
+  real(r8), parameter :: tol = 1.e-8_r8
+
+contains
+
+  @Test
+  subroutine test_get_fraction_tilled()
+
+    integer, parameter :: nlayers = 5
+    real(r8) :: zisoi(nlayers)        ! Depth of soil interfaces (bottom of each layer)
+    real(r8) :: dzsoi_decomp(nlayers) ! Thickness of soil layers
+    integer  :: j                 ! Soil layer
+    real(r8), parameter :: max_tillage_depth = 0.21_r8
+
+    zisoi = [0.01_r8, 0.05_r8, 0.1_r8, 0.5_r8, 1._r8]
+    dzsoi_decomp = [zisoi(1) - 0._r8, &
+                    zisoi(2) - zisoi(1), &
+                    zisoi(3) - zisoi(2), &
+                    zisoi(4) - zisoi(3), &
+                    zisoi(5) - zisoi(4)]
+
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(1), dzsoi_decomp(1), max_tillage_depth))
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(2), dzsoi_decomp(2), max_tillage_depth))
+    @assertEqual(1._r8,    get_fraction_tilled(zisoi(3), dzsoi_decomp(3), max_tillage_depth))
+    @assertEqual(0.275_r8, get_fraction_tilled(zisoi(4), dzsoi_decomp(4), max_tillage_depth), tolerance=tol)
+    @assertEqual(0._r8,    get_fraction_tilled(zisoi(5), dzsoi_decomp(5), max_tillage_depth))
+
+  end subroutine test_get_fraction_tilled
+
+
+  @Test
+
+  subroutine test_get_fraction_tilled_0thickness()
+    real(r8), parameter :: max_tillage_depth = 0.5_r8
+
+    @assertEqual(1._r8, get_fraction_tilled(0.4_r8, 0._r8, max_tillage_depth))
+    @assertEqual(1._r8, get_fraction_tilled(0.5_r8, 0._r8, max_tillage_depth))
+    @assertEqual(0._r8, get_fraction_tilled(0.6_r8, 0._r8, max_tillage_depth))
+  end subroutine test_get_fraction_tilled_0thickness
+
+
+
+end module test_tillage
