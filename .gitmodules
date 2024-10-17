@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 60191cf4e5db9bea30170c35eb2f7ea1a6b90439  # isforest-20241016: Combine isforest functions into one.
+fxtag = aa3b3b931bbb8199c21dd175fe2b2c9ddbf67d09  # edge-area-202410: Fix and rename edge forest bin variables.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
