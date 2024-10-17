@@ -2328,6 +2328,7 @@ contains
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
+    use clm_varctl      , only : hillslope_file
     use clm_varctl      , only : version, hostname, username, conventions, source
     use clm_varctl      , only : use_hillslope,nhillslope,max_columns_hillslope
     use domainMod       , only : ldomain
@@ -2428,6 +2429,8 @@ contains
     call ncd_putatt(lnfid, ncd_global, 'case_id', trim(caseid))
     str = get_filename(fsurdat)
     call ncd_putatt(lnfid, ncd_global, 'Surface_dataset', trim(str))
+    str = get_filename(hillslope_file)
+    call ncd_putatt(lnfid, ncd_global, 'Hillslope_dataset', trim(str))
     if (finidat == ' ') then
        str = 'arbitrary initialization'
     else
