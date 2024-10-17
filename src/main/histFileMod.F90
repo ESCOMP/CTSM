@@ -5278,10 +5278,6 @@ contains
       write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
    endif
    write(hist_index,'(i1.1)') hist_file - 1
-   ! TODO slevis: After hist_index add "i" or "a"
-   !              For guidance on how to split the files, search for
-   !              maxsplitfiles in https://github.com/ESCOMP/CAM/pull/903/files
-   !              See CAM#1003 for a bug-fix in monthly avged output
    set_hist_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
                        ".h"//hist_index//"."//trim(cdate)//".nc"
 
