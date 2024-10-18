@@ -936,7 +936,7 @@ contains
 
              ! if field is in exclude list, ff > 0.
 
-             if (ff == 0 .and. (allhistfldlist(f)%actflag(t) .or. hist_all_htapes)) then
+             if (ff == 0 .and. (allhistfldlist(f)%actflag(t) .or. (hist_all_htapes .and. t == 1))) then
                 call htape_addfld (t, f, ' ')
              end if
 
