@@ -1648,7 +1648,7 @@
       <option name="comment"  >Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure</option>
     </options>
   </test>
-  <test name="ERP_P36x2_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/all_outputs">
+  <test name="ERP_P36x2_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/all_outputs">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
