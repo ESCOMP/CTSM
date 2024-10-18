@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = aa3b3b931bbb8199c21dd175fe2b2c9ddbf67d09  # edge-area-202410: Fix and rename edge forest bin variables.
+fxtag = b1858ab6d3358be43adaec1ca6a9b9cdca08add0  # edge-area-202410: Revert "Delete unneeded use "FatesIOVariableKindMod" in FatesHistoryInterfaceMod."
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
