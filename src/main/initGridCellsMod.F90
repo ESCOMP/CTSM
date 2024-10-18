@@ -216,7 +216,7 @@ contains
     integer , intent(inout) :: pi                ! patch index
     !
     ! !LOCAL VARIABLES:
-    integer  :: m                                ! index
+    integer  :: m, ci2                           ! index
     integer  :: npatches                         ! number of patches in landunit
     integer  :: ncols
     integer  :: nlunits
@@ -224,6 +224,7 @@ contains
     integer  :: ncols_added                      ! number of columns actually added
     integer  :: nlunits_added                    ! number of landunits actually added
     real(r8) :: wtlunit2gcell                    ! landunit weight in gridcell
+    real(r8) :: wtcol2lunit                      ! column weight in landunit
     real(r8) :: p_wt                             ! patch weight (0-1)
     !------------------------------------------------------------------------
 
@@ -240,31 +241,37 @@ contains
     if (nlunits > 0) then
        call add_landunit(li=li, gi=gi, ltype=ltype, wtgcell=wtlunit2gcell)
        nlunits_added = nlunits_added + 1
-       
-       ! Assume one column on the landunit
-       call add_column(ci=ci, li=li, ctype=1, wtlunit=1.0_r8)
-       ncols_added = ncols_added + 1
 
-       ! For FATES: the total number of patches may not match what is in the surface
-       ! file, and therefor the weighting can't be used. The weightings in
-       ! wt_nat_patch may be meaningful (like with fixed biogeography), but they
-       ! they need a mapping table to connect to the allocated patches (in fates)
-       ! so the wt_nat_patch array is not applicable to these area weights
-       ! A subsequent call, via the clmfates interface will update these weights
-       ! by using said mapping table
-       
-       do m = natpft_lb,natpft_ub
-          if (natveg_patch_exists(gi, m)) then
-             if(use_fates .and. .not.use_fates_sp)then
-                p_wt = 1.0_r8/real(natpft_size,r8)
-             else
-                p_wt = wt_nat_patch(gi,m)
+       ! Potentially create multiple columns (e.g., for hillslope hydrology), but each
+       ! with the same PFT breakdown.
+       !
+       ! Set column weight arbitrarily for now. If we have multiple columns because we're
+       ! using hillslope hydrology, then col%wtlunit will be modified in InitHillslope.
+       wtcol2lunit = 1.0_r8/real(ncols,r8)
+       do ci2 = 1,ncols
+          call add_column(ci=ci, li=li, ctype=1, wtlunit=wtcol2lunit)
+          ncols_added = ncols_added + 1
+
+          ! For FATES: the total number of patches may not match what is in the surface
+          ! file, and therefor the weighting can't be used. The weightings in
+          ! wt_nat_patch may be meaningful (like with fixed biogeography), but they
+          ! they need a mapping table to connect to the allocated patches (in fates)
+          ! so the wt_nat_patch array is not applicable to these area weights
+          ! A subsequent call, via the clmfates interface will update these weights
+          ! by using said mapping table
+
+          do m = natpft_lb,natpft_ub
+             if (natveg_patch_exists(gi, m)) then
+                if(use_fates .and. .not.use_fates_sp)then
+                   p_wt = 1.0_r8/real(natpft_size,r8)
+                else
+                   p_wt = wt_nat_patch(gi,m)
+                end if
+                call add_patch(pi=pi, ci=ci, ptype=m, wtcol=p_wt)
+                npatches_added = npatches_added + 1
              end if
-             call add_patch(pi=pi, ci=ci, ptype=m, wtcol=p_wt)
-             npatches_added = npatches_added + 1
-          end if
+          end do
        end do
-
     end if
 
     SHR_ASSERT_FL(nlunits_added == nlunits, sourcefile, __LINE__)
@@ -272,7 +279,8 @@ contains
     SHR_ASSERT_FL(npatches_added == npatches, sourcefile, __LINE__)
 
   end subroutine set_landunit_veg_compete
-  
+
+
   !------------------------------------------------------------------------
   subroutine set_landunit_wet_lake (ltype, gi, li, ci, pi)
     !

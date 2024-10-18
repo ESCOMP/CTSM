@@ -1,11 +1,11 @@
-.. _running-with-anomaly-forcing:
-
 .. include:: ../substitutions.rst
+
+.. _running-with-anomaly-forcing:
 
 ==============================
  Running with anomaly forcing
 ==============================
-Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called 'anomaly forcing'.  The anomaly forcing method uses a previously completed fully coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes.  These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity.  Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.  
+Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called 'anomaly forcing'.  The anomaly forcing method uses a previously completed fully coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes.  These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity.  Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
 
 To enable anomaly forcing in a CTSM simulation, the following namelist variable can be added to the user\_nl\_datm file:
 
@@ -15,7 +15,7 @@ Any combination or subset of forcing variables can be used, e.g. to modify only 
 
   anomaly\_forcing = 'Anomaly.Forcing.Temperature'
 
-which will only adjust the temperature (TBOT).  
+which will only adjust the temperature (TBOT).
 
 After the namelist has been created, the run directory will be populated with files such as these:
 

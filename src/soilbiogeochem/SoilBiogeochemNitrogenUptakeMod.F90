@@ -24,7 +24,7 @@ module SoilBiogeochemNitrogenUptakeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemNitrogenUptake(bounds, nlevdecomp, num_soilc, filter_soilc, &
+  subroutine SoilBiogeochemNitrogenUptake(bounds, nlevdecomp, num_bgc_soilc, filter_bgc_soilc, &
        sminn_vr, dzsoi_decomp, nfixation_prof, nuptake_prof)
     !
     ! DESCRIPTION
@@ -33,8 +33,8 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds  
     integer           , intent(in)    :: nlevdecomp                                          ! number of vertical layers
-    integer           , intent(in)    :: num_soilc                                           ! number of soil columns in filter
-    integer           , intent(in)    :: filter_soilc(:)                                     ! filter for soil columns
+    integer           , intent(in)    :: num_bgc_soilc                                           ! number of soil columns in filter
+    integer           , intent(in)    :: filter_bgc_soilc(:)                                     ! filter for soil columns
     real(r8)          , intent(in)    :: sminn_vr(bounds%begc: , 1: )                        ! soil mineral nitrogen profile
     real(r8)          , intent(in)    :: dzsoi_decomp(1: )                                   ! layer thickness
     real(r8)          , intent(in)    :: nfixation_prof(bounds%begc: , 1: )                  ! nitrogen fixation profile
@@ -51,21 +51,21 @@ contains
     SHR_ASSERT_ALL_FL((ubound(nuptake_prof)   == (/bounds%endc, nlevdecomp/)) , sourcefile, __LINE__)
 
     ! init sminn_tot
-    do fc=1,num_soilc
-       c = filter_soilc(fc)
+    do fc=1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        sminn_tot(c) = 0.
     end do
 
     do j = 1, nlevdecomp
-       do fc=1,num_soilc
-          c = filter_soilc(fc)
+       do fc=1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           sminn_tot(c) = sminn_tot(c) + sminn_vr(c,j) * dzsoi_decomp(j)
        end do
     end do
 
     do j = 1, nlevdecomp
-       do fc=1,num_soilc
-          c = filter_soilc(fc)      
+       do fc=1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)      
           if (sminn_tot(c)  >  0.) then
              nuptake_prof(c,j) = sminn_vr(c,j) / sminn_tot(c)
           else

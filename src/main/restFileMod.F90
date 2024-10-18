@@ -27,6 +27,7 @@ module restFileMod
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
   use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+  use restUtilMod      , only : excess_ice_issue
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -502,6 +503,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_nstep
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
+    use clm_varctl           , only : hillslope_file
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
@@ -568,6 +570,7 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'hillslope_dataset', trim(hillslope_file))
     call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(get_flanduse_timeseries()))
     call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
 
@@ -592,6 +595,8 @@ contains
     ! !DESCRIPTION:
     ! Write metadata for issues fixed
     !
+    ! !USES:
+    use clm_varctl, only : use_excess_ice
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
@@ -606,6 +611,15 @@ contains
          ncid = ncid, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
+    ! If running with execess ice then mark the restart file as having excess ice fixed
+    ! This is a permanent feature, i.e. not expected to be removed from here.
+    ! It would only be removed if we decided to make use_excess_ice = .true. the default.
+    if ( use_excess_ice ) then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+    end if
 
   end subroutine restFile_write_issues_fixed
 
