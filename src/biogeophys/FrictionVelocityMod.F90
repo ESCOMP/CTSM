@@ -267,6 +267,7 @@ contains
             avgflag='A', long_name='friction velocity', &
             ptr_patch=this%fv_patch, default='inactive')
 
+       this%rah1_patch(begp:endp) = spval
        call hist_addfld1d (fname='RAH1', units='s/m', &
             avgflag='A', long_name='aerodynamical resistance ', &
             ptr_patch=this%rah1_patch, default='inactive')
