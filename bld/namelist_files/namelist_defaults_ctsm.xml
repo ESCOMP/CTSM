@@ -413,11 +413,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Canopy hydrology namelist defaults -->
 <use_clm5_fpi                               >.true.</use_clm5_fpi>
-<interception_fraction                      >1.0</interception_fraction>
-<maximum_leaf_wetted_fraction               >0.05</maximum_leaf_wetted_fraction>
 <use_clm5_fpi                 phys="clm4_5" >.false.</use_clm5_fpi>
-<interception_fraction        phys="clm4_5" >0.25</interception_fraction>
-<maximum_leaf_wetted_fraction phys="clm4_5" >1.0</maximum_leaf_wetted_fraction>
 
 <!-- Soilwater movement namelist defaults -->
 <soilwater_movement_method               >1</soilwater_movement_method>
@@ -493,9 +489,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lotmp_snowdensity_method               >'Slater2017'</lotmp_snowdensity_method>
 <lotmp_snowdensity_method phys="clm4_5" >'TruncatedAnderson1976'</lotmp_snowdensity_method>
 
-<upplim_destruct_metamorph                 >175.d00</upplim_destruct_metamorph>
-<upplim_destruct_metamorph   phys="clm4_5" >100.d00</upplim_destruct_metamorph>
-
 <overburden_compress_tfactor>0.08d00</overburden_compress_tfactor>
 
 <reset_snow>.false.</reset_snow>
@@ -551,10 +544,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c240822.nc</paramfile>
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c240814.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c240814.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c240814.nc</paramfile>
+<paramfile phys="clm6_0" >/glade/campaign/cgd/tss/people/oleson/modify_param/ctsm60_params.c241017.nc</paramfile>
+<paramfile phys="clm5_1" >/glade/campaign/cgd/tss/people/oleson/modify_param/ctsm51_params.c241017.nc</paramfile>
+<paramfile phys="clm5_0" >/glade/campaign/cgd/tss/people/oleson/modify_param/clm50_params.c241017.nc</paramfile>
+<paramfile phys="clm4_5" >/glade/campaign/cgd/tss/people/oleson/modify_param/clm45_params.c241017.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -604,9 +597,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <use_fertilizer                   >.false.</use_fertilizer>
 <use_fertilizer use_crop=".true." >.true.</use_fertilizer>
-
-<!-- Could depend on physics version -->
-<jmaxb1 use_luna=".true." >0.17</jmaxb1>
 
 <!-- o3_veg_stress_method-->
 <o3_veg_stress_method>unset</o3_veg_stress_method>

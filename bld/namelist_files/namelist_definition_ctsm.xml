@@ -404,19 +404,9 @@ Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the 
 <default>Default: 40</default>
 </entry>
 
-<entry id="interception_fraction" type="real" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="" >
-Fraction of intercepted precipitation
-</entry>
-
 <entry id="use_clm5_fpi" type="logical" category="clm_physics"
        group="clm_canopyhydrology_inparm" valid_values="" >
 If TRUE use clm5 equation for fraction of intercepted precipitation
-</entry>
-
-<entry id="maximum_leaf_wetted_fraction" type="real" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="" >
-Maximum fraction of leaf that may be wet prior to drip occuring
 </entry>
 
 <entry id="baseflow_scalar" type="real" category="clm_physics"
@@ -710,11 +700,6 @@ Scalar of leaf respiration to vcmax
 <entry id="zetamaxstable" type="real" category="clm_physics"
        group="friction_velocity" >
 The maximum value to use for zeta under stable conditions
-</entry>
-
-<entry id="Jmaxb1" type="real" category="clm_physics"
-       group="luna" >
-baseline proportion of nitrogen allocated for electron transport (J)
 </entry>
 
 <entry id="use_fates" type="logical" category="physics"
@@ -2837,11 +2822,6 @@ Vionnet2012 --- newer method, default in CLM50
 Snow density method to use for low temperatures (below -15C)
 TruncatedAnderson1976 -- Truncate the Anderson-1976 equation at the value for -15C
 Slater2017 ------------- Use equation from Slater that increases snow density for very cold temperatures  (Arctic, Antarctic)
-</entry>
-
-<entry id="upplim_destruct_metamorph" type="real" category="clm_physics"
-       group="clm_snowhydrology_inparm"   >
-Upper Limit on Destructive Metamorphism Compaction [kg/m3]
 </entry>
 
 <entry id="overburden_compress_Tfactor" type="real" category="clm_physics"

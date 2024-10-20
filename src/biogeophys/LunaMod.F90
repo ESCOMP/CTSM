@@ -12,7 +12,7 @@ module LunaMod
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varpar            , only : nlevcan
+  use clm_varpar            , only : nlevcan, mxpft
   use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
@@ -33,7 +33,6 @@ module LunaMod
 
   !------------------------------------------------------------------------------
   ! PUBLIC MEMBER FUNCTIONS:
-  public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
   public  :: Update_Photosynthesis_Capacity                !subroutine to update the canopy nitrogen profile
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
@@ -78,7 +77,6 @@ module LunaMod
   real(r8), parameter :: CO2ref = 380.0_r8                   ! reference CO2 concentration for calculation of reference NUE. 
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
-  real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
   real(r8), parameter :: NMCp25 = 0.715_r8                 ! estimated by assuming 80% maintenance respiration is used for photosynthesis enzyme maintenance
   real(r8), parameter :: Trange1 = 5.0_r8                  ! lower temperature limit (oC) for nitrogen optimization  
   real(r8), parameter :: Trange2 = 42.0_r8                 ! upper temperature limit (oC) for nitrogen optimization
@@ -92,70 +90,11 @@ module LunaMod
   
   contains
 
-  !********************************************************************************************************************************************************************** 
-  ! Read in LUNA namelist
-  subroutine LunaReadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for LUNA
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'lunaReadNML'
-    character(len=*), parameter :: nmlname = 'luna'
-    !-----------------------------------------------------------------------
-    namelist /luna/ Jmaxb1
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=luna, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (Jmaxb1, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=luna)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine lunaReadNML
-
 !----------------------------------------------------------------------------
   subroutine readParams( ncid )
     !
     ! !USES:
-    use ncdio_pio, only: file_desc_t
+    use ncdio_pio, only: file_desc_t,ncd_io
     use paramUtilMod, only: readNcdioScalar
     !
     ! !ARGUMENTS:
@@ -164,6 +103,10 @@ module LunaMod
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'readParams_Luna'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
     !--------------------------------------------------------------------
 
     ! CO2 compensation point at 25°C at present day O2 levels
@@ -314,6 +257,7 @@ module LunaMod
     c3psn         => pftcon%c3psn                                     , & ! photosynthetic pathway: 0.  =  c4, 1.  =  c3
     slatop        => pftcon%slatop                                    , & ! specific leaf area at top of canopy, projected area basis [m^2/gC]
     leafcn        => pftcon%leafcn                                    , & ! leaf C:N (gC/gN)        
+    jmaxb1        => pftcon%jmaxb1                                    , & ! Coefficient determining the response of electron transport rate to light availability (-)
     forc_pbot10   => atm2lnd_inst%forc_pbot240_downscaled_patch       , & ! Input:  [real(r8) (:)   ] 10 day mean atmospheric pressure(Pa)  
     CO2_p240      => atm2lnd_inst%forc_pco2_240_patch                 , & ! Input:  [real(r8) (:)   ] 10-day mean CO2 partial pressure (Pa)
     O2_p240       => atm2lnd_inst%forc_po2_240_patch                  , & ! Input:  [real(r8) (:)   ] 10-day mean O2 partial pressure (Pa)    
@@ -439,8 +383,8 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), o3coefjmax(p), &
-                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              jmaxb1(ft), PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              o3coefjmax(p), PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
@@ -825,7 +769,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
+     jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -840,7 +784,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tair10                     !10-day running mean of the 2m temperature (oC)
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
-  real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
+  real(r8), intent (in) :: jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
@@ -928,7 +872,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
+  JmaxCoef = jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
       params_inst%minrelh, 0.0_r8) / (1.0_r8 - params_inst%minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
