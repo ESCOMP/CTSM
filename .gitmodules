@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = b1858ab6d3358be43adaec1ca6a9b9cdca08add0  # edge-area-202410: Revert "Delete unneeded use "FatesIOVariableKindMod" in FatesHistoryInterfaceMod."
+fxtag = 15112f8a66fbfa50f66df8be2f5465177c8b6fed  # edge-area-202410: Revert "Revert "My diagnostic outputs now use group_dyna_*.""
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
