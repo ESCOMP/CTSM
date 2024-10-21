@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 870d9289d1648531336d921e0900e96229a51da8  # edge-area-202410: Move FATES_IS_FOREST_AP calc to update_history_dyn2_ageclass().
+fxtag = a8f9da0750f27a01e227582a46d4c3ced01696db  # edge-area-202410: Revert "Revert "Delete unneeded use "FatesIOVariableKindMod" in FatesHistoryInterfaceMod.""
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
