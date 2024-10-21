@@ -1,5 +1,5 @@
 """
-This module contains the NeonSite class and class functions which are used in run_tower.py
+This module contains the Plumber2Site class and class functions which are used in run_tower.py
 """
 
 # Import libraries
@@ -18,7 +18,6 @@ from ctsm.site_and_regional.tower_site import TowerSite
 # pylint: disable=wrong-import-position, import-error, unused-import, wrong-import-order
 from ctsm import add_cime_to_path
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
 
 from CIME import build
 from CIME.case import Case
@@ -28,9 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
-class NeonSite(TowerSite):
+class Plumber2Site(TowerSite):
     """
-    A class for encapsulating neon sites.
+    A class for encapsulating plumber sites.
     """
 
     def build_base_case(
@@ -45,7 +44,7 @@ class NeonSite(TowerSite):
     ):
         if user_mods_dirs is None:
             user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
             ]
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
@@ -74,11 +73,14 @@ class NeonSite(TowerSite):
         base_case_root: str, opt
             file path of base case
         run_type: str, opt
-            transient, post_ad, or ad case, default transient
+            transient, post_ad, or ad case, default ad
+            (ad case is default because PLUMBER requires spinup)
         prism: bool, opt
             if True, use PRISM precipitation, default False
+            Note: only supported for NEON sites
         user_version: str, opt
-            default 'latest'
+            default 'latest'; this could be useful later
+            This is currently only implemented with neon (not plumber) sites
         overwrite: bool, opt
             default False
         setup_only: bool, opt
@@ -91,10 +93,9 @@ class NeonSite(TowerSite):
             name of experiment, default False
         """
         user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
         ]
-        tower_type = "NEON"
-
+        tower_type = "PLUMBER"
         super().run_case(
             base_case_root,
             run_type,
@@ -109,11 +110,6 @@ class NeonSite(TowerSite):
             experiment,
         )
 
-    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
-        # TODO: include neon-specific user namelist lines, using this as just an example currently
-        if site_lines is None:
-            site_lines = [
-                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
-                                 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO',"""
-            ]
-        super().modify_user_nl(case_root, run_type, rundir, site_lines)
+    def set_ref_case(self, case):
+        super().set_ref_case(case)
+        return True  ### Check if super returns false, if this will still return True?
