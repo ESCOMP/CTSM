@@ -2032,6 +2032,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
+      <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
@@ -2071,6 +2072,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run CONUS for transient case starting in 2013 as for CAM case (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
+      <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
