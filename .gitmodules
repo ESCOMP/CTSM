@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 15112f8a66fbfa50f66df8be2f5465177c8b6fed  # edge-area-202410: Revert "Revert "My diagnostic outputs now use group_dyna_*.""
+fxtag = 870d9289d1648531336d921e0900e96229a51da8  # edge-area-202410: Move FATES_IS_FOREST_AP calc to update_history_dyn2_ageclass().
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
