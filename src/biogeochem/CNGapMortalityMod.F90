@@ -34,7 +34,6 @@ module CNGapMortalityMod
   public :: CNGapMortality
 
   type, private :: params_type
-     real(r8):: am     ! mortality rate based on annual rate, fractional mortality (1/yr)
      real(r8):: k_mort ! coeff. of growth efficiency in mortality equation
   end type params_type
   !
@@ -69,11 +68,6 @@ contains
     real(r8)           :: tempr ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
-
-    tString='r_mort'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%am=tempr
 
     tString='k_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
@@ -140,6 +134,7 @@ contains
          
          leafcn                   => pftcon%leafcn               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
          livewdcn                 => pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
+         r_mort                   => pftcon%r_mort               , & ! Input:  [real(r8) (:)]  Mortality rate (1/year)
          laisun                   => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
          laisha                   => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
          nind                     => dgvs_inst%nind_patch                           , & ! Output:[real(r8)(:)] number of individuals (#/m2) added by F. Li and S. Levis
@@ -183,8 +178,6 @@ contains
          )
 
       dt = real( get_step_size(), r8 )
-      ! set the mortality rate based on annual rate
-      am = params_inst%am
       ! set coeff of growth efficiency in mortality equation 
       k_mort = params_inst%k_mort
 
@@ -216,12 +209,12 @@ contains
                am = min(1._r8, am + heatstress(p))
             else ! lpj didn't set this for grasses; cn does
                ! set the mortality rate based on annual rate
-               am = params_inst%am
+               am = r_mort(ivt(p))
             end if
 
          end if
 
-         m  = am/(get_average_days_per_year() * secspday)
+         m  = r_mort(ivt(p))/(get_average_days_per_year() * secspday)
 
          !------------------------------------------------------
          ! patch-level gap mortality carbon fluxes
