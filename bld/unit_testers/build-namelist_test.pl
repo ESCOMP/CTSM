@@ -514,6 +514,11 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
    foreach my $options (
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.POLARCAP.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.ARCTIC.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.ARCTICGRIS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4CONUS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                      ) {
       &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
       eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
@@ -1352,8 +1357,8 @@ my %warntest = (
                                      namelst=>"fsurdat='build-namelist_test.pl'",
                                      phys=>"clm6_0",
                                    },
-     "hillslope with init_interp"=>{ options=>"-bgc bgc -envxml_dir .",
-                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.",
+     "hillslope with init_interp"=>{ options=>"--res 10x15 --bgc bgc --envxml_dir .",
+                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.,hillslope_file='/dev/null'",
                                      phys=>"clm6_0",
                                    },
                );
