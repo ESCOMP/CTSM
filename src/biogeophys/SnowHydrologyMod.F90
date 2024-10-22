@@ -87,7 +87,7 @@ module SnowHydrologyMod
       real(r8) :: scvng_fct_mlt_dst4    ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
       real(r8) :: ceta                  ! Overburden compaction constant (kg/m3)
       real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-      real(r8) :: upplim_destruct_metamorph ! Upper limit on destructive metamorphism compaction
+      real(r8) :: upplim_destruct_metamorph ! Upper limit on destructive metamorphism compaction (kg/m3)
   end type params_type
   type(params_type), private ::  params_inst
 

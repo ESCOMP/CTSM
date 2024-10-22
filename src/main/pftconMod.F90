@@ -165,7 +165,7 @@ module pftconMod
      real(r8), allocatable :: crit_onset_gdd_sf(:)! scale factor for crit_onset_gdd
      real(r8), allocatable :: ndays_on(:)         ! number of days to complete leaf onset
      real(r8), allocatable :: jmaxb0(:)           ! Baseline proportion of nitrogen allocated for electron transport (J)
-     real(r8), allocatable :: jmaxb1(:)           ! Coefficient determining the response of electron transport rate to light availability
+     real(r8), allocatable :: jmaxb1(:)           ! Coefficient determining the response of electron transport rate to light availability (-)
      real(r8), allocatable :: wc2wjb0(:)          ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
      real(r8), allocatable :: r_mort(:)           ! Mortality rate (1/year)
 

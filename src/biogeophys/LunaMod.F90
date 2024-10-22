@@ -777,7 +777,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
   real(r8), intent (in) :: jmaxb0                     !Baseline proportion of nitrogen allocated for electron transport (J)
-  real(r8), intent (in) :: jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
+  real(r8), intent (in) :: jmaxb1                     !coefficient determining the response of electron transport rate to light availability (-) 
   real(r8), intent (in) :: wc2wjb0                    !The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
