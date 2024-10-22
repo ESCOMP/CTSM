@@ -123,7 +123,6 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
-  <!-- Remove when CESM no longer needs it-->
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -960,7 +959,6 @@
       <option name="comment"  >Test Hist compset with Sp for CLM6.0</option>
     </options>
   </test>
-  <!-- Remove this when CAM removes the use of CLM60 in their testing and compsets -->
   <test name="ERP_D_Ld5" grid="ne30pg3_t232" compset="IHistClm60Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>

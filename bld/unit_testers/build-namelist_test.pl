@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3196;
+my $ntests = 3229;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2437;
@@ -605,6 +605,10 @@ my %failtest = (
                                      namelst=>"use_crop=.true.",
                                      phys=>"clm4_5",
                                    },
+     "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"use_prigent_roughness=.false.,dust_emis_method='Leung_2023'",
+                                     phys=>"clm6_0",
+                                   },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
                                      phys=>"clm5_0",
@@ -966,6 +970,16 @@ my %failtest = (
                                      namelst=>"use_soil_matrixcn=F,use_matrixcn=T,spinup_matrixcn=T",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
                                      phys=>"clm5_0",
+                                   },
+     "sasuspinupWOsoilmatx"      =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
+                                     namelst=>"use_soil_matrixcn=.false.,use_matrixcn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm6_0",
+                                   },
+     "sasuspinupWOCN"            =>{ options=>"-envxml_dir . -bgc sp  -clm_accelerated_spinup sasu",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"TRUE",
+                                     phys=>"clm6_0",
                                    },
      "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
                                      namelst=>"use_matrixcn=.false.,spinup_matrixcn=F,nyr_forcing=20",
