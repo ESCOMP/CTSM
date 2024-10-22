@@ -12,7 +12,7 @@ module LunaMod
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varpar            , only : nlevcan, mxpft
+  use clm_varpar            , only : nlevcan
   use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
@@ -101,10 +101,6 @@ module LunaMod
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'readParams_Luna'
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
     !--------------------------------------------------------------------
 
     ! CO2 compensation point at 25°C at present day O2 levels
@@ -170,7 +166,7 @@ module LunaMod
   
     ! !USES:
     use clm_time_manager      , only : get_step_size_real
-    use clm_varpar            , only : nlevsoi, mxpft
+    use clm_varpar            , only : nlevsoi
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
     use quadraticMod          , only : quadratic
