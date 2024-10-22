@@ -92,7 +92,7 @@ module LunaMod
   subroutine readParams( ncid )
     !
     ! !USES:
-    use ncdio_pio, only: file_desc_t,ncd_io
+    use ncdio_pio, only: file_desc_t
     use paramUtilMod, only: readNcdioScalar
     !
     ! !ARGUMENTS:
