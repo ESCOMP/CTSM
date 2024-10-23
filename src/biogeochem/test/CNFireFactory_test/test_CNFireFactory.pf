@@ -1,0 +1,78 @@
+module test_CNFireFactory
+
+    ! Tests of CNFireFactory
+  
+    use funit
+    use unittestSubgridMod, only : bounds
+    use FireMethodType   , only : fire_method_type
+    use CNFireFactoryMod
+    use shr_kind_mod , only : r8 => shr_kind_r8
+  
+    implicit none
+  
+    character(len=5) :: NLFilename = 'firefactorytest_nml'
+
+  @TestCase
+    type, extends(TestCase) :: TestCNFireFactory
+       class(fire_method_type), allocatable :: cnfire_method
+     contains
+       procedure :: setUp
+       procedure :: tearDown
+       procedure :: Init
+    end type TestCNFireFactory
+  
+  contains
+  
+    !-----------------------------------------------------------------------
+  
+    subroutine setUp(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      integer :: unitn
+
+      ! Create an exmpty namelist file for lifire namelist reading
+      open( newunit=unitn, file=trim(NLFilename), status='new' )
+      write(unitn,*) '&lifire_inparm'
+      write(unitn,*) '/'
+      close(unitn)
+
+    end subroutine setUp
+    !-----------------------------------------------------------------------
+  
+    subroutine tearDown(this)
+      use shr_sys_mod, only : shr_sys_system
+      class(TestCNFireFactory), intent(inout) :: this
+
+      integer :: rc
+
+      ! A clean method should be added to the fire method class structures
+      deallocate( this%cnfire_method )
+      ! Remove the namelist file
+      call shr_sys_system( "/bin/rm -f "//trim(NLFilename), rc )
+      @assertEqual( rc, 0, "error in removal of temporary lifire namelist file")
+
+    end subroutine tearDown
+  
+    !-----------------------------------------------------------------------
+  
+    subroutine Init(this, fire_method)
+      class(TestCNFireFactory), intent(inout) :: this
+      character(len=*), intent(in) :: fire_method
+
+      call create_cnfire_method(NLFilename, this%cnfire_method)
+
+    end subroutine Init
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine nofire_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%Init( fire_method = "none")
+
+    end subroutine nofire_works
+
+    !-----------------------------------------------------------------------
+
+end module test_CNFireFactory
