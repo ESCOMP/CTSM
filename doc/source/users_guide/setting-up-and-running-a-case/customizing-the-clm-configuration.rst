@@ -140,10 +140,17 @@ CLM_BLDNML_OPTS
                               Can also be set by using the CSMDATA environment variable.
      -d "directory"           Directory where output namelist file will be written
                               Default: current working directory.
-     -drydep                  Produce a drydep_inparm namelist that will go into the
+     -drydep                  Produce a drydep_inparm namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass dry-deposition to the atm.
+                              This populates the namelist with valid drydep settings for testing.
                               Default: -no-drydep
-                              (Note: buildnml.csh copies the file for use by the driver)
+                              Note: Can always add drydep fields to user_nl_clm even with --no-drydep
+                              (Note: buildnml copies the file for use by the driver)
+     -fire_emis               Produce a fire_emis_nl namelist for testing that will go into the
+                              "drv_flds_in" file for the driver to pass fire emissions to the atm.
+                              This populates the namelist with valid fire-emiss settings for testing.
+                              Note: Can always add fire_emis fields to user_nl_clm even with --no-fire_emis
+                              (Note: buildnml copies the file for use by the driver)
      -glc_grid "grid"         Glacier model grid and resolution when glacier model,
                               Only used if glc_nec > 0 for determining fglcmask
                               Default:  gland5UM
@@ -185,10 +192,12 @@ CLM_BLDNML_OPTS
      -namelist "namelist"     Specify namelist settings directly on the commandline by supplying
                               a string containing FORTRAN namelist syntax, e.g.,
                                  -namelist "&clm_inparm dt=1800 /"
-     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist that will go into the
+     -no-megan                DO NOT PRODUCE a megan_emis_nl namelist for testing that will go into the
                               "drv_flds_in" file for the driver to pass VOCs to the atm.
                               MEGAN (Model of Emissions of Gases and Aerosols from Nature)
-                              (Note: buildnml.csh copies the file for use by the driver)
+                              This removes setting default values for testing MEGAN fields
+                              Note: Can always add megan fields to user_nl_clm even with --no-megan
+                              (Note: buildnml copies the file for use by the driver)
      -[no-]note               Add note to output namelist  [do NOT add note] about the
                               arguments to build-namelist.
      -rcp "value"             Representative concentration pathway (rcp) to use for
@@ -258,6 +267,8 @@ The **$CTSMROOT/cime_config/buildnml** script already sets the resolution and ma
 
 #. -drydep
 
+#. -fire_emis
+
 #. -ignore_ic_date
 
 #. -ignore_ic_year
@@ -291,7 +302,7 @@ To see a list of valid variables that you could set do this:
 
 .. note:: Using a 20th-Century transient compset or the ``20thC_transient`` use-case using ``CLM_NML_USE_CASE`` would set this as well, but would also use dynamic nitrogen and aerosol deposition files, so using ``-clm_demand`` would be a way to get *just* dynamic vegetation types and NOT the other files as well.
 
-"-drydep" adds the dry-deposition namelist to the driver. This is a driver namelist, but adding the option here has CLM **build-namelist** create the ``drv_flds_in`` file that the driver will copy over and use. Invoking this option does have an impact on performance even for I compsets and will slow the model down. It's also only useful when running with an active atmosphere model that makes use of this information.
+"-drydep" adds a dry-deposition namelist for testing to the driver. This is a driver namelist, but adding the option here has CLM **build-namelist** create the ``drv_flds_in`` file that the driver will copy over and use. Invoking this option does have an impact on performance even for I compsets and will slow the model down. It's also only useful when running with an active atmosphere model that makes use of this information.
 
 "-ignore_ic_date" ignores the Initial Conditions (IC) date completely for finding initial condition files to startup from. Without this option or the "-ignore_ic_year" option below, the date of the file comes into play.
 
@@ -299,7 +310,7 @@ To see a list of valid variables that you could set do this:
 
 When "-irrig on" is used **build-namelist** will try to find surface datasets that have the irrigation model enabled (when running with Sattellitte Phenology). When running with the prognostic crop model on, "-irrig on" will turn irrigate crops on, while "-irrig off" will manage all crop areas as rain-fed without irrigation.
 
-"no-megan" means do NOT add the MEGAN model Biogenic Volatile Organic Compounds (BVOC) namelist to the driver. This namelist is created by default, so normally this WILL be done. This is a driver namelist, so unless "no-megan" is specified the CLM **build-namelist** will create the ``drv_flds_in`` file that the driver will copy over and use (if you are running with CAM and CAM produces this file as well, it's file will have precedence).
+"no-megan" means do NOT add a MEGAN model Biogenic Volatile Organic Compounds (BVOC) testing namelist to the driver. This namelist is created by default, so normally this WILL be done. This is a driver namelist, so unless "no-megan" is specified the CLM **build-namelist** will create the ``drv_flds_in`` file that the driver will copy over and use (if you are running with CAM and CAM produces this file as well, it's file will have precedence).
 
 "-note" adds a note to the bottom of the namelist file, that gives the details of how **build-namelist** was called, giving the specific command-line options given to it.
 
@@ -363,18 +374,20 @@ Example: user_nl_clm namelist file
    ! Users should add all user specific namelist changes below in the form of
    ! namelist_var = new_namelist_value
    !
-   ! Include namelist variables for drv_flds_in ONLY if -megan and/or -drydep options
-   ! are set in the CLM_NAMELIST_OPTS env variable.
-   !
    ! EXCEPTIONS:
+   ! Set use_cndv           by the compset you use and the CLM_BLDNML_OPTS -dynamic_vegetation setting
+   ! Set use_vichydro       by the compset you use and the CLM_BLDNML_OPTS -vichydro           setting
+   ! Set use_cn             by the compset you use and CLM_BLDNML_OPTS -bgc  setting
+   ! Set use_crop           by the compset you use and CLM_BLDNML_OPTS -crop setting
+   ! Set spinup_state       by the CLM_BLDNML_OPTS -bgc_spinup      setting
    ! Set co2_ppmv           with CCSM_CO2_PPMV                      option
-   ! Set dtime              with L_NCPL                             option
    ! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options
    ! Set finidat            with RUN_REFCASE/RUN_REFDATE/RUN_REFTOD options for hybrid or branch cases
    !                        (includes $inst_string for multi-ensemble cases)
-   ! Set glc_grid           with GLC_GRID                           option
-   ! Set glc_smb            with GLC_SMB                            option
-   ! Set maxpatch_glc    with GLC_NEC                            option
+   !                        or with CLM_FORCE_COLDSTART to do a cold start
+   !                        or set it with an explicit filename here.
+   ! Set maxpatch_glc       with GLC_NEC                            option
+   ! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
    !----------------------------------------------------------------------------------
    hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
                     'FSR','FSA','FGEV','FSH','FGR','TSOI',
@@ -638,7 +651,7 @@ The output to the above command is as follows:
      -vichydro <name>       Turn VIC hydrologic parameterizations : [on | off] (default is off)
      -crop <name>           Toggle for prognostic crop model. [on | off] (default is off)
                             (can ONLY be turned on when BGC type is CN or CNDV)
-     -comp_intf <name>      Component interface to use (ESMF or MCT) (default MCT)
+     -comp_intf <name>      Component interface to use (default ESMF, currently no other option)
      -defaults <file>       Specify full path to a configuration file which will be used
                             to supply defaults instead of the defaults in bld/config_files.
                             This file is used to specify model configuration parameters only.

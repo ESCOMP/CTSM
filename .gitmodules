@@ -1,0 +1,130 @@
+# This is a git submodule file with additional support for
+# git-fleximod (https://github.com/ESMCI/git-fleximod)
+#
+# The additional flags supported by git-fleximod are
+# fxtag - the tag associated with the submodule, this tag can be tested for
+#         consistancy with the submodule hash using git-fleximod status
+#         the hash can be updated to the tag using git-fleximod update
+#
+# fxrequired - indicates if a given submodule should be checked out on install
+#              submoudules can be toplevel or internal and required or optional
+#              toplevel means that the submodule should only be checked out if the
+#              module is the toplevel of the git repo (is not a submodule itself)
+#              internal means that the submodule is needed by the component whether
+#              the component is toplevel or the submodule of another repo
+#              required means that the submodule should always be checked out
+#              optional means that the submodule should only be checked out if the
+#              optional flag is provided to git-fleximod or the submodule name is
+#              explicitly listed on the git-fleximod command line.
+#
+# fxsparse -   this is a path to a git sparse checkout file indicating that the
+#              submodule should be checked out in sparse mode
+#
+# fxDONOTUSEurl    -   this field is used by git-fleximod test to insure that the url is pointing
+#              to the official url of the repo and not to an unofficial fork.
+#              It is intended for use of github workflows to test commits to protected
+#              repository branches.
+#
+[submodule "fates"]
+path = src/fates
+url = https://github.com/NGEET/fates
+fxtag = sci.1.78.2_api.36.0.0
+fxrequired = AlwaysRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/NCAR/fates-release
+
+[submodule "cism"]
+path = components/cism
+url = https://github.com/ESCOMP/CISM-wrapper
+fxtag = cismwrap_2_2_002
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
+
+[submodule "rtm"]
+path = components/rtm
+url = https://github.com/ESCOMP/RTM
+fxtag = rtm1_0_80
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/RTM
+
+[submodule "mosart"]
+path = components/mosart
+url = https://github.com/ESCOMP/MOSART
+fxtag = mosart1.1.02
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
+
+[submodule "mizuRoute"]
+path = components/mizuRoute
+url = https://github.com/ESCOMP/mizuRoute
+fxtag = cesm-coupling.n02_v2.1.2
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
+        
+[submodule "ccs_config"]
+path = ccs_config
+url = https://github.com/NorESMhub/ccs_config_noresm.git
+fxtag = ccs_config_noresm0.0.33
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/NorESMhub/ccs_config_noresm
+
+[submodule "cime"]
+path = cime
+url = https://github.com/ESMCI/cime
+fxtag = cime6.0.246
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESMCI/cime
+
+[submodule "cmeps"]
+path = components/cmeps
+url = https://github.com/ESCOMP/CMEPS.git
+fxtag = cmeps0.14.77
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
+
+[submodule "cdeps"]
+path = components/cdeps
+url = https://github.com/ESCOMP/CDEPS.git
+fxtag = cdeps1.0.48
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
+
+[submodule "share"]
+path = share
+url = https://github.com/ESCOMP/CESM_share
+fxtag = share1.0.19
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
+
+[submodule "mct"]
+path = libraries/mct
+url = https://github.com/MCSclimate/MCT
+fxtag = MCT_2.11.0
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/MCSclimate/MCT
+
+[submodule "parallelio"]
+path = libraries/parallelio
+url = https://github.com/NCAR/ParallelIO
+fxtag = pio2_6_2
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
+
+[submodule "doc-builder"]
+path = doc/doc-builder
+url = https://github.com/ESMCI/doc-builder
+fxtag = v1.0.8
+fxrequired = ToplevelOptional
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESMCI/doc-builder

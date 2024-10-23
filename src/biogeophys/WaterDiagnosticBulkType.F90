@@ -16,7 +16,7 @@ module WaterDiagnosticBulkType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_cn, iulog, use_luna
+  use clm_varctl     , only : use_cn, iulog, use_luna, use_hillslope
   use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan, nlevsoi
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -83,6 +83,9 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: qflx_prec_intr_patch   (:)   ! patch interception of precipitation (mm H2O/s)
      real(r8), pointer :: qflx_prec_grnd_col     (:)   ! col water onto ground including canopy runoff (mm H2O/s)
 
+     ! Hillslope stream variables
+     real(r8), pointer :: stream_water_depth_lun (:)   ! landunit depth of water in the streams (m)
+
    contains
 
      ! Public interfaces
@@ -108,11 +111,9 @@ module WaterDiagnosticBulkType
 
   type, private :: params_type
       real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
+      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
   end type params_type
   type(params_type), private ::  params_inst
-
-  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
-  real(r8), public, parameter :: snw_rds_min = 54.526_r8    
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -136,6 +137,8 @@ contains
 
     ! Momentum roughness length for soil, glacier, wetland (m)
     call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
+    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
 
   end subroutine readParams
 
@@ -231,6 +234,7 @@ contains
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
     allocate(this%qflx_prec_intr_patch   (begp:endp))                     ; this%qflx_prec_intr_patch   (:)   = nan
     allocate(this%qflx_prec_grnd_col     (begc:endc))                     ; this%qflx_prec_grnd_col     (:)   = nan
+    allocate(this%stream_water_depth_lun (begl:endl))                     ; this%stream_water_depth_lun (:)   = nan
 
   end subroutine InitBulkAllocate
 
@@ -252,12 +256,14 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     this%h2osno_total_col(begc:endc) = spval
@@ -340,7 +346,7 @@ contains
          fname=this%info%fname('RH2M_R'), &
          units='%',  &
          avgflag='A', &
-         long_name=this%info%lname('Rural 2m specific humidity'), &
+         long_name=this%info%lname('Rural 2m relative humidity'), &
          ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
 
     this%rh_ref2m_u_patch(begp:endp) = spval
@@ -580,6 +586,14 @@ contains
          long_name=this%info%lname('interception'), &
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
+    if (use_hillslope) then
+       this%stream_water_depth_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_DEPTH'), &
+            units='m',  avgflag='A', &
+            long_name=this%info%lname('depth of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_depth_lun, l2g_scale_type='natveg',  default='inactive')
+    endif
+    
   end subroutine InitBulkHistory
   
   !-----------------------------------------------------------------------
@@ -750,11 +764,11 @@ contains
 
       do c = bounds%begc,bounds%endc
          if (snl(c) < 0) then
-            this%snw_rds_col(c,snl(c)+1:0)        = snw_rds_min
+            this%snw_rds_col(c,snl(c)+1:0)        = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:snl(c)) = 0._r8
-            this%snw_rds_top_col(c)               = snw_rds_min
+            this%snw_rds_top_col(c)               = params_inst%snw_rds_min
          elseif (h2osno_input_col(c) > 0._r8) then
-            this%snw_rds_col(c,0)                 = snw_rds_min
+            this%snw_rds_col(c,0)                 = params_inst%snw_rds_min
             this%snw_rds_col(c,-nlevsno+1:-1)     = 0._r8
             this%snw_rds_top_col(c)               = spval
             this%sno_liq_top_col(c)               = spval
@@ -1236,7 +1250,7 @@ contains
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
-    this%snw_rds_col(column,0)  = snw_rds_min
+    this%snw_rds_col(column,0)  = params_inst%snw_rds_min
 
   end subroutine ResetBulk
 

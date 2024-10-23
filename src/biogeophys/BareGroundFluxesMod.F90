@@ -190,8 +190,12 @@ contains
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_t                 => atm2lnd_inst%forc_t_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin) 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
-         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
-         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)
+         forc_hgt_t             => atm2lnd_inst%forc_hgt_t_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of temperature [m]
+         forc_hgt_u             => atm2lnd_inst%forc_hgt_u_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of wind [m]
+         forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity [m]
+
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)
 
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
@@ -360,12 +364,10 @@ contains
 
             z0qg_patch(p) = z0hg_patch(p)
             ! Update the forcing heights for new roughness lengths
-            ! TODO(KWO, 2022-03-15) Only for Meier2022 for now to maintain bfb with ZengWang2007
-            if (z0param_method == 'Meier2022') then
-               forc_hgt_u_patch(p) = forc_hgt_u_patch(g) + z0mg_patch(p) + displa(p)
-               forc_hgt_t_patch(p) = forc_hgt_t_patch(g) + z0hg_patch(p) + displa(p)
-               forc_hgt_q_patch(p) = forc_hgt_q_patch(g) + z0qg_patch(p) + displa(p)
-            end if
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg_patch(p) + displa(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg_patch(p) + displa(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg_patch(p) + displa(p)
+
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
             zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 

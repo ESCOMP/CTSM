@@ -1,0 +1,2 @@
+fates_paramfile = '$CASEROOT/fates_params_twostream.nc'
+use_fates_fixed_biogeog=.true.

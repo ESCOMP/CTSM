@@ -147,7 +147,7 @@ module CNVegetationFacade
      ! - ch4_inst
      !   - probably not: really seems to belong in soilbiogeochem
      ! - crop_inst
-     ! - dust_inst
+     ! - dust_emis_inst
      ! - vocemis_inst
      ! - fireemis_inst
      ! - drydepvel_inst
@@ -469,6 +469,8 @@ contains
     use clm_varcon,      only : c3_r2, c14ratio
     use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
     use CNSharedParamsMod, only : use_matrixcn
+    use CNVegMatrixMod,  only : CNVegMatrixRest
+    use CNSoilMatrixMod, only : CNSoilMatrixRest
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -545,6 +547,14 @@ contains
                template_multiplier = c14ratio)
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
+
+       if ( use_matrixcn )then
+          call CNVegMatrixRest( ncid, flag )
+       end if
+    end if
+
+    if ( use_soil_matrixcn )then
+       call CNSoilMatrixRest( ncid, flag )
     end if
        
     if (use_cndv) then
