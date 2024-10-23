@@ -1,2 +1,2 @@
 use_soil_matrixcn = .true.
-paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm60_params_cn30.c240822.nc'
+paramfile = '/glade/campaign/cgd/tss/people/oleson/modify_param/ctsm60_params_cn30.c241017.nc'
