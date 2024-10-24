@@ -147,7 +147,7 @@ contains
     ! Input datasets
 
     namelist /clm_inparm/  &
-         fsurdat, &
+         fsurdat, hillslope_file, &
          paramfile, fsnowoptics, fsnowaging
 
     ! History, restart options
@@ -734,6 +734,7 @@ contains
     call mpi_bcast (finidat_interp_source, len(finidat_interp_source), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat_interp_dest, len(finidat_interp_dest), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hillslope_file, len(hillslope_file), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
@@ -1018,6 +1019,11 @@ contains
        write(iulog,*) '   fsurdat, surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
+    end if
+    if (hillslope_file == ' ') then
+       write(iulog,*) '   hillslope_file, hillslope dataset not set'
+    else
+       write(iulog,*) '   hillslope data   = ',trim(hillslope_file)
     end if
     if (fatmlndfrc == ' ') then
        write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'

@@ -1362,8 +1362,8 @@ my %warntest = (
                                      namelst=>"fsurdat='build-namelist_test.pl'",
                                      phys=>"clm6_0",
                                    },
-     "hillslope with init_interp"=>{ options=>"-bgc bgc -envxml_dir .",
-                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.",
+     "hillslope with init_interp"=>{ options=>"--res 10x15 --bgc bgc --envxml_dir .",
+                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.,hillslope_file='/dev/null'",
                                      phys=>"clm6_0",
                                    },
                );
