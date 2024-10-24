@@ -78,7 +78,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();
@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3997;
+my $ntests = 3229;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2437;
@@ -606,8 +606,8 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
-                                     namelst=>"use_prigent_roughness=.true.",
-                                     phys=>"clm5_1",
+                                     namelst=>"use_prigent_roughness=.false.,dust_emis_method='Leung_2023'",
+                                     phys=>"clm6_0",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
@@ -974,12 +974,12 @@ my %failtest = (
      "sasuspinupWOsoilmatx"      =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
                                      namelst=>"use_soil_matrixcn=.false.,use_matrixcn=.false.",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "sasuspinupWOCN"            =>{ options=>"-envxml_dir . -bgc sp  -clm_accelerated_spinup sasu",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
                                      namelst=>"use_matrixcn=.false.,spinup_matrixcn=F,nyr_forcing=20",
@@ -1410,7 +1410,7 @@ foreach my $key ( keys(%warntest) ) {
 #
 # Loop over all physics versions
 #
-foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
 $mode = "-phys $phys";
 &make_config_cache($phys);
 
@@ -1501,7 +1501,7 @@ if ( $#usecases != 15 ) {
 }
 my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4_transient", "2018-PD_transient", "1850-2100_SSP1-1.9_transient",
                       "1850-2100_SSP4-6.0_transient", "2018_control" );
-foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    print "physics = $phys\n";
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
@@ -1798,10 +1798,10 @@ foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
 #
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0/clm5_1/clm6_0 resolutions \n";
+print "Test clm4.5/clm5.0/clm6_0 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1901,7 +1901,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', "clm6_0" ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v7";
 my $simyr = "1850";
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
@@ -1909,9 +1909,6 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
-        if ( $lndtuningmode eq "clm5_1_CRUv7" ) {
-           next;
-        }
         if ( $lndtuningmode eq "clm6_0_CRUv7" ) {
            next;
         }
