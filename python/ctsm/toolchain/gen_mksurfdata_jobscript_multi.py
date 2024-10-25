@@ -24,6 +24,7 @@ valid_scenarios = [
     "global-present-low-res",
     "global-present-ultra-hi-res",
     "global-hist-1850-f19",
+    "global-hist-1850-f45",
     "crop-tropics-present",
     "crop",
     "crop-global-present",
@@ -246,6 +247,10 @@ def main():
         "global-hist-1850-f19": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
             "f19",
+        ),
+        "global-hist-1850-f45": (
+            "--start-year 1850 --end-year 2023 --nocrop --res",
+            "f45",
         ),
         "crop-tropics-present": (
             "--start-year 2000 --end-year 2000                                 --res",
