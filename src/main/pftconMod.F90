@@ -164,10 +164,6 @@ module pftconMod
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
      real(r8), allocatable :: crit_onset_gdd_sf(:)! scale factor for crit_onset_gdd
      real(r8), allocatable :: ndays_on(:)         ! number of days to complete leaf onset
-     real(r8), allocatable :: jmaxb0(:)           ! Baseline proportion of nitrogen allocated for electron transport (J)
-     real(r8), allocatable :: jmaxb1(:)           ! Coefficient determining the response of electron transport rate to light availability (-)
-     real(r8), allocatable :: wc2wjb0(:)          ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
-     real(r8), allocatable :: r_mort(:)           ! Mortality rate (1/year)
 
      !  crop
 
@@ -510,10 +506,6 @@ contains
     allocate( this%wood_density  (0:mxpft) )
     allocate( this%crit_onset_gdd_sf (0:mxpft) )
     allocate( this%ndays_on      (0:mxpft) )
-    allocate( this%jmaxb0        (0:mxpft) )
-    allocate( this%jmaxb1        (0:mxpft) )
-    allocate( this%wc2wjb0       (0:mxpft) )
-    allocate( this%r_mort        (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -1023,18 +1015,6 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('medlynintercept', this%medlynintercept, 'read', ncid, readvar=readv)  
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-
-    call ncd_io('jmaxb0', this%jmaxb0, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-
-    call ncd_io('jmaxb1', this%jmaxb1, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-
-    call ncd_io('wc2wjb0', this%wc2wjb0, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-
-    call ncd_io('r_mort', this%r_mort, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('mxmat', this%mxmat, 'read', ncid, readvar=readv)  
@@ -1616,10 +1596,6 @@ contains
     deallocate( this%taper)
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
-    deallocate( this%jmaxb0)
-    deallocate( this%jmaxb1)
-    deallocate( this%wc2wjb0)
-    deallocate( this%r_mort)
   end subroutine Clean
 
 end module pftconMod

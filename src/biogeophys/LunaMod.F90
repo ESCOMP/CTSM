@@ -9,10 +9,11 @@ module LunaMod
   ! !USES:
   use shr_kind_mod          , only : r8  => shr_kind_r8
   use shr_log_mod           , only : errMsg  => shr_log_errMsg
+  use shr_infnan_mod        , only : nan => shr_infnan_nan, assignment(=)
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varpar            , only : nlevcan
+  use clm_varpar            , only : nlevcan, mxpft
   use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
@@ -49,6 +50,11 @@ module LunaMod
       real(r8) :: enzyme_turnover_daily ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
       real(r8) :: relhExp       ! Specifies the impact of relative humidity on electron transport rate (unitless)
       real(r8) :: minrelh       ! Minimum relative humidity for nitrogen optimization (fraction)
+      real(r8), allocatable :: jmaxb0(:)  ! Baseline proportion of nitrogen allocated for electron transport (J)
+      real(r8), allocatable :: jmaxb1(:)  ! Coefficient determining the response of electron transport rate to light availability (-)
+      real(r8), allocatable :: wc2wjb0(:) ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
+  contains    
+      procedure, private :: allocParams    ! Allocate the parameters
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -88,11 +94,31 @@ module LunaMod
   
   contains
 
+  !-----------------------------------------------------------------------
+  subroutine allocParams ( this )
+    !
+    implicit none
+
+    ! !ARGUMENTS:
+    class(params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'allocParams'
+    !-----------------------------------------------------------------------
+
+    ! allocate parameters
+
+    allocate( this%jmaxb0    (0:mxpft) )          ; this%jmaxb0(:)   = nan
+    allocate( this%jmaxb1    (0:mxpft) )          ; this%jmaxb1(:)   = nan
+    allocate( this%wc2wjb0   (0:mxpft) )          ; this%wc2wjb0(:)  = nan
+
+  end subroutine allocParams
+
 !----------------------------------------------------------------------------
   subroutine readParams( ncid )
     !
     ! !USES:
-    use ncdio_pio, only: file_desc_t
+    use ncdio_pio, only: file_desc_t,ncd_io
     use paramUtilMod, only: readNcdioScalar
     !
     ! !ARGUMENTS:
@@ -101,6 +127,10 @@ module LunaMod
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'readParams_Luna'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
     !--------------------------------------------------------------------
 
     ! CO2 compensation point at 25°C at present day O2 levels
@@ -120,6 +150,21 @@ module LunaMod
     call readNcdioScalar(ncid, 'relhExp', subname, params_inst%relhExp)
     ! Minimum relative humidity for nitrogen optimization (fraction)
     call readNcdioScalar(ncid, 'minrelh', subname, params_inst%minrelh)
+
+    call params_inst%allocParams()
+
+    tString = "jmaxb0"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%jmaxb0=temp1d
+    tString = "jmaxb1"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%jmaxb1=temp1d
+    tString = "wc2wjb0"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%wc2wjb0=temp1d
 
    end subroutine readParams
 
@@ -247,9 +292,6 @@ module LunaMod
     c3psn         => pftcon%c3psn                                     , & ! photosynthetic pathway: 0.  =  c4, 1.  =  c3
     slatop        => pftcon%slatop                                    , & ! specific leaf area at top of canopy, projected area basis [m^2/gC]
     leafcn        => pftcon%leafcn                                    , & ! leaf C:N (gC/gN)        
-    jmaxb0        => pftcon%jmaxb0                                    , & ! Baseline proportion of nitrogen allocated for electron transport (J)
-    jmaxb1        => pftcon%jmaxb1                                    , & ! Coefficient determining the response of electron transport rate to light availability (-)
-    wc2wjb0       => pftcon%wc2wjb0                                   , & ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
     forc_pbot10   => atm2lnd_inst%forc_pbot240_downscaled_patch       , & ! Input:  [real(r8) (:)   ] 10 day mean atmospheric pressure(Pa)  
     CO2_p240      => atm2lnd_inst%forc_pco2_240_patch                 , & ! Input:  [real(r8) (:)   ] 10-day mean CO2 partial pressure (Pa)
     O2_p240       => atm2lnd_inst%forc_po2_240_patch                  , & ! Input:  [real(r8) (:)   ] 10-day mean O2 partial pressure (Pa)    
@@ -375,7 +417,8 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              jmaxb0(ft), jmaxb1(ft), wc2wjb0(ft), PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              params_inst%jmaxb0(ft), params_inst%jmaxb1(ft), params_inst%wc2wjb0(ft), PNlcold, PNetold, &
+                              PNrespold, PNcbold, dayl_factor(p), &
                               o3coefjmax(p), PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -1362,7 +1405,6 @@ subroutine  Quadratic(a,b,c,r1,r2)
   end if
         
 end subroutine Quadratic
-	
 
 end module LunaMod
 
