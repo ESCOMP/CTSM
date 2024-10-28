@@ -1038,6 +1038,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4.POLARCAP.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
 </init_interp_attributes>
 
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
+                        hgrid="ne0np4.POLARCAP.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.POLARCAP.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
 <!-- 2003 -->
 <init_interp_attributes sim_year="2003" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam7.0"
                         hgrid="1.9x2.5" use_cn=".false." maxpft="17"
@@ -1204,6 +1209,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
+                        hgrid="ne0np4.POLARCAP.ne30x4" use_cn=".false." maxpft="17"
+>hgrid=ne0np4.POLARCAP.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
+</init_interp_attributes>
+
 <init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam6.0"
                         hgrid="ne0np4.POLARCAP.ne30x4" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.POLARCAP.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false.
