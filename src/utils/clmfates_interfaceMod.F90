@@ -2577,8 +2577,8 @@ module CLMFatesInterfaceMod
           rssun     => photosyns_inst%rssun_patch  , &
           rssha     => photosyns_inst%rssha_patch,   &
           psnsun    => photosyns_inst%psnsun_patch,  &
-          psnsha    => photosyns_inst%psnsha_patch)
-
+          psnsha    => photosyns_inst%psnsha_patch,  &
+          ci        => canopystate_inst%ci_patch)
       do s = 1, this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2645,7 +2645,7 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 3
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
             rssha(p) = this%fates(nc)%bc_out(s)%rssha_pa(ifp)
-
+            ci(p) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval
