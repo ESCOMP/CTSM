@@ -4154,10 +4154,6 @@ sub setup_logic_megan {
   if ( defined($nl->get_value('megan_specifier')) ||
          defined($nl->get_value('megan_factors_file')) ) {
     check_megan_spec( $opts, $nl, $definition );
-    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                    "   Use the '-no-megan' option when '-bgc fates' is activated");
-    }
   }
 }
 
