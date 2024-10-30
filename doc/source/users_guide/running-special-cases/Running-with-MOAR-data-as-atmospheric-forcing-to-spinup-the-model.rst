@@ -18,7 +18,7 @@ Example: Simulation with MOAR Data on derecho
    > ./create_newcase -case MOARforce1850 -res f19_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd MOARforce1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
-   > ./xmlchange DATM_CPL_CASE=b40.1850.track1.1deg.006a
+   > ./xmlchange DATM_CPLHIST_CASE=b40.1850.track1.1deg.006a
    # The following sets the align year and years to run over for atm forcing
    #  (you could also use an editor)
    > ./xmlchange DATM_YR_ALIGN=1,DATM_YR_START=960,DATM_YR_END=1030
