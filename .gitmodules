@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm1.0.8
+fxtag = ccs_config_cesm1.0.7
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -100,18 +100,10 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 [submodule "share"]
 path = share
 url = https://github.com/ESCOMP/CESM_share
-fxtag = share1.0.20
+fxtag = share1.1.2
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
-
-[submodule "mct"]
-path = libraries/mct
-url = https://github.com/MCSclimate/MCT
-fxtag = MCT_2.11.0
-fxrequired = ToplevelRequired
-# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/MCSclimate/MCT
 
 [submodule "parallelio"]
 path = libraries/parallelio
