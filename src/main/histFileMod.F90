@@ -2362,6 +2362,7 @@ contains
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full, mxsowings, mxharvests
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
+    use clm_varctl      , only : hillslope_file
     use clm_varctl      , only : version, hostname, username, conventions, source
     use clm_varctl      , only : use_hillslope,nhillslope,max_columns_hillslope
     use domainMod       , only : ldomain
@@ -2465,6 +2466,8 @@ contains
     call ncd_putatt(lnfid, ncd_global, 'case_id', trim(caseid))
     str = get_filename(fsurdat)
     call ncd_putatt(lnfid, ncd_global, 'Surface_dataset', trim(str))
+    str = get_filename(hillslope_file)
+    call ncd_putatt(lnfid, ncd_global, 'Hillslope_dataset', trim(str))
     if (finidat == ' ') then
        str = 'arbitrary initialization'
     else
@@ -3568,17 +3571,6 @@ contains
               imissing_value=ispval, ifill_value=ispval)
        end if
        if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t,f), &
-              imissing_value=ispval, ifill_value=ispval)
-       else
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t,f), &
-              imissing_value=ispval, ifill_value=ispval)
-       end if
-       if (ldomain%isgrid2d) then
           call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
               dim1name='lon', dim2name='lat', &
               long_name='index of shallowest bedrock layer', ncid=nfid(t,f), &
@@ -3605,7 +3597,6 @@ contains
        call ncd_io(varname='area'    , data=ldomain%area, dim1name=grlnd, ncid=nfid(t,f), flag='write')
        call ncd_io(varname='landfrac', data=ldomain%frac, dim1name=grlnd, ncid=nfid(t,f), flag='write')
        call ncd_io(varname='landmask', data=ldomain%mask, dim1name=grlnd, ncid=nfid(t,f), flag='write')
-       call ncd_io(varname='pftmask' , data=ldomain%pftm, dim1name=grlnd, ncid=nfid(t,f), flag='write')
        call ncd_io(varname='nbedrock' , data=grc%nbedrock, dim1name=grlnd, ncid=nfid(t,f), flag='write')
 
     end if  ! (define/write mode

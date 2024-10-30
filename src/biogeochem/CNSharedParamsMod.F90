@@ -35,7 +35,7 @@ module CNSharedParamsMod
 
   ! Public data
 
-  logical, public, parameter :: use_matrixcn = .false.  ! true => use cn matrix solution
+  logical, public :: use_matrixcn = .false.  ! true => use cn matrix solution
   logical, public :: use_fun      = .false.             ! Use the FUN2.0 model
   integer, public :: nlev_soildecomp_standard = 5
   integer, public :: upper_soil_layer = -1              ! Upper soil layer to use for 10-day average in CNPhenology

@@ -8,47 +8,18 @@
 
 <sim_year_range>constant</sim_year_range>
 
-<irrigate use_crop=".true." phys="clm5_1">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5" >.false.</irrigate>
+<irrigate use_crop=".true." >.false.</irrigate>
 
-<stream_year_first_ndep phys="clm4_5" use_cn=".true." >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_5" use_cn=".true." >1850</stream_year_last_ndep>
+<stream_year_first_ndep use_cn=".true." >1850</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true." >1850</stream_year_last_ndep>
 
-<stream_year_first_ndep phys="clm5_0" use_cn=".true." >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_0" use_cn=".true." >1850</stream_year_last_ndep>
+<stream_year_first_popdens cnfireson=".true." >1850</stream_year_first_popdens>
+<stream_year_last_popdens  cnfireson=".true." >1850</stream_year_last_popdens>
 
-<stream_year_first_ndep phys="clm5_1" use_cn=".true." >1850</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_1" use_cn=".true." >1850</stream_year_last_ndep>
+<stream_year_first_urbantv >1850</stream_year_first_urbantv>
+<stream_year_last_urbantv  >1850</stream_year_last_urbantv>
 
-<stream_year_first_popdens phys="clm4_5" cnfireson=".true." >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." >1850</stream_year_last_popdens>
-
-<stream_year_first_popdens phys="clm5_0" cnfireson=".true." >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." >1850</stream_year_last_popdens>
-
-<stream_year_first_popdens phys="clm5_1" cnfireson=".true." >1850</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_1" cnfireson=".true." >1850</stream_year_last_popdens>
-
-<stream_year_first_urbantv phys="clm4_5"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5"  >1850</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0"  >1850</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm5_1"  >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_1"  >1850</stream_year_last_urbantv>
-
-<stream_fldfilename_ndep phys="clm5_1" use_cn=".true."
+<stream_fldfilename_ndep use_cn=".true."
 >lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
-
-<stream_fldfilename_ndep phys="clm5_0" use_cn=".true."
->lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
- 
-<stream_fldfilename_ndep phys="clm4_5" use_cn=".true."
->lnd/clm2/ndepdata/fndep_clm_WACCM6_CMIP6piControl001_y21-50avg_1850monthly_0.95x1.25_c180802.nc</stream_fldfilename_ndep>
- 
-<ndep_taxmode            phys="clm5_0"  use_cn=".true." >cycle</ndep_taxmode>
-<ndep_taxmode            phys="clm5_1"  use_cn=".true." >cycle</ndep_taxmode>
 
 </namelist_defaults>

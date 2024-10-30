@@ -1,3 +1,4 @@
+fates_paramfile = '$CASEROOT/fates_params_prt2_prescribed_np.nc'
 fates_parteh_mode = 2
 hist_fincl1       = 'FATES_L2FR','FATES_L2FR_CANOPY_REC_PF','FATES_L2FR_USTORY_REC_PF',
 'FATES_NH4UPTAKE_SZPF','FATES_NO3UPTAKE_SZPF','FATES_NEFFLUX_SZPF',

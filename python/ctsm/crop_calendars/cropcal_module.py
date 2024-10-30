@@ -13,6 +13,8 @@ from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 from ctsm.crop_calendars.import_ds import import_ds
 
+MISSING_RX_GDD_VAL = -1
+
 
 def check_and_trim_years(year_1, year_n, ds_in):
     """
@@ -168,8 +170,10 @@ def check_v0_le_v1(this_ds, var_list, msg_txt=" ", both_nan_ok=False, throw_erro
     if both_nan_ok:
         gdd_lt_hui = gdd_lt_hui | (np.isnan(this_ds[var0]) & np.isnan(this_ds[var1]))
     if np.all(gdd_lt_hui):
+        any_bad = False
         print(f"✅{msg_txt}{var0} always <= {var1}")
     else:
+        any_bad = True
         msg = f"❌{msg_txt}{var0} *not* always <= {var1}"
         gdd_lt_hui_vals = gdd_lt_hui.values
         patch_index = np.where(~gdd_lt_hui_vals)[0][0]
@@ -185,6 +189,7 @@ def check_v0_le_v1(this_ds, var_list, msg_txt=" ", both_nan_ok=False, throw_erro
             print(msg)
         else:
             raise RuntimeError(msg)
+    return any_bad
 
 
 def get_gs_len_da(this_da):
@@ -231,6 +236,13 @@ def import_max_gs_length(paramfile_dir, my_clm_ver, my_clm_subver):
     return mxmat_dict
 
 
+def unexpected_negative_rx_gdd(data_array):
+    """
+    Return True if there's a negative value not matching the designated missing value
+    """
+    return np.any((data_array.values < 0) & (data_array.values != MISSING_RX_GDD_VAL))
+
+
 def import_rx_dates(var_prefix, date_infile, dates_ds, set_neg1_to_nan=True):
     """
     Import prescribed sowing/harvest dates
@@ -260,19 +272,19 @@ def import_rx_dates(var_prefix, date_infile, dates_ds, set_neg1_to_nan=True):
         v_new = var.replace(var_prefix, "gs")
         this_ds = this_ds.rename({var: v_new})
 
-        # Set -1 prescribed GDD values to NaN. Only warn the first time.
+        # Set GDD values matching MISSING_RX_GDD_VAL to NaN. Only warn the first time.
         if (
             set_neg1_to_nan
             and var_prefix == "gdd"
             and v_new != var
             and np.any(this_ds[v_new].values < 0)
         ):
-            if np.any((this_ds[v_new].values < 0) & (this_ds[v_new].values != -1)):
+            if unexpected_negative_rx_gdd(this_ds[v_new]):
                 raise RuntimeError(f"Unexpected negative value in {var}")
             if not did_warn:
-                print("Setting -1 rx GDD values to NaN")
+                print(f"Setting {MISSING_RX_GDD_VAL} rx GDD values to NaN")
                 did_warn = True
-            this_ds[v_new] = this_ds[v_new].where(this_ds[v_new] != -1)
+            this_ds[v_new] = this_ds[v_new].where(this_ds[v_new] != MISSING_RX_GDD_VAL)
 
     return this_ds
 
@@ -333,14 +345,17 @@ def import_output(
     my_vars,
     year_1=None,
     year_n=None,
-    my_vegtypes=utils.define_mgdcrop_list(),
+    my_vegtypes=utils.define_mgdcrop_list_withgrasses(),
     sdates_rx_ds=None,
     gdds_rx_ds=None,
     verbose=False,
+    throw_errors=True,
 ):
     """
     Import CLM output
     """
+    any_bad = False
+
     # Import
     this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
 
@@ -410,7 +425,9 @@ def import_output(
     # Check that e.g., GDDACCUM <= HUI
     for var_list in [["GDDACCUM", "HUI"], ["SYEARS", "HYEARS"]]:
         if all(v in this_ds_gs for v in var_list):
-            check_v0_le_v1(this_ds_gs, var_list, both_nan_ok=True, throw_error=True)
+            any_bad = any_bad or check_v0_le_v1(
+                this_ds_gs, var_list, both_nan_ok=True, throw_error=throw_errors
+            )
 
     # Check that prescribed calendars were obeyed
     if sdates_rx_ds:
@@ -438,7 +455,7 @@ def import_output(
         raise RuntimeError("How to get NHARVEST_DISCREP for NHARVESTS > 2?")
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
 
-    return this_ds_gs
+    return this_ds_gs, any_bad
 
 
 def handle_zombie_crops(this_ds):

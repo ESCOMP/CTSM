@@ -24,6 +24,7 @@ module UrbanTimeVarType
   type, public :: urbantv_type
      !
      real(r8), public, pointer :: t_building_max(:)    ! lun maximum internal building air temperature (K)
+     real(r8), public, pointer :: p_ac(:)              ! lun air-conditioning adoption rate (unitless, between 0 and 1)
      type(shr_strdata_type)    :: sdat_urbantv         ! urban time varying input data stream
    contains
      ! !PUBLIC MEMBER FUNCTIONS:
@@ -31,8 +32,10 @@ module UrbanTimeVarType
      procedure, public :: urbantv_init      ! Initialize urban time varying stream
      procedure, public :: urbantv_interp    ! Interpolate urban time varying stream
   end type urbantv_type
-
-  character(15), private :: stream_varnames(isturb_MIN:isturb_MAX)
+  
+  integer      , private              :: stream_varname_MIN       ! minimum index for stream_varnames
+  integer      , private              :: stream_varname_MAX       ! maximum index for stream_varnames
+  character(15), private, pointer     :: stream_varnames(:)       ! urban time varying variable names
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -48,6 +51,7 @@ contains
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod     , only : hist_addfld1d
+    use UrbanParamsType , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     class(urbantv_type) :: this
@@ -60,9 +64,22 @@ contains
 
     begl = bounds%begl; endl = bounds%endl
 
+    ! Determine the minimum and maximum indices for stream_varnames
+    stream_varname_MIN = 1
+    ! Get value for the maximum index for stream_varnames: if using explicit AC adoption scheme, 
+    ! then set maximum index to 6 for reading in tbuildmax and p_ac for three urban density classes;
+    ! otherwise, set to 3 to only read in tbuildmax for three urban density classes. 
+    if (urban_explicit_ac) then
+       stream_varname_MAX = 6
+    else
+       stream_varname_MAX = 3
+    end if
+
     ! Allocate urbantv data structure
 
     allocate(this%t_building_max(begl:endl)); this%t_building_max(:) = nan
+    allocate(this%p_ac(begl:endl)); this%p_ac(:) = nan
+    allocate(stream_varnames(stream_varname_MIN:stream_varname_MAX))
 
     call this%urbantv_init(bounds, NLFilename)
     call this%urbantv_interp(bounds)
@@ -72,6 +89,12 @@ contains
           avgflag='A', long_name='prescribed maximum interior building temperature',   &
           ptr_lunit=this%t_building_max, default='inactive', set_nourb=spval, &
           l2g_scale_type='unity')
+    if (urban_explicit_ac) then
+       call hist_addfld1d (fname='P_AC', units='a fraction between 0 and 1',      &
+             avgflag='A', long_name='prescribed air-conditioning ownership rate',   &
+             ptr_lunit=this%p_ac, default='inactive', set_nourb=spval, &
+             l2g_scale_type='unity')
+    end if
 
   end subroutine Init
 
@@ -88,6 +111,7 @@ contains
     use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     use lnd_comp_shr     , only : mesh, model_clock
+    use UrbanParamsType  , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     implicit none
@@ -107,7 +131,6 @@ contains
     character(len=CL)  :: urbantvmapalgo = 'nn'             ! mapping alogrithm for urban ac
     character(len=CL)  :: urbantv_tintalgo = 'linear'       ! time interpolation alogrithm
     integer            :: rc                                ! error code
-    character(*), parameter :: urbantvString = "tbuildmax_" ! base string for field string
     character(*), parameter :: subName = "('urbantv_init')"
     !-----------------------------------------------------------------------
 
@@ -126,9 +149,14 @@ contains
     model_year_align_urbantv   = 1       ! align stream_year_first_urbantv with this model year
     stream_fldFileName_urbantv = ' '
     stream_meshfile_urbantv    = ' '
-    stream_varnames(isturb_tbd) = urbantvString//"TBD"
-    stream_varnames(isturb_hd)  = urbantvString//"HD"
-    stream_varnames(isturb_md)  = urbantvString//"MD"
+    stream_varnames(1) = "tbuildmax_TBD"
+    stream_varnames(2) = "tbuildmax_HD"
+    stream_varnames(3) = "tbuildmax_MD"
+    if (urban_explicit_ac) then
+       stream_varnames(4) = "p_ac_TBD"
+       stream_varnames(5) = "p_ac_HD"
+       stream_varnames(6) = "p_ac_MD"
+    end if
 
     ! Read urbantv_streams namelist
     if (masterproc) then
@@ -159,7 +187,7 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_urbantv = ',stream_fldFileName_urbantv
        write(iulog,'(a,a)' ) '  stream_meshfile_urbantv    = ',stream_meshfile_urbantv
        write(iulog,'(a,a)' ) '  urbantv_tintalgo           = ',urbantv_tintalgo
-       do n = isturb_tbd,isturb_md
+       do n = stream_varname_MIN,stream_varname_MAX
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
        write(iulog,*) ' '
@@ -176,8 +204,8 @@ contains
          stream_lev_dimname  = 'null',                               &
          stream_mapalgo      = trim(urbantvmapalgo),                 &
          stream_filenames    = (/trim(stream_fldfilename_urbantv)/), &
-         stream_fldlistFile  = stream_varnames(isturb_tbd:isturb_md),&
-         stream_fldListModel = stream_varnames(isturb_tbd:isturb_md),&
+         stream_fldlistFile  = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
+         stream_fldListModel = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
          stream_yearFirst    = stream_year_first_urbantv,            &
          stream_yearLast     = stream_year_last_urbantv,             &
          stream_yearAlign    = model_year_align_urbantv,             &
@@ -204,6 +232,8 @@ contains
     use clm_instur       , only : urban_valid
     use dshr_methods_mod , only : dshr_fldbun_getfldptr
     use dshr_strdata_mod , only : shr_strdata_advance
+    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
+    use UrbanParamsType  , only : urban_explicit_ac
     !
     ! !ARGUMENTS:
     class(urbantv_type)           :: this
@@ -235,8 +265,8 @@ contains
 
     ! Create 2d array for all stream variable data
     lsize = bounds%endg - bounds%begg + 1
-    allocate(dataptr2d(lsize, isturb_MIN:isturb_MAX))
-    do n = isturb_MIN,isturb_MAX
+    allocate(dataptr2d(lsize, stream_varname_MIN:stream_varname_MAX))
+    do n = stream_varname_MIN,stream_varname_MAX
        call dshr_fldbun_getFldPtr(this%sdat_urbantv%pstrm(1)%fldbun_model, trim(stream_varnames(n)), &
             fldptr1=dataptr1d, rc=rc)
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -249,18 +279,26 @@ contains
        end do
     end do
 
-    ! Determine this%tbuilding_max for all landunits
+    ! Determine this%tbuilding_max (and this%p_ac, if applicable) for all landunits
     do l = bounds%begl,bounds%endl
        if (lun%urbpoi(l)) then
           ! Note that since l is within [begl, endl] bounds, we can assume
           ! lun%gricell(l) is within [begg, endg]
           ig = lun%gridcell(l) - bounds%begg + 1
 
-          ! Since we are within an urban land unit, we know that
-          ! lun%itype is within [pisturb_MIN, isturb_MAX]
-          this%t_building_max(l) = dataptr2d(ig, lun%itype(l))
+          do n = stream_varname_MIN,stream_varname_MAX
+             if (stream_varnames((lun%itype(l)-6)) == stream_varnames(n)) then
+                this%t_building_max(l) = dataptr2d(ig,n)
+             end if
+             if (urban_explicit_ac) then
+                if (stream_varnames((lun%itype(l)-3)) == stream_varnames(n)) then
+                   this%p_ac(l) = dataptr2d(ig,n)
+                end if
+             end if
+          end do
        else
           this%t_building_max(l) = spval
+          this%p_ac(l) = spval
        end if
     end do
     deallocate(dataptr2d)
@@ -272,7 +310,13 @@ contains
           do g = bounds%begg,bounds%endg
              if (g == lun%gridcell(l)) exit
           end do
+          ! Check for valid urban data
           if ( .not. urban_valid(g) .or. (this%t_building_max(l) <= 0._r8)) then
+             found = .true.
+             gindx = g
+             lindx = l
+             exit
+          else if (urban_explicit_ac .and. (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8)) then
              found = .true.
              gindx = g
              lindx = l
@@ -285,6 +329,7 @@ contains
        write(iulog,*)'landunit type:   ',lun%itype(lindx)
        write(iulog,*)'urban_valid:     ',urban_valid(gindx)
        write(iulog,*)'t_building_max:  ',this%t_building_max(lindx)
+       write(iulog,*)'p_ac:            ',this%p_ac(lindx)
        call endrun(subgrid_index=lindx, subgrid_level=subgrid_level_landunit, &
             msg=errmsg(sourcefile, __LINE__))
     end if

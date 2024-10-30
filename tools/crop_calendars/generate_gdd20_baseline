@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""
+For description and instructions, please see README.
+"""
+
+import os
+import sys
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            os.pardir,
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.crop_calendars.generate_gdd20_baseline import main
+
+if __name__ == "__main__":
+    main()
+

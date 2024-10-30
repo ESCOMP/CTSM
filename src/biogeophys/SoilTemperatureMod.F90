@@ -671,9 +671,9 @@ contains
          tk_wall      =>    urbanparams_inst%tk_wall	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban wall    
          tk_roof      =>    urbanparams_inst%tk_roof	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban roof    
          tk_improad   =>    urbanparams_inst%tk_improad	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban impervious road
-         cv_wall      =>    urbanparams_inst%cv_wall	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban wall    
-         cv_roof      =>    urbanparams_inst%cv_roof	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban roof    
-         cv_improad   =>    urbanparams_inst%cv_improad	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban impervious road
+         cv_wall      =>    urbanparams_inst%cv_wall	     , & ! Input:  [real(r8) (:,:) ]  heat capacity of urban wall    
+         cv_roof      =>    urbanparams_inst%cv_roof	     , & ! Input:  [real(r8) (:,:) ]  heat capacity of urban roof    
+         cv_improad   =>    urbanparams_inst%cv_improad	     , & ! Input:  [real(r8) (:,:) ]  heat capacity of urban impervious road
          
          t_soisno     =>    temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ]  soil temperature [K]             
          
