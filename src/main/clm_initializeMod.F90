@@ -17,7 +17,7 @@ module clm_initializeMod
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, nhillslope
   use clm_varctl            , only : use_soil_moisture_streams
   use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
-  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake, ncolumns_hillslope, pct_urban_max
+  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, pct_lake_max, pct_urban_max, ncolumns_hillslope
   use perf_mod              , only : t_startf, t_stopf
   use readParamsMod         , only : readParameters
   use ncdio_pio             , only : file_desc_t
@@ -41,6 +41,7 @@ module clm_initializeMod
   public :: initialize2  ! Phase two initialization
 
   integer :: actual_numcft  ! numcft from sfc dataset
+  integer :: actual_nlevurb ! nlevurb from sfc dataset
   integer :: actual_numpft  ! numpft from sfc dataset
 
 !-----------------------------------------------------------------------
@@ -57,7 +58,7 @@ contains
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
     use clm_varctl           , only: fsurdat, version
-    use surfrdMod            , only: surfrd_get_num_patches
+    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb, surfrd_compat_check
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
     use initGridCellsMod     , only: initGridCells
@@ -99,7 +100,9 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
+    call surfrd_compat_check(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
+    call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
     ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
     ! number of patches per column.  We still use numcft from the surface
@@ -108,7 +111,7 @@ contains
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
     end if
 
-    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numpft, actual_numcft, actual_nlevurb)
     call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
@@ -133,8 +136,8 @@ contains
     use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
-    use clm_varctl                    , only : fsurdat
-    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use clm_varctl                    , only : fsurdat, hillslope_file
+    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
@@ -172,7 +175,7 @@ contains
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
-    use controlMod                    , only : NLFilename
+    use controlMod                    , only : NLFilename, check_missing_initdata_status
     use clm_instMod                   , only : clm_fates
     use BalanceCheckMod               , only : BalanceCheckInit
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
@@ -239,11 +242,11 @@ contains
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
     allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
-    allocate (haslake      (begg:endg                      ))
+    allocate (pct_lake_max (begg:endg                      ))
+    allocate (pct_urban_max(begg:endg, numurbl             ))
     if (use_hillslope) then
        allocate (ncolumns_hillslope  (begg:endg            ))
     endif
-    allocate (pct_urban_max(begg:endg, numurbl             ))
     allocate (wt_nat_patch (begg:endg, surfpft_lb:surfpft_ub ))
 
     ! Read list of Patches and their corresponding parameter values
@@ -251,7 +254,7 @@ contains
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
-    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, hillslope_file, actual_numcft)
 
     if(use_fates) then
 
@@ -302,7 +305,7 @@ contains
 
     if (use_hillslope) then
        ! Initialize hillslope properties
-       call InitHillslope(bounds_proc, fsurdat)
+       call InitHillslope(bounds_proc, hillslope_file)
     endif
 
     ! Set filters
@@ -329,7 +332,7 @@ contains
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
     ! for reweighting in subgridWeights.
-    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec, pct_lake_max)
     if (use_hillslope)  deallocate (ncolumns_hillslope)
 
     ! Determine processor bounds and clumps for this processor
@@ -518,17 +521,7 @@ contains
        else
           if (trim(finidat) == trim(finidat_interp_dest)) then
              ! Check to see if status file for finidat exists
-             klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
-             locfn = finidat_interp_dest(1:klen)//'.status'
-             inquire(file=trim(locfn), exist=lexists)
-             if (.not. lexists) then
-                if (masterproc) then
-                   write(iulog,'(a)')' failed to find file '//trim(locfn)
-                   write(iulog,'(a)')' this indicates a problem in creating '//trim(finidat_interp_dest)
-                   write(iulog,'(a)')' remove '//trim(finidat_interp_dest)//' and try again'
-                end if
-                call endrun()
-             end if
+             call check_missing_initdata_status(finidat_interp_dest)
           end if
           if (masterproc) then
              write(iulog,'(a)')'Reading initial conditions from file '//trim(finidat)
@@ -657,19 +650,21 @@ contains
     end if
 
     ! Initialize crop calendars
-    call t_startf('init_cropcal')
-    call cropcal_init(bounds_proc)
-    if (use_cropcal_streams) then
-      call cropcal_advance( bounds_proc )
-      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-      do nc = 1,nclumps
-         call get_clump_bounds(nc, bounds_clump)
-         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
-              filter_inactive_and_active(nc)%pcropp, crop_inst)
-      end do
-      !$OMP END PARALLEL DO
+    if (use_crop) then
+      call t_startf('init_cropcal')
+      call cropcal_init(bounds_proc)
+      if (use_cropcal_streams) then
+        call cropcal_advance( bounds_proc )
+        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+        do nc = 1,nclumps
+           call get_clump_bounds(nc, bounds_clump)
+           call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+                filter_inactive_and_active(nc)%pcropp, .true., crop_inst)
+        end do
+        !$OMP END PARALLEL DO
+      end if
+      call t_stopf('init_cropcal')
     end if
-    call t_stopf('init_cropcal')
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this

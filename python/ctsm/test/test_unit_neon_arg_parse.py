@@ -34,12 +34,14 @@ class Test_neon_arg_parse(unittest.TestCase):
         """
         Make /_tempdir for use by these tests.
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_function(self):

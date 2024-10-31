@@ -1,1 +1,11 @@
+
+! Run a transient case, with vegetation starting from bare ground, but land use starting from LUH state vector on starting date, in a nocomp configuration.
+! From Charlie's list of valid FATES configurations:
+! https://docs.google.com/spreadsheets/d/1eE3sRMYxfocZKbT8uIQhXpjjtfM2feXPRSWXJNoo4jM/edit#gid=0
 use_fates_luh = .true.
+use_fates_nocomp = .true.
+use_fates_fixed_biogeog = .true.
+use_fates_sp = .false.
+use_fates_potentialveg = .false.
+hist_fincl1 = 'FATES_PATCHAREA_LU', 'FATES_DISTURBANCE_RATE_MATRIX_LULU',
+'FATES_TRANSITION_MATRIX_LULU'

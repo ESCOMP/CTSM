@@ -6,7 +6,7 @@
 
 The Community Terrestrial Systems Model.
 
-This includes the Community Land Model (CLM5.0 and CLM4.5) of the Community Earth System Model.
+This includes the Community Land Model of the Community Earth System Model.
 
 For documentation, quick start, diagnostics, model output and
 references, see
@@ -43,19 +43,25 @@ CTSM code management is provided primarily by:
 Software engineering team:
 - [Erik Kluzek](https://github.com/ekluzek)
 - [Bill Sacks](https://github.com/billsacks)
-- [Sam Levis](https://github.com/slevisconsulting)
+- [Sam Levis](https://github.com/slevis-lmwg)
 - [Adrianna Foster](https://github.com/adrifoster)
 - [Sam Rabin](https://github.com/samsrabin)
 - [Greg Lemieux](https://github.com/glemieux)
 - [Ryan Knox](https://github.com/rgknox)
 
 Science team:
-- [Dave Lawrence](https://github.com/dlawrenncar)
 - [Will Wieder](https://github.com/wwieder)
+- [Dave Lawrence](https://github.com/dlawrenncar)
 - [Danica Lombardozzi](https://github.com/danicalombardozzi)
 - [Keith Oleson](https://github.com/olyson)
 - [Sean Swenson](https://github.com/swensosc)
-- [Jackie Shuman](https://github.com/jkshuman)
 - [Peter Lawrence](https://github.com/lawrencepj1)
-- [Rosie Fisher](https://github.com/rosiealice)
 - Gordon Bonan
+
+FATES Project:
+- https://github.com/NGEET/fates?tab=readme-ov-file
+
+Perturbed Parameter Experiment (PPE) Science team:
+- [Katie Dagon] (https://github.com/katiedagon)
+- [Daniel Kennedy] (https://github.com/djk2120)
+- [Linnea Hawkins] (https://github.com/linniahawkins)

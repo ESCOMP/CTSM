@@ -38,6 +38,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         self._testinputs_cc_path = testinputs_cc_path
 
         # Make /_tempdir for use by these tests.
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
 
         # Obtain path for the directory being created in /_tempdir
@@ -51,7 +52,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
 
         # What is the complete set of input arguments (including script name)?
         regrid_template_file = os.path.join(
-            testinputs_path, "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc"
+            testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.nc"
         )
         self._function_call_list = [
             "regrid_ggcmi_shdates",
@@ -73,6 +74,7 @@ class TestRegridGgcmiShdates(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_regrid_ggcmi_shdates(self):
