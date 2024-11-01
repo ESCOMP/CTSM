@@ -142,6 +142,7 @@ module lnd_import_export
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'
+  character(*), parameter :: Flrl_rofsur_nonh2o = 'Flrl_rofsur_nonh2o'
   character(*), parameter :: Flrl_rofsub    = 'Flrl_rofsub'
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
   character(*), parameter :: Flrl_rofi      = 'Flrl_rofi'
@@ -309,13 +310,18 @@ contains
 
     ! export to rof
     if (rof_prognostic) then
-       nflds_lnd2rof_tracers = shr_string_listGetNum(trim(lnd2rof_tracers))
-       ! Note addition of 1 for liquid water
-       if (nflds_lnd2rof_tracers > 0) then
-          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur, ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers+1)
+       if (lnd2rof_tracers == ' ') then
+          nflds_lnd2rof_tracers = 0
        else
-          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
+          nflds_lnd2rof_tracers = shr_string_listGetNum(trim(lnd2rof_tracers))
        end if
+       if (nflds_lnd2rof_tracers > 1) then
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur_nonh2o, &
+               ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers)
+       else if (nflds_lnd2rof_tracers == 1) then
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur_nonh2o)
+       end if
+       call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofi  )
@@ -752,6 +758,7 @@ contains
     !-------------------------------
 
     use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
+    use GridcellType         , only: grc
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
@@ -766,8 +773,9 @@ contains
     ! local variables
     type(ESMF_State)  :: exportState
     real(r8), pointer :: rofl2d(:,:)
+    real(r8), pointer :: rofl1d(:)
     integer           :: begg, endg
-    integer           :: i, g, n
+    integer           :: i, g, n, nt
     real(r8)          :: data1d(bounds%begg:bounds%endg)
     character(len=CS) :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
@@ -901,24 +909,36 @@ contains
     ! end do
 
     if (fldchk(exportState, Flrl_rofsur)) then
-       ! nflds_lnd2rof_tracers are just the extra number of liquid tracers other than water -
-       ! so add 1 here is to account for liquid water which is always sent
-       if (nflds_lnd2rof_tracers > 0) then
-          allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers+1))
-          rofl2d(:,1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:)
-          do n = 1,nflds_lnd2rof_tracers
-             call shr_string_listGetName(trim(lnd2rof_tracers), n, fldname)
-             if (trim(fldname) == 'H2O') then ! for testing
-                rofl2d(:,n+1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:) ! for test
+       call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
+            init_spval=.true., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+    if (fldchk(exportState, Flrl_rofsur_nonh2o)) then
+       if (nflds_lnd2rof_tracers > 1) then
+          allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers))
+          rofl2d(:,:) = 0._r8
+          do nt = 1,nflds_lnd2rof_tracers
+             call shr_string_listGetName(lnd2rof_tracers, nt, fldname)
+             if (trim(fldname) == 'testfld') then
+                do g = begg,endg
+                   rofl2d(g,nt) = cos(grc%latdeg(g))
+                end do
              end if
           end do
-          call state_setexport_2d(exportState, Flrl_rofsur, rofl2d, init_spval=.true., rc=rc)
+          call state_setexport_2d(exportState, Flrl_rofsur_nonh2o, rofl2d, init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           deallocate(rofl2d)
-       else
-          call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
-               init_spval=.true., rc=rc)
+       else if (nflds_lnd2rof_tracers == 1) then
+          allocate(rofl1d(begg:endg))
+          rofl1d(:) = 0._r8
+          if (trim(lnd2rof_tracers) == 'testfld') then
+             do g = begg,endg
+                rofl1d(g) = cos(grc%latdeg(g))
+             end do
+          end if
+          call state_setexport_1d(exportState, Flrl_rofsur_nonh2o, rofl1d, init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          deallocate(rofl1d)
        end if
     end if
     if (fldchk(exportState, Flrl_rofgwl)) then ! qgwl sent individually to mediator
