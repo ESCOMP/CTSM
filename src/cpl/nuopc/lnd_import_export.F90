@@ -919,9 +919,14 @@ contains
           rofl2d(:,:) = 0._r8
           do nt = 1,nflds_lnd2rof_tracers
              call shr_string_listGetName(lnd2rof_tracers, nt, fldname)
-             if (trim(fldname) == 'testfld') then
+             ! Temporary test fields
+             if (nt == 1) then
                 do g = begg,endg
                    rofl2d(g,nt) = cos(grc%latdeg(g))
+                end do
+             else if (nt == 2) then
+                do g = begg,endg
+                   rofl2d(g,nt) = sin(grc%latdeg(g))
                 end do
              end if
           end do
@@ -931,11 +936,10 @@ contains
        else if (nflds_lnd2rof_tracers == 1) then
           allocate(rofl1d(begg:endg))
           rofl1d(:) = 0._r8
-          if (trim(lnd2rof_tracers) == 'testfld') then
-             do g = begg,endg
-                rofl1d(g) = cos(grc%latdeg(g))
-             end do
-          end if
+          ! Temporary test field
+          do g = begg,endg
+             rofl1d(g) = cos(grc%latdeg(g))
+          end do
           call state_setexport_1d(exportState, Flrl_rofsur_nonh2o, rofl1d, init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           deallocate(rofl1d)
