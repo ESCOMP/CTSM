@@ -922,11 +922,11 @@ contains
              ! Temporary test fields
              if (nt == 1) then
                 do g = begg,endg
-                   rofl2d(g,nt) = cos(grc%latdeg(g))
+                   rofl2d(g,nt) = .1
                 end do
              else if (nt == 2) then
                 do g = begg,endg
-                   rofl2d(g,nt) = sin(grc%latdeg(g))
+                   rofl2d(g,nt) = .2
                 end do
              end if
           end do
