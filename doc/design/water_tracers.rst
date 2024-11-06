@@ -30,7 +30,7 @@ Broadly speaking, we considered three ways to store information for each tracer:
    ``h2osoi_liq_col_tracer(c,j,m)`` for tracers).
 
 3. Multiple instances of ``waterstate_type`` (etc.), with no extra dimension required for
-   individual variables. 
+   individual variables.
 
 We decided to go with option (3) for a number of reasons:
 
