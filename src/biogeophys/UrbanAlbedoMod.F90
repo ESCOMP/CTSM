@@ -78,9 +78,14 @@ contains
     type(surfalb_type)     , intent(inout) :: surfalb_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: fl,fp,fc,g,l,p,c,ib                                  ! indices
+    integer  :: fl,fp,fc,g,l,p,c,ib,f,fn                             ! indices and counters
     integer  :: ic                                                   ! 0=unit incoming direct; 1=unit incoming diffuse
-    integer  :: num_solar                                            ! counter
+    integer, allocatable :: filter_urbanl_coszen_gt0(:)              ! filter for urban landunits with coszen > 0
+    integer  :: num_urbanl_coszen_gt0                                ! number of urban landunits with coszen > 0
+    integer, allocatable :: filter_nourbanl_coszen_gt0(:)            ! filter for urban landunits with coszen <= 0
+    integer  :: num_nourbanl_coszen_gt0                              ! number of urban landunits with coszen <= 0
+    integer, allocatable :: filter_urbanc_coszen_gt0(:)              ! filter for urban columns with coszen > 0
+    integer  :: num_urbanc_coszen_gt0                                ! number of urban columns with coszen > 0
     real(r8) :: coszen             (bounds%begl:bounds%endl)         ! cosine solar zenith angle for next time step (landunit)
     real(r8) :: zen                (bounds%begl:bounds%endl)         ! solar zenith angle (radians)
     real(r8) :: sdir               (bounds%begl:bounds%endl, numrad) ! direct beam solar radiation on horizontal surface
@@ -165,8 +170,18 @@ contains
          begl               => bounds%begl                          , &
          vf_sr              => urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:) ]  view factor of sky for road
          vf_sw              => urbanparams_inst%vf_sw               , & ! Input:  [real(r8) (:) ]  view factor of sky for one wall
-         endl               => bounds%endl                            &
+         endl               => bounds%endl                          , &
+         begc               => bounds%begc                          , &
+         endc               => bounds%endc                            &
          )
+
+      !TODO KO - Indentation needs to be done properly throughout this module.  Will do later
+      ! to make the changes easier to review now.
+
+      ! Allocate urbanl and urbanc coszen filters
+      allocate(filter_urbanl_coszen_gt0(bounds%endl-bounds%begl+1))
+      allocate(filter_nourbanl_coszen_gt0(bounds%endl-bounds%begl+1))
+      allocate(filter_urbanc_coszen_gt0(bounds%endc-bounds%begc+1))
 
       ! ----------------------------------------------------------------------------
       ! Solar declination and cosine solar zenith angle and zenith angle for 
@@ -228,15 +243,36 @@ contains
          end do
       end do
 
+      ! Populate urbanl and urbanc coszen filters
+      f = 0
+      fn = 0
+      do fl = 1,num_urbanl
+         l = filter_urbanl(fl)
+         if (coszen(l) > 0._r8) then
+            f = f + 1
+            filter_urbanl_coszen_gt0(f) = l
+         else
+            fn = fn + 1
+            filter_nourbanl_coszen_gt0(fn) = l
+         end if
+      end do
+      num_urbanl_coszen_gt0 = f
+      num_nourbanl_coszen_gt0 = fn
+
+      f = 0
+      do fc = 1,num_urbanc
+         c = filter_urbanc(fc)
+         l = col%landunit(c)
+         if (coszen(l) > 0._r8) then
+            f = f + 1
+            filter_urbanc_coszen_gt0(f) = c
+         end if
+      end do
+      num_urbanc_coszen_gt0 = f
+
       ! ----------------------------------------------------------------------------
       ! Urban Code
       ! ----------------------------------------------------------------------------
-
-      num_solar = 0
-      do fl = 1,num_urbanl
-         l = filter_urbanl(fl)
-         if (coszen(l) > 0._r8) num_solar = num_solar + 1
-      end do
 
       do ib = 1,numrad
          do fl = 1,num_urbanl
@@ -267,16 +303,15 @@ contains
       end do
 
       ! ----------------------------------------------------------------------------
-      ! Only do the rest if all coszen are positive 
+      ! Use the urban coszen filters to only calculate quantities when coszen > 0
       ! ----------------------------------------------------------------------------
 
-      if (num_solar > 0)then
 
          ! Set constants - solar fluxes are per unit incoming flux
 
          do ib = 1,numrad
-            do fl = 1,num_urbanl
-               l = filter_urbanl(fl)
+            do fl = 1,num_urbanl_coszen_gt0
+               l = filter_urbanl_coszen_gt0(fl)
                sdir(l,ib) = 1._r8
                sdif(l,ib) = 1._r8
             end do
@@ -287,9 +322,11 @@ contains
 
          if (num_urbanl > 0) then
             call incident_direct (bounds, &
-                 num_urbanl, filter_urbanl, &
+                 num_urbanl_coszen_gt0, &
+                 filter_urbanl_coszen_gt0, &
+                 num_nourbanl_coszen_gt0, &
+                 filter_nourbanl_coszen_gt0, &
                  canyon_hwr(begl:endl), &
-                 coszen(begl:endl), &
                  zen(begl:endl), &
                  sdir(begl:endl, :), &
                  sdir_road(begl:endl, :), &
@@ -300,9 +337,10 @@ contains
          ! Incident diffuse radiation for 
          ! (a) roof and (b) road and both walls in urban canyon.
 
-         if (num_urbanl > 0) then
+         if (num_urbanl_coszen_gt0 > 0) then
             call incident_diffuse (bounds, &
-                 num_urbanl, filter_urbanl, &
+                 num_urbanl_coszen_gt0, &
+                 filter_urbanl_coszen_gt0, &
                  canyon_hwr(begl:endl), &
                  sdif(begl:endl, :), &
                  sdif_road(begl:endl, :), &
@@ -316,7 +354,8 @@ contains
             ic = 0
             call SnowAlbedo(bounds, &
                  num_urbanc, filter_urbanc, &
-                 coszen(begl:endl), &
+                 num_urbanc_coszen_gt0, &
+                 filter_urbanc_coszen_gt0, &
                  ic, &
                  albsnd_roof(begl:endl, :), &
                  albsnd_improad(begl:endl, :), &
@@ -326,7 +365,8 @@ contains
             ic = 1
             call SnowAlbedo(bounds, &
                  num_urbanc, filter_urbanc, &
-                 coszen(begl:endl), &
+                 num_urbanc_coszen_gt0, &
+                 filter_urbanc_coszen_gt0, &
                  ic, &
                  albsni_roof(begl:endl, :), &
                  albsni_improad(begl:endl, :), &
@@ -336,8 +376,8 @@ contains
 
          ! Combine snow-free and snow albedos
          do ib = 1,numrad
-            do fc = 1,num_urbanc
-               c = filter_urbanc(fc)
+            do fc = 1,num_urbanc_coszen_gt0
+               c = filter_urbanc_coszen_gt0(fc)
                l = col%landunit(c)
                if (ctype(c) == icol_roof) then    
                   alb_roof_dir_s(l,ib) = alb_roof_dir(l,ib)*(1._r8-frac_sno(c))  &
@@ -362,10 +402,10 @@ contains
          ! for road and both walls in urban canyon allowing for multiple reflection
          ! Reflected and absorbed solar radiation per unit incident radiation for roof
 
-         if (num_urbanl > 0) then
+         if (num_urbanl_coszen_gt0 > 0) then
             call net_solar (bounds, &
-                 num_urbanl, filter_urbanl, &
-                 coszen             (begl:endl), &
+                 num_urbanl_coszen_gt0, &
+                 filter_urbanl_coszen_gt0, &
                  canyon_hwr         (begl:endl), &
                  wtroad_perv        (begl:endl), &
                  sdir               (begl:endl, :), &
@@ -423,6 +463,7 @@ contains
                   albgrd(c,ib) = sref_improad_dir(l,ib)
                   albgri(c,ib) = sref_improad_dif(l,ib)
                endif
+               !TODO KO - Clean up these SNICAR comments (not needed?)
 ! add new snicar albedo variables for history fields
                if (coszen(l) > 0._r8) then
                   albgrd_hst(c,ib) = albgrd(c,ib)
@@ -444,7 +485,6 @@ contains
 ! end add new snicar
             end do
          end do
-      end if
 
     end associate
 
@@ -452,7 +492,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowAlbedo (bounds          , &
-       num_urbanc, filter_urbanc, coszen, ind , &
+       num_urbanc, filter_urbanc, num_urbanc_coszen_gt0, filter_urbanc_coszen_gt0, ind , &
        albsn_roof, albsn_improad, albsn_perroad, &
        waterstatebulk_inst)
     !
@@ -466,8 +506,9 @@ contains
     type(bounds_type), intent(in) :: bounds                     
     integer , intent(in) :: num_urbanc                          ! number of urban columns in clump
     integer , intent(in) :: filter_urbanc(:)                    ! urban column filter
+    integer , intent(in) :: num_urbanc_coszen_gt0               ! number of urban columns with coszen > 0
+    integer , intent(in) :: filter_urbanc_coszen_gt0(:)         ! filter for urban columns with coszen > 0
     integer , intent(in) :: ind                                 ! 0=direct beam, 1=diffuse radiation
-    real(r8), intent(in) :: coszen        ( bounds%begl: )      ! cosine solar zenith angle [landunit]
     real(r8), intent(out):: albsn_roof    ( bounds%begl: , 1: ) ! roof snow albedo by waveband [landunit, numrad]
     real(r8), intent(out):: albsn_improad ( bounds%begl: , 1: ) ! impervious road snow albedo by waveband [landunit, numrad]
     real(r8), intent(out):: albsn_perroad ( bounds%begl: , 1: ) ! pervious road snow albedo by waveband [landunit, numrad]
@@ -488,7 +529,6 @@ contains
     SHR_ASSERT_ALL_FL(numrad == 2, sourcefile, __LINE__)
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(coszen)        == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(albsn_roof)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(albsn_improad) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
@@ -497,10 +537,10 @@ contains
          caller = 'UrbanAlbedoMod:SnowAlbedo', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
-    do fc = 1,num_urbanc
-       c = filter_urbanc(fc)
+    do fc = 1,num_urbanc_coszen_gt0
+       c = filter_urbanc_coszen_gt0(fc)
        l = col%landunit(c)
-       if (coszen(l) > 0._r8 .and. h2osno_total(c) > 0._r8) then
+       if (h2osno_total(c) > 0._r8) then
           if (col%itype(c) == icol_roof) then
              albsn_roof(l,1) = snal0
              albsn_roof(l,2) = snal1
@@ -528,8 +568,9 @@ contains
   end subroutine SnowAlbedo
 
   !-----------------------------------------------------------------------
-  subroutine incident_direct (bounds                      ,                    &
-       num_urbanl, filter_urbanl, canyon_hwr, coszen, zen ,                    &
+  subroutine incident_direct (bounds,                                        &
+       num_urbanl_coszen_gt0, filter_urbanl_coszen_gt0,                      &
+       num_nourbanl_coszen_gt0, filter_nourbanl_coszen_gt0, canyon_hwr, zen, &
        sdir, sdir_road, sdir_sunwall, sdir_shadewall)
     !
     ! !DESCRIPTION: 
@@ -567,10 +608,11 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                      
-    integer , intent(in)  :: num_urbanl                          ! number of urban landunits
-    integer , intent(in)  :: filter_urbanl(:)                    ! urban landunit filter
+    integer , intent(in)  :: num_urbanl_coszen_gt0               ! number of urban landunits with coszen > 0
+    integer , intent(in)  :: filter_urbanl_coszen_gt0(:)         ! filter for urban landunits with coszen > 0
+    integer , intent(in)  :: num_nourbanl_coszen_gt0             ! number of urban landunits with coszen <= 0
+    integer , intent(in)  :: filter_nourbanl_coszen_gt0(:)       ! filter for urban landunits with coszen <= 0
     real(r8), intent(in)  :: canyon_hwr( bounds%begl: )          ! ratio of building height to street width [landunit]
-    real(r8), intent(in)  :: coszen( bounds%begl: )              ! cosine solar zenith angle [landunit]
     real(r8), intent(in)  :: zen( bounds%begl: )                 ! solar zenith angle (radians) [landunit]
     real(r8), intent(in)  :: sdir( bounds%begl: , 1: )           ! direct beam solar radiation incident on horizontal surface [landunit, numrad]
     real(r8), intent(out) :: sdir_road( bounds%begl: , 1: )      ! direct beam solar radiation incident on road per unit incident flux [landunit, numrad]
@@ -595,26 +637,22 @@ contains
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(canyon_hwr)     == (/bounds%endl/)),         sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(coszen)         == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(zen)            == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sdir)           == (/bounds%endl, numrad/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sdir_road)      == (/bounds%endl, numrad/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sdir_sunwall)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sdir_shadewall) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
-    do fl = 1,num_urbanl
-       l = filter_urbanl(fl)
-       if (coszen(l) > 0._r8) then
-          theta0(l) = asin(min( (1._r8/(canyon_hwr(l)*tan(max(zen(l),0.000001_r8)))), 1._r8 ))
-          tanzen(l) = tan(zen(l))
-       end if
+    do fl = 1,num_urbanl_coszen_gt0
+       l = filter_urbanl_coszen_gt0(fl)
+       theta0(l) = asin(min( (1._r8/(canyon_hwr(l)*tan(max(zen(l),0.000001_r8)))), 1._r8 ))
+       tanzen(l) = tan(zen(l))
     end do
 
     do ib = 1,numrad
 
-       do fl = 1,num_urbanl
-          l = filter_urbanl(fl)
-          if (coszen(l) > 0._r8) then
+       do fl = 1,num_urbanl_coszen_gt0
+          l = filter_urbanl_coszen_gt0(fl)
              sdir_shadewall(l,ib) = 0._r8
 
              ! incident solar radiation on wall and road integrated over all canyon orientations (0 <= theta <= pi/2)
@@ -628,21 +666,20 @@ contains
 
              swall_projected = (sdir_shadewall(l,ib) + sdir_sunwall(l,ib)) * canyon_hwr(l)
              err1(l) = sdir(l,ib) - (sdir_road(l,ib) + swall_projected)
-          else
-             sdir_road(l,ib) = 0._r8
-             sdir_sunwall(l,ib) = 0._r8
-             sdir_shadewall(l,ib) = 0._r8
-          endif
+       end do
+       do fl = 1,num_nourbanl_coszen_gt0
+          l = filter_nourbanl_coszen_gt0(fl)
+          sdir_road(l,ib) = 0._r8
+          sdir_sunwall(l,ib) = 0._r8
+          sdir_shadewall(l,ib) = 0._r8
        end do
 
-       do fl = 1,num_urbanl
-          l = filter_urbanl(fl)
-          if (coszen(l) > 0._r8) then
-             if (abs(err1(l)) > 0.001_r8) then
-                write (iulog,*) 'urban direct beam solar radiation balance error',err1(l)
-                write (iulog,*) 'clm model is stopping'
-                call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
-             endif
+       do fl = 1,num_urbanl_coszen_gt0
+          l = filter_urbanl_coszen_gt0(fl)
+          if (abs(err1(l)) > 0.001_r8) then
+             write (iulog,*) 'urban direct beam solar radiation balance error',err1(l)
+             write (iulog,*) 'clm model is stopping'
+             call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
           endif
        end do
 
@@ -650,9 +687,8 @@ contains
        ! sum sroad and swall over all canyon orientations (0 <= theta <= pi/2)
 
        if (numchk) then
-          do fl = 1,num_urbanl
-             l = filter_urbanl(fl)
-             if (coszen(l) > 0._r8) then
+          do fl = 1,num_urbanl_coszen_gt0
+             l = filter_urbanl_coszen_gt0(fl)
                 sumr = 0._r8
                 sumw = 0._r8
                 num  = 0._r8
@@ -670,11 +706,9 @@ contains
                 end do
                 err2(l) = sumr/num - sdir_road(l,ib)
                 err3(l) = sumw/num - sdir_sunwall(l,ib)
-             endif
           end do
-          do fl = 1,num_urbanl
-             l = filter_urbanl(fl)
-             if (coszen(l) > 0._r8) then
+          do fl = 1,num_urbanl_coszen_gt0
+             l = filter_urbanl_coszen_gt0(fl)
                 if (abs(err2(l)) > 0.0006_r8 ) then
                    write (iulog,*) 'urban road incident direct beam solar radiation error',err2(l)
                    write (iulog,*) 'clm model is stopping'
@@ -685,7 +719,6 @@ contains
                    write (iulog,*) 'clm model is stopping'
                    call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
                 end if
-             end if
           end do
        end if
 
@@ -695,7 +728,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine incident_diffuse (bounds, &
-       num_urbanl, filter_urbanl, canyon_hwr, &
+       num_urbanl_coszen_gt0, filter_urbanl_coszen_gt0, canyon_hwr, &
        sdif, sdif_road, sdif_sunwall, sdif_shadewall, &
        urbanparams_inst)
     !
@@ -707,8 +740,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)  :: bounds                      
-    integer               , intent(in)  :: num_urbanl                           ! number of urban landunits
-    integer               , intent(in)  :: filter_urbanl(:)                     ! urban landunit filter
+    integer               , intent(in)  :: num_urbanl_coszen_gt0                ! number of urban landunits with coszen > 0
+    integer               , intent(in)  :: filter_urbanl_coszen_gt0(:)          ! filter for urban landunits with coszen > 0
     real(r8)              , intent(in)  :: canyon_hwr     ( bounds%begl: )      ! ratio of building height to street width [landunit]
     real(r8)              , intent(in)  :: sdif           ( bounds%begl: , 1: ) ! diffuse solar radiation incident on horizontal surface [landunit, numrad]
     real(r8)              , intent(out) :: sdif_road      ( bounds%begl: , 1: ) ! diffuse solar radiation incident on road [landunit, numrad]
@@ -738,8 +771,8 @@ contains
          
          ! diffuse solar and conservation check. need to convert wall fluxes to ground area
          
-         do fl = 1,num_urbanl
-            l = filter_urbanl(fl)
+         do fl = 1,num_urbanl_coszen_gt0
+            l = filter_urbanl_coszen_gt0(fl)
             sdif_road(l,ib)      = sdif(l,ib) * vf_sr(l)
             sdif_sunwall(l,ib)   = sdif(l,ib) * vf_sw(l) 
             sdif_shadewall(l,ib) = sdif(l,ib) * vf_sw(l) 
@@ -750,8 +783,8 @@ contains
 
          ! error check
 
-         do fl = 1, num_urbanl
-            l = filter_urbanl(fl)
+         do fl = 1, num_urbanl_coszen_gt0
+            l = filter_urbanl_coszen_gt0(fl)
             if (abs(err(l)) > 0.001_r8) then
                write (iulog,*) 'urban diffuse solar radiation balance error',err(l) 
                write (iulog,*) 'clm model is stopping'
@@ -767,7 +800,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine net_solar (bounds                                                                 , &
-       num_urbanl, filter_urbanl, coszen, canyon_hwr, wtroad_perv, sdir, sdif                  , &
+       num_urbanl_coszen_gt0, filter_urbanl_coszen_gt0, canyon_hwr, wtroad_perv, sdir, sdif    , &
        alb_improad_dir, alb_perroad_dir, alb_wall_dir, alb_roof_dir                            , &
        alb_improad_dif, alb_perroad_dif, alb_wall_dif, alb_roof_dif                            , &
        sdir_road, sdir_sunwall, sdir_shadewall,                                                  &
@@ -782,9 +815,8 @@ contains
     !
     ! !ARGUMENTS:
     type (bounds_type), intent(in) :: bounds                            
-    integer , intent(in)    :: num_urbanl                               ! number of urban landunits
-    integer , intent(in)    :: filter_urbanl(:)                         ! urban landunit filter
-    real(r8), intent(in)    :: coszen             ( bounds%begl: )      ! cosine solar zenith angle [landunit]
+    integer,  intent(in)    :: num_urbanl_coszen_gt0                    ! number of urban landunits with coszen > 0
+    integer,  intent(in)    :: filter_urbanl_coszen_gt0(:)              ! filter for urban landunits with coszen > 0
     real(r8), intent(in)    :: canyon_hwr         ( bounds%begl: )      ! ratio of building height to street width [landunit]
     real(r8), intent(in)    :: wtroad_perv        ( bounds%begl: )      ! weight of pervious road wrt total road [landunit]
     real(r8), intent(in)    :: sdir               ( bounds%begl: , 1: ) ! direct beam solar radiation incident on horizontal surface [landunit, numrad]
@@ -897,7 +929,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(coszen)             == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(canyon_hwr)         == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wtroad_perv)        == (/bounds%endl/)),         sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sdir)               == (/bounds%endl, numrad/)), sourcefile, __LINE__)
@@ -948,15 +979,14 @@ contains
 
       ! Calculate impervious road
       
-      do fl = 1,num_urbanl 
-         l = filter_urbanl(fl)
+      do fl = 1,num_urbanl_coszen_gt0
+         l = filter_urbanl_coszen_gt0(fl)
          wtroad_imperv(l) = 1._r8 - wtroad_perv(l)
       end do
 
       do ib = 1,numrad
-         do fl = 1,num_urbanl
-            l = filter_urbanl(fl)
-            if (coszen(l) > 0._r8) then
+         do fl = 1,num_urbanl_coszen_gt0
+            l = filter_urbanl_coszen_gt0(fl)
 
                ! initial absorption and reflection for road and both walls. 
                ! distribute reflected radiation to sky, road, and walls 
@@ -1057,7 +1087,6 @@ contains
                sref_perroad_dif(l,ib)   = perroad_r_sky_dif(l)
                sref_sunwall_dif(l,ib)   = sunwall_r_sky_dif(l)
                sref_shadewall_dif(l,ib) = shadewall_r_sky_dif(l)
-            endif
 
          end do
 
@@ -1080,9 +1109,8 @@ contains
          !
          ! do separately for direct beam and diffuse
 
-         do fl = 1,num_urbanl
-            l = filter_urbanl(fl)
-            if (coszen(l) > 0._r8) then
+         do fl = 1,num_urbanl_coszen_gt0
+            l = filter_urbanl_coszen_gt0(fl)
 
                ! reflected direct beam
 
@@ -1279,20 +1307,17 @@ contains
 
                canyon_alb_dif(l) = sref_canyon_dif(l) / max(stot_dif(l), 1.e-06_r8)
                canyon_alb_dir(l) = sref_canyon_dir(l) / max(stot_dir(l), 1.e-06_r8)
-            end if
 
          end do   ! end of landunit loop
 
          ! Refected and absorbed solar radiation per unit incident radiation for roof
 
-         do fl = 1,num_urbanl
-            l = filter_urbanl(fl)
-            if (coszen(l) > 0._r8) then
-               sref_roof_dir(l,ib) = alb_roof_dir(l,ib) * sdir(l,ib)
-               sref_roof_dif(l,ib) = alb_roof_dif(l,ib) * sdif(l,ib)
-               sabs_roof_dir(l,ib) = sdir(l,ib) - sref_roof_dir(l,ib)
-               sabs_roof_dif(l,ib) = sdif(l,ib) - sref_roof_dif(l,ib)
-            end if
+         do fl = 1,num_urbanl_coszen_gt0
+            l = filter_urbanl_coszen_gt0(fl)
+            sref_roof_dir(l,ib) = alb_roof_dir(l,ib) * sdir(l,ib)
+            sref_roof_dif(l,ib) = alb_roof_dif(l,ib) * sdif(l,ib)
+            sabs_roof_dir(l,ib) = sdir(l,ib) - sref_roof_dir(l,ib)
+            sabs_roof_dif(l,ib) = sdif(l,ib) - sref_roof_dif(l,ib)
          end do
 
       end do   ! end of radiation band loop
