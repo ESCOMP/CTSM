@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = a8f9da0750f27a01e227582a46d4c3ced01696db  # edge-area-202410: Revert "Revert "Delete unneeded use "FatesIOVariableKindMod" in FatesHistoryInterfaceMod.""
+fxtag = 7cd56315a3973a4021c13725321454fd2c7d99de  # edge-area-202410: Add param file to work with previous.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
