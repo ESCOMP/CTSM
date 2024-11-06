@@ -678,6 +678,11 @@ sub setup_cmdl_chk_res {
   }
 }
 
+sub begins_with
+{
+    return substr($_[0], 0, length($_[1])) eq $_[1];
+}
+
 sub setup_cmdl_resolution {
   my ($opts, $nl_flags, $definition, $defaults, $envxml_ref) = @_;
 
@@ -713,7 +718,7 @@ sub setup_cmdl_resolution {
   $nl_flags->{'neon'} = ".false.";
   $nl_flags->{'neonsite'} = "";
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
-    if ( $opts->{'clm_usr_name'} eq "NEON" ) {
+    if ( begins_with($opts->{'clm_usr_name'}, "NEON") ) {
        $nl_flags->{'neon'} = ".true.";
        $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
        $log->verbose_message( "This is a NEON site with NEONSITE = " . $nl_flags->{'neonsite'} );
