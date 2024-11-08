@@ -84,28 +84,6 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2780</issue>
-      <comment>Crashes in the matrix solver.</comment>
-    </phase>
-  </test>
-  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.derecho_gnu.clm-default--clm-NEON-HARV--clm-matrixcnOn">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2780</issue>
-      <comment>Crashes in the matrix solver.</comment>
-    </phase>
-  </test>
-  <test name="SMS_D.1x1_brazil.I1850Clm60BgcCrop.derecho_gnu.clm-mimics_matrixcn">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2780</issue>
-      <comment>Crashes in the matrix solver.</comment>
-    </phase>
-  </test>
-
   <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
