@@ -311,6 +311,38 @@
       <issue>#2810</issue>
     </phase>
   </test>
+  
+  <test name="ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+    
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesPRISM--clm-NEON-FATES-YELLO">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+
+
+
 
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
