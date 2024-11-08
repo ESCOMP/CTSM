@@ -678,6 +678,11 @@ sub setup_cmdl_chk_res {
   }
 }
 
+sub begins_with
+{
+    return substr($_[0], 0, length($_[1])) eq $_[1];
+}
+
 sub setup_cmdl_resolution {
   my ($opts, $nl_flags, $definition, $defaults, $envxml_ref) = @_;
 
@@ -713,7 +718,7 @@ sub setup_cmdl_resolution {
   $nl_flags->{'neon'} = ".false.";
   $nl_flags->{'neonsite'} = "";
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
-    if ( $opts->{'clm_usr_name'} eq "NEON" ) {
+    if ( begins_with($opts->{'clm_usr_name'}, "NEON") ) {
        $nl_flags->{'neon'} = ".true.";
        $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
        $log->verbose_message( "This is a NEON site with NEONSITE = " . $nl_flags->{'neonsite'} );
@@ -2113,7 +2118,7 @@ sub setup_logic_roughness_methods {
   my $phys = $physv->as_string();
   if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
     if ( $var eq "Meier2022" ) {
-      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm5_1 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
     }
   }
 }
