@@ -319,13 +319,6 @@
     </phase>
   </test>
   
-  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2861</issue>
-    </phase>
-  </test>
-  
     
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesPRISM--clm-NEON-FATES-YELLO">
     <phase name="RUN">
