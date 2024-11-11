@@ -1979,7 +1979,6 @@
   </test>
   <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="fates"/>
     </machines>
@@ -2641,7 +2640,6 @@
   </test>
   <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
     <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2671,7 +2669,6 @@
   </test>
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -2708,7 +2705,6 @@
   </test>
   <test name="ERS_Lm13" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
     <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -3679,5 +3675,262 @@
     </options>
   </test>
 
+  <!-- ********************************************************************************** -->
+  <!--   NORESM Tests -->
+  <!-- ********************************************************************************** -->
+
+  <!-- FATES-SP -->
+
+  <test name="SMS" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdSatPhen">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Simple test to make sure the basic Fates-SP compset works</option>
+    </options>
+  </test>
+  <test name="ERP_Ld30" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdSatPhen">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdMeganSatPhen">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"></option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdDryDepSatPhen">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld3" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm-FatesColdSatPhen_prescribed">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"></option>
+    </options>
+  </test>
+
+  <!-- FATES-NOCOMP -->
+
+  <test name="ERS_Lm25" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/FatesCold">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERS_Lm25" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <!-- FATES-FULL -->
+
+  <test name="ERP_D" grid="f19_g17" compset="2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesCold">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="SMS_D" grid="1x1_brazil" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdDryDepSatPhen">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld5" grid="5x5_amazon" compset="2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesCold">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <!-- non-FATES SP tests -->
+
+  <test name="ERP_D_Ld5" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/decStart">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERS_D" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <!-- BGC tests -->
+
+  <test name="ERI_D_Ld9" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/decStart">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_Lm13" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/monthly">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <!-- BGCCrop tests -->
+
+  <test name="ERI_Ld9" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_Ld10" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_Ld3" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/coldStart">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_Ld3" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/mimics">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_Ld5" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/irrig_spunup">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="SMS_Lm13" grid="f19_g17" compset="2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/cropMonthOutput">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERP_D_Ld10" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/ADspinup">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <!-- single point non-FATES -->
+
+  <test name="ERS_D_Ld5" grid="1x1_mexicocityMEX" compset="2000_DATM%1PT_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/CLM1PTStartDate">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
 
 </testlist>
