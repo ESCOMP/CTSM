@@ -781,10 +781,11 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
-    logger.info("Tests:")
-    for test in test_data:
-        test_string = test_to_string(test).split(" ")[1]
-        logger.info("   %s", test_string)
+    if logger.getEffectiveLevel() <= logging.INFO:
+        logger.info("Tests:")
+        for test in test_data:
+            test_string = test_to_string(test).split(" ")[1]
+            logger.info("   %s", test_string)
     if not running_ctsm_py_tests:
         _check_py_env([t["testname"] for t in test_data])
         _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
