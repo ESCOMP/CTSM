@@ -9,10 +9,11 @@ module LunaMod
   ! !USES:
   use shr_kind_mod          , only : r8  => shr_kind_r8
   use shr_log_mod           , only : errMsg  => shr_log_errMsg
+  use shr_infnan_mod        , only : nan => shr_infnan_nan, assignment(=)
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varpar            , only : nlevcan
+  use clm_varpar            , only : nlevcan, mxpft
   use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
@@ -33,7 +34,6 @@ module LunaMod
 
   !------------------------------------------------------------------------------
   ! PUBLIC MEMBER FUNCTIONS:
-  public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
   public  :: Update_Photosynthesis_Capacity                !subroutine to update the canopy nitrogen profile
   public  :: Acc24_Climate_LUNA                            !subroutine to accumulate 24 hr climates
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
@@ -47,11 +47,14 @@ module LunaMod
       real(r8) :: kc25_coef     ! Michaelis-Menten const. at 25°C for CO2 (unitless)
       real(r8) :: ko25_coef     ! Michaelis-Menten const. at 25°C for O2 (unitless)
       real(r8) :: luna_theta_cj ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
-      real(r8) :: jmaxb0        ! The baseline proportion of nitrogen allocated for electron transport (J)
-      real(r8) :: wc2wjb0       ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
       real(r8) :: enzyme_turnover_daily ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
       real(r8) :: relhExp       ! Specifies the impact of relative humidity on electron transport rate (unitless)
       real(r8) :: minrelh       ! Minimum relative humidity for nitrogen optimization (fraction)
+      real(r8), allocatable :: jmaxb0(:)  ! Baseline proportion of nitrogen allocated for electron transport (J)
+      real(r8), allocatable :: jmaxb1(:)  ! Coefficient determining the response of electron transport rate to light availability (-)
+      real(r8), allocatable :: wc2wjb0(:) ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
+  contains    
+      procedure, private :: allocParams    ! Allocate the parameters
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -78,7 +81,6 @@ module LunaMod
   real(r8), parameter :: CO2ref = 380.0_r8                   ! reference CO2 concentration for calculation of reference NUE. 
   real(r8), parameter :: forc_pbot_ref = 101325.0_r8       ! reference air pressure for calculation of reference NUE
   real(r8), parameter :: Q10Enz = 2.0_r8                   ! Q10 value for enzyme decay rate
-  real(r8)            :: Jmaxb1 = 0.1_r8                   ! the baseline proportion of nitrogen allocated for electron transport (J)    
   real(r8), parameter :: NMCp25 = 0.715_r8                 ! estimated by assuming 80% maintenance respiration is used for photosynthesis enzyme maintenance
   real(r8), parameter :: Trange1 = 5.0_r8                  ! lower temperature limit (oC) for nitrogen optimization  
   real(r8), parameter :: Trange2 = 42.0_r8                 ! upper temperature limit (oC) for nitrogen optimization
@@ -92,70 +94,31 @@ module LunaMod
   
   contains
 
-  !********************************************************************************************************************************************************************** 
-  ! Read in LUNA namelist
-  subroutine LunaReadNML( NLFilename )
+  !-----------------------------------------------------------------------
+  subroutine allocParams ( this )
     !
-    ! !DESCRIPTION:
-    ! Read the namelist for LUNA
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
-    !
+    implicit none
+
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    class(params_type) :: this
     !
     ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'lunaReadNML'
-    character(len=*), parameter :: nmlname = 'luna'
+    character(len=32)  :: subname = 'allocParams'
     !-----------------------------------------------------------------------
-    namelist /luna/ Jmaxb1
 
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
+    ! allocate parameters
 
+    allocate( this%jmaxb0    (0:mxpft) )          ; this%jmaxb0(:)   = nan
+    allocate( this%jmaxb1    (0:mxpft) )          ; this%jmaxb1(:)   = nan
+    allocate( this%wc2wjb0   (0:mxpft) )          ; this%wc2wjb0(:)  = nan
 
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=luna, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (Jmaxb1, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=luna)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine lunaReadNML
+  end subroutine allocParams
 
 !----------------------------------------------------------------------------
   subroutine readParams( ncid )
     !
     ! !USES:
-    use ncdio_pio, only: file_desc_t
+    use ncdio_pio, only: file_desc_t,ncd_io
     use paramUtilMod, only: readNcdioScalar
     !
     ! !ARGUMENTS:
@@ -164,6 +127,10 @@ module LunaMod
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'readParams_Luna'
+    character(len=100) :: errCode = '-Error reading in parameters file:'
+    logical            :: readv ! has variable been read in or not
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
+    character(len=100) :: tString ! temp. var for reading
     !--------------------------------------------------------------------
 
     ! CO2 compensation point at 25°C at present day O2 levels
@@ -177,16 +144,27 @@ module LunaMod
     params_inst%kc25_coef = params_inst%kc25_coef * 1.e5_r8  ! from mol/mol to Luna units
     ! LUNA empirical curvature parameter for ac, aj photosynthesis co-limitation
     call readNcdioScalar(ncid, 'luna_theta_cj', subname, params_inst%luna_theta_cj)
-    ! The baseline proportion of nitrogen allocated for electron transport (J)
-    call readNcdioScalar(ncid, 'jmaxb0', subname, params_inst%jmaxb0)
-    ! The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (unitless)
-    call readNcdioScalar(ncid, 'wc2wjb0', subname, params_inst%wc2wjb0)
     ! The daily turnover rate for photosynthetic enzyme at 25oC in view of ~7 days of half-life time for Rubisco (Suzuki et al. 2001) (unitless)
     call readNcdioScalar(ncid, 'enzyme_turnover_daily', subname, params_inst%enzyme_turnover_daily)
     ! Specifies the impact of relative humidity on electron transport rate (unitless)
     call readNcdioScalar(ncid, 'relhExp', subname, params_inst%relhExp)
     ! Minimum relative humidity for nitrogen optimization (fraction)
     call readNcdioScalar(ncid, 'minrelh', subname, params_inst%minrelh)
+
+    call params_inst%allocParams()
+
+    tString = "jmaxb0"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%jmaxb0=temp1d
+    tString = "jmaxb1"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%jmaxb1=temp1d
+    tString = "wc2wjb0"
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%wc2wjb0=temp1d
 
    end subroutine readParams
 
@@ -233,7 +211,7 @@ module LunaMod
   
     ! !USES:
     use clm_time_manager      , only : get_step_size_real
-    use clm_varpar            , only : nlevsoi, mxpft
+    use clm_varpar            , only : nlevsoi
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
     use quadraticMod          , only : quadratic
@@ -439,8 +417,9 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), o3coefjmax(p), &
-                              PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
+                              params_inst%jmaxb0(ft), params_inst%jmaxb1(ft), params_inst%wc2wjb0(ft), PNlcold, PNetold, &
+                              PNrespold, PNcbold, dayl_factor(p), &
+                              o3coefjmax(p), PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
                           
@@ -825,7 +804,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
+     jmaxb0, jmaxb1, wc2wjb0, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -840,7 +819,9 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: tair10                     !10-day running mean of the 2m temperature (oC)
   real(r8), intent (in) :: tleafd10                   !10-day running mean of daytime leaf temperature (oC) 
   real(r8), intent (in) :: tleafn10                   !10-day running mean of nighttime leaf temperature (oC) 
-  real(r8), intent (in) :: Jmaxb1                     !coefficient determining the response of electron transport rate to light availability (unitless) 
+  real(r8), intent (in) :: jmaxb0                     !Baseline proportion of nitrogen allocated for electron transport (J)
+  real(r8), intent (in) :: jmaxb1                     !coefficient determining the response of electron transport rate to light availability (-) 
+  real(r8), intent (in) :: wc2wjb0                    !The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
   real(r8), intent (in) :: PNlcold                    !old value of the proportion of nitrogen allocated to light capture (unitless)
   real(r8), intent (in) :: PNetold                    !old value of the proportion of nitrogen allocated to electron transport (unitless)
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
@@ -928,7 +909,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   tleafd10c = min(max(tleafd10, Trange1), Trange2)    !constrain the physiological range
   tleafn10c = min(max(tleafn10, Trange1), Trange2)    !constrain the physiological range
   ci = 0.7_r8 * CO2a10 
-  JmaxCoef = Jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
+  JmaxCoef = jmaxb1 * dayl_factor * (1.0_r8 - exp(-params_inst%relhExp * max(relh10 - &
       params_inst%minrelh, 0.0_r8) / (1.0_r8 - params_inst%minrelh)))
   do while (PNlcoldi .NE. PNlc .and. jj < 100)      
      Fc = VcmxTKattge(tair10, tleafd10c) * Fc25
@@ -942,7 +923,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
      call Nitrogen_investments (KcKjFlag,FNCa, Nlc, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, tair10, &
           tleafd10c,tleafn10c, &
           Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, & 
-          Kc, Kj, ci, &
+          jmaxb0, wc2wjb0, Kc, Kj, ci, &
           Vcmax, Jmax,JmeanL,JmaxL, Net, Ncb, Nresp, PSN, RESP)
 
      Npsntarget = Nlc + Ncb + Net                                                         !target nitrogen allocated to photosynthesis, which may be lower or higher than Npsn_avail
@@ -957,7 +938,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc2, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
              Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
-             Kc, Kj, ci, &
+             jmaxb0, wc2wjb0, Kc, Kj, ci, &
              Vcmax, Jmax,JmeanL,JmaxL, Net2, Ncb2, Nresp2, PSN2, RESP2)
 
         Npsntarget2 = Nlc2 + Ncb2 + Net2
@@ -986,7 +967,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc1,forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
              Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
-             Kc, Kj, ci,&
+             jmaxb0, wc2wjb0, Kc, Kj, ci,&
              Vcmax, Jmax,JmeanL,JmaxL, Net1, Ncb1, Nresp1, PSN1, RESP1)
         Npsntarget1 = Nlc1 + Ncb1 + Net1
         Carboncost1 = (Npsntarget - Npsntarget1) * NMCp25 * Cv * (RespTBernacchi(tleafd10c) * hourpd + &
@@ -1017,7 +998,7 @@ end subroutine NitrogenAllocation
 subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
      CO2a10, O2a10, PARi10, PARimx10, rb10, hourpd, tair10, tleafd10, tleafn10, &
      Kj2Kc, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, &
-     Kc,  Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
+     jmaxb0, wc2wjb0, Kc,  Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
   implicit none
   integer,  intent (in) :: KcKjFlag                   !flag to indicate whether to update the Kc and Kj using the photosynthesis subroutine; 0--Kc and Kj need to be calculated; 1--Kc and Kj is prescribed.
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -1043,6 +1024,8 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: NUEjref                    !nitrogen use efficiency for electron transport under reference climates
   real(r8), intent (in) :: NUEr                       !nitrogen use efficiency for respiration
   real(r8), intent (in) :: o3coefjmax                 !ozone coef jmax 
+  real(r8), intent (in) :: jmaxb0                     !Baseline proportion of nitrogen allocated for electron transport (J)
+  real(r8), intent (in) :: wc2wjb0                    !The baseline ratio of rubisco limited rate vs light limited photosynthetic rate (Wc:Wj) (-)
 
   real(r8), intent (inout) :: Kc                      !conversion factors from Vc,max to Wc 
   real(r8), intent (inout) :: Kj                      !conversion factor from electron transport rate to Wj 
@@ -1072,7 +1055,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
   ELTRNabsorb = theta * PARi10
-  Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
+  Jmaxb0act = jmaxb0 * FNCa * Fj
 
   ! Default value of o3coefjmax is 1 -->
   ! o3coefjmax is only different from 1 if ozone_inst%stress_method == 'stress_falk'
@@ -1082,7 +1065,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
 
   JmaxL = theta * PARimx10 / (sqrt(1.0_r8 + (theta * PARimx10 / Jmax)**2.0_r8))        
   NUEchg = (NUEc / NUEcref) * (NUEjref / NUEj)
-  Wc2Wj = params_inst%wc2wjb0 * (NUEchg**0.5_r8)
+  Wc2Wj = wc2wjb0 * (NUEchg**0.5_r8)
   Vcmax = Wc2Wj * JmaxL * Kj2Kc
   JmeanL = theta * PARi10 / (sqrt(1.0_r8 + (ELTRNabsorb / Jmax)**2.0_r8))
   if(KcKjFlag.eq.0)then      !update the Kc,Kj, anc ci information
@@ -1422,7 +1405,6 @@ subroutine  Quadratic(a,b,c,r1,r2)
   end if
         
 end subroutine Quadratic
-	
 
 end module LunaMod
 
