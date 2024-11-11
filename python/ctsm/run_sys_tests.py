@@ -8,6 +8,7 @@ import subprocess
 from datetime import datetime
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
+from CIME.test_utils import test_to_string  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
 from ctsm.ctsm_logging import (
@@ -780,6 +781,10 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
+    logger.info("Tests:")
+    for test in test_data:
+        test_string = test_to_string(test).split(" ")[1]
+        logger.info("   %s", test_string)
     if not running_ctsm_py_tests:
         _check_py_env([t["testname"] for t in test_data])
         _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
