@@ -206,7 +206,6 @@ contains
     ! are passed to CLM in initialization, then this code block can be removed.
     ! ========================================================================
 
-!KO I think leaving this in here is still necessary even though is_first_step is now based on nstep=1
     need_glacier_initialization = is_first_step()
     
     if (need_glacier_initialization) then
@@ -1369,41 +1368,38 @@ contains
     ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
     ! use_fates) then statement ... double check if this is required and why
 
-!   I don't think this is necessary since there no longer an nstep=0
-!KO    if (nstep > 0) then
-       call t_startf('accum')
+    call t_startf('accum')
 
-       call atm2lnd_inst%UpdateAccVars(bounds_proc)
+    call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
-       call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
+    call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
 
-       call canopystate_inst%UpdateAccVars(bounds_proc)
+    call canopystate_inst%UpdateAccVars(bounds_proc)
 
-       call water_inst%UpdateAccVars(bounds_proc)
+    call water_inst%UpdateAccVars(bounds_proc)
 
-       call energyflux_inst%UpdateAccVars(bounds_proc)
+    call energyflux_inst%UpdateAccVars(bounds_proc)
 
-       ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
-       ! compiling this threaded, I needed to change the dummy arguments to be
-       ! pointers, and get rid of the explicit bounds in the subroutine call.
-       ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-       !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-       !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-       call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-            t_a10_patch=temperature_inst%t_a10_patch, &
-            t_ref2m_patch=temperature_inst%t_ref2m_patch)
+    ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+    ! compiling this threaded, I needed to change the dummy arguments to be
+    ! pointers, and get rid of the explicit bounds in the subroutine call.
+    ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+    !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+    !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+    call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+         t_a10_patch=temperature_inst%t_a10_patch, &
+         t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-       if (use_crop) then
-          call crop_inst%CropUpdateAccVars(bounds_proc, &
-               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
-       end if
+    if (use_crop) then
+       call crop_inst%CropUpdateAccVars(bounds_proc, &
+            temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
+    end if
 
-       if(use_fates) then
-          call clm_fates%UpdateAccVars(bounds_proc)
-       end if
+    if(use_fates) then
+       call clm_fates%UpdateAccVars(bounds_proc)
+    end if
 
-       call t_stopf('accum')
-!KO    end if
+    call t_stopf('accum')
 
     ! ============================================================================
     ! Update history buffer
