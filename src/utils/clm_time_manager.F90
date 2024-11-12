@@ -1734,7 +1734,7 @@ contains
   logical function is_first_step()
 
     !---------------------------------------------------------------------------------
-    ! Return true on first step of initial run only.
+    ! Return true on first step of any run.
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::is_first_step'
