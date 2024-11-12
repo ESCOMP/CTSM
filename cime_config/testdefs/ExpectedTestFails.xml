@@ -334,6 +334,19 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
 
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
@@ -343,6 +356,13 @@
   </test>
 
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLandUse">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2810</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2810</issue>
