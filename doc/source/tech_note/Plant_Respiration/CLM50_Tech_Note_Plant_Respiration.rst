@@ -70,6 +70,8 @@ The total maintenance respiration cost is then given as:
 
    CF_{mr} =CF_{mr\_ leaf} +CF_{mr\_ froot} +CF_{mr\_ livestem} +CF_{mr\_ livecroot} .
 
+.. _Growth Respiration:
+
 Growth Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

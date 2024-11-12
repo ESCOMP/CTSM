@@ -114,6 +114,8 @@ contains
     use ESMF              , only : ESMF_StateAdd
     use ESMF              , only : operator(==)
 
+    use shr_dust_emis_mod , only : shr_dust_emis_readnl
+
     ! input/output variables
     type(ESMF_GridComp)  :: comp         ! CLM gridded component
     type(ESMF_State)     :: import_state ! CLM import state
@@ -269,6 +271,9 @@ contains
 
     ! Fill in the value for model_meshfile in lnd_comp_shr used by the stream routines in share_esmf/
     model_meshfile = trim(lnd_mesh_filename)
+
+    ! Reading in the drv_flds_in namelist is required for dust emissions
+    call shr_dust_emis_readnl( mpicom, "drv_flds_in")
 
     !----------------------
     ! Obtain caseid and start type from attributes in import state

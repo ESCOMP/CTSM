@@ -358,7 +358,7 @@ For one-dimensional vertical water flow in soils, the conservation of mass is st
 
 where :math:`\theta` is the volumetric soil water content (mm\ :sup:`3` of water / mm\ :sup:`-3` of soil), :math:`t` is time (s), :math:`z` is height above some datum in the soil column (mm) (positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2` s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and :math:`e` is a soil moisture sink term (mm of water mm\ :sup:`-1` of soil s\ :sup:`-1`) (ET loss). This equation is solved numerically by dividing the soil column into multiple layers in the vertical and integrating downward over each layer with an upper boundary condition of the infiltration flux into the top soil layer :math:`q_{infl}` and a zero-flux lower boundary condition at the bottom of the soil column (sub-surface runoff is removed later in the timestep, section :numref:`Lateral Sub-surface Runoff`).
 
-The soil water flux :math:`q` in equation can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
+The soil water flux :math:`q` in equation :eq:`7.79` can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
    :label: 7.80
@@ -641,7 +641,7 @@ where
 
 The tridiagonal equation set is solved over :math:`i=1,\ldots,N_{levsoi}`.
 
-The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation as
+The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation :eq:`7.82` as
 
 .. math::
    :label: 7.115
@@ -895,7 +895,7 @@ The specific yield, :math:`S_{y}`, which depends on the soil properties and the 
 
 where B is the Clapp-Hornberger exponent. Because :math:`S_{y}` is a function of the soil properties, it results in water table dynamics that are consistent with the soil water fluxes described in section :numref:`Soil Water`.
 
-After the above calculations, two numerical adjustments are implemented to keep the liquid water content of each soil layer (:math:`w_{liq,\, i}` ) within physical constraints of :math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}` where :math:`w_{liq}^{\min } =0.01` (mm). First, beginning with the bottom soil layer :math:`i=N_{levsoi}`, any excess liquid water in each soil layer (:math:`w_{liq,\, i}^{excess} =w_{liq,\, i} -\left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i} \ge 0`) is successively added to the layer above. Any excess liquid water that remains after saturating the entire soil column (plus a maximum surface ponding depth :math:`w_{liq}^{pond} =10` kg m\ :sup:`-2`), is added to drainage :math:`q_{drai}`. Second, to prevent negative :math:`w_{liq,\, i}`, each layer is successively brought up to :math:`w_{liq,\, i} =w_{liq}^{\min }` by taking the required amount of water from the layer below. If this results in :math:`w_{liq,\, N_{levsoi} } <w_{liq}^{\min }`, then the layers above are searched in succession for the required amount of water (:math:`w_{liq}^{\min } -w_{liq,\, N_{levsoi} }` ) and removed from those layers subject to the constraint :math:`w_{liq,\, i} \ge w_{liq}^{\min }`. If sufficient water is not found, then the water is removed from :math:`W_{t}` and :math:`q_{drai}`.
+After the above calculations, two numerical adjustments are implemented to keep the liquid water content of each soil layer (:math:`w_{liq,\, i}` ) within physical constraints of :math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}` where :math:`w_{liq}^{\min } =0.01` (mm). First, beginning with the bottom soil layer :math:`i=N_{levsoi}`, any excess liquid water in each soil layer (:math:`w_{liq,\, i}^{excess} =w_{liq,\, i} -\left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i} \ge 0`) is successively added to the layer above. Any excess liquid water that remains after saturating the entire soil column is added to drainage :math:`q_{drai}`. Second, to prevent negative :math:`w_{liq,\, i}`, each layer is successively brought up to :math:`w_{liq,\, i} =w_{liq}^{\min }` by taking the required amount of water from the layer below. If this results in :math:`w_{liq,\, N_{levsoi} } <w_{liq}^{\min }`, then the layers above are searched in succession for the required amount of water (:math:`w_{liq}^{\min } -w_{liq,\, N_{levsoi} }` ) and removed from those layers subject to the constraint :math:`w_{liq,\, i} \ge w_{liq}^{\min }`. If sufficient water is not found, then the water is removed from :math:`W_{t}` and :math:`q_{drai}`.
 
 The soil surface layer liquid water and ice contents are then updated for dew :math:`q_{sdew}`, frost :math:`q_{frost}`, or sublimation :math:`q_{subl}` (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`) as
 

@@ -7,7 +7,7 @@ import string
 import re
 import pdb
 
-from datetime import date
+from datetime import date, timedelta
 from getpass import getuser
 
 from ctsm.git_utils import get_ctsm_git_short_hash
@@ -24,6 +24,24 @@ def abort(errmsg):
         pdb.set_trace()
 
     sys.exit("ERROR: {}".format(errmsg))
+
+
+def ensure_iterable(thing_we_want_iterable, iterable_length):
+    """
+    Ensure that a variable is iterable
+    """
+    already_iterable = True
+    try:
+        iter(thing_we_want_iterable)
+    except TypeError:
+        already_iterable = False
+
+    if not already_iterable:
+        thing_we_want_iterable = [thing_we_want_iterable] * iterable_length
+    elif len(thing_we_want_iterable) != iterable_length:
+        raise ValueError("Input is iterable but wrong length")
+
+    return thing_we_want_iterable
 
 
 def fill_template_file(path_to_template, path_to_final, substitutions):
@@ -189,3 +207,33 @@ def write_output(file, file_in, file_out, file_type):
     file.to_netcdf(path=file_out, mode="w", format="NETCDF3_64BIT")
     logger.info("Successfully created: %s", file_out)
     file.close()
+
+
+def get_isosplit(iso_string, split):
+    """
+    Split a string (iso_string) by the character sent in from split
+    Returns the number for that character split
+    Only used by parse_isoduration
+    """
+    if split in iso_string:
+        num, iso_string = iso_string.split(split)
+    else:
+        num = 0
+    return num, iso_string
+
+
+def parse_isoduration(iso_string):
+    """
+    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
+    """
+    # Remove prefix
+    iso_string = iso_string.split("P")[-1]
+
+    # Step through letter dividers
+    years, iso_string = get_isosplit(iso_string, "Y")
+    months, iso_string = get_isosplit(iso_string, "M")
+    days, iso_string = get_isosplit(iso_string, "D")
+
+    # Convert all to timedelta
+    delta_t = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
+    return int(delta_t.total_seconds() / 86400)

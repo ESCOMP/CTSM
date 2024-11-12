@@ -143,7 +143,7 @@ In the second step, after surface fluxes and snow/soil temperatures have been de
 
    w_{ice,\, snl+1}^{n+1} =w_{ice,\, snl+1}^{n} +f_{sno} \left(q_{frost} -q_{subl} \right)\Delta t.
 
-If :math:`w_{ice,\, snl+1}^{n+1} <0` upon solution of equation, the ice content is reset to zero and the liquid water content :math:`w_{liq,\, snl+1}` is reduced by the amount required to bring :math:`w_{ice,\, snl+1}^{n+1}` up to zero.
+If :math:`w_{ice,\, snl+1}^{n+1} <0` upon solution of equation :eq:`8.25`, the ice content is reset to zero and the liquid water content :math:`w_{liq,\, snl+1}` is reduced by the amount required to bring :math:`w_{ice,\, snl+1}^{n+1}` up to zero.
 
 The snow water equivalent :math:`W_{sno}` is capped to not exceed 10,000 kg m\ :sup:`-2`. If the addition of :math:`q_{frost}` were to result in :math:`W_{sno} > 10,000` kg m\ :sup:`-2`, the frost term :math:`q_{frost}` is instead added to the ice runoff term :math:`q_{snwcp,\, ice}` (section :numref:`Runoff from glaciers and snow-capped surfaces`).
 
@@ -192,7 +192,7 @@ where the volumetric liquid water :math:`\theta _{liq,\, i}` and ice :math:`\the
 
    \theta _{liq,\, i} =\frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} \rho _{liq} } \le 1-\theta _{ice,\, i} ,
 
-and :math:`S_{r} =0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson (1976) <Anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,\, i}` calculated in equation, unless the underlying layer is the surface soil layer, as
+and :math:`S_{r} =0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson (1976) <Anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,\, i}` calculated in equation :eq:`8.29`, unless the underlying layer is the surface soil layer, as
 
 .. math::
    :label: 8.32
@@ -206,7 +206,7 @@ The liquid water content :math:`w_{liq,\, i}`  is updated as
 
    w_{liq,\, i}^{n+1} =w_{liq,\, i}^{n} +\left(q_{i-1} -q_{i} \right)\Delta t.
 
-Equations - are solved sequentially from top (:math:`i=snl+1`) to bottom (:math:`i=0`) snow layer in each time step. The total flow of liquid water reaching the soil surface is then :math:`q_{liq,\, 0}` which is used in the calculation of surface runoff and infiltration (sections :numref:`Surface Runoff` and :numref:`Infiltration`).
+Equations :eq:`8.29` - :eq:`8.33` are solved sequentially from top (:math:`i=snl+1`) to bottom (:math:`i=0`) snow layer in each time step. The total flow of liquid water reaching the soil surface is then :math:`q_{liq,\, 0}` which is used in the calculation of surface runoff and infiltration (sections :numref:`Surface Runoff` and :numref:`Infiltration`).
 
 .. _Black and organic carbon and mineral dust within snow:
 

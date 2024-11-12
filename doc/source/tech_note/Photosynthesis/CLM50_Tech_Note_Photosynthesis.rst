@@ -253,7 +253,7 @@ The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`
 
    J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
 
-In these acclimation functions, :math:`T_{10}` is the 10-day mean air temperature (K) and :math:`T_{f}` is the freezing point of water (K). For lack of data, :math:`T_{p}` acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature range :math:`T_{10} -T_{f} \ge 11`°C and :math:`T_{10} -T_{f} \le 35`°C.
+In these acclimation functions, :math:`T_{10}` is the 10-day mean air temperature (K) and :math:`T_{f}` is the freezing point of water (K). For lack of data, :math:`T_{p}` acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature range :math:`T_{10} -T_{f} \ge` 11°C and :math:`T_{10} -T_{f} \le` 35°C.
 
 .. _Canopy scaling:
 
