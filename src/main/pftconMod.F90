@@ -886,13 +886,13 @@ contains
     call ncd_io('s_fix', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('nfix_tmin', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    call ncd_io('nfix_tmin', this%nfix_tmin, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('nfix_topt', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    call ncd_io('nfix_topt', this%nfix_topt, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('nfix_tmax', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    call ncd_io('nfix_tmax', this%nfix_tmax, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('akc_active', this%akc_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)

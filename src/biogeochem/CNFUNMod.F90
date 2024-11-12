@@ -291,7 +291,6 @@ module CNFUNMod
   real(r8)  :: litterfall_n_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
   real(r8)  :: litterfall_c_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
   real(r8)  :: tc_soisno(bounds%begc:bounds%endc,1:nlevdecomp)       ! Soil temperature                      (degrees Celsius)
-  real(r8)  :: tc_soila10(bounds%begc:bounds%endc)                   ! 10 day running mean Soil temperature  (degrees Celsius)
   real(r8)  :: npp_remaining(bounds%begp:bounds%endp,1:nstp)         ! A temporary variable for npp_remaining(gC/m2) 
   real(r8)  :: n_passive_step(bounds%begp:bounds%endp,1:nstp)        ! N taken up by transpiration at substep(gN/m2)
   real(r8)  :: n_passive_acc(bounds%begp:bounds%endp)                ! N acquired by passive uptake          (gN/m2)
@@ -468,19 +467,9 @@ module CNFUNMod
   real(r8) :: total_c_spent_retrans
   real(r8) :: total_c_accounted_retrans
 
-  ! Nfix parameters from Bytnerowicz et al. (2022), 
-  ! TODO, remove now that these have been put on parameter files
-  ! Temperate (and boreal)
   !real(r8) :: nfix_tmin = -2.04_r8
   !real(r8) :: nfix_topt = 32.10_r8
   !real(r8) :: nfix_tmax = 43.98_r8
-  ! Tropical parameters
-  !real(r8) :: nfix_tmin = 7.04_r8    ! Minimum temperature for tropical Nfix
-  !real(r8) :: nfix_topt = 33.22_r8   ! Optimum temperature for tropical Nfix
-  !real(r8) :: nfix_tmax = 45.35_r8   ! Max temperature for tropical N fix
-
-
-  
   !------end of not_use_nitrif_denitrif------!
   !--------------------------------------------------------------------
   !------------
@@ -501,6 +490,8 @@ module CNFUNMod
   integer   :: icost                             ! a local index
   integer   :: fixer                             ! 0 = non-fixer, 1
   ! =fixer 
+  !TODO, make namelist option
+  integer   :: nfix_method = 2                   ! 1 = Houlton, 2 = Bytnerowicz
   logical   :: unmetDemand                       ! True while there
   !  is still demand for N
   logical   :: local_use_flexibleCN              ! local version of use_flexCN
@@ -510,7 +501,7 @@ module CNFUNMod
   
   !--------------------------------------------------------------------
   !---------------------------------
-  associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
+  associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
@@ -538,10 +529,10 @@ module CNFUNMod
          perecm                 => pftcon%perecm                                        , & ! Input:   The fraction of ECM
          ! -associated PFT 
          grperc                 => pftcon%grperc                                        , & ! Input:   growth percentage
-         fun_cn_flex_a           => pftcon%fun_cn_flex_a                                , & ! Parameter a of FUN-flexcn link code (def 5)
-         fun_cn_flex_b           => pftcon%fun_cn_flex_b                                , & ! Parameter b of FUN-flexcn link code (def 200)
-         fun_cn_flex_c           => pftcon%fun_cn_flex_c                                , & ! Parameter b of FUN-flexcn link code (def 80)         
-         FUN_fracfixers          => pftcon%FUN_fracfixers                               , & ! Fraction of C that can be used for fixation.    
+         fun_cn_flex_a          => pftcon%fun_cn_flex_a                                 , & ! Parameter a of FUN-flexcn link code (def 5)
+         fun_cn_flex_b          => pftcon%fun_cn_flex_b                                 , & ! Parameter b of FUN-flexcn link code (def 200)
+         fun_cn_flex_c          => pftcon%fun_cn_flex_c                                 , & ! Parameter b of FUN-flexcn link code (def 80)
+         FUN_fracfixers         => pftcon%FUN_fracfixers                                , & ! Fraction of C that can be used for fixation.
          leafcn_offset          => cnveg_state_inst%leafcn_offset_patch                 , & ! Output:
          !  [real(r8)  (:)]  Leaf C:N used by FUN
          plantCN                => cnveg_state_inst%plantCN_patch                       , & ! Output:  [real(r8)  (:)]  Plant
@@ -722,8 +713,6 @@ module CNFUNMod
          !   liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
          t_soisno               => temperature_inst%t_soisno_col                                 , & ! Input:   [real(r8) (:,:)]
          !   soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         soila10                => temperature_inst%soila10_col                                  , & ! Input:  [real(r8) (:)   ] 
-         !   col 10-day running mean of the 12cm soil layer temperature (K)       
          crootfr                => soilstate_inst%crootfr_patch                                    & ! Input:   [real(r8) (:,:)]
          !   fraction of roots for carbon in each soil layer  (nlevgrnd)
          )
@@ -1070,45 +1059,48 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
          
             do j = 1, nlevdecomp
                tc_soisno(c,j)          = t_soisno(c,j)  -   tfrz
-               ! running mean soil temperature only calculated for single soil layer
-               tc_soila10(c)           = soila10(c)     -   tfrz
 
                if(pftcon%c3psn(patch%itype(p)).eq.1)then
                  fixer=1
                else
                  fixer=0
                endif
+
                ! TODO, make this a name list change determining which equation to use
-               ! This calls the Houlton function.
-               !  costNit(j,icostFix)     = fun_cost_fix(fixer,a_fix(ivt(p)),b_fix(ivt(p))&
-               !  ,c_fix(ivt(p)) ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+               if (nfix_method == 1) then
+                 ! This calls the Houlton function.
+                 costNit(j,icostFix) = fun_cost_fix(fixer,&
+                         a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p)),&
+                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+               elseif (nfix_method == 2) then
+                 ! Bytnerowicz no acclimation calculation
+                 
+                 ! Hardwiring the parameters works
+                 !costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer,&
+                 !   nfix_tmin, nfix_topt, nfix_tmax&
+                 !  ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+                 
+                 ! Debug print statements
+                 !write(iulog,*) "tmin, topt, tmax =", nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p))
+                 !write(iulog,*) "a_fix, b_fix, c_fix =", a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p))
+                 costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
+                         nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
+                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
 
-               ! Bytnerowicz no acclimation calculation
-               costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, nfix_tmin(ivt(p))&
-                       ,nfix_topt(ivt(p)), nfix_tmax(ivt(p)), big_cost,crootfr(p,j)&
-                       ,s_fix(ivt(p)), tc_soisno(c,j))
-
-
-               ! Bytnerowicz acclimation calculation
-               !costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_Acc(fixer,nfix_tmin,nfix_topt&
-               !,nfix_tmax ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soila10(c))
+               endif
 
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)
             
              
             !--------------------------------------------------------------------
-            !------------
             !         If passive uptake is insufficient, consider fixation,
             !          mycorrhizal 
             !         non-mycorrhizal, storage, and retranslocation.
             !--------------------------------------------------------------------
-            !------------
             !--------------------------------------------------------------------
-            !------------
             !          Costs of active uptake.
             !--------------------------------------------------------------------
-            !------------
             !------Mycorrhizal Uptake Cost-----------------!
             do j = 1,nlevdecomp
                rootc_dens_step            = rootc_dens(p,j) *  permyc(p,istp)
@@ -1658,92 +1650,25 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
 !--------------------------------------------------------------------------
   integer,  intent(in) :: fixer     ! flag indicating if plant is a fixer
                                     ! 1=yes, otherwise no.
-  real(r8), intent(in) :: nfix_tmin  ! As in Bytnerowicz et al. (2022)    
-  real(r8), intent(in) :: nfix_topt  ! As in Bytnerowicz et al. (2022)     
-  real(r8), intent(in) :: nfix_tmax  ! As in Bytnerowicz et al. (2022)    
+  real(r8), intent(in) :: nfix_tmin ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_topt ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_tmax ! As in Bytnerowicz et al. (2022)
   real(r8), intent(in) :: big_cost  ! an arbitrary large cost (gC/gN)
   real(r8), intent(in) :: crootfr   ! fraction of roots for carbon that are in this layer
-  real(r8), intent(in) :: s_fix     ! Inverts Houlton et al. 2008 and constrains between 7.5 and 12.5
+  real(r8), intent(in) :: s_fix     ! Inverts the temperature function for a cost function
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
   if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
-     fun_cost_fix_Bytnerowicz_noAcc  = (-1*s_fix) / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
-                                                    ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
-                                                      ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
- 
+     fun_cost_fix_Bytnerowicz_noAcc  = (-1*s_fix) * 1._r8 / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
+                                                            ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
+                                                              ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
+     fun_cost_fix_Bytnerowicz_noAcc = min(fun_cost_fix_Bytnerowicz_noAcc,big_cost)
   else
      fun_cost_fix_Bytnerowicz_noAcc = big_cost
   end if    ! ends up with the fixer or non-fixer decision
 
   end function fun_cost_fix_Bytnerowicz_noAcc
 !=========================================================================================
-
-! TODO, likely just remove the acclimation fuction, as it seems pretty complicated and didn't change point-scale results
-!=========================================================================================
-  real(r8) function fun_cost_fix_Bytnerowicz_Acc(fixer,nfix_tmin,nfix_topt,nfix_tmax,big_cost,crootfr,s_fix,tc_soisno,tc_soila10) 
-
-! Description:
-!   Calculate the cost of fixing N by nodules.
-! Code Description:
-!   This code is written to CTSM5.1 by Will Wieder 11/17/2022
-
-  implicit none
-!--------------------------------------------------------------------------
-! Function result.
-!--------------------------------------------------------------------------
-! real(r8) , intent(out) :: cost_of_n   !!! cost of fixing N (kgC/kgN)
-!--------------------------------------------------------------------------
-  integer,  intent(in) :: fixer     ! flag indicating if plant is a fixer
-                                    ! 1=yes, otherwise no.
-  real(r8), intent(inout) :: nfix_tmin  ! As in Bytnerowicz et al. (2022)    
-  real(r8), intent(inout) :: nfix_topt  ! As in Bytnerowicz et al. (2022)     
-  real(r8), intent(inout) :: nfix_tmax  ! As in Bytnerowicz et al. (2022)    
-  real(r8), intent(in) :: big_cost  ! an arbitrary large cost (gC/gN)
-  real(r8), intent(in) :: crootfr   ! fraction of roots for carbon that are in this layer
-  real(r8), intent(in) :: s_fix     ! Inverts Houlton et al. 2008 and constrains between 7.5 and 12.5
-  real(r8), intent(in) :: tc_soila10 ! 10 day running mean soil temperature, 12 cm (degrees Celsius)
-  real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
-
-  ! Temperate temperature function
-  !if (tc_soila10 < 18.5_r8) then
-  !   nfix_tmin = -2.04_r8
-  !   nfix_topt = 32.10_r8  
-  !   nfix_tmax = 43.98_r8 
-  !else if (tc_soila10 >= 18.5_r8 .and. tc_soila10 < 28.5_r8) then
-  !   nfix_tmin = 0.697_r8 * tc_soila10 - 14.93_r8          
-  !   nfix_topt = 0.047_r8 * tc_soila10 + 31.24_r8
-  !   nfix_tmax = 0.009_r8 * tc_soila10 + 43.82_r8
-  !else
-  !   nfix_tmin = 4.93_r8
-  !   nfix_topt = 32.58_r8
-  !   nfix_tmax = 44.08_r8
-  !end if
-  !Tropical temperature function !Tmax never changes!
-  nfix_tmax = 45.35_r8
-  if (tc_soila10 < 18.5_r8) then
-     nfix_tmin = 2.37_r8  !parameter not the same as in noACC
-     nfix_topt = 30.34_r8
-  else if (tc_soila10 >= 18.5_r8 .and. tc_soila10 < 28.5_r8) then
-     nfix_tmin = 0.932_r8 * tc_soila10 - 14.87_r8
-     nfix_topt = 0.574_r8 * tc_soila10 + 19.72_r8
-  else if (tc_soila10 >= 28.5_r8) then
-     nfix_tmin = 11.69_r8
-     nfix_topt = 36.08_r8  
-  end if
-
-  if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
-     fun_cost_fix_Bytnerowicz_Acc  = (-1*s_fix) / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
-                                                    ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
-                                                      ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
-
-  !fun_cost_fix  = (-1*s_fix) * 1.0_r8 / (1.25_r8* (exp(a_fix + b_fix * tc_soila10 * (1._r8 - 0.5_r8 * tc_soila10 / c_fix)) ))
-  else
-     fun_cost_fix_Bytnerowicz_Acc = big_cost
-  end if    ! ends up with the fixer or non-fixer decision
-
-  end function fun_cost_fix_Bytnerowicz_Acc
-!=========================================================================================
-
 
 !=========================================================================================
   real(r8) function fun_cost_active(sminn_layer,big_cost,kc_active,kn_active,rootc_dens,crootfr,smallValue)         
