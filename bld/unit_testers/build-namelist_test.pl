@@ -412,7 +412,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
          }
       }
    }
-   system( "/bin/rm $namelistfile" );
+   system( "/bin/rm -f $namelistfile" );
    &cleanup();
 }
 print "\n===============================================================================\n";
@@ -466,7 +466,7 @@ foreach my $site (
    if ( defined($opts{'generate'}) ) {
       $cfiles->copyfiles( "$options", $mode );
    }
-   system( "/bin/rm $namelistfile" );
+   system( "/bin/rm -f $namelistfile" );
    &cleanup();
 }
 
@@ -1971,7 +1971,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
 }
 &cleanup();
 
-system( "/bin/rm $finidat" );
+system( "/bin/rm -f $finidat" );
 
 print "\n==================================================\n";
 print " Dumping output  \n";
@@ -1982,7 +1982,7 @@ $xFail->parseOutput($captOut);
 print "Successfully ran all testing for build-namelist\n\n";
 
 &cleanup( "config" );
-system( "/bin/rm $tempfile" );
+system( "/bin/rm -f $tempfile" );
 
 sub cleanup {
 #
@@ -1993,10 +1993,10 @@ sub cleanup {
   print "Cleanup files created\n";
   if ( defined($type) ) {
      if ( $type eq "config" ) {
-        system( "/bin/rm config_cache.xml" );
+        system( "/bin/rm -f config_cache.xml" );
      }
   } else {
-     system( "/bin/rm $tempfile *_in" );
+     system( "/bin/rm -f $tempfile *_in" );
   }
 }
 
