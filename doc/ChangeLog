@@ -1,4 +1,91 @@
 ===============================================================
+Tag name: ctsm5.3.011
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Mon Nov 11 17:55:57 MST 2024
+One-line Summary: Improve handling of cold-start finidat
+
+Purpose and description of changes
+----------------------------------
+
+This PR changes things so that:
+
+1. Cold-start FATES runs with finidat specified will not require -ignore_warnings, and the supplied finidat will actually be obeyed.
+2. Cold-start non-FATES runs will not be allowed, even with -ignore_warnings.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed:
+- Resolves ESCOMP/CTSM#2856: FATES will never start from specified finidat (https://github.com/ESCOMP/CTSM/issues/2856)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+Adds three fates suite tests to expected fails:
+- ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesCold
+- SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro
+- ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES cold-start runs with finidat
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2870: Fix handling of finidat with cold starts (https://github.com/ESCOMP/CTSM/pull/2870)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.010
 Originator(s): afoster (Adrianna Foster)
 Date: Sat Nov  9 12:54:18 MST 2024
