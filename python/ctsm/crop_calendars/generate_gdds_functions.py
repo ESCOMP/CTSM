@@ -552,7 +552,7 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     myVars = [clm_gdd_var, "GDDHARV"]
-    patterns = [f"*h2.{thisYear-1}-01*.nc", f"*h2.{thisYear-1}-01*.nc.base"]
+    patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
     for p in patterns:
         pattern = os.path.join(indir, p)
         h2_files = glob.glob(pattern)
