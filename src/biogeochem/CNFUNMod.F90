@@ -467,9 +467,6 @@ module CNFUNMod
   real(r8) :: total_c_spent_retrans
   real(r8) :: total_c_accounted_retrans
 
-  !real(r8) :: nfix_tmin = -2.04_r8
-  !real(r8) :: nfix_topt = 32.10_r8
-  !real(r8) :: nfix_tmax = 43.98_r8
   !------end of not_use_nitrif_denitrif------!
   !--------------------------------------------------------------------
   !------------
@@ -1074,15 +1071,6 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                elseif (nfix_method == 2) then
                  ! Bytnerowicz no acclimation calculation
-                 
-                 ! Hardwiring the parameters works
-                 !costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer,&
-                 !   nfix_tmin, nfix_topt, nfix_tmax&
-                 !  ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
-                 
-                 ! Debug print statements
-                 !write(iulog,*) "tmin, topt, tmax =", nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p))
-                 !write(iulog,*) "a_fix, b_fix, c_fix =", a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p))
                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
                          nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
