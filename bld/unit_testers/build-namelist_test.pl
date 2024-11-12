@@ -1303,6 +1303,7 @@ foreach my $key ( keys(%failtest) ) {
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
+   &cleanup();
 }
 
 
@@ -1386,12 +1387,14 @@ foreach my $key ( keys(%warntest) ) {
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
+   &cleanup();
    # Now run with -ignore_warnings and make sure it works
    $options .= " -ignore_warnings";
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
+   &cleanup();
 }
 
 print "\n===============================================================================\n";
@@ -1442,6 +1445,7 @@ foreach my $key ( keys(%coldwfinidat) ) {
       $finidat = `grep finidat lnd_in`;
       ok ( $finidat =~ "testfile.nc", "coldwfinidat $key finidat? $finidat" );
    }
+   &cleanup();
 }
 
 #
