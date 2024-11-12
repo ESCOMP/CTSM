@@ -256,9 +256,9 @@
       <value compset="_CLM[^_]*%SP"       >-bgc sp</value>
       <value compset="_CLM[^_]*BGC"       >-bgc bgc</value>
       <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
-      <value compset="_CLM[^_]*FATES"       >-bgc fates -nomegan</value>
-      <value compset="_CLM[^_]*FATES-SP"    >-bgc fates -nomegan</value>
-      <value compset="_CLM[^_]*FATES-NOCOMP">-bgc fates -nomegan</value>
+      <value compset="_CLM[^_]*FATES"       >-bgc fates</value>
+      <value compset="_CLM[^_]*FATES-SP"    >-bgc fates</value>
+      <value compset="_CLM[^_]*FATES-NOCOMP">-bgc fates</value>
 
       <!-- Options specific for CLM4.5 -->
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>

@@ -251,7 +251,8 @@ def buildnml(case, caseroot, compname):
                 )
 
     if comp_atm != "datm":
-        nomeg = "-no-megan"
+        #nomeg = "-no-megan"
+        nomeg = ""
     else:
         nomeg = ""
 
