@@ -2591,16 +2591,9 @@ sub setup_logic_initial_conditions {
   my $finidat = $nl->get_value($var);
   $nl_flags->{'excess_ice_on_finidat'} = "unknown";
   if ( $nl_flags->{'clm_start_type'} =~ /cold/ ) {
-      # start of hack
-      # THIS is a temporary hack to enable fates to use finidat values for startup runs
-    my $is_fates = $nl_flags->{'use_fates'};
-    if (defined $finidat && not $is_fates) {
-      # end of hack
-      $log->warning("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incomptable with using a cold start" .
+    if (defined $finidat && !&value_is_true(($nl->get_value('use_fates')))) {
+      $log->fatal_error("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incompatible with using a cold start" .
               " (by setting CLM_FORCE_COLDSTART=on)." );
-      $log->warning("Overridding input $var file with one specifying that this is a cold start from arbitrary initial conditions." );
-      my $group = $definition->get_group_name($var);
-      $nl->set_variable_value($group, $var, "' '" );
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 $var, 'val'=>"' '", 'no_abspath'=>1);
@@ -2763,6 +2756,12 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
         $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
      }
   }
+
+  # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
+  if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
+     $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values from initial conditions, even if the initial conditions (finidat) file has hillslope information. If you are sure you want this behaviour, add -ignore_warnings to CLM_BLDNML_OPTS.")
+  }
+
 } # end initial conditions
 
 #-------------------------------------------------------------------------------
@@ -3603,17 +3602,6 @@ sub setup_logic_luna {
   if ( &value_is_true($nl->get_value('lnc_opt') ) && not &value_is_true( $nl_flags->{'use_cn'}) ) {
      $log->fatal_error("Cannot turn lnc_opt to true when bgc=sp" );
   }
-  my $var = "jmaxb1";
-  if ( &value_is_true( $nl_flags->{'use_luna'} ) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'use_luna'=>$nl_flags->{'use_luna'} );
-  }
-  my $val = $nl->get_value($var);
-  if ( ! &value_is_true( $nl_flags->{'use_luna'} ) ) {
-     if ( defined($val) ) {
-        $log->fatal_error("Cannot set $var when use_luna is NOT on" );
-     }
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3636,6 +3624,10 @@ sub setup_logic_hillslope {
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
       $log->fatal_error("Cannot turn on use_hillslope_routing when use_hillslope is off\n" );
+  }
+  my $hillslope_file = $nl->get_value('hillslope_file');
+  if ( &value_is_true($use_hillslope) && ( ! defined($hillslope_file) ) ) {
+    $log->fatal_error("You must provide hillslope_file if use_hillslope is .true.\n" );
   }
 }
 
@@ -4519,8 +4511,6 @@ sub setup_logic_canopyhydrology {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'interception_fraction' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'maximum_leaf_wetted_fraction' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_clm5_fpi' );
 }
 
@@ -4539,7 +4529,6 @@ sub setup_logic_snowpack {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upplim_destruct_metamorph');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc_ela');

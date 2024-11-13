@@ -5,16 +5,13 @@
 
 .. include:: ../substitutions.rst
 
-.. _running-PTCLM:
+.. _using-mesh-maker-index:
 
 #####################################
-Running PTCLM
+Using mesh_maker
 #####################################
 
 .. toctree::
    :maxdepth: 2
 
-   introduction-to-ptclm.rst
-   using-ptclm.rst
-   ptclm-examples.rst
-   adding-ptclm-site-data.rst
+   how-to-make-mesh.rst
