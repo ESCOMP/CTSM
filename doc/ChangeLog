@@ -1,4 +1,62 @@
 ===============================================================
+Tag name: ctsm5.3.012
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Wed 13 Nov 2024 09:53:51 AM MST
+One-line Summary: update fates tag
+
+Purpose and description of changes
+----------------------------------
+
+Updates FATES tag to latest fates main (sci.1.79.3_api.37.0.0), and updates API to go
+along with latest FATES update to refactor it's fire equations
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Round-off differences for FATES compsets where fire is active.
+NLCOMP differences for some FATES compsets
+
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2782: Fates fuel refactor (https://github.com/ESCOMP/CTSM/pull/2782)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.011
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Nov 11 17:55:57 MST 2024
