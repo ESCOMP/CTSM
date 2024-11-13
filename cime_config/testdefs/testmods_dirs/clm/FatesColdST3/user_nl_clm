@@ -1,1 +1,2 @@
 use_fates_ed_st3= .true.
+hist_fexcl1 = 'FATES_ERROR_EL'

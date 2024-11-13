@@ -28,7 +28,7 @@ module histFileMod
   use FatesInterfaceTypesMod , only : nlevheight
   use FatesInterfaceTypesMod , only : nlevdamage
   use FatesConstantsMod      , only : n_landuse_cats
-  use FatesLitterMod         , only : nfsc
+  use FatesFuelClassesMod    , only : num_fuel_classes
   use FatesLitterMod         , only : ncwd
   use PRTGenericMod          , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
@@ -91,6 +91,7 @@ module histFileMod
 
   character(len=max_namlen+2), public :: &
        hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
+                                         !            aka 'h0' history file.
   character(len=max_namlen+2), public :: &
        hist_fincl2(max_flds) = ' '       ! namelist: list of fields to include in history tape 2
   character(len=max_namlen+2), public :: &
@@ -116,6 +117,7 @@ module histFileMod
 
   character(len=max_namlen+2), public :: &
        hist_fexcl1(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 1
+                                   !           aka 'h0' history file.
   character(len=max_namlen+2), public :: &
        hist_fexcl2(max_flds) = ' ' ! namelist: list of fields to exclude from history tape 2
   character(len=max_namlen+2), public :: &
@@ -2518,7 +2520,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levpft', numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levage', nlevage, dimid)
        call ncd_defdim(lnfid, 'fates_levheight', nlevheight, dimid)
-       call ncd_defdim(lnfid, 'fates_levfuel', nfsc, dimid)
+       call ncd_defdim(lnfid, 'fates_levfuel', num_fuel_classes, dimid)
        call ncd_defdim(lnfid, 'fates_levcwdsc', ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
@@ -2533,7 +2535,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
-       call ncd_defdim(lnfid, 'fates_levagefuel', nlevage * nfsc, dimid)
+       call ncd_defdim(lnfid, 'fates_levagefuel', nlevage * num_fuel_classes, dimid)
        call ncd_defdim(lnfid, 'fates_levclscpf', nclmax*nlevsclass*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levlanduse', n_landuse_cats, dimid)
        call ncd_defdim(lnfid, 'fates_levlulu', n_landuse_cats * n_landuse_cats, dimid)
@@ -5628,7 +5630,7 @@ contains
     case ('fates_levheight')
        num2d = nlevheight
     case ('fates_levfuel')
-       num2d = nfsc
+       num2d = num_fuel_classes
     case ('fates_levcwdsc')
        num2d = ncwd
     case ('fates_levscpf')
@@ -5668,7 +5670,7 @@ contains
     case ('fates_levelage')
        num2d = num_elements_fates*nlevage
     case ('fates_levagefuel')
-       num2d = nlevage*nfsc
+       num2d = nlevage*num_fuel_classes
     case('fates_levclscpf')
        num2d = nclmax * nclmax * numpft_fates
     case ('fates_levlanduse')
