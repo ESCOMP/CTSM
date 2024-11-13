@@ -560,7 +560,7 @@ def import_and_process_1yr(
             break
     if not h2_files:
         error(logger, f"No files found matching patterns: {patterns}")
-    h2_ds = utils.import_ds(
+    h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
