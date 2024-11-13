@@ -3166,15 +3166,16 @@
       <option name="comment"  >Run a test with dry deposition on and FATES-SP</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run a test with MEGAN on and FATES-SP</option>
-    </options>
-  </test>
+  <!-- TODO: remove since megan will always be on with FATES now -->
+  <!-- <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen"> -->
+  <!--   <machines> -->
+  <!--     <machine name="derecho" compiler="gnu" category="aux_clm"/> -->
+  <!--   </machines> -->
+  <!--   <options> -->
+  <!--     <option name="wallclock">00:20:00</option> -->
+  <!--     <option name="comment"  >Run a test with MEGAN on and FATES-SP</option> -->
+  <!--   </options> -->
+  <!-- </test> -->
 
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
@@ -3697,15 +3698,6 @@
     <options>
       <option name="wallclock">00:30:00</option>
       <option name="comment">""</option>
-    </options>
-  </test>
-  <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdMeganSatPhen">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"></option>
     </options>
   </test>
   <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesColdDryDepSatPhen">
