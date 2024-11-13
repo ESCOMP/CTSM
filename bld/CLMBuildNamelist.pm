@@ -978,7 +978,7 @@ sub setup_cmdl_bgc {
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'use_fates'=>$nl_flags->{'use_fates'},
               , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
               , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
@@ -1214,7 +1214,7 @@ sub setup_cmdl_spinup {
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
                 $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
                 use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
@@ -1357,6 +1357,8 @@ sub setup_cmdl_run_type {
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
     }
   }
+  print "\n";
+  print "DEBUG0: clm_start_type is $nl_flags->{'clm_start_type'}\n";
   if ( ! defined $set ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
@@ -1364,6 +1366,7 @@ sub setup_cmdl_run_type {
                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'} );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
+  print "DEBUG1: clm_start_type is $nl_flags->{'clm_start_type'}\n";
   $nl_flags->{'st_year'}        = $st_year;
 }
 
@@ -2588,7 +2591,11 @@ sub setup_logic_initial_conditions {
   my $finidat = $nl->get_value($var);
   $nl_flags->{'excess_ice_on_finidat'} = "unknown";
   if ( $nl_flags->{'clm_start_type'} =~ /cold/ ) {
-    if (defined $finidat ) {
+      # start of hack
+      # THIS is a temporary hack to enable fates to use finidat values for startup runs
+    my $is_fates = $nl_flags->{'use_fates'};
+    if (defined $finidat && not $is_fates) {
+      # end of hack
       $log->warning("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incomptable with using a cold start" .
               " (by setting CLM_FORCE_COLDSTART=on)." );
       $log->warning("Overridding input $var file with one specifying that this is a cold start from arbitrary initial conditions." );
@@ -4969,7 +4976,7 @@ sub setup_logic_exice {
   # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string());
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   # Put use_exice into nl_flags so can be referenced later
   if ( value_is_true($use_exice) ) {

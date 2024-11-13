@@ -16,7 +16,7 @@
     <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
     <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%FATES-NOCOMP][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
-    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
+    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%FATES-NOCOMP][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
@@ -256,8 +256,8 @@
       <value compset="_CLM[^_]*%SP"       >-bgc sp</value>
       <value compset="_CLM[^_]*BGC"       >-bgc bgc</value>
       <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
-      <value compset="_CLM[^_]*FATES"     >-bgc fates -no-megan</value>
-      <value compset="_CLM[^_]*FATES-SP"  >-bgc fates -no-megan</value>
+      <value compset="_CLM[^_]*FATES"       >-bgc fates</value>
+      <value compset="_CLM[^_]*FATES-SP"    >-bgc fates</value>
       <value compset="_CLM[^_]*FATES-NOCOMP">-bgc fates</value>
 
       <!-- Options specific for CLM4.5 -->
@@ -333,7 +333,7 @@
       to create_newcase.  The default value is UNSET.
       For NEON cases, this can be set to either NEON or NEON.PRISM, the latter of which would
       use PRISM precipitation instead of the default NEON precipitation. NEON cases then also
-      use the variable NEONSITE to specify the exact site. PLUMBER cases use the variable 
+      use the variable NEONSITE to specify the exact site. PLUMBER cases use the variable
       PLUMBER2SITE to specify the exact site.</desc>
   </entry>
 
@@ -367,12 +367,13 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value                  compset="_CLM60%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
-      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
-      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
-      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
-      <value                  compset="_CLM51%[^_]*FATES-NOCOMP[%_]"  >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_nocomp</value>
-      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
+      <value                  compset="_CLM60%[^_]*FATES-SP[%_]"    >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
+      <value                  compset="_CLM60%[^_]*FATES-NOCOMP[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_nocomp</value>
+      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"    >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
+      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"   >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
+      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"    >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
+      <value                  compset="_CLM51%[^_]*FATES-NOCOMP[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_nocomp</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"   >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
       <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
     </values>
