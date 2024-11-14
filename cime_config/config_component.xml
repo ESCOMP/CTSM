@@ -172,11 +172,9 @@
     <type>logical</type>
     <valid_values>TRUE,FALSE</valid_values>
     <default_value>TRUE</default_value>
-    <!-- Until CAM sets dust settings in drv_flds_in this should only be TRUE
     <values>
-      <value compset="CAM"  >FALSE</value>
+      <value compset="CAM">FALSE</value>
     </values>
-    -->
     <group>run_component_cpl</group>
     <file>env_run.xml</file>
     <desc>If CTSM will set the dust settings in drv_flds_in (TRUE), or if ATM (i.e. CAM) will - DO NOT EDIT (set by compset name)</desc>
