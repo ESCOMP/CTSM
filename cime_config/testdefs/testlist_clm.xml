@@ -161,7 +161,7 @@
       <option name="comment">CESM3 development Exact restart test for all startup types at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS_Ld31" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -415,7 +415,7 @@
       <option name="comment"  >Include an excess ice test starting up from streams</option>
     </options>
   </test>
-  <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm60Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
+  <test name="SMS_Ly1" grid="f09_f09_mg17" compset="I1850Clm60Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -865,7 +865,7 @@
       <option name="comment"  >Run soil matrix solution without CN matrix with debug on and the extra options that it interacts with (isotopes and crop)</option>
     </options>
   </test>
-  <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
+  <test name="ERS_Ld396" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
@@ -875,7 +875,7 @@
       <option name="comment"  >Run matrix solution fast spinup for restart beyond a year (to trigger next year logic) turning off extra options to make faster (so without crop or isotopes). This test would've caught a previous bug.</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/clm60_monthly_matrixcn_soilCN30">
+  <test name="SMS_Ld31" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/clm60_monthly_matrixcn_soilCN30">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -914,7 +914,7 @@
       <option name="comment"  >Run without DEBUG for a long period for a single-point case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
-  <test name="LCISO_Lm13" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
+  <test name="LCISO_Ld396" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -1447,7 +1447,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P64x2_Lm13" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly">
+  <test name="ERP_P64x2_Ld396" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -1457,7 +1457,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="ERP_P64x2_Lm13" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
+  <test name="ERP_P64x2_Ld396" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -1468,7 +1468,7 @@
       <option name="comment"  >Repeat ERP_P64x2_Lm13...monthly test with matrixcnOn</option>
     </options>
   </test>
-  <test name="REP_P64x2_Lm13" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -1528,7 +1528,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P64x2_Lm25" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
+  <test name="ERP_P64x2_Ld761" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1564,7 +1564,7 @@
       <option name="comment"  >Want a multi-year global crop restart test; this was 5 years when we were doing cold start, but 3 years is probably sufficient given that we have spun-up crop initial conditions</option>
     </options>
   </test>
-  <test name="ERP_P64x2_Lm36" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
+  <test name="ERP_P64x2_Ly3" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -1939,7 +1939,7 @@
       <option name="comment"  >Include one LVG debug test (exact configuration is not very important). Note that the LVG test will fail if there is any 1-d output, or output separated by glacier elevation classes (e.g., the various *_FORC fields), so this includes a testmod that turns off any 1-d output.</option>
     </options>
   </test>
-  <test name="LCISO_Lm13" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/ciso_monthly">
+  <test name="LCISO_Ld396" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -1949,7 +1949,7 @@
       <option name="comment"  >Make sure Carbon isotopes on and off with land-use change, does NOT change answers. To verify for landuse change must go beyond a year boundary, because of #404 we can't use a December start, so need to run for beyond the year boundary.</option>
     </options>
   </test>
-  <test name="LCISO_Lm13" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/ciso_monthly--clm/matrixcnOn_ignore_warnings">
+  <test name="LCISO_L396" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/ciso_monthly--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -2360,7 +2360,7 @@
     </options>
   </test>
 
-  <test name="ERS_P128x1_Lm25" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
+  <test name="ERS_P128x1_Ld761" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <!-- no izumi tests since this has a pe layout specific for derecho -->
       <machine name="derecho" compiler="intel"   category="aux_clm"/>
@@ -2426,7 +2426,7 @@
       <option name="comment"  >Want a debug test that tests a number of aspects of transient crops, including a new crop landunit and shifting PCT_CFT; move to CLM50 once we can get it fast enough (see bug 2391)</option>
     </options>
   </test>
-  <test name="ERS_Lm25" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynlakes_monthly">
+  <test name="ERS_Ld761" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynlakes_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -2435,7 +2435,7 @@
       <option name="comment">Include a test of transient lakes</option>
     </options>
   </test>
-  <test name="ERS_Lm25" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+  <test name="ERS_Ld761" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -2579,7 +2579,7 @@
       <option name="comment">Repeat nlevgrnd_small test with matrixcnOn</option>
     </options>
   </test>
-  <test name="SMS_Lm13_PS" grid="f19_g17" compset="I2000Clm60BgcCrop" testmods="clm/cropMonthOutput">
+  <test name="SMS_Ld396_PS" grid="f19_g17" compset="I2000Clm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2754,7 +2754,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
+  <test name="ERS_Ld396" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -2762,7 +2762,7 @@
       <option name="wallclock">00:50:00</option>
     </options>
   </test>
-  <test name="ERS_Lm13" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
+  <test name="ERS_Ld396" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3303,7 +3303,7 @@
       <option name="comment"  >Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
-  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
+  <test name="SMS_Ld396" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
@@ -3313,7 +3313,7 @@
       <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
-  <test name="ERS_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesFireLightningPopDens">
+  <test name="ERS_Ly1" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3782,7 +3782,7 @@
 
   <!-- FATES-NOCOMP -->
 
-  <test name="ERS_Lm25" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/FatesColdNoComp">
+  <test name="ERS_Ld761" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3791,7 +3791,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERS_Lm25" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm-FatesColdTwoStreamNoCompFixedBioGeo">
+  <test name="ERS_Ld761" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm-FatesColdTwoStreamNoCompFixedBioGeo">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3812,7 +3812,7 @@
 
   <!-- FATES-FULL -->
 
-  <test name="ERP_D" grid="f19_g17" compset="2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesCold">
+  <test name="ERP_D" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV" testmods="clm/FatesCold">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3851,7 +3851,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+  <test name="ERP_D_Ld5" grid="f45_f45_mg37" compset="HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3860,7 +3860,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERS_D" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+  <test name="ERS_D" grid="f45_f45_mg37" compset="1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3872,7 +3872,7 @@
 
   <!-- BGC tests -->
 
-  <test name="ERI_D_Ld9" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+  <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3882,7 +3882,7 @@
     </options>
   </test>
 
-  <test name="ERP_D" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/decStart">
+  <test name="ERP_D" grid="f45_f45_mg37" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/decStart">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3892,19 +3892,19 @@
     </options>
   </test>
 
-  <test name="ERP_Ld731" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/monthly">
+  <test name="ERP_Ld761" grid="f45_f45_mg37" compset="HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/monthly">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
 
   <!-- BGCCrop tests -->
 
-  <test name="ERI_Ld9" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+  <test name="ERI_Ld9" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3914,12 +3914,12 @@
     </options>
   </test>
 
-  <test name="ERP_D_Ld10" grid="ne30pg3_ne30pg3_mtn14" compset="HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
+  <test name="ERP_D_Ld10" grid="f45_f45_mg37" compset="HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/default">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
@@ -3939,12 +3939,12 @@
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
 
-  <test name="ERP_D_Ld5" grid="ne30pg3_ne30pg3_mtn14" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/irrig_spunup">
+  <test name="ERP_D_Ld5" grid="f45_f45_mg37" compset="2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/irrig_spunup">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -3964,7 +3964,7 @@
     </options>
   </test>
 
-  <test name="ERP_D_Ld10" grid="ne30pg3_ne30pg3_mtn14" compset="1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/ADspinup">
+  <test name="ERP_D_Ld10" grid="f45_f45_mg37" compset="1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV" testmods="clm/ADspinup">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
