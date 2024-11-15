@@ -238,6 +238,9 @@ contains
        tm_perp_date = TimeSetymd( perpetual_ymd, 0, "tm_perp_date" )
     end if
 
+    ! Advance time step to start at nstep=1
+    call advance_timestep()
+
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -1731,7 +1734,7 @@ contains
   logical function is_first_step()
 
     !---------------------------------------------------------------------------------
-    ! Return true on first step of initial run only.
+    ! Return true on first step of startup and hybrid runs.
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::is_first_step'
@@ -1745,7 +1748,7 @@ contains
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
-    is_first_step = (nstep == 0)
+    is_first_step = (nstep == 1)
 
   end function is_first_step
   !=========================================================================================
