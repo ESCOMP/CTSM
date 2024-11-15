@@ -188,7 +188,7 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
-    use controlMod                         , only : nlfilename, fsurdat
+    use controlMod                         , only : nlfilename, fsurdat, hillslope_file
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
@@ -280,7 +280,7 @@ contains
 
     ! Set hillslope column bedrock values
     if (use_hillslope) then
-       call SetHillslopeSoilThickness(bounds,fsurdat, &
+       call SetHillslopeSoilThickness(bounds, hillslope_file, &
             soil_depth_lowland_in=8.5_r8,&
             soil_depth_upland_in =2.0_r8)
        call setSoilLayerClass(bounds)

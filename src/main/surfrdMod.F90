@@ -46,6 +46,83 @@ module surfrdMod
 
 contains
 
+  subroutine check_domain_attributes(ncid, begg, endg, ldomain, info)
+    ! !DESCRIPTION:
+    ! Checks for mismatches between the land domain and a surface or similar dataset's domain.
+    !
+    ! !USES:
+    use domainMod, only : domain_type, domain_init, domain_clean
+    !
+    ! !ARGUMENTS
+    type(file_desc_t), intent(inout) :: ncid ! netcdf id for input file
+    integer, intent(in) :: begg, endg
+    type(domain_type), intent(in) :: ldomain  ! land domain
+    character(len=*), intent(in) :: info  ! information to include in messages
+    !
+    ! !LOCAL VARIABLES
+    type(domain_type) :: inputdata_domain  ! local domain associated with input dataset
+    logical :: readvar  ! true => variable is on dataset
+    logical :: istype_domain  ! true => input file is of type domain
+    character(len=16) :: lon_var, lat_var  ! names of lat/lon on dataset
+    logical :: isgrid2d  ! true => input grid is 2d
+    integer :: ni, nj, ns  ! domain sizes
+    integer :: n
+    real(r8) :: rmaxlon, rmaxlat  ! local min/max vars
+
+   character(len=32) :: subname = 'check_domain_attributes'  ! subroutine name
+
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
+    if (readvar) then
+       istype_domain = .true.
+    else
+       call check_var(ncid=ncid, varname='LONGXY', readvar=readvar)
+       if (readvar) then
+          istype_domain = .false.
+       else
+          call endrun( msg=' ERROR: unknown '//info//' domain type---'//errMsg(sourcefile, __LINE__))
+       end if
+    end if
+    if (istype_domain) then
+       lon_var  = 'xc'
+       lat_var  = 'yc'
+    else
+       lon_var  = 'LONGXY'
+       lat_var  = 'LATIXY'
+    end if
+    if ( masterproc )then
+       write(iulog,*) trim(subname),' ',info,' lon_var = ',trim(lon_var),' lat_var =',trim(lat_var)
+    end if
+
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+    call domain_init(inputdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
+
+    call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=inputdata_domain%lonc, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: lon var NOT on '//info//' dataset---'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io(ncid=ncid, varname=lat_var, flag='read', data=inputdata_domain%latc, &
+         dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) call endrun( msg=' ERROR: lat var NOT on '//info//' dataset---'//errMsg(sourcefile, __LINE__))
+
+    rmaxlon = 0.0_r8
+    rmaxlat = 0.0_r8
+    do n = begg,endg
+       if (ldomain%lonc(n)-inputdata_domain%lonc(n) > 300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)-360._r8))
+       elseif (ldomain%lonc(n)-inputdata_domain%lonc(n) < -300.) then
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)+360._r8))
+       else
+          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-inputdata_domain%lonc(n)))
+       endif
+       rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-inputdata_domain%latc(n)))
+    enddo
+    if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
+       write(iulog,*)' ERROR: '//info//' dataset vs. land domain lon/lat mismatch error', rmaxlon,rmaxlat
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    call domain_clean(inputdata_domain)
+  end subroutine check_domain_attributes
+
   !-----------------------------------------------------------------------
   subroutine surfrd_compat_check ( lfsurdat )
     !
@@ -111,7 +188,7 @@ contains
   end subroutine surfrd_compat_check
 
   !-----------------------------------------------------------------------
-  subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, actual_numcft)
+  subroutine surfrd_get_data (begg, endg, ldomain, lfsurdat, lhillslope_file, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Read the surface dataset and create subgrid weights.
@@ -138,9 +215,10 @@ contains
     use clm_varctl  , only : create_crop_landunit, convert_ocean_to_land, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
-                             n_dom_landunits
+                             n_dom_landunits, &
+                             use_hillslope
     use fileutils           , only : getfil
-    use domainMod           , only : domain_type, domain_init, domain_clean
+    use domainMod           , only : domain_type
     use clm_instur          , only : wt_lunit, topo_glc_mec, pct_urban_max
     use landunit_varcon     , only : max_lunit, istsoil, isturb_MIN, isturb_MAX
     use dynSubgridControlMod, only : get_flanduse_timeseries
@@ -152,19 +230,13 @@ contains
     integer,          intent(in) :: begg, endg, actual_numcft
     type(domain_type),intent(in) :: ldomain     ! land domain
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
+    character(len=*), intent(in) :: lhillslope_file ! hillslope dataset filename
     !
     ! !LOCAL VARIABLES:
-    type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
-    integer           :: n                    ! loop indices
-    integer           :: ni,nj,ns             ! domain sizes
-    character(len=16) :: lon_var, lat_var     ! names of lat/lon on dataset
-    logical           :: readvar              ! true => variable is on dataset
-    real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
-    type(file_desc_t) :: ncid                 ! netcdf id
-    logical           :: istype_domain        ! true => input file is of type domain
-    logical           :: isgrid2d             ! true => intut grid is 2d
+    type(file_desc_t) :: ncid                 ! netcdf id for lfsurdat
+    type(file_desc_t) :: ncid_hillslope       ! netcdf id for lhillslope_file
 
     character(len=32) :: subname = 'surfrd_get_data'    ! subroutine name
     !-----------------------------------------------------------------------
@@ -173,6 +245,10 @@ contains
        write(iulog,*) 'Attempting to read surface boundary data .....'
        if (lfsurdat == ' ') then
           write(iulog,*)'lfsurdat must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       endif
+       if (use_hillslope .and. lhillslope_file == ' ') then
+          write(iulog,*)'lhillslope_file must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     endif
@@ -184,63 +260,16 @@ contains
 
     call getfil( lfsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-
-    ! Cmopare surfdat_domain attributes to ldomain attributes
-
-    call check_var(ncid=ncid, varname='xc', readvar=readvar)
-    if (readvar) then
-       istype_domain = .true.
-    else
-       call check_var(ncid=ncid, varname='LONGXY', readvar=readvar)
-       if (readvar) then
-          istype_domain = .false.
-       else
-          call endrun( msg=' ERROR: unknown domain type'//errMsg(sourcefile, __LINE__))
-       end if
-    end if
-    if (istype_domain) then
-       lon_var  = 'xc'
-       lat_var  = 'yc'
-    else
-       lon_var  = 'LONGXY'
-       lat_var  = 'LATIXY'
-    end if
-    if ( masterproc )then
-       write(iulog,*) trim(subname),' lon_var = ',trim(lon_var),' lat_var =',trim(lat_var)
+    if (use_hillslope) then
+       call getfil( lhillslope_file, locfn, 0 )
+       call ncd_pio_openfile (ncid_hillslope, trim(locfn), 0)
     end if
 
-    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
-    call domain_init(surfdata_domain, isgrid2d, ni, nj, begg, endg, subgrid_level=grlnd)
-
-    call ncd_io(ncid=ncid, varname=lon_var, flag='read', data=surfdata_domain%lonc, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: lon var NOT on surface dataset'//errMsg(sourcefile, __LINE__))
-
-    call ncd_io(ncid=ncid, varname=lat_var, flag='read', data=surfdata_domain%latc, &
-         dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: lat var NOT on surface dataset'//errMsg(sourcefile, __LINE__))
-
-    rmaxlon = 0.0_r8
-    rmaxlat = 0.0_r8
-    do n = begg,endg
-       if (ldomain%lonc(n)-surfdata_domain%lonc(n) > 300.) then
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)-360._r8))
-       elseif (ldomain%lonc(n)-surfdata_domain%lonc(n) < -300.) then
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)+360._r8))
-       else
-          rmaxlon = max(rmaxlon,abs(ldomain%lonc(n)-surfdata_domain%lonc(n)))
-       endif
-       rmaxlat = max(rmaxlat,abs(ldomain%latc(n)-surfdata_domain%latc(n)))
-    enddo
-    if (rmaxlon > 0.001_r8 .or. rmaxlat > 0.001_r8) then
-       write(iulog,*)' ERROR: surfdata_domain/ldomain lon/lat mismatch error', rmaxlon,rmaxlat
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+    ! Compare dataset domain attributes to ldomain attributes
+    call check_domain_attributes(ncid, begg, endg, ldomain, 'surface')
+    if (use_hillslope) then
+       call check_domain_attributes(ncid_hillslope, begg, endg, ldomain, 'hillslope')
     end if
-
-    !~! TODO(SPM, 022015) - if we deallocate and clean ldomain here, then you
-    !~! get errors in htape_timeconst where the information is needed to write
-    !~! the *.h0* file
-    !~!call domain_clean(surfdata_domain)
 
     ! Obtain special landunit info
 
@@ -248,7 +277,7 @@ contains
 
     ! Obtain vegetated landunit info
 
-    call surfrd_veg_all(begg, endg, ncid, ldomain%ns, actual_numcft)
+    call surfrd_veg_all(begg, endg, ncid, ncid_hillslope, ldomain%ns, actual_numcft)
 
     if (use_cndv) then
        call surfrd_veg_dgvm(begg, endg)
@@ -831,7 +860,7 @@ contains
   end subroutine surfrd_pftformat
 
 !-----------------------------------------------------------------------
-  subroutine surfrd_veg_all(begg, endg, ncid, ns, actual_numcft)
+  subroutine surfrd_veg_all(begg, endg, ncid, ncid_hillslope, ns, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Determine weight arrays for non-dynamic landuse mode
@@ -848,7 +877,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: begg, endg, actual_numcft
-    type(file_desc_t),intent(inout) :: ncid   ! netcdf id
+    type(file_desc_t),intent(inout) :: ncid   ! netcdf id for fsurdat
+    type(file_desc_t),intent(inout) :: ncid_hillslope ! netcdf id for hillslope_file
     integer          ,intent(in)    :: ns     ! domain size
     !
     ! !LOCAL VARIABLES:
@@ -934,7 +964,7 @@ contains
 
     ! Obtain hillslope hydrology information and modify pft weights
     if (use_hillslope) then
-       call surfrd_hillslope(begg, endg, ncid, ns)
+       call surfrd_hillslope(begg, endg, ncid_hillslope, ns)
     endif
 
     ! Convert from percent to fraction
