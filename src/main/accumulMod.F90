@@ -595,7 +595,7 @@ contains
 
     do k = begi,endi
        effective_nstep = nstep - this%ndays_reset_shifted(k,level)
-       time_to_reset = mod(effective_nstep,this%period) == 1 .or. this%period == 1
+       time_to_reset = (mod(effective_nstep,this%period) == 1 .or. this%period == 1) .and. effective_nstep /= 0
        if (this%active(k) .and. (time_to_reset .or. this%reset(k,level))) then
           if (this%reset(k,level) .and. .not. time_to_reset) then
              this%ndays_reset_shifted(k,level) = this%ndays_reset_shifted(k,level) + this%nsteps(k,level)
