@@ -1,4 +1,166 @@
 ===============================================================
+Tag name: ctsm5.3.014
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 15 Nov 2024 01:24:45 PM MST
+One-line Summary: Change history time to be the middle of the time bounds
+
+Purpose and description of changes
+----------------------------------
+
+ Making the change in order to be consistent with CAM and to make history output more intuitive.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Partly addresses issue #1059
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ The history time variable now equals the middle of the time bounds.
+ Instantaneous history tapes now do not include time bounds.
+ Mixed history tapes do not change the treatment of instantaneous fields or move them to separate tapes, yet.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+ This tag introduces changes to the mosart/rtm testlists.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  mosart
+    derecho ----- OK
+    izumi ------- OK
+
+  rtm
+    derecho ----- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only time variable
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: only the time variable
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ rtm, mosart
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2838
+ https://github.com/ESCOMP/MOSART/pull/70
+ https://github.com/ESCOMP/RTM/issues/54
+ https://github.com/ESCOMP/MOSART/pull/106
+ https://github.com/ESCOMP/RTM/pull/39
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.012
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Wed 13 Nov 2024 09:53:51 AM MST
+One-line Summary: update fates tag
+
+Purpose and description of changes
+----------------------------------
+
+Updates FATES tag to latest fates main (sci.1.79.3_api.37.0.0), and updates API to go
+along with latest FATES update to refactor it's fire equations
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Round-off differences for FATES compsets where fire is active.
+NLCOMP differences for some FATES compsets
+
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2782: Fates fuel refactor (https://github.com/ESCOMP/CTSM/pull/2782)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.011
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Mon Nov 11 17:55:57 MST 2024
