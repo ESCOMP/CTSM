@@ -52,16 +52,8 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_interface = case.get_value("COMP_INTERFACE")
     lilac_mode = case.get_value("LILAC_MODE")
-    if comp_interface == "nuopc":
-        yr_start = case.get_value("DATM_YR_START")
-        yr_end = case.get_value("DATM_YR_END")
-    else:
-        yr_start = case.get_value("DATM_CLMNCEP_YR_START")
-        yr_end = case.get_value("DATM_CLMNCEP_YR_END")
-
-    if yr_start != None and yr_start < 0:
-        yr_start = case.get_value("DATM_CPLHIST_YR_START")
-        yr_end = case.get_value("DATM_CPLHIST_YR_END")
+    yr_start = case.get_value("DATM_YR_START")
+    yr_end = case.get_value("DATM_YR_END")
 
     # For LILAC
     if yr_start == None or lilac_mode == "on":

@@ -1,4 +1,206 @@
 ===============================================================
+Tag name: ctsm5.3.012
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Wed 13 Nov 2024 09:53:51 AM MST
+One-line Summary: update fates tag
+
+Purpose and description of changes
+----------------------------------
+
+Updates FATES tag to latest fates main (sci.1.79.3_api.37.0.0), and updates API to go
+along with latest FATES update to refactor it's fire equations
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+
+
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Round-off differences for FATES compsets where fire is active.
+NLCOMP differences for some FATES compsets
+
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2782: Fates fuel refactor (https://github.com/ESCOMP/CTSM/pull/2782)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.011
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Mon Nov 11 17:55:57 MST 2024
+One-line Summary: Improve handling of cold-start finidat
+
+Purpose and description of changes
+----------------------------------
+
+This PR changes things so that:
+
+1. Cold-start FATES runs with finidat specified will not require -ignore_warnings, and the supplied finidat will actually be obeyed.
+2. Cold-start non-FATES runs will not be allowed, even with -ignore_warnings.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed:
+- Resolves ESCOMP/CTSM#2856: FATES will never start from specified finidat (https://github.com/ESCOMP/CTSM/issues/2856)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+Adds three fates suite tests to expected fails:
+- ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesCold
+- SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro
+- ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES cold-start runs with finidat
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2870: Fix handling of finidat with cold starts (https://github.com/ESCOMP/CTSM/pull/2870)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.010
+Originator(s): afoster (Adrianna Foster)
+Date: Sat Nov  9 12:54:18 MST 2024
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+- moves namelist variables to parameter file for PPE and makes some parameter variables pft-dimensioned (resolves ESCOMP/CTSM#2830 and resolves ESCOMP/CTSM#2831)
+- removes/replaces references to DATM_C* _YR_* variables (resolves ESCOMP/CTSM#2743)
+- documents that fincl1 and fexcl1 map to 'h0' history files
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+- ESCOMP/CTSM#2830 (allow LUNA & mortality parameter to vary by PFT; https://github.com/ESCOMP/CTSM/issues/2830)
+- ESCOMP/CTSM#2831 (Move namelist parameters to paramfile; https://github.com/ESCOMP/CTSM/issues/2831)
+- ESCOMP/CTSM#2743 (Docs: Remove refs to DATM_CLMNCEP_YR_* and DATM_CPL_YR_* variables; https://github.com/ESCOMP/CTSM/issues/2743)
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2845: PPE parameter work -Addresses issues 2830 and 2831 (https://github.com/ESCOMP/CTSM/pull/2845)
+- ESCOMP/CTSM#2852: Remove/replace refs to DATM_C*_YR_* variables (https://github.com/ESCOMP/CTSM/pull/2852)
+- ESCOMP/CTSM#2866: Document that fincl1 maps to 'h0' history file. And fexcl1 (https://github.com/ESCOMP/CTSM/pull/2866)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.009
 Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
 Date: Tue Oct 15 17:35:40 MDT 2024
