@@ -5,18 +5,19 @@ module CNSoilMatrixMod
   ! The matrix model of CLM5.0 was developed by Yiqi Luo EcoLab members,
   ! Drs. Xingjie Lu, Yuanyuan Huang and Zhengguang Du, at Northern Arizona University
   !----------------------------------------------------------------------------------
-  ! 
+  !
   ! DESCRIPTION:
   ! Module for CLM5.0BGC matrices
-  ! The matrix equation 
+  ! The matrix equation
   ! Xn+1 = Xn + I*dt + (A*K(ksi) - Kfire - tri/dz)*Xn*dt
   ! Or
   ! Xn+1 = Xn + I*dt + (A*K(ksi) - Kfire - V)*Xn*dt
-  
+
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use decompMod                          , only : bounds_type  
+  use spmdMod                            , only : masterproc
+  use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
   use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date,update_DA_nstep
   use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year,is_first_step_of_this_run_segment
@@ -31,11 +32,11 @@ module CNSoilMatrixMod
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type  
+  use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   use CNSharedParamsMod                  , only : CNParamsShareInst
-  use SoilStateType                      , only : soilstate_type  
+  use SoilStateType                      , only : soilstate_type
   use clm_varctl                         , only : spinup_matrixcn, hist_wrt_matrixcn_diag, nyr_forcing, nyr_SASU, iloop_avg
-  use ColumnType                         , only : col                
+  use ColumnType                         , only : col
   use GridcellType                       , only : grc
   use clm_varctl                         , only : use_c13, use_c14, iulog
   use perf_mod                           , only : t_startf, t_stopf
@@ -64,23 +65,25 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
-    if ( use_soil_matrixcn ) then
-       write(iulog,*) 'CN Soil matrix solution is on'
-       write(iulog,*) '*****************************'
-       if ( spinup_matrixcn ) then
-          write(iulog,*) '   Matrix spinup is on'
-          write(iulog,*) '   *******************'
-          write(iulog,*) '   nyr_forcing = ', nyr_forcing
-          write(iulog,*) '   nyr_SASU    = ', nyr_SASU
-          write(iulog,*) '   iloop_avg   = ', iloop_avg
-       end if
-       if ( hist_wrt_matrixcn_diag )then
-          write(iulog,*) '   Extra matrix solution tracability output is turned on'
+    if ( masterproc)  then
+       if ( use_soil_matrixcn ) then
+          write(iulog,*) 'CN Soil matrix solution is on'
+          write(iulog,*) '*****************************'
+          if ( spinup_matrixcn ) then
+             write(iulog,*) '   Matrix spinup is on'
+             write(iulog,*) '   *******************'
+             write(iulog,*) '   nyr_forcing = ', nyr_forcing
+             write(iulog,*) '   nyr_SASU    = ', nyr_SASU
+             write(iulog,*) '   iloop_avg   = ', iloop_avg
+          end if
+          if ( hist_wrt_matrixcn_diag )then
+             write(iulog,*) '   Extra matrix solution tracability output is turned on'
+          else
+             write(iulog,*) '   no extra matrix solution tracability output'
+          end if
        else
-          write(iulog,*) '   no extra matrix solution tracability output'
+          write(iulog,*) 'CN Soil matrix solution is off'
        end if
-    else
-       write(iulog,*) 'CN Soil matrix solution is off'
     end if
   end subroutine CNSoilMatrixInit
 
@@ -113,11 +116,11 @@ contains
 
     ! !LOCAL VARIABLES:
     integer :: fc,j,i, l,k ! indices
-    integer :: c     !  
+    integer :: c     !
     real(r8):: dt                   ! time step (seconds)
     real(r8):: epsi,fire_delta      ! small number
 
-    integer :: begc,endc                                    ! bounds 
+    integer :: begc,endc                                    ! bounds
     real(r8),dimension(bounds%begc:bounds%endc,nlevdecomp*(ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)) :: a_ma_vr,na_ma_vr
 
     real(r8),dimension(bounds%begc:bounds%endc,1:ndecomp_pools_vr,1) ::  soilmatrixc_cap,soilmatrixc13_cap,soilmatrixc14_cap,soilmatrixn_cap
@@ -144,23 +147,23 @@ contains
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
-    
+
 !    SHR_ASSERT_ALL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))  , errMsg(sourcefile, __LINE__))
     associate(                                      &
     cs_soil   => soilbiogeochem_carbonstate_inst    , & ! In/Output
     ns_soil   => soilbiogeochem_nitrogenstate_inst  , & ! In/Output
-    cs13_soil => c13_soilbiogeochem_carbonstate_inst, & ! In/Output 
-    cs14_soil => c14_soilbiogeochem_carbonstate_inst, & ! In/Output 
-    cf13_soil => c13_soilbiogeochem_carbonflux_inst,  & ! In/Output 
-    cf14_soil => c14_soilbiogeochem_carbonflux_inst,  & ! In/Output 
+    cs13_soil => c13_soilbiogeochem_carbonstate_inst, & ! In/Output
+    cs14_soil => c14_soilbiogeochem_carbonstate_inst, & ! In/Output
+    cf13_soil => c13_soilbiogeochem_carbonflux_inst,  & ! In/Output
+    cf14_soil => c14_soilbiogeochem_carbonflux_inst,  & ! In/Output
 
     fpi_vr                        => soilbiogeochem_state_inst%fpi_vr_col                 ,&!Input:[real(r8)(:,:)]fraction of potential immobilization (no units)
     cascade_donor_pool            => decomp_cascade_con%cascade_donor_pool                ,&!Input:[integer(:)]which pool is C taken from for a given decomposition step
-    cascade_receiver_pool         => decomp_cascade_con%cascade_receiver_pool             ,&!Input:[integer(:)]which pool is C added to for a given decomposition step 
+    cascade_receiver_pool         => decomp_cascade_con%cascade_receiver_pool             ,&!Input:[integer(:)]which pool is C added to for a given decomposition step
     floating_cn_ratio_decomp_pools=> decomp_cascade_con%floating_cn_ratio_decomp_pools    ,&!Input:[logical(:)]TRUE => pool has fixed C:N ratio
     initial_cn_ratio              => decomp_cascade_con%initial_cn_ratio                  ,&!Input:[real(r8)(:)]c:n ratio for initialization of pools
     rf_decomp_cascade             => soilbiogeochem_carbonflux_inst%rf_decomp_cascade_col      ,&!Input:[real(r8)(:,:,:)]respired fraction in decomposition step (frac)
-    pathfrac_decomp_cascade       => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col,&!Input:[real(r8)(:,:,:)]what fraction of C leaving a given pool passes 
+    pathfrac_decomp_cascade       => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col,&!Input:[real(r8)(:,:,:)]what fraction of C leaving a given pool passes
                                                                                             !                       through a given transition (frac)
     is_cwd                        => decomp_cascade_con%is_cwd                            ,&!Input:[logical(:)]TRUE => pool is a cwd pool
     is_litter                     => decomp_cascade_con%is_litter                         ,&!Input:[logical(:)]TRUE => pool is a litter pool
@@ -222,7 +225,7 @@ contains
     list_fire_AKVfire=> decomp_cascade_con%list_fire_AKVfire,&!In/Output:[Integer(:)] Saves mapping indices from Kfire to (A*K+V-Kfire) in the addition subroutine SPMP_ABC
     list_AK_AKVfire  => decomp_cascade_con%list_AK_AKVfire  ,&!In/Output:[Integer(:)] Saves mapping indices from A*K to (A*K+V-Kfire) in the addition subroutine SPMP_ABC
     list_AK_AKV      => decomp_cascade_con%list_AK_AKV      ,&!In/Output:[Integer(:)] Saves mapping indices from A*K to (A*K+V) in the addition subroutine SPMP_AB
-    list_V_AKV       => decomp_cascade_con%list_V_AKV        &!In/Output:[Integer(:)] Saves mapping indices from V to (A*K+V) in the addition subroutine SPMP_AB 
+    list_V_AKV       => decomp_cascade_con%list_V_AKV        &!In/Output:[Integer(:)] Saves mapping indices from V to (A*K+V) in the addition subroutine SPMP_AB
     )
 
      ! set time steps
@@ -230,7 +233,7 @@ contains
       dt = real( get_step_size(), r8 )
 
       Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
-      epsi = 1.e-8_r8 
+      epsi = 1.e-8_r8
 
       isbegofyear = is_beg_curr_year()
 
@@ -254,13 +257,13 @@ contains
                   cn_decomp_pools(c,j,l) = initial_cn_ratio(l)
                end do
             end do
-         end if 
+         end if
       end do
 
       call t_stopf('CN Soil matrix-init. matrix')
 
       call t_startf('CN Soil matrix-assign matrix-a-na')
-      ! Calculate non-diagonal entries (a_ma_vr and na_ma_vr) in transfer coefficient matrix A 
+      ! Calculate non-diagonal entries (a_ma_vr and na_ma_vr) in transfer coefficient matrix A
       do k = 1, ndecomp_cascade_transitions
          if(cascade_receiver_pool(k) .ne. 0)then  !transition to atmosphere
             do j = 1, nlevdecomp
@@ -289,10 +292,10 @@ contains
          do j = 1, nlevdecomp
             do fc = 1,num_soilc
                c = filter_soilc(fc)
-                  matrix_Cinter%V(c,j+(i-1)*nlevdecomp)   = cs_soil%decomp_cpools_vr_col(c,j,i)                
-                  Cinter_old(c,j+(i-1)*nlevdecomp)        = cs_soil%decomp_cpools_vr_col(c,j,i) 
+                  matrix_Cinter%V(c,j+(i-1)*nlevdecomp)   = cs_soil%decomp_cpools_vr_col(c,j,i)
+                  Cinter_old(c,j+(i-1)*nlevdecomp)        = cs_soil%decomp_cpools_vr_col(c,j,i)
                   !Cinter_old is saved for accumulation of C transfer calculation and C flux (hr and fire) adjustment
-                  matrix_Ninter%V(c,j+(i-1)*nlevdecomp)   = ns_soil%decomp_npools_vr_col(c,j,i)     
+                  matrix_Ninter%V(c,j+(i-1)*nlevdecomp)   = ns_soil%decomp_npools_vr_col(c,j,i)
                   Ninter_old(c,j+(i-1)*nlevdecomp)        = ns_soil%decomp_npools_vr_col(c,j,i)
                   !Ninter_old is saved for accumulation of N transfer calculation
             end do
@@ -338,7 +341,7 @@ contains
       end do
       ! Save the C and N pool size at begin of each year, which are used to calculate C and N capacity at end of each year.
       call t_startf('CN Soil matrix-assign matrix-decomp0')
-      if (is_beg_curr_year())then  
+      if (is_beg_curr_year())then
          iyr = iyr + 1
          if(mod(iyr-1,nyr_forcing) .eq. 0)then
             iloop = iloop + 1
@@ -368,7 +371,7 @@ contains
                end where
             end if
             if(use_c14)then
-               where(cs14_soil%decomp0_cpools_vr_col .lt. epsi*c14ratio) 
+               where(cs14_soil%decomp0_cpools_vr_col .lt. epsi*c14ratio)
                   cs14_soil%decomp0_cpools_vr_col = epsi*c14ratio
                end where
             end if
@@ -378,7 +381,7 @@ contains
          end if
       end if
       call t_stopf('CN Soil matrix-assign matrix-decomp0')
-   
+
       ! Set C transfer matrix Ac from a_ma_vr
       call t_startf('CN Soil matrix-matrix mult1-lev3-SetValueAK1')
       call AKsoilc%SetValueA(begc,endc,num_soilc,filter_soilc,a_ma_vr,A_i,A_j,Ntrans,init_readyAsoilc,list_Asoilc,RI_a,CI_a)
@@ -465,7 +468,7 @@ contains
             trcr_ntendency(c,ilev,idecomp) = trcr_ntendency(c,ilev,idecomp) + AVsoil%M(c,i)*matrix_Ninter%V(c,AVsoil%CI(i)) / dt
          end do
       end do
-     
+
       call matrix_Cinter%SPMM_AX(num_soilc,filter_soilc,AKallsoilc)
       call matrix_Ninter%SPMM_AX(num_soilc,filter_soilc,AKallsoiln)
 
@@ -497,8 +500,8 @@ contains
                matrix_Cinter13%V(c,j) = matrix_Cinput13%V(c,j) + matrix_Cinter13%V(c,j)
             end do
          end do
-      end if     
- 
+      end if
+
       ! Update soil C14 pool size: X(matrix_Cinter14) = X(matrix_Cinter14) + (A*K + AVsoil + AKfiresoil) * X(matrix_Cinter14) + I(matrix_Cinput14)
       if ( use_c14)then
          do j = 1, ndecomp_pools_vr
@@ -525,7 +528,7 @@ contains
             end do
          end do
       end do
-          
+
       if( use_c13 ) then
          do i=1,ndecomp_pools
             do j = 1,nlevdecomp
@@ -551,7 +554,7 @@ contains
       call t_stopf('CN Soil matrix-assign back')
 
       if(use_soil_matrixcn .and. (hist_wrt_matrixcn_diag .or. spinup_matrixcn))then
-            
+
          ! Accumulate C transfers during a whole calendar year to calculate the C and N capacity
          do j=1,ndecomp_pools*nlevdecomp
             do fc = 1,num_soilc
@@ -584,21 +587,21 @@ contains
 !         if(use_c14)then
 !            call cf14_soil%AKallsoilc%SetValueCopySM (num_soilc,filter_soilc,AKallsoilc)
 !         end if
-         ! Calculate all the soil C transfers in current time step. 
+         ! Calculate all the soil C transfers in current time step.
          ! After this step, AKallsoilc represents all the C transfers (gC/m3/step)
          call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Cinter_old(begc:endc,1:ndecomp_pools_vr))
          call AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
-        
+
          if(use_c13)then
             call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,C13inter_old(begc:endc,1:ndecomp_pools_vr))
             call cf13_soil%AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
          end if
-        
+
          if(use_c14)then
             call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,C14inter_old(begc:endc,1:ndecomp_pools_vr))
             call cf14_soil%AKallsoilc%SPMM_AK(num_soilc,filter_soilc,Xdiagsoil)
          end if
-        
+
          ! Calculate all the soil N transfers in current time step
          ! After this step, AKallsoiln represents all the N transfers (gN/m3/step)
          call Xdiagsoil%SetValueDM(begc,endc,num_soilc,filter_soilc,Ninter_old(begc:endc,1:ndecomp_pools_vr))
@@ -700,17 +703,17 @@ contains
                   c = filter_soilc(fc)
                   if (abs(cs_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
                       cs_soil%tran_acc(c,i,i) = 1.e+36_r8
-                  end if 
+                  end if
                end do
             end do
-        
+
             if(use_c13)then
                do i=1,ndecomp_pools_vr
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
                      if (abs(cs13_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
                          cs13_soil%tran_acc(c,i,i) = 1.e+36_r8
-                     end if 
+                     end if
                   end do
                end do
             end if
@@ -721,7 +724,7 @@ contains
                      c = filter_soilc(fc)
                      if (abs(cs14_soil%tran_acc(c,i,i)) .le. epsi)then !avoid inversion nan
                          cs14_soil%tran_acc(c,i,i) = 1.e+36_r8
-                     end if 
+                     end if
                   end do
                end do
             end if
@@ -731,11 +734,11 @@ contains
                   c = filter_soilc(fc)
                   if (abs(ns_soil%tran_nacc(c,i,i)) .le. epsi)then
                      ns_soil%tran_nacc(c,i,i) = 1.e+36_r8
-                  end if 
+                  end if
                end do
             end do
 
-            ! Calculate capacity 
+            ! Calculate capacity
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                call inverse(cs_soil%tran_acc(c,1:ndecomp_pools_vr,1:ndecomp_pools_vr),AKinv(1:ndecomp_pools_vr,1:ndecomp_pools_vr),ndecomp_pools_vr)
@@ -771,7 +774,7 @@ contains
                   end do
                end do
             end do
-                        
+
 
             do i = 1,ndecomp_pools
                do j = 1,nlevdecomp
@@ -812,7 +815,7 @@ contains
 
             ! If spin up is on, the capacity replaces the pool size with capacity.
             ! Copy the capacity into a 3D variable, and be ready to write to history files.
-            do i=1,ndecomp_pools 
+            do i=1,ndecomp_pools
                do j = 1,nlevdecomp
                   do fc = 1,num_soilc
                      c = filter_soilc(fc)
@@ -870,7 +873,7 @@ contains
                   end do
                end do
             end do
-         
+
             if(spinup_matrixcn)call update_DA_nstep()
             if(iloop .eq. iloop_avg .and. iyr .eq. nyr_forcing)iloop = 0
             if(iyr .eq. nyr_forcing)iyr = 0
@@ -905,7 +908,7 @@ contains
          call t_stopf('CN Soil matrix-calc. C capacity')
       end if !is out_matrix
 
-   end associate 
+   end associate
  end subroutine CNSoilMatrix
 
   !-----------------------------------------------------------------------
@@ -935,6 +938,5 @@ contains
 
     !------------------------------------------------------------------------
    end subroutine CNSoilMatrixRest
- 
-end module CNSoilMatrixMod
 
+end module CNSoilMatrixMod
