@@ -263,6 +263,7 @@ class TowerSite:
         no_batch,
         rerun,
         experiment,
+        no_input_data_check,
     ):
         """
         Run case.
@@ -413,8 +414,10 @@ class TowerSite:
             self.modify_user_nl(case_root, run_type, rundir)
 
             case.create_namelists()
+
             # explicitly run check_input_data
-            case.check_all_input_data()
+            if not no_input_data_check:
+                case.check_all_input_data()
             if not setup_only:
                 case.submit(no_batch=no_batch)
                 print("-----------------------------------")

@@ -92,6 +92,18 @@ def get_parser(args, description, valid_neon_sites):
     )
 
     parser.add_argument(
+        "--no-input-data-check", "--no-check-input-data",
+        help="""
+                Don't check for input data. Implies --setup-only.
+                [default: %(default)s]
+                """,
+        action="store_true",
+        dest="no_input_data_check",
+        required=False,
+        default=False,
+    )
+
+    parser.add_argument(
         "--rerun",
         help="""
                 If the case exists but does not appear to be complete, restart it.
@@ -223,6 +235,10 @@ def get_parser(args, description, valid_neon_sites):
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.WARN)
 
+    # --no-input-data-check implies --setup-only
+    if args.no_input_data_check and not args.setup_only:
+        args.setup_only = True
+
     return (
         neon_sites,
         args.output_root,
@@ -236,5 +252,6 @@ def get_parser(args, description, valid_neon_sites):
         args.setup_only,
         args.no_batch,
         args.rerun,
+        args.no_input_data_check,
         args.user_version,
     )

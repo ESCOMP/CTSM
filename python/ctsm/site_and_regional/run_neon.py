@@ -194,6 +194,7 @@ def main(description):
         setup_only,
         no_batch,
         rerun,
+        no_input_data_check,
         user_version,
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
@@ -240,4 +241,5 @@ def main(description):
                 no_batch=no_batch,
                 rerun=rerun,
                 experiment=experiment,
+                no_input_data_check=no_input_data_check,
             )
