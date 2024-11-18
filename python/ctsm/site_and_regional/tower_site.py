@@ -95,6 +95,7 @@ class TowerSite:
         if not output_root:
             output_root = os.getcwd()
         case_path = os.path.join(output_root, self.name)
+        print(case_path)
 
         logger.info("base_case_name : %s", self.name)
         logger.info("user_mods_dir  : %s", user_mods_dirs[0])
