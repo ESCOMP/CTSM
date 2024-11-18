@@ -68,6 +68,7 @@ class NeonSite(TowerSite):
         rerun=False,
         experiment=False,
         no_input_data_check=False,
+        xmlchange=None,
     ):
         """
         Run case.
@@ -116,6 +117,7 @@ class NeonSite(TowerSite):
             rerun,
             experiment,
             no_input_data_check,
+            xmlchange,
         )
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):

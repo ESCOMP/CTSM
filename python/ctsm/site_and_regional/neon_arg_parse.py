@@ -195,6 +195,17 @@ def get_parser(args, description, valid_neon_sites):
         choices=["v1", "v2", "v3"],
     )
 
+    parser.add_argument(
+        "--xmlchange",
+        help="""
+                Any xmlchanges (e.g., CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=500)
+                [default: %(default)s]
+                """,
+        required=False,
+        type=str,
+        default=None,
+    )
+
     args = parse_args_and_handle_standard_logging_options(args, parser)
 
     if "all" in args.neon_sites:
@@ -254,4 +265,5 @@ def get_parser(args, description, valid_neon_sites):
         args.rerun,
         args.no_input_data_check,
         args.user_version,
+        args.xmlchange,
     )

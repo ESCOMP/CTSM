@@ -196,6 +196,7 @@ def main(description):
         rerun,
         no_input_data_check,
         user_version,
+        xmlchange,
     ) = get_parser(sys.argv, description, valid_neon_sites)
 
     if output_root:
@@ -242,4 +243,5 @@ def main(description):
                 rerun=rerun,
                 experiment=experiment,
                 no_input_data_check=no_input_data_check,
+                xmlchange=xmlchange,
             )

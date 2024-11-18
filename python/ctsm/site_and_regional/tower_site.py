@@ -264,6 +264,7 @@ class TowerSite:
         rerun,
         experiment,
         no_input_data_check,
+        xmlchange,
     ):
         """
         Run case.
@@ -410,6 +411,12 @@ class TowerSite:
                 case.set_value("STOP_OPTION", "nmonths")
             if not rundir:
                 rundir = case.get_value("RUNDIR")
+
+            if xmlchange:
+                xmlchange_list = xmlchange.split(",")
+                for setting in xmlchange_list:
+                    setting_split = setting.split("=")
+                    case.set_value(*setting_split)
 
             self.modify_user_nl(case_root, run_type, rundir)
 
