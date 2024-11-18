@@ -47,7 +47,8 @@ class NeonSite(TowerSite):
             user_mods_dirs = [
                 os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
             ]
-        case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
+        case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs,
+                                            overwrite=overwrite)
 
         return case_path
 
