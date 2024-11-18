@@ -1269,10 +1269,6 @@ my %failtest = (
                                      namelst=>"use_luna=.true., lnc_opt=.true.",
                                      phys=>"clm5_0",
                                    },
-     "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.false., jmaxb1=1.0",
-                                     phys=>"clm5_0",
-                                   },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1352,10 +1348,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
-                                     namelst=>"finidat = 'testfile.nc'",
-                                     phys=>"clm5_0",
-                                   },
      "bgcspin_w_suplnitro"       =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
                                      namelst=>"suplnitro='ALL'",
                                      phys=>"clm5_0",
@@ -1434,6 +1426,56 @@ foreach my $key ( keys(%warntest) ) {
    is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
+}
+
+print "\n===============================================================================\n";
+print "Ensure cold starts with finidat are handled properly \n";
+print "=================================================================================\n";
+
+my %coldwfinidat = (
+     "bgc"   => { options=>"-envxml_dir . -clm_start_type cold",
+                  namelst=>"finidat = 'testfile.nc'",
+                  phys=>"clm5_0",
+                  expected_fail=>1,
+                },
+     "fates" => { options=>"-envxml_dir . -clm_start_type cold -bgc fates -no-megan",
+                  namelst=>"finidat = 'testfile.nc', use_fates = .true.",
+                  phys=>"clm5_0",
+                  expected_fail=>0,
+                },
+);
+my $finidat;
+foreach my $key ( keys(%coldwfinidat) ) {
+   print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "options", "namelst", "expected_fail" ) {
+      if ( not exists $coldwfinidat{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for coldwfinidat $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
+   &make_config_cache($coldwfinidat{$key}{"phys"});
+   my $options  = $coldwfinidat{$key}{"options"};
+   my $namelist = $coldwfinidat{$key}{"namelst"};
+   my $expected_fail = $coldwfinidat{$key}{"expected_fail"};
+   my %settings;
+   &make_env_run( %settings );
+
+   # Should fail if expected to, pass otherwise
+   eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   is( $? eq 0, $expected_fail eq 0, "coldwfinidat $key run");
+
+   if ( $expected_fail ) {
+      # Now run with -ignore_warnings and make sure it still doesn't work
+      $options .= " -ignore_warnings";
+      eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+      isnt( $?, 0, "coldwfinidat $key run -ignore_warnings" );
+   } else {
+      # Check that finidat was correctly set
+      $finidat = `grep finidat lnd_in`;
+      ok ( $finidat =~ "testfile.nc", "coldwfinidat $key finidat? $finidat" );
+   }
 }
 
 #
