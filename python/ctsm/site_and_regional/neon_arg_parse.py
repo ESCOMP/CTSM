@@ -45,7 +45,7 @@ def get_parser(args, description, valid_neon_sites):
         "--base-case",
         help="""
                 Root Directory of base case build
-                [default: %(default)s]
+                [default: CESMROOT/NEONSITE]
                 """,
         action="store",
         dest="base_case_root",
