@@ -42,4 +42,4 @@ For single point simulations, the global anomaly forcing files can be used, but 
 
     mapalgo = 'nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn' (the number of 'nn' values will depend on the number of original streams plus the number of anomaly forcing streams)
 
-The cycling of the present-day (base) climate is controlled through the DATM\_CLMNCEP\_YR\_START and DATM_CLMNCEP\_YR\_END variables in env\_run.xml.
+The cycling of the present-day (base) climate is controlled through the DATM\_YR\_START and DATM\_YR\_END variables in env\_run.xml.
