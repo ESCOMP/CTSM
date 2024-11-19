@@ -2157,7 +2157,7 @@
     </options>
   </test>
   <!-- Historical science support for clm5_0 workhorse resolutions -->
-  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/nofire">
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -2166,32 +2166,35 @@
       <option name="comment"  >Science support for historical clm5_0 physics with SP mode at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/nofire">
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for historical clm5_0 physics with SP mode at f19</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
   <!-- Historical science support for clm6_0 workhorse resolutions -->
-  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60Sp" testmods="clm/nofire">
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for historical clm6_0 physics with SP mode at f09</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60Sp" testmods="clm/nofire">
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for historical clm6_0 physics with SP mode at f19</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode--clm/nofireemis">
