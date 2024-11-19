@@ -37,6 +37,7 @@ module LakeFluxesMod
       real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
       real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
       real(r8) :: zsno     ! Momentum roughness length for snow (m)
+      real(r8) :: zglc     ! Momentum roughness length for ice (m)
       real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
@@ -49,6 +50,7 @@ contains
     ! !USES:
     use ncdio_pio, only: file_desc_t
     use paramUtilMod, only: readNcdioScalar
+    use clm_varctl, only: z0param_method
     !
     ! !ARGUMENTS:
     implicit none
@@ -64,6 +66,11 @@ contains
     call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
     ! Momentum roughness length for snow (m)
     call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+
+    if (z0param_method == 'Meier2022') then
+       ! Momentum roughness length for ice (m)
+       call readNcdioScalar(ncid, 'zglc', subname, params_inst%zglc)
+    end if
     ! Minimum wind speed at the atmospheric forcing height (m/s)
     call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
 
@@ -85,8 +92,10 @@ contains
     ! !USES:
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
-    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
-    use clm_varctl          , only : use_lch4
+    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval, rpi
+    use clm_varcon          , only : beta_param, nu_param, b1_param, b4_param
+    use clm_varcon          , only : meier_param1, meier_param2, meier_param3
+    use clm_varctl          , only : use_lch4, z0param_method, use_z0m_snowmelt
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
@@ -118,6 +127,10 @@ contains
     real(r8), pointer :: z0mg_col(:)               ! roughness length over ground, momentum [m]
     real(r8), pointer :: z0hg_col(:)               ! roughness length over ground, sensible heat [m]
     real(r8), pointer :: z0qg_col(:)               ! roughness length over ground, latent heat [m]
+    real(r8), pointer :: z0mg(:)                   ! patch roughness length over ground, momentum [m]
+    real(r8), pointer :: z0hg(:)                   ! patch roughness length over ground, sensible heat [m]
+    real(r8), pointer :: z0qg(:)                   ! patch roughness length over ground, latent heat [m]
+    real(r8), pointer :: kbm1(:)                   ! natural logarithm of z0mg_p/z0hg_p [-]
     integer , parameter  :: niters = 4             ! maximum number of iterations for surface temperature
     real(r8), parameter :: beta1 = 1._r8           ! coefficient of convective velocity (in computing W_*) [-]
     real(r8), parameter :: zii = 1000._r8          ! convective boundary height [m]
@@ -159,12 +172,8 @@ contains
     real(r8) :: ur(bounds%begp:bounds%endp)        ! wind speed at reference height [m/s]
     real(r8) :: ustar(bounds%begp:bounds%endp)     ! friction velocity [m/s]
     real(r8) :: wc                                 ! convective velocity [m/s]
-    real(r8) :: zeta                               ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: zldis(bounds%begp:bounds%endp)     ! reference height "minus" zero displacement height [m]
     real(r8) :: displa(bounds%begp:bounds%endp)    ! displacement (always zero) [m]
-    real(r8) :: z0mg(bounds%begp:bounds%endp)      ! roughness length over ground, momentum [m]
-    real(r8) :: z0hg(bounds%begp:bounds%endp)      ! roughness length over ground, sensible heat [m]
-    real(r8) :: z0qg(bounds%begp:bounds%endp)      ! roughness length over ground, latent heat [m]
     real(r8) :: u2m                                ! 2 m wind speed (m/s)
     real(r8) :: fm(bounds%begp:bounds%endp)        ! needed for BGC only to diagnose 10m wind speed
     real(r8) :: bw                                 ! partial density of water (ice + liquid)
@@ -219,7 +228,8 @@ contains
          lakefetch        =>    lakestate_inst%lakefetch_col           , & ! Input:  [real(r8) (:)   ]  lake fetch from surface data (m)                  
          
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
@@ -230,6 +240,7 @@ contains
          forc_hgt_t_patch =>    frictionvel_inst%forc_hgt_t_patch      , & ! Input:  [real(r8) (:)   ]  observational height of temperature at pft level [m]
          forc_hgt_q_patch =>    frictionvel_inst%forc_hgt_q_patch      , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity at pft level [m]
          zetamax          =>    frictionvel_inst%zetamaxstable         , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta             =>    frictionvel_inst%zeta_patch            , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          ram1             =>    frictionvel_inst%ram1_patch            , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)                    
 
          q_ref2m          =>    waterdiagnosticbulk_inst%q_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)      
@@ -270,7 +281,6 @@ contains
          taux             =>    energyflux_inst%taux_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy             =>    energyflux_inst%tauy_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)              
          dhsdt_canopy     =>    energyflux_inst%dhsdt_canopy_patch     , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm] 
-
          ks               =>    lakestate_inst%ks_col                  , & ! Output: [real(r8) (:)   ]  coefficient passed to LakeTemperature            
          ws               =>    lakestate_inst%ws_col                  , & ! Output: [real(r8) (:)   ]  surface friction velocity (m/s)                   
          betaprime        =>    lakestate_inst%betaprime_col           , & ! Output: [real(r8) (:)   ]  fraction of solar rad absorbed at surface: equal to NIR fraction
@@ -286,7 +296,10 @@ contains
       z0mg_col => frictionvel_inst%z0mg_col
       z0hg_col => frictionvel_inst%z0hg_col
       z0qg_col => frictionvel_inst%z0qg_col
-
+      z0mg => frictionvel_inst%z0mg_patch
+      z0hg => frictionvel_inst%z0hg_patch
+      z0qg => frictionvel_inst%z0qg_patch
+      kbm1 => frictionvel_inst%kbm1_patch
       kva0temp = 20._r8 + tfrz
 
       do fp = 1, num_lakep
@@ -324,20 +337,45 @@ contains
             z0qg(p) = max(z0qg(p), minz0lake)
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
-            z0mg(p) = z0frzlake
-            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+            select case (z0param_method)
+            case ('Meier2022')
+               z0mg(p) = params_inst%zglc
+
+
+               z0hg(p) = meier_param3 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
+
+            case ('ZengWang2007')
+               z0mg(p) = z0frzlake
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+            end select
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
-            z0mg(p) = params_inst%zsno
-            z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp)  ! Consistent with BareGroundFluxes
+            if(use_z0m_snowmelt) then
+               if ( snomelt_accum(c) < 1.e-5_r8 ) then
+                  z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
+               else
+                  z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
+               end if
+            else
+               z0mg(p) = params_inst%zsno
+            end if
+
+            select case (z0param_method)
+            case ('Meier2022')
+               z0hg(p) = meier_param3 * nu_param / ust_lake(c) ! For initial guess assume tstar = 0
+            case ('ZengWang2007')
+               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+            end select
+
             z0qg(p) = z0hg(p)
          end if
 
          ! Surface temperature and fluxes
 
+         ! Update forcing heights for updated roughness lengths
          forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
-         forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(p)
-         forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(p)
+         forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+         forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
 
          ! Find top layer
          jtop(c) = snl(c) + 1
@@ -379,6 +417,7 @@ contains
          g = patch%gridcell(p)
 
          dhsdt_canopy(p) = 0.0_r8
+
          nmozsgn(p) = 0
          obuold(p) = 0._r8
          displa(p) = 0._r8
@@ -500,17 +539,17 @@ contains
             qstar = temp2(p)*dqh(p)
 
             thvstar=tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
-            zeta=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
+            zeta(p)=zldis(p)*vkc * grav*thvstar/(ustar(p)**2*thv(c))
 
-            if (zeta >= 0._r8) then     !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            if (zeta(p) >= 0._r8) then     !stable
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                     !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                wc = beta1*(-grav*ustar(p)*thvstar*zii/thv(c))**0.333_r8
                um(p) = sqrt(ur(p)*ur(p)+wc*wc)
             end if
-            obu(p) = zldis(p)/zeta
+            obu(p) = zldis(p)/zeta(p)
 
             if (obuold(p)*obu(p) < 0._r8) nmozsgn(p) = nmozsgn(p)+1
 
@@ -545,14 +584,44 @@ contains
                z0hg(p) = max(z0hg(p), minz0lake)
             else if (snl(c) == 0) then
                ! in case it was above freezing and now below freezing
-               z0mg(p) = z0frzlake
-               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
-               z0qg(p) = z0hg(p)
+               select case (z0param_method)
+               case ('Meier2022')
+                  z0mg(p) = params_inst%zglc
+                  ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+                  ! likely more efficient to calculate as exponents
+                  z0hg(p) = meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
+
+               case ('ZengWang2007')
+                  z0mg(p) = z0frzlake
+                  z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+               end select
+                  z0qg(p) = z0hg(p)
             else ! Snow layers
-               ! z0mg won't have changed
-               z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+               if(use_z0m_snowmelt) then
+                  if ( snomelt_accum(c) < 1.e-5_r8 )then
+                      z0mg(p) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
+                  else
+                      z0mg(p) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
+                  end if
+               end if
+
+               select case (z0param_method)
+               case ('Meier2022')
+                  ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+                  ! likely more efficient to calculate as exponents
+                  z0hg(p) =  meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes
+
+               case ('ZengWang2007')
+                  z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / nu_param)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+               end select
+
                z0qg(p) = z0hg(p)
             end if
+
+            ! Update forcing heights for updated roughness lengths
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg(p)
 
          end do   ! end of filtered pft loop
 
@@ -690,6 +759,7 @@ contains
          z0hg_col(c) = z0hg(p)
          z0qg_col(c) = z0qg(p)
          ust_lake(c) = ustar(p)
+         kbm1(p)     = log(z0mg(p) / z0hg(p))
 
       end do
 

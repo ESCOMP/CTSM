@@ -19,13 +19,12 @@ add_definitions(-DHIDE_MPI)
 add_subdirectory(${CLM_ROOT}/share/src csm_share)
 add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
 add_subdirectory(${CLM_ROOT}/share/src/esmf_wrf_timemgr esmf_wrf_timemgr)
-add_subdirectory(${CLM_ROOT}/components/cpl7/driver/shr drv_share)
 
-# Extract just the files we need from drv_share
-set (drv_sources_needed_base
-  glc_elevclass_mod.F90
+# Add files needed from CMEPS
+list ( APPEND drv_sources_needed
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
   )
-extract_sources("${drv_sources_needed_base}" "${drv_sources}" drv_sources_needed)
 
 # Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
@@ -106,3 +105,8 @@ add_subdirectory(${CLM_ROOT}/src/dyn_subgrid/test clm_dyn_subgrid_test)
 add_subdirectory(${CLM_ROOT}/src/main/test clm_main_test)
 add_subdirectory(${CLM_ROOT}/src/init_interp/test clm_init_interp_test)
 add_subdirectory(${CLM_ROOT}/src/self_tests/test clm_self_tests_test)
+
+# Add driver unit test directories
+# (these should be moved to the appropriate submodule)
+add_subdirectory(${CLM_ROOT}/src/drv_test drv_test)
+

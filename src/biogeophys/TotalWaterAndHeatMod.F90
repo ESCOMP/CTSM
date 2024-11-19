@@ -358,7 +358,8 @@ contains
 
     associate( &
          h2osoi_ice   =>    waterstate_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)
-         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col   & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
+         excess_ice   =>    waterstate_inst%excess_ice_col   & ! Input   [real(r8) (:,:) ]  excess ice   (kg/m2)
          )
 
     do j = 1, nlevmaxurbgrnd
@@ -382,7 +383,7 @@ contains
 
           if (has_h2o) then
              liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
-             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+             ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j) + excess_ice(c,j)
           end if
        end do
     end do

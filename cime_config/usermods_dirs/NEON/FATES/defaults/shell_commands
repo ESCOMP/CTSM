@@ -39,3 +39,5 @@ fi
 
 # Explicitly set PIO Type to NETCDF since this is a single processor case (should already be set this way)
 ./xmlchange PIO_TYPENAME=netcdf
+
+./xmlchange NEONVERSION="v2"

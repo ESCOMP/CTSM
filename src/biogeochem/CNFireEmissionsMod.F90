@@ -185,7 +185,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine CNFireEmisUpdate(bounds, num_soilp, filter_soilp, cnveg_cf_inst, cnveg_cs_inst, fireemis_inst )
+  subroutine CNFireEmisUpdate(bounds, num_bgc_vegp, filter_bgc_vegp, cnveg_cf_inst, cnveg_cs_inst, fireemis_inst )
 
     use CNVegcarbonfluxType,  only : cnveg_carbonflux_type
     use CNVegCarbonStateType, only : cnveg_carbonstate_type
@@ -194,8 +194,8 @@ contains
 
     !ARGUMENTS:
     type(bounds_type),           intent(in)    :: bounds
-    integer,                     intent(in)    :: num_soilp       ! number of soil pfts in filter
-    integer,                     intent(in)    :: filter_soilp(:) ! filter for soil pfts
+    integer,                     intent(in)    :: num_bgc_vegp       ! number of bgc veg patches
+    integer,                     intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     type(cnveg_carbonflux_type), intent(in)    :: cnveg_cf_inst
     type(cnveg_carbonstate_type),intent(in)    :: cnveg_cs_inst
     type(fireemis_type),         intent(inout) :: fireemis_inst
@@ -235,8 +235,8 @@ contains
 
       ! Begin loop over points
       !_______________________________________________________________________________
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          g = patch%gridcell(p)
          c = patch%column(p)
 

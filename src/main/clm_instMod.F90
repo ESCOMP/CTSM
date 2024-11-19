@@ -8,9 +8,10 @@ module clm_instMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
+  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use clm_varctl      , only : use_excess_ice
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
@@ -45,7 +46,7 @@ module clm_instMod
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use CropType                        , only : crop_type
   use DryDepVelocity                  , only : drydepvel_type
-  use DUSTMod                         , only : dust_type
+  use DustEmisBase                    , only : dust_emis_base_type
   use EnergyFluxType                  , only : energyflux_type
   use FrictionVelocityMod             , only : frictionvel_type
   use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
@@ -151,7 +152,7 @@ module clm_instMod
   ! General biogeochem types
   type(ch4_type)      , public            :: ch4_inst
   type(crop_type)     , public            :: crop_inst
-  type(dust_type)     , public            :: dust_inst
+  class(dust_emis_base_type), public, allocatable :: dust_emis_inst
   type(vocemis_type)  , public            :: vocemis_inst
   type(fireemis_type) , public            :: fireemis_inst
   type(drydepvel_type), public            :: drydepvel_inst
@@ -187,12 +188,14 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
-    use controlMod                         , only : nlfilename, fsurdat
+    use controlMod                         , only : nlfilename, fsurdat, hillslope_file
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
+    use clm_varctl                         , only : use_excess_ice
+    use ExcessIceStreamType                , only : excessicestream_type, UseExcessIceStreams
     
     use initVerticalMod                    , only : initVertical
     use SnowHydrologyMod                   , only : InitSnowLayers
@@ -200,6 +203,11 @@ contains
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
     use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+    use clm_varctl                         , only : flandusepftdat
+    use clm_varctl                         , only : use_hillslope
+    use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
+    use initVerticalMod                    , only : setSoilLayerClass
+    use DustEmisFactory                    , only : create_dust_emissions
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -215,6 +223,8 @@ contains
     type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
+    real(r8), allocatable :: exice_init_conc_col(:) ! initial coldstart excess ice concentration (from the stream file or 0.0) (-)
+    type(excessicestream_type)  :: exice_stream
 
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
@@ -231,7 +241,6 @@ contains
 
     allocate (h2osno_col(begc:endc))
     allocate (snow_depth_col(begc:endc))
-
     ! snow water
     do c = begc,endc
        l = col%landunit(c)
@@ -269,6 +278,14 @@ contains
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
 
+    ! Set hillslope column bedrock values
+    if (use_hillslope) then
+       call SetHillslopeSoilThickness(bounds, hillslope_file, &
+            soil_depth_lowland_in=8.5_r8,&
+            soil_depth_upland_in =2.0_r8)
+       call setSoilLayerClass(bounds)
+    endif
+
     !-----------------------------------------------
     ! Set cold-start values for snow levels, snow layers and snow interfaces 
     !-----------------------------------------------
@@ -285,12 +302,23 @@ contains
 
     ! Initialization of public data types
 
+    ! If excess ice is read from the stream, it has to be read before we coldstart the temperature
+    allocate(exice_init_conc_col(bounds%begc:bounds%endc))
+    exice_init_conc_col(bounds%begc:bounds%endc) = 0.0_r8
+    if (use_excess_ice) then
+       call exice_stream%Init(bounds, NLFilename)
+       if (UseExcessIceStreams()) then
+          call exice_stream%CalcExcessIce(bounds, exice_init_conc_col(bounds%begc:bounds%endc))
+       endif
+    endif
+
     call temperature_inst%Init(bounds,           &
-         urbanparams_inst%em_roof(begl:endl),    &
-         urbanparams_inst%em_wall(begl:endl),    &
-         urbanparams_inst%em_improad(begl:endl), &
-         urbanparams_inst%em_perroad(begl:endl), &
-         IsSimpleBuildTemp(), IsProgBuildTemp() )
+         em_roof_lun=urbanparams_inst%em_roof(begl:endl),    &
+         em_wall_lun=urbanparams_inst%em_wall(begl:endl),    &
+         em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
+         em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
+         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp(), &
+         exice_init_conc_col=exice_init_conc_col(bounds%begc:bounds%endc) , NLFileName=NLFilename)
 
     call active_layer_inst%Init(bounds)
 
@@ -304,7 +332,9 @@ contains
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
          t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
-         use_aquifer_layer = use_aquifer_layer())
+         use_aquifer_layer = use_aquifer_layer(), &
+         exice_coldstart_depth = temperature_inst%excess_ice_coldstart_depth, &
+         exice_init_conc_col = exice_init_conc_col(begc:endc))
 
     call glacier_smb_inst%Init(bounds)
 
@@ -340,7 +370,7 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call dust_inst%Init(bounds)
+    allocate(dust_emis_inst, source = create_dust_emissions(bounds, NLFilename))
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
          snow_cover_fraction_method = snow_cover_fraction_method, &
@@ -371,7 +401,7 @@ contains
 
     call drydepvel_inst%Init(bounds)
 
-    if (decomp_method /= no_soil_decomp) then
+    if_decomp: if (decomp_method /= no_soil_decomp) then
 
        ! Initialize soilbiogeochem_state_inst
 
@@ -423,9 +453,10 @@ contains
        call SoilBiogeochemPrecisionControlInit( soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
                                                 c14_soilbiogeochem_carbonstate_inst, soilbiogeochem_nitrogenstate_inst)
 
-    end if ! end of if use_cn 
+    end if if_decomp
 
     ! Note - always call Init for bgc_vegetation_inst: some pieces need to be initialized always
+    ! Even for a FATES simulation, we call this to initialize product pools
     call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
     if (use_cn .or. use_fates) then
@@ -436,11 +467,12 @@ contains
     ! Initialize the Functionaly Assembled Terrestrial Ecosystem Simulator (FATES)
     ! 
     if (use_fates) then
-       call clm_fates%Init(bounds)
+       call clm_fates%Init(bounds, flandusepftdat)
     end if
 
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
+    deallocate (exice_init_conc_col)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields
@@ -486,6 +518,7 @@ contains
     use ncdio_pio       , only : file_desc_t
     use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
     use decompMod       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
+    use clm_varpar      , only : nlevsno
 
     !
     ! !DESCRIPTION:
@@ -532,7 +565,9 @@ contains
 
     call water_inst%restart(bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
-         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
+         watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), & 
+         altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc))
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 
@@ -550,7 +585,7 @@ contains
        call ch4_inst%restart(bounds, ncid, flag=flag)
     end if
 
-    if ( use_cn ) then
+    if ( use_cn .or. use_fates_bgc) then
        ! Need to do vegetation restart before soil bgc restart to get totvegc_col for purpose
        ! of resetting soil carbon at exit spinup when no vegetation is growing.
        call bgc_vegetation_inst%restart(bounds, ncid, flag=flag)
@@ -588,7 +623,8 @@ contains
             canopystate_inst=canopystate_inst, &
             soilstate_inst=soilstate_inst, &
             active_layer_inst=active_layer_inst, &
-            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst)
+            soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst, & 
+            soilbiogeochem_nitrogenflux_inst=soilbiogeochem_nitrogenflux_inst)
 
     end if
 

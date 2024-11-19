@@ -24,7 +24,7 @@ module SoilBiogeochemVerticalProfileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine SoilBiogeochemVerticalProfile(bounds, num_soilc,filter_soilc,num_soilp,filter_soilp, &
+  subroutine SoilBiogeochemVerticalProfile(bounds, num_bgc_soilc,filter_bgc_soilc,num_bgc_vegp,filter_bgc_vegp, &
        active_layer_inst, soilstate_inst, soilbiogeochem_state_inst)
     !
     ! !DESCRIPTION:
@@ -57,10 +57,10 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
-    integer                         , intent(in)    :: num_soilc                               ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:)                         ! filter for soil columns
-    integer                         , intent(in)    :: num_soilp                               ! number of soil patches in filter
-    integer                         , intent(in)    :: filter_soilp(:)                         ! filter for soil patches
+    integer                         , intent(in)    :: num_bgc_soilc                               ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:)                         ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_vegp                               ! number of soil patches in filter
+    integer                         , intent(in)    :: filter_bgc_vegp(:)                         ! filter for soil patches
     type(active_layer_type)         , intent(in)    :: active_layer_inst
     type(soilstate_type)            , intent(in)    :: soilstate_inst				    
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -71,7 +71,7 @@ contains
     real(r8) :: rootfr_tot
     real(r8) :: cinput_rootfr(bounds%begp:bounds%endp, 1:nlevdecomp_full)      ! pft-native root fraction used for calculating inputs
     real(r8) :: col_cinput_rootfr(bounds%begc:bounds%endc, 1:nlevdecomp_full)  ! col-native root fraction used for calculating inputs
-    integer  :: c, j, fc, p, fp, pi
+    integer  :: c, j, fc, p, fp
     integer  :: alt_ind
     ! debugging temp variables
     real(r8) :: froot_prof_sum
@@ -124,21 +124,20 @@ contains
       cinput_rootfr(begp:endp, :)     = 0._r8
       col_cinput_rootfr(begc:endc, :) = 0._r8
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          c = patch%column(p)
          if (patch%itype(p) /= noveg) then
             do j = 1, nlevdecomp
                cinput_rootfr(p,j) = crootfr(p,j) / dzsoi_decomp(j)
             end do
-
          else
             cinput_rootfr(p,1) = 0.
          endif
       end do
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          c = patch%column(p)
          ! integrate rootfr over active layer of soil column
          rootfr_tot = 0._r8
@@ -168,7 +167,6 @@ contains
             leaf_prof(p,1) = 1./dzsoi_decomp(1)
             stem_prof(p,1) = 1./dzsoi_decomp(1)
          endif
-
       end do
 
       !! aggregate root profile to column
@@ -176,42 +174,57 @@ contains
       !      cinput_rootfr(bounds%begp:bounds%endp, :), &
       !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
       !      'unity')
-      do pi = 1,maxsoil_patches
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if (pi <=  col%npatches(c)) then
-               p = col%patchi(c) + pi - 1
-               do j = 1,nlevdecomp
-                  col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
-               end do
-            end if
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
+         c = patch%column(p)
+         do j = 1,nlevdecomp
+            col_cinput_rootfr(c,j) = col_cinput_rootfr(c,j) + cinput_rootfr(p,j) * patch%wtcol(p)
          end do
       end do
 
+
       ! repeat for column-native profiles: Ndep and Nfix
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          rootfr_tot = 0._r8
          surface_prof_tot = 0._r8
-         ! redo column ntegration over active layer for column-native profiles
-         do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-            rootfr_tot = rootfr_tot + col_cinput_rootfr(c,j) * dzsoi_decomp(j)
-            surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
-         end do
-         if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
-            do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
-               nfixation_prof(c,j) = col_cinput_rootfr(c,j) / rootfr_tot
-               ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+         if_fates: if(col%is_fates(c))then
+            ! For FATES, we just use the e-folding depth for both fixation and deposition
+            ! partially because the fixation may be free-living depending on FATES-side
+            ! fixation choices, and partially for simplicity
+            do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+               surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
             end do
+            if ( (altmax_lastyear_indx(c) > 0) .and. (surface_prof_tot > 0._r8) ) then
+               do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+                  nfixation_prof(c,j) = surface_prof(j)/ surface_prof_tot
+                  ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+               end do
+            else
+               nfixation_prof(c,1) = 1./dzsoi_decomp(1)
+               ndep_prof(c,1) = 1./dzsoi_decomp(1)
+            endif
          else
-            nfixation_prof(c,1) = 1./dzsoi_decomp(1)
-            ndep_prof(c,1) = 1./dzsoi_decomp(1)
-         endif
+            ! redo column ntegration over active layer for column-native profiles
+            do j = 1, min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+               rootfr_tot = rootfr_tot + col_cinput_rootfr(c,j) * dzsoi_decomp(j)
+               surface_prof_tot = surface_prof_tot + surface_prof(j) * dzsoi_decomp(j)
+            end do
+            if ( (altmax_lastyear_indx(c) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
+               do j = 1,  min(max(altmax_lastyear_indx(c), 1), nlevdecomp)
+                  nfixation_prof(c,j) = col_cinput_rootfr(c,j) / rootfr_tot
+                  ndep_prof(c,j) = surface_prof(j)/ surface_prof_tot
+               end do
+            else
+               nfixation_prof(c,1) = 1./dzsoi_decomp(1)
+               ndep_prof(c,1) = 1./dzsoi_decomp(1)
+            endif
+         end if if_fates
       end do
 
       ! check to make sure integral of all profiles = 1.
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
          ndep_prof_sum = 0.
          nfixation_prof_sum = 0.
          do j = 1, nlevdecomp
@@ -237,8 +250,8 @@ contains
          endif
       end do
 
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          froot_prof_sum = 0.
          croot_prof_sum = 0.
          leaf_prof_sum = 0.

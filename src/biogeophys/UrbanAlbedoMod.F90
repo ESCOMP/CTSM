@@ -156,7 +156,12 @@ contains
          albgri             => surfalb_inst%albgri_col              , & ! Output: [real(r8) (:,:) ]  urban col ground albedo (diffuse)
          albd               => surfalb_inst%albd_patch              , & ! Output  [real(r8) (:,:) ]  urban pft surface albedo (direct)                         
          albi               => surfalb_inst%albi_patch              , & ! Output: [real(r8) (:,:) ]  urban pft surface albedo (diffuse)                        
-         
+! add new snicar albedo output for history files
+         albd_hst           => surfalb_inst%albd_hst_patch          , & ! Output:  [real(r8) (:,:) ]  surface albedo (direct) for history files
+         albi_hst           => surfalb_inst%albi_hst_patch          , & ! Output:  [real(r8) (:,:) ]  surface albedo (diffuse) for history files
+         albgrd_hst         => surfalb_inst%albgrd_hst_col          , & ! Output:  [real(r8) (:,:) ]  ground albedo (direct) for history files              
+         albgri_hst         => surfalb_inst%albgri_hst_col          , & ! Output:  [real(r8) (:,:) ]  ground albedo (diffuse) for history files
+! end add new snicar
          begl               => bounds%begl                          , &
          vf_sr              => urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:) ]  view factor of sky for road
          vf_sw              => urbanparams_inst%vf_sw               , & ! Input:  [real(r8) (:) ]  view factor of sky for one wall
@@ -418,12 +423,25 @@ contains
                   albgrd(c,ib) = sref_improad_dir(l,ib)
                   albgri(c,ib) = sref_improad_dif(l,ib)
                endif
+! add new snicar albedo variables for history fields
+               if (coszen(l) > 0._r8) then
+                  albgrd_hst(c,ib) = albgrd(c,ib)
+                  albgri_hst(c,ib) = albgri(c,ib)
+               end if
+! end add new snicar
             end do
             do fp = 1,num_urbanp
                p = filter_urbanp(fp)
                c = patch%column(p)
+               l = patch%landunit(p)
                albd(p,ib) = albgrd(c,ib)
                albi(p,ib) = albgri(c,ib)
+! add new snicar albedo variables for history fields
+               if (coszen(l) > 0._r8) then
+                  albd_hst(p,ib) = albd(p,ib)
+                  albi_hst(p,ib) = albi(p,ib)
+               end if
+! end add new snicar
             end do
          end do
       end if

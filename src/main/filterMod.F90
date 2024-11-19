@@ -19,6 +19,7 @@ module filterMod
   use ColumnType     , only : col
   use PatchType      , only : patch
   use glcBehaviorMod , only : glc_behavior_type
+  use clm_varctl     , only : use_cn, use_fates, use_fates_bgc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -32,9 +33,10 @@ module filterMod
      integer, pointer :: natvegp(:)      ! CNDV nat-vegetated (present) filter (patches)
      integer :: num_natvegp              ! number of patches in nat-vegetated filter
 
-     integer, pointer :: pcropp(:)       ! prognostic crop filter (patches)
+     integer, pointer :: pcropp(:)       ! prognostic crop filter (patches) 
      integer :: num_pcropp               ! number of patches in prognostic crop filter
-     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (patches)
+
+     integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (patches) 
      integer :: num_soilnopcropp         ! number of patches in soil w/o prog crops
 
      integer, pointer :: all_soil_patches(:) ! all soil or crop patches. Used for updating FATES SP drivers
@@ -48,6 +50,14 @@ module filterMod
      integer :: num_lakec                ! number of columns in lake filter
      integer, pointer :: nolakec(:)      ! non-lake filter (columns)
      integer :: num_nolakec              ! number of columns in non-lake filter
+
+     integer, pointer :: bgc_soilc(:)    ! soil with biogeochemistry active, negates
+                                         ! SP type runs, could be CN, FATES or CROP
+     integer :: num_bgc_soilc
+
+     integer, pointer :: bgc_vegp(:)     ! patches with vegetation biochemistry active, negates
+                                         ! SP type runs, could be CN or Crop (NOT FATES)
+     integer :: num_bgc_vegp
 
      integer, pointer :: soilc(:)        ! soil filter (columns)
      integer :: num_soilc                ! number of columns in soil filter
@@ -211,6 +221,9 @@ contains
        allocate(this_filter(nc)%soilc(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%soilp(bounds%endp-bounds%begp+1))
 
+       allocate(this_filter(nc)%bgc_soilc(bounds%endc-bounds%begc+1))
+       allocate(this_filter(nc)%bgc_vegp(bounds%endp-bounds%begp+1))
+       
        allocate(this_filter(nc)%snowc(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%nosnowc(bounds%endc-bounds%begc+1))
 
@@ -380,6 +393,39 @@ contains
     this_filter(nc)%num_nolakep = fnl
     this_filter(nc)%num_nolakeurbanp = fnlu
 
+
+    ! Create the soil bgc filter, all non-sp columns for vegetation
+    fs = 0
+    if( use_cn .or. use_fates_bgc )then
+       do c = bounds%begc,bounds%endc
+          if (col%active(c) .or. include_inactive) then
+             l =col%landunit(c)
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                fs = fs + 1
+                this_filter(nc)%bgc_soilc(fs) = c
+             end if
+          end if
+       end do
+    end if
+    this_filter(nc)%num_bgc_soilc = fs
+    
+    ! Create a filter at patch-level for vegetation biochemistry
+    ! all non-SP and non-fates patches on soil
+    fs = 0
+    if(use_cn)then
+       do p = bounds%begp,bounds%endp
+          if (patch%active(p) .or. include_inactive) then
+             l =patch%landunit(p)
+             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                fs = fs + 1
+                this_filter(nc)%bgc_vegp(fs) = p
+             end if
+          end if
+       end do
+    end if
+    this_filter(nc)%num_bgc_vegp = fs
+
+    
     ! Create soil filter at column-level
 
     fs = 0
@@ -393,8 +439,12 @@ contains
        end if
     end do
     this_filter(nc)%num_soilc = fs
-    ! Create soil filter at patch-level
 
+
+    
+
+    
+    ! Create soil filter at patch-level
     fs = 0
     do p = bounds%begp,bounds%endp
        if (patch%active(p) .or. include_inactive) then
@@ -405,6 +455,7 @@ contains
           end if
        end if
     end do
+
     this_filter(nc)%num_soilp = fs
 
     ! Create column-level hydrology filter (soil and Urban pervious road cols)
@@ -426,15 +477,17 @@ contains
     fl  = 0
     fnl = 0
     do p = bounds%begp,bounds%endp
-       if (patch%active(p) .or. include_inactive) then
-          if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
-             fl = fl + 1
-             this_filter(nc)%pcropp(fl) = p
-          else
-             l =patch%landunit(p)
-             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-                fnl = fnl + 1
-                this_filter(nc)%soilnopcropp(fnl) = p
+       if(.not.use_fates)then
+          if (patch%active(p) .or. include_inactive) then
+             if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
+                fl = fl + 1
+                this_filter(nc)%pcropp(fl) = p
+             else
+                l =patch%landunit(p)
+                if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+                   fnl = fnl + 1
+                   this_filter(nc)%soilnopcropp(fnl) = p
+                end if
              end if
           end if
        end if

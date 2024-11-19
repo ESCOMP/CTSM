@@ -13,8 +13,9 @@ module TopoMod
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
   use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice
+  use landunit_varcon, only : istice, istsoil
   use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
+  use clm_varctl     , only : use_hillslope, downscale_hillslope_meteorology
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -139,8 +140,14 @@ contains
           ! For other landunits, arbitrarily initialize topo_col to 0 m; for landunits
           ! where this matters, this will get overwritten in the run loop by values sent
           ! from CISM
-          this%topo_col(c) = 0._r8
-          this%needs_downscaling_col(c) = .false.
+          if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+             this%topo_col(c) = col%hill_elev(c)
+             this%needs_downscaling_col(c) = .true.
+          else
+             this%topo_col(c) = 0._r8
+             this%needs_downscaling_col(c) = .false.
+          endif
+
        end if
     end do
 
@@ -218,7 +225,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
-    integer :: c, g
+    integer :: c, l, g
+    real(r8), allocatable :: mean_hillslope_elevation(:)
+    real(r8):: mhe_norm
 
     character(len=*), parameter :: subname = 'UpdateTopo'
     !-----------------------------------------------------------------------
@@ -240,18 +249,48 @@ contains
          this%topo_col(begc:endc), &
          this%needs_downscaling_col(begc:endc))
 
-    ! For any point that isn't downscaled, set its topo value to the atmosphere's
-    ! topographic height. This shouldn't matter, but is useful if topo_col is written to
-    ! the history file.
-    !
+    ! calculate area-weighted mean hillslope elevation on each landunit
+    if (use_hillslope) then
+       allocate(mean_hillslope_elevation(bounds%begl:bounds%endl))
+       mean_hillslope_elevation(:) = 0._r8
+       do l = bounds%begl, bounds%endl
+          mhe_norm = 0._r8
+          do c = lun%coli(l), lun%colf(l)
+             if (col%is_hillslope_column(c)) then
+                mean_hillslope_elevation(l) = mean_hillslope_elevation(l) &
+                     + col%hill_elev(c)*col%hill_area(c)
+                mhe_norm = mhe_norm + col%hill_area(c)
+             endif
+          enddo
+          if (mhe_norm > 0) then
+             mean_hillslope_elevation(l) = mean_hillslope_elevation(l)/mhe_norm
+          endif
+       enddo
+    endif
+       
     ! This could operate over a filter like 'allc' in order to just operate over active
     ! points, but I'm not sure that would speed things up much, and would require passing
     ! in this additional filter.
+
     do c = bounds%begc, bounds%endc
        if (.not. this%needs_downscaling_col(c)) then
+          ! For any point that isn't already set to be downscaled, set its topo value to the
+          ! atmosphere's topographic height. This is important for the hillslope block
+          ! below. For non-hillslope columns, this shouldn't matter, but is useful if
+          ! topo_col is written to the history file.
           g = col%gridcell(c)
           this%topo_col(c) = atm_topo(g)
        end if
+       ! If needs_downscaling_col was already set, then that implies
+       ! that topo_col was previously set by update_glc2lnd_topo.
+       ! In that case, topo_col should be used as a starting point,
+       ! rather than the atmosphere's topo value.
+       if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+          l = col%landunit(c)
+          this%topo_col(c) =  this%topo_col(c) &
+               + (col%hill_elev(c) - mean_hillslope_elevation(l))
+          this%needs_downscaling_col(c) = .true.
+       endif
     end do
 
     call glc_behavior%update_glc_classes(bounds, this%topo_col(begc:endc))

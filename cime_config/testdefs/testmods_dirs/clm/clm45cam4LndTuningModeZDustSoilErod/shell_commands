@@ -1,0 +1,5 @@
+#!/bin/bash
+
+./xmlchange LND_TUNING_MODE="clm4_5_cam4.0"
+./xmlchange ROF_NCPL='$ATM_NCPL'
+
