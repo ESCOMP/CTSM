@@ -177,9 +177,6 @@ contains
     ! !DESCRIPTION:
     ! Set the time step number
     !
-    ! Note that the starting time step number is 0, so calling this with nstep = 1
-    ! advances the time step beyond the starting time step.
-    !
     ! !USES:
     use clm_time_manager, only : advance_timestep
     !
@@ -192,7 +189,7 @@ contains
     character(len=*), parameter :: subname = 'unittest_timemgr_set_nstep'
     !-----------------------------------------------------------------------
 
-    do n = 1, nstep
+    do n = 2, nstep
        call advance_timestep()
     end do
 
