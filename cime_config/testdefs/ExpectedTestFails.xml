@@ -29,7 +29,7 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
+  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq--clm-nofireemis">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>CDEPS/#243</issue>
@@ -37,6 +37,50 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+  <test name="ERS_Ly3.f10_f10_mg37.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+  <test name="SMS_Lm1.f10_f10_mg37.I1850Clm50BgcCropCmip6waccm.derecho_gnu.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2780</issue>
+      <comment>Crashes in the matrix solver.</comment>
+    </phase>
+  </test>
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.derecho_gnu.clm-default--clm-NEON-HARV--clm-matrixcnOn">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2780</issue>
+      <comment>Crashes in the matrix solver.</comment>
+    </phase>
+  </test>
+  <test name="SMS_D.1x1_brazil.I1850Clm60BgcCrop.derecho_gnu.clm-mimics_matrixcn">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2780</issue>
+      <comment>Crashes in the matrix solver.</comment>
+    </phase>
+  </test>
+
   <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
@@ -46,6 +90,13 @@
   </test>
   <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rep2">
+      <status>FAIL</status>
+      <issue>#2619</issue>
+      <comment>This failure relates to the preceding ERP failure.</comment>
+    </phase>
+  </test>
+  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+    <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the preceding ERP failure.</comment>
@@ -74,6 +125,17 @@
   </test>
   
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.derecho_gnu.clm-NEON-MOAB--clm-PRISM">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-NEON-MOAB--clm-PRISM">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2310</issue>
@@ -120,6 +182,13 @@
     </phase>
   </test>
 
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
+    <phase name="CREATE_NEWCASE">
+      <status>FAIL</status>
+      <issue>#2454</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.izumi_nag.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -144,7 +213,7 @@
 
   <!-- fates test suite failures -->
 
-  <test name="ERS_D_Ld3.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2653</issue>
@@ -194,13 +263,6 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Ld5.5x5_amazon.I1850Clm51Bgc.derecho_gnu.clm-HillslopeC">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2423</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
@@ -221,11 +283,69 @@
       <issue>#2325</issue>
     </phase>
   </test>
+  
+  <!-- izumi nag failures -->
+  <test name="ERS_D_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm50SpRs.izumi_nag.clm-CLM1PTStartDate">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesRs.izumi_nag.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.izumi_nag.clm-ptsRLA">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm60FatesRs.izumi_nag.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60SpRs.izumi_nag.clm-default--clm-NEON-TOOL">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+  
+  <test name="ERP_D_Ld5_P48x1.f10_f10_mg37.I1850Clm60Bgc.izumi_nag.clm-ciso">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2861</issue>
+    </phase>
+  </test>
+
 
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2310</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLandUse">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2810</issue>
     </phase>
   </test>
 

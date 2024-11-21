@@ -67,10 +67,10 @@ Switching to a different CTSM branch or tag
 
 If you have already checked out a branch or tag and **HAVE NOT MADE ANY
 MODIFICATIONS** it is simple to change your sandbox. Say that you
-checked out ctsm1.0.0 but really wanted to have ctsm1.1.0;
+checked out ctsm5.2.0 but really wanted to have ctsm5.3.0;
 you would simply do the following::
 
-  git checkout ctsm1.1.0
+  git checkout ctsm5.3.0
   ./bin/git-fleximod update
 
 You should **not** use this method if you have made any source code

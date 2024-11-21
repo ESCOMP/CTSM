@@ -211,9 +211,9 @@ foreach mysite ( $sites )
     ./xmlchange --id STOP_OPTION --val nyears
     ./xmlchange --id STOP_N --val $numyears
     ./xmlchange --id RUN_STARTDATE --val $startyear[$cnt]-01-01
-    ./xmlchange --id DATM_CLMNCEP_YR_ALIGN --val $startyear[$cnt]
-    ./xmlchange --id DATM_CLMNCEP_YR_START --val $startyear[$cnt]
-    ./xmlchange --id DATM_CLMNCEP_YR_END --val $endyear[$cnt]
+    ./xmlchange --id DATM_YR_ALIGN --val $startyear[$cnt]
+    ./xmlchange --id DATM_YR_START --val $startyear[$cnt]
+    ./xmlchange --id DATM_YR_END --val $endyear[$cnt]
     ./xmlchange --id CALENDAR --val GREGORIAN
     if ($BGC == ON) then
       ./xmlchange --id CLM_BLDNML_OPTS --val "-mask navy -bgc bgc -crop"
@@ -240,9 +240,9 @@ foreach mysite ( $sites )
       else
         ./xmlchange --id RUN_STARTDATE --val $startyear[$cnt]-01-01
       endif
-      ./xmlchange --id DATM_CLMNCEP_YR_ALIGN --val $alignyear
-      ./xmlchange --id DATM_CLMNCEP_YR_START --val $startyears
-      ./xmlchange --id DATM_CLMNCEP_YR_END --val $endyears
+      ./xmlchange --id DATM_YR_ALIGN --val $alignyear
+      ./xmlchange --id DATM_YR_START --val $startyears
+      ./xmlchange --id DATM_YR_END --val $endyears
       if ($alignyear == 1) then
         ./xmlchange --id CALENDAR --val NO_LEAP
       endif
@@ -263,7 +263,7 @@ foreach mysite ( $sites )
   ./preview_namelists
   # Have to force this for some reason
   if ($SPINUP_P1 == FALSE) then
-    ./xmlchange --id DATM_CLMNCEP_YR_END --val $endyear[$cnt]
+    ./xmlchange --id DATM_YR_END --val $endyear[$cnt]
     ./preview_namelists
   endif
   if ( $status != 0 )then
