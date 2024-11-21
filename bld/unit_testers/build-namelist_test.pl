@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3229;
+my $ntests = 3263;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2437;
@@ -473,7 +473,7 @@ foreach my $site (
 print "\n===============================================================================\n";
 print "Test some CAM specific setups for special grids \n";
 print "=================================================================================\n";
-foreach my $phys ( "clm4_5", "clm5_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys";
    &make_config_cache($phys);
    foreach my $options (
@@ -485,7 +485,7 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
-                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
+                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_GSWP3v1",
                       "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                      ) {
@@ -906,7 +906,7 @@ my %failtest = (
                                      namelst=>"h2osfcflag=0",
                                      phys=>"clm5_0",
                                    },
-     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3  -envxml_dir .",
+     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3v1  -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm4_5",
                                    },
@@ -943,6 +943,10 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "driver is invalid"         =>{ options=>"-driver invalid_name -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm6_0",
                                    },

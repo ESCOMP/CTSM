@@ -71,7 +71,7 @@ REQUIRED OPTIONS
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
                               (default current directory)
-     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for LILAC)
+     -lnd_frac "domainfile"   Land fraction file (the input domain file) (only needed with --lilac option)
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
@@ -1994,7 +1994,7 @@ sub setup_logic_lnd_frac {
                      "env variables) AND fatmlndfrac on namelist");
        }
        if ( $opts->{$var} =~ /UNSET/ ) {
-          $log->fatal_error("-lnd_frac was set as UNSET in the CTSM build-namelist set it with the env variables: LND_DOMAIN_PATH/LND_DOMAIN_FILE.");
+          $log->fatal_error("-lnd_frac was set as UNSET in the CTSM build-namelist, it's required with the --lilac option");
        }
        my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
@@ -2004,20 +2004,22 @@ sub setup_logic_lnd_frac {
      if (defined $nl->get_value('fatmlndfrc')) {
        # do nothing - use value provided by config_grid.xml and clm.cpl7.template
      } else {
-       $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
+       $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist, it is required for the --lilac option.");
      }
   #
   # For the NUOPC driver neither lnd_frac nor fatmlndfrc need to be set
   #
-  } else {
+  } elsif ($opts->{'driver'} eq "nuopc" ) {
      if ( defined($opts->{$var}) ) {
        if ( $opts->{$var} !~ /UNSET/ ) {
-          $log->fatal_error("$var should NOT be set for the NUOPC driver as it is unused" );
+          $log->fatal_error("$var should NOT be set for the NUOPC driver as it is unused (only used by the --lilac option)" );
        }
      }
      if ( defined($nl->get_value('fatmlndfrc')) ) {
        $log->fatal_error("fatmlndfrac should NOT be set in the namelist for the NUOPC driver as it is unused" );
      }
+  } else {
+       $log->fatal_error("Input --driver type of $opts->{'driver'} is an invalid option. Correct this in xml variable COMP_iINTERFACE in your case" );
   }
 }
 
@@ -2762,7 +2764,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
   # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
   if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
      $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values from initial conditions, even if the initial conditions (finidat) file has hillslope information. If you are sure you want this behaviour, add -ignore_warnings to CLM_BLDNML_OPTS.")
-  }
+}
 
 } # end initial conditions
 
