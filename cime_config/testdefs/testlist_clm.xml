@@ -3072,7 +3072,7 @@
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLandUse">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP" testmods="clm/FatesColdLandUse">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
