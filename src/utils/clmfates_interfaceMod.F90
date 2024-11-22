@@ -1485,6 +1485,7 @@ module CLMFatesInterfaceMod
          z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
+         voc_pftindex => canopystate_inst%voc_pftindex_patch, &
          snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
          frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col, &
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch)
@@ -1608,7 +1609,7 @@ module CLMFatesInterfaceMod
           z0m(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
           displa(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
           dleaf_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
-
+          voc_pftindex(col%patchi(c)+1:col%patchf(c)) = 0
           frac_veg_nosno_alb(col%patchi(c):col%patchf(c)) = 0.0_r8
 
           ! Set the bareground patch indicator
@@ -1670,6 +1671,7 @@ module CLMFatesInterfaceMod
              z0m(p)    = this%fates(nc)%bc_out(s)%z0m_pa(ifp)
              displa(p) = this%fates(nc)%bc_out(s)%displa_pa(ifp)
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
+             voc_pftindex(p) = this%fates(nc)%bc_out(s)%nocomp_MEGAN_pft_label_pa(ifp)
           end do ! veg pach
 
           if(abs(areacheck - 1.0_r8).gt.1.e-9_r8)then
@@ -2575,8 +2577,8 @@ module CLMFatesInterfaceMod
           rssun     => photosyns_inst%rssun_patch  , &
           rssha     => photosyns_inst%rssha_patch,   &
           psnsun    => photosyns_inst%psnsun_patch,  &
-          psnsha    => photosyns_inst%psnsha_patch)
-
+          psnsha    => photosyns_inst%psnsha_patch,  &
+          ci        => canopystate_inst%ci_patch)
       do s = 1, this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2643,7 +2645,7 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 3
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
             rssha(p) = this%fates(nc)%bc_out(s)%rssha_pa(ifp)
-
+            ci(p) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval

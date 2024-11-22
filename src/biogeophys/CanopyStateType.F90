@@ -46,12 +46,14 @@ module CanopyStateType
      real(r8) , pointer :: hbot_patch               (:)   ! patch canopy bottom (m)
      real(r8) , pointer :: z0m_patch                (:)   ! patch momentum roughness length (m)
      real(r8) , pointer :: displa_patch             (:)   ! patch displacement height (m)
+     real(r8) , pointer :: ci_patch                 (:)   ! Internal leaf CO2 concentration for MEGAN
      real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy
      real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy
      real(r8) , pointer :: fsun240_patch            (:)   ! patch 240hr average of sunlit fraction of canopy
 
      real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
-                                                          ! for non-ED/FATES this is the same as pftcon%dleaf()
+     ! for non-ED/FATES this is the same as pftcon%dleaf()
+     integer ,  pointer :: voc_pftindex_patch      (:)   ! FATES specific MEGAN pft index. 
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
@@ -139,11 +141,13 @@ contains
     allocate(this%hbot_patch               (begp:endp))           ; this%hbot_patch               (:)   = nan
     allocate(this%z0m_patch                (begp:endp))           ; this%z0m_patch                (:)   = nan
     allocate(this%displa_patch             (begp:endp))           ; this%displa_patch             (:)   = nan
+    allocate(this%ci_patch                 (begp:endp))           ; this%ci_patch                 (:)   = nan
     allocate(this%fsun_patch               (begp:endp))           ; this%fsun_patch               (:)   = nan
     allocate(this%fsun24_patch             (begp:endp))           ; this%fsun24_patch             (:)   = nan
     allocate(this%fsun240_patch            (begp:endp))           ; this%fsun240_patch            (:)   = nan
 
     allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
+    allocate(this%voc_pftindex_patch       (begp:endp))           ; this%voc_pftindex_patch       (:)   = 0    
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan

@@ -978,7 +978,7 @@ sub setup_cmdl_bgc {
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'use_fates'=>$nl_flags->{'use_fates'},
               , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
               , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
@@ -1214,7 +1214,7 @@ sub setup_cmdl_spinup {
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
                 $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
                 use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
@@ -4148,12 +4148,8 @@ sub setup_logic_megan {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');
   }
   if ( defined($nl->get_value('megan_specifier')) ||
-         defined($nl->get_value('megan_factors_file')) ) {
+       defined($nl->get_value('megan_factors_file')) ) {
     check_megan_spec( $opts, $nl, $definition );
-    if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                    "   Use the '-no-megan' option when '-bgc fates' is activated");
-    }
   }
 }
 
@@ -4966,7 +4962,7 @@ sub setup_logic_exice {
   # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string());
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   # Put use_exice into nl_flags so can be referenced later
   if ( value_is_true($use_exice) ) {
