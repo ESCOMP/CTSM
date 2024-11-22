@@ -20,23 +20,19 @@ def check_and_trim_years(year_1, year_n, ds_in):
     """
     After importing a file, restrict it to years of interest.
     """
-    ### In annual outputs, file with name Y is actually results from year Y-1.
-    ### Note that time values refer to when it was SAVED. So 1981-01-01 is for year 1980.
-
-    def get_year_from_cftime(cftime_date):
-        # Subtract 1 because the date for annual files is when it was SAVED
-        return cftime_date.year - 1
 
     # Check that all desired years are included
-    if get_year_from_cftime(ds_in.time.values[0]) > year_1:
+    year = utils.get_timestep_year(ds_in, ds_in.time.values[0])
+    if year > year_1:
         raise RuntimeError(
             f"Requested year_1 is {year_1} but first year in outputs is "
-            + f"{get_year_from_cftime(ds_in.time.values[0])}"
+            + f"{year}"
         )
-    if get_year_from_cftime(ds_in.time.values[-1]) < year_1:
+    year = utils.get_timestep_year(ds_in, ds_in.time.values[-1])
+    if year < year_1:
         raise RuntimeError(
             f"Requested year_n is {year_n} but last year in outputs is "
-            + f"{get_year_from_cftime(ds_in.time.values[-1])}"
+            + f"{year}"
         )
 
     # Remove years outside range of interest
