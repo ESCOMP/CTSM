@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Make sure the environment is setup to run the FATES modify parameter file tool
+
+if [ -f xmlquery ]; then
+   SRCDIR=$(./xmlquery SRCROOT --value || echo "null")
+   error=$?
+   if [ $error != 0 ]; then
+      echo "Trouble getting SRCROOT from case"
+      exit 1
+   fi
+   CASEDIR=`./xmlquery CASEROOT --value`
+   error=$?
+   if [ $error != 0 ]; then
+      echo "Trouble getting CASEROOT from case"
+      exit 1
+   fi
+   DEBUG=0
+else
+   echo "set SRCDIR assuming running in the testmod directory"
+   DEBUG=1
+   PWD=`pwd`
+   CASEDIR=$PWD
+   SRCDIR="$PWD/../../../../.."
+fi
+FATESDIR="$SRCDIR/src/fates/"
+
+# check if ncgen is in your path
+which ncgen >& /dev/null
+error=$?
+if [ $error != 0 ]; then
+   echo "ncgen is NOT in your path"
+   exit 1
+elif [ $DEBUG ]; then
+   echo "ncgen was found"
+fi
+
+# check if conda is in your path
+which conda >& /dev/null
+error=$?
+if [ $error != 0 ]; then
+   echo "conda is NOT in your path and is used to get the python environment to run the FATES modify parameter file tool"
+   noconda=1
+else
+   if [ $DEBUG ]; then
+      echo "conda was found"
+   fi
+   noconda=0
+fi
+
+# Check that  the modify script exists and can be used
+
+MODIFY_FATES_PARAMFILE="$FATESDIR/tools/modify_fates_paramfile.py"
+if [ ! -f $MODIFY_FATES_PARAMFILE ]; then
+   echo "$MODIFY_FATES_PARAMFILE does NOT exist"
+   exit 1
+elif [ $DEBUG ]; then
+   echo "$MODIFY_FATES_PARAMFILE was found"
+fi
+
+$MODIFY_FATES_PARAMFILE --help >& /dev/null
+error=$?
+if [ $error != 0 ]; then
+   echo "$MODIFY_FATES_PARAMFILE can NOT be succesfully run"
+   if [ $noconda == 1 ]; then
+      echo "Attempting to activate the conda ctsm_pylib environment"
+      conda activate ctsm_pylib
+      error=$?
+      if [ $error != 0 ]; then
+         echo "Trouble activating the conda ctsm_pylib environment"
+         exit 1
+      elif [ $DEBUG ]; then
+         echo "conda activate ctsm_pylib was successful"
+      fi
+   else
+      echo "Make sure your python environment can run $MODIFY_FATES_PARAMFILE"
+      echo "One way to do that is to add conda to your environment"
+      echo "    then activate the ctsm_pylib environemnt"
+      echo "    ctsm_oylib is created at the top level of CTSM using py_env_create"
+      exit 1
+   fi
+elif [ $DEBUG ]; then
+   echo "$MODIFY_FATES_PARAMFILE is runable"
+fi
