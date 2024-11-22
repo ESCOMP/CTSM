@@ -4758,8 +4758,6 @@ sub setup_logic_fates {
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
-              } elsif ( ! -f "$fname" ) {
-                 $log->fatal_error("$fname does NOT point to a valid filename" );
               }
            }
         }
@@ -4790,8 +4788,6 @@ sub setup_logic_fates {
                     my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
                     if ( ! defined($nl->get_value($var))  ) {
                        $log->fatal_error("$var is required when use_fates_luh is set and use_fates_potentialveg is false" );
-                    } elsif ( ! -f "$fname" ) {
-                       $log->fatal_error("$var does NOT point to a valid filename" );
                     }
                  }
               }
@@ -4804,8 +4800,6 @@ sub setup_logic_fates {
                     my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
                     if ( ! defined($nl->get_value($var))  ) {
                       $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
-                    } elsif ( ! -f "$fname" ) {
-                      $log->fatal_error("$var does NOT point to a valid filename" );
                     }
                  }
               }
@@ -4847,8 +4841,6 @@ sub setup_logic_fates {
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
-              } elsif ( ! -f "$fname" ) {
-                $log->fatal_error("$var does NOT point to a valid filename" );
               }
            }
         }
