@@ -196,7 +196,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._set_active_case(case_rxboth)
 
         # Set up stuff that applies to both tests
-        self._setup_all()
+        self._setup_all(h1_inst)
 
         # Add stuff specific to Prescribed Calendars run
         logger.info("RXCROPMATURITY log:  modify user_nl files: Prescribed Calendars")
