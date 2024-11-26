@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.013     erik 11/26/2024 Merge b4b-dev
+       ctsm5.3.012  afoster 11/13/2024 update fates tag
+       ctsm5.3.011 samrabin 11/11/2024 Improve handling of cold-start finidat
        ctsm5.3.010  afoster 11/09/2024 Merge b4b-dev
        ctsm5.3.009 samrabin 10/15/2024 Reduce outputs from matrixcnOn tests
        ctsm5.3.008   olyson 10/14/2024 PPE change to sa_leaf in CanopyFluxesMod.F90

@@ -2679,7 +2679,7 @@
       <option name="comment"  >5x5_amazon grid with FATES and latest CLM</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="ERS_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -2688,7 +2688,7 @@
       <option name="comment"  >This test should be converted to an ERP test once the PEM version of this test is passing COMPARE_base_modpes. Also change to 5x5_amazon once ccs_config updated to allow it</option>
     </options>
   </test>
-  <test name="PEM_D_Ld15" grid="f10_f10_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="PEM_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
