@@ -2731,7 +2731,7 @@
       <option name="comment"  >5x5_amazon grid with FATES and latest CLM</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="ERS_D_Ld20" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -2740,7 +2740,7 @@
       <option name="comment"  >This test should be converted to an ERP test once the PEM version of this test is passing COMPARE_base_modpes. Also change to 5x5_amazon once ccs_config updated to allow it</option>
     </options>
   </test>
-  <test name="PEM_D_Ld15" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
+  <test name="PEM_D_Ld20" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -2749,7 +2749,7 @@
       <option name="comment"  >This checks that the FATES seed dispersal MPI communication is consistent when the PE layout changes. Could convert to 5x5_amazon as above</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTreeDamage">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -2758,7 +2758,7 @@
       <option name="comment"  >Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -2769,7 +2769,7 @@
       <option name="comment"  >Ensure functionality of two-stream radiation option in FATES</option>
     </options>
   </test>
-  <test name="ERS_D_Ld15" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
