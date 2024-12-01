@@ -85,8 +85,6 @@ else
    log_msg_if_debug "conda was found"
    noconda=0
 fi
-echo "noconda = $noconda"
-
 # Check that  the modify script exists and can be used
 
 MODIFY_FATES_PARAMFILE="$FATESDIR/tools/modify_fates_paramfile.py"
@@ -101,7 +99,6 @@ cmd="$MODIFY_FATES_PARAMFILE --help"
 # If not runable as is if conda is available try some different options
 $(check_if_runable "$cmd" "$msg")
 if [[ "$?" -eq "0" ]]; then
-   echo "failed..."
    if [[ $noconda -eq "0" ]]; then
       prefix="conda run -n ctsm_pylib"
       echo "Attempting to run under \'$prefix\'"
@@ -109,7 +106,6 @@ if [[ "$?" -eq "0" ]]; then
       msg="$prefix $MODIFY_FATES_PARAMFILE can NOT be successfully run"
       $(check_if_runable "$cmdrun" "$msg")
       if [[ "$?" -eq "0" ]]; then
-         echo "failed..."
          echo "Attempting to activate the ctsm_pylib environment"
          $(conda activate ctsm_pylib)
          check_error $? "Trouble activating the conda ctsm_pylib environment"
