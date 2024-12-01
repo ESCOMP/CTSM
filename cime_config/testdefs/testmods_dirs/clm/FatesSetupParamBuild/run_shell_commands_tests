@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Define a custom error handler function
+handle_error() {
+    echo "An error occurred: $1"
+    echo "error code: $?"
+    # Additional error handling code can go here
+    return 1
+}
+
+# Set the error handler to be called when an error occurs
+trap 'handle_error "Something went wrong!"' ERR
+
+host=`hostname -f`
+if [[ "$host" =~ derecho*.hpc.ucar.edu || "$host" =~ d*.hpc.ucar.edu ]] ; then
+   echo "Running on Derecho..." >&2
+   echo ".... making sure conda is loaded..." >&2
+   module load conda
+else
+   echo "Not a recognized host: $host" >&2
+   exit 5
+fi
+echo "Test if shell_commands will run..."
+. ./shell_commands > /dev/null
+
+echo "Now do some tests of the bash subroutines" >&2
+unset DEBUG
+$(log_msg_if_debug "Die with Error since DEBUG is unset")
+if [[ "$?" -eq "0" ]]; then
+   echo "Should have died with an error..." >&2
+   exit 1
+fi
+echo "after DEBUG test"
+DEBUG=0
+$(log_msg_if_debug "Die with Error since too many options are input" "another option")
+
+echo "Successful"
