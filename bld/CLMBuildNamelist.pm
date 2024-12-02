@@ -678,10 +678,17 @@ sub setup_cmdl_chk_res {
   }
 }
 
+#-------------------------------------------------------------------------------
+
 sub begins_with
 {
+    # Arguments: long-string, substring
+    # For an input long-string check if it starts with the substring
+    # For example, if a string like NEON_PRISM starts with NEON
     return substr($_[0], 0, length($_[1])) eq $_[1];
 }
+
+#-------------------------------------------------------------------------------
 
 sub setup_cmdl_resolution {
   my ($opts, $nl_flags, $definition, $defaults, $envxml_ref) = @_;
