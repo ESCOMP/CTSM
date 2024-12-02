@@ -3,6 +3,22 @@
 # unit tester for the functions in shell_commands as well as the entire script
 #
 
+# Load or unload conda
+conda_for_host() {
+   host=$0
+   type=$1
+   if [[ "$host" =~ derecho*.hpc.ucar.edu || "$host" =~ d*.hpc.ucar.edu ]] ; then
+      echo "Running on Derecho..." >&1
+      if [[ "$type" == "load" ]]; then
+        module load conda
+      else
+        module unload conda
+      fi
+   else
+      echo "Not a recognized host: $host" >&1
+   fi
+}
+
 # Define a custom error handler function
 handle_error() {
     # Additional error handling code can go here
@@ -115,14 +131,7 @@ test_log_msg_logged_if_debug_nonzero() {
 #################################################
 
 host=`hostname -f`
-if [[ "$host" =~ derecho*.hpc.ucar.edu || "$host" =~ d*.hpc.ucar.edu ]] ; then
-   echo "Running on Derecho..." >&2
-   echo ".... making sure conda is loaded..." >&2
-   module load conda
-else
-   echo "Not a recognized host: $host" >&2
-   exit 5
-fi
+conda_for_host "$host" "load"
 
 # Set the error handler to be called when an error occurs
 trap 'handle_error "Error trapped so can check error status"' ERR
