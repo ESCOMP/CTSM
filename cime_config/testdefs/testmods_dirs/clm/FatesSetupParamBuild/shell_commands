@@ -16,11 +16,11 @@ log_msg_if_debug () {
    # Arguments: message
    if [ "$#" -ne "1" ]; then
       fatal_error "Wrong number of arguments to log_msg_if_debug"
-      return
+      return 5
    fi
    if [ -z "$DEBUG" ];then
       fatal_error "log_msg_if_debug was called without DEBUG being set"
-      return
+      return 5
    fi
    if [ "$DEBUG" -eq "1" ]; then
       echo -e $1
@@ -32,13 +32,13 @@ check_error () {
    # Arguments: error, error-message
    if [ "$#" -ne "2" ]; then
       fatal_error "Wrong number of arguments to check_error"
-      return
+      return 4
    fi
    error=$1
    msg=$2
    if [ "$error" -ne "0" ]; then
       fatal_error "$msg"
-      return
+      return 4
    fi
 }
 
@@ -99,7 +99,7 @@ main() {
    MODIFY_FATES_PARAMFILE="$FATESDIR/tools/modify_fates_paramfile.py"
    if [ ! -f $MODIFY_FATES_PARAMFILE ]; then
       fatal_error "$MODIFY_FATES_PARAMFILE does NOT exist"
-      return
+      return 6
    fi
    log_msg_if_debug "$MODIFY_FATES_PARAMFILE was found"
 
@@ -132,14 +132,15 @@ main() {
          echo "    ctsm_pylib is created at the top level of CTSM using py_env_create" >&2
          fatal_error "Can NOT run $MODIFY_FATES_PARAMFILE"
          if [ "$?" -ne "0" ]; then
-            return
+            return $?
          fi
       fi
    fi
    log_msg_if_debug "$MODIFY_FATES_PARAMFILE is runable"
    if [ "$?" -ne "0" ]; then
-      return
+      return $?
    fi
+   log_msg_if_debug "\nSuccesfully was able to setup the FATES parameter modify script and make sure it will work"
 }
 
 main
