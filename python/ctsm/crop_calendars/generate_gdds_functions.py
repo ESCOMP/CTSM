@@ -1,7 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
-# pylint: disable=too-many-lines,too-many-statements
+# pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
 import glob
@@ -553,8 +553,8 @@ def import_and_process_1yr(
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
     patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
-    for p in patterns:
-        pattern = os.path.join(indir, p)
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
         if h2_files:
             break

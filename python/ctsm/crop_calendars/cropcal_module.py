@@ -25,15 +25,11 @@ def check_and_trim_years(year_1, year_n, ds_in):
     year = utils.get_timestep_year(ds_in, ds_in.time.values[0])
     if year > year_1:
         raise RuntimeError(
-            f"Requested year_1 is {year_1} but first year in outputs is "
-            + f"{year}"
+            f"Requested year_1 is {year_1} but first year in outputs is {year}"
         )
     year = utils.get_timestep_year(ds_in, ds_in.time.values[-1])
     if year < year_1:
-        raise RuntimeError(
-            f"Requested year_n is {year_n} but last year in outputs is "
-            + f"{year}"
-        )
+        raise RuntimeError(f"Requested year_n is {year_n} but last year in outputs is {year}")
 
     # Remove years outside range of interest
     ### Include an extra year at the end to finish out final seasons.
