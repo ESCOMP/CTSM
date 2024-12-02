@@ -133,13 +133,26 @@ test_main_without_conda() {
    . ./shell_commands >& /dev/null
 
    conda_for_host "$host" "unload"
-   #export DEBUG=1
-   # BEK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   # EBK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   #                I think this is because there's a lot of output in main
    output=$(main >& /dev/null)
    error=$?
-   #echo "Error is $error" >&2
    expect_fail "$error" "main should fail without conda"
    conda_for_host "$host" "load"
+}
+
+# Test shell_commands without ctsm_pylib activated
+test_main_without_ctsm_pylib() {
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+
+   conda deactivate
+   # EBK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   #                I think this is because there's a lot of output in main
+   output=$(main >& /dev/null)
+   error=$?
+   echo $output >&2
+   expect_nofail "$error" "main should run without ctsm_pylib activated"
 }
 
 #################################################
@@ -162,5 +175,6 @@ test_log_msg_if_debug_fails_if_too_many_options
 test_log_msg_logged_if_debug_nonzero
 test_log_msg_not_logged_if_debug_zero
 test_main_without_conda
+test_main_without_ctsm_pylib
 
 echo -e "\n\nSuccessfully ran all the tests\n (Look for FAIL above for problems)"
