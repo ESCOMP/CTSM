@@ -1,0 +1,268 @@
+===============================================================
+Tag name: ctsm5.3.0
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 06 Sep 2024 02:21:22 AM MDT
+One-line Summary: Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust
+emissions, prigent roughness data
+
+Purpose and description of changes since ctsm5.2.0
+--------------------------------------------------
+
+
+Changes to CTSM Infrastructure:
+===============================
+
+ - manage_externals removed and replaced by git-fleximod
+ - Ability to handle CAM7 in LND_TUNING_MODE
+
+Changes to CTSM Answers:
+========================
+ 
+ Changes to defaults for clm6_0 physics:
+  - Urban explicit A/C turned on
+  - Snow thermal conductivity is now Sturm_1997
+  - New IC file for f09 1850
+  - New crop calendars
+  - Dust emissions is now Leung_2023
+  - Excess ice is turned on
+  - Updates to MEGAN for BVOC's
+  - Updates to BGC fire method
+
+ Changes for all physics versions:
+
+  - Parameter files updated
+  - FATES parameter file updated
+  - Glacier region 1 is now undefined
+  - Update in FATES transient Land use
+  - Pass active glacier (CISM) runoff directly to river model (MOSART)
+  - Add the option for using matrix for Carbon/Nitrogen BGC spinup
+
+
+New surface datasets:
+=====================
+
+
+New input datasets to mksurfdata_esmf:
+======================================
+
+
+Contributors
+------------
+
+
+Significant changes to scientifically-supported configurations since ctsm5.2.0
+------------------------------------------------------------------------------
+
+Notes of particular relevance for users for ctsm5.2.0 to ctsm5.3.0
+------------------------------------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Changes to documentation:
+
+Things being deprecated (which will be removed):
+
+Notes of particular relevance for developers for ctsm5.2.0 to ctsm5.3.0:
+------------------------------------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_esmf python)
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  mksurfdata_esmf
+     derecho ---- run "make all" to create all datasets (completes in XXX hours)
+     (crop-global-SSP2-4.5-ne30 was longest at 6 hr, most completed in XXX hours)
+
+  ctsm_sci
+     derecho ----
+
+  mosart
+     derecho ----
+     izumi ------
+
+  rtm
+     derecho ----
+
+
+Answer changes ctsm5.2.0 to ctsm5.3.0
+-------------------------------------
+
+Changes answers relative to baseline: Yes! New surface datasets so answers change for ALL simulations!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+===============================================================
+===============================================================
+Tag name: ctsm5.2.029
+Originator(s): multiple
+Date: 10 Sep 2024
+One-line Summary: Update surface datasets: double tag of ctsm5.3.0
+
+Purpose and description of changes
+----------------------------------
+
+New surface datasets because of updates in PFT/LAI/soil-color datasets, as well as two fire datasets (AG fire, pearland and the
+glacier behavior dataset. Also bring in an updated "PPE informed, hand-tuned" parameter file. And turn on Li2024 fire method. Also
+updates to allow creating transient landuse timeseries files going back to 1700. Fix an important bug on soil fields that was there
+since ctsm5.2.0. This results in mkaurfdata_esmf giving identical answers with a change in number of processors. Add in creation of
+ne0np4.POLARCAP.ne30x4 surface datasets.
+
+Asides: Remove VIC fields from surface datasets and testing. Add version to the surface datasets. Update the fire emissions factor
+dataset for the fire emissions testing in CTSM. Remove the --hires_pft option from mksurfdata_esmf as we don't have the datasets for
+it.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #2723 -- Version string on CTSM surface datasets to check for compatability
+   Partly addressed #2752 -- NEON surface datasets are defined in two places -- should just be one in namelist_defaults_ctsm.xml
+   Partly addresses #2720 -- Make polarcap surface datasets in ctsm5.3.0, remove VR 1850 datasets
+   Fixes #2452 -- Run mksurfdata_esmf with the new vegetation raw data
+   Fixes #2570 -- Historical configuration for CLM6
+   Fixes #2618 -- Update fire variables on surface dataset
+   Fixes #423 -- Update fire variables on surface dataset
+   Fixes #2734 -- Update fire emissions factors
+   Fixes #2744 -- Soil level clm surface input data for clm5.2.0 have missing values in large domains
+   Fixes #2502 -- fsurdat: PCT_SAND, PCT_CLAY, ORGANIC differ with different PE layouts on derecho
+   Fixes #2748 -- Update hillslope datasets for 5.3
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  New surface datasets means initial condition files created without ctsm5.3.0 surface
+  datasets will need to be interpolated
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  With new surface datasets the following GLC fields have region "1" set to UNSET:
+     glacier_region_behavior, glacier_region_melt_behavior, glacier_region_ice_runoff_behavior
+  For mksurfdata_esmf, the --vic and --hires_pft options were removed
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   glacier_region_behavior updated so that region ID 1 is UNSET
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   parameter file updated
+   surface datasets updatd
+   f09 1850 finidat file updated (also used for 2000)
+   fire emissions factor file updated
+
+Changes to documentation:
+   Technical Note documentation on glacier region updated
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Region 1 for glacier region is now undefined on purpose
+
+Changes to tests or testing:
+   VIC tests removed
+
+Testing summary: release testing (regular ctsm_sci fates mosart rtm mksurfdata_esmf python)
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! New surface datasets so answers change for ALL simulations!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: slevis ctsm52026_f09_pSASU
+
+   URL for LMWG diagnostics output used to validate new climate:
+       https://github.com/NCAR/LMWG_dev/issues/65
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2500 -- ctsm5.3.0: New pft/lai/glc-behavior/soilcolor/fire datasets
