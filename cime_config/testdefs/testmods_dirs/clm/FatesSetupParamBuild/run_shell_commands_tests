@@ -5,11 +5,13 @@
 
 # Load or unload conda
 conda_for_host() {
-   host=$0
-   type=$1
+   host=$1
+   type=$2
    if [[ "$host" =~ derecho*.hpc.ucar.edu || "$host" =~ d*.hpc.ucar.edu ]] ; then
-      echo "Running on Derecho..." >&1
       if [[ "$type" == "load" ]]; then
+        if [ "$verbose" -eq "1" ]; then
+           echo "Running on Derecho..." >&1
+        fi
         module load conda
       else
         module unload conda
@@ -125,10 +127,28 @@ test_log_msg_logged_if_debug_nonzero() {
    fi
 }
 
+# Test shell_commands without conda
+test_main_without_conda() {
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+
+   conda_for_host "$host" "unload"
+   #export DEBUG=1
+   # BEK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   output=$(main >& /dev/null)
+   error=$?
+   #echo "Error is $error" >&2
+   expect_fail "$error" "main should fail without conda"
+   conda_for_host "$host" "load"
+}
 
 #################################################
 # Main script
 #################################################
+
+export DEBUG=0
+export NOFAIL=1  # Set NOFAIL so that fatal errors won't abort
+export verbose=0
 
 host=`hostname -f`
 conda_for_host "$host" "load"
@@ -136,13 +156,11 @@ conda_for_host "$host" "load"
 # Set the error handler to be called when an error occurs
 trap 'handle_error "Error trapped so can check error status"' ERR
 
-export DEBUG=0
-export NOFAIL=1  # Set NOFIAL so that fatal errors won't abort
-export verbose=0
 test_run_shell_commands
 test_log_msg_if_debug_fails_if_DEBUG_unset
 test_log_msg_if_debug_fails_if_too_many_options
 test_log_msg_logged_if_debug_nonzero
 test_log_msg_not_logged_if_debug_zero
+test_main_without_conda
 
-echo "Successfully ran all the tests"
+echo -e "\n\nSuccessfully ran all the tests\n (Look for FAIL above for problems)"

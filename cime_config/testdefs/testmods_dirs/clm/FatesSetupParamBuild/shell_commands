@@ -130,9 +130,11 @@ main() {
          echo "       conda activate ctsm_pylib" >&2
          echo "    In some cases you may have to add conda activate ctsm_pylib in your startup files" >&2
          echo "    ctsm_pylib is created at the top level of CTSM using py_env_create" >&2
-         fatal_error "Can NOT run $MODIFY_FATES_PARAMFILE"
-         if [ "$?" -ne "0" ]; then
-            return $?
+         # EBK 2014/12/02 Should NOT have to save output below as unused but needs it to work
+         output=$(fatal_error "Can NOT run $MODIFY_FATES_PARAMFILE")
+         error=$?
+         if [ "$error" -ne "0" ]; then
+            return $error
          fi
       fi
    fi
