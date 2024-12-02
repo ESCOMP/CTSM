@@ -16,6 +16,14 @@ conda_for_host() {
       else
         module unload conda
       fi
+   elif [[ "$host" =~ izumi.cgd.ucar.edu || "$host" =~ i*.cgd.ucar.edu ]] ; then
+      echo "Running on Izumi..." >&1
+      . /usr/share/Modules/init/sh
+      if [[ "$type" == "load" ]]; then
+        module load lang/anaconda
+      else
+        module unload lang/anaconda
+      fi
    else
       echo "Not a recognized host: $host" >&1
    fi
