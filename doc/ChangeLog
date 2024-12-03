@@ -1,4 +1,167 @@
 ===============================================================
+Tag name: ctsm5.3.014
+Originator(s): multiple (see contributors below)
+Date: Tue 03 Dec 2024 04:31:03 PM MST
+One-line Summary: Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
+
+Purpose and description of changes
+----------------------------------
+
+Fix a list of issues mostly for testing that came in with the cesm3_0_beta03 and cesm3_0_beta04 tags
+for the science "chill" deadline bringing in the baseline science capabilities needed for the cesm3_0 release.
+
+List of things:
+
+- New polarcap grid
+- Fix use_init_interp for several resolutions that had problems
+- Remove clm5_1 physics option
+- Newly needed surface datasets added to auto build in Makefile for mksurfdata_esmf
+- Fix several individual tests that were failing
+- Update to submodules to ones roughly based on cesm3_0_beta04
+- Add graceful error checking to the FATES parameter file tests that will get it working in some cases
+
+Contributors
+------------
+    @slevis-lmwg @ekluzek @adamrher @samsrabin
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  #2861 -- Nag compiler mpi-serial tests are failing on Izumi after the OS upgrade
+  #2801 -- fsurdat file needed for NEON MOAB site bfb done testing
+  #2791 -- Add f19 16pft 1850 and Hist to list of surface dataset resolutions (for the PPE work)
+  #2780 -- New CN matrix fails with single point sites with the new ctsm5.3 datasets.
+  #2654 -- Failing tests for izumi_nag with mpi-serial in cesm3_0_alpha02a
+  #2640 -- Update submodules to cesm3_0_beta04 versions
+  #2548 -- ne0ARCTICne30x4 grid transient failure
+  #2544 -- Failing ne0CONUSne30x8_ne0CONUSne30x8_mt12 in CESM testing
+  #2486 -- Temporarily add back a T42 dataset for CAM
+  #2379 -- Deprecate clm5_1 physics with ctsm5.2.0
+  #2294 -- use of mct_mod is deprecated
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Removal of the clm5_1 physics option to CLM_PHYSICS_VERSION XML variable
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Add support for new grid: ne0np4.POLARCAP.ne30x4
+  Add support for f19 and f45 16-pft surface datasets
+  Fix some finidat issues for: f19, VR grids
+  Remove more mention of vichydro in namelist defaults
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   I think we should expand the shell_commands unit testing I added in FatesSetupParam.
+   usermod and testmod shell_commands can have tricky logic that's hard to get right and then
+   easy to break. Having unit testing that tests the tricky user mods (such as NEON and PLUMBER)
+   as well as this tricky FATES capability would help bring robustness, correctness and stability to this
+   part of the code. As well as the ability to make changes to this part and refactor to improve it.
+   As part of this I think adopting a bash unit tester (such as BATS) would be a good thing to do.
+   The other part is that I think we could add automated testing for this on push to PR's to master.
+   Future changes:
+    - Move FatesSetupParam to user-mod directory and activate for all FATES
+    - Add automated github test for the unit test there
+    - Adopt BATS for a bash unit test framework
+    - Add testing for NEON and PLUMBER2 shell_commands user-mod directories
+
+Changes to tests or testing:
+   Changes to lilac/sspmatrixcn tests needed for cime update
+   Clm51 tests changed to Clm60
+   C96 tests changed to C96_C96_mt232
+   Exact restart monthly length tests changed to days because of cime testing update
+   Exact restart 15 day length tests changed to 20 because of a cime testing bug
+   Some additional VR grid tests
+   FatesColdLandUse test requires a long name transient test now
+   New testmod include directory (FatesSetupParam) to setup to modify the FATES parameter file
+   Each of the testmods that need to modify the FATES parameter file then include FatesSetupParam
+   Add a unit-tester to the FatesSetupParam directory to make sure its functions work correctly
+   PFUNIT testing build infrastructure updated to use full ESMF library
+
+Testing summary: regular + fates + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (6 namelists are different than ctsm5.3.013, new 16pft for f19/f45 non-crop)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   Update most of the submodules to ones based from cesm3_0_beta04
+    - mizuRoute to cesm-coupling.n02_v2.1.3
+    - ccs_config_cesm1.0.10 (beyond cesm3_0_beta04 for unit testing issues)
+    - cime6.1.37 (beyond cesm3_0_beta04 for unit testing issues)
+    - cmeps1.0.16
+    - cdeps1.0.53 (behind cesm3_0_beta04 [at 1.0.57] to avoid nextsw_cday changes)
+    - share1.1.2
+    - pio2_6_3
+
+    mct removed
+    MPIserial_2.5.1 added
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   - #2888 -- PR to master of all changes
+   - #2853 -- Update submodules to ones that are based on cesm3_0_alpha04a 
+   - #2883 -- Update branch to latest master ctsm5.3.012 
+   - #2840 -- Fix single-point matrixCN fails 
+   - #2840 -- bfb bug PR status: awaiting review PR status: ready size: small
+   - #2855 -- Improve CLMBuildNamelist ability to detect NEON runs 
+   - #2716 -- add "polarcap" grid for cesm3 release enhancement
+   - #2834 -- f19 + f45 16pft fsurdat/landuse files to namelist_defaults_ctsm + Makefile 
+   - #2808 -- Remove Clm51 references throughout or change to Clm60 
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.013
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue 26 Nov 2024 02:59:49 PM MST
