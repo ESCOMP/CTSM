@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.014
 Originator(s): multiple (see contributors below)
-Date: Mon 02 Dec 2024 09:50:09 AM MST
+Date: Tue 03 Dec 2024 10:49:08 AM MST
 One-line Summary: Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
 
 Purpose and description of changes
@@ -13,7 +13,7 @@ for the science "chill" deadline bringing in the baseline science capabilities n
 List of things:
 
 - New polarcap grid
-- Fix use_init_interp for several resolutions that had
+- Fix use_init_interp for several resolutions that had problems
 - Remove clm5_1 physics option
 - Newly needed surface datasets added to auto build in Makefile for mksurfdata_esmf
 - Fix several individual tests that were failing
@@ -22,7 +22,7 @@ List of things:
 
 Contributors
 ------------
-    @slevis-lmwg @ekluzek @adamrher
+    @slevis-lmwg @ekluzek @adamrher @samsrabin
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -104,25 +104,25 @@ Testing summary: regular + fates + ctsm_sci
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
   ctsm_sci
-     derecho ----
+     derecho ---- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
