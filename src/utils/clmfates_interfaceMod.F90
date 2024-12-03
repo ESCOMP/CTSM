@@ -2579,7 +2579,7 @@ module CLMFatesInterfaceMod
           psnsun    => photosyns_inst%psnsun_patch,  &
           psnsha    => photosyns_inst%psnsha_patch,  &
           cisun_z   => photosyns_inst%cisun_z_patch, & 
-          cisha_z   => photosyns_inst%cisha_z_patch, & 
+          cisha_z   => photosyns_inst%cisha_z_patch & 
          )
       do s = 1, this%fates(nc)%nsites
 

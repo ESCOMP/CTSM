@@ -1115,7 +1115,7 @@ bioms:   do f = 1, fn
          if ( use_fates ) then      
             ! zeroed out here for megan isoprene calculations, in case patches are not transfered properly.
             photosyns_inst%cisha_z_patch(begp:endp,:) = -999._r8
-            photosyns_inst$cisun_z_patch(begp:endp,:) = -999._r8
+            photosyns_inst%cisun_z_patch(begp:endp,:) = -999._r8
             call clm_fates%wrap_photosynthesis(nc, bounds, fn, filterp(1:fn), &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
                  co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
