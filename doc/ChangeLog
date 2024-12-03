@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.014
 Originator(s): multiple (see contributors below)
-Date: Tue 03 Dec 2024 10:49:08 AM MST
+Date: Tue 03 Dec 2024 04:31:03 PM MST
 One-line Summary: Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
 
 Purpose and description of changes
@@ -104,7 +104,7 @@ Testing summary: regular + fates + ctsm_sci
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - OK
+    derecho - PASS (6 namelists are different than ctsm5.3.013, new 16pft for f19/f45 non-crop)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
