@@ -85,14 +85,14 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
-    use clm_varctl, only : use_fates, use_fates_nocomp, use_fates_sp
+    use clm_varctl, only : use_fates, use_fates_nocomp
     class(vocemis_type) :: this
     type(bounds_type), intent(in)    :: bounds  
 
 
     if ( shr_megan_mechcomps_n > 0) then
        if (use_fates) then
-          if (.not. (use_fates_nocomp .or. use_fates_sp)) then
+          if (.not. use_fates_nocomp) then ! SP implies NOCOMP is on.
              call endrun( msg='ERROR: MEGAN currently only works with when FATES is in SP and/or NOCOMP mode '//&
                   errMsg(sourcefile, __LINE__))
           end if
@@ -626,7 +626,7 @@ contains
              if (trim(meg_cmp%name) == 'isoprene') then 
                 ! Check of valid intercellular co2 pressure values.
                 if (cisha_z(p,nlevcan) < smallValue .or. cisun_z(p,nlevcan) < smallValue) then
-                   write(iulog,*) 'Invalid intercellular co2 pressure (sunlit, shaded): ',cisun_z(p,nlevcan),cisha_z(p,nlevcan)
+                   write(iulog,*) 'Invalid intercellular co2 pressure (patch itype, sunlit, shaded): ', l_pft_itype(p),cisun_z(p,nlevcan),cisha_z(p,nlevcan)
                    call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
                 endif
                 co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
