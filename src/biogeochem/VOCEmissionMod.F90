@@ -85,14 +85,14 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
-    use clm_varctl, only : use_fates, use_fates_nocomp
+    use clm_varctl, only : use_fates, use_fates_nocomp, use_fates_sp
     class(vocemis_type) :: this
     type(bounds_type), intent(in)    :: bounds  
 
 
     if ( shr_megan_mechcomps_n > 0) then
        if (use_fates) then
-          if (.not. use_fates_nocomp) then
+          if (.not. (use_fates_nocomp .or. use_fates_sp)) then
              call endrun( msg='ERROR: MEGAN currently only works with when FATES is in SP and/or NOCOMP mode '//&
                   errMsg(sourcefile, __LINE__))
           end if
@@ -417,6 +417,8 @@ contains
     ! !USES:
     use subgridAveMod        , only : p2g
     use clm_varctl           , only : use_fates
+    use clm_varcon           , only : smallValue
+    use decompMod            , only : subgrid_level_patch
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                  
@@ -615,15 +617,20 @@ contains
              
              ! Activity factor for T
              gamma_t = get_gamma_T(t_veg240(p), t_veg24(p),t_veg(p), ct1(class_num), ct2(class_num),&
-                                   betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt, patchpft)
+                                   betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt, l_pft_itype(p))
 
              ! Activity factor for Leaf Age
-             gamma_a = get_gamma_A(patchpft, elai240(p),elai(p),class_num)
+             gamma_a = get_gamma_A(l_pft_itype(p), elai240(p),elai(p),class_num)
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
+                ! Check of valid intercellular co2 pressure values.
+                if (cisha_z(p,nlevcan) < smallValue .or. cisun_z(p,nlevcan) < smallValue) then
+                   write(iulog,*) 'Invalid intercellular co2 pressure (sunlit, shaded): ',cisun_z(p,nlevcan),cisha_z(p,nlevcan)
+                   call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
+                endif
                 co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
-                gamma_c = get_gamma_C(cisun_z(p),cisha_z(p),forc_pbot(c),fsun(p), co2_ppmv)
+                gamma_c = get_gamma_C(cisun_z(p,nlevcan),cisha_z(p,nlevcan),forc_pbot(c),fsun(p), co2_ppmv)
 
              else
                 gamma_c = 1._r8
