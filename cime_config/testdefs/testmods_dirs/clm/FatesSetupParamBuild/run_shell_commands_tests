@@ -17,9 +17,11 @@ conda_for_host() {
         module unload conda
       fi
    elif [[ "$host" =~ izumi.cgd.ucar.edu || "$host" =~ i*.cgd.ucar.edu ]] ; then
-      echo "Running on Izumi..." >&1
-      . /usr/share/Modules/init/sh
+      if [ "$verbose" -eq "1" ]; then
+         echo "Running on Izumi..." >&1
+      fi
       if [[ "$type" == "load" ]]; then
+        . /usr/share/Modules/init/sh
         module load lang/anaconda
       else
         module unload lang/anaconda
@@ -35,7 +37,7 @@ handle_error() {
     return 1
 }
 
-# Expect that should should have run WITJ an error
+# Expect that should should have run WITH an error
 expect_fail() {
    error=$1
    msg=$2
@@ -145,7 +147,7 @@ test_main_without_conda() {
    #                I think this is because there's a lot of output in main
    output=$(main >& /dev/null)
    error=$?
-   expect_fail "$error" "main should fail without conda"
+   expect_fail "$error" "main should fail without conda (this can work on machines that include enough python packages outside of conda ctsm_pylib)"
    conda_for_host "$host" "load"
 }
 
@@ -185,4 +187,4 @@ test_log_msg_not_logged_if_debug_zero
 test_main_without_conda
 test_main_without_ctsm_pylib
 
-echo -e "\n\nSuccessfully ran all the tests\n (Look for FAIL above for problems)"
+echo -e "\n\nSuccessfully ran all the tests (Look for FAIL above for problems)"
