@@ -452,7 +452,9 @@ contains
     real(r8) :: par240_sha              ! temporary
     
     integer                            :: class_num, n_meg_comps, imech, imeg, ii
-    integer                            :: patchpft ! to transfer FATES PFT space into CLM PFT space.
+    integer                            :: l_pft_itype(bounds%begp:bounds%endp) ! local index of pft type 
+                                                      ! that corresponds to pfts on megan factors 
+                                                      ! for BGC it will be 1 to 1 with pftcon%itype(p)
     character(len=16)                  :: mech_name
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     real(r8)                           :: cp, alpha,  Eopt, topt  ! for history output
@@ -499,7 +501,6 @@ contains
          fsun240       => canopystate_inst%fsun240_patch        , & ! Input:  [real(r8) (:)   ]  sunlit fraction of canopy last 240 hrs            
          elai          => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          elai240       => canopystate_inst%elai240_patch        , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow last 240 hrs
-         ci_fates      => canopystate_inst%ci_patch            , & !Input:  [real(r8) (:)   ]  FATES-calculated internalleaf ci    
          cisun_z       => photosyns_inst%cisun_z_patch          , & ! Input:  [real(r8) (:,:) ]  sunlit intracellular CO2 (Pa)
          cisha_z       => photosyns_inst%cisha_z_patch          , & ! Input:  [real(r8) (:,:) ]  shaded intracellular CO2 (Pa)
          
@@ -531,11 +532,27 @@ contains
     ! initialize variables which get passed to the atmosphere
     vocflx(bounds%begp:bounds%endp,:)   = 0._r8
     vocflx_tot(bounds%begp:bounds%endp) = 0._r8
-
+    
     do imeg=1,shr_megan_megcomps_n
       meg_out(imeg)%flux_out(bounds%begp:bounds%endp) = 0._r8
     enddo
-          
+    
+    ! Get local pft types:
+    ! this has to be done earlier, so if use_fates, we locally know what is not bare ground
+    ! voc_pft_index comes from fates-internal mapping between pft's in megan_factors_file and fates pfts
+    l_pft_itype(bounds%begp:bounds%endp) = 0
+    if (use_fates) then
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+          l_pft_itype(p) = canopystate_inst%voc_pftindex_patch(p)
+       end do
+    else
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+          l_pft_itype(p) = patch%itype(p)
+       end do
+    end if
+
     ! Begin loop over points
     !_______________________________________________________________________________
     do fp = 1,num_soilp
@@ -551,7 +568,7 @@ contains
        vocflx_meg(:) = 0._r8
 
        ! calculate VOC emissions for non-bare ground Patches
-       if (patch%itype(p) > 0) then 
+       if (l_pft_itype(p) > 0) then 
           gamma=0._r8
 
           ! Calculate PAR: multiply w/m2 by 4.6 to get umol/m2/s for par (added 8/14/02)
@@ -583,16 +600,10 @@ contains
 
              ! set emis factor
              ! if specified, set EF for isoprene with mapped values
-             if(use_fates)then
-                patchpft = canopystate_inst%voc_pftindex_patch(p)
-             else
-                patchpft = patch%itype(p)
-             endif
-             
              if ( trim(meg_cmp%name) == 'isoprene' .and. shr_megan_mapped_emisfctrs) then
-                epsilon = get_map_EF(patchpft,g, vocemis_inst)
+                epsilon = get_map_EF(l_pft_itype(p),g, vocemis_inst)
              else
-                epsilon = meg_cmp%emis_factors(patchpft)
+                epsilon = meg_cmp%emis_factors(l_pft_itype(p))
              end if
 
              
@@ -612,11 +623,7 @@ contains
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
                 co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
-                if(use_fates)then
-                   gamma_c = get_gamma_C(ci_fates(p),ci_fates(p),forc_pbot(c),fsun(p), co2_ppmv)
-                else
-                   gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
-                endif
+                gamma_c = get_gamma_C(cisun_z(p),cisha_z(p),forc_pbot(c),fsun(p), co2_ppmv)
 
              else
                 gamma_c = 1._r8

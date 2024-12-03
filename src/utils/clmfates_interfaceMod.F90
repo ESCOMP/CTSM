@@ -2578,7 +2578,9 @@ module CLMFatesInterfaceMod
           rssha     => photosyns_inst%rssha_patch,   &
           psnsun    => photosyns_inst%psnsun_patch,  &
           psnsha    => photosyns_inst%psnsha_patch,  &
-          ci        => canopystate_inst%ci_patch)
+          cisun_z   => photosyns_inst%cisun_z_patch, & 
+          cisha_z   => photosyns_inst%cisha_z_patch, & 
+         )
       do s = 1, this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2645,7 +2647,9 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 3
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
             rssha(p) = this%fates(nc)%bc_out(s)%rssha_pa(ifp)
-            ci(p) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            ! this is needed for MEGAN to work with FATES
+            cisun_z = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            cisha_z = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval

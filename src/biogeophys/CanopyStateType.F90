@@ -46,7 +46,6 @@ module CanopyStateType
      real(r8) , pointer :: hbot_patch               (:)   ! patch canopy bottom (m)
      real(r8) , pointer :: z0m_patch                (:)   ! patch momentum roughness length (m)
      real(r8) , pointer :: displa_patch             (:)   ! patch displacement height (m)
-     real(r8) , pointer :: ci_patch                 (:)   ! Internal leaf CO2 concentration for MEGAN
      real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy
      real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy
      real(r8) , pointer :: fsun240_patch            (:)   ! patch 240hr average of sunlit fraction of canopy
@@ -141,7 +140,6 @@ contains
     allocate(this%hbot_patch               (begp:endp))           ; this%hbot_patch               (:)   = nan
     allocate(this%z0m_patch                (begp:endp))           ; this%z0m_patch                (:)   = nan
     allocate(this%displa_patch             (begp:endp))           ; this%displa_patch             (:)   = nan
-    allocate(this%ci_patch                 (begp:endp))           ; this%ci_patch                 (:)   = nan
     allocate(this%fsun_patch               (begp:endp))           ; this%fsun_patch               (:)   = nan
     allocate(this%fsun24_patch             (begp:endp))           ; this%fsun24_patch             (:)   = nan
     allocate(this%fsun240_patch            (begp:endp))           ; this%fsun240_patch            (:)   = nan
