@@ -2648,8 +2648,8 @@ module CLMFatesInterfaceMod
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
             rssha(p) = this%fates(nc)%bc_out(s)%rssha_pa(ifp)
             ! this is needed for MEGAN to work with FATES
-            cisun_z = this%fates(nc)%bc_out(s)%ci_pa(ifp)
-            cisha_z = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            cisun_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            cisha_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval
