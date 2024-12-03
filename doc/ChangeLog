@@ -93,7 +93,8 @@ Changes to tests or testing:
    Exact restart 15 day length tests changed to 20 because of a cime testing bug
    Some additional VR grid tests
    FatesColdLandUse test requires a long name transient test now
-   New testmod include directory (FatesSetupParam) to setup modifying FATES parameter file, testmods requiring it use it
+   New testmod include directory (FatesSetupParam) to setup to modify the FATES parameter file
+   Each of the testmods that need to modify the FATES parameter file then include FatesSetupParam
    Add a unit-tester to the FatesSetupParam directory to make sure its functions work correctly
    PFUNIT testing build infrastructure updated to use full ESMF library
 
