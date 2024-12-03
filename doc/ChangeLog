@@ -94,7 +94,7 @@ Changes to tests or testing:
    Some additional VR grid tests
    FatesColdLandUse test requires a long name transient test now
    New testmod include directory (FatesSetupParam) to setup modifying FATES parameter file, testmods requiring it use it
-   Add a unit-tester to the FatesSetupParam directory to make sure it's functions work correctly
+   Add a unit-tester to the FatesSetupParam directory to make sure its functions work correctly
    PFUNIT testing build infrastructure updated to use full ESMF library
 
 Testing summary: regular + fates + ctsm_sci
