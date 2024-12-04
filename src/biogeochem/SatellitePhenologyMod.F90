@@ -13,7 +13,7 @@ module SatellitePhenologyMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_lai_streams
+  use clm_varctl   , only : iulog, use_lai_streams, single_column
   use perf_mod     , only : t_startf, t_stopf
   use spmdMod      , only : masterproc, mpicom, iam
   use laiStreamMod , only : lai_init, lai_advance, lai_interp
@@ -311,7 +311,7 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
 
-    if (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj) then
+    if (.not. single_column .and. (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj)) then
        write(iulog,*)trim(subname), 'ldomain and input file do not match dims '
        write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
        write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
