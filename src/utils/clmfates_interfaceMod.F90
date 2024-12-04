@@ -305,6 +305,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_nocomp
      integer                                        :: pass_sp
      integer                                        :: pass_masterproc
+     integer                                        :: pass_luh
      logical                                        :: verbose_output
      type(fates_param_reader_ctsm_impl)             :: var_reader
      
@@ -348,6 +349,14 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
 
+        ! FATES landuse modes
+        if(use_fates_luh) then
+           pass_luh = 1
+        else
+           pass_luh = 0
+        end if
+        call set_fates_ctrlparms('use_luh2',ival=pass_luh)
+        
      end if
 
 
@@ -540,16 +549,12 @@ module CLMFatesInterfaceMod
 
         ! FATES landuse modes
         if(use_fates_luh) then
-           pass_use_luh = 1
            pass_num_luh_states = num_landuse_state_vars
            pass_num_luh_transitions = num_landuse_transition_vars
         else
-           pass_use_luh = 0
            pass_num_luh_states = 0
            pass_num_luh_transitions = 0
         end if
-
-        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh)
         call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
         call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
 
