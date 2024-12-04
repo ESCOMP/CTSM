@@ -137,8 +137,8 @@ contains
     use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
-    use clm_varctl                    , only : fsurdat
-    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use clm_varctl                    , only : fsurdat, hillslope_file
+    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
@@ -256,7 +256,7 @@ contains
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
-    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, hillslope_file, actual_numcft)
 
     if(use_fates) then
 
@@ -307,7 +307,7 @@ contains
 
     if (use_hillslope) then
        ! Initialize hillslope properties
-       call InitHillslope(bounds_proc, fsurdat)
+       call InitHillslope(bounds_proc, hillslope_file)
     endif
 
     ! Set filters

@@ -29,7 +29,7 @@ module lnd_comp_nuopc
   use NUOPC_Model            , only : NUOPC_ModelGet
   use shr_kind_mod           , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod            , only : shr_sys_abort
-  use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
+  use shr_log_mod            , only : shr_log_setLogUnit, shr_log_getLogUnit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use spmdMod                , only : masterproc, mpicom, spmd_init
@@ -66,7 +66,7 @@ module lnd_comp_nuopc
   private :: clm_orbital_init    ! Initialize the orbital information
   private :: clm_orbital_update  ! Update the orbital information
   private :: CheckImport
-  
+
   !--------------------------------------------------------------------------
   ! Private module data
   !--------------------------------------------------------------------------
@@ -235,7 +235,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Note still need compid for those parts of the code that use the data model
-    ! functionality through subroutine calls
+    ! functionality through subroutine calls (MCTID just means the Model ComonenT IDentification number)
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
@@ -333,8 +333,7 @@ contains
     !----------------------------------------------------------------------------
     ! reset shr logging to original values
     !----------------------------------------------------------------------------
-
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit(shrlogunit)
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine InitializeAdvertise
@@ -497,8 +496,8 @@ contains
     ! Reset shr logging to my log file
     !----------------------------------------------------------------------------
 
-    call shr_file_getLogUnit (shrlogunit)
-    call shr_file_setLogUnit (iulog)
+    call shr_log_getLogUnit (shrlogunit)
+    call shr_log_setLogUnit (iulog)
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
@@ -686,7 +685,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit (shrlogunit)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -777,8 +776,8 @@ contains
     ! Reset share log units
     !--------------------------------
 
-    call shr_file_getLogUnit (shrlogunit)
-    call shr_file_setLogUnit (iulog)
+    call shr_log_getLogUnit (shrlogunit)
+    call shr_log_setLogUnit (iulog)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -867,7 +866,7 @@ contains
        rstwr = .false.
        if (nlend .and. write_restart_at_endofrun) then
           rstwr = .true.
-       else 
+       else
           call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
@@ -967,7 +966,7 @@ contains
     ! Reset shr logging to my original values
     !--------------------------------
 
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit (shrlogunit)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
@@ -1293,14 +1292,14 @@ contains
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
-    
+
     ! This is the routine that enforces the explicit time dependence on the
     ! import fields. This simply means that the timestamps on the Fields in the
-    ! importState are checked against the currentTime on the Component's 
+    ! importState are checked against the currentTime on the Component's
     ! internalClock. Consequenty, this model starts out with forcing fields
-    ! at the current time as it does its forward step from currentTime to 
+    ! at the current time as it does its forward step from currentTime to
     ! currentTime + timeStep.
-    
+
     ! local variables
     type(ESMF_Clock)              :: clock
     type(ESMF_Time)               :: time
@@ -1324,7 +1323,7 @@ contains
     ! query the component for info
     call NUOPC_CompGet(gcomp, name=name, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    
+
     ! query the Component for its clock and importState
     call ESMF_GridCompGet(gcomp, clock=clock, importState=importState, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -1332,11 +1331,11 @@ contains
     ! get the current time out of the clock
     call ESMF_ClockGet(clock, currTime=time, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    
+
     ! check that Fields in the importState show correct timestamp
     allCurrent = NUOPC_IsAtTime(importState, time, fieldList=fieldList, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-      
+
     if (.not.allCurrent) then
       !TODO: introduce and use INCOMPATIBILITY return codes!!!!
       do i=1, size(fieldList)
@@ -1358,6 +1357,6 @@ contains
         rcToReturn=rc)
       return  ! bail out
     endif
-    
+
   end subroutine CheckImport
 end module lnd_comp_nuopc

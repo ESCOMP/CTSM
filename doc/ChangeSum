@@ -1,5 +1,18 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.014     erik 12/03/2024 Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
+       ctsm5.3.013     erik 11/26/2024 Merge b4b-dev
+       ctsm5.3.012  afoster 11/13/2024 update fates tag
+       ctsm5.3.011 samrabin 11/11/2024 Improve handling of cold-start finidat
+       ctsm5.3.010  afoster 11/09/2024 Merge b4b-dev
+       ctsm5.3.009 samrabin 10/15/2024 Reduce outputs from matrixcnOn tests
+       ctsm5.3.008   olyson 10/14/2024 PPE change to sa_leaf in CanopyFluxesMod.F90
+       ctsm5.3.007   slevis 10/14/2024 Clm60 finidat updates for ne30, f09, f19 grids
+       ctsm5.3.006 samrabin 10/11/2024 Merge b4b-dev
+       ctsm5.3.005     erik 10/10/2024 Hardcoded tuning adjustments for Leung_2024 dust emissions
+       ctsm5.3.004 samrabin 10/07/2024 Move hillslope data off surface datasets
+       ctsm5.3.003 multiple 10/07/2024 FATES default parameter file update
+       ctsm5.3.002 multiple 09/26/2024 Duplicate tag (same as 5.3.001)
        ctsm5.3.001 multiple 09/26/2024 Merge b4b-dev
          ctsm5.3.0 multiple 09/24/2024 Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
        ctsm5.2.029 multiple 09/24/2024 New surface datasets: double tag of ctsm5.3.0
