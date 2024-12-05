@@ -2084,6 +2084,16 @@
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
+  <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >POLARCAP test with clm50cam6"</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+    </options>
+  </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -2091,6 +2101,17 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
+      <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >ARCTIC test with cam6"</option>
       <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
@@ -2112,6 +2133,17 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
+      <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >ARCTICGRIS test with cam6"</option>
       <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
@@ -2143,6 +2175,16 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Run CONUS for transient case starting in 2013 as for CAM case (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
       <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
+      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_2013Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Repeat CONUS transient starting in 2013 for cam6"</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
