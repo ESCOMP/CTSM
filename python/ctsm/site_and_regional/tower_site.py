@@ -95,6 +95,7 @@ class TowerSite:
         if not output_root:
             output_root = os.getcwd()
         case_path = os.path.join(output_root, self.name)
+        print(case_path)
 
         logger.info("base_case_name : %s", self.name)
         logger.info("user_mods_dir  : %s", user_mods_dirs[0])
@@ -262,6 +263,8 @@ class TowerSite:
         no_batch,
         rerun,
         experiment,
+        no_input_data_check,
+        xmlchange,
     ):
         """
         Run case.
@@ -409,11 +412,19 @@ class TowerSite:
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
+            if xmlchange:
+                xmlchange_list = xmlchange.split(",")
+                for setting in xmlchange_list:
+                    setting_split = setting.split("=")
+                    case.set_value(*setting_split)
+
             self.modify_user_nl(case_root, run_type, rundir)
 
             case.create_namelists()
+
             # explicitly run check_input_data
-            case.check_all_input_data()
+            if not no_input_data_check:
+                case.check_all_input_data()
             if not setup_only:
                 case.submit(no_batch=no_batch)
                 print("-----------------------------------")
