@@ -365,7 +365,7 @@ contains
     if (masterproc) then
        nio = getavu()
        call get_curr_date(yr, mon, day, tod)
-       write(timestamp,'(".",i4.4,"-",i2.2,"-",i2.2,"-",i5.5)'),yr,mon,day,tod
+       write(timestamp,'(".",i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,tod
        locfn = trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)//timestamp
        inquire(file=trim(locfn), exist=found)
        if(.not. found) then
