@@ -1616,6 +1616,10 @@ module CLMFatesInterfaceMod
           patch%is_bareground(col%patchi(c)) = .true.
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
 
+          ! set voc_pft_index of bareground to 0 explicitly, so the bare ground is properly ignored in VOCEmissionMod
+          if (patch%is_bareground(col%patchi(c))) then
+             voc_pftindex(col%patchi(c)) = 0
+          endif
           ! Precision errors on the canopy_fraction_pa sum, even small (e-12)
           ! do exist, and can create potentially negetive bare-soil fractions
           ! (ie -1e-12 or smaller). Even though this is effectively zero,
@@ -2650,6 +2654,11 @@ module CLMFatesInterfaceMod
             ! this is needed for MEGAN to work with FATES
             cisun_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             cisha_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            if (this%fates(nc)%bc_out(s)%ci_pa(ifp) <0.0_r8) then
+               write(iulog,*) 'ci_pa is less than 0: ', this%fates(nc)%bc_out(s)%ci_pa(ifp)
+               write(iulog,*) 'filter ran photosynthesis s p icp ifp ilter',s,p,icp,ifp
+               call endrun(msg=errMsg(sourcefile, __LINE__))
+            endif
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval

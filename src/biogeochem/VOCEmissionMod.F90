@@ -546,7 +546,9 @@ contains
     if (use_fates) then
        do fp = 1,num_soilp
           p = filter_soilp(fp)
-          l_pft_itype(p) = canopystate_inst%voc_pftindex_patch(p)
+          if (patch%is_fates(p)) then
+            l_pft_itype(p) = canopystate_inst%voc_pftindex_patch(p)
+          endif
        end do
     else
        do fp = 1,num_soilp
@@ -625,12 +627,12 @@ contains
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
                 ! Check of valid intercellular co2 pressure values.
-                if (cisha_z(p,nlevcan) < smallValue .or. cisun_z(p,nlevcan) < smallValue) then
-                   write(iulog,*) 'Invalid intercellular co2 pressure (patch itype, sunlit, shaded): ', l_pft_itype(p),cisun_z(p,nlevcan),cisha_z(p,nlevcan)
+                if (cisha_z(p,1) < 0.0_r8 .or. cisun_z(p,1) < 0.0_r8) then
+                   write(iulog,*) 'Invalid intercellular co2 pressure (patch itype, sunlit, shaded): ', l_pft_itype(p),cisun_z(p,1),cisha_z(p,1)
                    call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
                 endif
                 co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
-                gamma_c = get_gamma_C(cisun_z(p,nlevcan),cisha_z(p,nlevcan),forc_pbot(c),fsun(p), co2_ppmv)
+                gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
 
              else
                 gamma_c = 1._r8
