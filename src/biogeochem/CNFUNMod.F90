@@ -206,7 +206,7 @@ module CNFUNMod
    use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
-   use clm_varctl      , only : use_nitrif_denitrif
+   use clm_varctl      , only : use_nitrif_denitrif, nfix_method
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
@@ -487,8 +487,6 @@ module CNFUNMod
   integer   :: icost                             ! a local index
   integer   :: fixer                             ! 0 = non-fixer, 1
   ! =fixer 
-  !TODO, make namelist option
-  integer   :: nfix_method = 2                   ! 1 = Houlton, 2 = Bytnerowicz
   logical   :: unmetDemand                       ! True while there
   !  is still demand for N
   logical   :: local_use_flexibleCN              ! local version of use_flexCN
@@ -496,6 +494,7 @@ module CNFUNMod
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
   
+  character(len=32) :: subname = 'CNFUN'
   !--------------------------------------------------------------------
   !---------------------------------
   associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
@@ -1063,19 +1062,19 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                  fixer=0
                endif
 
-               ! TODO, make this a name list change determining which equation to use
-               if (nfix_method == 1) then
-                 ! This calls the Houlton function.
+               select case (nfix_method)
+               case ('Houlton')
                  costNit(j,icostFix) = fun_cost_fix(fixer,&
                          a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p)),&
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
-               elseif (nfix_method == 2) then
-                 ! Bytnerowicz no acclimation calculation
+               case ('Bytnerowicz')  ! no acclimation calculation
                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
                          nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
-
-               endif
+               case default
+                  write(iulog,*) subname//' ERROR: unknown nfix_method value: ', nfix_method
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               end select
 
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)

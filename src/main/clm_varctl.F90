@@ -227,6 +227,8 @@ module clm_varctl
   !
   real(r8), public :: nfix_timeconst = -1.2345_r8 
 
+  character(len=25), public :: nfix_method  ! choice of nfix parameterization
+
   !----------------------------------------------------------
   ! Physics
   !----------------------------------------------------------
