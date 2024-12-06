@@ -1,4 +1,103 @@
 ===============================================================
+Tag name: ctsm5.3.013
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue 26 Nov 2024 02:59:49 PM MST
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Bring in latest b4b-dev branch to main CTSM development.
+
+- Update git-fleximod
+- Fix equation number in tech note
+- Implement urbanl and urbanc coszen filters
+- Make ALBGRD and ALBGRI active by default
+- Some adjustments to control pylint for the RXCROPMATURITY python tests
+- Run_sys_tests: Print test list in --verbose/--debug.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #17 albgrd and albgri history fields depend on decomposition, for urban points
+   Fixes #747 In UrbanAlbedo: Create a filter for coszen>0 and operate over that
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   ALBGRD/ALBGRI are now active by default on the h0 files
+
+Changes to documentation: Fixed equation number
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+    Testlist that will be run is now output when --verbose/--debug is given to run_sys_tests
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2893 -- Merge b4b-dev
+  #2786 -- git fleximod
+  #2848 -- equation number in tech note
+  #2875 -- run_sys_tests log testlist for --verbose/--debug options
+  #2860 -- Remove num_solar and implement coszen filters in UrbanAlbedoMod.F90
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.012
 Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
 Date: Wed 13 Nov 2024 09:53:51 AM MST
