@@ -3381,7 +3381,7 @@ sub setup_logic_mineral_nitrogen_dynamics {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept", "nfix_method" );
   if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
     foreach my $var ( @vars ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
@@ -3394,6 +3394,12 @@ sub setup_logic_mineral_nitrogen_dynamics {
        }
     }
   }
+
+  my $var = $nl->get_value('nfix_method');
+  if ( $var ne "'Houlton'" && $var ne "'Bytnerowicz'" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable nfix_method; expected Houlton or Bytnerowicz");
+  }
+
 }
 
 
