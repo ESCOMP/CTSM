@@ -86,6 +86,8 @@ module CLMFatesInterfaceMod
    use PhotosynthesisMod , only : photosyns_type
    use PhotosynthesisMod , only : stomatalcond_mtd_bb1987
    use PhotosynthesisMod , only : stomatalcond_mtd_medlyn2011
+   use PhotosynthesisMod , only : leafresp_mtd_ryan1991
+   use PhotosynthesisMod , only : leafresp_mtd_atkin2015
    use atm2lndType       , only : atm2lnd_type
    use SurfaceAlbedoType , only : surfalb_type
    use SolarAbsorbedType , only : solarabs_type
@@ -409,6 +411,8 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_stomatal_model
      integer                                        :: pass_stomatal_assimilation
 
+     type(photosyns_type)                           :: photosyns_inst
+
      call t_startf('fates_globals2')
 
      if (use_fates) then
@@ -551,6 +555,13 @@ module CLMFatesInterfaceMod
            pass_stomatal_assimilation = 2
         end if
         call set_fates_ctrlparms('stomatal_assim_model',ival=pass_stomatal_assimilation)
+
+        if (photosyns_inst%leafresp_method == leafresp_mtd_ryan1991) then
+           pass_leafresp_model = 1
+        else if (photosyns_inst%leafresp_method == leafresp_mtd_atkin2015) then
+           pass_leafresp_model = 2
+        end if
+        call set_fates_ctrlparms('maintresp_leaf_model',ival=pass_leafresp_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0

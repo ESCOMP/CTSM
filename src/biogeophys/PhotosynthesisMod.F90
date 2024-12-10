@@ -69,8 +69,8 @@ module  PhotosynthesisMod
   private :: spacA          ! the inverse Jacobian matrix relating delta(vegwp) to f, d(vegwp)=A*f
 
   ! !PRIVATE DATA:
-  integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
-  integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
+  integer, parameter, public  :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
+  integer, parameter, public  :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
   integer, parameter, private :: vegetation_weibull=0        ! PLC method type
   ! These are public for unit-tests
   integer, parameter, public   :: sun=1                 ! index for sunlit
@@ -224,7 +224,7 @@ module  PhotosynthesisMod
      ! Logical switches for different options
      logical, public  :: rootstem_acc                      ! Respiratory acclimation for roots and stems
      logical, private :: light_inhibit                     ! If light should inhibit respiration
-     integer, private :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
+     integer, public  :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
      integer, public  :: stomatalcond_mtd                  ! Stomatal conduction method type
      logical, private :: modifyphoto_and_lmr_forcrop       ! Modify photosynthesis and LMR for crop
    contains
