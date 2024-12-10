@@ -775,14 +775,23 @@ Allowed values are:
 This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
-<entry id="fates_leafresp_model" type="char*256" category="physics"
-        group="clm_inparm" valid_values="ryan1991, atkin2017" value="ryan1991">
-Set the FATES leaf maintenance respiration model
+<entry id="fates_regeneration_model" type="char*256" category="physics"
+        group="clm_inparm" valid_values="default, trs, trs_no_seed_dyn" value="default">
+Set the FATES seed regeneration model
+Valid values:
+  default: default scheme
+  trs: Tree Recruitment Scheme (Hanbury-Brown et al., 2022)
+  trs_no_seed_dyn: Tree Recruitment Scheme (Hanbury-Brown et al., 2022) without seed dynamics
 </entry>
 
 <entry id="fates_cstarvation_model" type="char*256" category="physics"
         group="clm_inparm" valid_values="linear, exponential" value="linear">
 Set the FATES carbon starvation model
+</entry>
+
+<entry id="fates_leafresp_model" type="char*256" category="physics"
+        group="clm_inparm" valid_values="ryan1991, atkin2017" value="ryan1991">
+Set the FATES leaf maintenance respiration model
 </entry>
 
 <entry id="fates_stomatal_assimilation" type="char*256" category="physics"

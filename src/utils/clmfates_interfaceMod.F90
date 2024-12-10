@@ -61,6 +61,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_stomatal_assimilation
    use clm_varctl        , only : fates_leafresp_model
    use clm_varctl        , only : fates_cstarvation_model
+   use clm_varctl        , only : fates_regeneration_model
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -411,6 +412,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_stomatal_assimilation
      integer                                        :: pass_leafresp_model
      integer                                        :: pass_cstarvation_model
+     integer                                        :: pass_regeneration_model
 
      call t_startf('fates_globals2')
 
@@ -568,6 +570,15 @@ module CLMFatesInterfaceMod
            pass_cstarvation_model = 2
         end if
         call set_fates_ctrlparms('mort_cstarvation_model',ival=pass_cstarvation_model)
+
+        if (trim(fates_regeneration_model) == 'default') then
+           pass_regeneration_model = 1
+        else if (trim(fates_regeneration_model) == 'trs') then
+           pass_regeneration_model = 2
+        else if (trim(fates_regeneration_model) == 'trs_no_seed_dyn') then
+           pass_regeneration_model = 3
+        end if
+        call set_fates_ctrlparms('regeneration_model',ival=pass_regeneration_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0
