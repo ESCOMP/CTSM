@@ -62,6 +62,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_leafresp_model
    use clm_varctl        , only : fates_cstarvation_model
    use clm_varctl        , only : fates_regeneration_model
+   use clm_varctl        , only : fates_hydro_solver
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -413,6 +414,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_leafresp_model
      integer                                        :: pass_cstarvation_model
      integer                                        :: pass_regeneration_model
+     integer                                        :: pass_hydro_solver
 
      call t_startf('fates_globals2')
 
@@ -579,6 +581,15 @@ module CLMFatesInterfaceMod
            pass_regeneration_model = 3
         end if
         call set_fates_ctrlparms('regeneration_model',ival=pass_regeneration_model)
+
+        if (trim(fates_hydro_solver) == '1D_Taylor') then
+           pass_hydro_solver = 1
+        else if (trim(fates_hydro_solver) == '2D_Picard') then
+           pass_hydro_solver = 2
+        else if (trim(fates_hydro_solver) == '2D_Taylor') then
+           pass_hydro_solver = 3
+        end if
+        call set_fates_ctrlparms('hydr_solver',ival=pass_hydro_solver)
 
         ! FATES logging and harvest modes
         pass_logging = 0
