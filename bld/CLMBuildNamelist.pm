@@ -809,8 +809,9 @@ sub setup_cmdl_fates_mode {
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
                       "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
                       "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel",
-                      "use_fates_daylength_factor", "use_fates_photosynth_acclimation", "fates_stomatal_model"
-                    );
+                      "use_fates_daylength_factor", "use_fates_photosynth_acclimation", "fates_stomatal_model",
+                      "fates_stomatal_assimilation"
+                   );
 
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -4705,7 +4706,8 @@ sub setup_logic_fates {
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
-                       "use_fates_daylength_factor", "use_fates_photosynth_acclimation", "fates_stomatal_model"
+                       "use_fates_daylength_factor", "use_fates_photosynth_acclimation", "fates_stomatal_model",
+                       "fates_stomatal_assimilation"
                     );
 
         foreach my $var ( @list ) {
