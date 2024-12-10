@@ -79,8 +79,8 @@ module  PhotosynthesisMod
   integer, parameter, public  :: root=4                 ! index for root
   integer, parameter, public  :: veg=vegetation_weibull ! index for vegetation
   integer, parameter, public  :: soil=1                 ! index for soil
-  integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
-  integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
+  integer, parameter, public  :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
+  integer, parameter, public  :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
 
   real(r8), parameter, private :: bbbopt_c3 = 10000._r8            ! Ball-Berry Photosynthesis intercept to use for C3 vegetation
   real(r8), parameter, private :: bbbopt_c4 = 40000._r8            ! Ball-Berry Photosynthesis intercept to use for C4 vegetation
@@ -225,7 +225,7 @@ module  PhotosynthesisMod
      logical, public  :: rootstem_acc                      ! Respiratory acclimation for roots and stems
      logical, private :: light_inhibit                     ! If light should inhibit respiration
      integer, private :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
-     integer, private :: stomatalcond_mtd                  ! Stomatal conduction method type
+     integer, public  :: stomatalcond_mtd                  ! Stomatal conduction method type
      logical, private :: modifyphoto_and_lmr_forcrop       ! Modify photosynthesis and LMR for crop
    contains
 

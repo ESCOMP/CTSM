@@ -83,6 +83,8 @@ module CLMFatesInterfaceMod
    use clm_varpar        , only : nlevdecomp_full
    use clm_varpar        , only : nlevsoi
    use PhotosynthesisMod , only : photosyns_type
+   use PhotosynthesisMod , only : stomatalcond_mtd_bb1987
+   use PhotosynthesisMod , only : stomatalcond_mtd_medlyn2011
    use atm2lndType       , only : atm2lnd_type
    use SurfaceAlbedoType , only : surfalb_type
    use SolarAbsorbedType , only : solarabs_type
@@ -403,6 +405,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_num_luh_transitions
      integer                                        :: pass_photosynth_acclimation_switch
      integer                                        :: pass_daylength_factor_switch
+     integer                                        :: pass_stomatal_model
 
      call t_startf('fates_globals2')
 
@@ -532,6 +535,13 @@ module CLMFatesInterfaceMod
            pass_daylength_factor_switch = 0
         end if
         call set_fates_ctrlparms('use_daylength_factor_switch',ival=pass_daylength_factor_switch)
+
+        if (photosyns_inst%stomatalcond_mtd == stomatalcond_mtd_bb1987) then
+           pass_stomatal_model = 1
+        else if (photosyns_inst%stomatalcond_mtd == stomatalcond_mtd_medlyn2011) then
+           pass_stomatal_model = 2
+        end if
+        call set_fates_ctrlparms('stomatal_model',ival=pass_stomatal_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0
