@@ -2391,6 +2391,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
+<use_fates_daylength_factor    use_fates=".true.">.true.</use_fates_daylength_factor>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>

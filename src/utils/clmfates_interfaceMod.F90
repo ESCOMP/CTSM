@@ -52,6 +52,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_tree_damage
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
+   use clm_varctl        , only : use_fates_daylength_factor
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : fates_harvest_mode
@@ -399,6 +400,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_use_potentialveg
      integer                                        :: pass_num_luh_states
      integer                                        :: pass_num_luh_transitions
+     integer                                        :: pass_daylength_factor_switch
 
      call t_startf('fates_globals2')
 
@@ -514,6 +516,13 @@ module CLMFatesInterfaceMod
            pass_cohort_age_tracking = 0
         end if
         call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
+
+        if(use_fates_daylength_factor) then
+           pass_daylength_factor_switch = 1
+        else
+           pass_daylength_factor_switch = 0
+        end if
+        call set_fates_ctrlparms('use_daylength_factor_switch',ival=pass_daylength_factor_switch)
 
         ! FATES logging and harvest modes
         pass_logging = 0

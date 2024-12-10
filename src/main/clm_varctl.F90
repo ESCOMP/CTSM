@@ -338,6 +338,7 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+  logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
 
   ! FATES history dimension level
   ! fates can produce history at either the daily timescale (dynamics)
