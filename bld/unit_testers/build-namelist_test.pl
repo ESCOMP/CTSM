@@ -412,7 +412,7 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
          }
       }
    }
-   system( "/bin/rm $namelistfile" );
+   system( "/bin/rm -f $namelistfile" );
    &cleanup();
 }
 print "\n===============================================================================\n";
@@ -466,7 +466,7 @@ foreach my $site (
    if ( defined($opts{'generate'}) ) {
       $cfiles->copyfiles( "$options", $mode );
    }
-   system( "/bin/rm $namelistfile" );
+   system( "/bin/rm -f $namelistfile" );
    &cleanup();
 }
 
@@ -1337,6 +1337,7 @@ foreach my $key ( keys(%failtest) ) {
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
+   &cleanup();
 }
 
 
@@ -1420,12 +1421,14 @@ foreach my $key ( keys(%warntest) ) {
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    isnt( $?, 0, $key );
    system( "cat $tempfile" );
+   &cleanup();
    # Now run with -ignore_warnings and make sure it works
    $options .= " -ignore_warnings";
    eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
    is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
+   &cleanup();
 }
 
 print "\n===============================================================================\n";
@@ -1476,6 +1479,7 @@ foreach my $key ( keys(%coldwfinidat) ) {
       $finidat = `grep finidat lnd_in`;
       ok ( $finidat =~ "testfile.nc", "coldwfinidat $key finidat? $finidat" );
    }
+   &cleanup();
 }
 
 #
@@ -2002,7 +2006,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
 }
 &cleanup();
 
-system( "/bin/rm $finidat" );
+system( "/bin/rm -f $finidat" );
 
 print "\n==================================================\n";
 print " Dumping output  \n";
@@ -2013,7 +2017,7 @@ $xFail->parseOutput($captOut);
 print "Successfully ran all testing for build-namelist\n\n";
 
 &cleanup( "config" );
-system( "/bin/rm $tempfile" );
+system( "/bin/rm -f $tempfile" );
 
 sub cleanup {
 #
@@ -2024,10 +2028,10 @@ sub cleanup {
   print "Cleanup files created\n";
   if ( defined($type) ) {
      if ( $type eq "config" ) {
-        system( "/bin/rm config_cache.xml" );
+        system( "/bin/rm -f config_cache.xml" );
      }
   } else {
-     system( "/bin/rm $tempfile *_in" );
+     system( "/bin/rm -f $tempfile *_in" );
   }
 }
 
