@@ -340,6 +340,8 @@ module clm_varctl
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
   logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
 
+  logical, public            :: use_fates_photosynth_acclimation = .false.    ! true => enable fates to use photosynthetic temperature acclimation
+
   ! FATES history dimension level
   ! fates can produce history at either the daily timescale (dynamics)
   ! and the model step timescale. It can also generate output on the extra dimension
