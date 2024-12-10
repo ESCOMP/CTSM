@@ -57,6 +57,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : fates_harvest_mode
+   use clm_varctl        , only : fates_stomatal_model
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -403,6 +404,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_num_luh_transitions
      integer                                        :: pass_photosynth_acclimation_switch
      integer                                        :: pass_daylength_factor_switch
+     integer                                        :: pass_stomatal_model
 
      call t_startf('fates_globals2')
 
@@ -532,6 +534,13 @@ module CLMFatesInterfaceMod
            pass_daylength_factor_switch = 0
         end if
         call set_fates_ctrlparms('use_daylength_factor_switch',ival=pass_daylength_factor_switch)
+
+        if (trim(fates_stomatal_model) == 'ballberry') then
+           pass_stomatal_model = 1
+        else if (trim(fates_stomatal_model) == 'medlyn') then
+           pass_stomatal_model = 2
+        end if
+        call set_fates_ctrlparms('stomatal_model',ival=pass_stomatal_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0

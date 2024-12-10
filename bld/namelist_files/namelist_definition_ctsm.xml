@@ -775,6 +775,11 @@ Allowed values are:
 This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
+<entry id="fates_stomatal_model" type="char*256" category="physics"
+        group="clm_inparm" valid_values="ballberry, medlyn" value="ballberry">
+Set the FATES stomatal conductance model
+</entry>
+
 <entry id="use_fates_photosynth_acclimation" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 If TRUE, enable FATES to use a photosynthesis temperature acclimation model.

@@ -242,6 +242,7 @@ contains
           fluh_timeseries,                              &
           flandusepftdat,                               &
           fates_inventory_ctrl_filename,                &
+          fates_stomatal_model,                         &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
           use_fates_tree_damage,                        &
@@ -801,6 +802,7 @@ contains
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_harvest_mode, len(fates_harvest_mode) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_stomatal_model, len(fates_stomatal_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1204,6 +1206,7 @@ contains
     if (use_fates) then
        write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
        write(iulog, *) '    fates_harvest_mode = ', fates_harvest_mode
+       write(iulog, *) '    fates_stomatal_model = ', fates_stomatal_model
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro

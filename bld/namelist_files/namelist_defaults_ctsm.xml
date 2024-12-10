@@ -2389,6 +2389,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_photosynth_acclimation use_fates=".true.">.false.</use_fates_photosynth_acclimation>
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
 <fates_harvest_mode            use_fates=".true.">no_harvest</fates_harvest_mode>
+<fates_stomatal_model          use_fates=".true.">ballberry</fates_stomatal_model>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage         use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
