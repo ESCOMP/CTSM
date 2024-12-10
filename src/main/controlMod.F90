@@ -245,6 +245,7 @@ contains
           fates_stomatal_model,                         &
           fates_stomatal_assimilation,                  &
           fates_leafresp_model,                         &
+          fates_cstarvation_model,                      &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
           use_fates_tree_damage,                        &
@@ -807,6 +808,7 @@ contains
     call mpi_bcast (fates_stomatal_model, len(fates_stomatal_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_stomatal_assimilation, len(fates_stomatal_assimilation) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_leafresp_model, len(fates_leafresp_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_cstarvation_model, len(fates_cstarvation_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1213,6 +1215,7 @@ contains
        write(iulog, *) '    fates_stomatal_model = ', fates_stomatal_model
        write(iulog, *) '    fates_stomatal_assimilation = ', fates_stomatal_assimilation
        write(iulog, *) '    fates_leafresp_model = ', fates_leafresp_model
+       write(iulog, *) '    fates_cstarvation_model = ', fates_cstarvation_model
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
