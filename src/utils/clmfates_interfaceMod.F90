@@ -58,6 +58,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : fates_harvest_mode
    use clm_varctl        , only : fates_stomatal_assimilation
+   use clm_varctl        , only : fates_cstarvation_model
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -410,6 +411,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_daylength_factor_switch
      integer                                        :: pass_stomatal_model
      integer                                        :: pass_stomatal_assimilation
+     integer                                        :: pass_cstarvation_model
 
      type(photosyns_type)                           :: photosyns_inst
 
@@ -562,6 +564,13 @@ module CLMFatesInterfaceMod
            pass_leafresp_model = 2
         end if
         call set_fates_ctrlparms('maintresp_leaf_model',ival=pass_leafresp_model)
+
+        if (trim(fates_cstarvation_model) == 'linear') then
+           pass_cstarvation_model = 1
+        else if (trim(fates_cstarvation_model) == 'expontential') then
+           pass_cstarvation_model = 2
+        end if
+        call set_fates_ctrlparms('mort_cstarvation_model',ival=pass_cstarvation_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0
