@@ -247,6 +247,7 @@ contains
           fates_leafresp_model,                         &
           fates_cstarvation_model,                      &
           fates_regeneration_model,                     &
+          fates_radiation_model,                        &
           fates_hydro_solver,                           &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
@@ -812,6 +813,7 @@ contains
     call mpi_bcast (fates_leafresp_model, len(fates_leafresp_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_cstarvation_model, len(fates_cstarvation_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_regeneration_model, len(fates_regeneration_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_radiation_model, len(fates_radiation_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_hydro_solver, len(fates_hydro_solver) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1221,6 +1223,7 @@ contains
        write(iulog, *) '    fates_leafresp_model = ', fates_leafresp_model
        write(iulog, *) '    fates_cstarvation_model = ', fates_cstarvation_model
        write(iulog, *) '    fates_regeneration_model = ', fates_regeneration_model
+       write(iulog, *) '    fates_radiation_model = ', fates_radiation_model
        write(iulog, *) '    fates_hydro_solver = ', fates_hydro_solver
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode

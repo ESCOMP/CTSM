@@ -63,6 +63,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_cstarvation_model
    use clm_varctl        , only : fates_regeneration_model
    use clm_varctl        , only : fates_hydro_solver
+   use clm_varctl        , only : fates_radiation_model
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -415,6 +416,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_cstarvation_model
      integer                                        :: pass_regeneration_model
      integer                                        :: pass_hydro_solver
+     integer                                        :: pass_radiation_model
 
      call t_startf('fates_globals2')
 
@@ -590,6 +592,13 @@ module CLMFatesInterfaceMod
            pass_hydro_solver = 3
         end if
         call set_fates_ctrlparms('hydr_solver',ival=pass_hydro_solver)
+
+        if (trim(fates_radiation_model) == 'norman') then
+           pass_radiation_model = 1
+        else if (trim(fates_hydro_solver) == 'twostream') then
+           pass_radiation_model = 2
+        end if
+        call set_fates_ctrlparms('radiation_model',ival=pass_radiation_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0
