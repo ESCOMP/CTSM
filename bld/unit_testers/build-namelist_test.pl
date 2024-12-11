@@ -368,7 +368,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $neondir      = "../../cime_config/usermods_dirs/NEON";
+my $neondir      = "../../cime_config/usermods_dirs/clm/NEON";
 foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO",
                    "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA",
                    "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP",
@@ -421,7 +421,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $plumdir      = "../../cime_config/usermods_dirs/PLUMBER2";
+my $plumdir      = "../../cime_config/usermods_dirs/clm/PLUMBER2";
 foreach my $site ( 
     "AR-SLu",  "AU-Emr",  "AU-TTE",  "CA-NS1",  "CA-SF3",  "CN-HaM",  "DE-Obe",  "ES-ES1",  "FR-Gri",  "IE-Dri",  "IT-LMa",  "IT-SRo",  "RU-Fyo",  "US-Aud",  "US-Ho1",  "US-Ne2",  "US-Syv",  "ZM-Mon",
     "AT-Neu",  "AU-Gin",  "AU-Tum",  "CA-NS2",  "CH-Cha",  "CN-Qia",  "DE-Seh",  "ES-ES2",  "FR-Hes",  "IT-Amp",  "IT-Mal",  "JP-SMF",  "RU-Zot",  "US-Bar",  "US-KS2",  "US-Ne3",  "US-Ton",

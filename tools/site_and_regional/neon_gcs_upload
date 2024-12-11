@@ -126,7 +126,7 @@ def main(description):
     #os.path.join(os.environ["HOME"],"gcwriter")
 
     # Get the list of supported neon sites from usermods
-    valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
+    valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","clm","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
     filedatestamp = datetime.datetime.now().date()
     site_list, output_root, file_date, upload_finidat, upload_history = get_parser(sys.argv, description, valid_neon_sites)
