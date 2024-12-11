@@ -26,29 +26,32 @@ Starting from a SCRIP grid file that describes the grid you will run the model o
 
 Green arrows define the input to a program, while red arrows define the output. Cylinders define files that are either created by a program or used as input for a program. Boxes are programs.
 
-You start with a description of a SCRIP grid file for your output grid file and then create mapping files from the raw datasets to it. Once, the mapping files are created **mksurfdata_esmf** is run to create the surface dataset to run the model.
+You start with a description of a SCRIP grid file for your output grid file and then create mapping files from the raw datasets to it. Once, the mapping files are created ``mksurfdata_esmf`` is run to create the surface dataset to run the model.
 
 Creating a Complete Set of Files for Input to CLM
 -------------------------------------------------
 
 1. Create SCRIP grid datasets (if NOT already done)
 
-   First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: $CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc. The mkmapgrids and mkscripgrid.ncl NCL script in the $CTSMROOT/tools/mkmapgrids directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
+   First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: ``$CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc``. The ``mkmapgrids`` and ``mkscripgrid.ncl`` NCL script in the ``$CTSMROOT/tools/mkmapgrids`` directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
+
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
 
 2. Create domain dataset (if NOT already done)
 
-   Next use gen_domain to create a domain file for use by DATM and CLM. This is required, unless a domain file was already created. See the Section called Creating a domain file for CLM and DATM for more information on this.
+   Next use ``gen_domain`` to create a domain file for use by DATM and CLM. This is required, unless a domain file was already created. See the Section called Creating a domain file for CLM and DATM for more information on this.
 
-3. Create mapping files for mksurfdata_esmf (if NOT already done)
+3. Create mapping files for ``mksurfdata_esmf`` (if NOT already done)
 
-   Create mapping files for mksurfdata_esmf with mkmapdata.sh in $CTSMROOT/tools/mkmapdata. See the Section called Creating mapping files that mksurfdata_esmf will use for more information on this.
+   Create mapping files for ``mksurfdata_esmf`` with ``mkmapdata.sh`` in ``$CTSMROOT/tools/mkmapdata``. See the Section called Creating mapping files that ``mksurfdata_esmf`` will use for more information on this.
 
 4. Create surface datasets
 
-   Next use mksurfdata_esmf to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or |version| for this program. See the Section called Using mksurfdata_esmf to create surface datasets from grid datasets for more information on this.
+   Next use ``mksurfdata_esmf`` to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or |version| for this program. See the Section called Using ``mksurfdata_esmf`` to create surface datasets from grid datasets for more information on this.
 
-5. Enter the new datasets into the build-namelist XML database
-   The last optional thing to do is to enter the new datasets into the build-namelist XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
+5. Enter the new datasets into the ``build-namelist`` XML database
+   The last optional thing to do is to enter the new datasets into the ``build-namelist`` XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
 
 The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
 

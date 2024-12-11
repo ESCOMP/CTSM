@@ -77,13 +77,13 @@ MACHINE_DEFAULTS = {
         create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
-                queue="main",
+                queue="develop",
                 walltime="03:50:00",
                 extra_args="",
                 # The following assumes a single node, with a single mpi proc; we may want
                 # to add more flexibility in the future, making the node / proc counts
                 # individually selectable
-                required_args="-l select=1:ncpus=128:mpiprocs=1 -V -r n -k oed",
+                required_args="-l select=1:ncpus=16:mpiprocs=1 -V -r n -k oed",
             )
         },
     ),

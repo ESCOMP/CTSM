@@ -56,7 +56,6 @@ contains
     integer , allocatable  :: glacier_region_i(:) ! glacier region on input grid
     integer , allocatable  :: glacier_region_o(:) ! glacier region on output grid
     integer                :: ier, rcode          ! error status
-    integer                :: max_index(1)
     character(len=*), parameter :: subname = 'mkglacierregion'
     !-----------------------------------------------------------------------
 
@@ -141,10 +140,29 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Determine glacier_region_o
+    !
+    ! We take the maximum glacier region index that has > 0 coverage in the output grid
+    ! cell. The frequency of occurrence of the different glacier regions is irrelevant.
+    ! For example, if the value 1 appears in 99% of source cells overlapping a given
+    ! destination cell and the value 2 appears in just 1%, we'll put 2 in the destination
+    ! cell because it is the maximum value. (This treatment is important so that we give
+    ! priority to non-zero indices, and more generally allow setting up the glacier region
+    ! indices so that higher values take precedence - i.e., if a CTSM grid cell has any
+    ! overlap with a higher-valued region, we use that region.)
     glacier_region_o(:) = 0
     do no = 1,ns_o
-       max_index = maxloc(data_o(:,no))
-       glacier_region_o(no) = max_index(1) - 1
+       ! Note that we loop starting at the highest index so we give priority to higher
+       ! indices. Also note that we stop looking at index 1 (i.e., we don't explicitly
+       ! look at index 0): if we haven't found a region with greater than 0 coverage from
+       ! looking at the indices greater than 0, then we'll default to assigning this to
+       ! glacier region 0, regardless of the coverage of glacier region 0 (though, in
+       ! practice, glacier region 0 should have 100% coverage in this case).
+       do l = nglacier_regions, 1, -1
+          if (data_o(l,no) > 0._r8) then
+             glacier_region_o(no) = l
+             exit
+          end if
+       end do
     end do
     
     ! Write output data

@@ -753,6 +753,7 @@ bioms:   do f = 1, fn
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
+               sa_leaf(p) = sa_leaf(p) + esai(p)
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
@@ -1624,7 +1625,8 @@ bioms:   do f = 1, fn
       ! snocan < rel_epsilon * snocan_baseline will be set to zero
       ! See NumericsMod for rel_epsilon value
       call truncate_small_values(fn, filterp, begp, endp, &
-         snocan_baseline(begp:endp), snocan(begp:endp))
+         snocan_baseline(begp:endp), snocan(begp:endp), &
+         custom_rel_epsilon=1.e-10_r8)
       
       if ( use_fates ) then
          

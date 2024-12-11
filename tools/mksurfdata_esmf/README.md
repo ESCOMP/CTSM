@@ -41,7 +41,7 @@ In addition for the build: python, bash-shell, CMake and GNU-Make are required
 These libraries need to be built such that they can all work together in the
 same executable. Hence, the above order may be required in building them.
 
-CTSM externals that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
+CTSM submodules that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
 those. A python environment that includes particular packages is also required
 we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
 
@@ -93,7 +93,7 @@ https://github.com/ESCOMP/CTSM/issues/2341
 
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
- ./manage_externals/checkout_externals # Assuming at the top level of the CTSM/CESM checkout
+ ./bin/git-fleximod update  # Assuming at the top level of the CTSM/CESM checkout
 ```
 
 This will bring in CIME and ccs_config which are required for building.
@@ -178,6 +178,10 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  make all  # ...or
  make all-subset
 ```
+
+ As of 2024/9/12 one needs to generate NEON and PLUMBER2 fsurdat files by
+ running ./neon_surf_wrapper and ./plumber2_surf_wrapper manually in the
+ /tools/site_and_regional directory.
 
 <!-- = -->
 ## NOTES
