@@ -331,6 +331,13 @@ module clm_varctl
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
   character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
+  character(len=256), public :: fates_stomatal_model = ''               ! stomatal conductance model, Ball-berry or Medlyn
+  character(len=256), public :: fates_stomatal_assimilation = ''        ! net or gross assimilation modes
+  character(len=256), public :: fates_leafresp_model = ''               ! Leaf maintenance respiration model, Ryan or Atkin
+  character(len=256), public :: fates_cstarvation_model = ''            ! linear or exponential function
+  character(len=256), public :: fates_regeneration_model = ''           ! default, TRS, or TRS without seed dynamics
+  character(len=256), public :: fates_radiation_model = ''              ! Norman or two-stream radiation model
+  character(len=256), public :: fates_hydro_solver = ''                 ! 1D Taylor, 2D Picard, 2D Newton
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
@@ -338,6 +345,9 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+  logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
+
+  logical, public            :: use_fates_photosynth_acclimation = .false.    ! true => enable fates to use photosynthetic temperature acclimation
 
   ! FATES history dimension level
   ! fates can produce history at either the daily timescale (dynamics)
