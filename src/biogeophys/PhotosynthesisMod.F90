@@ -69,8 +69,8 @@ module  PhotosynthesisMod
   private :: spacA          ! the inverse Jacobian matrix relating delta(vegwp) to f, d(vegwp)=A*f
 
   ! !PRIVATE DATA:
-  integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
-  integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
+  integer, parameter, public  :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
+  integer, parameter, public  :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
   integer, parameter, private :: vegetation_weibull=0        ! PLC method type
   ! These are public for unit-tests
   integer, parameter, public   :: sun=1                 ! index for sunlit
@@ -79,8 +79,8 @@ module  PhotosynthesisMod
   integer, parameter, public  :: root=4                 ! index for root
   integer, parameter, public  :: veg=vegetation_weibull ! index for vegetation
   integer, parameter, public  :: soil=1                 ! index for soil
-  integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
-  integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
+  integer, parameter, public  :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
+  integer, parameter, public  :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
 
   real(r8), parameter, private :: bbbopt_c3 = 10000._r8            ! Ball-Berry Photosynthesis intercept to use for C3 vegetation
   real(r8), parameter, private :: bbbopt_c4 = 40000._r8            ! Ball-Berry Photosynthesis intercept to use for C4 vegetation
@@ -224,8 +224,8 @@ module  PhotosynthesisMod
      ! Logical switches for different options
      logical, public  :: rootstem_acc                      ! Respiratory acclimation for roots and stems
      logical, private :: light_inhibit                     ! If light should inhibit respiration
-     integer, private :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
-     integer, private :: stomatalcond_mtd                  ! Stomatal conduction method type
+     integer, public  :: leafresp_method                   ! leaf maintencence respiration at 25C for canopy top method to use
+     integer, public  :: stomatalcond_mtd                  ! Stomatal conduction method type
      logical, private :: modifyphoto_and_lmr_forcrop       ! Modify photosynthesis and LMR for crop
    contains
 
