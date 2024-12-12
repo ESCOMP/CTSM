@@ -12,8 +12,8 @@ module SaturatedExcessRunoffMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero
-  use clm_varcon   , only : spval
+  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero, hillslope_fsat_equals_zero
+  use clm_varcon   , only : spval,ispval
   use LandunitType , only : landunit_type
   use landunit_varcon  , only : istcrop
   use ColumnType   , only : column_type
@@ -263,6 +263,19 @@ contains
           c = filter_hydrologyc(fc)
           l = col%landunit(c)
           if(lun%itype(l) == istcrop) fsat(c) = 0._r8
+       end do
+    endif
+
+    ! ------------------------------------------------------------------------
+    ! Set fsat to zero for upland hillslope columns
+    ! ------------------------------------------------------------------------
+    if (hillslope_fsat_equals_zero) then
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if(col%is_hillslope_column(c) .and. col%active(c)) then
+             ! Set fsat to zero for upland columns
+             if (col%cold(c) /= ispval) fsat(c) = 0._r8
+          endif
        end do
     endif
 

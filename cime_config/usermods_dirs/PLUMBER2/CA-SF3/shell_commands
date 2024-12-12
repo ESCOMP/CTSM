@@ -1,11 +1,11 @@
-./xmlchange PTS_LON=-106.00531000000001
+./xmlchange PLUMBER2SITE=CA-SF3
+./xmlchange PTS_LON=-106.00531
 ./xmlchange PTS_LAT=54.091599
 ./xmlchange DATM_YR_END=2005
+./xmlchange DATM_YR_START_FILENAME=2003
 ./xmlchange START_TOD=21600
 ./xmlchange ATM_NCPL=48
 
-echo "fsurdat='/glade/u/home/wwieder/CTSM/tools/site_and_regional/subset_data_single_point/surfdata_1x1_PLUMBER2_CA-SF3_hist_16pfts_Irrig_CMIP6_simyr2000_c231005.nc ' " >> user_nl_clm 
-echo "CLM_USRDAT.PLUMBER2:datafiles= \$DIN_LOC_ROOT/atm/datm7/CLM1PT_data/PLUMBER2/CA-SF3/CLM1PT_data/CTSM_DATM_CA-SF3_2003-2005.nc " >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_first=2003" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_last=2005" >> user_nl_datm_streams 
 echo "presaero.SSP3-7.0:year_align=2003" >> user_nl_datm_streams 

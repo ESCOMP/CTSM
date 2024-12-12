@@ -226,7 +226,7 @@ contains
 
     this%azsun_grc(begg:endg) = spval
     call hist_addfld1d (fname='AZSUN', units='radians', &
-         avgflag='A', long_name='cosine of solar zenith angle', &
+         avgflag='A', long_name='azimuth angle of the sun', &
          ptr_lnd=this%azsun_grc, default='inactive')
 
     this%coszen_grc(begg:endg) = spval
@@ -242,12 +242,12 @@ contains
     this%albgrd_col(begc:endc,:) = spval
     call hist_addfld2d (fname='ALBGRD', units='proportion', type2d='numrad', &
          avgflag='A', long_name='ground albedo (direct)', &
-         ptr_col=this%albgrd_col, default='inactive')
+         ptr_col=this%albgrd_col, default='active')
 
     this%albgri_col(begc:endc,:) = spval
     call hist_addfld2d (fname='ALBGRI', units='proportion', type2d='numrad', &
          avgflag='A', long_name='ground albedo (indirect)', &
-         ptr_col=this%albgri_col, default='inactive')
+         ptr_col=this%albgri_col, default='active')
 
     if (use_SSRE) then
        this%albdSF_patch(begp:endp,:) = spval

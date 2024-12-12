@@ -58,7 +58,7 @@ contains
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
     use clm_varctl           , only: fsurdat, version
-    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb
+    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb, surfrd_compat_check
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
     use initGridCellsMod     , only: initGridCells
@@ -100,6 +100,7 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
+    call surfrd_compat_check(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
@@ -135,8 +136,8 @@ contains
     use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
-    use clm_varctl                    , only : fsurdat
-    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use clm_varctl                    , only : fsurdat, hillslope_file
+    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
@@ -174,7 +175,7 @@ contains
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
-    use controlMod                    , only : NLFilename
+    use controlMod                    , only : NLFilename, check_missing_initdata_status
     use clm_instMod                   , only : clm_fates
     use BalanceCheckMod               , only : BalanceCheckInit
     use CNSharedParamsMod             , only : CNParamsSetSoilDepth
@@ -253,7 +254,7 @@ contains
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
-    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, hillslope_file, actual_numcft)
 
     if(use_fates) then
 
@@ -304,7 +305,7 @@ contains
 
     if (use_hillslope) then
        ! Initialize hillslope properties
-       call InitHillslope(bounds_proc, fsurdat)
+       call InitHillslope(bounds_proc, hillslope_file)
     endif
 
     ! Set filters
@@ -520,17 +521,7 @@ contains
        else
           if (trim(finidat) == trim(finidat_interp_dest)) then
              ! Check to see if status file for finidat exists
-             klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
-             locfn = finidat_interp_dest(1:klen)//'.status'
-             inquire(file=trim(locfn), exist=lexists)
-             if (.not. lexists) then
-                if (masterproc) then
-                   write(iulog,'(a)')' failed to find file '//trim(locfn)
-                   write(iulog,'(a)')' this indicates a problem in creating '//trim(finidat_interp_dest)
-                   write(iulog,'(a)')' remove '//trim(finidat_interp_dest)//' and try again'
-                end if
-                call endrun()
-             end if
+             call check_missing_initdata_status(finidat_interp_dest)
           end if
           if (masterproc) then
              write(iulog,'(a)')'Reading initial conditions from file '//trim(finidat)
@@ -659,19 +650,21 @@ contains
     end if
 
     ! Initialize crop calendars
-    call t_startf('init_cropcal')
-    call cropcal_init(bounds_proc)
-    if (use_cropcal_streams) then
-      call cropcal_advance( bounds_proc )
-      !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-      do nc = 1,nclumps
-         call get_clump_bounds(nc, bounds_clump)
-         call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
-              filter_inactive_and_active(nc)%pcropp, crop_inst)
-      end do
-      !$OMP END PARALLEL DO
+    if (use_crop) then
+      call t_startf('init_cropcal')
+      call cropcal_init(bounds_proc)
+      if (use_cropcal_streams) then
+        call cropcal_advance( bounds_proc )
+        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+        do nc = 1,nclumps
+           call get_clump_bounds(nc, bounds_clump)
+           call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+                filter_inactive_and_active(nc)%pcropp, .true., crop_inst)
+        end do
+        !$OMP END PARALLEL DO
+      end if
+      call t_stopf('init_cropcal')
     end if
-    call t_stopf('init_cropcal')
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
