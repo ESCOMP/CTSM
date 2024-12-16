@@ -388,6 +388,11 @@ Slope of free living Nitrogen fixation with annual ET
 Intercept of free living Nitrogen fixation with zero annual ET
 </entry>
 
+<entry id="nfix_method" type="char*25" category="clm_nitrogen"
+       group="clm_nitrogen" valid_values="Houlton,Bytnerowicz" value="Houlton" >
+Choice of nfix parameterization
+</entry>
+
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)

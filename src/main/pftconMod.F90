@@ -268,6 +268,9 @@ module pftconMod
      real(r8), allocatable :: b_fix         (:)   ! A BNF parameter
      real(r8), allocatable :: c_fix         (:)   ! A BNF parameter
      real(r8), allocatable :: s_fix         (:)   ! A BNF parameter
+     real(r8), allocatable :: nfix_tmin     (:)   ! A BNF parameter
+     real(r8), allocatable :: nfix_topt     (:)   ! A BNF parameter
+     real(r8), allocatable :: nfix_tmax     (:)   ! A BNF parameter
      real(r8), allocatable :: akc_active    (:)   ! A mycorrhizal uptake parameter
      real(r8), allocatable :: akn_active    (:)   ! A mycorrhizal uptake parameter
      real(r8), allocatable :: ekc_active    (:)   ! A mycorrhizal uptake parameter
@@ -485,6 +488,9 @@ contains
     allocate( this%b_fix         (0:mxpft) )
     allocate( this%c_fix         (0:mxpft) )
     allocate( this%s_fix         (0:mxpft) )
+    allocate( this%nfix_tmin     (0:mxpft) )
+    allocate( this%nfix_topt     (0:mxpft) )
+    allocate( this%nfix_tmax     (0:mxpft) )
     allocate( this%akc_active    (0:mxpft) )
     allocate( this%akn_active    (0:mxpft) )
     allocate( this%ekc_active    (0:mxpft) )
@@ -878,6 +884,15 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     
     call ncd_io('s_fix', this%s_fix, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('nfix_tmin', this%nfix_tmin, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('nfix_topt', this%nfix_topt, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('nfix_tmax', this%nfix_tmax, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('akc_active', this%akc_active, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -1575,6 +1590,9 @@ contains
     deallocate( this%b_fix)
     deallocate( this%c_fix)
     deallocate( this%s_fix)
+    deallocate( this%nfix_tmin)
+    deallocate( this%nfix_topt)
+    deallocate( this%nfix_tmax)
     deallocate( this%akc_active)
     deallocate( this%akn_active)
     deallocate( this%ekc_active)

@@ -26,7 +26,7 @@ module CNFUNMod
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
-    use CNSharedParamsMod               , only : use_matrixcn
+  use CNSharedParamsMod               , only : use_matrixcn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -206,7 +206,7 @@ module CNFUNMod
    use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
-   use clm_varctl      , only : use_nitrif_denitrif
+   use clm_varctl      , only : use_nitrif_denitrif, nfix_method
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
@@ -290,7 +290,7 @@ module CNFUNMod
   real(r8)  :: litterfall_n(bounds%begp:bounds%endp)                 ! N loss based on the leafc to litter   (gN/m2)  
   real(r8)  :: litterfall_n_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
   real(r8)  :: litterfall_c_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
-  real(r8)  :: tc_soisno(bounds%begc:bounds%endc,1:nlevdecomp)       ! Soil temperature            (degrees Celsius)
+  real(r8)  :: tc_soisno(bounds%begc:bounds%endc,1:nlevdecomp)       ! Soil temperature                      (degrees Celsius)
   real(r8)  :: npp_remaining(bounds%begp:bounds%endp,1:nstp)         ! A temporary variable for npp_remaining(gC/m2) 
   real(r8)  :: n_passive_step(bounds%begp:bounds%endp,1:nstp)        ! N taken up by transpiration at substep(gN/m2)
   real(r8)  :: n_passive_acc(bounds%begp:bounds%endp)                ! N acquired by passive uptake          (gN/m2)
@@ -467,7 +467,6 @@ module CNFUNMod
   real(r8) :: total_c_spent_retrans
   real(r8) :: total_c_accounted_retrans
 
-  
   !------end of not_use_nitrif_denitrif------!
   !--------------------------------------------------------------------
   !------------
@@ -495,9 +494,10 @@ module CNFUNMod
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
   
+  character(len=32) :: subname = 'CNFUN'
   !--------------------------------------------------------------------
   !---------------------------------
-  associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
+  associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
@@ -507,6 +507,9 @@ module CNFUNMod
          b_fix                  => pftcon%b_fix                                         , & ! Input:   A BNF parameter
          c_fix                  => pftcon%c_fix                                         , & ! Input:   A BNF parameter
          s_fix                  => pftcon%s_fix                                         , & ! Input:   A BNF parameter
+         nfix_tmin              => pftcon%nfix_tmin                                     , & ! Input:   A BNF parameter
+         nfix_topt              => pftcon%nfix_topt                                     , & ! Input:   A BNF parameter
+         nfix_tmax              => pftcon%nfix_tmax                                     , & ! Input:   A BNF parameter
          akc_active             => pftcon%akc_active                                    , & ! Input:   A mycorrhizal uptake
          !  parameter
          akn_active             => pftcon%akn_active                                    , & ! Input:   A mycorrhizal uptake
@@ -522,10 +525,10 @@ module CNFUNMod
          perecm                 => pftcon%perecm                                        , & ! Input:   The fraction of ECM
          ! -associated PFT 
          grperc                 => pftcon%grperc                                        , & ! Input:   growth percentage
-         fun_cn_flex_a           => pftcon%fun_cn_flex_a                                , & ! Parameter a of FUN-flexcn link code (def 5)
-         fun_cn_flex_b           => pftcon%fun_cn_flex_b                                , & ! Parameter b of FUN-flexcn link code (def 200)
-         fun_cn_flex_c           => pftcon%fun_cn_flex_c                                , & ! Parameter b of FUN-flexcn link code (def 80)         
-         FUN_fracfixers          => pftcon%FUN_fracfixers                               , & ! Fraction of C that can be used for fixation.    
+         fun_cn_flex_a          => pftcon%fun_cn_flex_a                                 , & ! Parameter a of FUN-flexcn link code (def 5)
+         fun_cn_flex_b          => pftcon%fun_cn_flex_b                                 , & ! Parameter b of FUN-flexcn link code (def 200)
+         fun_cn_flex_c          => pftcon%fun_cn_flex_c                                 , & ! Parameter b of FUN-flexcn link code (def 80)
+         FUN_fracfixers         => pftcon%FUN_fracfixers                                , & ! Fraction of C that can be used for fixation.
          leafcn_offset          => cnveg_state_inst%leafcn_offset_patch                 , & ! Output:
          !  [real(r8)  (:)]  Leaf C:N used by FUN
          plantCN                => cnveg_state_inst%plantCN_patch                       , & ! Output:  [real(r8)  (:)]  Plant
@@ -1041,9 +1044,7 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
          npp_to_nonmyc_nh4(:)        = 0.0_r8
          npp_to_fixation(:)          = 0.0_r8
          npp_to_retrans(:)           = 0.0_r8
-     
-  
-      
+
          unmetDemand              = .TRUE.
          plant_ndemand_pool_step(p,istp)   = plant_ndemand_pool(p)    * permyc(p,istp) 
          npp_remaining(p,istp)             = availc_pool(p)           * permyc(p,istp)
@@ -1051,32 +1052,42 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
   
          ! if (plant_ndemand_pool_step(p,istp) .gt. 0._r8) then   !
             !  plant_ndemand_pool_step > 0.0
-            
+         
             do j = 1, nlevdecomp
                tc_soisno(c,j)          = t_soisno(c,j)  -   tfrz
+
                if(pftcon%c3psn(patch%itype(p)).eq.1)then
                  fixer=1
                else
                  fixer=0
                endif
-               costNit(j,icostFix)     = fun_cost_fix(fixer,a_fix(ivt(p)),b_fix(ivt(p))&
-               ,c_fix(ivt(p)) ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+
+               select case (nfix_method)
+               case ('Houlton')
+                 costNit(j,icostFix) = fun_cost_fix(fixer,&
+                         a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p)),&
+                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+               case ('Bytnerowicz')  ! no acclimation calculation
+                 costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
+                         nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
+                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+               case default
+                  write(iulog,*) subname//' ERROR: unknown nfix_method value: ', nfix_method
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               end select
+
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)
             
              
             !--------------------------------------------------------------------
-            !------------
             !         If passive uptake is insufficient, consider fixation,
             !          mycorrhizal 
             !         non-mycorrhizal, storage, and retranslocation.
             !--------------------------------------------------------------------
-            !------------
             !--------------------------------------------------------------------
-            !------------
             !          Costs of active uptake.
             !--------------------------------------------------------------------
-            !------------
             !------Mycorrhizal Uptake Cost-----------------!
             do j = 1,nlevdecomp
                rootc_dens_step            = rootc_dens(p,j) *  permyc(p,istp)
@@ -1608,6 +1619,44 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   end if    ! ends up with the fixer or non-fixer decision
   
   end function fun_cost_fix
+
+
+!=========================================================================================
+  real(r8) function fun_cost_fix_Bytnerowicz_noAcc(fixer,nfix_tmin,nfix_topt,nfix_tmax,big_cost,crootfr,s_fix, tc_soisno)
+
+! Description:
+!   Calculate the cost of fixing N by nodules.
+! Code Description:
+!   This code is written to CTSM5.1 by Will Wieder 11/17/2022, modified for CLM6 11/01/2024
+
+  implicit none
+!--------------------------------------------------------------------------
+! Function result.
+!--------------------------------------------------------------------------
+! real(r8) , intent(out) :: cost_of_n   !!! cost of fixing N (kgC/kgN)
+!--------------------------------------------------------------------------
+  integer,  intent(in) :: fixer     ! flag indicating if plant is a fixer
+                                    ! 1=yes, otherwise no.
+  real(r8), intent(in) :: nfix_tmin ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_topt ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_tmax ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: big_cost  ! an arbitrary large cost (gC/gN)
+  real(r8), intent(in) :: crootfr   ! fraction of roots for carbon that are in this layer
+  real(r8), intent(in) :: s_fix     ! Inverts the temperature function for a cost function
+  real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
+
+  if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
+     fun_cost_fix_Bytnerowicz_noAcc  = (-1*s_fix) * 1._r8 / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
+                                                            ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
+                                                              ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
+     fun_cost_fix_Bytnerowicz_noAcc = min(fun_cost_fix_Bytnerowicz_noAcc,big_cost)
+  else
+     fun_cost_fix_Bytnerowicz_noAcc = big_cost
+  end if    ! ends up with the fixer or non-fixer decision
+
+  end function fun_cost_fix_Bytnerowicz_noAcc
+!=========================================================================================
+
 !=========================================================================================
   real(r8) function fun_cost_active(sminn_layer,big_cost,kc_active,kn_active,rootc_dens,crootfr,smallValue)         
 
