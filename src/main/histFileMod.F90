@@ -3372,7 +3372,7 @@ contains
 
        dim1id(1) = time_dimid
        str = 'days since ' // basedate // " " // basesec
-       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+       if (hist_avgflag_pertape(t) /= 'I') then  ! NOT instantaneous fields tape
           step_or_bounds = 'time_bounds'
           long_name = 'time at exact middle of ' // step_or_bounds
           call ncd_defvar(nfid(t), 'time', tape(t)%ncprec, 1, dim1id, varid, &
@@ -3439,7 +3439,7 @@ contains
           long_name = 'time step')
 
        dim2id(1) = nbnd_dimid;  dim2id(2) = time_dimid
-       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+       if (hist_avgflag_pertape(t) /= 'I') then  ! NOT instantaneous fields tape
           call ncd_defvar(nfid(t), 'time_bounds', ncd_double, 2, dim2id, varid, &
              long_name = 'time interval endpoints', &
              units = str)
@@ -3474,7 +3474,7 @@ contains
 
        timedata(1) = tape(t)%begtime  ! beginning time
        timedata(2) = mdcur + mscur/secspday  ! end time
-       if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
+       if (hist_avgflag_pertape(t) /= 'I') then  ! NOT instantaneous fields tape
           time = (timedata(1) + timedata(2)) * 0.5_r8
           call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
        else
