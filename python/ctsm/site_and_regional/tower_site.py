@@ -98,20 +98,20 @@ class TowerSite:
         # Error checking on the input
         #
         if not os.path.isdir(cesmroot):
-            abort("Input cesmroot directory does NOT exist: "+str(cesmroot) )
-        if not isinstance(res,str):
-            abort("Input res is NOT a string as expected: "+str(res) )
-        if not isinstance(compset,str):
-            abort("Input compset is NOT a string as expected: "+str(compset) )
-        if not isinstance(overwrite,bool):
-            abort("Input compset is NOT a boolean as expected: "+str(compset) )
-        if not isinstance(setup_only,bool):
-            abort("Input setup_only is NOT a boolean as expected: "+str(setup_only) )
-        if not isinstance(user_mods_dirs,list):
-            abort("Input user_mods_dirs is NOT a list as expected: "+str(user_mods_dirs) )
+            abort("Input cesmroot directory does NOT exist: " + str(cesmroot))
+        if not isinstance(res, str):
+            abort("Input res is NOT a string as expected: " + str(res))
+        if not isinstance(compset, str):
+            abort("Input compset is NOT a string as expected: " + str(compset))
+        if not isinstance(overwrite, bool):
+            abort("Input compset is NOT a boolean as expected: " + str(compset))
+        if not isinstance(setup_only, bool):
+            abort("Input setup_only is NOT a boolean as expected: " + str(setup_only))
+        if not isinstance(user_mods_dirs, list):
+            abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
         for dir in user_mods_dirs:
             if not os.path.isdir(dir):
-                abort("Input user_mods_dirs directory does NOT exist: "+str(dir) )
+                abort("Input user_mods_dirs directory does NOT exist: " + str(dir))
 
         print("---- building a base case -------")
         # pylint: disable=attribute-defined-outside-init
@@ -121,10 +121,9 @@ class TowerSite:
             output_root = os.getcwd()
 
         if not os.path.isdir(output_root):
-            abort("Input output_root directory does NOT exist: "+str(output_root) )
+            abort("Input output_root directory does NOT exist: " + str(output_root))
 
         case_path = os.path.join(output_root, self.name)
-
 
         logger.info("base_case_name : %s", self.name)
         logger.info("user_mods_dir  : %s", user_mods_dirs[0])
