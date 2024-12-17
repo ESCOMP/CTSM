@@ -235,7 +235,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Note still need compid for those parts of the code that use the data model
-    ! functionality through subroutine calls
+    ! functionality through subroutine calls (MCTID just means the Model ComonenT IDentification number)
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
