@@ -100,7 +100,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 [submodule "share"]
 path = share
 url = https://github.com/ESCOMP/CESM_share
-fxtag = share1.1.3
+fxtag = share1.1.6
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
