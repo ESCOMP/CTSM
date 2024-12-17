@@ -709,30 +709,6 @@ contains
    
     endif
 
-    ! megan variables
-    this%cisun_z_patch(begp:endp,:) = spval
-    this%cisha_z_patch(begp:endp,:) = spval
-    if (nlevcan>1) then 
-       call hist_addfld2d (fname='CISUN', units='(Pa)', type2d='nlevcan', &
-          avgflag='A', long_name='sunlit leaf intracellular CO2 pressure', &
-          ptr_patch=this%cisun_z_patch, set_lake=spval, set_urb=spval, default='inactive')
-
-       call hist_addfld2d (fname='CISHA', units='(Pa)', type2d='nlevcan', &
-          avgflag='A', long_name='shaded leaf intracellular CO2 pressure', &
-          ptr_patch=this%cisha_z_patch, set_lake=spval, set_urb=spval, default='inactive')
-    else
-       ptr_1d => this%cisun_z_patch(begp:endp,1)
-       call hist_addfld1d (fname='CISUN', units='(Pa)', &
-          avgflag='A', long_name='sunlit leaf intracellular CO2 pressure', &
-          ptr_patch=ptr_1d, default='inactive')
-
-       ptr_1d => this%cisha_z_patch(begp:endp,1)
-       call hist_addfld1d (fname='CISHA', units='(Pa)', &
-          avgflag='A', long_name='shaded leaf intracellular CO2 pressure', &
-          ptr_patch=ptr_1d, default='inactive')
-
-    endif
-
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
