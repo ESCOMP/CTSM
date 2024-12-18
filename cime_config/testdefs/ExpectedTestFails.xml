@@ -138,6 +138,13 @@
     </phase>
   </test>
   
+  <test name="SSPMATRIXCN_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-ciso_monthly">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2913</issue>
+    </phase>
+  </test>
+  
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
     <phase name="RUN">
       <status>FAIL</status>
