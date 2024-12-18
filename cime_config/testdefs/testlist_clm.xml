@@ -2487,7 +2487,7 @@
       <option name="comment">Include a test of transient lakes</option>
     </options>
   </test>
-  <test name="ERS_L761" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
