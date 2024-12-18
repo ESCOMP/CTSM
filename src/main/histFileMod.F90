@@ -321,8 +321,8 @@ module histFileMod
   !
   type (allhistfldlist_entry) :: allhistfldlist(max_flds)  ! list of all history fields
   !
-  ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
-  ! then data in tape(i) is undefined and should not be referenced.
+  ! Whether each history tape is in use in this run. If history_tape_in_use(i,j) is false,
+  ! then data in [tape(i), file(j)] is undefined and should not be referenced.
   !
   logical :: history_tape_in_use(max_tapes, maxsplitfiles)  ! whether each history tape is in use in this run
   !
@@ -885,7 +885,7 @@ contains
 
     ! First ensure contents of fincl and fexcl are valid names
 
-    do t = 1,max_tapes
+    tape_loop: do t = 1, max_tapes
        fld = 1
        do while (fld < max_flds .and. fincl(fld,t) /= ' ')
           name = getname (fincl(fld,t))
@@ -914,11 +914,11 @@ contains
           end if
           fld = fld + 1
        end do
-    end do
+    end do tape_loop
 
     history_tape_in_use(:,:) = .false.
     tape(:)%nflds(:) = 0
-    do t = 1,max_tapes
+    tape_loop: do t = 1, max_tapes
 
        ! Loop through the allhistfldlist set of field names and determine if any of those
        ! are in the FINCL or FEXCL arrays
@@ -977,7 +977,7 @@ contains
              call shr_sys_flush(iulog)
           end if
        end do file_loop
-    end do
+    end do tape_loop
 
     ! Determine index of max active history tape, and whether each tape is in use
 
@@ -1018,7 +1018,7 @@ contains
 
     if (masterproc) then
        write(iulog,*) 'There will be a total of ',ntapes,' history tapes'
-       do t=1,ntapes
+       tape_loop: do t = 1, ntapes
           write(iulog,*)
           if (hist_nhtfrq(t) == 0) then
              write(iulog,*)'History tape ',t,' write frequency is MONTHLY'
@@ -1032,12 +1032,14 @@ contains
           end if
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
-          if (.not. history_tape_in_use(t,f)) then
-             write(iulog,*) 'History tape ',t,' does not have any fields,'
-             write(iulog,*) 'so it will not be written!'
-          end if
+          file_loop: do f = 1, maxsplitfiles
+             if (.not. history_tape_in_use(t,f)) then
+                write(iulog,*) 'History tape ', t,' and file ', f, ' has no fields,'
+                write(iulog,*) 'so it will not be written!'
+             end if
+          end do file_loop
           write(iulog,*)
-       end do
+       end do tape_loop
        call shr_sys_flush(iulog)
     end if
 
@@ -2821,7 +2823,7 @@ contains
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
                 ! 6) TODO DONE Changed nfid(t) to (t,f) throughout
-                ! TODO Use ncid => nfid(t,f) here and elsewhere if possible, as done in
+                ! TODO LATER Use ncid => nfid(t,f) here and elsewhere if possible, as done in
                 !      subroutine hfields_1dinfo
                 call ncd_defvar(ncid=nfid(t,f), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levgrnd', &
@@ -4203,7 +4205,7 @@ contains
 
     ! Loop over active history tapes, create new history files if necessary
     ! and write data to history files if end of history interval.
-    do t = 1, ntapes
+    tape_loop: do t = 1, ntapes
        file_loop: do f = 1, maxsplitfiles
 
           if (.not. history_tape_in_use(t,f)) then
@@ -4309,7 +4311,7 @@ contains
 
           end if
        end do file_loop
-    end do  ! end loop over history tapes
+    end do tape_loop
 
     ! Determine if file needs to be closed
 
@@ -4319,7 +4321,7 @@ contains
     ! Auxilary files may have been closed and saved off without being full,
     ! must reopen the files
 
-    do t = 1, ntapes
+    tape_loop: do t = 1, ntapes
        file_loop: do f = 1, maxsplitfiles
           if (.not. history_tape_in_use(t,f)) then
              cycle
@@ -4346,7 +4348,7 @@ contains
              endif
           endif
        end do file_loop
-    end do
+    end do tape_loop
 
     ! Reset number of time samples to zero if file is full
 
@@ -4717,7 +4719,7 @@ contains
           end do file_loop
        end do tape_loop
 
-       ! 12a) TODO LHS fincl & fexcl may need the file dimension here
+       ! 12a) TODO NEXT: LHS fincl & fexcl may need the file dimension here
        fincl(:,1)  = hist_fincl1(:)
        fincl(:,2)  = hist_fincl2(:)
        fincl(:,3)  = hist_fincl3(:)
@@ -4842,7 +4844,7 @@ contains
                 ! true for all tapes <= ntapes.
                 history_tape_in_use_onfile(:,:) = .true.
              end if
-             do t = 1, ntapes
+             tape_loop: do t = 1, ntapes
                 file_loop: do f = 1, maxsplitfiles
                    if (history_tape_in_use_onfile(t,f) .neqv. history_tape_in_use(t,f)) then
                       write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
@@ -4857,7 +4859,7 @@ contains
                            additional_msg=errMsg(sourcefile, __LINE__))
                    end if
                 end do file_loop
-             end do
+             end do tape_loop
              ! TODO Is this correct or should next few lines (and call ncd_io
              !      above) be in a do f loop?
              call ncd_io('locfnh',  locfnh(1:ntapes,1:maxsplitfiles),  'read', ncid )
@@ -5359,7 +5361,7 @@ contains
    ! 1) TODO DONE After hist_index added file_index = "i" or "a"
    !    See maxsplitfiles in https://github.com/ESCOMP/CAM/pull/903/files
    !    See CAM#1003 for a bug-fix in monthly avged output
-   ! AT THE END search all the vars that I modified to make sure I did not miss any of them
+   ! TODO FINAL search all the vars that I modified to make sure I did not miss any of them
    set_hist_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
                        ".h"//hist_index//file_index//"."//trim(cdate)//".nc"
 
