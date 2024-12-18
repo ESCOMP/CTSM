@@ -80,6 +80,10 @@ module histFileMod
        hist_dov2xy(max_tapes) = (/.true.,(.true.,ni=2,max_tapes)/) ! namelist: true=> do grid averaging
   integer, public :: &
        hist_nhtfrq(max_tapes) = (/0, (-24, ni=2,max_tapes)/)        ! namelist: history write freq(0=monthly)
+  ! TODO slevis: My intuition currently says that namelist hist_* variables and the User should
+  ! remain agnostic as to whether tapes correspond to instantaneous or non files.
+  ! The split will happen under the covers at runtime, and the hist_* vars should NOT
+  ! have a 2nd (i.e. file) dimension.
   character(len=avgflag_strlen), public :: &
        hist_avgflag_pertape(max_tapes) = (/(' ',ni=1,max_tapes)/)   ! namelist: per tape averaging flag
   character(len=max_namlen), public :: &
@@ -260,9 +264,11 @@ module histFileMod
   ! These values are specified in hist_addfld* calls but then can be
   ! overridden by namelist params like hist_fincl1.
   type, extends(entry_base) :: allhistfldlist_entry
+     ! 10) TODO DONE Add 2nd dim to avgflag and actflag
+     !        UNDONE because both are also dimensioned by fld which (at least
+     !        for now) is unique per tape; therefore, do not specify file number
      logical :: actflag(max_tapes)  ! which history tapes to write to. 
-     ! 10) TODO NEXT Add second dimension to avgflag as necessary
-     character(len=avgflag_strlen) :: avgflag(max_tapes, maxsplitfiles)  ! type of time averaging
+     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
      procedure :: copy => copy_allhistfldlist_entry
   end type allhistfldlist_entry
@@ -335,7 +341,7 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  ! 11) TODO History restart files seem to mirror history files => need the second dimension I think
+  ! 11) TODO NEXT History restart files seem to mirror history files => need the second dimension I think
   character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
@@ -2299,7 +2305,7 @@ contains
     ! Normalize by number of accumulations for time averaged case
 
     do fld = 1,tape(t)%nflds(f)
-       avgflag   =  tape(t)%hlist(fld)%avgflag(f)  ! TODO Is this how I'm changing avgflag?
+       avgflag   =  tape(t)%hlist(fld)%avgflag
        if ( is_mapping_upto_subgrid(tape(t)%hlist(fld)%field%type1d, tape(t)%hlist(fld)%field%type1d_out) )then
           beg1d =  tape(t)%hlist(fld)%field%beg1d_out
           end1d =  tape(t)%hlist(fld)%field%end1d_out
