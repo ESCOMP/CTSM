@@ -1,4 +1,81 @@
 ===============================================================
+Tag name: ctsm5.3.015
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 18 Dec 2024 12:46:57 PM MST
+One-line Summary: Update cdeps with cam7 nextsw cday changes
+
+Purpose and description of changes
+----------------------------------
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+
+
+Testing summary: regular
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only for CPLHIST cases, otherwise bit-for-bit
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Compsets with DATM^CPLHIST
+    - what platforms/compilers: All
+    - nature of change; larger than roundoff/same climate
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cdeps share
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.014
 Originator(s): multiple (see contributors below)
 Date: Tue 03 Dec 2024 04:31:03 PM MST
