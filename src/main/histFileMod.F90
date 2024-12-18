@@ -341,8 +341,8 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  ! 11) TODO NEXT History restart files seem to mirror history files => need the second dimension I think
-  character(len=max_length_filename) :: locfnhr(max_tapes) ! local history restart file names
+  ! 11) TODO DONE History restart files seem to mirror history files => need the second dimension I think
+  character(len=max_length_filename) :: locfnhr(max_tapes, maxsplitfiles)  ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
@@ -2444,10 +2444,10 @@ contains
     else
        if (masterproc) then
           write(iulog,*) trim(subname),' : Opening netcdf rhtape ', &
-                                      trim(locfnhr(t))
+                                      trim(locfnhr(t,f))
           call shr_sys_flush(iulog)
        end if
-       call ncd_pio_createfile(lnfid, trim(locfnhr(t)))
+       call ncd_pio_createfile(lnfid, trim(locfnhr(t,f)))
        call ncd_putatt(lnfid, ncd_global, 'title', &
           'CLM Restart History information, required to continue a simulation' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
@@ -4530,7 +4530,7 @@ contains
 
              ! Create the restart history filename and open it
              write(hnum,'(i1.1)') t-1
-             locfnhr(t) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
+             locfnhr(t,f) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
                           // ".rh" // hnum //"."// trim(rdate) //".nc"
 
              call htape_create( t, f, histrest=.true. )
@@ -4707,7 +4707,7 @@ contains
              call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=t)
              if (history_tape_in_use(t,f)) then
                 my_locfnh  = locfnh(t,f)
-                my_locfnhr = locfnhr(t)
+                my_locfnhr = locfnhr(t,f)
              else
                 my_locfnh  = 'non_existent_file'
                 my_locfnhr = 'non_existent_file'
@@ -4879,8 +4879,8 @@ contains
                    cycle
                 end if
 
-                call getfil( locrest(t), locfnhr(t), 0 )
-                call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t)), ncd_nowrite)
+                call getfil( locrest(t), locfnhr(t,f), 0 )
+                call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t,f)), ncd_nowrite)
 
                 if ( t == 1 )then
 
