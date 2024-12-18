@@ -1,13 +1,15 @@
 ===============================================================
 Tag name: ctsm5.3.015
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed 18 Dec 2024 12:46:57 PM MST
+Date: Wed 18 Dec 2024 02:09:40 PM MST
 One-line Summary: Update cdeps with cam7 nextsw cday changes
 
 Purpose and description of changes
 ----------------------------------
 
-
+Update CDEPS with changes for CAM7 nextsw_cday handling. This changes answers
+for CPLHIST cases. We also changed the cam7LndTuningMode tests to turn this on
+for DATM to more closely match what CAM7 does.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -28,22 +30,34 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed
 ----------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes: #2897 Update CDEPS to bring in DATM change regarding nextsw_cday changing answers in CPLHIST cases
 
 Notes of particular relevance for users
 ---------------------------------------
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist parameter for DATM: nextsw_cday_calc
+      defaults to cam6, set to cam7 for CPLHIST and specific tests
+      Only applies if iradsw is NOT 0 or 1
 
-Changes made to namelist defaults (e.g., changed parameter values):
+       Here is the documention on this in the namelist_definitial XML for DATM:
++      For CPLHIST cases, this should agree with the version of CAM (or other atmosphere
++      model) used to generate the CPLHIST forcings; the valid values for this variable are
++      based on this: 'cam6' is appropriate for cases generated with the driver ordering in
++      CAM6 and earlier, and 'cam7' is appropriate for cases generated with the driver
++      ordering in CAM7 and later.
++
++      For 'cam6', the next radiation timestep is set to the present time plus 2 timesteps
++      when mod(tod+dtime,delta_radsw)==0. For 'cam7', the next radiation timestep is set
++      to the present time plus 1 timestep when mod(tod,delta_radsw)==0.
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 
 Changes to tests or testing:
-
+    cam7LndTuningMode testmods changed so that iradsw==-1 (hourly) , and nextsw_cday_calc='cam7'
 
 Testing summary: regular
 ----------------
@@ -70,9 +84,12 @@ Other details
 -------------
 
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cdeps share
+   cdeps to cdeps1.0.57
+   share to share1.1.6
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+   #2900 -- Update cdeps with cam7 nextsw cday changes
 
 ===============================================================
 ===============================================================
