@@ -341,14 +341,15 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  ! 11) TODO DONE History restart files seem to mirror history files => need the second dimension I think
+  ! 11a) TODO DONE History restart files seem to mirror history files => need the second dimension I think
   character(len=max_length_filename) :: locfnhr(max_tapes, maxsplitfiles)  ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
   !
   type(file_desc_t), target :: nfid(max_tapes, maxsplitfiles)  ! file ids
-  type(file_desc_t), target :: ncid_hist(max_tapes)  ! file ids for history restart files
+  ! 11b) TODO DONE History restart files seem to mirror history files => need the second dimension I think
+  type(file_desc_t), target :: ncid_hist(max_tapes, maxsplitfiles)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
   integer :: hist_interval_dimid             ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
@@ -2378,8 +2379,6 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                   ! tape index
-    ! TODO If file dimension not necessary for histrest, make f optional
-    !      and remove from the second call to this subroutine
     integer, intent(in) :: f  ! file index
     logical, intent(in), optional :: histrest  ! if creating the history restart file
     !
@@ -2424,7 +2423,7 @@ contains
 
     ncprec = tape(t)%ncprec
     if (lhistrest) then
-       lnfid => ncid_hist(t)
+       lnfid => ncid_hist(t,f)
     else
        lnfid => nfid(t,f)
     endif
@@ -4406,7 +4405,8 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    character(len=max_chars)  :: locrest(max_tapes)  ! local history restart file names
+    ! 11c) TODO History restart files seem to mirror history files => need the second dimension I think
+    character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
     character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
     character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
@@ -4522,7 +4522,7 @@ contains
        ! Loop over tapes - write out namelist information to each restart-history tape
        ! only read/write accumulators and counters if needed
 
-       do t = 1,ntapes
+       tape_loop: do t = 1, ntapes
           file_loop: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
@@ -4536,7 +4536,7 @@ contains
              call htape_create( t, f, histrest=.true. )
 
              ! Add read/write accumultators and counters if needed
-             if (.not. tape(t)%is_endhist) then
+             not_endhist: if (.not. tape(t)%is_endhist) then
                 fld_loop: do fld = 1, tape(t)%nflds(f)
                    name           =  tape(t)%hlist(fld)%field%name
                    long_name      =  tape(t)%hlist(fld)%field%long_name
@@ -4562,134 +4562,134 @@ contains
 
                    if (dim2name == 'undefined') then
                       if (num2d == 1) then
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name), xtype=ncd_double, &
                               dim1name=dim1name, &
                               long_name=trim(long_name), units=trim(units))
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name_acc), xtype=ncd_int,  &
                               dim1name=dim1name, &
                               long_name=trim(long_name_acc), units=trim(units_acc))
                       else
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name), xtype=ncd_double, &
                               dim1name=dim1name, dim2name=type2d, &
                               long_name=trim(long_name), units=trim(units))
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name_acc), xtype=ncd_int,  &
                               dim1name=dim1name, dim2name=type2d, &
                               long_name=trim(long_name_acc), units=trim(units_acc))
                       end if
                    else
                       if (num2d == 1) then
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name), xtype=ncd_double, &
                               dim1name=dim1name, dim2name=dim2name, &
                               long_name=trim(long_name), units=trim(units))
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name_acc), xtype=ncd_int,  &
                               dim1name=dim1name, dim2name=dim2name, &
                               long_name=trim(long_name_acc), units=trim(units_acc))
                       else
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name), xtype=ncd_double, &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name), xtype=ncd_double, &
                               dim1name=dim1name, dim2name=dim2name, dim3name=type2d, &
                               long_name=trim(long_name), units=trim(units))
-                         call ncd_defvar(ncid=ncid_hist(t), varname=trim(name_acc), xtype=ncd_int,  &
+                         call ncd_defvar(ncid=ncid_hist(t,f), varname=trim(name_acc), xtype=ncd_int,  &
                               dim1name=dim1name, dim2name=dim2name, dim3name=type2d, &
                               long_name=trim(long_name_acc), units=trim(units_acc))
                       end if
                    endif
                 end do fld_loop
-             endif
+             end if not_endhist
+
+             !
+             ! Add namelist information to each restart history tape
+             !
+             call ncd_defdim( ncid_hist(t,f), 'fname_lenp2'  , max_namlen+2, dimid)
+             call ncd_defdim( ncid_hist(t,f), 'fname_len'    , max_namlen  , dimid)
+             call ncd_defdim( ncid_hist(t,f), 'avgflag_len'  , avgflag_strlen, dimid)
+             call ncd_defdim( ncid_hist(t,f), 'scalar'       , 1           , dimid)
+             call ncd_defdim( ncid_hist(t,f), 'max_chars'    , max_chars   , dimid)
+             call ncd_defdim( ncid_hist(t,f), 'max_nflds'    , max_nflds   ,  dimid)
+             call ncd_defdim( ncid_hist(t,f), 'max_flds'     , max_flds    , dimid)
+
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='nhtfrq', xtype=ncd_int, &
+                  long_name="Frequency of history writes",               &
+                  comment="Namelist item", &
+                  units="absolute value of negative is in hours, 0=monthly, positive is time-steps",     &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='mfilt', xtype=ncd_int, &
+                  long_name="Number of history time samples on a file", units="unitless",     &
+                  comment="Namelist item", &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='ncprec', xtype=ncd_int, &
+                  long_name="Flag for data precision", flag_values=(/1,2/), &
+                  comment="Namelist item", &
+                  nvalid_range=(/1,2/), &
+                  flag_meanings=(/"single-precision", "double-precision"/), &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='dov2xy', xtype=ncd_log, &
+                  long_name="Output on 2D grid format (TRUE) or vector format (FALSE)", &
+                  comment="Namelist item", &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='fincl', xtype=ncd_char, &
+                  comment="Namelist item", &
+                  long_name="Fieldnames to include", &
+                  dim1name='fname_lenp2', dim2name='max_flds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='fexcl', xtype=ncd_char, &
+                  comment="Namelist item", &
+                  long_name="Fieldnames to exclude",  &
+                  dim1name='fname_lenp2', dim2name='max_flds' )
+
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='nflds', xtype=ncd_int, &
+                  long_name="Number of fields on file", units="unitless",        &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='ntimes', xtype=ncd_int, &
+                  long_name="Number of time steps on file", units="time-step",     &
+                  dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='is_endhist', xtype=ncd_log, &
+                  long_name="End of history file", dim1name='scalar')
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='begtime', xtype=ncd_double, &
+                  long_name="Beginning time", units="time units",     &
+                  dim1name='scalar')
+
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='num2d', xtype=ncd_int, &
+                  long_name="Size of second dimension", units="unitless",     &
+                  dim1name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='hpindex', xtype=ncd_int, &
+                  long_name="History pointer index", units="unitless",     &
+                  dim1name='max_nflds' )
+
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='avgflag', xtype=ncd_char, &
+                  long_name="Averaging flag", &
+                  units="A=Average, X=Maximum, M=Minimum, I=Instantaneous, SUM=Sum", &
+                  dim1name='avgflag_len', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='name', xtype=ncd_char, &
+                  long_name="Fieldnames",  &
+                  dim1name='fname_len', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='long_name', xtype=ncd_char, &
+                  long_name="Long descriptive names for fields", &
+                  dim1name='max_chars', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='units', xtype=ncd_char, &
+                  long_name="Units for each history field output", &
+                  dim1name='max_chars', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='type1d', xtype=ncd_char, &
+                  long_name="1st dimension type", &
+                  dim1name='string_length', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='type1d_out', xtype=ncd_char, &
+                  long_name="1st output dimension type", &
+                  dim1name='string_length', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='type2d', xtype=ncd_char, &
+                  long_name="2nd dimension type", &
+                  dim1name='string_length', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='p2c_scale_type', xtype=ncd_char, &
+                  long_name="PFT to column scale type", &
+                  dim1name='scale_type_string_length', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='c2l_scale_type', xtype=ncd_char, &
+                  long_name="column to landunit scale type", &
+                  dim1name='scale_type_string_length', dim2name='max_nflds' )
+             call ncd_defvar(ncid=ncid_hist(t,f), varname='l2g_scale_type', xtype=ncd_char, &
+                  long_name="landunit to gridpoint scale type", &
+                  dim1name='scale_type_string_length', dim2name='max_nflds' )
+
+             call ncd_enddef(ncid_hist(t,f))
+
           end do file_loop
-
-          !
-          ! Add namelist information to each restart history tape
-          !
-          call ncd_defdim( ncid_hist(t), 'fname_lenp2'  , max_namlen+2, dimid)
-          call ncd_defdim( ncid_hist(t), 'fname_len'    , max_namlen  , dimid)
-          call ncd_defdim( ncid_hist(t), 'avgflag_len'  , avgflag_strlen, dimid)
-          call ncd_defdim( ncid_hist(t), 'scalar'       , 1           , dimid)
-          call ncd_defdim( ncid_hist(t), 'max_chars'    , max_chars   , dimid)
-          call ncd_defdim( ncid_hist(t), 'max_nflds'    , max_nflds   ,  dimid)
-          call ncd_defdim( ncid_hist(t), 'max_flds'     , max_flds    , dimid)
-
-          call ncd_defvar(ncid=ncid_hist(t), varname='nhtfrq', xtype=ncd_int, &
-               long_name="Frequency of history writes",               &
-               comment="Namelist item", &
-               units="absolute value of negative is in hours, 0=monthly, positive is time-steps",     &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='mfilt', xtype=ncd_int, &
-               long_name="Number of history time samples on a file", units="unitless",     &
-               comment="Namelist item", &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='ncprec', xtype=ncd_int, &
-               long_name="Flag for data precision", flag_values=(/1,2/), &
-               comment="Namelist item", &
-               nvalid_range=(/1,2/), &
-               flag_meanings=(/"single-precision", "double-precision"/), &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='dov2xy', xtype=ncd_log, &
-               long_name="Output on 2D grid format (TRUE) or vector format (FALSE)", &
-               comment="Namelist item", &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='fincl', xtype=ncd_char, &
-               comment="Namelist item", &
-               long_name="Fieldnames to include", &
-               dim1name='fname_lenp2', dim2name='max_flds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='fexcl', xtype=ncd_char, &
-               comment="Namelist item", &
-               long_name="Fieldnames to exclude",  &
-               dim1name='fname_lenp2', dim2name='max_flds' )
-
-          call ncd_defvar(ncid=ncid_hist(t), varname='nflds', xtype=ncd_int, &
-               long_name="Number of fields on file", units="unitless",        &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='ntimes', xtype=ncd_int, &
-               long_name="Number of time steps on file", units="time-step",     &
-               dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='is_endhist', xtype=ncd_log, &
-               long_name="End of history file", dim1name='scalar')
-          call ncd_defvar(ncid=ncid_hist(t), varname='begtime', xtype=ncd_double, &
-               long_name="Beginning time", units="time units",     &
-               dim1name='scalar')
-
-          call ncd_defvar(ncid=ncid_hist(t), varname='num2d', xtype=ncd_int, &
-               long_name="Size of second dimension", units="unitless",     &
-               dim1name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='hpindex', xtype=ncd_int, &
-               long_name="History pointer index", units="unitless",     &
-               dim1name='max_nflds' )
-
-          call ncd_defvar(ncid=ncid_hist(t), varname='avgflag', xtype=ncd_char, &
-               long_name="Averaging flag", &
-               units="A=Average, X=Maximum, M=Minimum, I=Instantaneous, SUM=Sum", &
-               dim1name='avgflag_len', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='name', xtype=ncd_char, &
-               long_name="Fieldnames",  &
-               dim1name='fname_len', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='long_name', xtype=ncd_char, &
-               long_name="Long descriptive names for fields", &
-               dim1name='max_chars', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='units', xtype=ncd_char, &
-               long_name="Units for each history field output", &
-               dim1name='max_chars', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='type1d', xtype=ncd_char, &
-               long_name="1st dimension type", &
-               dim1name='string_length', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='type1d_out', xtype=ncd_char, &
-               long_name="1st output dimension type", &
-               dim1name='string_length', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='type2d', xtype=ncd_char, &
-               long_name="2nd dimension type", &
-               dim1name='string_length', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='p2c_scale_type', xtype=ncd_char, &
-               long_name="PFT to column scale type", &
-               dim1name='scale_type_string_length', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='c2l_scale_type', xtype=ncd_char, &
-               long_name="column to landunit scale type", &
-               dim1name='scale_type_string_length', dim2name='max_nflds' )
-          call ncd_defvar(ncid=ncid_hist(t), varname='l2g_scale_type', xtype=ncd_char, &
-               long_name="landunit to gridpoint scale type", &
-               dim1name='scale_type_string_length', dim2name='max_nflds' )
-
-          call ncd_enddef(ncid_hist(t))
-
-       end do   ! end of ntapes loop
+       end do tape_loop
 
        RETURN
 
@@ -4701,7 +4701,7 @@ contains
     !================================================
 
        ! Add history filenames to master restart file
-       do t = 1,ntapes
+       tape_loop: do t = 1, ntapes
           ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
           file_loop: do f = 1, maxsplitfiles
              call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=t)
@@ -4715,8 +4715,9 @@ contains
              call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
              call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
           end do file_loop
-       end do
+       end do tape_loop
 
+       ! 12a) TODO LHS fincl & fexcl may need the file dimension here
        fincl(:,1)  = hist_fincl1(:)
        fincl(:,2)  = hist_fincl2(:)
        fincl(:,3)  = hist_fincl3(:)
@@ -4748,38 +4749,40 @@ contains
        !
        allocate(itemp(max_nflds))
 
-       do t = 1,ntapes
+       tape_loop: do t = 1, ntapes
           file_loop: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
              end if
 
-             call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='write')
+             ! 12c) TODO fincl & fexcl may need the file dimension here (and elsewhere?)
+             !           Look into is_endhist, as well
+             call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='write')
 
-             call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='write')
+             call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='write')
 
-             call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t), flag='write')
+             call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t,f), flag='write')
 
-             call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t), flag='write')
+             call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t,f), flag='write')
 
              itemp(:) = 0
              do fld = 1, tape(t)%nflds(f)
                 itemp(fld) = tape(t)%hlist(fld)%field%num2d
              end do
-             call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t), flag='write')
+             call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t,f), flag='write')
 
              itemp(:) = 0
              do fld = 1, tape(t)%nflds(f)
                 itemp(fld) = tape(t)%hlist(fld)%field%hpindex
              end do
-             call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t), flag='write')
+             call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t,f), flag='write')
 
-             call ncd_io('nflds',   tape(t)%nflds(f), 'write', ncid_hist(t) )
-             call ncd_io('ntimes',  tape(t)%ntimes,  'write', ncid_hist(t) )
-             call ncd_io('nhtfrq',  tape(t)%nhtfrq,  'write', ncid_hist(t) )
-             call ncd_io('mfilt',   tape(t)%mfilt,   'write', ncid_hist(t) )
-             call ncd_io('ncprec',  tape(t)%ncprec,  'write', ncid_hist(t) )
-             call ncd_io('begtime', tape(t)%begtime, 'write', ncid_hist(t) )
+             call ncd_io('nflds',   tape(t)%nflds(f), 'write', ncid_hist(t,f) )
+             call ncd_io('ntimes',  tape(t)%ntimes,  'write', ncid_hist(t,f) )
+             call ncd_io('nhtfrq',  tape(t)%nhtfrq,  'write', ncid_hist(t,f) )
+             call ncd_io('mfilt',   tape(t)%mfilt,   'write', ncid_hist(t,f) )
+             call ncd_io('ncprec',  tape(t)%ncprec,  'write', ncid_hist(t,f) )
+             call ncd_io('begtime', tape(t)%begtime, 'write', ncid_hist(t,f) )
              allocate(tmpstr(tape(t)%nflds(f), 3), tname(tape(t)%nflds(f)), &
                   tavgflag(tape(t)%nflds(f)), tunits(tape(t)%nflds(f)), tlongname(tape(t)%nflds(f)), &
                   p2c_scale_type(tape(t)%nflds(f)), c2l_scale_type(tape(t)%nflds(f)), &
@@ -4796,20 +4799,20 @@ contains
                 c2l_scale_type(fld) = tape(t)%hlist(fld)%field%c2l_scale_type
                 l2g_scale_type(fld) = tape(t)%hlist(fld)%field%l2g_scale_type
              end do
-             call ncd_io( 'name', tname, 'write',ncid_hist(t))
-             call ncd_io('long_name', tlongname, 'write', ncid_hist(t))
-             call ncd_io('units', tunits, 'write',ncid_hist(t))
-             call ncd_io('type1d', tmpstr(:,1), 'write', ncid_hist(t))
-             call ncd_io('type1d_out', tmpstr(:,2), 'write', ncid_hist(t))
-             call ncd_io('type2d', tmpstr(:,3), 'write', ncid_hist(t))
-             call ncd_io('avgflag',tavgflag , 'write', ncid_hist(t))
-             call ncd_io('p2c_scale_type', p2c_scale_type, 'write', ncid_hist(t))
-             call ncd_io('c2l_scale_type', c2l_scale_type, 'write', ncid_hist(t))
-             call ncd_io('l2g_scale_type', l2g_scale_type, 'write', ncid_hist(t))
+             call ncd_io( 'name', tname, 'write',ncid_hist(t,f))
+             call ncd_io('long_name', tlongname, 'write', ncid_hist(t,f))
+             call ncd_io('units', tunits, 'write',ncid_hist(t,f))
+             call ncd_io('type1d', tmpstr(:,1), 'write', ncid_hist(t,f))
+             call ncd_io('type1d_out', tmpstr(:,2), 'write', ncid_hist(t,f))
+             call ncd_io('type2d', tmpstr(:,3), 'write', ncid_hist(t,f))
+             call ncd_io('avgflag',tavgflag , 'write', ncid_hist(t,f))
+             call ncd_io('p2c_scale_type', p2c_scale_type, 'write', ncid_hist(t,f))
+             call ncd_io('c2l_scale_type', c2l_scale_type, 'write', ncid_hist(t,f))
+             call ncd_io('l2g_scale_type', l2g_scale_type, 'write', ncid_hist(t,f))
              deallocate(tname,tlongname,tunits,tmpstr,tavgflag)
              deallocate(p2c_scale_type, c2l_scale_type, l2g_scale_type)
           end do file_loop
-       end do
+       end do tape_loop
        deallocate(itemp)
 
     !
@@ -4873,58 +4876,59 @@ contains
        start(1)=1
 
        if ( is_restart() )then
-          do t = 1,ntapes
+          tape_loop: do t = 1, ntapes
              file_loop: do f = 1, maxsplitfiles
                 if (.not. history_tape_in_use(t,f)) then
                    cycle
                 end if
 
                 call getfil( locrest(t), locfnhr(t,f), 0 )
-                call ncd_pio_openfile (ncid_hist(t), trim(locfnhr(t,f)), ncd_nowrite)
+                call ncd_pio_openfile (ncid_hist(t,f), trim(locfnhr(t,f)), ncd_nowrite)
 
                 if ( t == 1 )then
 
-                   call ncd_inqdlen(ncid_hist(1),dimid,max_nflds,name='max_nflds')
+                   call ncd_inqdlen(ncid_hist(1,f),dimid,max_nflds,name='max_nflds')
 
                    allocate(itemp(max_nflds))
                 end if
 
-                call ncd_inqvid(ncid_hist(t), 'name',           varid, name_desc)
-                call ncd_inqvid(ncid_hist(t), 'long_name',      varid, longname_desc)
-                call ncd_inqvid(ncid_hist(t), 'units',          varid, units_desc)
-                call ncd_inqvid(ncid_hist(t), 'type1d',         varid, type1d_desc)
-                call ncd_inqvid(ncid_hist(t), 'type1d_out',     varid, type1d_out_desc)
-                call ncd_inqvid(ncid_hist(t), 'type2d',         varid, type2d_desc)
-                call ncd_inqvid(ncid_hist(t), 'avgflag',        varid, avgflag_desc)
-                call ncd_inqvid(ncid_hist(t), 'p2c_scale_type', varid, p2c_scale_type_desc)
-                call ncd_inqvid(ncid_hist(t), 'c2l_scale_type', varid, c2l_scale_type_desc)
-                call ncd_inqvid(ncid_hist(t), 'l2g_scale_type', varid, l2g_scale_type_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'name',           varid, name_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'long_name',      varid, longname_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'units',          varid, units_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'type1d',         varid, type1d_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'type1d_out',     varid, type1d_out_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'type2d',         varid, type2d_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'avgflag',        varid, avgflag_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'p2c_scale_type', varid, p2c_scale_type_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'c2l_scale_type', varid, c2l_scale_type_desc)
+                call ncd_inqvid(ncid_hist(t,f), 'l2g_scale_type', varid, l2g_scale_type_desc)
 
-                call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t), flag='read')
+                ! 12d) TODO fincl & fexcl may need the file dimension here (and elsewhere?)
+                call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='read')
 
-                call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t), flag='read')
+                call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='read')
 
-                call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t) )
+                call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t,f) )
                 if ( nflds_onfile /= tape(t)%nflds(f) ) then
                    write(iulog,*) 'nflds = ', tape(t)%nflds(f), ' nflds_onfile = ', nflds_onfile
                    call endrun(msg=' ERROR: number of fields different than on restart file!,'// &
                         ' you can NOT change history options on restart!' //&
                      errMsg(sourcefile, __LINE__))
                 end if
-                call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t) )
-                call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t) )
-                call ncd_io('mfilt',   tape(t)%mfilt, 'read', ncid_hist(t) )
-                call ncd_io('ncprec',  tape(t)%ncprec, 'read', ncid_hist(t) )
-                call ncd_io('begtime', tape(t)%begtime, 'read', ncid_hist(t) )
+                call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t,f) )
+                call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t,f) )
+                call ncd_io('mfilt',   tape(t)%mfilt, 'read', ncid_hist(t,f) )
+                call ncd_io('ncprec',  tape(t)%ncprec, 'read', ncid_hist(t,f) )
+                call ncd_io('begtime', tape(t)%begtime, 'read', ncid_hist(t,f) )
 
-                call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t), flag='read')
-                call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t), flag='read')
-                call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t), flag='read')
+                call ncd_io(varname='is_endhist', data=tape(t)%is_endhist, ncid=ncid_hist(t,f), flag='read')
+                call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t,f), flag='read')
+                call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t,f), flag='read')
                 do fld = 1, tape(t)%nflds(f)
                    tape(t)%hlist(fld)%field%num2d = itemp(fld)
                 end do
 
-                call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t), flag='read')
+                call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t,f), flag='read')
                 do fld = 1, tape(t)%nflds(f)
                    tape(t)%hlist(fld)%field%hpindex = itemp(fld)
                 end do
@@ -4932,25 +4936,25 @@ contains
                 fld_loop: do fld = 1, tape(t)%nflds(f)
                    start(2) = fld
                    call ncd_io( name_desc,           tape(t)%hlist(fld)%field%name,       &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( longname_desc,       tape(t)%hlist(fld)%field%long_name,  &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( units_desc,          tape(t)%hlist(fld)%field%units,      &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( type1d_desc,         tape(t)%hlist(fld)%field%type1d,     &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( type1d_out_desc,     tape(t)%hlist(fld)%field%type1d_out, &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( type2d_desc,         tape(t)%hlist(fld)%field%type2d,     &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( avgflag_desc,        tape(t)%hlist(fld)%avgflag,          &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( p2c_scale_type_desc, tape(t)%hlist(fld)%field%p2c_scale_type,   &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( c2l_scale_type_desc, tape(t)%hlist(fld)%field%c2l_scale_type,   &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call ncd_io( l2g_scale_type_desc, tape(t)%hlist(fld)%field%l2g_scale_type,   &
-                                'read', ncid_hist(t), start )
+                                'read', ncid_hist(t,f), start )
                    call strip_null(tape(t)%hlist(fld)%field%name)
                    call strip_null(tape(t)%hlist(fld)%field%long_name)
                    call strip_null(tape(t)%hlist(fld)%field%units)
@@ -5044,8 +5048,9 @@ contains
                 end if
 
              end do file_loop
-          end do  ! end of tapes loop
+          end do tape_loop
 
+          ! 12b) TODO LHS fincl & fexcl may need the file dimension here
           hist_fincl1(:)  = fincl(:,1)
           hist_fincl2(:)  = fincl(:,2)
           hist_fincl3(:)  = fincl(:,3)
@@ -5081,9 +5086,9 @@ contains
     ! A new history file is used on a branch run.
     !======================================================================
 
-    if (flag == 'write') then
+    read_write: if (flag == 'write') then
 
-       do t = 1,ntapes
+       tape_loop: do t = 1, ntapes
           file_loop: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
@@ -5113,17 +5118,17 @@ contains
                       hbuf1d(beg1d_out:end1d_out) = hbuf(beg1d_out:end1d_out,1)
                       nacs1d(beg1d_out:end1d_out) = nacs(beg1d_out:end1d_out,1)
 
-                      call ncd_io(ncid=ncid_hist(t), flag='write', varname=trim(name), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='write', varname=trim(name), &
                            dim1name=type1d_out, data=hbuf1d)
-                      call ncd_io(ncid=ncid_hist(t), flag='write', varname=trim(name_acc), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='write', varname=trim(name_acc), &
                            dim1name=type1d_out, data=nacs1d)
 
                       deallocate(hbuf1d)
                       deallocate(nacs1d)
                    else
-                      call ncd_io(ncid=ncid_hist(t), flag='write', varname=trim(name), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='write', varname=trim(name), &
                            dim1name=type1d_out, data=hbuf)
-                      call ncd_io(ncid=ncid_hist(t), flag='write', varname=trim(name_acc), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='write', varname=trim(name_acc), &
                            dim1name=type1d_out, data=nacs)
                    end if
 
@@ -5131,16 +5136,16 @@ contains
 
              end if  ! end of is_endhist block
 
-             call ncd_pio_closefile(ncid_hist(t))
+             call ncd_pio_closefile(ncid_hist(t,f))
 
           end do file_loop
-       end do   ! end of ntapes loop
+       end do tape_loop
 
     else if (flag == 'read') then
 
        ! Read history restart information if history files are not full
 
-       do t = 1,ntapes
+       tape_loop: do t = 1, ntapes
           file_loop: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
@@ -5167,9 +5172,9 @@ contains
                          call endrun(msg=errMsg(sourcefile, __LINE__))
                       end if
 
-                      call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='read', varname=trim(name), &
                            dim1name=type1d_out, data=hbuf1d)
-                      call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name_acc), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='read', varname=trim(name_acc), &
                            dim1name=type1d_out, data=nacs1d)
 
                       hbuf(beg1d_out:end1d_out,1) = hbuf1d(beg1d_out:end1d_out)
@@ -5178,21 +5183,21 @@ contains
                       deallocate(hbuf1d)
                       deallocate(nacs1d)
                    else
-                      call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='read', varname=trim(name), &
                            dim1name=type1d_out, data=hbuf)
-                      call ncd_io(ncid=ncid_hist(t), flag='read', varname=trim(name_acc), &
+                      call ncd_io(ncid=ncid_hist(t,f), flag='read', varname=trim(name_acc), &
                            dim1name=type1d_out, data=nacs)
                    end if
                 end do fld_loop
 
              end if
 
-             call ncd_pio_closefile(ncid_hist(t))
+             call ncd_pio_closefile(ncid_hist(t,f))
 
           end do file_loop
-       end do
+       end do tape_loop
 
-    end if
+    end if read_write
 
   end subroutine hist_restart_ncd
 
