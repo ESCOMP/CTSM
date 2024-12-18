@@ -4405,7 +4405,7 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    ! 11c) TODO History restart files seem to mirror history files => need the second dimension I think
+    ! 11c) TODO DONE History restart files seem to mirror history files => need the second dimension I think
     character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
     character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
     character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
@@ -4479,7 +4479,7 @@ contains
     ! First when writing out and in define mode, create files and define all variables
     !
     !================================================
-    if (flag == 'define') then
+    define_read_write: if (flag == 'define') then
     !================================================
 
        if (.not. present(rdate)) then
@@ -4823,7 +4823,7 @@ contains
     !================================================
 
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
-       if (is_restart()) then
+       is_restart: if (is_restart()) then
           if (ntapes_onfile /= ntapes) then
              write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
              call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
@@ -4831,7 +4831,7 @@ contains
                   additional_msg=errMsg(sourcefile, __LINE__))
           end if
 
-          if (ntapes > 0) then
+          ntapes_gt_0: if (ntapes > 0) then
              ! 4) TODO DONE Changed history_tape_in_use_onfile(t) to (t,f) throughout
              allocate(history_tape_in_use_onfile(ntapes, maxsplitfiles))
              call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
@@ -4861,28 +4861,28 @@ contains
              ! TODO Is this correct or should next few lines (and call ncd_io
              !      above) be in a do f loop?
              call ncd_io('locfnh',  locfnh(1:ntapes,1:maxsplitfiles),  'read', ncid )
-             call ncd_io('locfnhr', locrest(1:ntapes), 'read', ncid )
-             do t = 1,ntapes
-                do f = 1, maxsplitfiles
-                   call strip_null(locrest(t))
+             call ncd_io('locfnhr', locrest(1:ntapes,1:maxsplitfiles), 'read', ncid )
+             tape_loop: do t = 1, ntapes
+                file_loop: do f = 1, maxsplitfiles
+                   call strip_null(locrest(t,f))
                    call strip_null(locfnh(t,f))
-                end do
-             end do
-          end if
-       end if
+                end do file_loop
+             end do tape_loop
+          end if ntapes_gt_0
+       end if is_restart
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
 
        start(1)=1
 
-       if ( is_restart() )then
+       is_restart: if ( is_restart() ) then
           tape_loop: do t = 1, ntapes
              file_loop: do f = 1, maxsplitfiles
                 if (.not. history_tape_in_use(t,f)) then
                    cycle
                 end if
 
-                call getfil( locrest(t), locfnhr(t,f), 0 )
+                call getfil( locrest(t,f), locfnhr(t,f), 0 )
                 call ncd_pio_openfile (ncid_hist(t,f), trim(locfnhr(t,f)), ncd_nowrite)
 
                 if ( t == 1 )then
@@ -5073,11 +5073,11 @@ contains
           hist_fexcl9(:)  = fexcl(:,9)
           hist_fexcl10(:) = fexcl(:,10)
 
-       end if
+       end if is_restart
 
        if ( allocated(itemp) ) deallocate(itemp)
 
-    end if
+    end if define_read_write
 
     !======================================================================
     ! Read/write history file restart data.
