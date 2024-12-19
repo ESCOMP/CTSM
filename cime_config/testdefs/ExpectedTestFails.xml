@@ -84,21 +84,21 @@
     </phase>
   </test>
 
-  <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the following REP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rep2">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the preceding ERP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
@@ -114,7 +114,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="RUN">
+    <phase name="BUILD">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>
@@ -124,6 +124,27 @@
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2310</issue>
+    </phase>
+  </test>
+  
+  <test name="ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2914</issue>
+    </phase>
+  </test>
+  
+  <test name="ERS_P128x1_Ld765.f10_f10_mg37.I2000Clm60Fates.derecho_intel.clm-FatesColdNoComp">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2914</issue>
+    </phase>
+  </test>
+  
+  <test name="LILACSMOKE_D_Ld2.f10_f10_mg37.I2000Ctsm50NwpSpAsRs.derecho_intel.clm-lilac">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>#2905</issue>
     </phase>
   </test>
   
@@ -144,7 +165,28 @@
       <issue>#2913</issue>
     </phase>
   </test>
-  
+
+  <test name="SSP_D_Ld10.f10_f10_mg37.I1850Clm60Bgc.derecho_intel.clm-rtmColdSSP">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2913</issue>
+    </phase>
+  </test>
+
+  <test name="SSP_D_Ld4.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-ciso_rtmColdSSP">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2913</issue>
+    </phase>
+  </test>
+
+  <test name="SSP_Ld10.f10_f10_mg37.I1850Clm50Bgc.derecho_gnu.clm-rtmColdSSP">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2913</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
     <phase name="RUN">
       <status>FAIL</status>
@@ -162,6 +204,194 @@
       <issue>#2310</issue>
     </phase>
   </test>
+  
+
+  <!--- Izumi mpi-serial tests failing for me -->
+
+  <test name='ERS_D_Ld5_Mmpi-serial.1x1_vancouverCAN.I1PtClm50SpRs.izumi_nag.clm-CLM1PTStartDate' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.izumi_intel.clm-decStart1851_noinitial' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_D_Mmpi-serial_Ld5.1x1_brazil.I2000Clm50FatesRs.izumi_nag.clm-FatesCold' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ld1200_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_gnu.clm-cropMonthlyNoinitial' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ld1600_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-cropMonthlyNoinitial' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ld600_Mmpi-serial.1x1_smallvilleIA.I1850Clm50BgcCrop.izumi_gnu.clm-cropMonthlyNoinitial' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly20_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-cropMonthlyNoinitial' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly20_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRs.izumi_intel.clm-cropMonthlyNoinitial--clm-matrixcnOn' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly3_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.izumi_gnu.clm-cropMonthOutput' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly5_Mmpi-serial.1x1_smallvilleIA.I1850Clm50BgcCrop.izumi_gnu.clm-ciso_monthly' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly5_Mmpi-serial.1x1_smallvilleIA.I1850Clm50BgcCrop.izumi_gnu.clm-ciso_monthly--clm-matrixcnOn' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.izumi_intel.clm-cropMonthOutput' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='ERS_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropQianRs.izumi_intel.clm-cropMonthOutput--clm-matrixcnOn_ignore_warnings' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsRLA' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.izumi_gnu.clm-ptsROA' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_D_Ld1_Mmpi-serial.f45_f45_mg37.I2000Clm50SpRs.izumi_nag.clm-ptsRLA' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.izumi_intel.clm-cropMonthOutput' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm60FatesRs.izumi_nag.clm-FatesCold' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60SpRs.izumi_nag.clm-default--clm-NEON-TOOL' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60Bgc.izumi_gnu.clm-mimics' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_Ly3_Mmpi-serial.1x1_numaIA.I2000Clm50BgcDvCropQianRs.izumi_gnu.clm-ignor_warn_cropMonthOutputColdStart' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_Ly5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.izumi_intel.clm-newton_krylov_spinup' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+
+  <test name='SMS_Ly5_Mmpi-serial.1x1_smallvilleIA.IHistClm60BgcCropQianRs.izumi_gnu.clm-gregorian_cropMonthOutput' > 
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2916</issue>
+    </phase>
+  </test>
+
+<!-- End of Izumi mpi-serial tests failing -->
   
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_gnu.clm-FatesPRISM--clm-NEON-FATES-YELL">
     <phase name="SHAREDLIB_BUILD">
