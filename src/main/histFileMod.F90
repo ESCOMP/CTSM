@@ -412,7 +412,6 @@ contains
     ! the CTSM's web-based documentation.
 
     ! First sort the list to be in alphabetical order
-    ! TODO Is t = 1 argument needed?
     call sort_hist_list(1, nallhistflds, allhistfldlist)
 
     if (masterproc .and. hist_fields_list_file) then
@@ -963,7 +962,6 @@ contains
 
           ! Specification of tape contents now complete.
           ! Sort each list of active entries
-          ! TODO Is t argument needed?
           call sort_hist_list(t, tape(t)%nflds(f), tape(t)%hlist)
 
           if (masterproc) then
@@ -1362,10 +1360,10 @@ contains
     character(len=hist_dim_name_length) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","mxsowings","mxharvests"]
     !-----------------------------------------------------------------------
 
-    do t = 1,ntapes
-!$OMP PARALLEL DO PRIVATE (f, fld, num2d, numdims)
+    tape_loop: do t = 1, ntapes
        file_loop: do f = 1, maxsplitfiles
-          do fld = 1,tape(t)%nflds(f)
+!$OMP PARALLEL DO PRIVATE (fld, num2d, numdims)
+          do fld = 1, tape(t)%nflds(f)
 
              numdims = tape(t)%hlist(fld)%field%numdims
 
@@ -1376,9 +1374,9 @@ contains
                 call hist_update_hbuf_field_2d (t, fld, bounds, num2d)
              end if
           end do
-       end do file_loop
 !$OMP END PARALLEL DO
-    end do
+       end do file_loop
+    end do tape_loop
 
   end subroutine hist_update_hbuf
 
@@ -2307,18 +2305,18 @@ contains
 
     ! Normalize by number of accumulations for time averaged case
 
-    do fld = 1,tape(t)%nflds(f)
-       avgflag   =  tape(t)%hlist(fld)%avgflag
+    do fld = 1, tape(t)%nflds(f)
+       avgflag = tape(t)%hlist(fld)%avgflag
        if ( is_mapping_upto_subgrid(tape(t)%hlist(fld)%field%type1d, tape(t)%hlist(fld)%field%type1d_out) )then
-          beg1d =  tape(t)%hlist(fld)%field%beg1d_out
-          end1d =  tape(t)%hlist(fld)%field%end1d_out
+          beg1d = tape(t)%hlist(fld)%field%beg1d_out
+          end1d = tape(t)%hlist(fld)%field%end1d_out
        else
-          beg1d =  tape(t)%hlist(fld)%field%beg1d
-          end1d =  tape(t)%hlist(fld)%field%end1d
+          beg1d = tape(t)%hlist(fld)%field%beg1d
+          end1d = tape(t)%hlist(fld)%field%end1d
        end if
-       num2d     =  tape(t)%hlist(fld)%field%num2d
-       nacs      => tape(t)%hlist(fld)%nacs
-       hbuf      => tape(t)%hlist(fld)%hbuf
+       num2d =  tape(t)%hlist(fld)%field%num2d
+       nacs  => tape(t)%hlist(fld)%nacs
+       hbuf  => tape(t)%hlist(fld)%hbuf
 
        if (avgflag == 'A' .or. avgflag(1:1) == 'L') then
           aflag = .true.
@@ -4495,6 +4493,7 @@ contains
        ! and then add the history and history restart filenames
        !
        call ncd_defdim( ncid, 'ntapes'       , ntapes      , dimid)
+       call ncd_defdim( ncid, 'maxsplitfiles', maxsplitfiles, dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
        call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_log, &
@@ -4513,7 +4512,7 @@ contains
        call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
             long_name="Restart history filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes" )
+            dim1name='max_chars', dim2name="ntapes", dim3name="maxsplitfiles" )
        ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
