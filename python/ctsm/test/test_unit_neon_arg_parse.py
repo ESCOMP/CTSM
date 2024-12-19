@@ -60,7 +60,7 @@ class Test_neon_arg_parse(unittest.TestCase):
         description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!d]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!d]*")
         )
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
         parsed_arguments = get_parser(sys.argv, description, valid_neon_sites)

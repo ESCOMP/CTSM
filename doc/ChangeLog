@@ -1,4 +1,110 @@
 ===============================================================
+Tag name: ctsm5.3.016
+Originator(s): jedwards and erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu 19 Dec 2024 02:00:31 AM MST
+One-line Summary: Rpointer files for restart now have the simulation timestamp in the filename
+
+Purpose and description of changes
+----------------------------------
+
+Add the simulation timestamp to the rpointer files. Also update submodules with this change
+in CMEPS and CDEPS as well as updated cime to handle it.
+
+Add a "clm" level directory under usermods_dirs so that the component where user-mods reside
+is declared and to make them function the same as test-mods.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary:  regular
+----------------
+dd timestamp to rpointer file
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cime, cmeps, cdeps
+    cime to cime6.1.49
+    cmeps to cmeps1.0.32
+    cdeps to cdeps1.0.61
+
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2757 -- add timestamp to rpointer file
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.015
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 18 Dec 2024 02:09:40 PM MST
