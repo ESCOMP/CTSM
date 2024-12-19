@@ -894,7 +894,7 @@ contains
              if (name == allhistfldname) exit
           end do
           if (name /= allhistfldname) then
-             write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', f, ') ',&
+             write(iulog,*) trim(subname),' ERROR: ', trim(name), ' in fincl(', fld, ') ',&
                   'for history tape ',t,' not found'
              call endrun(msg=errMsg(sourcefile, __LINE__))
           end if
@@ -4218,6 +4218,7 @@ contains
              cycle
           end if
 
+          ! 13) TODO NEXT is_endhist may need file dimension
           ! Determine if end of history interval
           tape(t)%is_endhist = .false.
           if (tape(t)%nhtfrq==0) then   !monthly average
@@ -4719,7 +4720,7 @@ contains
           end do file_loop
        end do tape_loop
 
-       ! 12a) TODO NEXT: LHS fincl & fexcl may need the file dimension here
+       ! 12a) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
        fincl(:,1)  = hist_fincl1(:)
        fincl(:,2)  = hist_fincl2(:)
        fincl(:,3)  = hist_fincl3(:)
@@ -4757,8 +4758,7 @@ contains
                 cycle
              end if
 
-             ! 12c) TODO fincl & fexcl may need the file dimension here (and elsewhere?)
-             !           Look into is_endhist, as well
+             ! 12c) TODO DONE (NOT DONE) fincl & fexcl may need the file dimension
              call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='write')
 
              call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='write')
@@ -4905,7 +4905,7 @@ contains
                 call ncd_inqvid(ncid_hist(t,f), 'c2l_scale_type', varid, c2l_scale_type_desc)
                 call ncd_inqvid(ncid_hist(t,f), 'l2g_scale_type', varid, l2g_scale_type_desc)
 
-                ! 12d) TODO fincl & fexcl may need the file dimension here (and elsewhere?)
+                ! 12d) TODO DONE (NOT DONE) fincl & fexcl may need the file dimension
                 call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='read')
 
                 call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='read')
@@ -5052,7 +5052,7 @@ contains
              end do file_loop
           end do tape_loop
 
-          ! 12b) TODO LHS fincl & fexcl may need the file dimension here
+          ! 12b) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
           hist_fincl1(:)  = fincl(:,1)
           hist_fincl2(:)  = fincl(:,2)
           hist_fincl3(:)  = fincl(:,3)
