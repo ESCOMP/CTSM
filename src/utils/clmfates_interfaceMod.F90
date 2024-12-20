@@ -2655,9 +2655,12 @@ module CLMFatesInterfaceMod
             cisun_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             cisha_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
             if (this%fates(nc)%bc_out(s)%ci_pa(ifp) <0.0_r8) then
-               write(iulog,*) 'ci_pa is less than 0: ', this%fates(nc)%bc_out(s)%ci_pa(ifp)
-               write(iulog,*) 'filter ran photosynthesis s p icp ifp ilter',s,p,icp,ifp
-               call endrun(msg=errMsg(sourcefile, __LINE__))
+               cisha_z(p,:) = 0.0_r8
+               cisun_z(p,:) = 0.0_r8
+               if (debug) then
+                  write(iulog,*) 'WARNING: ci_pa is less than 0: ', this%fates(nc)%bc_out(s)%ci_pa(ifp)
+                  write(iulog,*) 'filter ran photosynthesis s p icp ifp ilter',s,p,icp,ifp
+               endif
             endif
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
