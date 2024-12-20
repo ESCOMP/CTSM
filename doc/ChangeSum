@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.016     erik 12/19/2024 Rpointer files for restart now have the simulation date in the filename
+       ctsm5.3.015     erik 12/18/2024 Update cdeps with cam7 nextsw cday changes
+       ctsm5.3.014     erik 12/03/2024 Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
        ctsm5.3.013     erik 11/26/2024 Merge b4b-dev
        ctsm5.3.012  afoster 11/13/2024 update fates tag
        ctsm5.3.011 samrabin 11/11/2024 Improve handling of cold-start finidat

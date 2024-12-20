@@ -60,7 +60,7 @@ TIMEOUT = 60
 
 # -- valid neon sites
 valid = glob.glob(
-    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
+    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "clm", "NEON", "[!d]*")
 )
 valid_neon_sites = [x[-4:] for x in valid]  # last 4 letters in each string
 
