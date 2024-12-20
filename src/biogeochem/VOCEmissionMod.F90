@@ -417,7 +417,6 @@ contains
     ! !USES:
     use subgridAveMod        , only : p2g
     use clm_varctl           , only : use_fates
-    use clm_varcon           , only : smallValue
     use GridcellType         , only : grc
     !
     ! !ARGUMENTS:
