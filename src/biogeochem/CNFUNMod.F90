@@ -54,6 +54,9 @@ module CNFUNMod
   
   type, private :: params_type
      real(r8) :: ndays_off       ! number of days to complete leaf offset
+     real(r8), allocatable :: nfix_tmin(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_topt(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_tmax(:)  ! A BNF parameter
   end type params_type   
  
   !
@@ -86,6 +89,7 @@ module CNFUNMod
   !
   ! !USES:
   use ncdio_pio , only : file_desc_t,ncd_io
+  use clm_varpar, only : mxpft
 
   ! !ARGUMENTS:
   implicit none
@@ -106,6 +110,20 @@ module CNFUNMod
     if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_off=tempr
 
+    allocate(params_inst%nfix_tmin(mxpft))
+    tString='nfix_tmin'
+    call ncd_io(trim(tString), params_inst%nfix_tmin(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_topt(mxpft))
+    tString='nfix_topt'
+    call ncd_io(trim(tString), params_inst%nfix_topt(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_tmax(mxpft))
+    tString='nfix_tmax'
+    call ncd_io(trim(tString), params_inst%nfix_tmax(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
  end subroutine readParams
 
@@ -505,9 +523,6 @@ module CNFUNMod
          b_fix                  => pftcon%b_fix                                         , & ! Input:   A BNF parameter
          c_fix                  => pftcon%c_fix                                         , & ! Input:   A BNF parameter
          s_fix                  => pftcon%s_fix                                         , & ! Input:   A BNF parameter
-         nfix_tmin              => pftcon%nfix_tmin                                     , & ! Input:   A BNF parameter
-         nfix_topt              => pftcon%nfix_topt                                     , & ! Input:   A BNF parameter
-         nfix_tmax              => pftcon%nfix_tmax                                     , & ! Input:   A BNF parameter
          akc_active             => pftcon%akc_active                                    , & ! Input:   A mycorrhizal uptake
          !  parameter
          akn_active             => pftcon%akn_active                                    , & ! Input:   A mycorrhizal uptake
@@ -1067,7 +1082,7 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                case ('Bytnerowicz')  ! no acclimation calculation
                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
-                         nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
+                         params_inst%nfix_tmin(ivt(p)), params_inst%nfix_topt(ivt(p)), params_inst%nfix_tmax(ivt(p)), &
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                case default
                   errCode = ' ERROR: unknown nfix_method value: ' // nfix_method
