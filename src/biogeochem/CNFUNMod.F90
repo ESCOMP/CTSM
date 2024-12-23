@@ -92,7 +92,6 @@ module CNFUNMod
   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
   !
   ! !LOCAL VARIABLES:
-  character(len=32)  :: subname = 'CNFUNParamsType'
   character(len=100) :: errCode = '-Error reading in parameters file:'
   logical            :: readv ! has variable been read in or not
   real(r8)           :: tempr ! temporary to read in parameter
@@ -135,7 +134,6 @@ module CNFUNMod
   integer           :: nstep                    ! time step number
   integer           :: nstep_fun                ! Number of
   !  atmospheric timesteps between calls to FUN
-  character(len=32) :: subname = 'CNFUNInit'
 !--------------------------------------------------------------------
   !---
 
@@ -494,7 +492,7 @@ module CNFUNMod
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
   
-  character(len=32) :: subname = 'CNFUN'
+  character(len=100) :: errCode
   !--------------------------------------------------------------------
   !---------------------------------
   associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
@@ -1072,8 +1070,8 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                          nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                case default
-                  write(iulog,*) subname//' ERROR: unknown nfix_method value: ', nfix_method
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
+                  errCode = ' ERROR: unknown nfix_method value: ' // nfix_method
+                  call endrun( msg=trim(errCode) // errMsg(sourcefile, __LINE__))
                end select
 
             end do

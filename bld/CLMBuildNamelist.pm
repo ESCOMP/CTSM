@@ -3409,13 +3409,6 @@ sub setup_logic_mineral_nitrogen_dynamics {
     }
   }
 
-  if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
-    my $var = $nl->get_value('nfix_method');
-    if ( $var ne "'Houlton'" && $var ne "'Bytnerowicz'" ) {
-      $log->fatal_error("$var is incorrect entry for the namelist variable nfix_method; expected Houlton or Bytnerowicz");
-    }
-  }
-
 }
 
 
