@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.017
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 20 Dec 2024 11:31:36 AM MST
+Date: Tue 24 Dec 2024 03:43:01 PM MST
 One-line Summary: Merge b4b-dev
 
 Purpose and description of changes
@@ -54,7 +54,7 @@ Testing summary:
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi ------- machine unavailable
+    izumi ------- machine seems problematic at the moment
 
 
 Answer changes
