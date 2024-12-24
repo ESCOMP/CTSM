@@ -1718,9 +1718,9 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
   if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
-     fun_cost_fix_Bytnerowicz_noAcc  = (-1*s_fix) * 1._r8 / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
-                                                            ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
-                                                              ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
+     fun_cost_fix_Bytnerowicz_noAcc  = (-s_fix) / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
+                                                  ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
+                                                    ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
      fun_cost_fix_Bytnerowicz_noAcc = min(fun_cost_fix_Bytnerowicz_noAcc,big_cost)
   else
      fun_cost_fix_Bytnerowicz_noAcc = big_cost
