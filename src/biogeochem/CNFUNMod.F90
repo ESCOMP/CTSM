@@ -48,10 +48,13 @@ module CNFUNMod
   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNFUNReadNML  ! Read in namelist variables
   public:: readParams            ! Read in parameters needed for FUN
   public:: CNFUNInit             ! FUN calculation initialization
   public:: CNFUN                 ! Run FUN
   
+  character(len=25) :: nfix_method  ! choice of nfix parameterization
+
   type, private :: params_type
      real(r8) :: ndays_off       ! number of days to complete leaf offset
      real(r8), allocatable :: nfix_tmin(:)  ! A BNF parameter
@@ -85,6 +88,62 @@ module CNFUNMod
  contains
 !--------------------------------------------------------------------
    !---
+ subroutine CNFUNReadNML(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read in namelist variables
+    !
+    ! !USES:
+    use fileutils  , only : getavu, relavu, opnfil
+    use shr_nl_mod , only : shr_nl_find_group_name
+    use spmdMod    , only : masterproc, mpicom
+    use shr_mpi_mod, only : shr_mpi_bcast
+    use clm_varctl , only : iulog
+    use spmdMod    , only : MPI_CHARACTER
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename  ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr   ! error code
+    integer :: unitn  ! unit for namelist file
+
+    character(len=*), parameter :: nmlname = 'cnfun_inparm'
+    !-----------------------------------------------------------------------
+
+    namelist /cnfun_inparm/ nfix_method
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//' namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cnfun_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call mpi_bcast (nfix_method, len(nfix_method), MPI_CHARACTER, 0, mpicom, ierr)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cnfun_inparm)
+       write(iulog,*) ' '
+    end if
+
+ end subroutine CNFUNReadNML
+
+  !-----------------------------------------------------------------------
  subroutine readParams ( ncid )
   !
   ! !USES:
@@ -222,7 +281,7 @@ module CNFUNMod
    use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
-   use clm_varctl      , only : use_nitrif_denitrif, nfix_method
+   use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin

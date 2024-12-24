@@ -5209,6 +5209,7 @@ sub write_output_files {
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
+  push @groups, "cnfun_inparm";
   push @groups, "photosyns_inparm";
   push @groups, "cnfire_inparm";
   push @groups, "cn_general";
