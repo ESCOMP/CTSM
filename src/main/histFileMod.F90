@@ -321,10 +321,10 @@ module histFileMod
   !
   type (allhistfldlist_entry) :: allhistfldlist(max_flds)  ! list of all history fields
   !
-  ! Whether each history tape is in use in this run. If history_tape_in_use(i,j) is false,
+  ! Whether each history tape is in use in this run. If history_tape_in_use(i,j) is 0 (i.e. false),
   ! then data in [tape(i), file(j)] is undefined and should not be referenced.
   !
-  logical :: history_tape_in_use(max_tapes, maxsplitfiles)  ! whether each history tape is in use in this run
+  integer :: history_tape_in_use(max_tapes, maxsplitfiles)  ! history tape is/isn't in use in this run (1 or 0)
   !
   ! The actual (accumulated) history data for all active fields in each in-use tape. See
   ! 'history_tape_in_use' for in-use tapes, and 'allhistfldlist' for active fields. See also
@@ -913,7 +913,7 @@ contains
           end if
           fld = fld + 1
        end do
-       history_tape_in_use(t,:) = .false.
+       history_tape_in_use(t,:) = 0  ! equivalent to .false.
        tape(t)%nflds(:) = 0
     end do tape_loop1
 
@@ -993,7 +993,7 @@ contains
     do t = 1, ntapes
        do f = 1, maxsplitfiles
           if (tape(t)%nflds(f) > 0) then
-             history_tape_in_use(t,f) = .true.
+             history_tape_in_use(t,f) = 1  ! equivalent to .true.
           end if
        end do
     end do
@@ -1031,7 +1031,7 @@ contains
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
           file_loop2: do f = 1, maxsplitfiles
-             if (.not. history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 write(iulog,*) 'History tape ', t,' and file ', f, ' has no fields,'
                 write(iulog,*) 'so it will not be written!'
              end if
@@ -4206,7 +4206,7 @@ contains
     tape_loop1: do t = 1, ntapes
        file_loop1: do f = 1, maxsplitfiles
 
-          if (.not. history_tape_in_use(t,f)) then
+          if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
 
@@ -4322,7 +4322,7 @@ contains
 
     tape_loop2: do t = 1, ntapes
        file_loop2: do f = 1, maxsplitfiles
-          if (.not. history_tape_in_use(t,f)) then
+          if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
 
@@ -4353,7 +4353,7 @@ contains
 
     do t = 1, ntapes
        do f = 1, maxsplitfiles
-          if (.not. history_tape_in_use(t,f)) then
+          if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
 
@@ -4440,7 +4440,7 @@ contains
     integer :: dimid                             ! dimension ID
     integer :: k                                 ! 1d index
     integer :: ntapes_onfile                     ! number of history tapes on the restart file
-    logical, allocatable :: history_tape_in_use_onfile(:,:) ! whether a given history tape is in use, according to the restart file
+    integer, allocatable :: history_tape_in_use_onfile(:,:)  ! history tape is/isn't (1 or 0) in use according to the restart file
     integer :: nflds_onfile                      ! number of history fields on the restart file
     logical :: readvar                           ! whether a variable was read successfully
     integer :: t                                 ! tape index
@@ -4496,8 +4496,8 @@ contains
        call ncd_defdim( ncid, 'maxsplitfiles', maxsplitfiles, dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
-       call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_log, &
-            long_name="Whether this history tape is in use", &
+       call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_int, &
+            long_name="Whether this history tape is/isn't (1 or 0) in use", &
             dim1name="ntapes", dim2name="maxsplitfiles")
        ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
@@ -4526,7 +4526,7 @@ contains
 
        tape_loop1: do t = 1, ntapes
           file_loop1: do f = 1, maxsplitfiles
-             if (.not. history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
 
@@ -4707,7 +4707,7 @@ contains
           ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
           file_loop2: do f = 1, maxsplitfiles
              call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=t)
-             if (history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 my_locfnh  = locfnh(t,f)
                 my_locfnhr = locfnhr(t,f)
              else
@@ -4753,7 +4753,7 @@ contains
 
        tape_loop3: do t = 1, ntapes
           file_loop3: do f = 1, maxsplitfiles
-             if (.not. history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
 
@@ -4841,17 +4841,17 @@ contains
                 ! BACKWARDS_COMPATIBILITY(wjs, 2018-10-06) Old restart files do not have
                 ! 'history_tape_in_use'. However, before now, this has implicitly been
                 ! true for all tapes <= ntapes.
-                history_tape_in_use_onfile(:,:) = .true.
+                history_tape_in_use_onfile(:,:) = 1  ! equivalent to .true.
              end if
              tape_loop4: do t = 1, ntapes
                 file_loop4: do f = 1, maxsplitfiles
-                   if (history_tape_in_use_onfile(t,f) .neqv. history_tape_in_use(t,f)) then
+                   if (history_tape_in_use_onfile(t,f) /= history_tape_in_use(t,f)) then
                       write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
                       write(iulog,*) 'disagrees with current run: For tape and file ', t, f
                       write(iulog,*) 'On restart file: ', history_tape_in_use_onfile(t,f)
                       write(iulog,*) 'In current run : ', history_tape_in_use(t,f)
                       write(iulog,*) 'This suggests that this tape was empty in one case,'
-                      write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
+                      write(iulog,*) 'but non-empty in the other. (history_tape_in_use 0 or .false.'
                       write(iulog,*) 'means that history tape is empty.)'
                       call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
                            'You can NOT change history options on restart.', &
@@ -4879,7 +4879,7 @@ contains
        if_restart2: if ( is_restart() ) then
           tape_loop6: do t = 1, ntapes
              file_loop6: do f = 1, maxsplitfiles
-                if (.not. history_tape_in_use(t,f)) then
+                if (history_tape_in_use(t,f) == 0) then
                    cycle
                 end if
 
@@ -5091,7 +5091,7 @@ contains
 
        tape_loop7: do t = 1, ntapes
           file_loop7: do f = 1, maxsplitfiles
-             if (.not. history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
 
@@ -5148,7 +5148,7 @@ contains
 
        tape_loop8: do t = 1, ntapes
           file_loop8: do f = 1, maxsplitfiles
-             if (.not. history_tape_in_use(t,f)) then
+             if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
 
