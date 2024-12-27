@@ -594,7 +594,7 @@ contains
     ! Increase number of fields on list of all history fields
 
     nallhistflds = nallhistflds + 1
-    f = nallhistflds
+    fld = nallhistflds
 
     ! Check number of fields in list against maximum number
 
@@ -840,7 +840,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer :: t, fld                       ! tape, field indices
+    integer :: t, f, fld                    ! tape, file, field indices
     integer :: ff                           ! index into include, exclude and fprec list
     character(len=max_namlen) :: name       ! field name portion of fincl (i.e. no avgflag separator)
     character(len=max_namlen) :: allhistfldname ! name from allhistfldlist field
@@ -884,7 +884,7 @@ contains
 
     ! First ensure contents of fincl and fexcl are valid names
 
-    tape_loop: do t = 1, max_tapes
+    tape_loop1: do t = 1, max_tapes
        fld = 1
        do while (fld < max_flds .and. fincl(fld,t) /= ' ')
           name = getname (fincl(fld,t))
@@ -913,11 +913,11 @@ contains
           end if
           fld = fld + 1
        end do
-    end do tape_loop
+       history_tape_in_use(t,:) = .false.
+       tape(t)%nflds(:) = 0
+    end do tape_loop1
 
-    history_tape_in_use(:,:) = .false.
-    tape(:)%nflds(:) = 0
-    tape_loop: do t = 1, max_tapes
+    tape_loop2: do t = 1, max_tapes
 
        ! Loop through the allhistfldlist set of field names and determine if any of those
        ! are in the FINCL or FEXCL arrays
@@ -927,7 +927,7 @@ contains
        ! or if it is on by default and was not excluded via namelist (FEXCL[1-max_tapes]).
 
        ! 8) TODO DONE do f = 1, maxsplitfiles where needed; search "do t"
-       file_loop: do f = 1, maxsplitfiles
+       file_loop1: do f = 1, maxsplitfiles
           do fld = 1, nallhistflds
              allhistfldname = allhistfldlist(fld)%field%name
              call list_index (fincl(1,t), allhistfldname, ff)
@@ -974,8 +974,8 @@ contains
              end do
              call shr_sys_flush(iulog)
           end if
-       end do file_loop
-    end do tape_loop
+       end do file_loop1
+    end do tape_loop2
 
     ! Determine index of max active history tape, and whether each tape is in use
 
@@ -1016,7 +1016,7 @@ contains
 
     if (masterproc) then
        write(iulog,*) 'There will be a total of ',ntapes,' history tapes'
-       tape_loop: do t = 1, ntapes
+       tape_loop3: do t = 1, ntapes
           write(iulog,*)
           if (hist_nhtfrq(t) == 0) then
              write(iulog,*)'History tape ',t,' write frequency is MONTHLY'
@@ -1030,14 +1030,14 @@ contains
           end if
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
-          file_loop: do f = 1, maxsplitfiles
+          file_loop2: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 write(iulog,*) 'History tape ', t,' and file ', f, ' has no fields,'
                 write(iulog,*) 'so it will not be written!'
              end if
-          end do file_loop
+          end do file_loop2
           write(iulog,*)
-       end do tape_loop
+       end do tape_loop3
        call shr_sys_flush(iulog)
     end if
 
@@ -3659,9 +3659,9 @@ contains
 
     if (.not. tape(t)%dov2xy) then
        if (mode == 'define') then
-          call hfields_1dinfo(t, mode='define')
+          call hfields_1dinfo(t, f, mode='define')
        else if (mode == 'write') then
-          call hfields_1dinfo(t, mode='write')
+          call hfields_1dinfo(t, f, mode='write')
        end if
     end if
 
@@ -4203,8 +4203,8 @@ contains
 
     ! Loop over active history tapes, create new history files if necessary
     ! and write data to history files if end of history interval.
-    tape_loop: do t = 1, ntapes
-       file_loop: do f = 1, maxsplitfiles
+    tape_loop1: do t = 1, ntapes
+       file_loop1: do f = 1, maxsplitfiles
 
           if (.not. history_tape_in_use(t,f)) then
              cycle
@@ -4306,11 +4306,11 @@ contains
              call t_stopf('hist_htapes_wrapup_write')
 
              ! Zero necessary history buffers
-             call hfields_zero(t)
+             call hfields_zero(t, f)
 
           end if
-       end do file_loop
-    end do tape_loop
+       end do file_loop1
+    end do tape_loop1
 
     ! Determine if file needs to be closed
 
@@ -4320,8 +4320,8 @@ contains
     ! Auxilary files may have been closed and saved off without being full,
     ! must reopen the files
 
-    tape_loop: do t = 1, ntapes
-       file_loop: do f = 1, maxsplitfiles
+    tape_loop2: do t = 1, ntapes
+       file_loop2: do f = 1, maxsplitfiles
           if (.not. history_tape_in_use(t,f)) then
              cycle
           end if
@@ -4346,8 +4346,8 @@ contains
                 end if
              endif
           endif
-       end do file_loop
-    end do tape_loop
+       end do file_loop2
+    end do tape_loop2
 
     ! Reset number of time samples to zero if file is full
 
@@ -4524,8 +4524,8 @@ contains
        ! Loop over tapes - write out namelist information to each restart-history tape
        ! only read/write accumulators and counters if needed
 
-       tape_loop: do t = 1, ntapes
-          file_loop: do f = 1, maxsplitfiles
+       tape_loop1: do t = 1, ntapes
+          file_loop1: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
              end if
@@ -4539,7 +4539,7 @@ contains
 
              ! Add read/write accumultators and counters if needed
              not_endhist: if (.not. tape(t)%is_endhist) then
-                fld_loop: do fld = 1, tape(t)%nflds(f)
+                fld_loop1: do fld = 1, tape(t)%nflds(f)
                    name           =  tape(t)%hlist(fld)%field%name
                    long_name      =  tape(t)%hlist(fld)%field%long_name
                    units          =  tape(t)%hlist(fld)%field%units
@@ -4595,7 +4595,7 @@ contains
                               long_name=trim(long_name_acc), units=trim(units_acc))
                       end if
                    endif
-                end do fld_loop
+                end do fld_loop1
              end if not_endhist
 
              !
@@ -4690,8 +4690,8 @@ contains
 
              call ncd_enddef(ncid_hist(t,f))
 
-          end do file_loop
-       end do tape_loop
+          end do file_loop1
+       end do tape_loop1
 
        RETURN
 
@@ -4703,9 +4703,9 @@ contains
     !================================================
 
        ! Add history filenames to master restart file
-       tape_loop: do t = 1, ntapes
+       tape_loop2: do t = 1, ntapes
           ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
-          file_loop: do f = 1, maxsplitfiles
+          file_loop2: do f = 1, maxsplitfiles
              call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=t)
              if (history_tape_in_use(t,f)) then
                 my_locfnh  = locfnh(t,f)
@@ -4716,8 +4716,8 @@ contains
              end if
              call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
              call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
-          end do file_loop
-       end do tape_loop
+          end do file_loop2
+       end do tape_loop2
 
        ! 12a) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
        fincl(:,1)  = hist_fincl1(:)
@@ -4751,8 +4751,8 @@ contains
        !
        allocate(itemp(max_nflds))
 
-       tape_loop: do t = 1, ntapes
-          file_loop: do f = 1, maxsplitfiles
+       tape_loop3: do t = 1, ntapes
+          file_loop3: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
              end if
@@ -4812,8 +4812,8 @@ contains
              call ncd_io('l2g_scale_type', l2g_scale_type, 'write', ncid_hist(t,f))
              deallocate(tname,tlongname,tunits,tmpstr,tavgflag)
              deallocate(p2c_scale_type, c2l_scale_type, l2g_scale_type)
-          end do file_loop
-       end do tape_loop
+          end do file_loop3
+       end do tape_loop3
        deallocate(itemp)
 
     !
@@ -4824,7 +4824,7 @@ contains
     !================================================
 
        call ncd_inqdlen(ncid,dimid,ntapes_onfile, name='ntapes')
-       is_restart: if (is_restart()) then
+       if_restart1: if (is_restart()) then
           if (ntapes_onfile /= ntapes) then
              write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
              call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
@@ -4843,8 +4843,8 @@ contains
                 ! true for all tapes <= ntapes.
                 history_tape_in_use_onfile(:,:) = .true.
              end if
-             tape_loop: do t = 1, ntapes
-                file_loop: do f = 1, maxsplitfiles
+             tape_loop4: do t = 1, ntapes
+                file_loop4: do f = 1, maxsplitfiles
                    if (history_tape_in_use_onfile(t,f) .neqv. history_tape_in_use(t,f)) then
                       write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
                       write(iulog,*) 'disagrees with current run: For tape and file ', t, f
@@ -4857,28 +4857,28 @@ contains
                            'You can NOT change history options on restart.', &
                            additional_msg=errMsg(sourcefile, __LINE__))
                    end if
-                end do file_loop
-             end do tape_loop
+                end do file_loop4
+             end do tape_loop4
              ! TODO Is this correct or should next few lines (and call ncd_io
              !      above) be in a do f loop?
              call ncd_io('locfnh',  locfnh(1:ntapes,1:maxsplitfiles),  'read', ncid )
              call ncd_io('locfnhr', locrest(1:ntapes,1:maxsplitfiles), 'read', ncid )
-             tape_loop: do t = 1, ntapes
-                file_loop: do f = 1, maxsplitfiles
+             tape_loop5: do t = 1, ntapes
+                file_loop5: do f = 1, maxsplitfiles
                    call strip_null(locrest(t,f))
                    call strip_null(locfnh(t,f))
-                end do file_loop
-             end do tape_loop
+                end do file_loop5
+             end do tape_loop5
           end if ntapes_gt_0
-       end if is_restart
+       end if if_restart1
 
        ! Determine necessary indices - the following is needed if model decomposition is different on restart
 
        start(1)=1
 
-       is_restart: if ( is_restart() ) then
-          tape_loop: do t = 1, ntapes
-             file_loop: do f = 1, maxsplitfiles
+       if_restart2: if ( is_restart() ) then
+          tape_loop6: do t = 1, ntapes
+             file_loop6: do f = 1, maxsplitfiles
                 if (.not. history_tape_in_use(t,f)) then
                    cycle
                 end if
@@ -4934,7 +4934,7 @@ contains
                    tape(t)%hlist(fld)%field%hpindex = itemp(fld)
                 end do
 
-                fld_loop: do fld = 1, tape(t)%nflds(f)
+                fld_loop2: do fld = 1, tape(t)%nflds(f)
                    start(2) = fld
                    call ncd_io( name_desc,           tape(t)%hlist(fld)%field%name,       &
                                 'read', ncid_hist(t,f), start )
@@ -5040,7 +5040,7 @@ contains
                    tape(t)%hlist(fld)%field%beg1d = beg1d
                    tape(t)%hlist(fld)%field%end1d = end1d
 
-                end do fld_loop
+                end do fld_loop2
 
                 ! If history file is not full, open it
 
@@ -5048,8 +5048,8 @@ contains
                    call ncd_pio_openfile (nfid(t,f), trim(locfnh(t,f)), ncd_write)
                 end if
 
-             end do file_loop
-          end do tape_loop
+             end do file_loop6
+          end do tape_loop6
 
           ! 12b) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
           hist_fincl1(:)  = fincl(:,1)
@@ -5074,7 +5074,7 @@ contains
           hist_fexcl9(:)  = fexcl(:,9)
           hist_fexcl10(:) = fexcl(:,10)
 
-       end if is_restart
+       end if if_restart2
 
        if ( allocated(itemp) ) deallocate(itemp)
 
@@ -5089,15 +5089,15 @@ contains
 
     read_write: if (flag == 'write') then
 
-       tape_loop: do t = 1, ntapes
-          file_loop: do f = 1, maxsplitfiles
+       tape_loop7: do t = 1, ntapes
+          file_loop7: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
              end if
 
              if (.not. tape(t)%is_endhist) then
 
-                fld_loop: do fld = 1, tape(t)%nflds(f)
+                fld_loop3: do fld = 1, tape(t)%nflds(f)
                    name       =  tape(t)%hlist(fld)%field%name
                    name_acc   =  trim(name) // "_acc"
                    type1d_out =  tape(t)%hlist(fld)%field%type1d_out
@@ -5133,28 +5133,28 @@ contains
                            dim1name=type1d_out, data=nacs)
                    end if
 
-                end do fld_loop
+                end do fld_loop3
 
              end if  ! end of is_endhist block
 
              call ncd_pio_closefile(ncid_hist(t,f))
 
-          end do file_loop
-       end do tape_loop
+          end do file_loop7
+       end do tape_loop7
 
     else if (flag == 'read') then
 
        ! Read history restart information if history files are not full
 
-       tape_loop: do t = 1, ntapes
-          file_loop: do f = 1, maxsplitfiles
+       tape_loop8: do t = 1, ntapes
+          file_loop8: do f = 1, maxsplitfiles
              if (.not. history_tape_in_use(t,f)) then
                 cycle
              end if
 
              if (.not. tape(t)%is_endhist) then
 
-                fld_loop: do fld = 1, tape(t)%nflds(f)
+                fld_loop4: do fld = 1, tape(t)%nflds(f)
                    name       =  tape(t)%hlist(fld)%field%name
                    name_acc   =  trim(name) // "_acc"
                    type1d_out =  tape(t)%hlist(fld)%field%type1d_out
@@ -5189,14 +5189,14 @@ contains
                       call ncd_io(ncid=ncid_hist(t,f), flag='read', varname=trim(name_acc), &
                            dim1name=type1d_out, data=nacs)
                    end if
-                end do fld_loop
+                end do fld_loop4
 
              end if
 
              call ncd_pio_closefile(ncid_hist(t,f))
 
-          end do file_loop
-       end do tape_loop
+          end do file_loop8
+       end do tape_loop8
 
     end if read_write
 
