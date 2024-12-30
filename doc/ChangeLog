@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.3.017
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 24 Dec 2024 03:43:01 PM MST
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+ #2869 Update temperature cost function for symbiotic Nfix in FUN
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2869
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable: nfix_method
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ nfix_method default: Houlton
+ other available option: Bytnerowicz
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- machine seems problematic at the moment
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, but read caveat.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: tests with ciso_cwd_hr testmods
+    - what platforms/compilers: all
+    - nature of change: irrelevant
+
+ Explanation:
+ "diff ctsm60_ciso_cwd_hr_params.c241119.asc ctsm60_params.c241119.asc"
+ differ ONLY in the value of ceta. The previous paramfile for ciso_cwd_hr
+ showed additional diffs, likely due to problems that we have seen before
+ when generating new paramfiles. The ciso_cwd_hr tests would not have shown
+ diffs had the previous paramfile been correct, so I only mention the diffs
+ here for the record.
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2869
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.016
 Originator(s): jedwards and erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu 19 Dec 2024 04:23:39 PM MST
