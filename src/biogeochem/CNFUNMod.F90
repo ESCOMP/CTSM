@@ -48,12 +48,18 @@ module CNFUNMod
   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNFUNReadNML  ! Read in namelist variables
   public:: readParams            ! Read in parameters needed for FUN
   public:: CNFUNInit             ! FUN calculation initialization
   public:: CNFUN                 ! Run FUN
   
+  character(len=25) :: nfix_method  ! choice of nfix parameterization
+
   type, private :: params_type
      real(r8) :: ndays_off       ! number of days to complete leaf offset
+     real(r8), allocatable :: nfix_tmin(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_topt(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_tmax(:)  ! A BNF parameter
   end type params_type   
  
   !
@@ -82,17 +88,73 @@ module CNFUNMod
  contains
 !--------------------------------------------------------------------
    !---
+ subroutine CNFUNReadNML(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read in namelist variables
+    !
+    ! !USES:
+    use fileutils  , only : getavu, relavu, opnfil
+    use shr_nl_mod , only : shr_nl_find_group_name
+    use spmdMod    , only : masterproc, mpicom
+    use shr_mpi_mod, only : shr_mpi_bcast
+    use clm_varctl , only : iulog
+    use spmdMod    , only : MPI_CHARACTER
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename  ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr   ! error code
+    integer :: unitn  ! unit for namelist file
+
+    character(len=*), parameter :: nmlname = 'cnfun_inparm'
+    !-----------------------------------------------------------------------
+
+    namelist /cnfun_inparm/ nfix_method
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//' namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cnfun_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call mpi_bcast (nfix_method, len(nfix_method), MPI_CHARACTER, 0, mpicom, ierr)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cnfun_inparm)
+       write(iulog,*) ' '
+    end if
+
+ end subroutine CNFUNReadNML
+
+  !-----------------------------------------------------------------------
  subroutine readParams ( ncid )
   !
   ! !USES:
   use ncdio_pio , only : file_desc_t,ncd_io
+  use clm_varpar, only : mxpft
 
   ! !ARGUMENTS:
   implicit none
   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
   !
   ! !LOCAL VARIABLES:
-  character(len=32)  :: subname = 'CNFUNParamsType'
   character(len=100) :: errCode = '-Error reading in parameters file:'
   logical            :: readv ! has variable been read in or not
   real(r8)           :: tempr ! temporary to read in parameter
@@ -107,6 +169,20 @@ module CNFUNMod
     if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_off=tempr
 
+    allocate(params_inst%nfix_tmin(mxpft))
+    tString='nfix_tmin'
+    call ncd_io(trim(tString), params_inst%nfix_tmin(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_topt(mxpft))
+    tString='nfix_topt'
+    call ncd_io(trim(tString), params_inst%nfix_topt(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_tmax(mxpft))
+    tString='nfix_tmax'
+    call ncd_io(trim(tString), params_inst%nfix_tmax(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
  end subroutine readParams
 
@@ -135,7 +211,6 @@ module CNFUNMod
   integer           :: nstep                    ! time step number
   integer           :: nstep_fun                ! Number of
   !  atmospheric timesteps between calls to FUN
-  character(len=32) :: subname = 'CNFUNInit'
 !--------------------------------------------------------------------
   !---
 
@@ -206,7 +281,7 @@ module CNFUNMod
    use clm_time_manager, only : get_step_size_real, get_curr_date
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
-   use clm_varctl      , only : use_nitrif_denitrif, nfix_method
+   use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
@@ -494,7 +569,7 @@ module CNFUNMod
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
   
-  character(len=32) :: subname = 'CNFUN'
+  character(len=100) :: errCode
   !--------------------------------------------------------------------
   !---------------------------------
   associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
@@ -507,9 +582,6 @@ module CNFUNMod
          b_fix                  => pftcon%b_fix                                         , & ! Input:   A BNF parameter
          c_fix                  => pftcon%c_fix                                         , & ! Input:   A BNF parameter
          s_fix                  => pftcon%s_fix                                         , & ! Input:   A BNF parameter
-         nfix_tmin              => pftcon%nfix_tmin                                     , & ! Input:   A BNF parameter
-         nfix_topt              => pftcon%nfix_topt                                     , & ! Input:   A BNF parameter
-         nfix_tmax              => pftcon%nfix_tmax                                     , & ! Input:   A BNF parameter
          akc_active             => pftcon%akc_active                                    , & ! Input:   A mycorrhizal uptake
          !  parameter
          akn_active             => pftcon%akn_active                                    , & ! Input:   A mycorrhizal uptake
@@ -1069,11 +1141,11 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                case ('Bytnerowicz')  ! no acclimation calculation
                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
-                         nfix_tmin(ivt(p)),nfix_topt(ivt(p)),nfix_tmax(ivt(p)), &
+                         params_inst%nfix_tmin(ivt(p)), params_inst%nfix_topt(ivt(p)), params_inst%nfix_tmax(ivt(p)), &
                          big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
                case default
-                  write(iulog,*) subname//' ERROR: unknown nfix_method value: ', nfix_method
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
+                  errCode = ' ERROR: unknown nfix_method value: ' // nfix_method
+                  call endrun( msg=trim(errCode) // errMsg(sourcefile, __LINE__))
                end select
 
             end do
@@ -1646,9 +1718,9 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
   if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
-     fun_cost_fix_Bytnerowicz_noAcc  = (-1*s_fix) * 1._r8 / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
-                                                            ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
-                                                              ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
+     fun_cost_fix_Bytnerowicz_noAcc  = (-s_fix) / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
+                                                  ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
+                                                    ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
      fun_cost_fix_Bytnerowicz_noAcc = min(fun_cost_fix_Bytnerowicz_noAcc,big_cost)
   else
      fun_cost_fix_Bytnerowicz_noAcc = big_cost
