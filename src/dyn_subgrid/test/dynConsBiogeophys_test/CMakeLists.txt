@@ -3,4 +3,4 @@ set(pfunit_sources
 
 add_pfunit_ctest(dynConsBiogeophys
   TEST_SOURCES "${pfunit_sources}"
-  LINK_LIBRARIES clm csm_share esmf_wrf_timemgr)
+  LINK_LIBRARIES clm csm_share esmf)

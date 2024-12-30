@@ -119,6 +119,7 @@ contains
     !
     ! !USES:
     use CNMRespMod                       , only : CNMRespReadNML
+    use CNFUNMod                         , only : CNFUNReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
@@ -256,8 +257,6 @@ contains
     namelist /clm_nitrogen/ MM_Nuptake_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, &
          CN_evergreen_phenology_opt, carbon_resp_opt
-
-    namelist /clm_nitrogen/ nfix_method
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
@@ -598,6 +597,7 @@ contains
 
     if ( use_fun ) then
        call CNMRespReadNML( NLFilename )
+       call CNFUNReadNML( NLFilename )
     end if
 
     call soilHydReadNML(   NLFilename )
@@ -884,7 +884,6 @@ contains
        call mpi_bcast (use_c13_timeseries,  1, MPI_LOGICAL, 0, mpicom, ier)
        call mpi_bcast (atm_c13_filename,  len(atm_c13_filename), MPI_CHARACTER, 0, mpicom, ier)
        call mpi_bcast (use_fun,            1, MPI_LOGICAL, 0, mpicom, ier)
-       call mpi_bcast (nfix_method, len(nfix_method), MPI_CHARACTER, 0, mpicom, ier)
     end if
 
     call mpi_bcast (perchroot, 1, MPI_LOGICAL, 0, mpicom, ier)
