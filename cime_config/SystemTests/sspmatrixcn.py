@@ -22,7 +22,7 @@ if __name__ == "__main__":
     sys.path.append(os.path.join(CIMEROOT, "scripts", "lib"))
     sys.path.append(os.path.join(CIMEROOT, "scripts"))
 else:
-    from CIME.utils import append_testlog
+    from CIME.status import append_testlog
 
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon

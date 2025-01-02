@@ -126,9 +126,9 @@ cime_config/config_tests.xml ----- Define CTSM specific tests
 cime_config/config_pes.xml ------- Define Processor layouts for various CTSM grids and compsets
 cime_config/testdefs ------------- Directory for specification of CTSM testing
 cime_config/testdefs/ExpectedTestFails.xml -- List of tests that are expected to fail
-cime_config/usermods_dirs -------- Directories of sets of user-modification subdirs
+cime_config/usermods_dirs/clm ---- Directories of sets of user-modification subdirs
                                    (These are directories that add specific user modifications to
-                                    simulations created using "cime/scripts/create_newcase --user-mods-dir".)
+                                    simulations created using "cime/scripts/create_newcase --user-mods-dir clm/*)
 
 tools/mksurfdata_esmf --------- Directory to build program to create surface dataset 
                                 at any resolution.
