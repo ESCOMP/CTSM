@@ -97,8 +97,10 @@ class SSP(SystemTestsCommon):
                 os.symlink(item, link_name)
 
         for item in glob.glob("{}/*rpointer*".format(rest_path)):
-            shutil.copy(item, rundir)
-
+            try:
+                shutil.copy(item, rundir)
+            except shutil.SameFileError:
+                pass
         self._case.set_value("CLM_ACCELERATED_SPINUP", "off")
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
