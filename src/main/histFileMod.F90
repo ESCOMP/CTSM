@@ -290,7 +290,7 @@ module histFileMod
   ! the code but contains 'h0' in its output filenames (see set_hist_filename method).
   type history_tape
      integer  :: nflds(maxsplitfiles)          ! number of active fields on file
-     integer  :: ntimes                        ! current number of time samples on tape
+     integer  :: ntimes(maxsplitfiles)         ! current number of time samples on tape
      integer  :: mfilt                         ! maximum number of time samples per tape
      integer  :: nhtfrq                        ! number of time samples per tape
      integer  :: ncprec                        ! netcdf output precision
@@ -715,7 +715,7 @@ contains
     ! Note - with netcdf, only 1 (ncd_double) and 2 (ncd_float) are allowed
 
     do t=1,ntapes
-       tape(t)%ntimes = 0
+       tape(t)%ntimes(:) = 0
        tape(t)%dov2xy = hist_dov2xy(t)
        tape(t)%nhtfrq = hist_nhtfrq(t)
        tape(t)%mfilt = hist_mfilt(t)
@@ -3179,7 +3179,7 @@ contains
     call get_proc_bounds(bounds)
 
 
-    if (tape(t)%ntimes == 1) then
+    if (tape(t)%ntimes(f) == 1) then
        if (mode == 'define') then
           call ncd_defvar(varname='levgrnd', xtype=tape(t)%ncprec, &
                dim1name='levgrnd', &
@@ -3394,7 +3394,7 @@ contains
     !-------------------------------------------------------------------------------
 
     ! For define mode -- only do this for first time-sample
-    if (mode == 'define' .and. tape(t)%ntimes == 1) then
+    if (mode == 'define' .and. tape(t)%ntimes(f) == 1) then
        call get_ref_date(yr, mon, day, nbsec)
        nstep = get_nstep()
        hours   = nbsec / 3600
@@ -3495,26 +3495,26 @@ contains
        mcdate = yr*10000 + mon*100 + day
        nstep = get_nstep()
 
-       call ncd_io('mcdate', mcdate, 'write', nfid(t,f), nt=tape(t)%ntimes)
-       call ncd_io('mcsec' , mcsec , 'write', nfid(t,f), nt=tape(t)%ntimes)
-       call ncd_io('mdcur' , mdcur , 'write', nfid(t,f), nt=tape(t)%ntimes)
-       call ncd_io('mscur' , mscur , 'write', nfid(t,f), nt=tape(t)%ntimes)
-       call ncd_io('nstep' , nstep , 'write', nfid(t,f), nt=tape(t)%ntimes)
+       call ncd_io('mcdate', mcdate, 'write', nfid(t,f), nt=tape(t)%ntimes(f))
+       call ncd_io('mcsec' , mcsec , 'write', nfid(t,f), nt=tape(t)%ntimes(f))
+       call ncd_io('mdcur' , mdcur , 'write', nfid(t,f), nt=tape(t)%ntimes(f))
+       call ncd_io('mscur' , mscur , 'write', nfid(t,f), nt=tape(t)%ntimes(f))
+       call ncd_io('nstep' , nstep , 'write', nfid(t,f), nt=tape(t)%ntimes(f))
 
        timedata(1) = tape(t)%begtime  ! beginning time
        timedata(2) = mdcur + mscur/secspday  ! end time
        if (tape(t)%hlist(1)%avgflag /= 'I') then  ! NOT instantaneous fields tape
           time = (timedata(1) + timedata(2)) * 0.5_r8
-          call ncd_io('time_bounds', timedata, 'write', nfid(t,f), nt=tape(t)%ntimes)
+          call ncd_io('time_bounds', timedata, 'write', nfid(t,f), nt=tape(t)%ntimes(f))
        else
           time = timedata(2)
        end if
-       call ncd_io('time'  , time  , 'write', nfid(t,f), nt=tape(t)%ntimes)
+       call ncd_io('time'  , time  , 'write', nfid(t,f), nt=tape(t)%ntimes(f))
 
        call getdatetime (cdate, ctime)
-       call ncd_io('date_written', cdate, 'write', nfid(t,f), nt=tape(t)%ntimes)
+       call ncd_io('date_written', cdate, 'write', nfid(t,f), nt=tape(t)%ntimes(f))
 
-       call ncd_io('time_written', ctime, 'write', nfid(t,f), nt=tape(t)%ntimes)
+       call ncd_io('time_written', ctime, 'write', nfid(t,f), nt=tape(t)%ntimes(f))
 
     endif
 
@@ -3522,7 +3522,7 @@ contains
     !***     Grid definition variables ***
     !-------------------------------------------------------------------------------
     ! For define mode -- only do this for first time-sample
-    if (mode == 'define' .and. tape(t)%ntimes == 1) then
+    if (mode == 'define' .and. tape(t)%ntimes(f) == 1) then
 
        if (ldomain%isgrid2d) then
           call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
@@ -3591,7 +3591,7 @@ contains
 
     else if (mode == 'write') then
 
-       ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
+       ! Most of this is constant and only needs to be done on tape(t)%ntimes(f)=1
        ! But, some may change for dynamic PATCH mode for example
 
        if (ldomain%isgrid2d) then
@@ -3686,7 +3686,7 @@ contains
        numdims        = tape(t)%hlist(fld)%field%numdims
        num2d          = tape(t)%hlist(fld)%field%num2d
        l2g_scale_type = tape(t)%hlist(fld)%field%l2g_scale_type
-       nt             = tape(t)%ntimes
+       nt             = tape(t)%ntimes(f)
 
        if (mode == 'define') then
 
@@ -4235,7 +4235,7 @@ contains
 
              ! Increment current time sample counter.
 
-             tape(t)%ntimes = tape(t)%ntimes + 1
+             tape(t)%ntimes(f) = tape(t)%ntimes(f) + 1
 
              ! Create history file if appropriate and build time comment
 
@@ -4243,7 +4243,7 @@ contains
              ! define dims, vars, etc.
 
 
-             if (tape(t)%ntimes == 1) then
+             if (tape(t)%ntimes(f) == 1) then
                 call t_startf('hist_htapes_wrapup_define')
                 ! 2) TODO DONE Changed locfnh(t) to locfnh(t,f) throughout
                 locfnh(t,f) = set_hist_filename (hist_freq=tape(t)%nhtfrq, &
@@ -4279,7 +4279,7 @@ contains
              call htape_timeconst(t, f, mode='write')
 
              ! Write 3D time constant history variables to first history tapes
-             if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes == 1 )then
+             if ( do_3Dtconst .and. t == 1 .and. tape(t)%ntimes(f) == 1 )then
                 call htape_timeconst3D(t, f, &
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
                      cellsand_col, cellclay_col, mode='write')
@@ -4314,7 +4314,9 @@ contains
 
     ! Determine if file needs to be closed
 
-    call hist_do_disp (ntapes, tape(:)%ntimes, tape(:)%mfilt, if_stop, if_disphist, rstwr, nlend)
+    file_loop1b: do f = 1, maxsplitfiles
+       call hist_do_disp (ntapes, tape(:)%ntimes(f), tape(:)%mfilt, if_stop, if_disphist, rstwr, nlend)
+    end do file_loop1b
 
     ! Close open history file
     ! Auxilary files may have been closed and saved off without being full,
@@ -4327,7 +4329,7 @@ contains
           end if
 
           if (if_disphist(t)) then
-             if (tape(t)%ntimes /= 0) then
+             if (tape(t)%ntimes(f) /= 0) then
                 if (masterproc) then
                    write(iulog,*)
                    write(iulog,*)  trim(subname),' : Closing local history file ',&
@@ -4337,7 +4339,7 @@ contains
 
                call ncd_pio_closefile(nfid(t,f))
 
-                if (.not.if_stop .and. (tape(t)%ntimes/=tape(t)%mfilt)) then
+                if (.not.if_stop .and. (tape(t)%ntimes(f)/=tape(t)%mfilt)) then
                    call ncd_pio_openfile (nfid(t,f), trim(locfnh(t,f)), ncd_write)
                 end if
              else
@@ -4357,8 +4359,8 @@ contains
              cycle
           end if
 
-          if (if_disphist(t) .and. tape(t)%ntimes==tape(t)%mfilt) then
-             tape(t)%ntimes = 0
+          if (if_disphist(t) .and. tape(t)%ntimes(f)==tape(t)%mfilt) then
+             tape(t)%ntimes(f) = 0
           end if
        end do
     end do
@@ -4464,7 +4466,7 @@ contains
     if (flag == 'read') then
        if (nsrest == nsrBranch) then
           do t = 1,ntapes
-             tape(t)%ntimes = 0
+             tape(t)%ntimes(f) = 0
           end do
           return
        end if
@@ -4779,7 +4781,7 @@ contains
              call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t,f), flag='write')
 
              call ncd_io('nflds',   tape(t)%nflds(f), 'write', ncid_hist(t,f) )
-             call ncd_io('ntimes',  tape(t)%ntimes,  'write', ncid_hist(t,f) )
+             call ncd_io('ntimes',  tape(t)%ntimes(f),  'write', ncid_hist(t,f) )
              call ncd_io('nhtfrq',  tape(t)%nhtfrq,  'write', ncid_hist(t,f) )
              call ncd_io('mfilt',   tape(t)%mfilt,   'write', ncid_hist(t,f) )
              call ncd_io('ncprec',  tape(t)%ncprec,  'write', ncid_hist(t,f) )
@@ -4916,7 +4918,7 @@ contains
                         ' you can NOT change history options on restart!' //&
                      errMsg(sourcefile, __LINE__))
                 end if
-                call ncd_io('ntimes',  tape(t)%ntimes, 'read', ncid_hist(t,f) )
+                call ncd_io('ntimes',  tape(t)%ntimes(f), 'read', ncid_hist(t,f) )
                 call ncd_io('nhtfrq',  tape(t)%nhtfrq, 'read', ncid_hist(t,f) )
                 call ncd_io('mfilt',   tape(t)%mfilt, 'read', ncid_hist(t,f) )
                 call ncd_io('ncprec',  tape(t)%ncprec, 'read', ncid_hist(t,f) )
@@ -5044,7 +5046,7 @@ contains
 
                 ! If history file is not full, open it
 
-                if (tape(t)%ntimes /= 0) then
+                if (tape(t)%ntimes(f) /= 0) then
                    call ncd_pio_openfile (nfid(t,f), trim(locfnh(t,f)), ncd_write)
                 end if
 
