@@ -49,7 +49,9 @@ module histFileMod
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
   integer , private, parameter :: avgflag_strlen = 10   ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
-  integer , private, parameter :: maxsplitfiles = 2  ! max number of files per tape (instantaneous_file_index = 1, accumulated_file_index = 2)
+  integer , private, parameter :: maxsplitfiles = 2  ! max number of files per tape
+  integer , private, parameter :: instantaneous_file_index = 1
+  integer , private, parameter :: accumulated_file_index = 2
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
   ! given layer. Note that the public parameters are the only ones that can be used by
@@ -5358,7 +5360,11 @@ contains
       write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
    endif
    write(hist_index,'(i1.1)') hist_file - 1
-   write(file_index,'(i1.1)') f_index  ! instantaneous or accumulated_file_index
+   if (f_index == instantaneous_file_index) then
+      file_index = 'i'  ! instantaneous file_index
+   else if (f_index == accumulated_file_index) then
+      file_index = 'a'  ! accumulated file_index
+   end if
    ! 1) TODO DONE After hist_index added file_index = "i" or "a"
    !    See maxsplitfiles in https://github.com/ESCOMP/CAM/pull/903/files
    !    See CAM#1003 for a bug-fix in monthly avged output
