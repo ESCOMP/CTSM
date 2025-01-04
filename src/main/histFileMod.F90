@@ -50,8 +50,8 @@ module histFileMod
   integer , private, parameter :: avgflag_strlen = 10   ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
   integer , private, parameter :: maxsplitfiles = 2  ! max number of files per tape
-  integer , private, parameter :: instantaneous_file_index = 1
-  integer , private, parameter :: accumulated_file_index = 2
+  integer , private, parameter :: accumulated_file_index = 1
+  integer , private, parameter :: instantaneous_file_index = 2
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
   ! given layer. Note that the public parameters are the only ones that can be used by
@@ -266,10 +266,8 @@ module histFileMod
   ! These values are specified in hist_addfld* calls but then can be
   ! overridden by namelist params like hist_fincl1.
   type, extends(entry_base) :: allhistfldlist_entry
-     ! 10) TODO DONE Add 2nd dim to avgflag and actflag
-     !        UNDONE because both are also dimensioned by fld which (at least
-     !        for now) is unique per tape; therefore, do not specify file number
-     logical :: actflag(max_tapes)  ! which history tapes to write to. 
+     ! 10) TODO DONE Add 2nd dim to actflag, which should make fld unique by file
+     logical :: actflag(max_tapes,maxsplitfiles)  ! which history tapes to write to
      character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
      procedure :: copy => copy_allhistfldlist_entry
@@ -385,7 +383,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: ncol = 5  ! number of table columns
+    integer, parameter :: ncol = 6  ! number of table columns
     integer nf, i, j  ! do-loop counters
     integer hist_fields_file  ! file unit number
     integer width_col(ncol)  ! widths of table columns
@@ -426,7 +424,8 @@ contains
        width_col(2) = hist_dim_name_length  ! level dimension column
        width_col(3) = 94  ! long description column
        width_col(4) = 65  ! units column
-       width_col(5) = 7  ! active (T or F) column
+       width_col(5) = 10  ! active (T or F) column
+       width_col(6) = 12  ! active (T or F) column
        width_col_sum = sum(width_col) + ncol - 1  ! sum of widths & blank spaces
 
        ! Convert integer widths to strings for use in format statements
@@ -480,9 +479,9 @@ contains
        fmt_txt = '('//str_w_col_sum//'a)'
        write(hist_fields_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
-       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//',x,a'//str_width_col(6)//')'
        write(hist_fields_file,fmt_txt) 'Variable Name',  &
-                           'Level Dim.', 'Long Description', 'Units', 'Active?'
+                           'Level Dim.', 'Long Description', 'Units', "Active 'I'", "Act. not 'I'"
 
        ! End header, same as header
        ! Concatenate strings needed in format statement
@@ -494,14 +493,14 @@ contains
 
        ! Main table
        ! Concatenate strings needed in format statement
-       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//',l'//str_width_col(6)//')'
        do nf = 1,nallhistflds
           write(hist_fields_file,fmt_txt) &
              allhistfldlist(nf)%field%name,  &
              allhistfldlist(nf)%field%type2d,  &
              allhistfldlist(nf)%field%long_name,  &
              allhistfldlist(nf)%field%units,  &
-             allhistfldlist(nf)%actflag(1)
+             allhistfldlist(nf)%actflag(1,:)
        end do
 
        ! Table footer, same as header
@@ -659,7 +658,7 @@ contains
     ! FLAG SET TO FALSE
 
     allhistfldlist(fld)%avgflag(:) = avgflag
-    allhistfldlist(fld)%actflag(:) = .false.
+    allhistfldlist(fld)%actflag(:,:) = .false.
 
   end subroutine allhistfldlist_addfld
 
@@ -784,9 +783,13 @@ contains
     found = .false.
     do fld = 1, nallhistflds
        if (trim(name) == trim(allhistfldlist(fld)%field%name)) then
-          allhistfldlist(fld)%actflag(tape_index) = .true.
           if (present(avgflag)) then
              if (avgflag /= ' ') allhistfldlist(fld)%avgflag(tape_index) = avgflag
+          end if
+          if (allhistfldlist(fld)%avgflag(tape_index) == 'I') then
+             allhistfldlist(fld)%actflag(tape_index,instantaneous_file_index) = .true.
+          else
+             allhistfldlist(fld)%actflag(tape_index,accumulated_file_index) = .true.
           end if
           found = .true.
           exit
@@ -940,7 +943,11 @@ contains
                 ! will be called for field
 
                 avgflag = getflag (fincl(ff,t))
-                call htape_addfld (t, f, fld, avgflag)
+                if (f == instantaneous_file_index .and. avgflag == 'I') then
+                   call htape_addfld (t, f, fld, avgflag)
+                else if (f == accumulated_file_index .and. avgflag /= 'I') then
+                   call htape_addfld (t, f, fld, avgflag)
+                end if
 
              else if (.not. hist_empty_htapes) then
 
@@ -955,7 +962,7 @@ contains
                 ! called below only if field is not in exclude list OR in
                 ! include list
 
-                if (ff == 0 .and. allhistfldlist(fld)%actflag(t)) then
+                if (ff == 0 .and. allhistfldlist(fld)%actflag(t,f)) then
                    call htape_addfld (t, f, fld, ' ')
                 end if
 
