@@ -1,4 +1,224 @@
 ===============================================================
+Tag name: ctsm5.3.016
+Originator(s): jedwards and erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu 19 Dec 2024 04:23:39 PM MST
+One-line Summary: Rpointer files for restart now have the simulation timestamp in the filename
+
+Purpose and description of changes
+----------------------------------
+
+Add the simulation timestamp to the rpointer files. Also update submodules with this change
+in CMEPS and CDEPS as well as updated cime to handle it. See the notes below for an explaination
+about this.
+
+Add a "clm" level directory under usermods_dirs so that the component where user-mods reside
+is declared and to make them function the same as test-mods.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   There are text files that CESM uses to keep track of how far simulations
+   have progressed. They are simple text files that point to the filename of the latest
+   restart file for that component. There is such a file for each component. So for CTSM I cases
+   that's: lnd, cpl, and atm (and rof if it's active). Normally for just extending the length
+   of a simulations -- the user doesn't have to worry about these files.
+
+   However, if there was a problem when a simulation shut down, it's possible that
+   different components will have mismatched restarts and rpointer files. In the past this
+   meant figuring out what restart file should be pointed to in each component rpointer file
+   and correcting it by hand in an editor. There was only the final set of rpointer files that
+   was kept for a case.
+
+   Now, with this update the lnd, cpl, and atm rpointer files have the simulation date in the filenames.
+   So it's easy to spot if the restarts are mismatched for one of the components. Also since
+   there are matching rpointer files for each time restarts are created it's now easier to make
+   sure restarts and rpointer files are all correctly matched. And for a user to take a set of restarts
+   and matching rpointer files to start up from for any part of an existing simulation to start from.
+   This means you don't have to hand edit the rpointer files and make sure you don't make a mistake
+   when you do.
+
+   Old rpointer filenames:
+      rpointer.atm
+      rpointer.cpl
+      rpointer.lnd
+
+   New names:
+      rpointer.atm.YYYY-MM-DD-SSSSS
+      rpointer.cpl.YYYY-MM-DD-SSSSS
+      rpointer.lnd.YYYY-MM-DD-SSSSS
+
+   Where YYYY-MM-DD-SSSSS is the year month day and seconds into the day for the simulation timestamp
+   For example rpointer.lnd.2000-01-01-00000 for a rpointer file for starting at Jan/1st/2000 at midnight
+
+
+  NOTE: BACKWARDS COMPATIBLE
+     For all the components you can use both the new format or old format for the rpointer filenames.
+     So if you are restarting from an existing case before ctsm5.3.016 you CAN use those rpointer filenames
+     that don't have the timestamps in the name.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  There's a lot of testing that failed with this tag, that we'll need to fix soonish.
+  There are issues on the problems and they are marked as expected fails
+
+  On Izumi I had to rebuild a bunch of tests as they failed with run_sys_tests submitted under ctsm_pylib.
+
+  Note, also that MOSART and RTM were NOT updated to use the new format.
+
+Testing summary:  regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS (inventoryfileDNE fails as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cime, cmeps, cdeps
+    cime to cime6.1.49
+    cmeps to cmeps1.0.32
+    cdeps to cdeps1.0.61
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2757 -- add timestamp to rpointer file
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.015
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 18 Dec 2024 02:09:40 PM MST
+One-line Summary: Update cdeps with cam7 nextsw cday changes
+
+Purpose and description of changes
+----------------------------------
+
+Update CDEPS with changes for CAM7 nextsw_cday handling. This changes answers
+for CPLHIST cases. We also changed the cam7LndTuningMode tests to turn this on
+for DATM to more closely match what CAM7 does.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes: #2897 Update CDEPS to bring in DATM change regarding nextsw_cday changing answers in CPLHIST cases
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist parameter for DATM: nextsw_cday_calc
+      defaults to cam6, set to cam7 for CPLHIST and specific tests
+      Only applies if iradsw is NOT 0 or 1
+
+       Here is the documention on this in the namelist_definitial XML for DATM:
++      For CPLHIST cases, this should agree with the version of CAM (or other atmosphere
++      model) used to generate the CPLHIST forcings; the valid values for this variable are
++      based on this: 'cam6' is appropriate for cases generated with the driver ordering in
++      CAM6 and earlier, and 'cam7' is appropriate for cases generated with the driver
++      ordering in CAM7 and later.
++
++      For 'cam6', the next radiation timestep is set to the present time plus 2 timesteps
++      when mod(tod+dtime,delta_radsw)==0. For 'cam7', the next radiation timestep is set
++      to the present time plus 1 timestep when mod(tod,delta_radsw)==0.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+    cam7LndTuningMode testmods changed so that iradsw==-1 (hourly) , and nextsw_cday_calc='cam7'
+
+Testing summary: regular
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only for CPLHIST cases, otherwise bit-for-bit
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Compsets with DATM^CPLHIST
+    - what platforms/compilers: All
+    - nature of change; larger than roundoff/same climate
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cdeps share
+   cdeps to cdeps1.0.57
+   share to share1.1.6
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2900 -- Update cdeps with cam7 nextsw cday changes
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.014
 Originator(s): multiple (see contributors below)
 Date: Tue 03 Dec 2024 04:31:03 PM MST
