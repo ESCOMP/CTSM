@@ -169,17 +169,17 @@ module CNFUNMod
     if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_off=tempr
 
-    allocate(params_inst%nfix_tmin(mxpft))
+    allocate(params_inst%nfix_tmin(0:mxpft))
     tString='nfix_tmin'
     call ncd_io(trim(tString), params_inst%nfix_tmin(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%nfix_topt(mxpft))
+    allocate(params_inst%nfix_topt(0:mxpft))
     tString='nfix_topt'
     call ncd_io(trim(tString), params_inst%nfix_topt(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%nfix_tmax(mxpft))
+    allocate(params_inst%nfix_tmax(0:mxpft))
     tString='nfix_tmax'
     call ncd_io(trim(tString), params_inst%nfix_tmax(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -535,7 +535,7 @@ module CNFUNMod
   real(r8) :: total_N_resistance   ! C to of N for whole soil -leaf
   !  pathway
   real(r8) :: free_RT_frac=0.0_r8  !fraction of N retranslocation which is automatic/free.
-  !  SHould be made into a PFT parameter. 
+  !  Should be made into a PFT parameter.
   
   real(r8) :: paid_for_n_retrans
   real(r8) :: free_n_retrans
@@ -1136,13 +1136,13 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
 
                select case (nfix_method)
                case ('Houlton')
-                 costNit(j,icostFix) = fun_cost_fix(fixer,&
-                         a_fix(ivt(p)),b_fix(ivt(p)),c_fix(ivt(p)),&
-                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+                  costNit(j,icostFix) = fun_cost_fix(fixer, &
+                          a_fix(ivt(p)), b_fix(ivt(p)), c_fix(ivt(p)), &
+                          big_cost, crootfr(p,j), s_fix(ivt(p)), tc_soisno(c,j))
                case ('Bytnerowicz')  ! no acclimation calculation
-                 costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
-                         params_inst%nfix_tmin(ivt(p)), params_inst%nfix_topt(ivt(p)), params_inst%nfix_tmax(ivt(p)), &
-                         big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
+                          params_inst%nfix_tmin(ivt(p)), params_inst%nfix_topt(ivt(p)), params_inst%nfix_tmax(ivt(p)), &
+                          big_cost,crootfr(p,j), s_fix(ivt(p)), tc_soisno(c,j))
                case default
                   errCode = ' ERROR: unknown nfix_method value: ' // nfix_method
                   call endrun( msg=trim(errCode) // errMsg(sourcefile, __LINE__))
