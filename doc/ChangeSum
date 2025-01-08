@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-tmp-241219.n02.ctsm5.3.016  01/07/2025 FATES hydro test update
+tmp-241219.n02.ctsm5.3.016  01/08/2025 FATES hydro test update
 tmp-241219.n01.ctsm5.3.016  12/24/2024 Merge b4b-dev
        ctsm5.3.016     erik 12/19/2024 Rpointer files for restart now have the simulation date in the filename
        ctsm5.3.015     erik 12/18/2024 Update cdeps with cam7 nextsw cday changes
