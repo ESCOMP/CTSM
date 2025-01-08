@@ -3133,7 +3133,6 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    write(iulog,*) 'Init2: calling FireInit'
     call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
