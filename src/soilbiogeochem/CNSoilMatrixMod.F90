@@ -79,8 +79,6 @@ contains
        else
           write(iulog,*) '   no extra matrix solution tracability output'
        end if
-    else
-       write(iulog,*) 'CN Soil matrix solution is off'
     end if
   end subroutine CNSoilMatrixInit
 
