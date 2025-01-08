@@ -1279,11 +1279,6 @@ module CLMFatesInterfaceMod
                                           this%fates(nc)%sites,  &
                                           this%fates(nc)%bc_in )
 
-      if (masterproc) then
-         write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
-                                                  bounds_clump%endg
-      end if
-
       call t_stopf('fates_dynamics_daily_driver')
 
       return
