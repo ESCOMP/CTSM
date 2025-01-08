@@ -556,6 +556,13 @@
     </phase>
   </test>
 
+  <test name="PVT_Lm3.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesLUPFT">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2919</issue>
+    </phase>
+  </test>
+
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
   <test name="SMS_Lh3.f10_f10_mg37.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
