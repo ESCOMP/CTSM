@@ -67,6 +67,8 @@ Changes answers relative to baseline: Yes, only for aux_clm fates testmods
   last fates tag update, which results in non-B4B changes.  These have been reviewed
   and differ as expected.
 
+  Also, see caveat in Answer changes for tag tmp-241219.n01.ctsm5.3.016.
+
 Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
