@@ -1,4 +1,74 @@
 ===============================================================
+Tag name: tmp-241219.n03.ctsm5.3.016
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed 08 Jan 2025 06:09:41 PM MST
+One-line Summary: Bug fix for izumi nag tests to pass
+
+Purpose and description of changes
+----------------------------------
+
+ Allocation statements should have been (0:mxpft) instead of (mxpft).
+ I introduced the bug in a small refactor requested in #2917.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #2924
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added tests that I should have added in the tmp-241219.n01.ctsm5.3.016 tag:
+ ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50BgcCru.izumi_nag.clm-flexCN_FUN_BNF
+ ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50BgcCru.derecho_intel.clm-flexCN_FUN_BNF
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+ derecho used tmp-241219.n02.ctsm5.3.016
+ izumi used ctsm5.3.016 because it was the best available baseline
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No but read caveat.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: a few Fates cases
+    - what platforms/compilers: izumi; only because I compared to ctsm5.3.016
+    - nature of change: same as in the tmp-241219.n02.ctsm5.3.016 tag
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2925
+
+===============================================================
+===============================================================
 Tag name: tmp-241219.n02.ctsm5.3.016
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Wed 08 Jan 2025 10:52:49 AM MST
