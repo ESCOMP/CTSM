@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.017   slevis 01/09/2025 Merge tmp-241219 branch to master
 tmp-241219.n03.ctsm5.3.016  01/09/2025 Bug fix for izumi nag tests to pass (slevis)
 tmp-241219.n02.ctsm5.3.016  01/08/2025 FATES hydro test update (glemieux)
 tmp-241219.n01.ctsm5.3.016  12/24/2024 Merge b4b-dev (slevis)
