@@ -1,4 +1,112 @@
 ===============================================================
+Tag name: ctsm5.3.018
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 10 Jan 2025 05:37:08 PM MST
+One-line Summary: Change history time to be the middle of the time bounds
+
+Purpose and description of changes
+----------------------------------
+ Making the change to be consistent with CAM and to make history output more intuitive.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Partly addresses issue #1059
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ The history time variable now equals the middle of the time bounds.
+ Instantaneous history tapes now do not include time bounds.
+ Mixed history tapes do not change the treatment of instantaneous fields or move them to separate tapes, yet.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Same changes are needed separately in clm, in mosart, and in rtm.
+
+Changes to tests or testing:
+ This tag introduces changes to the mosart/rtm testlists.
+
+ FAIL RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput RUN
+ I did not label this failure EXPECTED because the fix comes in later in this series of "history" tags, in particular ctsm5.3.020.
+
+ I resolved the izumi nag tests that failed to build (due to a bug in rtm and mosart) by introducing the bug-fix manually, as explained here:
+https://github.com/ESCOMP/CTSM/pull/2084#issuecomment-2584164690
+ In the next tag we expect to update to the rtm/mosart tags that include the fix.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  mosart
+    derecho ----- OK
+    izumi ------- OK
+
+  rtm
+    derecho ----- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Only time variable, plus read caveat
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: only the time variable
+
+ Caveat: We see diffs in mosart and cpl output that will be eliminated later in this series of "history" tags, in particular ctsm5.3.020. They are discussed here:
+https://github.com/ESCOMP/CTSM/pull/2838#issuecomment-2477608383
+https://github.com/ESCOMP/MOSART/issues/103#issuecomment-2479679014
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ rtm, mosart
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2838
+ https://github.com/ESCOMP/MOSART/pull/70
+ https://github.com/ESCOMP/RTM/issues/54
+ https://github.com/ESCOMP/MOSART/pull/106
+ https://github.com/ESCOMP/RTM/pull/39
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.017
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 09 Jan 2025 11:56:43 AM MST
