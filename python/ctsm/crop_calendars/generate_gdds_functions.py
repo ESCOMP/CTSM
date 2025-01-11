@@ -1,7 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
-# pylint: disable=too-many-lines,too-many-statements
+# pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
 import glob
