@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.018
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 10 Jan 2025 04:06:17 PM MST
+Date: Fri 10 Jan 2025 05:37:08 PM MST
 One-line Summary: Change history time to be the middle of the time bounds
 
 Purpose and description of changes
@@ -49,6 +49,10 @@ Changes to tests or testing:
 
  FAIL RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput RUN
  I did not label this failure EXPECTED because the fix comes in later in this series of "history" tags, in particular ctsm5.3.020.
+
+ I resolved the izumi nag tests that failed to build (due to a bug in rtm and mosart) by introducing the bug-fix manually, as explained here:
+https://github.com/ESCOMP/CTSM/pull/2084#issuecomment-2584164690
+ In the next tag we expect to update to the rtm/mosart tags that include the fix.
 
 Testing summary:
 ----------------
