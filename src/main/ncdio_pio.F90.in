@@ -1906,6 +1906,7 @@ contains
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid, subgrid_level_name, vardesc, start, count,found=found,posNOTonfile=posNOTonfile)
              call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+             call ncd_inqvdims(ncid, ndims, vardesc)
              if (isgrid2d) then
                 count(3) = size(data,dim=2)
                 n=3
@@ -1914,11 +1915,9 @@ contains
                    n=4
                 end if
              else
-                count(2) = size(data,dim=2)
-                n=2
+                n=ndims
                 if (present(nt)) then
-                   start(3) = nt ; count(3) = 1
-                   n=3
+                   start(n) = nt ; count(n) = 1
                 end if
              end if
              if (present(switchdim)) then
