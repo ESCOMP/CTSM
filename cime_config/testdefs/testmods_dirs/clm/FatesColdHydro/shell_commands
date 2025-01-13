@@ -1,8 +1,0 @@
-SRCDIR=`./xmlquery SRCROOT --value`
-CASEDIR=`./xmlquery CASEROOT --value`
-FATESDIR=$SRCDIR/src/fates
-FATESPARAMFILE=$CASEDIR/fates_params_hydrograsstempfix.nc
-
-ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
-
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_allom_smode --val 1 --allpfts
