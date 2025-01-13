@@ -178,6 +178,9 @@ contains
   !=========================================================================================
 
   subroutine timemgr_init(curr_date_in )
+
+    use clm_varctl, only : nsrest, nsrContinue, nsrBranch
+
     type(ESMF_Time), intent(in), optional :: curr_date_in 
 
     !---------------------------------------------------------------------------------
@@ -243,7 +246,9 @@ contains
     end if
 
     ! Advance time step to start at nstep=1
-    call advance_timestep()
+    if (nsrest /= nsrContinue .and. nsrest /= nsrBranch) then
+       call advance_timestep()
+    end if
 
     ! Print configuration summary to log file (stdout).
 
