@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.019
 Originator(s): olyson (Keith Oleson, UCAR/TSS)
-Date: Tue 14 Jan 2025 10:55:50 AM MST
+Date: Tue 14 Jan 2025 02:46:11 PM MST
 One-line Summary: Stop running 0th time step
 
 Purpose and description of changes
@@ -64,6 +64,16 @@ Testing summary:
 
     derecho ----- OK
     izumi ------- OK
+
+  mosart
+    derecho ----- OK
+    izumi ------- OK
+
+  rtm
+    derecho ----- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+ I repeated the rtm & mosart test-suites with mosart1.1.04 instead of 06 and rtm1_0_82 instead of 84 (all else the same) and compared against the new baselines mosart1.1.06-ctsm5.3.019 and rtm1_0_84-ctsm5.3.019. These gave b4b identical answers.
 
 Answer changes
 --------------
