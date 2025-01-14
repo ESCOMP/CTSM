@@ -249,9 +249,9 @@ class SSPMATRIXCN(SystemTestsCommon):
 
                     for item in glob.glob("{}/*rpointer*".format(rest_path)):
                         try:
-                           shutil.copy(item, rundir)
+                            shutil.copy(item, rundir)
                         except shutil.SameFileError:
-                           pass
+                            pass
             #
             # Run the case (Archiving on)
             #
