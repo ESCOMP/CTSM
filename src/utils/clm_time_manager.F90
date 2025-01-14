@@ -178,6 +178,9 @@ contains
   !=========================================================================================
 
   subroutine timemgr_init(curr_date_in )
+
+    use clm_varctl, only : nsrest, nsrContinue, nsrBranch
+
     type(ESMF_Time), intent(in), optional :: curr_date_in 
 
     !---------------------------------------------------------------------------------
@@ -240,6 +243,11 @@ contains
 
     if (tm_perp_calendar) then
        tm_perp_date = TimeSetymd( perpetual_ymd, 0, "tm_perp_date" )
+    end if
+
+    ! Advance time step to start at nstep=1
+    if (nsrest /= nsrContinue .and. nsrest /= nsrBranch) then
+       call advance_timestep()
     end if
 
     ! Print configuration summary to log file (stdout).
@@ -1731,7 +1739,7 @@ contains
   logical function is_first_step()
 
     !---------------------------------------------------------------------------------
-    ! Return true on first step of initial run only.
+    ! Return true on first step of startup and hybrid runs.
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::is_first_step'
@@ -1745,7 +1753,7 @@ contains
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
-    is_first_step = (nstep == 0)
+    is_first_step = (nstep == 1)
 
   end function is_first_step
   !=========================================================================================

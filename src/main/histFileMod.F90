@@ -2676,7 +2676,7 @@ contains
     ! !DESCRIPTION:
     ! Write time constant 3D variables to history tapes.
     ! Only write out when this subroutine is called (normally only for
-    ! primary history files at very first time-step, nstep=0).
+    ! primary history files at very first time-step, nstep=1).
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
@@ -4167,12 +4167,6 @@ contains
     do t = 1, ntapes
 
        if (.not. history_tape_in_use(t)) then
-          cycle
-       end if
-
-       ! Skip nstep=0 if monthly average
-
-       if (nstep==0 .and. tape(t)%nhtfrq==0) then
           cycle
        end if
 
