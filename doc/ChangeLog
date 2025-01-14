@@ -1,6 +1,235 @@
 ===============================================================
 Tag name: ctsm5.3.017
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 09 Jan 2025 11:56:43 AM MST
+One-line Summary: Merge tmp-241219 branch to master
+
+Purpose and description of changes
+----------------------------------
+
+Includes three tmp-241219 tags:
+ tmp-241219.n01.ctsm5.3.016 Merge b4b-dev:
+    nfix_method options Houlton (default), Bytnerowicz (option)
+ tmp-241219.n02.ctsm5.3.016 FATES hydro test update
+ tmp-241219.n03.ctsm5.3.016 Bug fix for izumi nag tests to pass (b4b unless using Bytnerowicz)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Each separate tag documents this information below.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ nfix_method as explained in tmp-241219.n01.ctsm5.3.016 tag below.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New tests as documented in tmp-241219.n03.ctsm5.3.016 tag below.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK (baseline linked to tmp-241219.n03.ctsm5.3.016)
+    izumi ------- OK (baseline linked to tmp-241219.n03.ctsm5.3.016)
+
+  fates tests:
+    derecho ----- No new testing; last baseline is fates-sci.1.80.4_api.37.0.0-tmp-241219.n02.ctsm5.3.016
+    izumi ------- No new testing; see tmp-241219.n02.ctsm5.3.016 tag below
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for aux_clm fates testmods
+
+  Same comment as in tmp-241219.n02.ctsm5.3.016 tag:
+  The FATES tag update includes a number of science and bug fix updates since the
+  last fates tag update, which results in non-B4B changes.  These have been reviewed
+  and differ as expected.
+
+  Also, see caveat in Answer changes for tag tmp-241219.n01.ctsm5.3.016.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ fates updated to sci.1.80.4_api.37.0.0
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2928
+
+===============================================================
+===============================================================
+Tag name: tmp-241219.n03.ctsm5.3.016
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 09 Jan 2025 11:39:37 AM MST
+One-line Summary: Bug fix for izumi nag tests to pass
+
+Purpose and description of changes
+----------------------------------
+ Allocation statements should have been (0:mxpft) instead of (mxpft).
+ I introduced the bug in a small refactor requested in #2917.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2924
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added tests that I should have added in the tmp-241219.n01.ctsm5.3.016 tag:
+ ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50BgcCru.izumi_nag.clm-flexCN_FUN_BNF
+ ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50BgcCru.derecho_intel.clm-flexCN_FUN_BNF
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+ derecho used tmp-241219.n02.ctsm5.3.016 (i.e. the previous tag)
+ izumi used ctsm5.3.016 because it was the best available baseline
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No but read caveat.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: a few Fates cases
+    - what platforms/compilers: izumi; only because I compared to ctsm5.3.016
+    - nature of change: same as in the tmp-241219.n02.ctsm5.3.016 tag
+
+ Note: Also on izumi I see the following failure in all the tests that 'failed to initialize'
+       that I had to go back to build and run, whether with ./case.build or ./create_test. For example:
+       FAIL ERP_D_Ld5_P48x1.f10_f10_mg37.I2000Clm50BgcCru.izumi_nag.clm-noFUN_flexCN BASELINE ctsm5.3.016: ERROR CPRNC failed to open files
+       I am aware that others have also seen this behavior.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2925
+
+===============================================================
+===============================================================
+Tag name: tmp-241219.n02.ctsm5.3.016
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Wed 08 Jan 2025 10:52:49 AM MST
+One-line Summary: FATES hydro test update
+
+Purpose and description of changes
+----------------------------------
+
+This minor update reverts a temporary work around for FATES hydro system tests.
+The FATES tag is updated to capture the FATES-side fix to the issue that predicated
+the temporary testing workaround.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  #2878 - Remove fates_allom_smode shell_command update in FatesColdHydro testmod
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  FATES hydro tests will no long build a custom parameter file on the fly
+  The one FATES PVT test has been added to expected failure per #2919
+
+Testing summary: regular + fates
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK (see #2924)
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for aux_clm fates testmods
+
+  The FATES tag update includes a number of science and bug fix updates since the
+  last fates tag update, which results in non-B4B changes.  These have been reviewed
+  and differ as expected.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.79.3_api.37.0.0 -> sci.1.80.4_api.37.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  https://github.com/ESCOMP/CTSM/pull/2882
+
+===============================================================
+===============================================================
+Tag name: tmp-241219.n01.ctsm5.3.016
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Tue 24 Dec 2024 03:43:01 PM MST
 One-line Summary: Merge b4b-dev
 
