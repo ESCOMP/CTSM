@@ -8,6 +8,10 @@ Purpose and description of changes
 ----------------------------------
  As with the last tag, this is also for consistency with CAM.
 
+Contributors
+------------
+ Bill Sacks. In the final steps, also slevis.
+
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
@@ -29,7 +33,19 @@ Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
  Fixes #925
- Fixes #2923
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Same or similar changes needed separately in clm, in mosart, and in rtm.
+
+Changes to tests or testing:
+ FAIL RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput RUN
+ I did not label this failure EXPECTED because the fix is planned for the next tag, ctsm5.3.020.
+
+ I resolved the izumi nag tests that failed to build (due to a bug in rtm and mosart) by introducing the bug-fix manually, as explained here:
+https://github.com/ESCOMP/CTSM/pull/2084#issuecomment-2584164690
+ In ctsm5.3.020 we plan to update to the rtm/mosart tags that include the fix.
 
 Testing summary:
 ----------------
@@ -59,10 +75,19 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: All
     - nature of change: larger than roundoff/same climate
 
+ Caveat: We see diffs in mosart and cpl output that will be eliminated in ctsm5.3.020. They are discussed here:
+https://github.com/ESCOMP/CTSM/pull/2838#issuecomment-2477608383
+https://github.com/ESCOMP/MOSART/issues/103#issuecomment-2479679014
+
 Other details
 -------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ rtm and mosart were already updated in the previous tag (ctsm5.3.018) to include the corresponding rtm and mosart tags
+
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2084
+ https://github.com/ESCOMP/MOSART/pull/67
+ https://github.com/ESCOMP/RTM/pull/37
 
 ===============================================================
 ===============================================================
@@ -163,7 +188,7 @@ https://github.com/ESCOMP/MOSART/issues/103#issuecomment-2479679014
 Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
- rtm, mosart
+ rtm, mosart (see related note in ctsm5.3.019)
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2838
