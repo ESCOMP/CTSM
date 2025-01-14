@@ -2125,9 +2125,12 @@ sub setup_logic_roughness_methods {
     $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
   }
   my $phys = $physv->as_string();
-  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
-    if ( $var eq "Meier2022" ) {
+  if ( $var eq "Meier2022" ) {
+    if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
       $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+    if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007")
     }
   }
 }
