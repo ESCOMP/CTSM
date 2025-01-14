@@ -248,8 +248,10 @@ class SSPMATRIXCN(SystemTestsCommon):
                         os.symlink(item, linkfile)
 
                     for item in glob.glob("{}/*rpointer*".format(rest_path)):
-                        shutil.copy(item, rundir)
-
+                        try:
+                           shutil.copy(item, rundir)
+                        except shutil.SameFileError:
+                           pass
             #
             # Run the case (Archiving on)
             #
