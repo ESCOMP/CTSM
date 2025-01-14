@@ -1,6 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.3.014   slevis 11/18/2024 Change history time to be the middle of the time bounds
+       ctsm5.3.019   olyson 01/14/2025 Stop running 0th time step
+       ctsm5.3.018   slevis 01/10/2025 Change history time to be the middle of the time bounds
+       ctsm5.3.017   slevis 01/09/2025 Merge tmp-241219 branch to master
+tmp-241219.n03.ctsm5.3.016  01/09/2025 Bug fix for izumi nag tests to pass (slevis)
+tmp-241219.n02.ctsm5.3.016  01/08/2025 FATES hydro test update (glemieux)
+tmp-241219.n01.ctsm5.3.016  12/24/2024 Merge b4b-dev (slevis)
+       ctsm5.3.016     erik 12/19/2024 Rpointer files for restart now have the simulation date in the filename
+       ctsm5.3.015     erik 12/18/2024 Update cdeps with cam7 nextsw cday changes
+       ctsm5.3.014     erik 12/03/2024 Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
+       ctsm5.3.013     erik 11/26/2024 Merge b4b-dev
        ctsm5.3.012  afoster 11/13/2024 update fates tag
        ctsm5.3.011 samrabin 11/11/2024 Improve handling of cold-start finidat
        ctsm5.3.010  afoster 11/09/2024 Merge b4b-dev
