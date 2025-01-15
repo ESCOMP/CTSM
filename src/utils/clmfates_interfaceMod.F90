@@ -535,7 +535,7 @@ module CLMFatesInterfaceMod
 
         if(trim(fates_photosynth_acclimation) == 'kumarathunge2019') then
            pass_photosynth_acclimation_switch = 1
-        else if(trim(fates_photosynth_acclimation) == 'nonacclimating')
+        else if(trim(fates_photosynth_acclimation) == 'nonacclimating') then
            pass_photosynth_acclimation_switch = 0
         end if
         call set_fates_ctrlparms('photosynth_acclimation',ival=pass_photosynth_acclimation_switch)
@@ -547,9 +547,9 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_daylength_factor_switch',ival=pass_daylength_factor_switch)
 
-        if (trim(fates_stomatal_model) == 'ballberry') then
+        if (trim(fates_stomatal_model) == 'ballberry1987') then
            pass_stomatal_model = 1
-        else if (trim(fates_stomatal_model) == 'medlyn') then
+        else if (trim(fates_stomatal_model) == 'medlyn2011') then
            pass_stomatal_model = 2
         end if
         call set_fates_ctrlparms('stomatal_model',ival=pass_stomatal_model)
