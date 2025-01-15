@@ -19,9 +19,9 @@ module clm_time_manager
 
    public ::&
         set_timemgr_init,         &! setup startup values
-        timemgr_init,             &! time manager initialization
+        timemgr_init,             &! time manager initialization, called always
         timemgr_restart_io,       &! read/write time manager restart info and restart time manager
-        timemgr_restart,          &! restart the time manager using info from timemgr_restart
+        timemgr_restart,          &! check that time manager is setup coorectly upcon restart
         timemgr_datediff,         &! calculate difference between two time instants
         advance_timestep,         &! increment timestep number
         get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
@@ -157,7 +157,7 @@ contains
     !
     character(len=*), parameter :: sub = 'clm::set_timemgr_init'
 
-    if ( timemgr_set ) call shr_sys_abort( sub//":: timemgr_init or timemgr_restart already called" )
+    if ( timemgr_set ) call shr_sys_abort( sub//":: timemgr_init already called" )
     if (present(calendar_in)      ) calendar         = trim(calendar_in)
     if (present(start_ymd_in)     ) start_ymd        = start_ymd_in
     if (present(start_tod_in)     ) start_tod        = start_tod_in
@@ -505,7 +505,10 @@ contains
   subroutine timemgr_restart()
 
     !---------------------------------------------------------------------------------
-    ! Restart the ESMF time manager using the synclock for ending date.
+    ! On restart do some checkcing to make sure time is synchronized with the clock from CESM.
+    ! Set a couple of variables, and advance the clock, so time is aligned properly.
+   !
+    ! timemgr_init MIST be called before this
     !
 
     character(len=*), parameter :: sub = 'clm::timemgr_restart'
@@ -517,13 +520,10 @@ contains
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
     !---------------------------------------------------------------------------------
-    call timemgr_spmdbcast( )
+    ! Check that timemgr_init was already called
+    if ( .not. check_timemgr_initialized(sub) ) return
 
-    ! Initialize calendar from restart info
-
-    call init_calendar()
-
-    ! Initialize the timestep from restart info
+    ! Initialize the timestep
 
     dtime = rst_step_sec
 
@@ -554,12 +554,6 @@ contains
     ! Set flag that this is the first timestep of the restart run.
 
     tm_first_restart_step = .true.
-
-    ! Print configuration summary to log file (stdout).
-
-    if (masterproc) call timemgr_print()
-
-    timemgr_set = .true.
 
   end subroutine timemgr_restart
 
