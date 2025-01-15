@@ -588,7 +588,7 @@ module CLMFatesInterfaceMod
            pass_hydro_solver = 1
         else if (trim(fates_hydro_solver) == '2D_Picard') then
            pass_hydro_solver = 2
-        else if (trim(fates_hydro_solver) == '2D_Taylor') then
+        else if (trim(fates_hydro_solver) == '2D_Newton') then
            pass_hydro_solver = 3
         end if
         call set_fates_ctrlparms('hydr_solver',ival=pass_hydro_solver)
