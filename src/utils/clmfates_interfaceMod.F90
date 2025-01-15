@@ -932,8 +932,6 @@ module CLMFatesInterfaceMod
             pf = col%patchf(c)
             patch%itype(pi:pf) = ispval
             patch%is_fates(pi:pf) = .true.
-            !write(iulog,*)'SETTING ISPVAL'
-            !call endrun(msg=errMsg(sourcefile, __LINE__))
          end do
 
       end do
