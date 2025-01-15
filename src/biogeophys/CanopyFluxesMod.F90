@@ -1112,7 +1112,6 @@ bioms:   do f = 1, fn
 
          end do
          if ( use_fates ) then      
-            ! zeroed out here for megan isoprene calculations, in case patches are not transfered properly.
 
             call clm_fates%wrap_photosynthesis(nc, bounds, fn, filterp(1:fn), &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
