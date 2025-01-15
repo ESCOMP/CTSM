@@ -3399,7 +3399,7 @@ sub setup_logic_mineral_nitrogen_dynamics {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept", "nfix_method" );
   if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
     foreach my $var ( @vars ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
@@ -3412,6 +3412,7 @@ sub setup_logic_mineral_nitrogen_dynamics {
        }
     }
   }
+
 }
 
 
@@ -5216,6 +5217,7 @@ sub write_output_files {
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
+  push @groups, "cnfun_inparm";
   push @groups, "photosyns_inparm";
   push @groups, "cnfire_inparm";
   push @groups, "cn_general";

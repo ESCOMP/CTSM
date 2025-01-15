@@ -177,7 +177,11 @@ contains
 
   !=========================================================================================
 
-  subroutine timemgr_init( )
+  subroutine timemgr_init(curr_date_in )
+
+    use clm_varctl, only : nsrest, nsrContinue, nsrBranch
+
+    type(ESMF_Time), intent(in), optional :: curr_date_in 
 
     !---------------------------------------------------------------------------------
     ! Initialize the ESMF time manager from the sync clock
@@ -187,8 +191,8 @@ contains
     character(len=*), parameter :: sub = 'clm::timemgr_init'
     integer :: rc                            ! return code
     type(ESMF_Time) :: start_date            ! start date for run
-    type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_Time) :: ref_date              ! reference date for time coordinate
+    type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
     !---------------------------------------------------------------------------------
@@ -211,8 +215,11 @@ contains
     start_date = TimeSetymd( start_ymd, start_tod, "start_date" )
 
     ! Initialize current date
-
-    curr_date = start_date
+    if(present(curr_date_in)) then
+       curr_date = curr_date_in
+    else
+       curr_date = start_date
+    endif
 
     call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
@@ -238,6 +245,11 @@ contains
        tm_perp_date = TimeSetymd( perpetual_ymd, 0, "tm_perp_date" )
     end if
 
+    ! Advance time step to start at nstep=1
+    if (nsrest /= nsrContinue .and. nsrest /= nsrBranch) then
+       call advance_timestep()
+    end if
+
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -253,7 +265,7 @@ contains
     !---------------------------------------------------------------------------------
     ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
-    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance
+    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance, esmf_clockiscreated
 
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
@@ -277,6 +289,7 @@ contains
     ! manager included in cime appears to require stopTime.
     call ESMF_TimeSet(stop_date, yy=really_big_year, mm=12, dd=31, s=0, &
          calendar=tm_cal, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
 
     ! Error check 
 
@@ -299,9 +312,10 @@ contains
 
     ! Initialize the clock
 
+    
     tm_clock = ESMF_ClockCreate(name="CLM Time-manager clock", timeStep=step_size, startTime=start_date, &
          stopTime=stop_date, refTime=ref_date, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockSetup')
+    call chkrc(rc, sub//': error return from ESMF_ClockCreate')
 
     ! Advance clock to the current time (in case of a restart)
 
@@ -496,11 +510,12 @@ contains
 
   !=========================================================================================
 
-  subroutine timemgr_restart( )
+  subroutine timemgr_restart()
 
     !---------------------------------------------------------------------------------
     ! Restart the ESMF time manager using the synclock for ending date.
     !
+
     character(len=*), parameter :: sub = 'clm::timemgr_restart'
     integer :: rc                            ! return code
     integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
@@ -520,16 +535,15 @@ contains
 
     dtime = rst_step_sec
 
-    ! Initialize start date from restart info
+    ! Check start date from restart info
 
-    start_date = TimeSetymd( rst_start_ymd, rst_start_tod, "start_date" )
+    if (rst_start_ymd .ne. start_ymd .or. rst_start_tod .ne. start_tod) then
+       call shr_sys_abort(sub//'ERROR: mismatch in start date with restart file')
+    endif
 
-    ! Initialize current date from restart info
-
-    curr_date = TimeSetymd( rst_curr_ymd, rst_curr_tod, "curr_date" )
-
-    call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
+    if (rst_ref_ymd .ne. ref_ymd .or. rst_ref_tod .ne. ref_tod) then
+       call shr_sys_abort(sub//'ERROR: mismatch in reference date with restart file')
+    endif
 
     call ESMF_TimeIntervalSet( day_step_size, d=1, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting day_step_size')
@@ -539,12 +553,6 @@ contains
     nstep_rad_prev = rst_nstep_rad_prev
 
     ! Initialize ref date from restart info
-
-    ref_date = TimeSetymd( rst_ref_ymd, rst_ref_tod, "ref_date" )
-
-    ! Initialize clock 
-
-    call init_clock( start_date, ref_date, curr_date)
 
     ! Advance the timestep.  
     ! Data from the restart file corresponds to the last timestep of the previous run.
@@ -1731,7 +1739,7 @@ contains
   logical function is_first_step()
 
     !---------------------------------------------------------------------------------
-    ! Return true on first step of initial run only.
+    ! Return true on first step of startup and hybrid runs.
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::is_first_step'
@@ -1745,7 +1753,7 @@ contains
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
-    is_first_step = (nstep == 0)
+    is_first_step = (nstep == 1)
 
   end function is_first_step
   !=========================================================================================

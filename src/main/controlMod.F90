@@ -119,6 +119,7 @@ contains
     !
     ! !USES:
     use CNMRespMod                       , only : CNMRespReadNML
+    use CNFUNMod                         , only : CNFUNReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
@@ -605,6 +606,7 @@ contains
 
     if ( use_fun ) then
        call CNMRespReadNML( NLFilename )
+       call CNFUNReadNML( NLFilename )
     end if
 
     call soilHydReadNML(   NLFilename )
