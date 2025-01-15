@@ -2129,8 +2129,9 @@ sub setup_logic_roughness_methods {
     if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
       $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
     }
+    # Make sure that fates and meier2022 are not both active due to issue #2932
     if ( &value_is_true($nl_flags->{'use_fates'}) ) {
-      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007")
+      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007.  See issue #2932 for more information.")
     }
   }
 }
