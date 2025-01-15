@@ -1616,6 +1616,10 @@ module CLMFatesInterfaceMod
           patch%is_bareground(col%patchi(c)) = .true.
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
 
+          ! set voc_pft_index of bareground to 0 explicitly, so the bare ground is properly ignored in VOCEmissionMod
+          if (patch%is_bareground(col%patchi(c))) then
+             voc_pftindex(col%patchi(c)) = 0
+          endif
           ! Precision errors on the canopy_fraction_pa sum, even small (e-12)
           ! do exist, and can create potentially negetive bare-soil fractions
           ! (ie -1e-12 or smaller). Even though this is effectively zero,
@@ -2578,7 +2582,9 @@ module CLMFatesInterfaceMod
           rssha     => photosyns_inst%rssha_patch,   &
           psnsun    => photosyns_inst%psnsun_patch,  &
           psnsha    => photosyns_inst%psnsha_patch,  &
-          ci        => canopystate_inst%ci_patch)
+          cisun_z   => photosyns_inst%cisun_z_patch, & 
+          cisha_z   => photosyns_inst%cisha_z_patch & 
+         )
       do s = 1, this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2645,7 +2651,17 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 3
             rssun(p) = this%fates(nc)%bc_out(s)%rssun_pa(ifp)
             rssha(p) = this%fates(nc)%bc_out(s)%rssha_pa(ifp)
-            ci(p) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            ! this is needed for MEGAN to work with FATES
+            cisun_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            cisha_z(p,:) = this%fates(nc)%bc_out(s)%ci_pa(ifp)
+            if (this%fates(nc)%bc_out(s)%ci_pa(ifp) <0.0_r8) then
+               cisha_z(p,:) = 0.0_r8
+               cisun_z(p,:) = 0.0_r8
+               if (debug) then
+                  write(iulog,*) 'WARNING: ci_pa is less than 0: ', this%fates(nc)%bc_out(s)%ci_pa(ifp)
+                  write(iulog,*) 'filter ran photosynthesis s p icp ifp ilter',s,p,icp,ifp
+               endif
+            endif
             ! These fields are marked with a bad-value flag
             photosyns_inst%psnsun_patch(p)   = spval
             photosyns_inst%psnsha_patch(p)   = spval

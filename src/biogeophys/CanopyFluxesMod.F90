@@ -1111,9 +1111,8 @@ bioms:   do f = 1, fn
             vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
 
          end do
-
          if ( use_fates ) then      
-            
+
             call clm_fates%wrap_photosynthesis(nc, bounds, fn, filterp(1:fn), &
                  svpts(begp:endp), eah(begp:endp), o2(begp:endp), &
                  co2(begp:endp), rb(begp:endp), dayl_factor(begp:endp), &
