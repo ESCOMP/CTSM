@@ -814,9 +814,9 @@ Set net or gross asslimiation for the FATES stomatal model
 Set the FATES stomatal conductance model
 </entry>
 
-<entry id="use_fates_photosynth_acclimation" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-If TRUE, enable FATES to use a photosynthesis temperature acclimation model.
+<entry id="fates_photosynth_acclimation" type="char*256" category="physics"
+       group="clm_inparm" valid_values="nonacclimating, kumarathunge2019" value="nonacclimating">
+Set the FATES photosynthesis temperature acclimation model.
 (Only relevant if FATES is on)
 </entry>
 
