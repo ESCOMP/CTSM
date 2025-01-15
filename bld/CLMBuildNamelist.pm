@@ -2118,7 +2118,7 @@ sub setup_logic_roughness_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
-              'phys'=>$nl_flags->{'phys'} );
+              'phys'=>$nl_flags->{'phys'} , 'use_fates'=>$nl_flags->{'use_fates'});
 
   my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
   if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
