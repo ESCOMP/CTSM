@@ -1,0 +1,56 @@
+./xmlchange PLUMBER2SITE=FR-Lq1
+./xmlchange PTS_LON=2.73583
+./xmlchange PTS_LAT=45.643059
+./xmlchange DATM_YR_END=2006
+./xmlchange DATM_YR_START_FILENAME=2004
+./xmlchange START_TOD=82800
+./xmlchange ATM_NCPL=48
+
+echo "presaero.SSP3-7.0:year_first=2004" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_last=2006" >> user_nl_datm_streams 
+echo "presaero.SSP3-7.0:year_align=2004" >> user_nl_datm_streams 
+
+echo "presndep.SSP3-7.0:year_first=2004" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_last=2006" >> user_nl_datm_streams 
+echo "presndep.SSP3-7.0:year_align=2004" >> user_nl_datm_streams 
+
+echo "co2tseries.SSP3-7.0:year_first=2004" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_last=2006" >> user_nl_datm_streams 
+echo "co2tseries.SSP3-7.0:year_align=2004" >> user_nl_datm_streams 
+
+compset=`./xmlquery COMPSET --value` 
+CLM_USRDAT_NAME=`./xmlquery CLM_USRDAT_NAME --value` 
+TEST=`./xmlquery TEST --value` 
+
+# For a transient case run the whole length and do not cycle 
+if  [[ $compset =~ ^HIST ]]; then 
+  # Number of years that can be run for the full transient case 
+  if [[ $TEST != "TRUE" ]]; then  
+    ./xmlchange STOP_N=3
+  fi 
+  # set start date for transient case with historical compset 
+  ./xmlchange RUN_STARTDATE=2003-12-31
+  ./xmlchange DATM_YR_ALIGN=2003
+  ./xmlchange DATM_YR_START=2003
+else 
+  # for spinup case with I2000 compset 
+  ./xmlchange RUN_STARTDATE=0001-01-01
+  ./xmlchange DATM_YR_ALIGN=1
+  ./xmlchange DATM_YR_START=2004
+fi 
+
+# Turn on LAI streams for a SP case 
+if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then 
+  echo "stream_fldfilename_lai='\$DIN_LOC_ROOT/lnd/clm2/lai_streams/PLUMBER2/FR-Lq1/LAI_stream_FR-Lq1_2004-2006.nc'" >> user_nl_clm 
+  echo "stream_year_last_lai=2006" >> user_nl_clm 
+  if  [[ $compset =~ ^HIST ]]; then 
+    # for transient case with a historical compset 
+    echo "model_year_align_lai=2003" >> user_nl_clm 
+    echo "stream_year_first_lai=2003" >> user_nl_clm 
+  else 
+    # for a spinup case with a i2000 compset 
+    echo "model_year_align_lai=1" >> user_nl_clm 
+    echo "stream_year_first_lai=2004" >> user_nl_clm 
+  fi 
+fi 
+

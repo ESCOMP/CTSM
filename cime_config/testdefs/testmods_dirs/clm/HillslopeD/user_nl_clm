@@ -1,0 +1,3 @@
+! Various hillslope options not exercised by other testmods
+hillslope_pft_distribution_method = 'DominantPftLowland'
+hillslope_soil_profile_method = 'Linear'

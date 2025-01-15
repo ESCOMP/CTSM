@@ -1,7 +1,7 @@
 .. _specific-atm-models:
 
 ==============================================================
- Instructions on using CTSM with specific atmosphere models 
+ Instructions on using CTSM with specific atmosphere models
 ==============================================================
 
 .. toctree::
