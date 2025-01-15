@@ -12,8 +12,8 @@ module SaturatedExcessRunoffMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero
-  use clm_varcon   , only : spval
+  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero, hillslope_fsat_equals_zero
+  use clm_varcon   , only : spval,ispval
   use LandunitType , only : landunit_type
   use landunit_varcon  , only : istcrop
   use ColumnType   , only : column_type
@@ -233,10 +233,8 @@ contains
 
          qflx_sat_excess_surf   =>    waterfluxbulk_inst%qflx_sat_excess_surf_col, & ! Output: [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
          qflx_floodc            =>    waterfluxbulk_inst%qflx_floodc_col         , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM
-         qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col , & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
+         qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col   & ! Input: [real(r8) (:)   ] rain plus snow melt falling on the soil (mm/s)
 
-         origflag               =>    soilhydrology_inst%origflag            , & ! Input:  logical
-         fracice                =>    soilhydrology_inst%fracice_col           & ! Input:  [real(r8) (:,:) ]  fractional impermeability (-)
          )
 
     ! ------------------------------------------------------------------------
@@ -269,35 +267,33 @@ contains
     endif
 
     ! ------------------------------------------------------------------------
+    ! Set fsat to zero for upland hillslope columns
+    ! ------------------------------------------------------------------------
+    if (hillslope_fsat_equals_zero) then
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          if(col%is_hillslope_column(c) .and. col%active(c)) then
+             ! Set fsat to zero for upland columns
+             if (col%cold(c) /= ispval) fsat(c) = 0._r8
+          endif
+       end do
+    endif
+
+    ! ------------------------------------------------------------------------
     ! Compute qflx_sat_excess_surf
     !
     ! assume qinmax (maximum infiltration rate) is large relative to
     ! qflx_rain_plus_snomelt in control
     ! ------------------------------------------------------------------------
     
-    if (origflag == 1) then
-       if (this%fsat_method == FSAT_METHOD_VIC) then
-          ! NOTE(wjs, 2017-07-12) I'm not sure if it's the VIC fsat method per se that
-          ! is incompatible with origflag, or some other aspect of VIC: The original
-          ! check was for origflag == 1 and use_vichydro, which also appears in error
-          ! checks elsewhere.
-          call endrun(msg="VICHYDRO is not available for origflag=1"//errmsg(sourcefile, __LINE__))
-       end if
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          fcov(c) = (1._r8 - fracice(c,1)) * fsat(c) + fracice(c,1)
-          qflx_sat_excess_surf(c) = fcov(c) * qflx_rain_plus_snomelt(c)
-       end do
-    else
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          ! only send fast runoff directly to streams
-          qflx_sat_excess_surf(c) = fsat(c) * qflx_rain_plus_snomelt(c)
-
-          ! Set fcov just to have it on the history file
-          fcov(c) = fsat(c)
-       end do
-    end if
+    do fc = 1, num_hydrologyc
+       c = filter_hydrologyc(fc)
+       ! only send fast runoff directly to streams
+       qflx_sat_excess_surf(c) = fsat(c) * qflx_rain_plus_snomelt(c)
+       
+       ! Set fcov just to have it on the history file
+       fcov(c) = fsat(c)
+    end do
 
     ! ------------------------------------------------------------------------
     ! For urban columns, send flood water flux to runoff

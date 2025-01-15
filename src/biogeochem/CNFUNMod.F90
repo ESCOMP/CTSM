@@ -48,13 +48,18 @@ module CNFUNMod
   private
 !
 ! !PUBLIC MEMBER FUNCTIONS:
+  public :: CNFUNReadNML  ! Read in namelist variables
   public:: readParams            ! Read in parameters needed for FUN
   public:: CNFUNInit             ! FUN calculation initialization
   public:: CNFUN                 ! Run FUN
   
+  character(len=25) :: nfix_method  ! choice of nfix parameterization
+
   type, private :: params_type
-     real(r8) :: ndays_on        ! number of days to complete leaf onset
      real(r8) :: ndays_off       ! number of days to complete leaf offset
+     real(r8), allocatable :: nfix_tmin(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_topt(:)  ! A BNF parameter
+     real(r8), allocatable :: nfix_tmax(:)  ! A BNF parameter
   end type params_type   
  
   !
@@ -64,7 +69,6 @@ module CNFUNMod
   !
   ! !PRIVATE DATA MEMBERS:
   real(r8) :: dt              ! decomp timestep (seconds)
-  real(r8) :: ndays_on        ! number of days to complete onset
   real(r8) :: ndays_off       ! number of days to complete offset
   
   integer, private, parameter :: COST_METHOD = 2 !new way of doing the N uptake
@@ -84,17 +88,73 @@ module CNFUNMod
  contains
 !--------------------------------------------------------------------
    !---
+ subroutine CNFUNReadNML(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read in namelist variables
+    !
+    ! !USES:
+    use fileutils  , only : getavu, relavu, opnfil
+    use shr_nl_mod , only : shr_nl_find_group_name
+    use spmdMod    , only : masterproc, mpicom
+    use shr_mpi_mod, only : shr_mpi_bcast
+    use clm_varctl , only : iulog
+    use spmdMod    , only : MPI_CHARACTER
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename  ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr   ! error code
+    integer :: unitn  ! unit for namelist file
+
+    character(len=*), parameter :: nmlname = 'cnfun_inparm'
+    !-----------------------------------------------------------------------
+
+    namelist /cnfun_inparm/ nfix_method
+
+    ! Initialize options to default values, in case they are not specified in
+    ! the namelist
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//' namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=cnfun_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call mpi_bcast (nfix_method, len(nfix_method), MPI_CHARACTER, 0, mpicom, ierr)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=cnfun_inparm)
+       write(iulog,*) ' '
+    end if
+
+ end subroutine CNFUNReadNML
+
+  !-----------------------------------------------------------------------
  subroutine readParams ( ncid )
   !
   ! !USES:
   use ncdio_pio , only : file_desc_t,ncd_io
+  use clm_varpar, only : mxpft
 
   ! !ARGUMENTS:
   implicit none
   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
   !
   ! !LOCAL VARIABLES:
-  character(len=32)  :: subname = 'CNFUNParamsType'
   character(len=100) :: errCode = '-Error reading in parameters file:'
   logical            :: readv ! has variable been read in or not
   real(r8)           :: tempr ! temporary to read in parameter
@@ -104,16 +164,25 @@ module CNFUNMod
 
   ! read in parameters
 
-    tString='ndays_on'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%ndays_on=tempr
-
     tString='ndays_off'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun( msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%ndays_off=tempr
 
+    allocate(params_inst%nfix_tmin(0:mxpft))
+    tString='nfix_tmin'
+    call ncd_io(trim(tString), params_inst%nfix_tmin(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_topt(0:mxpft))
+    tString='nfix_topt'
+    call ncd_io(trim(tString), params_inst%nfix_topt(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%nfix_tmax(0:mxpft))
+    tString='nfix_tmax'
+    call ncd_io(trim(tString), params_inst%nfix_tmax(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
  end subroutine readParams
 
@@ -142,7 +211,6 @@ module CNFUNMod
   integer           :: nstep                    ! time step number
   integer           :: nstep_fun                ! Number of
   !  atmospheric timesteps between calls to FUN
-  character(len=32) :: subname = 'CNFUNInit'
 !--------------------------------------------------------------------
   !---
 
@@ -172,7 +240,6 @@ module CNFUNMod
   timestep_fun = real(secspday * fun_period)
   nstep_fun    = int(secspday * dayspyr / dt) 
 
-  ndays_on     = params_inst%ndays_on
   ndays_off    = params_inst%ndays_off
 
   !--------------------------------------------------------------------
@@ -218,6 +285,7 @@ module CNFUNMod
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
+   use CNVegMatrixMod  , only : matrix_update_phn
 !
 ! !ARGUMENTS: 
    type(bounds_type)                       , intent(in)    :: bounds
@@ -297,7 +365,7 @@ module CNFUNMod
   real(r8)  :: litterfall_n(bounds%begp:bounds%endp)                 ! N loss based on the leafc to litter   (gN/m2)  
   real(r8)  :: litterfall_n_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
   real(r8)  :: litterfall_c_step(bounds%begp:bounds%endp,1:nstp)       ! N loss based on the leafc to litter   (gN/m2)
-  real(r8)  :: tc_soisno(bounds%begc:bounds%endc,1:nlevdecomp)       ! Soil temperature            (degrees Celsius)
+  real(r8)  :: tc_soisno(bounds%begc:bounds%endc,1:nlevdecomp)       ! Soil temperature                      (degrees Celsius)
   real(r8)  :: npp_remaining(bounds%begp:bounds%endp,1:nstp)         ! A temporary variable for npp_remaining(gC/m2) 
   real(r8)  :: n_passive_step(bounds%begp:bounds%endp,1:nstp)        ! N taken up by transpiration at substep(gN/m2)
   real(r8)  :: n_passive_acc(bounds%begp:bounds%endp)                ! N acquired by passive uptake          (gN/m2)
@@ -467,14 +535,13 @@ module CNFUNMod
   real(r8) :: total_N_resistance   ! C to of N for whole soil -leaf
   !  pathway
   real(r8) :: free_RT_frac=0.0_r8  !fraction of N retranslocation which is automatic/free.
-  !  SHould be made into a PFT parameter. 
+  !  Should be made into a PFT parameter.
   
   real(r8) :: paid_for_n_retrans
   real(r8) :: free_n_retrans
   real(r8) :: total_c_spent_retrans
   real(r8) :: total_c_accounted_retrans
 
-  
   !------end of not_use_nitrif_denitrif------!
   !--------------------------------------------------------------------
   !------------
@@ -502,9 +569,10 @@ module CNFUNMod
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
   
+  character(len=100) :: errCode
   !--------------------------------------------------------------------
   !---------------------------------
-  associate(ivt                    => patch%itype                                          , & ! Input:   [integer  (:) ]  p
+  associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
          leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
@@ -529,10 +597,10 @@ module CNFUNMod
          perecm                 => pftcon%perecm                                        , & ! Input:   The fraction of ECM
          ! -associated PFT 
          grperc                 => pftcon%grperc                                        , & ! Input:   growth percentage
-         fun_cn_flex_a           => pftcon%fun_cn_flex_a                                , & ! Parameter a of FUN-flexcn link code (def 5)
-         fun_cn_flex_b           => pftcon%fun_cn_flex_b                                , & ! Parameter b of FUN-flexcn link code (def 200)
-         fun_cn_flex_c           => pftcon%fun_cn_flex_c                                , & ! Parameter b of FUN-flexcn link code (def 80)         
-         FUN_fracfixers          => pftcon%FUN_fracfixers                               , & ! Fraction of C that can be used for fixation.    
+         fun_cn_flex_a          => pftcon%fun_cn_flex_a                                 , & ! Parameter a of FUN-flexcn link code (def 5)
+         fun_cn_flex_b          => pftcon%fun_cn_flex_b                                 , & ! Parameter b of FUN-flexcn link code (def 200)
+         fun_cn_flex_c          => pftcon%fun_cn_flex_c                                 , & ! Parameter b of FUN-flexcn link code (def 80)
+         FUN_fracfixers         => pftcon%FUN_fracfixers                                , & ! Fraction of C that can be used for fixation.
          leafcn_offset          => cnveg_state_inst%leafcn_offset_patch                 , & ! Output:
          !  [real(r8)  (:)]  Leaf C:N used by FUN
          plantCN                => cnveg_state_inst%plantCN_patch                       , & ! Output:  [real(r8)  (:)]  Plant
@@ -621,6 +689,7 @@ module CNFUNMod
          leafc_change           => cnveg_carbonflux_inst%leafc_change_patch             , & ! Output:  [real(r8)
          !  (:) ]  Used C from the leaf (gC/m2/s)
          leafn_storage_to_xfer  => cnveg_nitrogenflux_inst%leafn_storage_to_xfer_patch  , & ! Output:  [real(r8) (:) ]
+         iretransn_to_iout      => cnveg_nitrogenflux_inst%iretransn_to_iout_ph         , & ! Input:   [integer]
          plant_ndemand          => cnveg_nitrogenflux_inst%plant_ndemand_patch          , & ! Iutput:  [real(r8) (:)
          !  ]  N flux required to support initial GPP (gN/m2/s)
          plant_ndemand_retrans  => cnveg_nitrogenflux_inst%plant_ndemand_retrans_patch  , & ! Output:  [real(r8) (:)
@@ -1047,9 +1116,7 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
          npp_to_nonmyc_nh4(:)        = 0.0_r8
          npp_to_fixation(:)          = 0.0_r8
          npp_to_retrans(:)           = 0.0_r8
-     
-  
-      
+
          unmetDemand              = .TRUE.
          plant_ndemand_pool_step(p,istp)   = plant_ndemand_pool(p)    * permyc(p,istp) 
          npp_remaining(p,istp)             = availc_pool(p)           * permyc(p,istp)
@@ -1057,32 +1124,42 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
   
          ! if (plant_ndemand_pool_step(p,istp) .gt. 0._r8) then   !
             !  plant_ndemand_pool_step > 0.0
-            
+         
             do j = 1, nlevdecomp
                tc_soisno(c,j)          = t_soisno(c,j)  -   tfrz
+
                if(pftcon%c3psn(patch%itype(p)).eq.1)then
                  fixer=1
                else
                  fixer=0
                endif
-               costNit(j,icostFix)     = fun_cost_fix(fixer,a_fix(ivt(p)),b_fix(ivt(p))&
-               ,c_fix(ivt(p)) ,big_cost,crootfr(p,j),s_fix(ivt(p)),tc_soisno(c,j))
+
+               select case (nfix_method)
+               case ('Houlton')
+                  costNit(j,icostFix) = fun_cost_fix(fixer, &
+                          a_fix(ivt(p)), b_fix(ivt(p)), c_fix(ivt(p)), &
+                          big_cost, crootfr(p,j), s_fix(ivt(p)), tc_soisno(c,j))
+               case ('Bytnerowicz')  ! no acclimation calculation
+                  costNit(j,icostFix) = fun_cost_fix_Bytnerowicz_noAcc(fixer, &
+                          params_inst%nfix_tmin(ivt(p)), params_inst%nfix_topt(ivt(p)), params_inst%nfix_tmax(ivt(p)), &
+                          big_cost,crootfr(p,j), s_fix(ivt(p)), tc_soisno(c,j))
+               case default
+                  errCode = ' ERROR: unknown nfix_method value: ' // nfix_method
+                  call endrun( msg=trim(errCode) // errMsg(sourcefile, __LINE__))
+               end select
+
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)
             
              
             !--------------------------------------------------------------------
-            !------------
             !         If passive uptake is insufficient, consider fixation,
             !          mycorrhizal 
             !         non-mycorrhizal, storage, and retranslocation.
             !--------------------------------------------------------------------
-            !------------
             !--------------------------------------------------------------------
-            !------------
             !          Costs of active uptake.
             !--------------------------------------------------------------------
-            !------------
             !------Mycorrhizal Uptake Cost-----------------!
             do j = 1,nlevdecomp
                rootc_dens_step            = rootc_dens(p,j) *  permyc(p,istp)
@@ -1451,11 +1528,14 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
       retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
-      ! Without matrix solution
       if(.not. use_matrixcn)then
          free_retransn_to_npool(p) = free_nretrans(p)/dt
-      ! With matrix solution (when it comes in)
       else
+         if(retransn(p) .gt. 0)then
+            free_retransn_to_npool(p) = retransn(p) * matrix_update_phn(p,iretransn_to_iout,free_nretrans(p)/dt/retransn(p),dt,cnveg_nitrogenflux_inst,.true.,.true.)
+         else
+            free_retransn_to_npool(p) = 0._r8
+         end if
       end if
       ! this is the N that comes off leaves. 
       Nretrans(p)               = retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -1611,6 +1691,44 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   end if    ! ends up with the fixer or non-fixer decision
   
   end function fun_cost_fix
+
+
+!=========================================================================================
+  real(r8) function fun_cost_fix_Bytnerowicz_noAcc(fixer,nfix_tmin,nfix_topt,nfix_tmax,big_cost,crootfr,s_fix, tc_soisno)
+
+! Description:
+!   Calculate the cost of fixing N by nodules.
+! Code Description:
+!   This code is written to CTSM5.1 by Will Wieder 11/17/2022, modified for CLM6 11/01/2024
+
+  implicit none
+!--------------------------------------------------------------------------
+! Function result.
+!--------------------------------------------------------------------------
+! real(r8) , intent(out) :: cost_of_n   !!! cost of fixing N (kgC/kgN)
+!--------------------------------------------------------------------------
+  integer,  intent(in) :: fixer     ! flag indicating if plant is a fixer
+                                    ! 1=yes, otherwise no.
+  real(r8), intent(in) :: nfix_tmin ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_topt ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: nfix_tmax ! As in Bytnerowicz et al. (2022)
+  real(r8), intent(in) :: big_cost  ! an arbitrary large cost (gC/gN)
+  real(r8), intent(in) :: crootfr   ! fraction of roots for carbon that are in this layer
+  real(r8), intent(in) :: s_fix     ! Inverts the temperature function for a cost function
+  real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
+
+  if (fixer == 1 .and. crootfr > 1.e-6_r8 .and. tc_soisno > nfix_tmin .and. tc_soisno < nfix_tmax) then
+     fun_cost_fix_Bytnerowicz_noAcc  = (-s_fix) / ( ((nfix_tmax-tc_soisno)/(nfix_tmax-nfix_topt))*&
+                                                  ( ((tc_soisno-nfix_tmin)/(nfix_topt-nfix_tmin))**&
+                                                    ((nfix_topt- nfix_tmin)/(nfix_tmax-nfix_topt)) ) )
+     fun_cost_fix_Bytnerowicz_noAcc = min(fun_cost_fix_Bytnerowicz_noAcc,big_cost)
+  else
+     fun_cost_fix_Bytnerowicz_noAcc = big_cost
+  end if    ! ends up with the fixer or non-fixer decision
+
+  end function fun_cost_fix_Bytnerowicz_noAcc
+!=========================================================================================
+
 !=========================================================================================
   real(r8) function fun_cost_active(sminn_layer,big_cost,kc_active,kn_active,rootc_dens,crootfr,smallValue)         
 

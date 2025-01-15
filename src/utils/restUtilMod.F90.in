@@ -19,6 +19,7 @@ module restUtilMod
   implicit none
   save
   private
+  integer, parameter, public :: excess_ice_issue = 1787
   ! save
   !
   !-----------------------------------------------------------------------
@@ -88,8 +89,14 @@ module restUtilMod
   end interface set_missing_vals_to_constant
   public :: set_missing_vals_to_constant
 
+  public :: RestartExcessIceIssue
+
   private :: missing_field_possibly_abort
   private :: write_interpinic_flag
+
+  ! Answer whether to call restartvar(), if necessary checking whether
+  ! a dimension exists in the restart file
+  public :: CallRestartvarDimOK
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -740,5 +747,78 @@ contains
 
   end subroutine write_interpinic_flag
 
+  !-----------------------------------------------------------------------
+  subroutine RestartExcessIceIssue(ncid, flag, excess_ice_on_restart)
+    !
+    ! !DESCRIPTION:
+    ! Is excess ice on the originating restart file? This is important to have
+    ! because the init_interp process copies the cold-start values to the
+    ! interpolated file if they aren't there, and we need to know if good values
+    ! exist on the originating restart file.
+    !
+    ! !USES:
+    use ncdio_pio                , only : file_desc_t
+    use IssueFixedMetadataHandler, only : read_issue_fixed_metadata
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid       ! netcdf id
+    character(len=*) , intent(in)    :: flag       ! 'read' or 'write'
+    logical, intent(out) :: excess_ice_on_restart  ! If excess ice is on the restart file
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: attribute_value
+
+
+    character(len=*), parameter :: subname = 'RestartExcessIceIssue'
+    !-----------------------------------------------------------------------
+
+    excess_ice_on_restart = .false.
+    ! The write of the issue metadata is in restFileMod::: restFile_write_issues_fixed
+    if (flag == 'read' )then
+       call read_issue_fixed_metadata( &
+            ncid = ncid, &
+            issue_num = excess_ice_issue, &
+            attribute_value = attribute_value)
+       if (attribute_value == 0) then
+          excess_ice_on_restart = .false.
+       else
+          excess_ice_on_restart = .true.
+       end if
+
+    end if
+
+  end subroutine RestartExcessIceIssue
+  !-----------------------------------------------------------------------
+  logical function CallRestartvarDimOK (ncid, flag, dimname)
+    !
+    ! !DESCRIPTION:
+    ! Answer whether to call restartvar(), if necessary checking whether
+    ! a dimension exists in the restart file
+    !
+    ! BACKWARDS_COMPATIBILITY(wjs/ssr, 2022-02-02)
+    ! Used in Restart(). Even though restartvar() can safely be called for a
+    ! non-existent variable, it gives an error for a non-existent dimension, so
+    ! check whether the dimension exists before trying to read. The need for this
+    ! function arose because we recently added the mxsowings and mxharvests
+    ! dimensions to the restart file.
+    !
+    ! !USES:
+    use ncdio_pio
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    character(len=*) , intent(in)    :: dimname
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if (flag == 'read') then
+       call check_dim(ncid, dimname, dimexist=CallRestartvarDimOK)
+    else
+       CallRestartvarDimOK = .true.
+    end if
+
+  end function CallRestartvarDimOK
 
 end module restUtilMod

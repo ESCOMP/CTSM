@@ -96,7 +96,7 @@ contains
   end subroutine CNPrecisionControlReadNML
 
   !-----------------------------------------------------------------------
-  subroutine CNPrecisionControl(bounds, num_soilp, filter_soilp, &
+  subroutine CNPrecisionControl(bounds, num_bgc_vegp, filter_bgc_vegp, &
        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        cnveg_nitrogenstate_inst)
     !
@@ -111,8 +111,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds          ! bounds
-    integer                        , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                        , intent(in)    :: num_bgc_vegp       ! number of bgc veg patches in filter
+    integer                        , intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
@@ -190,8 +190,8 @@ contains
          )
 
       ! patch loop
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
 
          ! initialize the patch-level C and N truncation terms
          pc(p) = 0._r8
@@ -205,7 +205,7 @@ contains
       ! the C component, but truncate C, C13, and N components
 
       ! leaf C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%leafc_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_patch(bounds%begp:bounds%endp), &
                                 pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
@@ -223,7 +223,7 @@ contains
 
 
       ! leaf storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%leafc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -238,7 +238,7 @@ contains
       end if
 
       ! leaf transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%leafc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%leafn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -256,7 +256,7 @@ contains
       ! EBK KO DML: For some reason frootc/frootn can go negative and allowing
       ! it to be negative is important for C4 crops (otherwise they die) Jun/3/2016
       if ( prec_control_for_froot ) then
-         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_patch(bounds%begp:bounds%endp),  &
+         call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%frootc_patch(bounds%begp:bounds%endp),  &
                                    ns%frootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, allowneg=.true.)
           if (use_c13) then
@@ -272,7 +272,7 @@ contains
       end if
 
       ! froot storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%frootc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%frootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -287,7 +287,7 @@ contains
       end if
 
       ! froot transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%frootc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%frootc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%frootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -304,7 +304,7 @@ contains
       if ( use_crop )then
          do k = 1, nrepr
             ! grain C and N
-            call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%reproductivec_patch(bounds%begp:bounds%endp,k), &
+            call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%reproductivec_patch(bounds%begp:bounds%endp,k), &
                  ns%reproductiven_patch(bounds%begp:bounds%endp,k), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                  num_truncatep, filter_truncatep, croponly=.true. )
             if (use_c13) then
@@ -319,7 +319,7 @@ contains
             end if
 
             ! grain storage C and N
-            call TruncateCandNStates( bounds, filter_soilp, num_soilp, &
+            call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, &
                  cs%reproductivec_storage_patch(bounds%begp:bounds%endp,k), &
                  ns%reproductiven_storage_patch(bounds%begp:bounds%endp,k), pc(bounds%begp:), pn(bounds%begp:), &
                  __LINE__, num_truncatep, filter_truncatep, croponly=.true. )
@@ -336,7 +336,7 @@ contains
             end if
 
             ! grain transfer C and N
-            call TruncateCandNStates( bounds, filter_soilp, num_soilp, &
+            call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, &
                  cs%reproductivec_xfer_patch(bounds%begp:bounds%endp,k), &
                  ns%reproductiven_xfer_patch(bounds%begp:bounds%endp,k), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                  num_truncatep, filter_truncatep, croponly=.true.)
@@ -352,7 +352,7 @@ contains
             end if
          end do
          ! grain transfer C and N
-         call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
+         call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%cropseedc_deficit_patch(bounds%begp:bounds%endp), &
                                    ns%cropseedn_deficit_patch(bounds%begp:bounds%endp), pc(bounds%begp:), &
                                    pn(bounds%begp:), __LINE__, &
                                    num_truncatep, filter_truncatep, &
@@ -371,7 +371,7 @@ contains
       end if
 
       ! livestem C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livestemc_patch(bounds%begp:bounds%endp), &
                                 ns%livestemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -386,7 +386,7 @@ contains
       end if
 
       ! livestem storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livestemc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%livestemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
 
@@ -401,7 +401,7 @@ contains
                                   __LINE__)
       end if
       ! livestem transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livestemc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livestemc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%livestemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -416,7 +416,7 @@ contains
       end if
 
       ! deadstem C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadstemc_patch(bounds%begp:bounds%endp), &
                                 ns%deadstemn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -430,7 +430,7 @@ contains
                                   __LINE__)
       end if
       ! deadstem storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadstemc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%deadstemn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -445,7 +445,7 @@ contains
       end if
 
       ! deadstem transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadstemc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%deadstemn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -460,7 +460,7 @@ contains
       end if
 
       ! livecroot C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livecrootc_patch(bounds%begp:bounds%endp), &
                                 ns%livecrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -475,7 +475,7 @@ contains
       end if
 
       ! livecroot storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livecrootc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%livecrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -490,7 +490,7 @@ contains
       end if
 
       ! livecroot transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%livecrootc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%livecrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
 
@@ -506,7 +506,7 @@ contains
       end if
 
       ! deadcroot C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadcrootc_patch(bounds%begp:bounds%endp), &
                                 ns%deadcrootn_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
                                 num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -521,7 +521,7 @@ contains
       end if
 
       ! deadcroot storage C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadcrootc_storage_patch(bounds%begp:bounds%endp), &
                                 ns%deadcrootn_storage_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -536,7 +536,7 @@ contains
       end if
 
       ! deadcroot transfer C and N
-      call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%deadcrootc_xfer_patch(bounds%begp:bounds%endp), &
                                 ns%deadcrootn_xfer_patch(bounds%begp:bounds%endp), pc(bounds%begp:), pn(bounds%begp:), &
                                 __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
@@ -551,7 +551,7 @@ contains
       end if
 
       ! gresp_storage (C only)
-      call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_storage_patch(bounds%begp:bounds%endp), &
+      call TruncateCStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%gresp_storage_patch(bounds%begp:bounds%endp), &
                             pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
          call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
@@ -565,7 +565,7 @@ contains
       end if
 
       ! gresp_xfer(c only)
-      call TruncateCStates( bounds, filter_soilp, num_soilp, cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
+      call TruncateCStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%gresp_xfer_patch(bounds%begp:bounds%endp), &
                             pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
          call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
@@ -579,7 +579,7 @@ contains
       end if
 
       ! cpool (C only)
-      call TruncateCStates( bounds, filter_soilp, num_soilp, cs%cpool_patch(bounds%begp:bounds%endp), &
+      call TruncateCStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%cpool_patch(bounds%begp:bounds%endp), &
                             pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep)
       if (use_c13) then
          call TruncateAdditional( bounds, num_truncatep, filter_truncatep, &
@@ -595,7 +595,7 @@ contains
       if ( use_crop )then
          ! xsmrpool (C only)
          ! xsmr is a pool to balance the budget and as such can be freely negative
-         call TruncateCStates( bounds, filter_soilp, num_soilp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
+         call TruncateCStates( bounds, filter_bgc_vegp, num_bgc_vegp, cs%xsmrpool_patch(bounds%begp:bounds%endp), &
                                 pc(bounds%begp:), __LINE__, num_truncatep, filter_truncatep, &
                                 allowneg=.true., croponly=.true. )
          if (use_c13) then
@@ -612,16 +612,16 @@ contains
       end if
 
       ! retransn (N only)
-      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%retransn_patch(bounds%begp:bounds%endp), pn(bounds%begp:), &
+      call TruncateNStates( bounds, filter_bgc_vegp, num_bgc_vegp, ns%retransn_patch(bounds%begp:bounds%endp), pn(bounds%begp:), &
                             __LINE__ )
 
       ! npool (N only)
-      call TruncateNStates( bounds, filter_soilp, num_soilp, ns%npool_patch(bounds%begp:bounds%endp), pn(bounds%begp:), &
+      call TruncateNStates( bounds, filter_bgc_vegp, num_bgc_vegp, ns%npool_patch(bounds%begp:bounds%endp), pn(bounds%begp:), &
                             __LINE__ )
 
       ! patch loop
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
 
          cs%ctrunc_patch(p) = cs%ctrunc_patch(p) + pc(p)
 
@@ -639,7 +639,7 @@ contains
 
  end subroutine CNPrecisionControl
 
- subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, &
+ subroutine TruncateCandNStates( bounds, filter_bgc_vegp, num_bgc_vegp, carbon_patch, nitrogen_patch, pc, pn, lineno, &
                                  num_truncatep, filter_truncatep, croponly, allowneg )
     !
     ! !DESCRIPTION:
@@ -657,8 +657,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type)              , intent(in)    :: bounds          ! bounds
-    integer                        , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                        , intent(in)    :: num_bgc_vegp       ! number of bgc veg patches in filter
+    integer                        , intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     real(r8), intent(inout) :: carbon_patch(bounds%begp:)
     real(r8), intent(inout) :: nitrogen_patch(bounds%begp:)
     real(r8), intent(inout) :: pc(bounds%begp:)
@@ -688,8 +688,8 @@ contains
     end if
 
     num_truncatep = 0
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
 
        if ( .not. lcroponly .or. (patch%itype(p) >= nc3crop) ) then
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
@@ -733,7 +733,7 @@ contains
     end do
  end subroutine TruncateCandNStates
 
- subroutine TruncateCStates( bounds, filter_soilp, num_soilp, carbon_patch, pc, lineno,  &
+ subroutine TruncateCStates( bounds, filter_bgc_vegp, num_bgc_vegp, carbon_patch, pc, lineno,  &
                              num_truncatep, filter_truncatep, croponly, allowneg )
     !
     ! !DESCRIPTION:
@@ -751,8 +751,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in)    :: bounds          ! bounds
-    integer          , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer          , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer          , intent(in)    :: num_bgc_vegp       ! number of bgc veg patches in filter
+    integer          , intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     real(r8)         , intent(inout) :: carbon_patch(bounds%begp:)
     real(r8)         , intent(inout) :: pc(bounds%begp:)
     integer          , intent(in)    :: lineno
@@ -780,8 +780,8 @@ contains
     end if
 
     num_truncatep = 0
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
 
        if ( .not. lcroponly .or. (patch%itype(p) >= nc3crop) ) then
           if ( .not. lallowneg .and. (carbon_patch(p) < cnegcrit) ) then
@@ -801,7 +801,7 @@ contains
     end do
  end subroutine TruncateCStates
 
- subroutine TruncateNStates( bounds, filter_soilp, num_soilp, nitrogen_patch, pn, lineno )
+ subroutine TruncateNStates( bounds, filter_bgc_vegp, num_bgc_vegp, nitrogen_patch, pn, lineno )
     !
     ! !DESCRIPTION:
     ! Truncate Nitrogen states. If a nitrogen state is too small truncate it to
@@ -816,8 +816,8 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type)              , intent(in)    :: bounds          ! bounds
-    integer                        , intent(in)    :: num_soilp       ! number of soil patchs in filter
-    integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                        , intent(in)    :: num_bgc_vegp       ! number of bgc veg patches in filter
+    integer                        , intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     real(r8), intent(inout) :: nitrogen_patch(bounds%begp:)
     real(r8), intent(inout) :: pn(bounds%begp:)
     integer,  intent(in)    :: lineno
@@ -826,8 +826,8 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(nitrogen_patch) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pn)             == (/bounds%endp/)), sourcefile, __LINE__)
-    do fp = 1,num_soilp
-       p = filter_soilp(fp)
+    do fp = 1,num_bgc_vegp
+       p = filter_bgc_vegp(fp)
        if ( nitrogen_patch(p) < nnegcrit ) then
           ! write(iulog,*) 'WARNING: Nitrogen patch negative = ', nitrogen_patch
           ! call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &

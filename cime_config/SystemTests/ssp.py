@@ -18,8 +18,8 @@ import shutil, glob, os
 
 logger = logging.getLogger(__name__)
 
-class SSP(SystemTestsCommon):
 
+class SSP(SystemTestsCommon):
     def __init__(self, case):
         """
         initialize an object interface to the SSP system test
@@ -48,10 +48,10 @@ class SSP(SystemTestsCommon):
         stop_n1 = int(stop_nf / 2)
         stop_n2 = stop_nf - stop_n1
 
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         # (1) do a spinup run in the main case in the cloned ref case
         #      (short term archiving is on)
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         os.chdir(clone_path)
         self._set_active_case(clone)
 
@@ -61,20 +61,24 @@ class SSP(SystemTestsCommon):
 
         with clone:
             clone.set_value("CLM_ACCELERATED_SPINUP", "on")
-            clone.set_value("STOP_N",stop_n1)
+            clone.set_value("STOP_N", stop_n1)
 
         dout_sr = clone.get_value("DOUT_S_ROOT")
         # No history files expected, set suffix=None to avoid compare error
         self._skip_pnl = False
         self.run_indv(suffix=None, st_archive=True)
 
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         # (2) do a hybrid, non-spinup run in orig_case
-        #-------------------------------------------------------------------
+        # -------------------------------------------------------------------
         os.chdir(caseroot)
         self._set_active_case(orig_case)
 
-        refdate = run_cmd_no_fail(r'ls -1dt {}/rest/*-00000* | head -1 | sed "s/-00000.*//" | sed "s/^.*rest\///"'.format(dout_sr))
+        refdate = run_cmd_no_fail(
+            r'ls -1dt {}/rest/*-00000* | head -1 | sed "s/-00000.*//" | sed "s/^.*rest\///"'.format(
+                dout_sr
+            )
+        )
         refsec = "00000"
 
         # obtain rpointer files and necessary restart files from short term archiving directory

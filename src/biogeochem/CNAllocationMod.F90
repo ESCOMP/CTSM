@@ -86,6 +86,7 @@ contains
     !
     ! !USES:
     use CNSharedParamsMod           , only : use_matrixcn
+    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
@@ -398,7 +399,9 @@ contains
              ! allocation coefficients should be irrelevant because crops have no
              ! live carbon pools
              aleaf(p) = 1._r8
+             aleafi(p) = 1._r8
              astem(p) = 0._r8
+             astemi(p) = 0._r8
              aroot(p) = 0._r8
              do k = 1, nrepr
                 arepr(p,k) = 0._r8
@@ -413,7 +416,9 @@ contains
           ! allocation coefficients should be irrelevant because crops have no
           ! live carbon pools
           aleaf(p) = 1._r8
+          aleafi(p) = 1._r8
           astem(p) = 0._r8
+          astemi(p) = 0._r8
           aroot(p) = 0._r8
           do k = 1, nrepr
              arepr(p,k) = 0._r8

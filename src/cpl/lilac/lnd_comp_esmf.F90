@@ -114,6 +114,8 @@ contains
     use ESMF              , only : ESMF_StateAdd
     use ESMF              , only : operator(==)
 
+    use shr_dust_emis_mod , only : shr_dust_emis_readnl
+
     ! input/output variables
     type(ESMF_GridComp)  :: comp         ! CLM gridded component
     type(ESMF_State)     :: import_state ! CLM import state
@@ -270,6 +272,9 @@ contains
     ! Fill in the value for model_meshfile in lnd_comp_shr used by the stream routines in share_esmf/
     model_meshfile = trim(lnd_mesh_filename)
 
+    ! Reading in the drv_flds_in namelist is required for dust emissions
+    call shr_dust_emis_readnl( mpicom, "drv_flds_in")
+
     !----------------------
     ! Obtain caseid and start type from attributes in import state
     !----------------------
@@ -369,7 +374,7 @@ contains
     !--------------------------------
     ! Finish initializing ctsm
     !--------------------------------
-    call initialize2(ni,nj)
+    call initialize2(ni,nj, currTime)
     call ESMF_LogWrite(subname//"ctsm initialize2 done...", ESMF_LOGMSG_INFO)
 
     !--------------------------------
@@ -703,25 +708,6 @@ contains
        call update_rad_dtime(doalb)
 
        !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
-
-       call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          rstwr = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          rstwr = .false.
-       endif
-       if (masterproc) then
-          write(iulog,*)' restart alarm is ',rstwr
-       end if
-
-       !--------------------------------
        ! Determine if time to stop
        !--------------------------------
 
@@ -738,6 +724,25 @@ contains
        endif
        if (masterproc) then
           write(iulog,*)' stop alarm is ',nlend
+       end if
+
+       !--------------------------------
+       ! Determine if time to write restart
+       !--------------------------------
+
+       call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          rstwr = .true.
+          call ESMF_AlarmRingerOff( alarm, rc=rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          rstwr = .false.
+       endif
+       if (masterproc) then
+          write(iulog,*)' restart alarm is ',rstwr
        end if
 
        !--------------------------------
