@@ -518,6 +518,11 @@ contains
                   errMsg(sourcefile, __LINE__))
           end if
 
+          if (z0param_method == 'Meier2022') then
+             call endrun(msg=' ERROR: Surface roughness parameterization Meier2022 is not compatible with FATES.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
+
        else
           
           ! These do default to false anyway, but this emphasizes they

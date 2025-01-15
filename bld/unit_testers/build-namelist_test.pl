@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3263;
+my $ntests = 3264;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1979;
+   $ntests += 1980;
 }
 plan( tests=>$ntests );
 
@@ -1183,6 +1183,10 @@ my %failtest = (
                                    },
      "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
+                                     phys=>"clm5_0",
+                                   },
+     "useMeierwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"z0param_method=Meier2022",
                                      phys=>"clm5_0",
                                    },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
