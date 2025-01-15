@@ -57,7 +57,7 @@ contains
     use clm_varpar           , only: clm_varpar_init
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
-    use clm_varctl           , only: fsurdat, version, z0param_method
+    use clm_varctl           , only: fsurdat, version
     use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb, surfrd_compat_check
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
@@ -108,10 +108,6 @@ contains
     ! number of patches per column.  We still use numcft from the surface
     ! file though...
     if(use_fates) then
-       if (z0param_method == 'Meier2022') then
-          call endrun(msg='ERROR clm_initializeMod: '//&
-               'FATES is not compatible with Meier2022')
-       end if
        call CLMFatesGlobals1(actual_numpft, actual_numcft, actual_maxsoil_patches)
     end if
 
