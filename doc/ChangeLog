@@ -1,4 +1,102 @@
 ===============================================================
+Tag name: ctsm5.3.021
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu 16 Jan 2025 03:01:32 PM MST
+One-line Summary: Standardize time metadata
+
+Purpose and description of changes
+----------------------------------
+ Standardizes a dimension name of output variable time_bounds from hist_interval to nbnd.
+ Standardizes attributes for time_bounds, mcdate, mcsec, mdcur, and mscur.`
+
+Contributors
+------------
+ Also Bill Sacks and Erik Kluzek.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1693
+ Fixes #2923
+ Resolves https://github.com/ESCOMP/MOSART/pull/66
+ Resolves https://github.com/ESCOMP/RTM/pull/35
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Same or similar changes needed in all three: clm, rtm, mosart.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ Just new metadata in history.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ mosart1.1.08
+ rtm1_0_85
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2052
+ https://github.com/ESCOMP/MOSART/pull/66
+ https://github.com/ESCOMP/RTM/pull/35
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.020
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+THIS IS ONLY A PLACEHOLDER
+===============================================================
+===============================================================
 Tag name: ctsm5.3.019
 Originator(s): olyson (Keith Oleson, UCAR/TSS)
 Date: Tue 14 Jan 2025 02:46:11 PM MST
@@ -10,7 +108,7 @@ Purpose and description of changes
 
 Contributors
 ------------
- Bill Sacks. In the final steps, also slevis.
+ Also Bill Sacks and, in the final steps, slevis.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
