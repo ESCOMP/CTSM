@@ -368,7 +368,7 @@ CONTAINS
                 endif
              endif   
 
-             if(wesveg<0 .or. wesveg>1 )then
+             if(wesveg<0 .or. wesveg>11 )then
                 call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &
                     msg='ERROR: No sensible Wesley vegetation type'//&
                     errMsg(sourcefile, __LINE__))
