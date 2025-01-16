@@ -187,6 +187,13 @@
     </phase>
   </test>
 
+  <test name="SSP_Ld4.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-ciso_rtmColdSSP">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2913</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
     <phase name="RUN">
       <status>FAIL</status>
