@@ -13,6 +13,7 @@ Step 3: Run a slow-mode spinup
 Step 4: matrix Spinup off
 """
 import shutil, glob, os, sys
+from datetime import datetime
 
 if __name__ == "__main__":
     CIMEROOT = os.environ.get("CIMEROOT")
@@ -225,6 +226,7 @@ class SSPMATRIXCN(SystemTestsCommon):
                 self.append_user_nl(clone_path, n)
 
             dout_sr = clone.get_value("DOUT_S_ROOT")
+            ninst = self._case.get_value("NINST")
 
             self._skip_pnl = False
             #
@@ -247,9 +249,17 @@ class SSPMATRIXCN(SystemTestsCommon):
                             os.makedirs(rundir)
                         os.symlink(item, linkfile)
 
-                    for item in glob.glob("{}/*rpointer*".format(rest_path)):
+                    # For a branch the cpl rpointer file needs to be handled
+                    if self.runtyp[n] is "branch":
+                    
+                        drvrest = "rpointer.cpl"
+                        if ninst > 1:
+                            drvrest += "_0001"
+                        drvrest += rest_time
+
+                        self._set_drv_restart_pointer(drvrest)
                         try:
-                            shutil.copy(item, rundir)
+                            shutil.copy(drvrest, rundir)
                         except shutil.SameFileError:
                             pass
             #
@@ -269,6 +279,7 @@ class SSPMATRIXCN(SystemTestsCommon):
             )
             refsec = "00000"
             rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
+            rest_time = "." + refdate + "-" + refsec
 
         #
         # Last step in original case
@@ -296,8 +307,19 @@ class SSPMATRIXCN(SystemTestsCommon):
                 os.remove(linkfile)
             os.symlink(item, linkfile)
 
-        for item in glob.glob("{}/*rpointer*".format(rest_path)):
-            shutil.copy(item, rundir)
+        # For a branch the cpl rpointer file needs to be handled
+        if self.runtyp[n] is "branch":
+                
+            drvrest = "rpointer.cpl"
+            if ninst > 1:
+                drvrest += "_0001"
+            drvrest += rest_time
+
+            self._set_drv_restart_pointer(drvrest)
+            try:
+                shutil.copy(os.path.join( rest_path, drvrest), rundir)
+            except shutil.SameFileError:
+                pass
 
         self.append_user_nl(clone_path, n)
         #
