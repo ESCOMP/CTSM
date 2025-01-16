@@ -694,25 +694,6 @@ contains
     call update_rad_dtime(doalb)
 
     !--------------------------------
-    ! Determine if time to write restart
-    !--------------------------------
-
-    call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       rstwr = .true.
-       call ESMF_AlarmRingerOff( alarm, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       rstwr = .false.
-    endif
-    if (masterproc) then
-       write(iulog,*)' restart alarm is ',rstwr
-    end if
-
-    !--------------------------------
     ! Determine if time to stop
     !--------------------------------
 
@@ -729,6 +710,25 @@ contains
     endif
     if (masterproc) then
        write(iulog,*)' stop alarm is ',nlend
+    end if
+
+    !--------------------------------
+    ! Determine if time to write restart
+    !--------------------------------
+
+    call ESMF_ClockGetAlarm(clock, alarmname='lilac_restart_alarm', alarm=alarm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       rstwr = .true.
+       call ESMF_AlarmRingerOff( alarm, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       rstwr = .false.
+    endif
+    if (masterproc) then
+       write(iulog,*)' restart alarm is ',rstwr
     end if
 
     !--------------------------------
