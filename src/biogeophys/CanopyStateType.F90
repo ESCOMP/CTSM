@@ -55,7 +55,6 @@ module CanopyStateType
      ! for non-ED/FATES this is the same as pftcon%dleaf()
      integer ,  pointer :: voc_pftindex_patch      (:)   ! FATES specific MEGAN pft index. 
                                                           ! for non-ED/FATES this is the same as pfton%dleaf()
-     real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
                                                           ! for non-ED/FATES this is the same as pftcon%dleaf()
      integer ,  pointer :: wesley_veg_index_patch   (:)   ! Wesley PFT index for FATES dry deposition calculations
      integer ,  pointer :: wesley_season_index_patch (:)   ! Season for dry deposition calculations
