@@ -81,7 +81,7 @@ class SSP(SystemTestsCommon):
         )
         refsec = "00000"
 
-        # obtain rpointer files and necessary restart files from short term archiving directory
+        # obtain necessary restart files from short term archiving directory
         rundir = self._case.get_value("RUNDIR")
 
         rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
@@ -96,11 +96,6 @@ class SSP(SystemTestsCommon):
             else:
                 os.symlink(item, link_name)
 
-        for item in glob.glob("{}/*rpointer*".format(rest_path)):
-            try:
-                shutil.copy(item, rundir)
-            except shutil.SameFileError:
-                pass
         self._case.set_value("CLM_ACCELERATED_SPINUP", "off")
         self._case.set_value("RUN_TYPE", "hybrid")
         self._case.set_value("GET_REFCASE", False)
