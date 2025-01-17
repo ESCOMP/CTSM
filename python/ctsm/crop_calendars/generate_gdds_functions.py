@@ -553,8 +553,8 @@ def import_and_process_1yr(
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
     patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
-    for p in patterns:
-        pattern = os.path.join(indir, p)
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
         if h2_files:
             break

@@ -430,3 +430,45 @@ def make_lon_increasing(xr_obj):
         raise RuntimeError("Unable to rearrange longitude axis so it's monotonically increasing")
 
     return xr_obj.roll(lon=shift, roll_coords=True)
+
+
+def is_inst_file(dsa):
+    """
+    Check whether Dataset or DataArray has time data from an "instantaneous file"
+    """
+    return "at end of" in dsa["time"].attrs["long_name"]
+
+
+def get_beg_inst_timestep_year(timestep):
+    """
+    Get year associated with the BEGINNING of a timestep in an
+    instantaneous file
+    """
+    year = timestep.year
+
+    is_jan1 = timestep.dayofyr == 1
+    is_midnight = timestep.hour == timestep.minute == timestep.second == 0
+    if is_jan1 and is_midnight:
+        year -= 1
+
+    return year
+
+
+def get_timestep_year(dsa, timestep):
+    """
+    Get the year associated with a timestep, with different handling
+    depending on whether the file is instantaneous
+    """
+    if is_inst_file(dsa):
+        year = get_beg_inst_timestep_year(timestep)
+    else:
+        year = timestep.year
+    return year
+
+
+def get_integer_years(dsa):
+    """
+    Convert time axis to numpy array of integer years
+    """
+    out_array = [get_timestep_year(dsa, t) for t in dsa["time"].values]
+    return out_array
