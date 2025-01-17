@@ -1,4 +1,59 @@
 ===============================================================
+Tag name: ctsm5.3.020
+Originator(s): samrabin (Sam Rabin, UCAR/TSS, samrabin@ucar.edu)
+Date: Fri Jan 17 12:21:24 MST 2025
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Merging b4b-dev and ctsm5.3.019. Includes some improvements to test list / expected failures.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New test suite: Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2938: ctsm5.3.020: Merge b4b-dev 2025-01-16 (https://github.com/ESCOMP/CTSM/pull/2938)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.019
 Originator(s): olyson (Keith Oleson, UCAR/TSS)
 Date: Tue 14 Jan 2025 02:46:11 PM MST
