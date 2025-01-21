@@ -126,28 +126,7 @@
       <issue>#2310</issue>
     </phase>
   </test>
-  
-  <test name="ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2914</issue>
-    </phase>
-  </test>
-  
-  <test name="ERS_P128x1_Ld765.f10_f10_mg37.I2000Clm60Fates.derecho_intel.clm-FatesColdNoComp">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2914</issue>
-    </phase>
-  </test>
-  
-  <test name="LILACSMOKE_D_Ld2.f10_f10_mg37.I2000Ctsm50NwpSpAsRs.derecho_intel.clm-lilac">
-    <phase name="MODEL_BUILD">
-      <status>FAIL</status>
-      <issue>#2905</issue>
-    </phase>
-  </test>
-  
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.derecho_gnu.clm-NEON-MOAB--clm-PRISM">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -242,23 +221,12 @@
   </test>
 
   <test name="ERS_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
-    <phase name="CREATE_NEWCASE">
-      <status>FAIL</status>
-      <issue>#2454</issue>
-    </phase>
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#2325</issue>
     </phase>
   </test>
 
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
-    <phase name="CREATE_NEWCASE">
-      <status>FAIL</status>
-      <issue>#2454</issue>
-    </phase>
-  </test>
-  
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdST3">
     <phase name="RUN">
       <status>FAIL</status>
