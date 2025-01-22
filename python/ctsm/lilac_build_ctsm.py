@@ -830,7 +830,7 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
 
     shutil.copyfile(
         src=os.path.join(
-            path_to_ctsm_root(), "cime_config", "usermods_dirs", "lilac", "user_nl_ctsm"
+            path_to_ctsm_root(), "cime_config", "usermods_dirs", "clm", "lilac", "user_nl_ctsm"
         ),
         dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, "user_nl_ctsm"),
     )
