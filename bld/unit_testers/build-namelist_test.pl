@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3229;
+my $ntests = 3263;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2437;
+   $ntests += 1979;
 }
 plan( tests=>$ntests );
 
@@ -368,7 +368,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $neondir      = "../../cime_config/usermods_dirs/NEON";
+my $neondir      = "../../cime_config/usermods_dirs/clm/NEON";
 foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO",
                    "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA",
                    "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP",
@@ -421,7 +421,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $plumdir      = "../../cime_config/usermods_dirs/PLUMBER2";
+my $plumdir      = "../../cime_config/usermods_dirs/clm/PLUMBER2";
 foreach my $site ( 
     "AR-SLu",  "AU-Emr",  "AU-TTE",  "CA-NS1",  "CA-SF3",  "CN-HaM",  "DE-Obe",  "ES-ES1",  "FR-Gri",  "IE-Dri",  "IT-LMa",  "IT-SRo",  "RU-Fyo",  "US-Aud",  "US-Ho1",  "US-Ne2",  "US-Syv",  "ZM-Mon",
     "AT-Neu",  "AU-Gin",  "AU-Tum",  "CA-NS2",  "CH-Cha",  "CN-Qia",  "DE-Seh",  "ES-ES2",  "FR-Hes",  "IT-Amp",  "IT-Mal",  "JP-SMF",  "RU-Zot",  "US-Bar",  "US-KS2",  "US-Ne3",  "US-Ton",
@@ -473,7 +473,7 @@ foreach my $site (
 print "\n===============================================================================\n";
 print "Test some CAM specific setups for special grids \n";
 print "=================================================================================\n";
-foreach my $phys ( "clm4_5", "clm5_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys";
    &make_config_cache($phys);
    foreach my $options (
@@ -485,7 +485,7 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
-                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
+                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_GSWP3v1",
                       "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                      ) {
@@ -906,7 +906,7 @@ my %failtest = (
                                      namelst=>"h2osfcflag=0",
                                      phys=>"clm5_0",
                                    },
-     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3  -envxml_dir .",
+     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3v1  -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm4_5",
                                    },
@@ -943,6 +943,10 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "driver is invalid"         =>{ options=>"-driver invalid_name -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm6_0",
                                    },
@@ -1265,10 +1269,6 @@ my %failtest = (
                                      namelst=>"use_luna=.true., lnc_opt=.true.",
                                      phys=>"clm5_0",
                                    },
-     "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.false., jmaxb1=1.0",
-                                     phys=>"clm5_0",
-                                   },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1348,10 +1348,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
-                                     namelst=>"finidat = 'testfile.nc'",
-                                     phys=>"clm5_0",
-                                   },
      "bgcspin_w_suplnitro"       =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
                                      namelst=>"suplnitro='ALL'",
                                      phys=>"clm5_0",
@@ -1430,6 +1426,56 @@ foreach my $key ( keys(%warntest) ) {
    is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
+}
+
+print "\n===============================================================================\n";
+print "Ensure cold starts with finidat are handled properly \n";
+print "=================================================================================\n";
+
+my %coldwfinidat = (
+     "bgc"   => { options=>"-envxml_dir . -clm_start_type cold",
+                  namelst=>"finidat = 'testfile.nc'",
+                  phys=>"clm5_0",
+                  expected_fail=>1,
+                },
+     "fates" => { options=>"-envxml_dir . -clm_start_type cold -bgc fates -no-megan",
+                  namelst=>"finidat = 'testfile.nc', use_fates = .true.",
+                  phys=>"clm5_0",
+                  expected_fail=>0,
+                },
+);
+my $finidat;
+foreach my $key ( keys(%coldwfinidat) ) {
+   print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "options", "namelst", "expected_fail" ) {
+      if ( not exists $coldwfinidat{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for coldwfinidat $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
+   &make_config_cache($coldwfinidat{$key}{"phys"});
+   my $options  = $coldwfinidat{$key}{"options"};
+   my $namelist = $coldwfinidat{$key}{"namelst"};
+   my $expected_fail = $coldwfinidat{$key}{"expected_fail"};
+   my %settings;
+   &make_env_run( %settings );
+
+   # Should fail if expected to, pass otherwise
+   eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   is( $? eq 0, $expected_fail eq 0, "coldwfinidat $key run");
+
+   if ( $expected_fail ) {
+      # Now run with -ignore_warnings and make sure it still doesn't work
+      $options .= " -ignore_warnings";
+      eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+      isnt( $?, 0, "coldwfinidat $key run -ignore_warnings" );
+   } else {
+      # Check that finidat was correctly set
+      $finidat = `grep finidat lnd_in`;
+      ok ( $finidat =~ "testfile.nc", "coldwfinidat $key finidat? $finidat" );
+   }
 }
 
 #

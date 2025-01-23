@@ -510,13 +510,10 @@ For running "I" cases there are several other noteworthy configuration items tha
    CCSM_BGC
    DATM_MODE
    DATM_PRESAERO
-   DATM_CLMNCEP_YR_ALIGN
-   DATM_CLMNCEP_YR_START
-   DATM_CLMNCEP_YR_END
-   DATM_CPL_CASE
-   DATM_CPL_YR_ALIGN
-   DATM_CPL_YR_START
-   DATM_CPL_YR_END
+   DATM_YR_ALIGN
+   DATM_YR_START
+   DATM_YR_END
+   DATM_CPLHIST_CASE
 
 ``CCSM_CO2_PPMV``
    Sets the mixing ratio of CO2 in parts per million by volume for ALL CESM components to use. Note that most compsets already set this value to something reasonable. Also note that some compsets may tell the atmosphere model to override this value with either historic or ramped values. If the ``CCSM_BGC`` variable is set to something other than "none" the atmosphere model will determine CO2, and CLM will listen and use what the atmosphere sends it. On the CLM side the namelist item ``co2_type`` tells CLM to use the value sent from the atmosphere rather than a value set on it's own namelist.
@@ -569,26 +566,17 @@ For running "I" cases there are several other noteworthy configuration items tha
 
   ``pt1_pt1`` = read in single-point or regional datasets
 
-DATM_CLMNCEP_YR_START
-  ``DATM_CLMNCEP_YR_START`` sets the beginning year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` modes.
+DATM_YR_START
+  ``DATM_YR_START`` sets the beginning year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` or ``CPLHISTForcing`` modes.
 
-DATM_CLMNCEP_YR_END
-  ``DATM_CLMNCEP_YR_END`` sets the ending year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` modes.
+DATM_YR_END
+  ``DATM_YR_END`` sets the ending year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` or ``CPLHISTForcing`` modes.
 
-DATM_CLMNCEP_YR_ALIGN
-  ``DATM_CLMNCEP_YR_START`` and ``DATM_CLMNCEP_YR_END`` determine the range of years to cycle the atmospheric data over, and ``DATM_CLMNCEP_YR_ALIGN`` determines which year in that range of years the simulation will start with.
+DATM_YR_ALIGN
+  ``DATM_YR_START`` and ``DATM_YR_END`` determine the range of years to cycle the atmospheric data over, and ``DATM_YR_ALIGN`` determines which year in that range of years the simulation will start with.
 
-DATM_CPL_CASE
-  ``DATM_CPL_CASE`` sets the casename to use for the ``CPLHISTForcing`` mode.
-
-DATM_CPL_YR_START
-  ``DATM_CPL_YR_START`` sets the beginning year to cycle the atmospheric data over for the ``CPLHISTForcing`` mode.
-
-DATM_CPL_YR_END
-  ``DATM_CPL_YR_END`` sets the ending year to cycle the atmospheric data over for the ``CPLHISTForcing`` mode.
-
-DATM_CPL_YR_ALIGN
-  ``DATM_CPL_YR_START`` and ``DATM_CPL_YR_END`` determine the range of years to cycle the atmospheric data over, and ``DATM_CPL_YR_ALIGN`` determines which year in that range of years the simulation will start with.
+DATM_CPLHIST_CASE
+  ``DATM_CPLHIST_CASE`` sets the casename to use for the ``CPLHISTForcing`` mode.
 
 -----------------------------
 Downloading DATM Forcing Data
@@ -596,9 +584,9 @@ Downloading DATM Forcing Data
 
 In Chapter One of the `CESM User's Guide <link-to-CESM-UG>`_ there is a section on "Downloading input data". The normal process of setting up cases will use the "scripts/ccsm_utils/Tools/check_input_data" script to retrieve data from the CESM subversion inputdata repository. This is true for the standard `CLM_QIAN` forcing as well.
 
-The `CLMCRUNCEP` data is uploaded into the subversion inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). Because of its size you may also need to download it onto a separate disk space. We have done that on cheyenne for example where it resides in ``$ENV{CESMROOT}/lmwg`` while the rest of the input data resides in ``$ENV{CESMDATAROOT}/inputdata``. The data is also already available on: janus, franklin, and hopper. If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_CPL_YR_START`` and ``DATM_CPL_YR_END`` in say 20 year sections over 1901 to 2010, and then use ``check_input_data`` to export the data.
+The `CLMCRUNCEP` data is uploaded into the subversion inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). Because of its size you may also need to download it onto a separate disk space. We have done that on derecho for example where it resides in ``$ENV{CESMROOT}/lmwg`` while the rest of the input data resides in ``$ENV{CESMDATAROOT}/inputdata``. The data is also already available on: janus, franklin, and hopper. If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_YR_START`` and ``DATM_YR_END`` in say 20 year sections over 1901 to 2010, and then use ``check_input_data`` to export the data.
 
-The ``CPLHISTForcing`` DATM forcing data is unique -- because it is large compared to the rest of the input data, and we only have a disk copy on cheyenne. The DATM assumes the path for the previous NCAR machine cheyenne of ``/glade/p/cesm/shared_outputdata/cases/ccsm4/$DATM_CPLHIST_CASE`` for the data. So you will need to change this path in order to run on any other machine. You can download the data itself from NCAR HPSS from ``/CCSM/csm/$DATM_CPLHIST_CASE``.
+The ``CPLHISTForcing`` DATM forcing data is unique -- because it is large compared to the rest of the input data, and we only have a disk copy on derecho. The DATM assumes the path for derecho of ``/glade/p/cesm/shared_outputdata/cases/ccsm4/$DATM_CPLHIST_CASE`` for the data. So you will need to change this path in order to run on any other machine.
 
 --------------------------------------
 Customizing via the build script files
