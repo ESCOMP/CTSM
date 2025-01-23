@@ -1,5 +1,6 @@
 """
-This module contains the Plumber2Site class and class functions which are used in run_tower.py
+This module contains the Plumber2Site class and class functions that extend the tower_site class for
+things that are specific just for PLUMBER2 sites.
 """
 
 # Import libraries
