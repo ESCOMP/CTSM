@@ -5,6 +5,8 @@ copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import is_instantaneous
+
 
 def define_pftlist():
     """
@@ -432,13 +434,6 @@ def make_lon_increasing(xr_obj):
     return xr_obj.roll(lon=shift, roll_coords=True)
 
 
-def is_inst_file(dsa):
-    """
-    Check whether Dataset or DataArray has time data from an "instantaneous file"
-    """
-    return "at end of" in dsa["time"].attrs["long_name"]
-
-
 def get_beg_inst_timestep_year(timestep):
     """
     Get year associated with the BEGINNING of a timestep in an
@@ -459,7 +454,7 @@ def get_timestep_year(dsa, timestep):
     Get the year associated with a timestep, with different handling
     depending on whether the file is instantaneous
     """
-    if is_inst_file(dsa):
+    if is_instantaneous(dsa["time"]):
         year = get_beg_inst_timestep_year(timestep)
     else:
         year = timestep.year
