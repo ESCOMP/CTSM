@@ -12,6 +12,7 @@ from ctsm.crop_calendars.convert_axis_time2gs import convert_axis_time2gs
 from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 from ctsm.crop_calendars.import_ds import import_ds
+from ctsm.utils import is_instantaneous
 
 MISSING_RX_GDD_VAL = -1
 
@@ -31,7 +32,12 @@ def check_and_trim_years(year_1, year_n, ds_in):
 
     # Remove years outside range of interest
     ### Include an extra year at the end to finish out final seasons.
-    ds_in = utils.safer_timeslice(ds_in, slice(f"{year_1+1}-01-01", f"{year_n+2}-01-01"))
+    slice_yr_1 = year_1
+    slice_yr_n = year_n + 1
+    if is_instantaneous(ds_in["time"]):
+        slice_yr_1 += 1
+        slice_yr_n += 1
+    ds_in = utils.safer_timeslice(ds_in, slice(f"{slice_yr_1}-01-01", f"{slice_yr_n}-01-01"))
 
     # Make sure you have the expected number of timesteps (including extra year)
     n_years_expected = year_n - year_1 + 2
@@ -454,9 +460,7 @@ def convert_time_to_int_year(filename, this_ds, this_ds_gs):
         # time_bounds saved. After that PR (and before the segregation of instantaneous and other
         # variables onto separate files), files with an instantaneous variable first in their list
         # do not get time_bounds saved.
-        this_ds_gs = this_ds_gs.assign_coords(
-            {"cftime": this_ds["time_bounds"].isel({"hist_interval": 0})}
-        )
+        this_ds_gs = this_ds_gs.assign_coords({"cftime": this_ds["time_bounds"].isel({"nbnd": 0})})
         this_ds_gs = this_ds_gs.assign_coords(
             {"time": [t.year for t in this_ds_gs["cftime"].values]}
         )

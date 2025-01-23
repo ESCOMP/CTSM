@@ -23,7 +23,7 @@ def compute_derived_vars(ds_in, var):
         and "HDATES" in ds_in
         and ds_in.HDATES.dims == ("time", "mxharvests", "patch")
     ):
-        year_list = np.array([np.float32(x.year - 1) for x in ds_in.time.values])
+        year_list = np.array([np.float32(x.year) for x in ds_in.time.values])
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),
