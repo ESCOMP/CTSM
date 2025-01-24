@@ -319,7 +319,8 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     """
     ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31"))
     for some reason. This function tries to fall back to slicing by integers. It should work with
-    both Datasets and DataArrays.
+    both Datasets and DataArrays. NOTE: This isn't a problem for more modern Python environments.
+    Even npl-2022b can use the straightforward slicing in the "try" block.
     """
     try:
         ds_in = ds_in.sel({time_var: time_slice})
