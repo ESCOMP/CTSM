@@ -35,7 +35,7 @@ module SurfaceAlbedoMod
   public :: SurfaceAlbedo_readnl
   public :: SurfaceAlbedoInitTimeConst
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
-  public :: DownscaleGeogZenithAngle
+  public :: UpdateZenithAngles
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -228,12 +228,13 @@ contains
 
   ! -----------------------------------------------------------------------
   
-  subroutine UpdateZenithAngles(bounds,nc, surfalb_inst, nextsw_cday, declinp1)
+  subroutine UpdateZenithAngles(bounds, surfalb_inst, nextsw_cday, declinp1)
 
     ! Incorporate surface slopes to generate column level zenith angles
     
     use clm_varctl          , only : downscale_hillslope_meteorology
-
+    use shr_orb_mod
+    
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
     type(surfalb_type)     , intent(inout)         :: surfalb_inst
     real(r8)               , intent(in)            :: nextsw_cday        ! calendar day at Greenwich (1.00, ..., days/year)
@@ -266,6 +267,8 @@ contains
          else
             coszen_col(c) = coszen_grc(g)
          endif
+
+         print*,"COSZEN_COL:",c,coszen_col(c)
          
       end do
 
@@ -307,7 +310,7 @@ contains
     ! only computed over active points.
     !
     ! !USES:
-    use shr_orb_mod
+    !use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
     use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
@@ -478,7 +481,9 @@ contains
           fabi_sha_z    =>    surfalb_inst%fabi_sha_z_patch         & ! Output:  [real(r8) (:,:) ]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
           )
 
-   
+
+     print*,"PEFORMING ALBEDO"
+     
     ! Apply column level zenith angles to the patch level
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)

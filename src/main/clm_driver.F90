@@ -52,6 +52,7 @@ module clm_driver
   use AerosolMod             , only : AerosolMasses
   use SnowSnicarMod          , only : SnowAge_grain
   use SurfaceAlbedoMod       , only : SurfaceAlbedo
+  use SurfaceAlbedoMod       , only : UpdateZenithAngles
   use UrbanAlbedoMod         , only : UrbanAlbedo
   !
   use SurfaceRadiationMod    , only : SurfaceRadiation, CanopySunShadeFracs
@@ -1225,7 +1226,7 @@ contains
        ! ============================================================================
 
 
-       call UpdateZenithAngles(bounds_clump,surfalb_inst)
+       call UpdateZenithAngles(bounds_clump,surfalb_inst, nextsw_cday, declinp1)
        
        if (doalb ) then
 

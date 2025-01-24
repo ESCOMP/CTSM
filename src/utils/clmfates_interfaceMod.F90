@@ -2813,9 +2813,9 @@ module CLMFatesInterfaceMod
     end do
 
     call FatesNormalizedCanopyRadiation( &
-            this%fates(nc)%sites(s), &
-            this%fates(nc)%bc_in(s),  &
-            this%fates(nc)%bc_out(s))
+            this%fates(nc)%sites, &
+            this%fates(nc)%bc_in,  &
+            this%fates(nc)%bc_out)
 
 
     ! Pass FATES BC's back to HLM
@@ -2826,7 +2826,7 @@ module CLMFatesInterfaceMod
        
        do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
           
-          p = ifp+col_pp%pfti(c)
+          p = ifp+col%patchi(c)
 
           albd(p,:) = this%fates(nc)%bc_out(s)%albd_parb(ifp,:)
           albi(p,:) = this%fates(nc)%bc_out(s)%albi_parb(ifp,:)
