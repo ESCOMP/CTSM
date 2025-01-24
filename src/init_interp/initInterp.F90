@@ -951,7 +951,7 @@ contains
       real(r8), pointer  , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-      logical            , intent(in)    :: allow_scm ! if .true., allow scm data slice
+      logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
 
       ! local
       character(16)                      :: readflag
@@ -977,7 +977,7 @@ contains
       integer, pointer   , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-      logical            , intent(in)    :: allow_scm ! if .true., allow scm data slice
+      logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
 
       ! local
       character(16)                      :: readflag
