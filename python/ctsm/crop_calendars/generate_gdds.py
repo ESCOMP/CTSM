@@ -145,6 +145,7 @@ def main(
         else:
             mxmats = None
 
+        h1_instantaneous = None
         for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
             if this_yr <= pickle_year:
                 continue
@@ -161,6 +162,7 @@ def main(
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
+                h1_instantaneous,
             ) = gddfn.import_and_process_1yr(
                 first_season,
                 last_season,
@@ -181,6 +183,7 @@ def main(
                 skip_crops,
                 outdir_figs,
                 logger,
+                h1_instantaneous,
             )
 
             gddfn.log(logger, f"   Saving pickle file ({pickle_file})...")
