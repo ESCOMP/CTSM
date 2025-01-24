@@ -324,7 +324,7 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     """
     try:
         ds_in = ds_in.sel({time_var: time_slice})
-    except:  # pylint: disable=bare-except
+    except Exception as this_exception:  # pylint: disable=broad-except
         # If the issue might have been slicing using strings, try to fall back to integer slicing
         can_try_integer_slicing = (
             isinstance(time_slice.start, str)
@@ -340,15 +340,15 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
         if can_try_integer_slicing:
             fileyears = np.array([x.year for x in ds_in.time.values])
             if len(np.unique(fileyears)) != len(fileyears):
-                print("Could not fall back to integer slicing of years: Time axis not annual")
-                raise
+                msg = "Could not fall back to integer slicing of years: Time axis not annual"
+                raise RuntimeError(msg) from this_exception
             y_start = int(time_slice.start.split("-")[0])
             y_stop = int(time_slice.stop.split("-")[0])
             where_in_timeslice = np.where((fileyears >= y_start) & (fileyears <= y_stop))[0]
             ds_in = ds_in.isel({time_var: where_in_timeslice})
         else:
-            print(f"Could not fall back to integer slicing for time_slice {time_slice}")
-            raise
+            msg = f"Could not fall back to integer slicing for time_slice {time_slice}"
+            raise RuntimeError(msg) from this_exception
 
     return ds_in
 
