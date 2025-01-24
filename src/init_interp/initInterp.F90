@@ -951,7 +951,7 @@ contains
       real(r8), pointer  , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-      logical            , intent(in)    :: allow_scm ! if .true., use the 'glob' form of ncd_io
+      logical            , intent(in)    :: allow_scm ! if .true., allow scm data slice
 
       ! local
       character(16)                      :: readflag
