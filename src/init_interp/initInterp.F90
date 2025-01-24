@@ -959,6 +959,10 @@ contains
       if (allow_scm) then
          readflag='read'
       else
+         ! Flag to distinguish the times during IC interpolation when running in single column mode but
+         ! need to read the full data grid. Normally single_column means
+         ! "read the data grid and extract the closest column" but
+         ! during IC interpolation you need to read in the full grid to be interpolated regardless of the single_column flag.
          readflag='read_noscm'
       endif
 
@@ -985,6 +989,10 @@ contains
       if (allow_scm) then
          readflag='read'
       else
+         ! Flag to distinguish the times during IC interpolation when running in single column mode but
+         ! need to read the full data grid. Normally single_column means
+         ! "read the data grid and extract the closest column" but
+         ! during IC interpolation you need to read in the full grid to be interpolated regardless of the single_column flag.
          readflag='read_noscm'
       endif
 
