@@ -37,7 +37,7 @@ def check_and_trim_years(year_1, year_n, ds_in):
     if is_instantaneous(ds_in["time"]):
         slice_yr_1 += 1
         slice_yr_n += 1
-    ds_in = utils.safer_timeslice(ds_in, slice(f"{slice_yr_1}-01-01", f"{slice_yr_n}-01-01"))
+    ds_in = utils.safer_timeslice(ds_in, slice(f"{slice_yr_1}-01-01", f"{slice_yr_n}-12-31"))
 
     # Make sure you have the expected number of timesteps (including extra year)
     n_years_expected = year_n - year_1 + 2
