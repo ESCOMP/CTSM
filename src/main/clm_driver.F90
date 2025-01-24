@@ -1224,7 +1224,10 @@ contains
        ! Determine albedos for next time step
        ! ============================================================================
 
-       if (doalb) then
+
+       call UpdateZenithAngles(bounds_clump,surfalb_inst)
+       
+       if (doalb ) then
 
           ! Albedos for non-urban columns
           call t_startf('surfalb')
