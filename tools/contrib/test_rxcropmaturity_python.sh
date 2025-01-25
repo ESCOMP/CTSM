@@ -1,25 +1,41 @@
 #!/usr/bin/env bash
 set -e
 
+# This script is designed to easily test updated versions of the code in python/ctsm/crop_calendars/
+# on outputs of the rxcropmaturity test suite. For RXCROPMATURITYSKIPGEN tests (i.e., skipping the
+# GDD-generating step, it will rerun check_rxboth_run.py. It will also do this for RXCROPMATURITY
+# tests whose call of generate_gdds.py completed successfully. For RXCROPMATURITY tests where that
+# failed, it will retry the generate_gdds.py call. Tests are performed with both the ctsm_pylib
+# and npl conda environments.
+#
+# Note that the python/ctsm/crop_calendars/ this test uses will be in the same CTSM directory as
+# you used to start the tests.
+#
+# The script takes one positional input:
+#     suite_dir: The directory where your test suite was performed. E.g., $SCRATCH/tests_0123-142858de.
+#
+# Output will look something like this (✅ for success, 🔴 for failure):
+#     ctsm_pylib
+#        RXCROPMATURITYINST_Lm61.f10_f10_mg37.IHist check_rxboth_run ✅
+#        RXCROPMATURITY_Lm61.f10_f10_mg37.IHist generate_gdds 🔴
+#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
+#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHist check_rxboth_run 🔴
+#     npl
+#        RXCROPMATURITYINST_Lm61.f10_f10_mg37.IHist check_rxboth_run ✅
+#        RXCROPMATURITY_Lm61.f10_f10_mg37.IHist generate_gdds ✅
+#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
+#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
+#
+# Log files for each will be saved as TEST_SHORTNAME.CONDA_ENV.log.
+
 # Process input arguments
 suite_dir="$1"
 if [[ ! -d "${suite_dir}" ]]; then
     echo "You must provide suite_dir" >&2
     exit 1
 fi
-shift
-script="$1"
-if [[ ! -f "${script}" ]]; then
-    echo "You must provide script path" >&2
-    exit 1
-fi
-shift
-sdates_file="$1"
-if [[ ! -f "${script}" ]]; then
-    echo "You must provide sdates_file" >&2
-    exit 1
-fi
 
+# Where do we save log files?
 log_dir="$PWD"
 
 cd "${suite_dir}"
