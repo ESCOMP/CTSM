@@ -5,6 +5,8 @@ copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import is_instantaneous
+
 
 def define_pftlist():
     """
@@ -317,11 +319,12 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     """
     ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31"))
     for some reason. This function tries to fall back to slicing by integers. It should work with
-    both Datasets and DataArrays.
+    both Datasets and DataArrays. NOTE: This isn't a problem for more modern Python environments.
+    Even npl-2022b can use the straightforward slicing in the "try" block.
     """
     try:
         ds_in = ds_in.sel({time_var: time_slice})
-    except:  # pylint: disable=bare-except
+    except Exception as this_exception:  # pylint: disable=broad-except
         # If the issue might have been slicing using strings, try to fall back to integer slicing
         can_try_integer_slicing = (
             isinstance(time_slice.start, str)
@@ -337,15 +340,15 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
         if can_try_integer_slicing:
             fileyears = np.array([x.year for x in ds_in.time.values])
             if len(np.unique(fileyears)) != len(fileyears):
-                print("Could not fall back to integer slicing of years: Time axis not annual")
-                raise
+                msg = "Could not fall back to integer slicing of years: Time axis not annual"
+                raise RuntimeError(msg) from this_exception
             y_start = int(time_slice.start.split("-")[0])
             y_stop = int(time_slice.stop.split("-")[0])
             where_in_timeslice = np.where((fileyears >= y_start) & (fileyears <= y_stop))[0]
             ds_in = ds_in.isel({time_var: where_in_timeslice})
         else:
-            print(f"Could not fall back to integer slicing for time_slice {time_slice}")
-            raise
+            msg = f"Could not fall back to integer slicing for time_slice {time_slice}"
+            raise RuntimeError(msg) from this_exception
 
     return ds_in
 
@@ -432,13 +435,6 @@ def make_lon_increasing(xr_obj):
     return xr_obj.roll(lon=shift, roll_coords=True)
 
 
-def is_inst_file(dsa):
-    """
-    Check whether Dataset or DataArray has time data from an "instantaneous file"
-    """
-    return "at end of" in dsa["time"].attrs["long_name"]
-
-
 def get_beg_inst_timestep_year(timestep):
     """
     Get year associated with the BEGINNING of a timestep in an
@@ -459,7 +455,7 @@ def get_timestep_year(dsa, timestep):
     Get the year associated with a timestep, with different handling
     depending on whether the file is instantaneous
     """
-    if is_inst_file(dsa):
+    if is_instantaneous(dsa["time"]):
         year = get_beg_inst_timestep_year(timestep)
     else:
         year = timestep.year
