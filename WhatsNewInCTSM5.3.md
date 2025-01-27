@@ -4,26 +4,26 @@
 
 ### New features
 
-* `manage_externals` replaced by [`git-fleximod`](https://github.com/ESMCI/git-fleximod/blob/main/README.md) ([PR \#2559](https://github.com/ESCOMP/CTSM/pull/2559))  
-* No longer runs the 0th time step in first segment of startup and hybrid runs. (Branch and continue runs never had this 0th time step.) ([PR \#2084](https://github.com/ESCOMP/CTSM/pull/2084))  
-* CN Matrix method to speed up spinup for the BGC model. ([PR \#640](https://github.com/ESCOMP/CTSM/pull/640); [Liao et al. 2023](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023MS003625)).  
-* New `Leung_2023` dust emissions ([PR \#1897](https://github.com/ESCOMP/CTSM/pull/1897); [Leung et al 2023](https://doi.org/10.5194/acp-23-6487-2023), [Leung et al. 2024](https://doi.org/10.5194/acp-24-2287-2024))  
-* Explicit air conditioning for the urban model ([PR \#2275](https://github.com/ESCOMP/CTSM/pull/2275); [Li et al. 2024](https://agupubs.onlinelibrary.wiley.com/share/NY4AYPREB8Y8BUDP7DXD?target=10.1029/2023MS004107))  
-* FATES compsets can now be run with transient land use; off by default ([PR \#2507](https://github.com/ESCOMP/CTSM/pull/2507))  
-* Ability to handle CAM7 in `LND_TUNING_MODE` ([PR \#2632](https://github.com/ESCOMP/CTSM/pull/2632))
+* `manage_externals` replaced by [`git-fleximod`](https://github.com/ESMCI/git-fleximod/blob/main/README.md). ([PR \#2559](https://github.com/ESCOMP/CTSM/pull/2559))  
+* No longer runs the 0th time step in first segment of startup and hybrid runs; branch and continue runs never had this 0th time step. ([PR \#2084](https://github.com/ESCOMP/CTSM/pull/2084))  
+* New CN Matrix method speeds up spinup for the BGC model. ([PR \#640](https://github.com/ESCOMP/CTSM/pull/640); [Liao et al. 2023](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023MS003625)).  
+* New `Leung_2023` dust emissions. ([PR \#1897](https://github.com/ESCOMP/CTSM/pull/1897); [Leung et al 2023](https://doi.org/10.5194/acp-23-6487-2023), [Leung et al. 2024](https://doi.org/10.5194/acp-24-2287-2024))  
+* Explicit air conditioning for the urban model. ([PR \#2275](https://github.com/ESCOMP/CTSM/pull/2275); [Li et al. 2024](https://agupubs.onlinelibrary.wiley.com/share/NY4AYPREB8Y8BUDP7DXD?target=10.1029/2023MS004107))  
+* FATES compsets can now be run with transient land use; off by default. ([PR \#2507](https://github.com/ESCOMP/CTSM/pull/2507))  
+* Ability to handle CAM7 in `LND_TUNING_MODE`. ([PR \#2632](https://github.com/ESCOMP/CTSM/pull/2632))
 
 ### Answer changes
 
 Changes to defaults for `clm6_0` physics:
 
-* Urban explicit A/C turned on (links above)  
-* Snow thermal conductivity method is now `Sturm1997` ([PR \#2348](https://github.com/ESCOMP/CTSM/pull/2348)`;` see also [discussion \#1960](https://github.com/ESCOMP/CTSM/discussions/1960))  
-* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000\) resolutions  
-* New crop calendars ([PR \#2664](https://github.com/ESCOMP/CTSM/pull/2664); informed by [Rabin et al., 2023](https://gmd.copernicus.org/articles/16/7253/2023/gmd-16-7253-2023.html))  
-* Dust emissions method is now `Leung_2023` (links above)  
-* Excess ice is turned on ([PR \#1787](https://github.com/ESCOMP/CTSM/pull/1787))  
-* Updates to MEGAN for BVOCs ([PR \#2588](https://github.com/ESCOMP/CTSM/pull/2588))  
-* New BGC fire method `li2024crujra` ([PR \#2684](https://github.com/ESCOMP/CTSM/pull/2684), [PR \#2711](https://github.com/ESCOMP/CTSM/pull/2711), [PR \#2715](https://github.com/ESCOMP/CTSM/issues/2715)): Avoid crop fires during growing season; allow lightning ignitions in tropical closed forests; add effect of landscape fragmentation on ignitions and duration; recalibrate against GFED5 burned area and with CRU-JRA climate.
+* Urban explicit A/C turned on (links above).  
+* Snow thermal conductivity method is now `Sturm1997`. ([PR \#2348](https://github.com/ESCOMP/CTSM/pull/2348); see also [discussion \#1960](https://github.com/ESCOMP/CTSM/discussions/1960))  
+* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000) resolutions.  
+* New crop calendars. ([PR \#2664](https://github.com/ESCOMP/CTSM/pull/2664); informed by [Rabin et al., 2023](https://gmd.copernicus.org/articles/16/7253/2023/gmd-16-7253-2023.html))  
+* Dust emissions method is now `Leung_2023` (links above).  
+* Excess ice is turned on. ([PR \#1787](https://github.com/ESCOMP/CTSM/pull/1787))  
+* Updates to MEGAN for BVOCs. ([PR \#2588](https://github.com/ESCOMP/CTSM/pull/2588))  
+* New BGC fire method `li2024crujra`: Avoid crop fires during growing season; allow lightning ignitions in tropical closed forests; add effect of landscape fragmentation on ignitions and duration; recalibrate against GFED5 burned area and with CRU-JRA climate. ([PR \#2684](https://github.com/ESCOMP/CTSM/pull/2684), [PR \#2711](https://github.com/ESCOMP/CTSM/pull/2711), [PR \#2715](https://github.com/ESCOMP/CTSM/issues/2715))
 
 Changes for all physics versions:
 
@@ -49,19 +49,19 @@ Changes for all physics versions:
 
 Startup and hybrid runs no longer run the 0th time step, consistent with the same change in CAM. (Branch and continue runs never had this 0th time step.) This means you will not get an extraneous initial history file anymore. In some circumstances this may also affect the names of history files.
 
-In most cases, the history “time” variable is now defined as the middle of a history file’s `time_bounds` instead of the end, for consistency with the same change in CAM. The exception is if you specify `hist_avgflag_pertape = 'I'` for that file, in which case it will be treated as an “instantaneous” file. Instantaneous history files (a) have their `time` coordinate set to the end of the last timestep (as did all history files before this tag) and (b) do not include `time_bounds`.
+In most cases, the history `time` variable is now defined as the middle of a history file’s `time_bounds` instead of the end, for consistency with the same change in CAM. The exception is if you specify `hist_avgflag_pertape = 'I'` for that file, in which case it will be treated as an “instantaneous” file. Instantaneous history files (a) have their `time` coordinate set to the end of the last timestep (as did all history files before this tag) and (b) do not include `time_bounds`.
 
 The history dimension name `hist_interval` (of output variable `time_bounds`) is standardized to be `nbnd`. History variables `time_bounds`, `mcdate`, `mcsec`, `mdcur`, and `mscur` are standardized to include the calendar attribute.
 
 ### New surface datasets and landuse timeseries files ([PR \#2500](https://github.com/ESCOMP/CTSM/pull/2500))
 
 * Transient landuse timeseries files going back to 1700 now possible (and made for f09).  
-* Fix an important bug on soil fields that was there since `ctsm5.2.0`. This has the side effect of `mksurfdata_esmf` now giving identical answers with a change in number of processors, as it should ([issue \#2744](https://github.com/ESCOMP/CTSM/issues/2744))  
-* Surface datasets now provided for the `ne0np4.POLARCAP.ne30x4` grid ([PR \#2716](https://github.com/ESCOMP/CTSM/pull/2716), [issue \#2720](https://github.com/ESCOMP/CTSM/issues/2720))  
-* Surface datasets now have their version number embedded to prevent mismatch of surface dataset and CTSM version ([issue \#2723](https://github.com/ESCOMP/CTSM/issues/2723))  
+* Fix an important bug on soil fields that was there since `ctsm5.2.0`. This has the side effect of `mksurfdata_esmf` now giving identical answers with a change in number of processors, as it should. ([Issue \#2744](https://github.com/ESCOMP/CTSM/issues/2744))  
+* Surface datasets now provided for the `ne0np4.POLARCAP.ne30x4` grid. ([PR \#2716](https://github.com/ESCOMP/CTSM/pull/2716), [issue \#2720](https://github.com/ESCOMP/CTSM/issues/2720))  
+* Surface datasets now have their version number embedded to prevent mismatch of surface dataset and CTSM version. ([Issue \#2723](https://github.com/ESCOMP/CTSM/issues/2723))  
 * Remove outdated hydrology `VIC` (Variable Infiltration Capacity Hydrology model) fields from surface datasets.  
 * Updates to input datasets:  
-  * PFT/LAI/soil-color raw datasets; now from the TRENDY2024 timeseries that ends in 2023\. (Issues [\#2570](https://github.com/ESCOMP/CTSM/issues/2570) and [\#2452](https://github.com/ESCOMP/CTSM/issues/2452))  
+  * PFT/LAI/soil-color raw datasets; now from the TRENDY2024 timeseries that ends in 2023. (Issues [\#2570](https://github.com/ESCOMP/CTSM/issues/2570) and [\#2452](https://github.com/ESCOMP/CTSM/issues/2452))  
   * Two fire datasets: crop fire peak month and peatland fraction. (Issue [\#2618](https://github.com/ESCOMP/CTSM/issues/2618))  
   * Glacier behavior dataset (related to how non-Greenland glaciers are handled). (Issue [\#423](https://github.com/ESCOMP/CTSM/issues/423))
 
@@ -101,8 +101,8 @@ Note that this is backwards-compatible, so for all the components you can use ei
 
 ## Simulations supporting this release
 
-f19 Clm60Bgc 16pft: [https://github.com/NCAR/LMWG\_dev/issues/70](https://github.com/NCAR/LMWG_dev/issues/70)     
-f09 with Clm60BgcCrop: [https://github.com/NCAR/LMWG\_dev/issues/69](https://github.com/NCAR/LMWG_dev/issues/69)   
-ne30 with Clm60BgcCrop: [https://github.com/NCAR/LMWG\_dev/issues/68](https://github.com/NCAR/LMWG_dev/issues/68)
+- f19 `Clm60Bgc` 16pft: [https://github.com/NCAR/LMWG\_dev/issues/70](https://github.com/NCAR/LMWG_dev/issues/70)     
+- f09 with `Clm60BgcCrop`: [https://github.com/NCAR/LMWG\_dev/issues/69](https://github.com/NCAR/LMWG_dev/issues/69)   
+- ne30 with `Clm60BgcCrop`: [https://github.com/NCAR/LMWG\_dev/issues/68](https://github.com/NCAR/LMWG_dev/issues/68)
 
 Note: Dust emissions in CTSM 5.3 will be different from the above simulations because of a tuning update that came in after those.
