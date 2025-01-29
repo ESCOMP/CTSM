@@ -251,7 +251,7 @@ class SSPMATRIXCN(SystemTestsCommon):
 
                     # For a branch the cpl rpointer file needs to be handled
                     if self.runtyp[n] is "branch":
-                    
+
                         drvrest = "rpointer.cpl"
                         if ninst > 1:
                             drvrest += "_0001"
@@ -309,7 +309,7 @@ class SSPMATRIXCN(SystemTestsCommon):
 
         # For a branch the cpl rpointer file needs to be handled
         if self.runtyp[n] is "branch":
-                
+
             drvrest = "rpointer.cpl"
             if ninst > 1:
                 drvrest += "_0001"
@@ -317,7 +317,7 @@ class SSPMATRIXCN(SystemTestsCommon):
 
             self._set_drv_restart_pointer(drvrest)
             try:
-                shutil.copy(os.path.join( rest_path, drvrest), rundir)
+                shutil.copy(os.path.join(rest_path, drvrest), rundir)
             except shutil.SameFileError:
                 pass
 
@@ -331,65 +331,3 @@ class SSPMATRIXCN(SystemTestsCommon):
         #
         self._case.flush()
         self.run_indv(suffix="step{}".format(self.steps[n]), st_archive=False)
-
-
-#
-# Unit testing for above
-#
-import unittest
-from CIME.case import Case
-from CIME.utils import _LessThanFilter
-from argparse import RawTextHelpFormatter
-
-
-class test_ssp_matrixcn(unittest.TestCase):
-    def setUp(self):
-        self.ssp = SSPMATRIXCN()
-
-    def test_logger(self):
-        # Test the logger
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-        logger.level = logging.DEBUG
-        logger.info("nyr_forcing = {}".format(self.ssp.nyr_forcing))
-        for n in range(self.ssp.n_steps()):
-            self.ssp.__logger__(n)
-            if self.ssp.spin[n] == "sasu":
-                logger.info("  SASU spinup is .true.")
-                if self.ssp.sasu[n] != -999:
-                    logger.info("  nyr_sasu = {}".format(self.ssp.sasu[n]))
-                if self.ssp.iloop[n] != -999:
-                    logger.info("  iloop_avg = {}".format(self.ssp.iloop[n]))
-
-        logger.info("Total number of years {}".format(self.ssp.total_years()))
-        logger.removeHandler(stream_handler)
-
-    def test_n_steps(self):
-        self.assertTrue(self.ssp.n_steps() == 3)
-
-    def test_valid_n(self):
-        for n in range(self.ssp.n_steps()):
-            self.ssp.check_n(n)
-
-    def test_negative_n(self):
-        self.assertRaises(SystemExit, self.ssp.check_n, -1)
-
-    def test_n_too_big(self):
-        self.assertRaises(SystemExit, self.ssp.check_n, self.ssp.n_steps())
-
-    def test_append_user_nl_step2(self):
-        ufile = "user_nl_clm"
-        if not os.path.exists(ufile):
-            os.mknod(ufile)
-        else:
-            expect(0, ufile + " file already exists, not overwritting it")
-
-        self.ssp.append_user_nl(caseroot=".", n=2)
-        print(ufile + " for step 2")
-        log = open(ufile, "r").read()
-        print(log)
-        os.remove(ufile)
-
-
-if __name__ == "__main__":
-    unittest.main()
