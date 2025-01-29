@@ -267,8 +267,6 @@ contains
          else
             coszen_col(c) = coszen_grc(g)
          endif
-
-         print*,"COSZEN_COL:",c,coszen_col(c)
          
       end do
 
@@ -481,14 +479,11 @@ contains
           fabi_sha_z    =>    surfalb_inst%fabi_sha_z_patch         & ! Output:  [real(r8) (:,:) ]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
           )
 
-
-     print*,"PEFORMING ALBEDO"
-     
     ! Apply column level zenith angles to the patch level
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
        c = patch%column(p)
-       if(col%is_fates(p))then
+       if(patch%is_fates(p))then
           coszen_patch(p) = spval
        else
           coszen_patch(p) = coszen_col(c)
