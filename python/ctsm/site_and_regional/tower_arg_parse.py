@@ -18,6 +18,8 @@ from CIME.utils import parse_args_and_handle_standard_logging_options
 from CIME.utils import setup_standard_logging_options
 
 
+# TODO: Refactor to shorten this and remove this pylint disable!
+# pylint: disable=too-many-statements
 def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     """
     Get parser object for this script.

@@ -380,9 +380,9 @@ class TowerSite:
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
-                # This was created originally set to 18 for NEON cases, which typically start in 2018.
+                # This was originally set to 18 for NEON cases, which typically start in 2018.
                 # AD cases, would start in 0018, followed by postAD in 1018.
-                # PLUMBER cases all start in different years, but this is not expected to cause issues.
+                # PLUMBER cases all start in different years, but not expected to cause issues.
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
