@@ -2790,23 +2790,22 @@ module CLMFatesInterfaceMod
        ! the zenith angle is positive. In the future, FATES
        ! may perform calculations on diffuse radiation during
        ! dawn and dusk when the sun is below the horizon, but not yet
+
+       do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
+          p = ifp+col%patchi(c)
+          this%fates(nc)%bc_in(s)%fcansno_pa(ifp) = fcansno(p)
+       end do
+
        
        if(coszen_col(c) > 0._r8) then
 
           this%fates(nc)%bc_in(s)%albgr_dir_rb(:) = albgrd_col(c,:)
           this%fates(nc)%bc_in(s)%albgr_dif_rb(:) = albgri_col(c,:)
-          
-          do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
-             p = ifp+col%patchi(c)
-             this%fates(nc)%bc_in(s)%fcansno_pa(ifp) = fcansno(p)
-          end do
-          
        else
 
           ! This will ensure a crash in FATES if it tries
           this%fates(nc)%bc_in(s)%albgr_dir_rb(:) = spval
           this%fates(nc)%bc_in(s)%albgr_dif_rb(:) = spval
-          this%fates(nc)%bc_in(s)%fcansno_pa(:)   = spval
           
        end if
 
