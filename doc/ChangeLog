@@ -1,8 +1,8 @@
 ===============================================================
 Tag name: ctsm5.3.021
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
-Date: Fri 17 Jan 2025 12:42:24 PM MST
-One-line Summary: Standardize time metadata
+Date: Wed 29 Jan 2025 04:21:40 PM MST
+One-line Summary: Standardize time metadata (release tag for ctsm5.3)
 
 Purpose and description of changes
 ----------------------------------
@@ -38,6 +38,11 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
  Resolves https://github.com/ESCOMP/MOSART/pull/66
  Resolves https://github.com/ESCOMP/RTM/pull/35
 
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ This is the release tag for ctsm5.3, so it includes the file WhatsNewInCTSM5.3.md.
+
 Notes of particular relevance for developers:
 ---------------------------------------------
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
@@ -50,27 +55,30 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - PASS
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
+  fates tests
+    derecho ----- OK against baseline fates-sci.1.80.4_api.37.0.0-tmp-241219.n02.ctsm5.3.016
+    izumi ------- OK against baseline fates-sci.1.80.4_api.37.0.0-ctsm5.3.014
 
-  any other testing (give details below):
+  ctsm_sci against baseline ctsm_sci-ctsm5.3.016
+    derecho ---- OK
 
-  ctsm_sci
-     derecho ----
+  rtm tests against baseline rtm1_0_86-ctsm5.3.019
+    derecho ----- PASS
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+  mosart tests against baseline mosart1.1.08-ctsm5.3.019
+    derecho ----- OK
+    izumi ------- PASS
 
 
 Answer changes
@@ -82,8 +90,9 @@ Changes answers relative to baseline: No
 Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
- mosart1.1.08
- rtm1_0_85
+ mosart1.1.07 to mosart1.1.08
+ ccs_config_cesm1.0.16 to ccs_config_cesm1.0.20 to gain access to f09_t232 grid
+ rtm was already updated to rtm1_0_86 in an earlier tag
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2052
@@ -138,8 +147,6 @@ Testing summary:
 
 Other details
 -------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
