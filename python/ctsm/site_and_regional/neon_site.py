@@ -46,7 +46,9 @@ class NeonSite(TowerSite):
     ):
         if user_mods_dirs is None:
             user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+                os.path.join(
+                    self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name
+                )
             ]
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
@@ -92,7 +94,7 @@ class NeonSite(TowerSite):
             name of experiment, default False
         """
         user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name)
         ]
         tower_type = "NEON"
 

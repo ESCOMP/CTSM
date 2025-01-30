@@ -16,7 +16,7 @@ List of utilities required for CESM in the `Software/OS Prerequisites <https://w
 
 Before working with |version| read the `CESM QuickStart Guide <https://escomp.github.io/CESM/versions/cesm2.2/html/>`_. Once you are familiar with how to setup cases for any type of simulation with CESM you will want to direct your attention to the specifics of using CLM.
 
-For some of the details of setting up cases for |version| read the README and text files available from the "$CTSMROOT/doc" directory (see the "CLM Web pages" section for a link to the list of these files). Here are the important ones that you should be familiar with:
+For some of the details of setting up cases for |version| read the README and text files available from the ``$CTSMROOT/doc`` directory (see the "CLM Web pages" section for a link to the list of these files). Here are the important ones that you should be familiar with:
 
 - :ref:`readme` describing the directory structure.
 - The IMPORTANT_NOTES file talks about important things for users to know about using the model scientifically. It content is given in the next chapter on :ref:`scientific-validiation`.

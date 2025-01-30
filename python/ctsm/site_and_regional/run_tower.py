@@ -209,7 +209,7 @@ def main(description):
     # The [!Fd]* portion means that we won't retrieve cases that start with:
     # F (FATES) or d (default). We should be aware of adding cases that start with these.
     valid_neon_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!Fd]*")
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 

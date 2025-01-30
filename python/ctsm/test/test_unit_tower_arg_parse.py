@@ -60,12 +60,12 @@ class Test_tower_arg_parse(unittest.TestCase):
         description = ""
         cesmroot = path_to_ctsm_root()
         valid_neon_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!Fd]*")
         )
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
         valid_plumber_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
         )
         valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 
@@ -89,12 +89,12 @@ class Test_tower_arg_parse(unittest.TestCase):
         cesmroot = path_to_ctsm_root()
 
         valid_neon_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "NEON", "[!Fd]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!Fd]*")
         )
         valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
         valid_plumber_sites = glob.glob(
-            os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
+            os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
         )
         valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
 

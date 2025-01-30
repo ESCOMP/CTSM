@@ -137,7 +137,6 @@ module CLMFatesInterfaceMod
    use FatesParametersInterface, only : fates_parameters_type
 
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
-   use FatesIOVariableKindMod, only : group_dyna_simple, group_dyna_complx
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
@@ -1242,14 +1241,6 @@ module CLMFatesInterfaceMod
       end if
 
       ! ---------------------------------------------------------------------------------
-      ! Flush arrays to values defined by %flushval (see registry entry in
-      ! subroutine define_history_vars()
-      ! ---------------------------------------------------------------------------------
-      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
-
-      call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
-
-      ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
       ! provided.
       ! ---------------------------------------------------------------------------------
@@ -2019,23 +2010,16 @@ module CLMFatesInterfaceMod
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
 
+
                ! ------------------------------------------------------------------------
-               ! Update history IO fields that depend on ecosystem dynamics
+               ! Flush FATES history variables.
+               ! The flushing process sets all columns outside of FATES perview to
+               ! the ignore value. This only needs to be done once, because FATES will
+               ! not overwright values outside the columns that it is in charge of.
                ! ------------------------------------------------------------------------
-               if(fates_history_dimlevel(2)>0) then
-                  call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
-                  do s = 1,this%fates(nc)%nsites
-                     call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                          upfreq_in=group_dyna_simple)
-                  end do
-                  if(fates_history_dimlevel(2)>1) then
-                     call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
-                     do s = 1,this%fates(nc)%nsites
-                        call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                             upfreq_in=group_dyna_complx)
-                     end do
-                  end if
-               end if
+
+               call fates_hist%flush_all_hvars(nc)    
+               
                call fates_hist%update_history_dyn( nc,                     &
                                                    this%fates(nc)%nsites,  &
                                                    this%fates(nc)%sites,   &
@@ -2220,22 +2204,15 @@ module CLMFatesInterfaceMod
                 soilbiogeochem_carbonflux_inst, .false.)
 
            ! ------------------------------------------------------------------------
-           ! Update history IO fields that depend on ecosystem dynamics
+           ! Flush and zero FATES history variables.
+           ! The flushing process sets all columns outside of FATES perview to
+           ! the ignore value. This only needs to be done once, because FATES will
+           ! not overwright values outside the columns that it is in charge of.
+           ! We also start off by setting all values on FATES columns to zero.
            ! ------------------------------------------------------------------------
-           if(fates_history_dimlevel(2)>0) then
-              call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_simple)
-              do s = 1,this%fates(nc)%nsites
-                 call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                      upfreq_in=group_dyna_simple)
-              end do
-              if(fates_history_dimlevel(2)>1) then
-                 call fates_hist%flush_hvars(nc,upfreq_in=group_dyna_complx)
-                 do s = 1,this%fates(nc)%nsites
-                    call fates_hist%zero_site_hvars(this%fates(nc)%sites(s), &
-                         upfreq_in=group_dyna_complx)
-                 end do
-              end if
-           end if
+
+           call fates_hist%flush_all_hvars(nc)
+           
            call fates_hist%update_history_dyn( nc,                     &
                 this%fates(nc)%nsites,                                  &
                 this%fates(nc)%sites,                                   &
@@ -3626,9 +3603,6 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_out(s)%plant_stored_h2o_si
    end do
 
-
-   ! Update History Buffers that need to be updated after hydraulics calls
-
    call fates_hist%update_history_hydraulics(nc, &
          this%fates(nc)%nsites, &
          this%fates(nc)%sites, &
@@ -3648,7 +3622,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
    use FatesInterfaceTypesMod, only : nlevheight
    use FatesInterfaceTypesMod, only : nlevdamage
-   use FatesLitterMod,         only : nfsc
+   use FatesFuelClassesMod,    only : num_fuel_classes
    use FatesLitterMod,         only : ncwd
    use EDParamsMod,            only : nlevleaf, nclmax
    use FatesInterfaceTypesMod, only : numpft_fates => numpft
@@ -3700,7 +3674,7 @@ module CLMFatesInterfaceMod
    fates%sizeagepft_class_end   = nlevsclass * nlevage * numpft_fates
 
    fates%fuel_begin = 1
-   fates%fuel_end = nfsc
+   fates%fuel_end = num_fuel_classes
 
    fates%cwdsc_begin = 1
    fates%cwdsc_end = ncwd
@@ -3727,7 +3701,7 @@ module CLMFatesInterfaceMod
    fates%elage_end   = num_elements * nlevage
 
    fates%agefuel_begin = 1
-   fates%agefuel_end   = nlevage * nfsc
+   fates%agefuel_end   = nlevage * num_fuel_classes
 
    fates%cdpf_begin = 1
    fates%cdpf_end = nlevdamage * numpft_fates * nlevsclass

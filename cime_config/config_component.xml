@@ -15,8 +15,7 @@
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
-    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
-    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
+    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
     <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
@@ -78,7 +77,7 @@
     </desc>
     <default_value>UNSET</default_value>
     <!-- 10 forcing options for each CLM physics option: CRUv7, GSWP3, cam7.0, cam6.0, cam5.0, cam4.0, QIAN, 1PT, NLDAS2, ERA5 -->
-    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_cam5.0,clm4_5_cam4.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm5_1_CRUv7,clm5_1_GSWP3v1,clm5_1_cam6.0,clm5_1_QIAN,clm5_1_1PT,clm5_1_NLDAS2,clm5_1_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_cam5.0,clm4_5_cam4.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
     <values match="last">
       <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), cam5.0, cam4.0, QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm4_5 physics options -->
@@ -113,14 +112,6 @@
       <value compset="DATM%1PT_CLM50"    >clm5_0_1PT</value>
       <value compset="DATM%NLDAS2_CLM50" >clm5_0_NLDAS2</value>
       <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
-      <!-- All the clm5_1 physics options -->
-      <value compset="DATM%GSWP3v1_CLM51">clm5_1_GSWP3v1</value>
-      <value compset="CAM[^_]*_CLM51"    >INVALID_USE_CLM60_NOT_CLM51</value>
-      <value compset="CAM40[^_]*_CLM51"  >clm5_1_cam4.0</value>
-      <value compset="CAM50[^_]*_CLM51"  >clm5_1_cam5.0</value>
-      <value compset="CAM60[^_]*_CLM51"  >clm5_1_cam6.0</value>
-      <value compset="CAM70[^_]*_CLM51"  >INVALID_USE_CLM60_NOT_CLM51_FOR_CAM70</value>
-      <value compset="DATM%CPLHIST_CLM51">INVALID_USE_CLM60_NOT_CLM51_FOR_CPLHIST</value>
       <!-- All the clm6_0 physics options -->
       <value compset="DATM%CRUv7_CLM60"  >clm6_0_CRUv7</value>
       <value compset="DATM%CRU_CLM60"    >clm6_0_CRUv7</value>
@@ -147,7 +138,7 @@
 
   <entry id="CLM_PHYSICS_VERSION" >
     <type>char</type>
-    <valid_values>clm4_5,clm5_0,clm5_1,clm6_0</valid_values>
+    <valid_values>clm4_5,clm5_0,clm6_0</valid_values>
     <!-- By setting the default_value to UNSET (or some other non-empty
          string that doesn't appear in the list of valid_values), the
          scripts will ensure that one of the below values is picked up
@@ -156,7 +147,6 @@
     <values>
       <value compset="_CLM45" >clm4_5</value>
       <value compset="_CLM50" >clm5_0</value>
-      <value compset="_CLM51" >clm5_1</value>
       <value compset="_CLM60" >clm6_0</value>
     </values>
     <group>run_component_ctsm</group>
@@ -167,6 +157,7 @@
   </entry>
 
   <entry id="LND_SETS_DUST_EMIS_DRV_FLDS">
+    <!-- See https://github.com/ESCOMP/CTSM/issues/2713 we plan to phase this out -->
     <type>logical</type>
     <valid_values>TRUE,FALSE</valid_values>
     <default_value>TRUE</default_value>
@@ -364,12 +355,15 @@
     <valid_values></valid_values>
     <default_value></default_value>
     <values match="last">
-      <value                  compset="_CLM60%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
-      <value                  compset="_CLM51%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/fates_sp</value>
-      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_deck</value>
-      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_nociso_deck</value>
-      <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
-      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
+      <value                  compset="_CLM60%[^_]*FATES-SP[%_]"      >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/fates_sp</value>
+      <value                  compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_nociso_deck</value>
+      <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_waccm_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_waccm_nociso_deck</value>
+      <value                  compset="_CLM60%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM60%[^_]*CMIP6DECK[%_]"     >$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_nociso_deck</value>
+      <value                  compset="_CLM60%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_waccm_deck</value>
+      <value grid="l%1.9x2.5" compset="_CLM60%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/clm/cmip6_waccm_nociso_deck</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_case.xml</file>

@@ -1,7 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
-# pylint: disable=too-many-lines,too-many-statements
+# pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
 import glob
@@ -60,6 +60,7 @@ def error(logger, string):
     """
     Simultaneously print ERROR messages to console and to log file
     """
+    print(string)
     logger.error(string)
     raise RuntimeError(string)
 
@@ -271,7 +272,7 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h2 file (list)
+    # Get h1 file (list)
     h1_pattern = os.path.join(indir, "*h1.*.nc")
     h1_filelist = glob.glob(h1_pattern)
     if not h1_filelist:
@@ -551,13 +552,14 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc")
-    h2_files = glob.glob(pattern)
-    if not h2_files:
-        pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc.base")
+    patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
+    for p in patterns:
+        pattern = os.path.join(indir, p)
         h2_files = glob.glob(pattern)
-        if not h2_files:
-            error(logger, f"No files found matching pattern '*h2.{this_year-1}-01-01*.nc(.base)'")
+        if h2_files:
+            break
+    if not h2_files:
+        error(logger, f"No files found matching patterns: {patterns}")
     h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
