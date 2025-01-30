@@ -69,6 +69,8 @@ class TowerSite:
             ),
         )
 
+    # TODO: Refactor to shorten this so the disable can be removed
+    # pylint: disable=too-many-statements
     def build_base_case(
         self, cesmroot, output_root, res, compset, user_mods_dirs, overwrite=False, setup_only=False
     ):
@@ -111,9 +113,9 @@ class TowerSite:
             abort("Input setup_only is NOT a boolean as expected: " + str(setup_only))
         if not isinstance(user_mods_dirs, list):
             abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
-        for dir in user_mods_dirs:
-            if not os.path.isdir(dir):
-                abort("Input user_mods_dirs directory does NOT exist: " + str(dir))
+        for dirtree in user_mods_dirs:
+            if not os.path.isdir(dirtree):
+                abort("Input user_mods_dirs dirtreetory does NOT exist: " + str(dirtree))
 
         print("---- building a base case -------")
         # pylint: disable=attribute-defined-outside-init
