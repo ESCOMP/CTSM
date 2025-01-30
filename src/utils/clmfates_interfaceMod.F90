@@ -2752,8 +2752,7 @@ module CLMFatesInterfaceMod
  
  ! ======================================================================================
 
- subroutine wrap_canopy_radiation(this, bounds_clump, nc, &
-                                  fcansno, surfalb_inst)
+ subroutine wrap_canopy_radiation(this, bounds_clump, nc, fcansno, surfalb_inst)
 
    ! Arguments
     class(hlm_fates_interface_type), intent(inout) :: this
@@ -2816,7 +2815,6 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in,  &
             this%fates(nc)%bc_out)
 
-
     ! Pass FATES BC's back to HLM
     ! -----------------------------------------------------------------------------------
     do s = 1, this%fates(nc)%nsites
@@ -2836,6 +2834,17 @@ module CLMFatesInterfaceMod
           ftii(p,:) = this%fates(nc)%bc_out(s)%ftii_parb(ifp,:)
           
        end do
+       ! Flush other patches a default value
+       do p = col%patchi(c)+ifp+1,col%patchf(c)
+          albd(p,:) = 0._r8
+          albi(p,:) = 0._r8
+          fabd(p,:) = 0._r8
+          fabi(p,:) = 0._r8
+          ftdd(p,:) = 1._r8
+          ftid(p,:) = 1._r8
+          ftii(p,:) = 1._r8
+       end do
+       
     end do
           
   end associate
