@@ -215,7 +215,7 @@ def main(description):
 
     # Get the list of supported plumber sites from usermods
     valid_plumber_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", "[!d]*")
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
     )
 
     valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])

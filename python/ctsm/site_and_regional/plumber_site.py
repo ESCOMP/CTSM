@@ -45,7 +45,9 @@ class Plumber2Site(TowerSite):
     ):
         if user_mods_dirs is None:
             user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
+                os.path.join(
+                    self.cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", self.name
+                )
             ]
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
@@ -94,7 +96,9 @@ class Plumber2Site(TowerSite):
             name of experiment, default False
         """
         user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "PLUMBER2", self.name)
+            os.path.join(
+                self.cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", self.name
+            )
         ]
         tower_type = "PLUMBER"
         super().run_case(
