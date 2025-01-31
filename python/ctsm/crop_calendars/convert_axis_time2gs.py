@@ -5,6 +5,7 @@ import warnings
 import sys
 import numpy as np
 import xarray as xr
+from ctsm.crop_calendars.cropcal_utils import get_integer_years
 
 try:
     import pandas as pd
@@ -85,7 +86,7 @@ def set_up_ds_with_gs_axis(ds_in):
         if not any(x in ["mxsowings", "mxharvests"] for x in ds_in[var].dims):
             data_vars[var] = ds_in[var]
     # Set up the new dataset
-    gs_years = [t.year - 1 for t in ds_in.time.values[:-1]]
+    gs_years = get_integer_years(ds_in)[:-1]
     coords = ds_in.coords
     coords["gs"] = gs_years
     ds_out = xr.Dataset(data_vars=data_vars, coords=coords, attrs=ds_in.attrs)
