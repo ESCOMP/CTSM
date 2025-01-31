@@ -33,15 +33,17 @@ from CIME.tests.case_fake import CaseFake
 
 logger = logging.getLogger(__name__)
 
+
 class SSPCaseFake(CaseFake):
     """
     Extend the CaseFake class with a couple things needed here
     """
+
     def __init__(self, case_root, tempdir, create_case_root=True):
         """
         Initialization handling the tempdir
         """
-        super().__init__( case_root, create_case_root)
+        super().__init__(case_root, create_case_root)
         self._tempdir = tempdir
 
     def create_clone(
@@ -52,32 +54,32 @@ class SSPCaseFake(CaseFake):
         """
         Extend to handle creation of user_nl_clm file
         """
-        clone = super().create_clone( newcase, keepexe=keepexe)
-        os.mknod( os.path.join( newcase, "user_nl_clm") )
+        clone = super().create_clone(newcase, keepexe=keepexe)
+        os.mknod(os.path.join(newcase, "user_nl_clm"))
         # Also make the needed case directories
         clone.make_case_dirs(self._tempdir)
         return clone
 
     def make_case_dirs(self, tempdir):
-        """ 
+        """
         Create the directories needed for the CASE
         """
         casename = self.get_value("CASE")
-        dout_s_root = Path( tempdir, "archive", casename )
-        dout_s_root.mkdir( parents=True )
-        self.set_value("DOUT_S_ROOT", str(dout_s_root) )
-        rest_root = Path( dout_s_root, "rest" )
-        rest_root.mkdir( )
-        rundir = Path( tempdir, casename, "run" )
+        dout_s_root = Path(tempdir, "archive", casename)
+        dout_s_root.mkdir(parents=True)
+        self.set_value("DOUT_S_ROOT", str(dout_s_root))
+        rest_root = Path(dout_s_root, "rest")
+        rest_root.mkdir()
+        rundir = Path(tempdir, casename, "run")
         rundir.mkdir()
-        self.set_value("RUNDIR", rundir )
+        self.set_value("RUNDIR", rundir)
 
-
-    def __str__( self ):
+    def __str__(self):
         """
         String method
         """
         return "caseroot=%s" % (self.get_value("CASEROOT"))
+
 
 class TestSSPMatrix(unittest.TestCase):
     """
@@ -110,7 +112,7 @@ class TestSSPMatrix(unittest.TestCase):
         Remove temporary directory
         """
         os.chdir(self._previous_dir)
-        #shutil.rmtree(self._tempdir, ignore_errors=True)
+        shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_logger(self):
         """
@@ -178,6 +180,7 @@ class TestSSPMatrix(unittest.TestCase):
         Test doing the standard run_phase, that does each step
         """
         self.ssp.run_phase()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
