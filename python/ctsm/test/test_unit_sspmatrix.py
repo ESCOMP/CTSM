@@ -11,22 +11,20 @@ import shutil
 import logging
 from pathlib import Path
 
-from ctsm.path_utils import add_cime_lib_to_path
+from ctsm.path_utils import add_cime_lib_to_path, add_ctsm_systests_to_path
 from ctsm import unit_testing
 
-_CIME_PATH = add_cime_lib_to_path(standalone_only=True)
+add_ctsm_systests_to_path()
+add_cime_lib_to_path()
 
-# -- add python/ctsm  to path (needed if we want to run the test stand-alone)
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
-_CTSM_SYSTEST_DIR = os.path.join(_CIME_PATH, os.pardir, "cime_config")
-sys.path.insert(1, _CTSM_PYTHON)
-sys.path.insert(1, _CTSM_SYSTEST_DIR)
-# pylint: disable=wrong-import-order
+# pylint: disable=import-error
 # pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-order
 from SystemTests.sspmatrixcn import SSPMATRIXCN
 
-# pylint: disable=wrong-import-order
+# pylint: disable=import-error
 # pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-order
 from CIME.tests.case_fake import CaseFake
 
 # pylint: disable=invalid-name
