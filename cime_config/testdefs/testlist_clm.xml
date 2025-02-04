@@ -12,6 +12,7 @@
         hillslope: Experimental test list used for the hillslope option of the model
         rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
         matrixcn: Tests exercising the matrix-CN capability
+        aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -905,6 +906,7 @@
   <test name="ERS_Ld1640_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -1149,6 +1151,7 @@
   <test name="SMS_Ld5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm60Bgc" testmods="clm/mimics">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1158,6 +1161,7 @@
   <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/newton_krylov_spinup">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1315,6 +1319,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Science support for I1850Clm50BgcCropCru at f19</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN_BNF">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
@@ -1524,7 +1537,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P64x2_Ld762" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
+  <test name="ERP_P64x2_Ld765" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1692,6 +1705,7 @@
   <test name="ERS_D_Ld7_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/decStart1851_noinitial">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1709,6 +1723,7 @@
   <test name="ERS_Ld600_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCrop" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1718,6 +1733,7 @@
   <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1727,6 +1743,7 @@
   <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly--clm/matrixcnOn">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="gnu" category="matrixcn"/>
     </machines>
     <options>
@@ -1737,6 +1754,7 @@
   <test name="ERS_Ld1200_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1746,6 +1764,7 @@
   <test name="ERS_Ld1600_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1755,6 +1774,7 @@
   <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock"     >04:00:00</option>
@@ -1765,6 +1785,7 @@
   <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial--clm/matrixcnOn">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -1785,6 +1806,7 @@
   <test name="ERS_Ly3_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -1859,6 +1881,7 @@
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1869,6 +1892,7 @@
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -1881,6 +1905,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -2290,18 +2315,22 @@
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="gnu" category="prealpha"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
@@ -2399,6 +2428,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
@@ -2410,7 +2440,9 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/HARV">
     <machines>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
+      <machine name="derecho"  compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2421,8 +2453,10 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/NEON/HARV--clm/matrixcnOn">
     <machines>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
+      <machine name="derecho"  compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho"  compiler="gnu" category="matrixcn"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
       <machine name="izumi"    compiler="nag" category="matrixcn"/>
     </machines>
     <options>
@@ -2434,7 +2468,9 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60SpRs" testmods="clm/default--clm/NEON/TOOL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2445,7 +2481,9 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/NEON/MOAB--clm/PRISM">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
+      <machine name="derecho"  compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2454,7 +2492,7 @@
     </options>
   </test>
 
-  <test name="ERS_P128x1_Ld762" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
+  <test name="ERS_P128x1_Ld765" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <!-- no izumi tests since this has a pe layout specific for derecho -->
       <machine name="derecho" compiler="intel"   category="aux_clm"/>
@@ -2469,8 +2507,10 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Fates" testmods="clm/FatesFireLightningPopDens--clm/NEON/FATES/NIWO">
     <machines>
       <machine name="derecho"  compiler="intel" category="aux_clm"/>
+      <machine name="derecho"  compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho"  compiler="intel" category="fates"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
     </machines>
     <options>
@@ -2482,8 +2522,10 @@
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Fates" testmods="clm/FatesPRISM--clm/NEON/FATES/YELL">
     <machines>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm_mpi_serial"/>
       <machine name="izumi"    compiler="nag"   category="fates"/>
       <machine name="derecho"  compiler="gnu" category="aux_clm"/>
+      <machine name="derecho"  compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho"  compiler="gnu" category="fates"/>
     </machines>
     <options>
@@ -2514,6 +2556,7 @@
   <test name="SMS_D_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm45BgcCropQianRs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2529,7 +2572,7 @@
       <option name="comment">Include a test of transient lakes</option>
     </options>
   </test>
-  <test name="ERS_L761" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -2556,9 +2599,10 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsROA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsROA">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2705,6 +2749,7 @@
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianRs" testmods="clm/ignor_warn_cropMonthOutputColdStart">
     <machines>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2714,6 +2759,7 @@
   <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="izumi"    compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="izumi"    compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -2765,6 +2811,7 @@
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
@@ -2869,7 +2916,9 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2878,6 +2927,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
@@ -2896,6 +2946,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3208,6 +3259,7 @@
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdHydro">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
@@ -3450,6 +3502,7 @@
   <test name="SMS_Ly1_Mmpi-serial" grid="1x1_brazil" compset="IHistClm60BgcQianRs" testmods="clm/output_bgc_highfreq">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -3460,6 +3513,7 @@
   <test name="SMS_Ld12_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm60SpRs" testmods="clm/output_sp_highfreq">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -3526,6 +3580,7 @@
   <test name="FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1" grid="5x5_amazon" compset="I2000Clm50SpRs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="clm_pymods"/>
     </machines>
     <options>
@@ -3670,6 +3725,7 @@
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60Bgc" testmods="clm/HillslopeC">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
     </machines>
     <options>
