@@ -90,6 +90,7 @@ module clm_varcon
 
   integer, public, parameter  :: fun_period  = 1            ! A FUN parameter, and probably needs to be changed for testing
   real(r8),public, parameter  :: smallValue  = 1.e-12_r8    ! A small values used by FUN
+  real(r8),public, parameter  :: sum_to_1_tol = 1.e-13_r8   ! error tolerance 
 
   ! ------------------------------------------------------------------------
   ! Special value flags
@@ -153,6 +154,18 @@ module clm_varcon
   !!! C14
   real(r8), public :: c14ratio = 1.e-12_r8
   ! real(r8) :: c14ratio = 1._r8  ! debug lets set to 1 to try to avoid numerical errors
+
+  !------------------------------------------------------------------
+  ! Surface roughness constants
+  !------------------------------------------------------------------
+  real(r8), public, parameter :: beta_param = 7.2_r8  ! Meier et al. (2022) https://doi.org/10.5194/gmd-15-2365-2022
+  real(r8), public, parameter :: nu_param = 1.5e-5_r8  ! Meier et al. (2022) kinematic viscosity of air
+  real(r8), public, parameter :: b1_param = 1.4_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: b4_param = -0.31_r8  ! Meier et al. (2022) empirical constant
+  real(r8), public, parameter :: cd1_param = 7.5_r8  ! Meier et al. (2022) originally from Raupach (1994)
+  real(r8), public, parameter :: meier_param1 = 0.23_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param2 = 0.08_r8  ! slevis did not find it documented
+  real(r8), public, parameter :: meier_param3 = 70.0_r8  ! slevis did not find it documented, but to the question "What is the 70 in the formula for roughness length" bard.google.com responds "[...] a dimensionless constant [...] originally introduced by von Karman. It is based on experimental data and is thought to represent the ratio of the average height of the surface roughness elements to the distance that the wind travels before it is slowed down by the roughness."
 
   !------------------------------------------------------------------
   ! Urban building temperature constants

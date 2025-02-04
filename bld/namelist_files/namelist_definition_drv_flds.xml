@@ -35,10 +35,14 @@
 	 group="megan_emis_nl"
 	 valid_values="" >
     MEGAN specifier. This is in the form of: Chem-compound = megan_compound(s)
-    where megan_compound(s) can be the sum of megan compounds with a "+" between them.
+    where megan_compound(s) can be an equation with megan compounds added or subtracted together with multiplication
     In each equation, the item to the left of the equal sign is a CAM chemistry compound, the
     items to the right are compounds known to the MEGAN model (single or combinations).
+    Long lines for equations can be split into multiple specifiers
     For example: megan_specifier = 'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a'
+    or...        megan_specifier = 'SOAE = 0.5954*isoprene + 5.1004*(carene_3 + pinene_a + thujene_a + bornene +',
+                                   ' terpineol_4 + terpineol_a + terpinyl_ACT_a + myrtenal + sabinene + pinene_b + camphene +',
+    and etcetera...
   </entry>
 
   <entry id="megan_mapped_emisfctrs"
@@ -121,6 +125,46 @@
   <entry id="carma_fields" type="char*256" category="carma"
 	 group="carma_inparm" valid_values="" >
     List of fluxes needed by the CARMA model, from CLM to CAM.
+  </entry>
+
+  <!-- ========================================================================================  -->
+  <!-- DUST Emission fields                                                                      -->
+  <!-- ========================================================================================  -->
+
+  <entry id="dust_emis_method" type="char*80" category="dust_emissions"
+    group="dust_emis_inparm" valid_values="Zender_2003,Leung_2023" >
+     Which dust emission method is going to be used. Either the Zender 2003 scheme or the Leung 2023 scheme.
+     (NOTE: The Leung 2023 method is NOT currently available)
+  </entry>
+
+  <entry id="zender_soil_erod_source" type="char*80" category="dust_emissions"
+    group="dust_emis_inparm" valid_values="none,lnd,atm" >
+     Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
+     in the active LAND model or in the ATM model.
+     (only used when dust_emis_method is Zender_2003)
+  </entry>
+
+  <!-- ========================================================================================  -->
+  <!-- Ozone to surface                                                                          -->
+  <!-- ========================================================================================  -->
+
+  <entry id="atm_ozone_frequency" type="char*64" category="ozone_coupling"
+         group="ozone_coupling_nl" valid_values="subdaily,multiday_average">
+         Frequency of surface ozone field passed from CAM to surface components.
+         Surface ozone is passed every coupling interval, but this namelist flag
+         indicates whether the timestep-level values are interpolated from a
+         coarser temporal resolution.
+         Default: set by CAM
+  </entry>
+
+  <!-- ========================================================================================  -->
+  <!-- Lightning                                                                                 -->
+  <!-- ========================================================================================  -->
+
+  <entry id="atm_provides_lightning" type="logical" category="lightning_coupling"
+         group="lightning_coupling_nl" valid_values="">
+         If TRUE atmosphere model will provide prognosed lightning flash frequency.
+         (NOTE: NOT CONNECTED INTO CTSM YET)
   </entry>
 
 </namelist_definition>

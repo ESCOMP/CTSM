@@ -2,7 +2,7 @@ module test_unittestArray
 
   ! Tests of unittestArrayMod
 
-  use pfunit_mod
+  use funit
   use unittestArrayMod
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod

@@ -47,17 +47,18 @@ contains
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
-       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_input_col, watsat_col, t_soisno_col, use_aquifer_layer, exice_coldstart_depth, exice_init_conc_col)
 
     class(waterstatebulk_type), intent(inout) :: this
     type(bounds_type) , intent(in) :: bounds
     class(water_info_base_type), intent(in), target :: info
     type(water_tracer_container_type), intent(inout) :: vars
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)
-    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
-
+    logical           , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
+    real(r8)         , intent(in) :: exice_coldstart_depth ! depth below which excess ice will be present
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:) ! initial coldstart excess ice concentration (from the stream file)
 
     call this%Init(bounds = bounds, &
          info = info, &
@@ -65,7 +66,8 @@ contains
          h2osno_input_col = h2osno_input_col, &
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = use_aquifer_layer)
+         use_aquifer_layer = use_aquifer_layer, & 
+         exice_coldstart_depth = exice_coldstart_depth, exice_init_conc_col = exice_init_conc_col(bounds%begc:bounds%endc))
 
     call this%InitBulkAllocate(bounds) 
 
@@ -187,7 +189,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine RestartBulk(this, bounds, ncid, flag, &
-       watsat_col)
+       watsat_col, t_soisno_col, altmax_lastyear_indx)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -199,9 +201,11 @@ contains
     ! !ARGUMENTS:
     class(waterstatebulk_type), intent(in) :: this
     type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   ! netcdf id
-    character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    type(file_desc_t), intent(inout) :: ncid                                    ! netcdf id
+    character(len=*) , intent(in)    :: flag                                    ! 'read' or 'write'
+    real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)           ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:)      !col active layer index last year
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
@@ -211,7 +215,9 @@ contains
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevmaxurbgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 
+         watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
+         altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:)) 
 
 
     call restartvar(ncid=ncid, flag=flag, &

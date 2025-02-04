@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=RMNP
+./xmlchange PTS_LON=254.45476
+./xmlchange PTS_LAT=40.27707

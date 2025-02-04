@@ -213,7 +213,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer, &
+       exice_coldstart_depth, exice_init_conc_col)
     !
     ! !DESCRIPTION:
     ! Initialize all water variables
@@ -227,6 +228,8 @@ contains
     real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     logical           , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    real(r8)          , intent(in) :: exice_coldstart_depth                    ! depth below which excess ice will be present
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:) ! initial coldstart excess ice concentration (from the stream file)
     !
     ! !LOCAL VARIABLES:
 
@@ -239,13 +242,15 @@ contains
          snow_depth_col = snow_depth_col, &
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = use_aquifer_layer)
+         use_aquifer_layer = use_aquifer_layer, &
+         exice_coldstart_depth = exice_coldstart_depth, exice_init_conc_col = exice_init_conc_col)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine InitForTesting(this, bounds, params, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_col, snow_depth_col, watsat_col, &
+       t_soisno_col, use_aquifer_layer, exice_coldstart_depth, exice_init_conc_col)
     !
     ! !DESCRIPTION:
     ! Version of Init routine just for unit tests
@@ -258,9 +263,11 @@ contains
     type(water_params_type), intent(in) :: params
     real(r8)          , intent(in) :: h2osno_col(bounds%begc:)
     real(r8)          , intent(in) :: snow_depth_col(bounds%begc:)
-    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)          ! volumetric soil water at saturation (porosity)
+    real(r8)          , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)          , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical , intent(in), optional :: use_aquifer_layer ! whether an aquifer layer is used in this run (false by default)
+    logical , intent(in), optional :: use_aquifer_layer                       ! whether an aquifer layer is used in this run (false by default)
+    real(r8)          , intent(in) :: exice_coldstart_depth                    ! depth below which excess ice will be present
+    real(r8)          , intent(in) :: exice_init_conc_col(bounds%begc:) ! initial coldstart excess ice concentration (from the stream file)
     !
     ! !LOCAL VARIABLES:
     logical :: l_use_aquifer_layer
@@ -279,13 +286,15 @@ contains
          snow_depth_col = snow_depth_col, &
          watsat_col = watsat_col, &
          t_soisno_col = t_soisno_col, &
-         use_aquifer_layer = l_use_aquifer_layer)
+         use_aquifer_layer = l_use_aquifer_layer, &
+         exice_coldstart_depth = exice_coldstart_depth, &
+         exice_init_conc_col = exice_init_conc_col )
 
   end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine DoInit(this, bounds, &
-       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer)
+       h2osno_col, snow_depth_col, watsat_col, t_soisno_col, use_aquifer_layer, exice_coldstart_depth, exice_init_conc_col)
     !
     ! !DESCRIPTION:
     ! Actually do the initialization (shared between main Init routine and InitForTesting)
@@ -299,7 +308,9 @@ contains
     real(r8)         , intent(in) :: snow_depth_col(bounds%begc:)
     real(r8)         , intent(in) :: watsat_col(bounds%begc:, 1:)            ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in) :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
-    logical          , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
+    logical          , intent(in) :: use_aquifer_layer                       ! whether an aquifer layer is used in this run
+    real(r8)         , intent(in) :: exice_coldstart_depth ! depth below which excess ice will be present
+    real(r8)         , intent(in) :: exice_init_conc_col(bounds%begc:) ! initial coldstart excess ice concentration (from the stream file)
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
@@ -308,6 +319,7 @@ contains
     character(len=*), parameter :: subname = 'DoInit'
     !-----------------------------------------------------------------------
 
+
     begc = bounds%begc
     endc = bounds%endc
 
@@ -315,6 +327,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(snow_depth_col) == [endc]), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(watsat_col, 1) == endc), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(t_soisno_col, 1) == endc), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(exice_init_conc_col, 1) == endc), sourcefile, __LINE__)
 
     call this%SetupTracerInfo()
 
@@ -333,7 +346,9 @@ contains
          h2osno_input_col = h2osno_col(begc:endc),       &
          watsat_col = watsat_col(begc:endc, 1:),   &
          t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
-         use_aquifer_layer = use_aquifer_layer)
+         use_aquifer_layer = use_aquifer_layer, & 
+         exice_coldstart_depth = exice_coldstart_depth, &
+         exice_init_conc_col = exice_init_conc_col)
 
     call this%waterdiagnosticbulk_inst%InitBulk(bounds, &
          bulk_info, &
@@ -373,7 +388,9 @@ contains
             h2osno_input_col = h2osno_col(begc:endc),       &
             watsat_col = watsat_col(begc:endc, 1:),   &
             t_soisno_col = t_soisno_col(begc:endc, -nlevsno+1:), &
-            use_aquifer_layer = use_aquifer_layer)
+            use_aquifer_layer = use_aquifer_layer, &
+            exice_coldstart_depth = exice_coldstart_depth, &
+            exice_init_conc_col = exice_init_conc_col)
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
@@ -716,7 +733,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
-       watsat_col)
+       watsat_col, t_soisno_col, altmax_lastyear_indx)
     !
     ! !DESCRIPTION:
     ! Read/write information to/from restart file for all water variables
@@ -728,6 +745,8 @@ contains
     character(len=*) , intent(in)    :: flag   ! 'read', 'write' or 'define'
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file (ignored for flag=='read')
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
+    real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
+    integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:) !col active layer index last year
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -740,7 +759,9 @@ contains
     call this%waterfluxbulk_inst%restartBulk (bounds, ncid, flag=flag)
 
     call this%waterstatebulk_inst%restartBulk (bounds, ncid, flag=flag, &
-         watsat_col=watsat_col(bounds%begc:bounds%endc,:))
+         watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+         t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
+         altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
 
     call this%waterdiagnosticbulk_inst%restartBulk (bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file=writing_finidat_interp_dest_file, &
@@ -751,7 +772,9 @@ contains
        call this%bulk_and_tracers(i)%waterflux_inst%Restart(bounds, ncid, flag=flag)
 
        call this%bulk_and_tracers(i)%waterstate_inst%Restart(bounds, ncid, flag=flag, &
-            watsat_col=watsat_col(bounds%begc:bounds%endc,:))
+            watsat_col=watsat_col(bounds%begc:bounds%endc,:), &
+            t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
+            altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
 

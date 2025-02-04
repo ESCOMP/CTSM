@@ -15,12 +15,14 @@ module dynSubgridDriverMod
   use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes, &
                                             get_do_transient_urban
   use dynSubgridControlMod         , only : get_do_harvest
+  use dynSubgridControlMod         , only : get_do_grossunrep
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
   use dynColumnStateUpdaterMod     , only : column_state_updater_type
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  use dynGrossUnrepMod             , only : dynGrossUnrep_init, dynGrossUnrep_interp
   use dynlakeFileMod               , only : dynlake_init, dynlake_interp
   use dynurbanFileMod              , only : dynurban_init, dynurban_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
@@ -87,6 +89,11 @@ contains
     ! Note that dynpft_init needs to be called from outside any loops over clumps - so
     ! this routine needs to be called from outside any loops over clumps.
     !
+    !
+    ! !USES:
+    use clm_varctl               , only : fates_harvest_mode
+    use dynFATESLandUseChangeMod , only : fates_harvest_clmlanduse
+    !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds_proc ! processor-level bounds
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -121,11 +128,15 @@ contains
     ! flanduse_timeseries file. However, this could theoretically be changed so that the
     ! harvest data were separated from the pftdyn data, allowing them to differ in the
     ! years over which they apply.
-    if (get_do_harvest()) then
+    if (get_do_harvest() .or. trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
-    
+    ! Initialize stuff for gross unrepresented landuse data. 
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_init(bounds_proc, grossunrep_filename=get_flanduse_timeseries())
+    end if
+
     ! Initialize stuff for prescribed transient lakes
     if (get_do_transient_lakes()) then
         call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
@@ -195,10 +206,11 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, use_fates
-    use dynInitColumnsMod    , only : initialize_new_columns
-    use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
-    use dynEDMod             , only : dyn_ED
+    use clm_varctl              , only : use_cn, use_fates, use_fates_luh, use_fates_potentialveg
+    use dynInitColumnsMod       , only : initialize_new_columns
+    use dynConsBiogeophysMod    , only : dyn_hwcontent_init, dyn_hwcontent_final
+    use dynEDMod                , only : dyn_ED
+    use dynFATESLandUseChangeMod, only : dynFatesLandUseInterp
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
@@ -270,7 +282,11 @@ contains
     if (get_do_harvest() .and. .not. use_fates) then
        call dynHarvest_interp(bounds_proc)
     end if
-	
+
+    if (get_do_grossunrep()) then
+       call dynGrossUnrep_interp(bounds_proc)
+    end if
+
     if (get_do_transient_lakes()) then
        call dynlake_interp(bounds_proc)
     end if
@@ -278,6 +294,11 @@ contains
     if (get_do_transient_urban()) then
        call dynurban_interp(bounds_proc)
     end if
+
+    if (use_fates_luh .and. .not. use_fates_potentialveg) then
+       call dynFatesLandUseInterp(bounds_proc)
+    end if
+
     ! ==========================================================================
     ! Do land cover change that does not require I/O
     ! ==========================================================================

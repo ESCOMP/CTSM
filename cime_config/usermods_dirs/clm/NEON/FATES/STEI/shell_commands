@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=STEI
+./xmlchange PTS_LON=270.4112
+./xmlchange PTS_LAT=45.5076

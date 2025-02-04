@@ -2,7 +2,7 @@ module initInterpMindistTestUtils
 
   ! Utilities to aid the testing of initInterpMindist
 
-  use pfunit_mod
+  use funit
   use shr_kind_mod , only : r8 => shr_kind_r8
   use initInterpMindist, only : subgrid_type, subgrid_special_indices_type
   use glcBehaviorMod, only: glc_behavior_type

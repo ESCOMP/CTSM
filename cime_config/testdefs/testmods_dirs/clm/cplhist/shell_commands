@@ -1,12 +1,8 @@
-driver=`./xmlquery --value COMP_INTERFACE`
-if [ "$driver" = "nuopc" ]; then
-   ./xmlchange DATM_YR_ALIGN=1
-   ./xmlchange DATM_YR_END=84
-   ./xmlchange DATM_YR_START=82
-else
-   ./xmlchange DATM_CPLHIST_YR_ALIGN=1
-   ./xmlchange DATM_CPLHIST_YR_END=84
-   ./xmlchange DATM_CPLHIST_YR_START=82
-fi
-./xmlchange DATM_CPLHIST_CASE=b.e20.B1850.f09_g17.pi_control.all.221.cplhist
-./xmlchange DATM_CPLHIST_DIR=/glade/p/cesm/bgcwg_dev/forcing/b.e20.B1850.f09_g17.pi_control.all.221.cplhist/cpl/hist.mon
+./xmlchange DATM_CPLHIST_CASE=cam6ctsm51_cesm23a12c_ne30pg3g17_CPLHIST_1850
+./xmlchange DATM_CPLHIST_DIR='$DIN_LOC_ROOT/atm/datm7/atm_forcing.cdeps_datm.CPLHIST_cam6ctsm51_cesm23a12c_ne30pg3g17_1850'
+./xmlchange DATM_YR_START=1
+./xmlchange DATM_YR_END=1
+./xmlchange DATM_YR_ALIGN=1
+
+# Needed until we have cplhist forcing with ndep - see https://github.com/escomp/ctsm/issues/1844
+./xmlchange DATM_PRESNDEP=none

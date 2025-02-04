@@ -2,7 +2,7 @@ module test_SpeciesNonIsotope
 
   ! Tests of SpeciesNonIsotopeType
 
-  use pfunit_mod
+  use funit
   use SpeciesNonIsotopeType
   use shr_kind_mod , only : r8 => shr_kind_r8
 
