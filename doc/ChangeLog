@@ -1,4 +1,90 @@
 ===============================================================
+Tag name: ctsm5.3.022
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue Feb  4 09:41:49 AM PST 2025
+One-line Summary: Update FATES namelist build to avoid Meier2022
+
+Purpose and description of changes
+----------------------------------
+
+This tag brings in three updates, the primary of which is an update to the namelist
+build to avoid running FATES with roughness method Meier2022 in light of recently
+discovered incompatibility between FATES and this method.  FATES will now used
+ZengWang2007 for all run mode.
+
+The other two updates are fairly minor changes.  One is a B4B change to the order in
+which the use_fates_luh flag is passed to FATES.  The other is an update to history
+outputs for the FatesColdAllVars testmod per a recent FATES-side update.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+  #2932 - 'Meier 2022' z0 parameterization causes errors with FATES
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi -------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+ fates suite tested against fates-sci.1.80.10_api.37.0.0-ctsm5.3.021
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only some FATES tests
+
+  The FATES tag has been updated from sci.1.80.4_api.37.0.0 to sci.1.80.11_api.37.0.0,
+  which includes a number of bug fixes some of which result in changes to some baselines.
+  Additional, all tests using Clm60Fates based compsets have DIFFs due to the roughness
+  method update.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.80.4_api.37.0.0 -> sci.1.80.11_api.37.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  https://github.com/ESCOMP/CTSM/pull/2934
+  https://github.com/ESCOMP/CTSM/pull/2936
+  https://github.com/ESCOMP/CTSM/pull/2898
+  https://github.com/NGEET/FATES/pull/1273
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.021
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Wed 29 Jan 2025 04:21:40 PM MST
