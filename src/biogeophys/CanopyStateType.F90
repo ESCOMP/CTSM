@@ -29,9 +29,10 @@ module CanopyStateType
      real(r8) , pointer :: elai_patch               (:)   ! patch canopy one-sided leaf area index with burying by snow
      real(r8) , pointer :: esai_patch               (:)   ! patch canopy one-sided stem area index with burying by snow
 
-     real(r8) , pointer :: tlai_hist_patch               (:)   ! patch canopy one-sided leaf area index, for SP mode
-     real(r8) , pointer :: tsai_hist_patch               (:)   ! patch canopy one-sided stem area index, for SP mode
-     real(r8) , pointer :: htop_hist_patch               (:)   ! patch canopy height, for SP mode
+     real(r8) , pointer :: tlai_input_patch          (:)   ! patch canopy one-sided leaf area index driver data for SP mode (no burying by snow)
+     real(r8) , pointer :: tsai_input_patch          (:)   ! patch canopy one-sided stem area index driver data for SP mode (no burying by snow)
+     real(r8) , pointer :: htop_input_patch          (:)   ! patch canopy height driver data for SP mode
+     real(r8) , pointer :: hbot_input_patch          (:)   ! patch canopy bottom driver data for SP mode 
 
      real(r8) , pointer :: elai240_patch            (:)   ! patch canopy one-sided leaf area index with burying by snow average over 10days
      real(r8) , pointer :: laisun_patch             (:)   ! patch patch sunlit projected leaf area index
@@ -119,9 +120,10 @@ contains
 
     allocate(this%frac_veg_nosno_patch     (begp:endp))           ; this%frac_veg_nosno_patch     (:)   = huge(1)
     allocate(this%frac_veg_nosno_alb_patch (begp:endp))           ; this%frac_veg_nosno_alb_patch (:)   = 0
-    allocate(this%tlai_hist_patch          (begp:endp))           ; this%tlai_hist_patch          (:)   = nan
-    allocate(this%tsai_hist_patch          (begp:endp))           ; this%tsai_hist_patch          (:)   = nan
-    allocate(this%htop_hist_patch          (begp:endp))           ; this%htop_hist_patch          (:)   = nan
+    allocate(this%tlai_input_patch         (begp:endp))           ; this%tlai_input_patch         (:)   = nan
+    allocate(this%tsai_input_patch         (begp:endp))           ; this%tsai_input_patch         (:)   = nan
+    allocate(this%htop_input_patch         (begp:endp))           ; this%htop_input_patch         (:)   = nan
+    allocate(this%hbot_input_patch         (begp:endp))           ; this%hbot_input_patch         (:)   = nan
     allocate(this%tlai_patch               (begp:endp))           ; this%tlai_patch               (:)   = nan
     allocate(this%tsai_patch               (begp:endp))           ; this%tsai_patch               (:)   = nan
     allocate(this%elai_patch               (begp:endp))           ; this%elai_patch               (:)   = nan
@@ -217,10 +219,10 @@ contains
             ptr_patch=this%displa_patch, default='inactive', l2g_scale_type='veg')
 
        if(use_fates_sp)then
-          this%htop_hist_patch(begp:endp) = spval
+          this%htop_input_patch(begp:endp) = spval
           call hist_addfld1d (fname='HTOP', units='m', &
               avgflag='A', long_name='HTOP weights for SP mode', &
-              ptr_patch=this%htop_hist_patch)
+              ptr_patch=this%htop_input_patch)
        else
           this%htop_patch(begp:endp) = spval
           call hist_addfld1d (fname='HTOP', units='m', &
@@ -230,15 +232,15 @@ contains
     endif
 
     if(use_fates_sp)then
-      this%tlai_hist_patch(begp:endp) = spval
+      this%tlai_input_patch(begp:endp) = spval
       call hist_addfld1d (fname='TLAI', units='m', &
           avgflag='A', long_name='TLAI weights for SP mode', &
-          ptr_patch=this%tlai_hist_patch)
+          ptr_patch=this%tlai_input_patch)
 
-      this%tsai_hist_patch(begp:endp) = spval
+      this%tsai_input_patch(begp:endp) = spval
       call hist_addfld1d (fname='TSAI', units='m', &
           avgflag='A', long_name='TSAI weights for SP mode', &
-          ptr_patch=this%tsai_hist_patch)
+          ptr_patch=this%tsai_input_patch)
 
     else
        this%tlai_patch(begp:endp) = spval
@@ -541,9 +543,10 @@ contains
           this%laisha_patch(p) = 0._r8
        end if
 
-       this%tlai_hist_patch(p)       = 0._r8
-       this%tsai_hist_patch(p)       = 0._r8
-       this%htop_hist_patch(p)       = 0._r8
+       this%tlai_input_patch(p)       = 0._r8
+       this%tsai_input_patch(p)       = 0._r8
+       this%htop_input_patch(p)       = 0._r8
+       this%hbot_input_patch(p)       = 0._r8
 
        ! needs to be initialized to spval to avoid problems when averaging for the accum
        ! field
