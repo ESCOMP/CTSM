@@ -88,7 +88,7 @@ contains
   end subroutine SatellitePhenologyInit
 
   !================================================================
-  subroutine SatellitePhenology(bounds, num_filter, filter, &
+  subroutine GetSatellitePhenologyInputs(bounds, num_filter, filter, &
        waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -117,15 +117,10 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
-         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
-         tlai               => canopystate_inst%tlai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
-         tsai               => canopystate_inst%tsai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
-         elai               => canopystate_inst%elai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow
-         esai               => canopystate_inst%esai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index with burying by snow
-         htop               => canopystate_inst%htop_input_patch    ,    & ! Output: [real(r8) (:) ] canopy top (m)
-         hbot               => canopystate_inst%hbot_input_patch    ,    & ! Output: [real(r8) (:) ] canopy bottom (m)
-         frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
+         tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
+         tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
+         htop_driver        => canopystate_inst%htop_input_patch    ,    & ! Output: [real(r8) (:) ] canopy top (m)
+         hbot_driver        => canopystate_inst%hbot_input_patch    ,    & ! Output: [real(r8) (:) ] canopy bottom (m)
          )
 
       if (use_lai_streams) then
@@ -153,53 +148,105 @@ contains
          ! bottom height   HBOT <- mhvb1 and mhvb2
 
          if (.not. use_lai_streams) then
-            tlai(p) = timwt(1)*mlai2t(p,1) + timwt(2)*mlai2t(p,2)
+            tlai_driver(p) = timwt(1)*mlai2t(p,1) + timwt(2)*mlai2t(p,2)
          endif
 
-         tsai(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
-         htop(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
-         hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
+         tsai_driver(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
+         htop_driver(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
+         hbot_driver(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
+         
+      end do
+      end associate
+      
+   end subroutine GetSatellitePhenologyInputs
+   
+   !==============================================================================
+   
+   subroutine SetSPModeCanopyStructs(bounds, num_filter, filter, &
+    waterdiagnosticbulk_inst, canopystate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Ecosystem dynamics: phenology, vegetation
+    ! Sets the canopystate_inst% data structure for non-FATES runs
+    !
+    ! !USES:
+    use pftconMod               , only : noveg, nbrdlf_dcd_brl_shrub
+    use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+    use CanopyStateType         , only : canopystate_type
+    use PatchType               , only : patch
+    use clm_varctl              , only : use_fates_sp
+    
+    type(bounds_type)              , intent(in)    :: bounds
+    integer                        , intent(in)    :: num_filter                        ! number of column points in patch filter
+    integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter points
+    type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
+    type(canopystate_type)         , intent(inout) :: canopystate_inst
+    
+    if (use_fates_sp) then 
+      return ! we should not be here
+    end if 
+    
+    associate(                                                           &
+      frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+      snow_depth         => waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
+      tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided leaf area index, no burying by snow
+      tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided stem area index, no burying by snow
+      tlai               => canopystate_inst%tlai_patch,              & ! Output: [real(r8) (:)]  one-sided leaf area index, no burying by snow
+      tsai               => canopystate_inst%tsai_patch,              & ! Output: [real(r8) (:)]  one-sided stem area index, no burying by snow
+      elai               => canopystate_inst%elai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow
+      esai               => canopystate_inst%esai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index with burying by snow
+      htop_driver        => canopystate_inst%htop_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for canopy top (m)
+      hbot_driver        => canopystate_inst%hbot_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for canopy bottom (m)
+      htop               => canopystate_inst%htop_patch    ,          & ! Output: [real(r8) (:) ] canopy top (m)
+      hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)
+      frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
+      )
+      
+    do fp = 1, num_filter
+      
+      p = filter(fp)
+      c = patch%column(p)
+      
+      ! for regular CLM (non-FATES), this is just a 1:1 mapping
+      tlai(p) = tlai_driver
+      tsai(p) = tsai_driver
+      htop(p) = htop_driver
+      hbot(p) = hbot_driver
+      
+      ! adjust lai and sai for burying by snow. if exposed lai and sai
+      ! are less than 0.05, set equal to zero to prevent numerical
+      ! problems associated with very small lai and sai.
 
-         ! adjust lai and sai for burying by snow. if exposed lai and sai
-         ! are less than 0.05, set equal to zero to prevent numerical
-         ! problems associated with very small lai and sai.
+      ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height
+      ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
 
-         ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height
-         ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+      ! NOTE: The following snow burial code is duplicated in CNVegStructUpdateMod.
+      ! Changes in one place should be accompanied by similar changes in the other.
 
-         ! NOTE: The following snow burial code is duplicated in CNVegStructUpdateMod.
-         ! Changes in one place should be accompanied by similar changes in the other.
+      if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub) then
+        ol = min(max(snow_depth(c) - hbot(p), 0.0_r8), htop(p) - hbot(p))
+        fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
+      else
+        fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
+      endif
 
-         if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub ) then
-            ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
-            fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
-         else
-            fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
-         endif
+      elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
+      esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
+      if (elai(p) < 0.05_r8) elai(p) = 0._r8
+      if (esai(p) < 0.05_r8) esai(p) = 0._r8
 
-         ! area weight by snow covered fraction
-         if(.not.use_fates_sp)then
+      ! Fraction of vegetation free of snow
+      if ((elai(p) + esai(p)) >= 0.05_r8) then
+        frac_veg_nosno_alb(p) = 1
+      else
+        frac_veg_nosno_alb(p) = 0
+      end if
 
-         ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
-         ! are duplicated by the FATE variables (in the FATES IFP indexing space)
-           elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
-           esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
-           if (elai(p) < 0.05_r8) elai(p) = 0._r8
-           if (esai(p) < 0.05_r8) esai(p) = 0._r8
-
-           ! Fraction of vegetation free of snow
-
-           if ((elai(p) + esai(p)) >= 0.05_r8) then
-              frac_veg_nosno_alb(p) = 1
-           else
-              frac_veg_nosno_alb(p) = 0
-           end if
-         endif !fates_sp
-      end do ! end of patch loop
+    end do ! end of patch loop
 
     end associate
 
-  end subroutine SatellitePhenology
+  end subroutine SetSPModeCanopyStructs
 
   !==============================================================================
   subroutine interpMonthlyVeg (bounds, canopystate_inst)
