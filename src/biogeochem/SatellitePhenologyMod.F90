@@ -24,7 +24,8 @@ module SatellitePhenologyMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: SatellitePhenology     ! CLMSP Ecosystem dynamics: phenology, vegetation
+  public :: GetSatellitePhenologyInputs ! put the data into the correct format
+  public :: SetSPModeCanopyStructs      ! CLMSP Ecosystem dynamics: phenology, vegetation
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
@@ -88,8 +89,7 @@ contains
   end subroutine SatellitePhenologyInit
 
   !================================================================
-  subroutine GetSatellitePhenologyInputs(bounds, num_filter, filter, &
-       waterdiagnosticbulk_inst, canopystate_inst)
+  subroutine GetSatellitePhenologyInputs(bounds, num_filter, filter, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Ecosystem dynamics: phenology, vegetation
@@ -107,7 +107,6 @@ contains
     type(bounds_type)              , intent(in)    :: bounds
     integer                        , intent(in)    :: num_filter                        ! number of column points in patch filter
     integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter points
-    type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
