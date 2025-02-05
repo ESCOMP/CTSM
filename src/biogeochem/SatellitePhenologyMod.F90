@@ -111,15 +111,13 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,p,c                            ! indices
-    real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
-    real(r8) :: fb                                ! fraction of canopy layer covered by snow
     !-----------------------------------------------------------------------
 
     associate(                                                           &
          tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
          tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
          htop_driver        => canopystate_inst%htop_input_patch    ,    & ! Output: [real(r8) (:) ] canopy top (m)
-         hbot_driver        => canopystate_inst%hbot_input_patch    ,    & ! Output: [real(r8) (:) ] canopy bottom (m)
+         hbot_driver        => canopystate_inst%hbot_input_patch         & ! Output: [real(r8) (:) ] canopy bottom (m)
          )
 
       if (use_lai_streams) then
@@ -175,11 +173,18 @@ contains
     use PatchType               , only : patch
     use clm_varctl              , only : use_fates_sp
     
+    !
+    ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
     integer                        , intent(in)    :: num_filter                        ! number of column points in patch filter
     integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter points
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fp,p,c                            ! indices
+    real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
+    real(r8) :: fb                                ! fraction of canopy layer covered by snow
     
     if (use_fates_sp) then 
       return ! we should not be here
@@ -207,10 +212,10 @@ contains
       c = patch%column(p)
       
       ! for regular CLM (non-FATES), this is just a 1:1 mapping
-      tlai(p) = tlai_driver
-      tsai(p) = tsai_driver
-      htop(p) = htop_driver
-      hbot(p) = hbot_driver
+      tlai(p) = tlai_driver(p)
+      tsai(p) = tsai_driver(p)
+      htop(p) = htop_driver(p)
+      hbot(p) = hbot_driver(p)
       
       ! adjust lai and sai for burying by snow. if exposed lai and sai
       ! are less than 0.05, set equal to zero to prevent numerical
