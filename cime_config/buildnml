@@ -110,6 +110,7 @@ def buildnml(case, caseroot, compname):
         "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
         "clm6_0_ERA5": "clm6_0_GSWP3v1",
         "clm6_0_CRUv7": "clm6_0_GSWP3v1",
+        "clm6_0_CRUJRA2024": "clm6_0_GSWP3v1",
     }
     for mode, closest in closest_tuning.items():
         if lnd_tuning_mode == mode:

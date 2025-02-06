@@ -3379,6 +3379,16 @@
       <option name="comment">30 day exact restart test with threading for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
+  <test name="ERP_P128x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">30 day exact restart test with threading for FATES fixed biogeography reduced complexity mode on an f45 grid and CRUJRA2024 instead of CRUv7 datm.</option>
+    </options>
+  </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLogging">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
