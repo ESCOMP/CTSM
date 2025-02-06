@@ -6,6 +6,7 @@ generate_crop_gdds = .true.
 use_mxmat = .false.
 
 ! (h3) Daily outputs for GDD generation and figure-making
+! Note that hist_mfilt ≠ 1 means that ERI tests will probably fail
 hist_fincl4 = 'GDDACCUM', 'GDDHARV'
 hist_nhtfrq(4) = -24
 hist_mfilt(4) = 365
