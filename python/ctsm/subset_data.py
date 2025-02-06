@@ -571,6 +571,10 @@ def setup_files(args, defaults, cesmroot):
         abort("inputdata directory does not exist")
 
     # DATM data
+    # TODO issue #1895: allow datm_crujra, which also affects
+    #      tools/site_and_regional/default_data_1850.cfg
+    #      tools/site_and_regional/default_data_2000.cfg
+    #      python/ctsm/test/testinputs/default_data.cfg
     datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
     dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
