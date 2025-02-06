@@ -2,7 +2,7 @@ $CTSMROOT/README                                          09/05/2024
 
 Community Terrestrial Systems Model (CTSM) science version 5.3 series -- source code, tools, 
 offline-build and test scripts. This gives you everything you need
-to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRU NCEP or GSWP3 forcing data in 
+to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRU or GSWP3 forcing data in
 place of a modeled atmosphere.
 
 CMEPS is the Community Mediator for Earth Prediction Systems. And CDEPS is the
