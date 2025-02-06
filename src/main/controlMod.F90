@@ -119,7 +119,7 @@ contains
     !
     ! !USES:
     use CNMRespMod                       , only : CNMRespReadNML
-    use LunaMod                          , only : LunaReadNML
+    use CNFUNMod                         , only : CNFUNReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
@@ -584,7 +584,6 @@ contains
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
-    call LunaReadNML            ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -598,6 +597,7 @@ contains
 
     if ( use_fun ) then
        call CNMRespReadNML( NLFilename )
+       call CNFUNReadNML( NLFilename )
     end if
 
     call soilHydReadNML(   NLFilename )
