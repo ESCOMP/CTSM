@@ -25,7 +25,7 @@ module SatellitePhenologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: GetSatellitePhenologyInputs ! put the data into the correct format
-  public :: SetSPModeCanopyStructs      ! CLMSP Ecosystem dynamics: phenology, vegetation
+  public :: SetSPModeCanopyStructs      ! CLM(BGC)-SP phenology and vegetation
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
@@ -114,10 +114,10 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
-         tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
-         htop_driver        => canopystate_inst%htop_input_patch    ,    & ! Output: [real(r8) (:) ] canopy top (m)
-         hbot_driver        => canopystate_inst%hbot_input_patch         & ! Output: [real(r8) (:) ] canopy bottom (m)
+         tlai_tinterp        => canopystate_inst%tlai_input_patch    ,   & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
+         tsai_tinterp        => canopystate_inst%tsai_input_patch    ,   & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
+         htop_tinterp        => canopystate_inst%htop_input_patch    ,   & ! Output: [real(r8) (:) ] canopy top (m)
+         hbot_tinterp        => canopystate_inst%hbot_input_patch        & ! Output: [real(r8) (:) ] canopy bottom (m)
          )
 
       if (use_lai_streams) then
@@ -145,12 +145,12 @@ contains
          ! bottom height   HBOT <- mhvb1 and mhvb2
 
          if (.not. use_lai_streams) then
-            tlai_driver(p) = timwt(1)*mlai2t(p,1) + timwt(2)*mlai2t(p,2)
+            tlai_tinterp(p) = timwt(1)*mlai2t(p,1) + timwt(2)*mlai2t(p,2)
          endif
 
-         tsai_driver(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
-         htop_driver(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
-         hbot_driver(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
+         tsai_tinterp(p) = timwt(1)*msai2t(p,1) + timwt(2)*msai2t(p,2)
+         htop_tinterp(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
+         hbot_tinterp(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
          
       end do
       end associate
@@ -159,7 +159,7 @@ contains
    
    !==============================================================================
    
-   subroutine SetSPModeCanopyStructs(bounds, num_filter, filter, &
+   subroutine SetSatellitePhenologyBGCCanopyStructs(bounds, num_filter, filter, &
     waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -187,7 +187,8 @@ contains
     real(r8) :: fb                                ! fraction of canopy layer covered by snow
     
     if (use_fates_sp) then 
-      return ! we should not be here
+       write(iulog,*) 'SetSatellitePhenologyBGCCanopyStructs', 'should not be calling this method when use_fates_sp == .true.'
+      call endrun(msg=errMsg(sourcefile, __LINE__))
     end if 
     
     associate(                                                           &
@@ -250,7 +251,7 @@ contains
 
     end associate
 
-  end subroutine SetSPModeCanopyStructs
+  end subroutine SetSatellitePhenologyBGCCanopyStructs
 
   !==============================================================================
   subroutine interpMonthlyVeg (bounds, canopystate_inst)
