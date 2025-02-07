@@ -75,4 +75,44 @@ module test_CNFireFactory
 
     !-----------------------------------------------------------------------
 
+    @Test
+    subroutine li2014_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%Init( fire_method = "li2014qianfrc")
+
+    end subroutine li2014_works
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine li2016_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%Init( fire_method = "li2016crufrc")
+
+    end subroutine li2016_works
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine li2021_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%Init( fire_method = "li2021gswpfrc")
+
+    end subroutine li2021_works
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine li2024_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%Init( fire_method = "li2024gswpfrc")
+
+    end subroutine li2024_works
+
+    !-----------------------------------------------------------------------
+
 end module test_CNFireFactory
