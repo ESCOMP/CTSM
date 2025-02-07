@@ -145,27 +145,6 @@
     </phase>
   </test>
 
-  <test name="SSP_D_Ld10.f10_f10_mg37.I1850Clm60Bgc.derecho_intel.clm-rtmColdSSP">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2913</issue>
-    </phase>
-  </test>
-
-  <test name="SSP_D_Ld4.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-ciso_rtmColdSSP">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2913</issue>
-    </phase>
-  </test>
-
-  <test name="SSP_Ld10.f10_f10_mg37.I1850Clm50Bgc.derecho_gnu.clm-rtmColdSSP">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2913</issue>
-    </phase>
-  </test>
-
   <test name="SSP_Ld4.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-ciso_rtmColdSSP">
     <phase name="RUN">
       <status>FAIL</status>
