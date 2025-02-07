@@ -115,7 +115,6 @@
       <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
       <!-- All the clm6_0 physics options -->
       <value compset="DATM%CRUJRA2024_CLM60">clm6_0_CRUJRA2024</value>
-      <value compset="DATM%CRU_CLM60"    >clm6_0_CRUJRA2024</value>
       <value compset="DATM%CRUv7_CLM60"  >clm6_0_CRUv7</value>
       <value compset="SATM_CLM60"        >clm6_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM60">clm6_0_GSWP3v1</value>
