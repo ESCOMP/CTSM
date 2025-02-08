@@ -5,18 +5,18 @@
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
 This is a wrapper script for running CTSM simulation for one or more
-neon sites.
+tower (neon or plumber) sites.
 
-This script is only for neon site and we will develop a more general
-code later.
+This script is only for supported tower sites and we will develop a
+more general code later.
 
 This script first creates and builds a generic base case.
-Next, it will clone the base_case for different neon sites and run
+Next, it will clone the base_case for different tower sites and run
 types to reduce the need to build ctsm everytime.
 
 This script will do the following:
     1) Create a generic base case for cloning.
-    2) Make the case for the specific neon site(s).
+    2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for:
         a. AD spinup
 	b. post-AD spinup
@@ -33,11 +33,10 @@ conda activate ctsm_py
 
 -------------------------------------------------------------------
 To see the available options:
-    ./run_neon.py --help
+    ./run_tower.py --help
 -------------------------------------------------------------------
 """
 # TODO (NS)
-# - [ ]
 # - [ ] Case dependency and the ability to check case status
 # - [ ] If Case dependency works we don't need finidat given explicilty for post-ad and transient.
 
@@ -64,8 +63,9 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.download_utils import download_file
-from ctsm.site_and_regional.neon_arg_parse import get_parser
+from ctsm.site_and_regional.tower_arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
+from ctsm.site_and_regional.plumber_site import Plumber2Site
 
 # pylint: disable=import-error, wildcard-import, wrong-import-order
 from standard_script_setup import *
@@ -130,7 +130,7 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             # versions = tmp_df[7].unique()
             # print ("all versions available for ", site_name,":", *versions)
             latest_version = tmp_df[7].iloc[-1]
-            # print ("latests version available for ", site_name,":", latest_version)
+            # print ("latest version available for ", site_name,":", latest_version)
 
             tmp_df = tmp_df[tmp_df[7].str.contains(latest_version)]
             # -- remove .nc from the file names
@@ -167,9 +167,41 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     return available_list
 
 
+def setup_plumber_data(valid_plumber_sites):
+    """
+    A function to set up plumber site objects
+    with dummy start and end years and months.
+    This allows us to use the list of plumber site objects.
+
+    Returns:
+        available_list :
+            list of plumber_site objects that is found
+    """
+
+    available_list = []
+
+    for site_name in valid_plumber_sites:
+
+        # start_year and end_year are set in shell commands, so these get overwritten
+        start_year = 8888
+        end_year = 9999
+        start_month = 1
+        end_month = 12
+
+        logger.debug("Valid plumber site %s found!", site_name)
+        finidat = None
+
+        plumber_site = Plumber2Site(
+            site_name, start_year, end_year, start_month, end_month, finidat
+        )
+        available_list.append(plumber_site)
+
+    return available_list
+
+
 def main(description):
     """
-    Determine valid neon sites. Make an output directory if it does not exist.
+    Determine valid tower sites. Make an output directory if it does not exist.
     Loop through requested sites and run CTSM at that site.
     """
     cesmroot = path_to_ctsm_root()
@@ -181,21 +213,28 @@ def main(description):
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
+    # Get the list of supported plumber sites from usermods
+    valid_plumber_sites = glob.glob(
+        os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
+    )
+
+    valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])
+
     (
-        site_list,
+        neon_site_list,
+        plumber_site_list,
         output_root,
         run_type,
         experiment,
         prism,
         overwrite,
-        run_length,
         base_case_root,
         run_from_postad,
         setup_only,
         no_batch,
         rerun,
         user_version,
-    ) = get_parser(sys.argv, description, valid_neon_sites)
+    ) = get_parser(sys.argv, description, valid_neon_sites, valid_plumber_sites)
 
     if output_root:
         logger.debug("output_root : %s", output_root)
@@ -206,7 +245,7 @@ def main(description):
     available_list = check_neon_listing(valid_neon_sites)
 
     # =================================
-    # -- all neon sites can be cloned from one generic case
+    # -- all tower sites can be cloned from one generic case
     # -- so no need to define a base_case for every site.
 
     res = "CLM_USRDAT"
@@ -216,28 +255,55 @@ def main(description):
         compset = "I1PtClm60Bgc"
 
     # --  Looping over neon sites
+    if neon_site_list:
+        for neon_site in available_list:
+            if neon_site.name in neon_site_list:
+                if run_from_postad:
+                    neon_site.finidat = None
+                if not base_case_root:
+                    user_mods_dirs = None
+                    base_case_root = neon_site.build_base_case(
+                        cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                    )
+                logger.info("-----------------------------------")
+                logger.info("Running CTSM for neon site : %s", neon_site.name)
 
-    for neon_site in available_list:
-        if neon_site.name in site_list:
-            if run_from_postad:
-                neon_site.finidat = None
-            if not base_case_root:
-                user_mods_dirs = None
-                base_case_root = neon_site.build_base_case(
-                    cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                neon_site.run_case(
+                    base_case_root,
+                    run_type,
+                    prism,
+                    user_version,
+                    overwrite=overwrite,
+                    setup_only=setup_only,
+                    no_batch=no_batch,
+                    rerun=rerun,
+                    experiment=experiment,
                 )
-            logger.info("-----------------------------------")
-            logger.info("Running CTSM for neon site : %s", neon_site.name)
 
-            neon_site.run_case(
-                base_case_root,
-                run_type,
-                prism,
-                run_length,
-                user_version,
-                overwrite=overwrite,
-                setup_only=setup_only,
-                no_batch=no_batch,
-                rerun=rerun,
-                experiment=experiment,
-            )
+    # -- check for available plumber data:
+    available_plumber_list = setup_plumber_data(valid_plumber_sites)
+
+    # --  Looping over plumber sites
+    if plumber_site_list:
+        for plumber_site in available_plumber_list:
+            if plumber_site.name in plumber_site_list:
+                if run_from_postad:
+                    plumber_site.finidat = None
+                if not base_case_root:
+                    user_mods_dirs = None
+                    base_case_root = plumber_site.build_base_case(
+                        cesmroot, output_root, res, compset, user_mods_dirs, overwrite, setup_only
+                    )
+                logger.info("-----------------------------------")
+                logger.info("Running CTSM for plumber site : %s", plumber_site.name)
+                plumber_site.run_case(
+                    base_case_root,
+                    run_type,
+                    prism,
+                    user_version,
+                    overwrite=overwrite,
+                    setup_only=setup_only,
+                    no_batch=no_batch,
+                    rerun=rerun,
+                    experiment=experiment,
+                )
