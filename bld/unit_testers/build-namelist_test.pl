@@ -1981,8 +1981,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
         if ( $lndtuningmode eq "clm6_0_CRUv7" or
-             $lndtuningmode eq "clm4_5_CRUJRA2024" or
-             $lndtuningmode eq "clm5_0_CRUJRA2024") {
+             $lndtuningmode eq "clm4_5_CRUJRA2024") {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

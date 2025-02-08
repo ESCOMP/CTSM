@@ -159,6 +159,10 @@
   </compset>
 
   <compset>
+    <alias>I1850Clm50SpCrujra</alias>
+    <lname>1850_DATM%CRUJRA2024_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
     <alias>I1850Clm60SpCrujra</alias>
     <lname>1850_DATM%CRUJRA2024_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
@@ -226,6 +230,10 @@
     <lname>1850_DATM%CRUv7_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
+  </compset>
+  <compset>
+    <alias>I1850Clm50BgcCropCrujra</alias>
+    <lname>1850_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- latest CLM version with BGC-Crop and CRU forcing -->
@@ -378,6 +386,10 @@
     <science_support grid="f19_g17"/>
   </compset>
 
+  <compset>
+    <alias>IHistClm50SpCrujra</alias>
+    <lname>HIST_DATM%CRUJRA2024_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
   <compset>
     <alias>IHistClm50SpCru</alias>
     <lname>HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
