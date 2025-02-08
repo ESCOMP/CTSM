@@ -1,4 +1,64 @@
 ===============================================================
+Tag name: ctsm5.3.023
+Originator(s): afoster (Adrianna Foster)
+Date: Sat Feb  8 08:36:00 MST 2025
+One-line Summary: merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+[Merging b4b-dev and ctsm5.3.022. Fixes SSP tests and adds PLUMBER tower run capabilities
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description):
+Fixes #2813
+Fixes #2920
+Fixes #1487
+Fixes #2739
+Fixes #2410
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Can now run PLUMBER towers
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+    
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- ESCOMP/CTSM#2957: ctsm5.3.023: Merge b4bdev 20250206 (https://github.com/ESCOMP/CTSM/pull/2957)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.022
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Thu Feb  6 11:22:48 MST 2025
