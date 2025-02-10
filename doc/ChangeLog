@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: ctsm5.3.024
+Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
+Date: Mon 10 Feb 2025 03:38:43 PM MST
+One-line Summary: Change choice of pressure in CLMU building energy model
+
+Purpose and description of changes
+----------------------------------
+
+ In the CLMU BEM, the choice of pressure for calculating indoor air density is changed from standard pressure to bottom layer of atmosphere pressure of the corresponding grid cell.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2755
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ From the PR: I have updated the inline documentation in the code where it's needed
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- PEND
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+ From the PR: Some urban variables such as urban 2m air temperature, 2m relative humidity, urban air-conditioning and heating energy fluxes will change slightly. See #2755 for details.
+
+ slevis from running aux_clm: I see larger differences that seem justified as simulations typically diverge from small initial differences.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2758
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.023
 Originator(s): afoster (Adrianna Foster)
 Date: Sat Feb  8 08:36:00 MST 2025
@@ -4220,7 +4286,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.2.010
-Originator(s): @cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
+Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
 Date: Thu 11 Jul 2024 11:57:15 AM MDT
 One-line Summary: Explicit A/C adoption
 
