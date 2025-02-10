@@ -58,7 +58,7 @@ contains
     use clm_varcon           , only: clm_varcon_init
     use landunit_varcon      , only: landunit_varcon_init
     use clm_varctl           , only: fsurdat, version
-    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb
+    use surfrdMod            , only: surfrd_get_num_patches, surfrd_get_nlevurb, surfrd_compat_check
     use controlMod           , only: control_init, control_print, NLFilename
     use ncdio_pio            , only: ncd_pio_init
     use initGridCellsMod     , only: initGridCells
@@ -100,6 +100,7 @@ contains
 
     call control_init(dtime)
     call ncd_pio_init()
+    call surfrd_compat_check(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
@@ -124,19 +125,20 @@ contains
   end subroutine initialize1
 
   !-----------------------------------------------------------------------
-  subroutine initialize2(ni,nj)
+  subroutine initialize2(ni,nj, currtime)
     !
     ! !DESCRIPTION:
     ! CLM initialization second phase
     !
     ! !USES:
+    use ESMF                          , only : ESMF_Time
     use clm_varcon                    , only : spval
     use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
     use clm_varpar                    , only : surfpft_lb, surfpft_ub
     use clm_varpar                    , only : nlevsno
     use clm_varpar                    , only : natpft_size,cft_size
-    use clm_varctl                    , only : fsurdat
-    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use clm_varctl                    , only : fsurdat, hillslope_file
+    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
@@ -185,6 +187,7 @@ contains
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
+    type(ESMF_Time), intent(in) :: currtime
     !
     ! !LOCAL VARIABLES:
     integer            :: c,g,i,j,k,l,n,p ! indices
@@ -253,7 +256,7 @@ contains
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
-    call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
+    call surfrd_get_data(begg, endg, ldomain, fsurdat, hillslope_file, actual_numcft)
 
     if(use_fates) then
 
@@ -304,7 +307,7 @@ contains
 
     if (use_hillslope) then
        ! Initialize hillslope properties
-       call InitHillslope(bounds_proc, fsurdat)
+       call InitHillslope(bounds_proc, hillslope_file)
     endif
 
     ! Set filters
@@ -344,10 +347,12 @@ contains
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
 
+    
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()
     else
+       call timemgr_init(curr_date_in=currtime)
        call restFile_getfile(file=fnamer, path=pnamer)
        call restFile_open( flag='read', file=fnamer, ncid=ncid )
        call timemgr_restart_io( ncid=ncid, flag='read' )

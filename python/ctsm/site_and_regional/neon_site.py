@@ -1,5 +1,6 @@
 """
-This module contains the NeonSite class and class functions which are used in run_neon.py
+This module contains the NeonSite class and class functions which extend the tower_site class for
+things that are specific just for NEON sites.
 """
 
 # Import libraries
@@ -45,7 +46,9 @@ class NeonSite(TowerSite):
     ):
         if user_mods_dirs is None:
             user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+                os.path.join(
+                    self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name
+                )
             ]
         case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
 
@@ -57,7 +60,6 @@ class NeonSite(TowerSite):
         base_case_root,
         run_type,
         prism,
-        run_length,
         user_version,
         tower_type=None,
         user_mods_dirs=None,
@@ -78,8 +80,6 @@ class NeonSite(TowerSite):
             transient, post_ad, or ad case, default transient
         prism: bool, opt
             if True, use PRISM precipitation, default False
-        run_length: str, opt
-            length of run, default '4Y'
         user_version: str, opt
             default 'latest'
         overwrite: bool, opt
@@ -94,7 +94,7 @@ class NeonSite(TowerSite):
             name of experiment, default False
         """
         user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
+            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name)
         ]
         tower_type = "NEON"
 
@@ -102,7 +102,6 @@ class NeonSite(TowerSite):
             base_case_root,
             run_type,
             prism,
-            run_length,
             user_version,
             tower_type,
             user_mods_dirs,

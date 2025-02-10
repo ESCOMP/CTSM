@@ -69,31 +69,64 @@ class TowerSite:
             ),
         )
 
+    # TODO: Refactor to shorten this so the disable can be removed
+    # pylint: disable=too-many-statements
     def build_base_case(
         self, cesmroot, output_root, res, compset, user_mods_dirs, overwrite=False, setup_only=False
     ):
         """
         Function for building a base_case to clone.
-        To spend less time on building ctsm for the neon cases,
+        To spend less time on building ctsm for the neon and plumber cases,
         all the other cases are cloned from this case
         Args:
         self:
-            The NeonSite object
+            The TowerSite object
         base_root (str):
             root of the base_case CIME
+        cesmroot (str):
+            root of the CESM code to run
+        output_root (str):
+            root of the output directory to write to
         res (str):
             base_case resolution or gridname
         compset (str):
             base case compset
+        user_mods_dirs (str):
+            path to the user-mod-directory to use
         overwrite (bool) :
             Flag to overwrite the case if exists
+        setup_only (bool) :
+            Flag to only do the setup phase
         """
+        #
+        # Error checking on the input
+        #
+        if not os.path.isdir(cesmroot):
+            abort("Input cesmroot directory does NOT exist: " + str(cesmroot))
+        if not isinstance(res, str):
+            abort("Input res is NOT a string as expected: " + str(res))
+        if not isinstance(compset, str):
+            abort("Input compset is NOT a string as expected: " + str(compset))
+        if not isinstance(overwrite, bool):
+            abort("Input compset is NOT a boolean as expected: " + str(compset))
+        if not isinstance(setup_only, bool):
+            abort("Input setup_only is NOT a boolean as expected: " + str(setup_only))
+        if not isinstance(user_mods_dirs, list):
+            abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
+        for dirtree in user_mods_dirs:
+            if not os.path.isdir(dirtree):
+                abort("Input user_mods_dirs dirtreetory does NOT exist: " + str(dirtree))
+
         print("---- building a base case -------")
         # pylint: disable=attribute-defined-outside-init
         self.base_case_root = output_root
         # pylint: enable=attribute-defined-outside-init
         if not output_root:
             output_root = os.getcwd()
+
+        if not os.path.isdir(output_root):
+            abort("Input output_root directory does NOT exist: " + str(output_root))
+
         case_path = os.path.join(output_root, self.name)
 
         logger.info("base_case_name : %s", self.name)
@@ -188,6 +221,8 @@ class TowerSite:
                     "finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(rundir, self.finidat)
                 ]
         else:
+            if not site_lines:
+                site_lines = []
             user_nl_lines = [
                 "hist_fincl2 = ''",
                 "hist_mfilt = 20",
@@ -253,7 +288,6 @@ class TowerSite:
         base_case_root,
         run_type,
         prism,
-        run_length,
         user_version,
         tower_type,
         user_mods_dirs,
@@ -271,11 +305,10 @@ class TowerSite:
         base_case_root: str, opt
             file path of base case
         run_type: str, opt
-            transient, post_ad, or ad case, default transient
+            transient, post_ad, or ad case
+            default transient for neon cases and ad for plumber cases
         prism: bool, opt
             if True, use PRISM precipitation, default False
-        run_length: str, opt
-            length of run, default '4Y'
         user_version: str, opt
             default 'latest'
         overwrite: bool, opt
@@ -380,10 +413,14 @@ class TowerSite:
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART", "on")
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
+                # This was originally set to 18 for NEON cases, which typically start in 2018.
+                # AD cases, would start in 0018, followed by postAD in 1018.
+                # PLUMBER cases all start in different years, but not expected to cause issues.
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")
                 case.set_value("RESUBMIT", 1)
-                case.set_value("STOP_N", run_length)
+                # this case.setup() is necessary to create the case.run batch job
+                case.case_setup()
 
             else:
                 case.set_value("CLM_FORCE_COLDSTART", "off")
@@ -393,7 +430,6 @@ class TowerSite:
             if run_type == "postad":
                 case.case_setup()
                 self.set_ref_case(case)
-                case.set_value("STOP_N", run_length)
 
             # For transient cases STOP will be set in the user_mod_directory
             if run_type == "transient":
