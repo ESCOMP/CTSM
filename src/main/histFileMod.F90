@@ -154,7 +154,7 @@ module histFileMod
   public :: hist_addfld1d        ! Add a 1d single-level field to the list of all history fields
   public :: hist_addfld2d        ! Add a 2d multi-level field to the list of all history fields
   public :: hist_addfld_decomp   ! Add a 1d/2d field based on patch or column data
-  public :: hist_add_subscript   ! Add a 2d subscript dimension
+
 
   public :: hist_printflds       ! Print summary of list of all history fields
   public :: htapes_fieldlist     ! Finalize history file field lists, intersecting allhistfldlist with
@@ -203,10 +203,6 @@ module histFileMod
                                                   ! is 255. But this can't be increased until all hard
                                                   ! coded values throughout the i/o stack are updated.
   integer, parameter :: max_chars = 199        ! max chars for char variables
-  integer, parameter :: max_subs = 100         ! max number of subscripts
-  integer            :: num_subs = 0           ! actual number of subscripts
-  character(len=32)  :: subs_name(max_subs)    ! name of subscript
-  integer            :: subs_dim(max_subs)     ! dimension of subscript
 
   ! type2d value for a field without a level dimension. This value is important for the
   ! following reasons (as of 2023-08-21):
@@ -263,8 +259,11 @@ module histFileMod
   end interface
 
   ! Additional per-field metadata. See also history_entry. 
-  ! These values are specified in hist_addfld* calls but then can be
-  ! overridden by namelist params like hist_fincl1.
+  ! For the primary history tape, some fields are enabled here (inside hist_addfld* 
+  ! call)  but then can be overridden by namelist params (like hist_fincl1). The
+  ! fields for other history tapes are theoretically settable here but in
+  ! practice are all disabled.  Fields for those tapes have to be specified
+  ! explicitly and manually via hist_fincl2 et al.
   type, extends(entry_base) :: allhistfldlist_entry
      ! 10) TODO DONE Add 2nd dim to actflag, which should make fld unique by file
      logical :: actflag(max_tapes,maxsplitfiles)  ! which history tapes to write to
@@ -315,8 +314,8 @@ module histFileMod
   type (clmpoint_ra) :: clmptr_ra(max_mapflds) ! Real array data (2D)
   !
   ! History field metadata including which history tapes (if any) it should be output to, and
-  ! type of accumulation to perform. The field ordering is arbitrary, depending on the order of
-  ! hist_addfld* calls in the code.
+  ! type of accumulation to perform. This list contains all possible fields, and their field ordering 
+  ! is arbitrary, as it depends on the order of hist_addfld* calls in the code.
   ! For the field data itself, see 'tape'.
   !
   type (allhistfldlist_entry) :: allhistfldlist(max_flds)  ! list of all history fields
@@ -351,7 +350,7 @@ module histFileMod
   ! 11b) TODO DONE History restart files seem to mirror history files => need the second dimension I think
   type(file_desc_t), target :: ncid_hist(max_tapes, maxsplitfiles)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
-  integer :: hist_interval_dimid             ! time bounds dimension id
+  integer :: nbnd_dimid                      ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
   !
   ! Time Constant variable names and filename
@@ -2541,9 +2540,6 @@ contains
     ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
     call ncd_defdim(lnfid, 'elevclas' , maxpatch_glc + 1, dimid)
 
-    do n = 1,num_subs
-       call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
-    end do
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
@@ -2579,7 +2575,7 @@ contains
     end if
 
     if ( .not. lhistrest )then
-       call ncd_defdim(lnfid, 'hist_interval', 2, hist_interval_dimid)
+       call ncd_defdim(lnfid, 'nbnd', 2, nbnd_dimid)
        call ncd_defdim(lnfid, 'time', ncd_unlimited, time_dimid)
        if (masterproc)then
           write(iulog,*) trim(subname), &
@@ -2714,7 +2710,7 @@ contains
     ! !DESCRIPTION:
     ! Write time constant 3D variables to history tapes.
     ! Only write out when this subroutine is called (normally only for
-    ! primary history files at very first time-step, nstep=0).
+    ! primary history files at very first time-step, nstep=1).
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
@@ -3440,6 +3436,7 @@ contains
        long_name = 'current date (YYYYMMDD) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mcdate', ncd_int, 1, dim1id , varid, &
           long_name = long_name)
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        !
        ! add global attribute time_period_freq
        !
@@ -3469,19 +3466,24 @@ contains
        long_name = 'current seconds of current date at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mcsec' , ncd_int, 1, dim1id , varid, &
           long_name = long_name, units='s')
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        long_name = 'current day (from base day) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mdcur' , ncd_int, 1, dim1id , varid, &
           long_name = long_name)
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        long_name = 'current seconds of current day at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mscur' , ncd_int, 1, dim1id , varid, &
           long_name = long_name)
+       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t,f) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
-       dim2id(1) = hist_interval_dimid;  dim2id(2) = time_dimid
+       dim2id(1) = nbnd_dimid;  dim2id(2) = time_dimid
        if (f == accumulated_file_index) then
           call ncd_defvar(nfid(t,f), 'time_bounds', ncd_double, 2, dim2id, varid, &
-             long_name = 'history time interval endpoints')
+             long_name = 'time interval endpoints', &
+             units = str)
+          call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
        end if
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
@@ -4215,13 +4217,7 @@ contains
     tape_loop1: do t = 1, ntapes
        file_loop1: do f = 1, maxsplitfiles
 
-          if (history_tape_in_use(t,f) == 0) then
-             cycle
-          end if
-
-          ! Skip nstep=0 if monthly average
-
-          if (nstep==0 .and. tape(t)%nhtfrq==0) then
+          if (.not. history_tape_in_use(t,f)) then
              cycle
           end if
 
@@ -4240,7 +4236,7 @@ contains
 
              ! Normalize history buffer if time averaged
 
-             call hfields_normalize(t, f)
+             call hfields_normalize(t,f)
 
              ! Increment current time sample counter.
 
@@ -4262,7 +4258,7 @@ contains
                         ' at nstep = ',get_nstep()
                    write(iulog,*)'calling htape_create for tape t and file f = ', t, f
                 endif
-                call htape_create (t, f)
+                call htape_create (t,f)
 
                 ! Define time-constant field variables
                 call htape_timeconst(t, f, mode='define')
@@ -4293,7 +4289,6 @@ contains
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
                      cellsand_col, cellclay_col, mode='write')
                 do_3Dtconst = .false.
-             end if
 
              if (masterproc) then
                 write(iulog,*)
@@ -6068,31 +6063,6 @@ contains
     endif
 
   end function next_history_pointer_index
-
-  !-----------------------------------------------------------------------
-  subroutine hist_add_subscript(name, dim)
-    !
-    ! !DESCRIPTION:
-    ! Add a history variable to the output history tape.
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: name ! name of subscript
-    integer         , intent(in) :: dim  ! dimension of subscript
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*),parameter :: subname = 'hist_add_subscript'
-    !-----------------------------------------------------------------------
-
-    num_subs = num_subs + 1
-    if (num_subs > max_subs) then
-       write(iulog,*) trim(subname),' ERROR: ',&
-            ' num_subs = ',num_subs,' greater than max_subs= ',max_subs
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
-    subs_name(num_subs) = name
-    subs_dim(num_subs) =  dim
-
-  end subroutine hist_add_subscript
 
   !-----------------------------------------------------------------------
 
