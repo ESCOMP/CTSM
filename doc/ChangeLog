@@ -1,13 +1,13 @@
 ===============================================================
 Tag name: ctsm5.3.024
 Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
-Date: Mon 10 Feb 2025 03:38:43 PM MST
+Date: Tue Feb 11 09:56:24 MST 2025
 One-line Summary: Change choice of pressure in CLMU building energy model
 
 Purpose and description of changes
 ----------------------------------
 
- In the CLMU BEM, the choice of pressure for calculating indoor air density is changed from standard pressure to bottom layer of atmosphere pressure of the corresponding grid cell.
+ In the CLMU Building Energy Model (BEM), the choice of pressure for calculating indoor air density is changed from standard pressure to bottom layer of atmosphere pressure of the corresponding grid cell.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -42,7 +42,7 @@ Testing summary:
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi ------- PEND
+    izumi ------- OK
 
 Answer changes
 --------------
