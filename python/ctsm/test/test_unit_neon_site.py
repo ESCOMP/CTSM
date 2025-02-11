@@ -26,7 +26,7 @@ from ctsm.site_and_regional.neon_site import NeonSite
 
 class TestNeonSite(unittest.TestCase):
     """
-    Basic class for testing NeonSite.py.
+    Basic class for testing neon_site.py.
     """
 
     def setUp(self):
