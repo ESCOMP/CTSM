@@ -4236,7 +4236,7 @@ contains
 
              ! Normalize history buffer if time averaged
 
-             call hfields_normalize(t,f)
+             call hfields_normalize(t, f)
 
              ! Increment current time sample counter.
 
@@ -4258,7 +4258,7 @@ contains
                         ' at nstep = ',get_nstep()
                    write(iulog,*)'calling htape_create for tape t and file f = ', t, f
                 endif
-                call htape_create (t,f)
+                call htape_create (t, f)
 
                 ! Define time-constant field variables
                 call htape_timeconst(t, f, mode='define')
@@ -4289,6 +4289,7 @@ contains
                      bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
                      cellsand_col, cellclay_col, mode='write')
                 do_3Dtconst = .false.
+             end if
 
              if (masterproc) then
                 write(iulog,*)
