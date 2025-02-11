@@ -84,7 +84,6 @@
       <!-- All the clm4_5 physics options -->
       <value compset="SATM_CLM45"        >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
-      <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
       <value compset="CAM40[^_]*_CLM45"  >clm4_5_cam4.0</value>
@@ -100,7 +99,6 @@
       <!-- All the clm5_0 physics options -->
       <value compset="DATM%CRUJRA2024_CLM50">clm5_0_CRUJRA2024</value>
       <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
-      <value compset="DATM%CRU_CLM50"    >clm5_0_CRUv7</value>
       <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
