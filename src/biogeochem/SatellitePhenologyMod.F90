@@ -25,7 +25,7 @@ module SatellitePhenologyMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: GetSatellitePhenologyInputs ! put the data into the correct format
-  public :: SetSPModeCanopyStructs      ! CLM(BGC)-SP phenology and vegetation
+  public :: SetSatellitePhenologyBGCCanopyStructs ! CLM(BGC)-SP phenology and vegetation
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)

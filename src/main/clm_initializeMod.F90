@@ -174,7 +174,7 @@ contains
     use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
-    use SatellitePhenologyMod         , only : GetSatellitePhenologyInputs, SetSPModeCanopyStructs
+    use SatellitePhenologyMod         , only : GetSatellitePhenologyInputs
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename, check_missing_initdata_status
