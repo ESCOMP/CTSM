@@ -15,6 +15,8 @@ from ctsm import unit_testing
 from ctsm.site_and_regional.run_tower import main
 from ctsm.path_utils import path_to_ctsm_root
 
+from CIME.case import Case
+
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
 # pylint: disable=invalid-name
@@ -114,6 +116,69 @@ class TestSysRunTower(unittest.TestCase):
 
         # assert that AR-SLu directories were created during setup
         self.assertTrue("AR-SLu" in glob.glob(self._tempdir + "/AR-SLu*")[0])
+
+    def test_xmlchange_neon(self):
+        """
+        This test checks that the --xmlchange argument is obeyed for a NEON site.
+        """
+
+        # run the run_tower tool
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--neon-sites",
+            "BART",
+            "--no-input-data-check",
+            "--experiment",
+            "TEST",
+            "--xmlchange",
+            "CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=1987",
+            "--output-root",
+            self._tempdir,
+        ]
+        print(sys.argv)
+        main("")
+
+        # Check that the --xmlchange argument is obeyed
+        case_dir = os.path.join(self._tempdir, "BART.TEST.transient")
+        self.assertTrue(os.path.exists(case_dir))
+        with Case(case_dir, read_only=True) as case:
+            value = case.get_value("CLM_CO2_TYPE")
+            print(f"CLM_CO2_TYPE = {value}")
+            self.assertTrue(value == "constant")
+            value = int(case.get_value("CCSM_CO2_PPMV"))
+            print(f"CCSM_CO2_PPMV = {value}")
+            self.assertTrue(int(value) == 1987)
+
+    def test_xmlchange_plumber(self):
+        """
+        This test checks that the --xmlchange argument is obeyed for a PLUMBER site.
+        """
+
+        # run the run_tower tool for plumber site
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--plumber-sites",
+            "AR-SLu",
+            "--no-input-data-check",
+            "--experiment",
+            "TEST",
+            "--xmlchange",
+            "CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=1987",
+            "--output-root",
+            self._tempdir,
+        ]
+        main("")
+
+        # Check that the --xmlchange argument is obeyed
+        case_dir = os.path.join(self._tempdir, "AR-SLu.TEST.ad")
+        self.assertTrue(os.path.exists(case_dir))
+        with Case(case_dir, read_only=True) as case:
+            value = case.get_value("CLM_CO2_TYPE")
+            print(f"CLM_CO2_TYPE = {value}")
+            self.assertTrue(value == "constant")
+            value = int(case.get_value("CCSM_CO2_PPMV"))
+            print(f"CCSM_CO2_PPMV = {value}")
+            self.assertTrue(int(value) == 1987)
 
 
 if __name__ == "__main__":
