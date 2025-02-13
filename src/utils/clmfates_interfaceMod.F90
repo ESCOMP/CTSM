@@ -301,10 +301,11 @@ module CLMFatesInterfaceMod
      integer,intent(in)                             :: surf_numpft
      integer,intent(in)                             :: surf_numcft
      integer,intent(out)                            :: maxsoil_patches
-     integer                                        :: pass_biogeog
-     integer                                        :: pass_nocomp
-     integer                                        :: pass_sp
+     integer                                        :: pass_use_fixed_biogeog
+     integer                                        :: pass_use_nocomp
+     integer                                        :: pass_use_sp
      integer                                        :: pass_masterproc
+     integer                                        :: pass_use_luh2
      logical                                        :: verbose_output
      type(fates_param_reader_ctsm_impl)             :: var_reader
      
@@ -321,25 +322,25 @@ module CLMFatesInterfaceMod
         ! Send parameters individually
         
         if(use_fates_fixed_biogeog)then
-           pass_biogeog = 1
+           pass_use_fixed_biogeog = 1
         else
-           pass_biogeog = 0
+           pass_use_fixed_biogeog = 0
         end if
-        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
+        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_use_fixed_biogeog)
         
         if(use_fates_nocomp)then
-           pass_nocomp = 1
+           pass_use_nocomp = 1
         else
-           pass_nocomp = 0
+           pass_use_nocomp = 0
         end if
-        call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
+        call set_fates_ctrlparms('use_nocomp',ival=pass_use_nocomp)
         
         if(use_fates_sp)then
-           pass_sp = 1
+           pass_use_sp = 1
         else
-           pass_sp = 0
+           pass_use_sp = 0
         end if
-        call set_fates_ctrlparms('use_sp',ival=pass_sp)
+        call set_fates_ctrlparms('use_sp',ival=pass_use_sp)
         
         if(masterproc)then
            pass_masterproc = 1
@@ -348,6 +349,14 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
 
+        ! FATES landuse modes
+        if(use_fates_luh) then
+           pass_use_luh2 = 1
+        else
+           pass_use_luh2 = 0
+        end if
+        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh2)
+        
      end if
 
 
@@ -395,7 +404,6 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
-     integer                                        :: pass_use_luh
      integer                                        :: pass_use_potentialveg
      integer                                        :: pass_num_luh_states
      integer                                        :: pass_num_luh_transitions
@@ -540,16 +548,12 @@ module CLMFatesInterfaceMod
 
         ! FATES landuse modes
         if(use_fates_luh) then
-           pass_use_luh = 1
            pass_num_luh_states = num_landuse_state_vars
            pass_num_luh_transitions = num_landuse_transition_vars
         else
-           pass_use_luh = 0
            pass_num_luh_states = 0
            pass_num_luh_transitions = 0
         end if
-
-        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh)
         call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
         call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
 
@@ -1278,11 +1282,6 @@ module CLMFatesInterfaceMod
                                           this%fates(nc)%nsites, &
                                           this%fates(nc)%sites,  &
                                           this%fates(nc)%bc_in )
-
-      if (masterproc) then
-         write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
-                                                  bounds_clump%endg
-      end if
 
       call t_stopf('fates_dynamics_daily_driver')
 
@@ -3138,7 +3137,6 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    write(iulog,*) 'Init2: calling FireInit'
     call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')

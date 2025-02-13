@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/NGEET/fates
-fxtag = sci.1.79.3_api.37.0.0
+fxtag = sci.1.80.11_api.37.0.0
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
@@ -36,7 +36,7 @@ fxDONOTUSEurl = https://github.com/NCAR/fates-release
 [submodule "cism"]
 path = components/cism
 url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_002
+fxtag = cismwrap_2_2_005
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
@@ -44,7 +44,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
 [submodule "rtm"]
 path = components/rtm
 url = https://github.com/ESCOMP/RTM
-fxtag = rtm1_0_80
+fxtag = rtm1_0_86
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/RTM
@@ -52,7 +52,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/RTM
 [submodule "mosart"]
 path = components/mosart
 url = https://github.com/ESCOMP/MOSART
-fxtag = mosart1.1.02
+fxtag = mosart1.1.08
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
@@ -60,7 +60,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 [submodule "mizuRoute"]
 path = components/mizuRoute
 url = https://github.com/ESCOMP/mizuRoute
-fxtag = cesm-coupling.n02_v2.1.2
+fxtag = cesm-coupling.n03_v2.2.0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm1.0.0
+fxtag = ccs_config_cesm1.0.20
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -76,7 +76,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 path = cime
 url = https://github.com/ESMCI/cime
-fxtag = cime6.0.246
+fxtag = cime6.1.59
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -84,7 +84,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps0.14.77
+fxtag = cmeps1.0.33
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.48
+fxtag = cdeps1.0.61
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
@@ -100,26 +100,26 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 [submodule "share"]
 path = share
 url = https://github.com/ESCOMP/CESM_share
-fxtag = share1.0.19
+fxtag = share1.1.7
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
 
-[submodule "mct"]
-path = libraries/mct
-url = https://github.com/MCSclimate/MCT
-fxtag = MCT_2.11.0
-fxrequired = ToplevelRequired
-# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/MCSclimate/MCT
-
 [submodule "parallelio"]
 path = libraries/parallelio
 url = https://github.com/NCAR/ParallelIO
-fxtag = pio2_6_2
+fxtag = pio2_6_3
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
+
+[submodule "mpi-serial"]
+path = libraries/mpi-serial
+url = https://github.com/ESMCI/mpi-serial
+fxtag = MPIserial_2.5.1
+fxrequired = ToplevelRequired
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 
 [submodule "doc-builder"]
 path = doc/doc-builder
