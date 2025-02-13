@@ -105,7 +105,8 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     )
 
     parser.add_argument(
-        "--no-input-data-check", "--no-check-input-data",
+        "--no-input-data-check",
+        "--no-check-input-data",
         help="""
                 Don't check for input data. Implies --setup-only.
                 [default: %(default)s]
