@@ -5,32 +5,36 @@ name: pylint check on push and PR
 on: [push, pull_request]
 
 jobs:
-  pylint-check-old:
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.7.9"]
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r python/requirements.txt
-    - name: Analysing the code with pylint
-      run: |
-        cd python
-        pylint --rcfile=ctsm/.pylintrc ctsm
+   # Disabled pylint-check-old because 3.7.9 requires netCDF to be manually installed first
+#   pylint-check-old:
+#     runs-on: ubuntu-20.04
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         python-version: ["3.7.9"]
+#     steps:
+#     - uses: actions/checkout@v4
+#     - name: Set up Python ${{ matrix.python-version }}
+#       uses: actions/setup-python@v5
+#       with:
+#         python-version: ${{ matrix.python-version }}
+#     - name: Install dependencies
+#       run: |
+#         python -m pip install --upgrade pip
+#         pip install -r python/requirements.txt
+#     - name: Analysing the code with pylint
+#       run: |
+#         cd python
+#         pylint --rcfile=ctsm/.pylintrc ctsm
   pylint-check:
      runs-on: ubuntu-latest
      strategy:
        fail-fast: false
        matrix:
-         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+         # Python 3.8 fails because GEOS C headers aren't installed
+         # Our pylint (2.8.3) is incompatible with Python > 3.10
+         # python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+         python-version: ["3.9", "3.10"]
      steps:
      - uses: actions/checkout@v4
      - name: Set up Python ${{ matrix.python-version }}
