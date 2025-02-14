@@ -180,6 +180,57 @@ class TestSysRunTower(unittest.TestCase):
             print(f"CCSM_CO2_PPMV = {value}")
             self.assertTrue(int(value) == 1987)
 
+    def test_setup_only_neon(self):
+        """
+        This test checks that the --setup-only argument is obeyed for NEON sites
+        """
+
+        # run the run_tower tool
+        site_name = "BART"
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--neon-sites",
+            site_name,
+            "--setup-only",
+            "--experiment",
+            "TEST",
+            "--output-root",
+            self._tempdir,
+        ]
+        print(sys.argv)
+        main("")
+
+        # make sure that build didn't happen: this dir should be empty
+        case_dir = os.path.join(self._tempdir, site_name)
+        build_dir_to_check = os.path.join(case_dir, "bld", "cpl", "obj")
+        self.assertTrue(os.path.exists(build_dir_to_check))
+        self.assertTrue(len(os.listdir(build_dir_to_check)) == 0)
+
+    def test_setup_only_plumber(self):
+        """
+        This test checks that the --setup-only argument is obeyed for PLUMBER sites
+        """
+
+        # run the run_tower tool for plumber site
+        site_name = "AR-SLu"
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--plumber-sites",
+            site_name,
+            "--setup-only",
+            "--experiment",
+            "TEST",
+            "--output-root",
+            self._tempdir,
+        ]
+        main("")
+
+        # make sure that build didn't happen: this dir should be empty
+        case_dir = os.path.join(self._tempdir, site_name)
+        build_dir_to_check = os.path.join(case_dir, "bld", "cpl", "obj")
+        self.assertTrue(os.path.exists(build_dir_to_check))
+        self.assertTrue(len(os.listdir(build_dir_to_check)) == 0)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
