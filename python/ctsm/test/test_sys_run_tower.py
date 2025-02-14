@@ -10,6 +10,7 @@ import unittest
 import tempfile
 import shutil
 import sys
+import pathlib
 
 from ctsm import unit_testing
 from ctsm.site_and_regional.run_tower import main
@@ -230,6 +231,73 @@ class TestSysRunTower(unittest.TestCase):
         build_dir_to_check = os.path.join(case_dir, "bld", "cpl", "obj")
         self.assertTrue(os.path.exists(build_dir_to_check))
         self.assertTrue(len(os.listdir(build_dir_to_check)) == 0)
+
+    def test_overwrite_neon(self):
+        """
+        This test checks that the --overwrite argument is obeyed for NEON sites
+        """
+
+        # run the run_tower tool once
+        site_name = "BART"
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--neon-sites",
+            site_name,
+            "--no-input-data-check",
+            "--experiment",
+            "TEST",
+            "--output-root",
+            self._tempdir,
+        ]
+        print(sys.argv)
+        main("")
+
+        # create a file that should be erased during the upcoming overwrite
+        case_dir = os.path.join(self._tempdir, site_name)
+        test_file = os.path.join(case_dir, "test_file")
+        pathlib.Path(test_file).touch()
+        self.assertTrue(os.path.exists(test_file))
+
+        # run the tool again, overwriting existing
+        sys.argv += ["--overwrite"]
+        print(sys.argv)
+        main("")
+
+        # ensure that file we created is gone
+        self.assertFalse(os.path.exists(test_file))
+
+    def test_overwrite_plumber(self):
+        """
+        This test checks that the --overwrite argument is obeyed for PLUMBER sites
+        """
+
+        # run the run_tower tool once
+        site_name = "AR-SLu"
+        sys.argv = [
+            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
+            "--plumber-sites",
+            site_name,
+            "--no-input-data-check",
+            "--experiment",
+            "TEST",
+            "--output-root",
+            self._tempdir,
+        ]
+        main("")
+
+        # create a file that should be erased during the upcoming overwrite
+        case_dir = os.path.join(self._tempdir, site_name)
+        test_file = os.path.join(case_dir, "test_file")
+        pathlib.Path(test_file).touch()
+        self.assertTrue(os.path.exists(test_file))
+
+        # run the tool again, overwriting existing
+        sys.argv += ["--overwrite"]
+        print(sys.argv)
+        main("")
+
+        # ensure that file we created is gone
+        self.assertFalse(os.path.exists(test_file))
 
 
 if __name__ == "__main__":
