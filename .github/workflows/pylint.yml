@@ -24,4 +24,4 @@ jobs:
      - name: Analysing the code with pylint
        run: |
          cd python
-         pylint --check --rcfile=ctsm/.pylintrc --fail-under=0 ctsm
+         pylint --rcfile=ctsm/.pylintrc --fail-under=0 ctsm
