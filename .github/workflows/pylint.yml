@@ -7,15 +7,18 @@ on: [push, pull_request]
 jobs:
   pylint-check:
      runs-on: ubuntu-latest
+     strategy:
+       matrix:
+         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
      steps:
      - uses: actions/checkout@v4
-     - name: Set up Python
+     - name: Set up Python ${{ matrix.python-version }}
        uses: actions/setup-python@v3
        with:
-         python-version: "3.7.9"
+         python-version: ${{ matrix.python-version }}
      - name: Install dependencies
        run: |
-         python -m pip install --upgrade "pip==22.3.0"
+         python -m pip install --upgrade pip
          pip install pylint
      - name: Analysing the code with pylint
        run: |
