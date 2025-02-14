@@ -1,0 +1,23 @@
+name: pylint check on push and PR
+#
+# Run the pylint formatting in check mode
+#
+on: [push, pull_request]
+
+jobs:
+  pylint-check:
+     runs-on: ubuntu-latest
+     steps:
+     - uses: actions/checkout@v4
+     - name: Set up Python
+       uses: actions/setup-python@v3
+       with:
+         python-version: "3.7.9"
+     - name: Install dependencies
+       run: |
+         python -m pip install --upgrade "pip==22.3.0"
+         pip install pylint
+     - name: Analysing the code with pylint
+       run: |
+         cd python
+         pylint --check --rcfile=ctsm/.pylintrc --fail-under=0 ctsm
