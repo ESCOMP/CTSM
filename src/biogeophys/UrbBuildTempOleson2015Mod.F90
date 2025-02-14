@@ -16,6 +16,7 @@ module UrbBuildTempOleson2015Mod
   use UrbanTimeVarType  , only : urbantv_type  
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
+  use atm2lndType       , only : atm2lnd_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   !
@@ -42,7 +43,7 @@ contains
 ! !INTERFACE:
   subroutine BuildingTemperature (bounds, num_urbanl, filter_urbanl, num_nolakec, &
                                   filter_nolakec, tk, urbanparams_inst, temperature_inst, &
-                                  energyflux_inst, urbantv_inst)
+                                  energyflux_inst, urbantv_inst, atm2lnd_inst)
 !
 ! !DESCRIPTION:
 ! Solve for t_building, inner surface temperatures of roof, sunw, shdw, and floor temperature
@@ -202,7 +203,7 @@ contains
 ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_step_size_real
-    use clm_varcon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
+    use clm_varcon      , only : rair, cpair, sb, hcv_roof, hcv_roof_enhanced, &
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
                                  dz_floor, dens_floor, cp_floor, vent_ach
@@ -224,10 +225,11 @@ contains
     type(temperature_type), intent(inout) :: temperature_inst ! temperature variables
     type(energyflux_type) , intent(inout) :: energyflux_inst  ! energy flux variables
     type(urbantv_type)    , intent(in)    :: urbantv_inst     ! urban time varying variables
+    type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst     ! forcing variables from atmosphere
 !
 ! !LOCAL VARIABLES:
     integer, parameter :: neq = 5          ! number of equation/unknowns
-    integer  :: fc,fl,c,l                  ! indices
+    integer  :: fc,fl,c,l,g                ! indices
     real(r8) :: dtime                      ! land model time step (s)
     real(r8) :: building_hwr(bounds%begl:bounds%endl)      ! building height to building width ratio (-)
     real(r8) :: t_roof_inner_bef(bounds%begl:bounds%endl)  ! roof inside surface temperature at previous time step (K)              
@@ -310,6 +312,7 @@ contains
     ctype             => col%itype                         , & ! Input:  [integer (:)]  column type
     zi                => col%zi                            , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
     z                 => col%z                             , & ! Input:  [real(r8) (:,:)]  layer thickness (m)
+    forc_pbot         => atm2lnd_inst%forc_pbot_not_downscaled_grc, & ! Input: [real(r8) (:)]  atmospheric pressure (Pa)
 
     ht_roof           => lun%ht_roof                       , & ! Input:  [real(r8) (:)]  height of urban roof (m) 
     canyon_hwr        => lun%canyon_hwr                    , & ! Input:  [real(r8) (:)]  ratio of building height to street hwidth (-)
@@ -348,6 +351,7 @@ contains
     ! 5. Calculate building height to building width ratio
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
+       g = lun%gridcell(l)
        if (urbpoi(l)) then
          t_roof_inner_bef(l)  = t_roof_inner(l)
          t_sunw_inner_bef(l)  = t_sunw_inner(l)
@@ -376,8 +380,8 @@ contains
          cp_floori(l) = cp_floor
          ! Intermediate calculation for concrete floor (W m-2 K-1)
          cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
-         ! Density of dry air at standard pressure and t_building (kg m-3)
-         rho_dair(l) = pstd / (rair*t_building_bef(l))
+         ! Density of dry air at surface pressure and t_building (kg m-3)
+         rho_dair(l) = forc_pbot(g) / (rair*t_building_bef(l))
          ! Building height to building width ratio
          building_hwr(l) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/wtlunit_roof(l)
        end if
