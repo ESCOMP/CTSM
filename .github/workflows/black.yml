@@ -2,7 +2,21 @@ name: black check on push and PR
 #
 # Run the python formatting in check mode
 #
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+      - '.github/workflows/black.yml'
+  pull_request:
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+      - '.github/workflows/black.yml'
 
 jobs:
   black-check:

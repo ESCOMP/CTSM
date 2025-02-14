@@ -1,8 +1,18 @@
 name: pylint check on push and PR
 #
-# Run the pylint formatting in check mode
+# Run the pylint formatting
 #
-on: [push, pull_request]
+on:
+   push:
+     paths:
+       - 'python/ctsm/**'
+       - 'python/requirements.txt'
+       - '.github/workflows/pylint.yml'
+   pull_request:
+     paths:
+      - 'python/ctsm/**'
+      - 'python/requirements.txt'
+      - '.github/workflows/pylint.yml'
 
 jobs:
    # Disabled pylint-check-old because 3.7.9 requires netCDF to be manually installed first
