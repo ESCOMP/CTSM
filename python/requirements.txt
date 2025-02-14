@@ -8,7 +8,7 @@ numpy
 xarray
 xesmf
 numba
-pylint
+pylint==2.8.3
 black
 cartopy
 matplotlib
