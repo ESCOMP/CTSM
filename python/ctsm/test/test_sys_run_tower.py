@@ -16,6 +16,8 @@ from ctsm import unit_testing
 from ctsm.site_and_regional.run_tower import main
 from ctsm.path_utils import path_to_ctsm_root
 
+# pylint: disable=import-error
+# pylint: disable=wrong-import-order
 from CIME.case import Case
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
