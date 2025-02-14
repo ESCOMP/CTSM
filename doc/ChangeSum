@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.027   slevis 02/??/2025 Add option to use CRUJRA2024 with clm6 and clm5
+       ctsm5.3.026
+       ctsm5.3.025
        ctsm5.3.024 xinchang 02/11/2025 Change choice of pressure in CLMU building energy model
        ctsm5.3.023  afoster 02/08/2025 merge b4b-dev
        ctsm5.3.022 glemieux 02/06/2025 Update FATES namelist build to avoid Meier2022
