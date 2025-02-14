@@ -24,4 +24,4 @@ jobs:
      - name: Analysing the code with black
        run: |
          cd python
-         black --check --config python/pyproject.toml ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml
+         black --check --config pyproject.toml ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml
