@@ -42,7 +42,17 @@ class TowerSite:
     -------
     """
 
-    def __init__(self, tower_type, name, start_year, end_year, start_month, end_month, finidat):
+    def __init__(
+        self,
+        tower_type,
+        name,
+        start_year,
+        end_year,
+        start_month,
+        end_month,
+        finidat,
+        user_mods_dirs=None,
+    ):
         """
         Initializes TowerSite with the given arguments.
         Parameters
@@ -62,6 +72,14 @@ class TowerSite:
         self.cesmroot = path_to_ctsm_root()
         self.finidat = finidat
 
+        if user_mods_dirs is None:
+            self.set_default_user_mods_dirs()
+        elif not isinstance(user_mods_dirs, list):
+            abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
+        else:
+            self.user_mods_dirs = user_mods_dirs
+            self.check_user_mods_dirs()
+
     def __str__(self):
         """
         Converts ingredients of the TowerSite to string for printing.
@@ -76,10 +94,29 @@ class TowerSite:
             ),
         )
 
+    def set_default_user_mods_dirs(self):
+        """
+        Sets user_mods_dirs to the default
+        """
+        self.user_mods_dirs = [
+            os.path.join(
+                self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
+            )
+        ]
+        self.check_user_mods_dirs()
+
+    def check_user_mods_dirs(self):
+        """
+        Checks that every user_mod_dir exists
+        """
+        for dirtree in self.user_mods_dirs:
+            if not os.path.isdir(dirtree):
+                abort("Input user_mods_dirs dirtreetory does NOT exist: " + str(dirtree))
+
     # TODO: Refactor to shorten this so the disable can be removed
     # pylint: disable=too-many-statements
     def build_base_case(
-        self, cesmroot, output_root, res, compset, user_mods_dirs, overwrite=False, setup_only=False
+        self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
     ):
         """
         Function for building a base_case to clone.
@@ -98,20 +135,11 @@ class TowerSite:
             base_case resolution or gridname
         compset (str):
             base case compset
-        user_mods_dirs (str):
-            path to the user-mod-directory to use
         overwrite (bool) :
             Flag to overwrite the case if exists
         setup_only (bool) :
             Flag to only do the setup phase
         """
-        # Define fallback user_mods_dirs
-        if user_mods_dirs is None:
-            user_mods_dirs = [
-                os.path.join(
-                    self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
-                )
-            ]
         #
         # Error checking on the input
         #
@@ -125,11 +153,6 @@ class TowerSite:
             abort("Input compset is NOT a boolean as expected: " + str(compset))
         if not isinstance(setup_only, bool):
             abort("Input setup_only is NOT a boolean as expected: " + str(setup_only))
-        if user_mods_dirs is not None and not isinstance(user_mods_dirs, list):
-            abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
-        for dirtree in user_mods_dirs:
-            if not os.path.isdir(dirtree):
-                abort("Input user_mods_dirs dirtreetory does NOT exist: " + str(dirtree))
 
         print("---- building a base case -------")
         # pylint: disable=attribute-defined-outside-init
@@ -145,7 +168,7 @@ class TowerSite:
         print(case_path)
 
         logger.info("base_case_name : %s", self.name)
-        logger.info("user_mods_dir  : %s", user_mods_dirs[0])
+        logger.info("user_mods_dir  : %s", self.user_mods_dirs[0])
 
         if overwrite and os.path.isdir(case_path):
             print("Removing the existing case at: {}".format(case_path))
@@ -165,7 +188,7 @@ class TowerSite:
                     run_unsupported=True,
                     answer="r",
                     output_root=output_root,
-                    user_mods_dirs=user_mods_dirs,
+                    user_mods_dirs=self.user_mods_dirs,
                     driver="nuopc",
                 )
 
@@ -304,7 +327,6 @@ class TowerSite:
         run_type,
         prism,
         user_version,
-        user_mods_dirs,
         overwrite,
         setup_only,
         no_batch,
@@ -412,7 +434,7 @@ class TowerSite:
                 # that the shell_commands file is copied, as well as taking care of the DATM inputs.
                 # See https://github.com/ESCOMP/CTSM/pull/1872#pullrequestreview-1169407493
                 #
-                basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
+                basecase.create_clone(case_root, keepexe=True, user_mods_dirs=self.user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
             if run_type != "transient":

@@ -33,69 +33,6 @@ class Plumber2Site(TowerSite):
     A class for encapsulating plumber sites.
     """
 
-    # pylint: disable=too-many-statements
-    def run_case(
-        self,
-        base_case_root,
-        run_type,
-        prism,
-        user_version,
-        user_mods_dirs=None,
-        overwrite=False,
-        setup_only=False,
-        no_batch=False,
-        rerun=False,
-        experiment=False,
-        no_input_data_check=False,
-        xmlchange=None,
-    ):
-        """
-        Run case.
-
-        Args:
-        self
-        base_case_root: str, opt
-            file path of base case
-        run_type: str, opt
-            transient, post_ad, or ad case, default ad
-            (ad case is default because PLUMBER requires spinup)
-        prism: bool, opt
-            if True, use PRISM precipitation, default False
-            Note: only supported for NEON sites
-        user_version: str, opt
-            default 'latest'; this could be useful later
-            This is currently only implemented with neon (not plumber) sites
-        overwrite: bool, opt
-            default False
-        setup_only: bool, opt
-            default False; if True, set up but do not run case
-        no_batch: bool, opt
-            default False
-        rerun: bool, opt
-            default False
-        experiment: str, opt
-            name of experiment, default False
-        """
-        user_mods_dirs = [
-            os.path.join(
-                self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
-            )
-        ]
-        super().run_case(
-            base_case_root,
-            run_type,
-            prism,
-            user_version,
-            user_mods_dirs,
-            overwrite,
-            setup_only,
-            no_batch,
-            rerun,
-            experiment,
-            no_input_data_check,
-            xmlchange,
-        )
-
     def set_ref_case(self, case):
         super().set_ref_case(case)
         return True  ### Check if super returns false, if this will still return True?
