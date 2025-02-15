@@ -33,34 +33,6 @@ class Plumber2Site(TowerSite):
     A class for encapsulating plumber sites.
     """
 
-    def build_base_case(
-        self,
-        cesmroot,
-        output_root,
-        res,
-        compset,
-        user_mods_dirs=None,
-        overwrite=False,
-        setup_only=False,
-    ):
-        if user_mods_dirs is None:
-            user_mods_dirs = [
-                os.path.join(
-                    self.cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", self.name
-                )
-            ]
-        case_path = super().build_base_case(
-            cesmroot,
-            output_root,
-            res,
-            compset,
-            user_mods_dirs,
-            overwrite=overwrite,
-            setup_only=setup_only,
-        )
-
-        return case_path
-
     # pylint: disable=too-many-statements
     def run_case(
         self,
@@ -68,7 +40,6 @@ class Plumber2Site(TowerSite):
         run_type,
         prism,
         user_version,
-        tower_type=None,
         user_mods_dirs=None,
         overwrite=False,
         setup_only=False,
@@ -107,16 +78,14 @@ class Plumber2Site(TowerSite):
         """
         user_mods_dirs = [
             os.path.join(
-                self.cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", self.name
+                self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
             )
         ]
-        tower_type = "PLUMBER"
         super().run_case(
             base_case_root,
             run_type,
             prism,
             user_version,
-            tower_type,
             user_mods_dirs,
             overwrite,
             setup_only,

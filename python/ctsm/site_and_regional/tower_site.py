@@ -29,6 +29,7 @@ from CIME.utils import safe_copy, expect, symlink_force
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_SITE_TYPES = ["NEON", "PLUMBER2"]
 
 # pylint: disable=too-many-instance-attributes
 class TowerSite:
@@ -41,12 +42,18 @@ class TowerSite:
     -------
     """
 
-    def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
+    def __init__(self, tower_type, name, start_year, end_year, start_month, end_month, finidat):
         """
         Initializes TowerSite with the given arguments.
         Parameters
         ----------
         """
+        if tower_type not in ALLOWED_SITE_TYPES:
+            raise ValueError(
+                f"tower_type '{tower_type}' not allowed. "
+                f"Choose from: {','.join(ALLOWED_SITE_TYPES)}"
+            )
+        self.tower_type = tower_type
         self.name = name
         self.start_year = int(start_year)
         self.end_year = int(end_year)
@@ -98,6 +105,13 @@ class TowerSite:
         setup_only (bool) :
             Flag to only do the setup phase
         """
+        # Define fallback user_mods_dirs
+        if user_mods_dirs is None:
+            user_mods_dirs = [
+                os.path.join(
+                    self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
+                )
+            ]
         #
         # Error checking on the input
         #
@@ -111,7 +125,7 @@ class TowerSite:
             abort("Input compset is NOT a boolean as expected: " + str(compset))
         if not isinstance(setup_only, bool):
             abort("Input setup_only is NOT a boolean as expected: " + str(setup_only))
-        if not isinstance(user_mods_dirs, list):
+        if user_mods_dirs is not None and not isinstance(user_mods_dirs, list):
             abort("Input user_mods_dirs is NOT a list as expected: " + str(user_mods_dirs))
         for dirtree in user_mods_dirs:
             if not os.path.isdir(dirtree):
@@ -290,7 +304,6 @@ class TowerSite:
         run_type,
         prism,
         user_version,
-        tower_type,
         user_mods_dirs,
         overwrite,
         setup_only,
@@ -408,7 +421,7 @@ class TowerSite:
                 case.set_value("STOP_OPTION", "ndays")
                 case.set_value("REST_OPTION", "end")
             case.set_value("CONTINUE_RUN", False)
-            if tower_type == "NEON":
+            if self.tower_type == "NEON":
                 case.set_value("NEONVERSION", version)
                 if prism:
                     case.set_value("CLM_USRDAT_NAME", "NEON.PRISM")

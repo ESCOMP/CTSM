@@ -160,7 +160,9 @@ def parse_neon_listing(listing_file, valid_neon_sites):
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
 
-            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
+            neon_site = NeonSite(
+                "NEON", site_name, start_year, end_year, start_month, end_month, finidat
+            )
             logger.debug(neon_site)
             available_list.append(neon_site)
 
@@ -192,7 +194,7 @@ def setup_plumber_data(valid_plumber_sites):
         finidat = None
 
         plumber_site = Plumber2Site(
-            site_name, start_year, end_year, start_month, end_month, finidat
+            "PLUMBER2", site_name, start_year, end_year, start_month, end_month, finidat
         )
         available_list.append(plumber_site)
 
