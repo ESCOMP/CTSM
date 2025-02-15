@@ -33,6 +33,9 @@ class Plumber2Site(TowerSite):
     A class for encapsulating plumber sites.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__("PLUMBER2", *args, **kwargs)
+
     def set_ref_case(self, case):
         super().set_ref_case(case)
         return True  ### Check if super returns false, if this will still return True?

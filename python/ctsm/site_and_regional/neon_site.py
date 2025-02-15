@@ -34,6 +34,9 @@ class NeonSite(TowerSite):
     A class for encapsulating neon sites.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__("NEON", *args, **kwargs)
+
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently
         if site_lines is None:
