@@ -247,7 +247,7 @@ contains
       else
         frac_veg_nosno_alb(p) = 0
       end if
-      end if
+     end if
 
     end do ! end of patch loop
 
