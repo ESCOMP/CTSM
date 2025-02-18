@@ -165,7 +165,6 @@ class TowerSite:
             abort("Input output_root directory does NOT exist: " + str(output_root))
 
         case_path = os.path.join(output_root, self.name)
-        print(case_path)
 
         logger.info("base_case_name : %s", self.name)
         logger.info("user_mods_dir  : %s", self.user_mods_dirs[0])

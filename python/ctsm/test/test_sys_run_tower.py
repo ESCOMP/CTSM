@@ -69,7 +69,6 @@ class TestSysRunTower(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        print(sys.argv)
         main("")
 
         # assert that BART directories were created during setup
@@ -138,7 +137,6 @@ class TestSysRunTower(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        print(sys.argv)
         main("")
 
         # Check that the --xmlchange argument is obeyed
@@ -169,7 +167,6 @@ class TestSysRunTower(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        print(sys.argv)
         main("")
 
         # make sure that build didn't happen: this dir should be empty
@@ -195,7 +192,6 @@ class TestSysRunTower(unittest.TestCase):
             "--output-root",
             self._tempdir,
         ]
-        print(sys.argv)
         main("")
 
         # create a file that should be erased during the upcoming overwrite
@@ -206,7 +202,6 @@ class TestSysRunTower(unittest.TestCase):
 
         # run the tool again, overwriting existing
         sys.argv += ["--overwrite"]
-        print(sys.argv)
         main("")
 
         # ensure that file we created is gone
