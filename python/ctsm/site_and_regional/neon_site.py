@@ -50,7 +50,15 @@ class NeonSite(TowerSite):
                     self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name
                 )
             ]
-        case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
+        case_path = super().build_base_case(
+            cesmroot,
+            output_root,
+            res,
+            compset,
+            user_mods_dirs,
+            overwrite=overwrite,
+            setup_only=setup_only,
+        )
 
         return case_path
 
@@ -68,6 +76,8 @@ class NeonSite(TowerSite):
         no_batch=False,
         rerun=False,
         experiment=False,
+        no_input_data_check=False,
+        xmlchange=None,
     ):
         """
         Run case.
@@ -92,6 +102,8 @@ class NeonSite(TowerSite):
             default False
         experiment: str, opt
             name of experiment, default False
+        no_input_data_check: bool, opt
+            default False
         """
         user_mods_dirs = [
             os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", self.name)
@@ -110,6 +122,8 @@ class NeonSite(TowerSite):
             no_batch,
             rerun,
             experiment,
+            no_input_data_check,
+            xmlchange,
         )
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):

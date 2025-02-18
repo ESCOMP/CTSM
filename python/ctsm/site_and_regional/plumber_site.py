@@ -49,7 +49,15 @@ class Plumber2Site(TowerSite):
                     self.cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", self.name
                 )
             ]
-        case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
+        case_path = super().build_base_case(
+            cesmroot,
+            output_root,
+            res,
+            compset,
+            user_mods_dirs,
+            overwrite=overwrite,
+            setup_only=setup_only,
+        )
 
         return case_path
 
@@ -67,6 +75,8 @@ class Plumber2Site(TowerSite):
         no_batch=False,
         rerun=False,
         experiment=False,
+        no_input_data_check=False,
+        xmlchange=None,
     ):
         """
         Run case.
@@ -113,6 +123,8 @@ class Plumber2Site(TowerSite):
             no_batch,
             rerun,
             experiment,
+            no_input_data_check,
+            xmlchange,
         )
 
     def set_ref_case(self, case):
