@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: ctsm5.3.025
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue Feb 18 02:02:34 PM PST 2025
+One-line Summary: FATES default parameter file update
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the default parameter file for FATES bringing in a number of updates:
+   - adds parameters for land use grazing
+   - updates the FATES z0mr turbulence parameters for consistency with CLM
+   - adds FATES pft-dependent btran model switches for a forthcoming update
+   - updates the default hydro solver switch to Picard 2D
+
+This also updates the default FATES tag which includes two issue fixes and introduces
+the aforementioned land use grazing capability.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes FATES#1316 -- z0mr parameters are all the same in the default parameter file
+   Fixes FATES#773 -- update the default hydraulics solver?
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   The FATES tag update includes new history outputs associated with land use grazing.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   The fates default parameter file has been updated.  See the associated FATES pull
+   requests for more detail.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi -------
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for FATES tests only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.80.11_api.37.0.0 -> sci.1.81.0_api.37.1.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   https://github.com/ESCOMP/CTSM/pull/2965
+   https://github.com/NGEET/fates/pull/1334
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.024
 Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
 Date: Tue Feb 11 09:56:24 MST 2025
