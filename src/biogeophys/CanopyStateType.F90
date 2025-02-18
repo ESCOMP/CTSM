@@ -587,6 +587,14 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='tsai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided stem area index, no burying by snow', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%tsai_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='tlai_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp mode driver data for one-sided leaf area index, no burying by snow', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%tlai_input_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='tsai_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp mode driver data for one-sided stem area index, no burying by snow', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%tsai_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='elai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided leaf area index, with burying by snow', units='', &
@@ -607,10 +615,18 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='htop', xtype=ncd_double,  &
          dim1name='pft', long_name='canopy top', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%htop_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='htop_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp-mode driver data for canopy top', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%htop_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='hbot', xtype=ncd_double,  &
-         dim1name='pft', long_name='canopy botton', units='m', &
+         dim1name='pft', long_name='canopy bottom', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%hbot_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='hbot_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp-mode driver data for canopy bottom', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%hbot_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='mlaidiff', xtype=ncd_double,  &
          dim1name='pft', long_name='difference between lai month one and month two', units='', &
