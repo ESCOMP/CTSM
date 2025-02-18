@@ -29,8 +29,6 @@ from CIME.utils import safe_copy, expect, symlink_force
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_SITE_TYPES = ["NEON", "PLUMBER2"]
-
 # pylint: disable=too-many-instance-attributes
 class TowerSite:
     """
@@ -58,11 +56,6 @@ class TowerSite:
         Parameters
         ----------
         """
-        if tower_type not in ALLOWED_SITE_TYPES:
-            raise ValueError(
-                f"tower_type '{tower_type}' not allowed. "
-                f"Choose from: {','.join(ALLOWED_SITE_TYPES)}"
-            )
         self.tower_type = tower_type
         self.name = name
         self.start_year = int(start_year)
