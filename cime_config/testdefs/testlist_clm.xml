@@ -1989,7 +1989,6 @@
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
-      <machine name="derecho" compiler="nvhpc" category="ssp"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
