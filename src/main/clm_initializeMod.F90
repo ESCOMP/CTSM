@@ -174,7 +174,7 @@ contains
     use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
-    use SatellitePhenologyMod         , only : GetSatellitePhenologyInputs, SetSPModeCanopyStructs
+    use SatellitePhenologyMod         , only : GetSatellitePhenologyInputs, SetSatellitePhenologyBGCCanopyStructs
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename, check_missing_initdata_status
@@ -754,6 +754,8 @@ contains
              call GetSatellitePhenologyInputs(bounds_clump, &
                   filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                   canopystate_inst)
+             call SetSatellitePhenologyBGCCanopyStructs(bounds_clump, filter_inactive_and_active(nc)%num_soilp, &
+                  filter_inactive_and_active(nc)%soilp, water_inst%waterdiagnosticbulk_inst, canopystate_inst)
 
           end do
           !$OMP END PARALLEL DO

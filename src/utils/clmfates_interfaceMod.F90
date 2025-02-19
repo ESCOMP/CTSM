@@ -301,10 +301,11 @@ module CLMFatesInterfaceMod
      integer,intent(in)                             :: surf_numpft
      integer,intent(in)                             :: surf_numcft
      integer,intent(out)                            :: maxsoil_patches
-     integer                                        :: pass_biogeog
-     integer                                        :: pass_nocomp
-     integer                                        :: pass_sp
+     integer                                        :: pass_use_fixed_biogeog
+     integer                                        :: pass_use_nocomp
+     integer                                        :: pass_use_sp
      integer                                        :: pass_masterproc
+     integer                                        :: pass_use_luh2
      logical                                        :: verbose_output
      type(fates_param_reader_ctsm_impl)             :: var_reader
      
@@ -321,25 +322,25 @@ module CLMFatesInterfaceMod
         ! Send parameters individually
         
         if(use_fates_fixed_biogeog)then
-           pass_biogeog = 1
+           pass_use_fixed_biogeog = 1
         else
-           pass_biogeog = 0
+           pass_use_fixed_biogeog = 0
         end if
-        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_biogeog)
+        call set_fates_ctrlparms('use_fixed_biogeog',ival=pass_use_fixed_biogeog)
         
         if(use_fates_nocomp)then
-           pass_nocomp = 1
+           pass_use_nocomp = 1
         else
-           pass_nocomp = 0
+           pass_use_nocomp = 0
         end if
-        call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
+        call set_fates_ctrlparms('use_nocomp',ival=pass_use_nocomp)
         
         if(use_fates_sp)then
-           pass_sp = 1
+           pass_use_sp = 1
         else
-           pass_sp = 0
+           pass_use_sp = 0
         end if
-        call set_fates_ctrlparms('use_sp',ival=pass_sp)
+        call set_fates_ctrlparms('use_sp',ival=pass_use_sp)
         
         if(masterproc)then
            pass_masterproc = 1
@@ -348,6 +349,14 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('masterproc',ival=pass_masterproc)
 
+        ! FATES landuse modes
+        if(use_fates_luh) then
+           pass_use_luh2 = 1
+        else
+           pass_use_luh2 = 0
+        end if
+        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh2)
+        
      end if
 
 
@@ -395,7 +404,6 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
-     integer                                        :: pass_use_luh
      integer                                        :: pass_use_potentialveg
      integer                                        :: pass_num_luh_states
      integer                                        :: pass_num_luh_transitions
@@ -540,16 +548,12 @@ module CLMFatesInterfaceMod
 
         ! FATES landuse modes
         if(use_fates_luh) then
-           pass_use_luh = 1
            pass_num_luh_states = num_landuse_state_vars
            pass_num_luh_transitions = num_landuse_transition_vars
         else
-           pass_use_luh = 0
            pass_num_luh_states = 0
            pass_num_luh_transitions = 0
         end if
-
-        call set_fates_ctrlparms('use_luh2',ival=pass_use_luh)
         call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
         call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
 
@@ -1592,10 +1596,17 @@ module CLMFatesInterfaceMod
           elai(col%patchi(c):col%patchf(c)) = 0.0_r8
           esai(col%patchi(c):col%patchf(c)) = 0.0_r8
           hbot(col%patchi(c):col%patchf(c)) = 0.0_r8
+          
+          if(use_fates_sp)then
+            canopystate_inst%tlai_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
+            canopystate_inst%tsai_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
+            canopystate_inst%htop_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
+          else
 
-          tlai(col%patchi(c):col%patchf(c)) = 0.0_r8
-          tsai(col%patchi(c):col%patchf(c)) = 0.0_r8
-          htop(col%patchi(c):col%patchf(c)) = 0.0_r8
+            tlai(col%patchi(c):col%patchf(c)) = 0.0_r8
+            tsai(col%patchi(c):col%patchf(c)) = 0.0_r8
+            htop(col%patchi(c):col%patchf(c)) = 0.0_r8
+          end if 
   
 
           ! FATES does not dictate bare-ground so turbulent
@@ -1641,11 +1652,17 @@ module CLMFatesInterfaceMod
              esai(p) = this%fates(nc)%bc_out(s)%esai_pa(ifp)
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
 
-             tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
-             tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
-             htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+             if(use_fates_sp)then
+               canopystate_inst%tlai_hist_patch(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
+               canopystate_inst%tsai_hist_patch(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
+               canopystate_inst%htop_hist_patch(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+             else
+               tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
+               tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
+               htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+             endif
 
-             if(use_fates_sp.and.abs(canopystate_inst%tlai_patch(p) - &
+             if(use_fates_sp.and.abs(canopystate_inst%tlai_hist_patch(p) - &
                                  this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
                write(iulog,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
              endif
@@ -1940,9 +1957,9 @@ module CLMFatesInterfaceMod
                      do ft = surfpft_lb,surfpft_ub  !set of pfts in HLM
                         ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.
                         p = ft + col%patchi(c) ! for an FT of 1 we want to use
-                        this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_input_patch(p)
-                        this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = canopystate_inst%tsai_input_patch(p)
-                        this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = canopystate_inst%htop_input_patch(p)
+                        this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
+                        this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = canopystate_inst%tsai_patch(p)
+                        this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = canopystate_inst%htop_patch(p)
                         if(canopystate_inst%htop_patch(p).lt.1.0e-20)then ! zero htop causes inifinite/nans. This is
                            this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 0.01_r8
                         endif

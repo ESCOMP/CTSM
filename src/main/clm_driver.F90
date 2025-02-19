@@ -58,7 +58,7 @@ module clm_driver
   use UrbanRadiationMod      , only : UrbanRadiation
   !
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use SatellitePhenologyMod  , only : GetSatellitePhenologyInputs, interpMonthlyVeg, SetSPModeCanopyStructs
+  use SatellitePhenologyMod  , only : GetSatellitePhenologyInputs, interpMonthlyVeg, SetSatellitePhenologyBGCCanopyStructs
   use ndepStreamMod          , only : ndep_interp
   use cropcalStreamMod       , only : cropcal_advance, cropcal_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
@@ -1046,7 +1046,7 @@ contains
           call t_startf('SatellitePhenology')
           call GetSatellitePhenologyInputs(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                canopystate_inst)
-          call SetSPModeCanopyStructs(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+          call SetSatellitePhenologyBGCCanopyStructs(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
@@ -1059,8 +1059,11 @@ contains
           ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
           ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
           ! use the first three points, which would incorrectly represent the interpolated values.
-          call GetSatellitePhenologyInputs(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+          call GetSatellitePhenologyInputs(bounds_clump, &
+               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                canopystate_inst)
+          call SetSatellitePhenologyBGCCanopyStructs(bounds_clump, filter_inactive_and_active(nc)%num_soilp, &
+               filter_inactive_and_active(nc)%soilp, water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
 
        end if
