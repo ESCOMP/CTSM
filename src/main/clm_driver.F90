@@ -1062,8 +1062,6 @@ contains
           call GetSatellitePhenologyInputs(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                canopystate_inst)
-          call SetSatellitePhenologyBGCCanopyStructs(bounds_clump, filter_inactive_and_active(nc)%num_soilp, &
-               filter_inactive_and_active(nc)%soilp, water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
 
        end if

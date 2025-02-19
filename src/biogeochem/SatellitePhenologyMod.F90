@@ -186,10 +186,10 @@ contains
     real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb                                ! fraction of canopy layer covered by snow
     
-    !if (use_fates_sp) then 
-    !   write(iulog,*) 'SetSatellitePhenologyBGCCanopyStructs', 'should not be calling this method when use_fates_sp == .true.'
-    !  call endrun(msg=errMsg(sourcefile, __LINE__))
-    !end if 
+    if (use_fates_sp) then 
+      write(iulog,*) 'SetSatellitePhenologyBGCCanopyStructs', 'should not be calling this method when use_fates_sp == .true.'
+     call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if 
     
     associate(                                                           &
       frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
@@ -228,7 +228,6 @@ contains
       ! NOTE: The following snow burial code is duplicated in CNVegStructUpdateMod.
       ! Changes in one place should be accompanied by similar changes in the other.
 
-      if (.not. use_fates_sp) then
       if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub) then
         ol = min(max(snow_depth(c) - hbot(p), 0.0_r8), htop(p) - hbot(p))
         fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
@@ -247,7 +246,6 @@ contains
       else
         frac_veg_nosno_alb(p) = 0
       end if
-     end if
 
     end do ! end of patch loop
 
