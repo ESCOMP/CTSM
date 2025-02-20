@@ -119,9 +119,9 @@ class TestSysRunTower(unittest.TestCase):
         # assert that AR-SLu directories were created during setup
         self.assertTrue("AR-SLu" in glob.glob(self._tempdir + "/AR-SLu*")[0])
 
-    def test_xmlchange_neon(self):
+    def test_xmlchange(self):
         """
-        This test checks that the --xmlchange argument is obeyed for a NEON site.
+        This test checks that the --xmlchange argument is obeyed.
         """
 
         # run the run_tower tool
@@ -150,40 +150,9 @@ class TestSysRunTower(unittest.TestCase):
             print(f"CCSM_CO2_PPMV = {value}")
             self.assertTrue(int(value) == 1987)
 
-    def test_xmlchange_plumber(self):
+    def test_setup_only(self):
         """
-        This test checks that the --xmlchange argument is obeyed for a PLUMBER site.
-        """
-
-        # run the run_tower tool for plumber site
-        sys.argv = [
-            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
-            "--plumber-sites",
-            "AR-SLu",
-            "--no-input-data-check",
-            "--experiment",
-            "TEST",
-            "--xmlchange",
-            "CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=1987",
-            "--output-root",
-            self._tempdir,
-        ]
-        main("")
-
-        # Check that the --xmlchange argument is obeyed
-        case_dir = os.path.join(self._tempdir, "AR-SLu.TEST.ad")
-        self.assertTrue(os.path.exists(case_dir))
-        with Case(case_dir, read_only=True) as case:
-            value = case.get_value("CLM_CO2_TYPE")
-            print(f"CLM_CO2_TYPE = {value}")
-            self.assertTrue(value == "constant")
-            value = int(case.get_value("CCSM_CO2_PPMV"))
-            print(f"CCSM_CO2_PPMV = {value}")
-            self.assertTrue(int(value) == 1987)
-
-    def test_setup_only_neon(self):
-        """
-        This test checks that the --setup-only argument is obeyed for NEON sites
+        This test checks that the --setup-only argument is obeyed
         """
 
         # run the run_tower tool
@@ -206,34 +175,9 @@ class TestSysRunTower(unittest.TestCase):
         self.assertTrue(os.path.exists(build_dir_to_check))
         self.assertTrue(len(os.listdir(build_dir_to_check)) == 0)
 
-    def test_setup_only_plumber(self):
+    def test_overwrite(self):
         """
-        This test checks that the --setup-only argument is obeyed for PLUMBER sites
-        """
-
-        # run the run_tower tool for plumber site
-        site_name = "AR-SLu"
-        sys.argv = [
-            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
-            "--plumber-sites",
-            site_name,
-            "--setup-only",
-            "--experiment",
-            "TEST",
-            "--output-root",
-            self._tempdir,
-        ]
-        main("")
-
-        # make sure that build didn't happen: this dir should be empty
-        case_dir = os.path.join(self._tempdir, site_name)
-        build_dir_to_check = os.path.join(case_dir, "bld", "cpl", "obj")
-        self.assertTrue(os.path.exists(build_dir_to_check))
-        self.assertTrue(len(os.listdir(build_dir_to_check)) == 0)
-
-    def test_overwrite_neon(self):
-        """
-        This test checks that the --overwrite argument is obeyed for NEON sites
+        This test checks that the --overwrite argument is obeyed
         """
 
         # run the run_tower tool once
@@ -241,38 +185,6 @@ class TestSysRunTower(unittest.TestCase):
         sys.argv = [
             os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
             "--neon-sites",
-            site_name,
-            "--no-input-data-check",
-            "--experiment",
-            "TEST",
-            "--output-root",
-            self._tempdir,
-        ]
-        main("")
-
-        # create a file that should be erased during the upcoming overwrite
-        case_dir = os.path.join(self._tempdir, site_name)
-        test_file = os.path.join(case_dir, "test_file")
-        pathlib.Path(test_file).touch()
-        self.assertTrue(os.path.exists(test_file))
-
-        # run the tool again, overwriting existing
-        sys.argv += ["--overwrite"]
-        main("")
-
-        # ensure that file we created is gone
-        self.assertFalse(os.path.exists(test_file))
-
-    def test_overwrite_plumber(self):
-        """
-        This test checks that the --overwrite argument is obeyed for PLUMBER sites
-        """
-
-        # run the run_tower tool once
-        site_name = "AR-SLu"
-        sys.argv = [
-            os.path.join(path_to_ctsm_root(), "tools", "site_and_regional", "run_tower"),
-            "--plumber-sites",
             site_name,
             "--no-input-data-check",
             "--experiment",
