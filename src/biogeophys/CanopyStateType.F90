@@ -34,10 +34,6 @@ module CanopyStateType
      real(r8) , pointer :: htop_input_patch          (:)   ! patch canopy height driver data for SP mode
      real(r8) , pointer :: hbot_input_patch          (:)   ! patch canopy bottom driver data for SP mode
      
-     real(r8) , pointer :: tlai_hist_patch          (:)   ! patch canopy one-sided leaf area index driver data for SP mode (no burying by snow)
-     real(r8) , pointer :: tsai_hist_patch          (:)   ! patch canopy one-sided stem area index driver data for SP mode (no burying by snow)
-     real(r8) , pointer :: htop_hist_patch          (:)   ! patch canopy height driver data for SP mode
-
      real(r8) , pointer :: elai240_patch            (:)   ! patch canopy one-sided leaf area index with burying by snow average over 10days
      real(r8) , pointer :: laisun_patch             (:)   ! patch patch sunlit projected leaf area index
      real(r8) , pointer :: laisha_patch             (:)   ! patch patch shaded projected leaf area index
@@ -127,11 +123,6 @@ contains
     allocate(this%tlai_input_patch         (begp:endp))           ; this%tlai_input_patch         (:)   = nan
     allocate(this%tsai_input_patch         (begp:endp))           ; this%tsai_input_patch         (:)   = nan
     allocate(this%htop_input_patch         (begp:endp))           ; this%htop_input_patch         (:)   = nan
-    
-    allocate(this%tlai_hist_patch         (begp:endp))           ; this%tlai_hist_patch         (:)   = nan
-    allocate(this%tsai_hist_patch         (begp:endp))           ; this%tsai_hist_patch         (:)   = nan
-    allocate(this%htop_hist_patch         (begp:endp))           ; this%htop_hist_patch         (:)   = nan
-    
     allocate(this%hbot_input_patch         (begp:endp))           ; this%hbot_input_patch         (:)   = nan
     allocate(this%tlai_patch               (begp:endp))           ; this%tlai_patch               (:)   = nan
     allocate(this%tsai_patch               (begp:endp))           ; this%tsai_patch               (:)   = nan
@@ -557,10 +548,6 @@ contains
        this%htop_input_patch(p)       = 0._r8
        this%hbot_input_patch(p)       = 0._r8
        
-       this%tlai_hist_patch(p)       = 0._r8
-       this%tsai_hist_patch(p)       = 0._r8
-       this%htop_hist_patch(p)       = 0._r8
-
        ! needs to be initialized to spval to avoid problems when averaging for the accum
        ! field
        this%fsun_patch(p) = spval
