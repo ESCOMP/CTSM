@@ -1648,7 +1648,7 @@ module CLMFatesInterfaceMod
              tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
              htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              
-             if(use_fates_sp.and.abs(canopystate_inst%tlai(p) - &
+             if(use_fates_sp.and.abs(tlai(p) - &
                                  this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
                write(iulog,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
              endif
