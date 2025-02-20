@@ -2122,16 +2122,20 @@ sub setup_logic_roughness_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
-              'phys'=>$nl_flags->{'phys'} );
+              'phys'=>$nl_flags->{'phys'} , 'use_fates'=>$nl_flags->{'use_fates'});
 
   my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
   if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
     $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
   }
   my $phys = $physv->as_string();
-  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
-    if ( $var eq "Meier2022" ) {
+  if ( $var eq "Meier2022" ) {
+    if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
       $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+    # Make sure that fates and meier2022 are not both active due to issue #2932
+    if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007.  See issue #2932 for more information.")
     }
   }
 }

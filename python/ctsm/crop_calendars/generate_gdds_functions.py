@@ -10,6 +10,7 @@ from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import is_instantaneous
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
@@ -258,6 +259,7 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
+    h1_instantaneous,
 ):
     """
     Import one year of CLM output data for GDD generation
@@ -287,12 +289,19 @@ def import_and_process_1yr(
     else:
         crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
-    print(h1_filelist)
+    # Are h1 files instantaneous?
+    if h1_instantaneous is None:
+        h1_instantaneous = is_instantaneous(xr.open_dataset(h1_filelist[0])["time"])
+
+    if h1_instantaneous:
+        slice_year = this_year
+    else:
+        slice_year = this_year - 1
     dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
-        time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
+        time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
     )
     for timestep in dates_ds["time"].values:
@@ -553,8 +562,8 @@ def import_and_process_1yr(
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
     patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
-    for p in patterns:
-        pattern = os.path.join(indir, p)
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
         if h2_files:
             break
@@ -810,6 +819,7 @@ def import_and_process_1yr(
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
+        h1_instantaneous,
     )
 
 
