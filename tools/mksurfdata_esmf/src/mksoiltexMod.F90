@@ -35,6 +35,90 @@ module mksoiltexMod
 contains
 !=================================================================================
 
+  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o, data_modifier, organic_o)
+    !
+    ! Arguments
+    integer, intent(in) :: no
+    integer, intent(in) :: lookup_index
+    integer, intent(in) :: n_scid, nlay, n_mapunits
+    character(*), intent(in) :: name
+    real(r4), intent(in) :: val_neg_4  ! Fallback value if read-in value is -4
+    real(r4), intent(in) :: val_neg_other  ! Fallback value if read-in value is negative but not -4
+    real(r4), intent(in) :: data_i(:,:,:)
+    real(r4), intent(out) :: data_o(:,:)
+    real(r4), optional, intent(in) :: data_modifier(:,:,:)
+    real(r4), optional, intent(out) :: organic_o(:,:)
+    !
+    ! Local variables
+    integer :: l
+    integer :: ier
+    logical :: is_neg_4
+    logical :: organic2
+    real(r4), allocatable  :: organic_i(:,:,:)
+
+    ! Apply data_modifer, if needed (organic_o OPTION 2)
+    organic2 = .false.
+    if (present(data_modifier)) then
+       if (.not. present(organic_o)) then
+          call shr_sys_abort('mksoiltex_i_to_o: data_modifier not needed if not providing organic_o')
+       else if (trim(name) /= 'orgc') then
+          call shr_sys_abort('mksoiltex_i_to_o: organic_o should only be provided along with orgc')
+       end if
+       organic2 = .true.
+       allocate(organic_i(nlay,n_scid,n_mapunits), stat=ier)
+       if (ier/=0) call shr_sys_abort()
+       organic_i = data_i * data_modifier
+    else if (present(organic_o)) then
+       call shr_sys_abort('mksoiltex_i_to_o: If providing organic_o, also provide data_modifier')
+    end if
+
+    ! Fill first layer of output array with first positive value on SCID dim of input array
+    data_o(no,1) = data_i(1,1,lookup_index)
+    if (organic2) organic_o(no,1) = organic_i(1,1,lookup_index)
+    if (data_o(no,1) < 0._r4) then
+       do l = 2,n_scid
+          if (data_i(1,l,lookup_index) >= 0._r4) then
+             data_o(no,1) = data_i(1,l,lookup_index)
+             if (organic2) organic_o(no,1) = organic_i(1,l,lookup_index)  ! TODO: This should probably be under a conditional looking at organic_i instead of data_i, but that's not how it was in the original
+             exit
+          end if
+       end do
+    end if
+
+    ! Handle cases where no positive value was found
+    if (data_o(no,1) < 0._r4) then
+       is_neg_4 = int(data_o(no,1)) == -4  ! TODO: Rename. Maybe indicates sand dune?
+       if (is_neg_4) then
+          data_o(no,:) = val_neg_4
+          if (organic2) organic_o(no,:) = val_neg_4  ! TODO: This should probably be under conditionals looking at organic_o instead of data_o, but that's not how it was in the original
+       else
+          data_o(no,:) = val_neg_other
+          if (organic2) organic_o(no,:) = val_neg_other  ! TODO: This should probably be under conditionals looking at organic_o instead of data_o, but that's not how it was in the original
+       end if
+    end if
+
+    ! Ensure negative values are handled
+    ! TODO: Remove as unnecessary?
+    ! TODO: Also handle organic_o? Not handled in original
+    if (data_o(no,1) < 0._r4 .and. trim(name) /= "sand") then
+       write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+       call shr_sys_abort('could not find a value >= 0 for '//name)
+    end if
+
+    ! Top soil layer is filled above. Here, we fill the other layers.
+    do l = 2,nlay
+       data_o(no,l) = data_i(l,1,lookup_index)
+       if (organic2) organic_o(no,l) = organic_i(l,1,lookup_index)
+
+       ! If a layer is negative, fill it with the previous layer's value
+       if (data_o(no,l) < 0._r4) then
+          data_o(no,l) = data_o(no,l-1)
+          if (organic2) organic_o(no,l) = organic_o(no,l-1)  ! TODO: This should probably be under a conditional looking at organic_o instead of data_o, but that's not how it was in the original
+       end if
+    end do
+
+  end subroutine mksoiltex_i_to_o
+
   subroutine mksoiltex(file_mesh_i, file_mapunit_i, file_lookup_i, mesh_o, pioid_o, rc)
     !
     ! make %sand, %clay, organic carbon content, coarse fragments, bulk density,
@@ -94,6 +178,7 @@ contains
     type(var_desc_t)       :: pio_varid_bulk
     type(var_desc_t)       :: pio_varid_phaq
     type(var_desc_t)       :: pio_varid_organic
+    integer, parameter     :: organic_o_option = 1
     integer                :: starts(3)     ! starting indices for reading lookup table
     integer                :: counts(3)     ! dimension counts for reading lookup table
     integer                :: srcTermProcessing_Value = 0
@@ -109,6 +194,10 @@ contains
        write(ndiag,'(a)') ' Input mapunit file is '//trim(file_mapunit_i)
        write(ndiag,'(a)') ' Input lookup table file is '//trim(file_lookup_i)
        write(ndiag,'(a)') ' Input mesh/grid file is '//trim(file_mesh_i)
+    end if
+
+    if (organic_o_option < 1 .or. organic_o_option > 2) then
+       call shr_sys_abort('organic_o_option must be 1 or 2')
     end if
 
     ! Determine ns_o and allocate output data
@@ -328,180 +417,26 @@ contains
           ! Determine lookup_index
           lookup_index = mapunit_lookup(mapunit_o(no))
 
-          ! Determine top soil layer sand_o
-          ! If less than 0 search within the SCID array for the first index
-          ! that gives a value greater than or  equal to 0
-          ! Then determine the other soil layers
-          sand_o(no,1) = float(sand_i(1,1,lookup_index))
-          if (sand_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (float(sand_i(1,l,lookup_index)) >= 0._r4) then
-                   sand_o(no,1) = float(sand_i(1,l,lookup_index))
-                   exit
-                end if
-             end do
+          ! Fill output arrays
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "sand", 99._r4, 43._r4, float(sand_i(:,:,:)), sand_o)
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "clay", 1._r4, 18._r4, float(clay_i(:,:,:)), clay_o)
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "cfrag", 1._r4, 0._r4, float(cfrag_i(:,:,:)), cfrag_o)
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "bulk", 1.5_r4, 1.5_r4, bulk_i, bulk_o)  ! TODO: 1.5 ok for sand dunes and -7?
+          call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+               "phaq", 7._r4, 7._r4, phaq_i, phaq_o)
+          if (organic_o_option == 1) then
+             call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+                  "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
+          else
+             call mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, &
+                  "orgc", 1._r4, 0._r4, orgc_i, orgc_o, &
+                  orgc_i * bulk_i * float(100 - cfrag_i) * 0.01_r4 / 0.58_r4, &
+                  organic_o)
           end if
-          if (sand_o(no,1) < 0._r4) then
-             if (int(sand_o(no,1)) == -4) then
-                sand_o(no,:) = 99._r4
-             else
-                sand_o(no,:) = 43._r4
-             end if
-          end if
-          do l = 2,nlay
-             sand_o(no,l) = float(sand_i(l,1,lookup_index))
-             if (sand_o(no,l) < 0._r4) then
-                sand_o(no,l) = sand_o(no,l-1)
-             end if
-          end do
-
-          ! Same algorithm for clay_o as for sand_o
-          clay_o(no,1) = float(clay_i(1,1,lookup_index))
-          if (clay_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (float(clay_i(1,l,lookup_index)) >= 0._r4) then
-                   clay_o(no,1) = float(clay_i(1,l,lookup_index))
-                   exit
-                end if
-             end do
-          end if
-          if (clay_o(no,1) < 0._r4) then
-             if (int(clay_o(no,1)) == -4) then
-                clay_o(no,:) = 1._r4
-             else
-                clay_o(no,:) = 18._r4
-             end if
-          end if
-          if (clay_o(no,1) < 0._r4) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for clay_i') 
-          end if
-          do l = 2,nlay
-             clay_o(no,l) = float(clay_i(l,1,lookup_index))
-             if (clay_o(no,l) < 0._r4) then
-                clay_o(no,l) = clay_o(no,l-1)
-             end if
-          end do
-
-          ! Same algorithm for orgc_o as for sand_o
-          ! organic_o OPTION 2 (commented out)
-          ! Calculate from multiple input variables to get the output variable
-          orgc_o(no,1) = orgc_i(1,1,lookup_index)
-!         organic_o(no,1) = orgc_i(1,1,lookup_index) * bulk_i(1,1,lookup_index) * float(100 - cfrag_i(1,1,lookup_index)) * 0.01_r4 / 0.58_r4
-          if (orgc_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (orgc_i(1,l,lookup_index) >= 0._r4) then
-                   orgc_o(no,1) = orgc_i(1,l,lookup_index)
-!                  organic_o(no,1) = orgc_i(1,l,lookup_index) * bulk_i(1,l,lookup_index) * float(100 - cfrag_i(1,l,lookup_index)) * 0.01_r4 / 0.58_r4
-                   exit
-                end if
-             end do
-          end if
-          if (orgc_o(no,1) < 0._r4) then
-             if (int(orgc_o(no,1)) == -4) then  ! sand dunes
-                orgc_o(no,:) = 1._r4
-!               organic_o(no,:) = 1._r4
-             else
-                orgc_o(no,:) = 0._r4
-!               organic_o(no,:) = 0._r4
-             end if
-          end if
-          if (orgc_o(no,1) < 0._r4) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for orgc_i')
-          end if
-          do l = 2,nlay
-             orgc_o(no,l) = orgc_i(l,1,lookup_index)
-!            organic_o(no,l) = orgc_i(l,1,lookup_index) * bulk_i(l,1,lookup_index) * float(100 - cfrag_i(l,1,lookup_index)) * 0.01_r4 / 0.58_r4
-             if (orgc_o(no,l) < 0._r4) then
-                orgc_o(no,l) = orgc_o(no,l-1)
-!               organic_o(no,l) = organic_o(no,l-1)
-             end if
-          end do
-
-          ! Same algorithm for cfrag_o as for sand_o
-          cfrag_o(no,1) = float(cfrag_i(1,1,lookup_index))
-          if (cfrag_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (float(cfrag_i(1,l,lookup_index)) >= 0._r4) then
-                   cfrag_o(no,1) = float(cfrag_i(1,l,lookup_index))
-                   exit
-                end if
-             end do
-          end if
-          if (cfrag_o(no,1) < 0._r4) then
-             if (int(cfrag_o(no,1)) == -4) then  ! sand dunes
-                cfrag_o(no,:) = 1._r4
-             else
-                cfrag_o(no,:) = 0._r4
-             end if
-          end if
-          if (cfrag_o(no,1) < 0._r4) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for cfrag_i')
-          end if
-          do l = 2,nlay
-             cfrag_o(no,l) = float(cfrag_i(l,1,lookup_index))
-             if (cfrag_o(no,l) < 0._r4) then
-                cfrag_o(no,l) = cfrag_o(no,l-1)
-             end if
-          end do
-
-          ! Same algorithm for bulk_o as for sand_o
-          bulk_o(no,1) = bulk_i(1,1,lookup_index)
-          if (bulk_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (bulk_i(1,l,lookup_index) >= 0._r4) then
-                   bulk_o(no,1) = bulk_i(1,l,lookup_index)
-                   exit
-                end if
-             end do
-          end if
-          if (bulk_o(no,1) < 0._r4) then
-             if (int(bulk_o(no,1)) == -4) then  ! sand dunes
-                bulk_o(no,:) = 1.5_r4  ! TODO Ok for sand dunes?
-             else
-                bulk_o(no,:) = 1.5_r4  ! TODO Ok for -7?
-             end if
-          end if
-          if (bulk_o(no,1) < 0._r4) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for bulk_i')
-          end if
-          do l = 2,nlay
-             bulk_o(no,l) = bulk_i(l,1,lookup_index)
-             if (bulk_o(no,l) < 0._r4) then
-                bulk_o(no,l) = bulk_o(no,l-1)
-             end if
-          end do
-
-          ! Same algorithm for phaq_o as for sand_o
-          phaq_o(no,1) = phaq_i(1,1,lookup_index)
-          if (phaq_o(no,1) < 0._r4) then
-             do l = 2,n_scid
-                if (phaq_i(1,l,lookup_index) >= 0._r4) then
-                   phaq_o(no,1) = phaq_i(1,l,lookup_index)
-                   exit
-                end if
-             end do
-          end if
-          if (phaq_o(no,1) < 0._r4) then
-             if (int(phaq_o(no,1)) == -4) then  ! sand dunes
-                phaq_o(no,:) = 7._r4
-             else
-                phaq_o(no,:) = 7._r4
-             end if
-          end if
-          if (phaq_o(no,1) < 0._r4) then
-             write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-             call shr_sys_abort('could not find a value >= 0 for phaq_i')
-          end if
-          do l = 2,nlay
-             phaq_o(no,l) = phaq_i(l,1,lookup_index)
-             if (phaq_o(no,l) < 0._r4) then
-                phaq_o(no,l) = phaq_o(no,l-1)
-             end if
-          end do
 
           ! ---------------------------------------------------------------
           ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
@@ -514,11 +449,13 @@ contains
           ! (calculated from orgc_i, cfrag_i, and bulk_i) to organic_o. This
           ! approach first calculates organic_i and then regrids to organic_o
           ! rather than regridding all the terms first and then calculating
-          ! organic_o. Commented out code above belongs to that option.
-          do l = 1, nlay
-             organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
-                               (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
-          end do
+          ! organic_o. That would be organic_o_option 2.
+          if (organic_o_option == 1) then
+             do l = 1, nlay
+                organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
+                                  (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
+             end do
+          end if
 
        end if
 
