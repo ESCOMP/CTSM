@@ -105,6 +105,19 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
     )
 
     parser.add_argument(
+        "--no-input-data-check",
+        "--no-check-input-data",
+        help="""
+                Don't check for input data. Implies --setup-only.
+                [default: %(default)s]
+                """,
+        action="store_true",
+        dest="no_input_data_check",
+        required=False,
+        default=False,
+    )
+
+    parser.add_argument(
         "--rerun",
         help="""
                 If the case exists but does not appear to be complete, restart it.
@@ -185,6 +198,17 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         choices=["v1", "v2", "v3"],
     )
 
+    parser.add_argument(
+        "--xmlchange",
+        help="""
+                Any xmlchanges (e.g., CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=500)
+                [default: %(default)s]
+                """,
+        required=False,
+        type=str,
+        default=None,
+    )
+
     args = parse_args_and_handle_standard_logging_options(args, parser)
 
     if args.neon_sites:
@@ -230,6 +254,10 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.WARN)
 
+    # --no-input-data-check implies --setup-only
+    if args.no_input_data_check and not args.setup_only:
+        args.setup_only = True
+
     return (
         neon_sites,
         plumber_sites,
@@ -243,5 +271,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         args.setup_only,
         args.no_batch,
         args.rerun,
+        args.no_input_data_check,
         args.user_version,
+        args.xmlchange,
     )
