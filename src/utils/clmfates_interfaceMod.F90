@@ -603,7 +603,7 @@ module CLMFatesInterfaceMod
 
         if (trim(fates_radiation_model) == 'norman') then
            pass_radiation_model = 1
-        else if (trim(fates_hydro_solver) == 'twostream') then
+        else if (trim(fates_radiation_model) == 'twostream') then
            pass_radiation_model = 2
         end if
         call set_fates_ctrlparms('radiation_model',ival=pass_radiation_model)
