@@ -1,3 +1,0 @@
- use_matrixcn = .true.
- use_soil_matrixcn = .true.
- hist_wrt_matrixcn_diag = .true.

@@ -1,8 +1,0 @@
-! The following results in nlevsoi = 3, nlevgrnd = 4; together with the standard setting
-! of nlevurb = 5, this results in nlevgrnd < nlevurb, which is what we particularly want
-! to test here.
-soil_layerstruct_userdefined = 0.2, 0.4, 0.8, 1.6
-soil_layerstruct_userdefined_nlevsoi = 3
-
-! Need to make sure interpolation is on because of the change in nlevgrnd relative to finidat
-use_init_interp = .true.

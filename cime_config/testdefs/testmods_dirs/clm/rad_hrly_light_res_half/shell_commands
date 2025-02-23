@@ -1,2 +1,0 @@
-./xmlchange CLM_BLDNML_OPTS="-light_res 360x720" --append
-./xmlchange BFBFLAG="TRUE"

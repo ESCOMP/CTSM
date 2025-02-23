@@ -1,5 +1,0 @@
-This directory contains unit tests of some utility code contained in
-this self_tests directory. This is a bit confusing: the self-tests
-themselves are NOT run from here (they are NOT run via the standard unit
-testing infrastructure), but this directory contains some standard unit
-tests of lower-level infrastructure code leveraged by the self-tests.

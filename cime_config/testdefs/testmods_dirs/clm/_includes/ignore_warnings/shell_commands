@@ -1,1 +1,0 @@
-./xmlchange --append CLM_BLDNML_OPTS="-ignore_warnings"

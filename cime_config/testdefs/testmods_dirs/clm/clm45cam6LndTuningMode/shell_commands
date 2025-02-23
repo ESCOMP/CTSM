@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./xmlchange LND_TUNING_MODE="clm4_5_cam6.0"
-

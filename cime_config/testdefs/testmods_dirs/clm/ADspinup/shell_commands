@@ -1,5 +1,0 @@
-#!/bin/bash
-
-./xmlchange CLM_ACCELERATED_SPINUP="on"
-./xmlchange MOSART_MODE="NULL"
-

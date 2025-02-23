@@ -1,7 +1,0 @@
-add_subdirectory(array_utils_test)
-add_subdirectory(clm_time_manager_test)
-add_subdirectory(annual_flux_dribbler_test)
-add_subdirectory(numerics_test)
-add_subdirectory(quadratic_test)
-add_subdirectory(matrix_test)
-add_subdirectory(sparse_matrix_test)

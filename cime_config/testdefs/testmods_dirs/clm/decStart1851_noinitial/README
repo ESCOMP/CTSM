@@ -1,8 +1,0 @@
-This testmods directory was created for the sake of the smallville transient
-test case. We need to use a cold-start to avoid this error message:
-
-ERROR : CLM build-namelist::CLMBuildNamelist::setup_logic_initial_conditions() :
-using ignore_ic_date is incompatable with crop!
-
-Once the above problem is fixed, we should stop doing a coldstart in this
-testmods

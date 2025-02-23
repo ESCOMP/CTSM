@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  lilac:
-    build: .
-    container_name: lilac
-    volumes:
-      - .:/lilac
-    command: /lilac/ci/build_and_test_lilac.sh

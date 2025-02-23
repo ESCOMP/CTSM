@@ -1,2 +1,0 @@
-This testmod directory is for tests that want to use the 'basic'
-testmod, but also need use_init_interp = .true.

@@ -1,3 +1,0 @@
-lower_boundary_condition = 2
-soil_layerstruct_predefined = '49SL_10m'
-use_bedrock = .true.

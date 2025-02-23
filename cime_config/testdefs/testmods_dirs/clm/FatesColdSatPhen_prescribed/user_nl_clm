@@ -1,3 +1,0 @@
-use_lai_streams = .true.
-lai_tintalgo = 'lower'      ! set time interpolation to use lower value, so can compare more directly to input dataset
- 
