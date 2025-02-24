@@ -2571,6 +2571,9 @@ contains
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
                endif
 
+               ! Reset heat-stress variables
+               call crop_heatstress_reset(HS_ndays(p), heatwave_crop(p))
+
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2615,9 +2618,6 @@ contains
               else ! continue same fert application every timestep
                  fert_counter(p) = fert_counter(p) - dt
               end if
-
-            ! Reset heat-stress variables
-            call crop_heatstress_reset(HS_ndays(p), heatwave_crop(p))
 
          else   ! crop not live
             ! next 2 lines conserve mass if leaf*_xfer > 0 due to interpinic.

@@ -3,7 +3,7 @@ module CropHeatStress
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
-  ! !MODULE: CNPhenologyMod
+  ! !MODULE: CropHeatStress
   !
   ! !DESCRIPTION:
   ! Module for implementing the effect of heat stress on crop production
@@ -28,7 +28,7 @@ module CropHeatStress
 
   !
   ! !PUBLIC FOR UNIT TESTING
-  real(r8), public, parameter :: tcrit = 306._r8
+  real(r8), public, parameter :: tcrit = 303.15_r8
   real(r8), public, parameter :: HS_ndays_min = 3._r8
 
   character(len=*), parameter, private :: sourcefile = &
@@ -111,8 +111,8 @@ contains
 
     !-----------------------------------------------------------------------
 
-    tcrit = 300
-    tmax  = 310
+    tcrit = 303.15_r8
+    tmax  = 315._r8
     day_min = 3
     day_max = 14
 
