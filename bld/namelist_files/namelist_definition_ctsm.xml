@@ -780,6 +780,13 @@ Allowed values are:
 This option is older than the luhdata options and may be depricated at some point in the future.
 </entry>
 
+<entry id="fates_electron_transport_model" type="char*256" category="physics"
+        group="elm_inparm" valid_values="FvCB1980,JohnsonBerry2021" value="FvCB1980">
+Set the FATES electron transport model to either Johnson-Berry 2021 or
+  Farquhar von Caemmerer and Berry 1980 (FvCB1980).
+
+</entry>
+
 <entry id="fates_radiation_model" type="char*256" category="physics"
         group="clm_inparm" valid_values="norman,twostream" value="norman">
 Set the FATES radiation model

@@ -339,6 +339,7 @@ module clm_varctl
   character(len=256), public :: fates_radiation_model = ''              ! Norman or two-stream radiation model
   character(len=256), public :: fates_hydro_solver = ''                 ! 1D Taylor, 2D Picard, 2D Newton
   character(len=256), public :: fates_photosynth_acclimation = ''       ! nonacclimating, kumarathunge2019
+  character(len=256), public :: fates_electron_transport_model = ''     ! Johnson-Berry 2021 or Farquhar von Caemmerer and Berry 1980
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure

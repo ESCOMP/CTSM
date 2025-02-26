@@ -811,7 +811,7 @@ sub setup_cmdl_fates_mode {
                       "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel",
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                      "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model"
+                      "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
                    );
 
        # dis-allow fates specific namelist items with non-fates runs
@@ -4714,7 +4714,7 @@ sub setup_logic_fates {
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model"
+                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
                     );
 
         foreach my $var ( @list ) {

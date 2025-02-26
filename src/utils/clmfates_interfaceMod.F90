@@ -64,6 +64,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_regeneration_model
    use clm_varctl        , only : fates_hydro_solver
    use clm_varctl        , only : fates_radiation_model
+   use clm_varctl        , only : fates_electron_transport_model
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
@@ -425,6 +426,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_regeneration_model
      integer                                        :: pass_hydro_solver
      integer                                        :: pass_radiation_model
+     integer                                        :: pass_electron_transport_model
 
      call t_startf('fates_globals2')
 
@@ -607,6 +609,13 @@ module CLMFatesInterfaceMod
            pass_radiation_model = 2
         end if
         call set_fates_ctrlparms('radiation_model',ival=pass_radiation_model)
+
+        if (trim(fates_electron_transport_model) == 'FvCB1980') then
+           pass_radiation_model = 1
+        else if (trim(fates_electron_transport_model) == 'JohnsonBerry2021') then
+           pass_radiation_model = 2
+        end if
+        call set_fates_ctrlparms('electron_transport_model',ival=pass_electron_transport_model)
 
         ! FATES logging and harvest modes
         pass_logging = 0
