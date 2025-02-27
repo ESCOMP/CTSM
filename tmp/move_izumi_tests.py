@@ -59,12 +59,13 @@ def print_tests_info(tree):
 # Identify and remove duplicate machines
 def remove_duplicate_machines(tree):
     root = tree.getroot()
+    seen = set()
     for test in root.findall('test'):
+        test_tuple = (test.get('name'), test.get('grid'), test.get('compset'), test.get('testmods'))
         machines = test.find('machines')
-        seen = set()
         duplicates = []
         for machine in machines.findall('machine'):
-            machine_tuple = (machine.get('name'), machine.get('compiler'), machine.get('category'))
+            machine_tuple = test_tuple + (machine.get('name'), machine.get('compiler'), machine.get('category'))
             if machine_tuple in seen:
                 duplicates.append(machine)
             else:
