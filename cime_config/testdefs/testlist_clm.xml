@@ -739,16 +739,6 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version  in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
-    </options>
-  </test>
   <!-- Historical clm5_0 physics BgcCrop science support -->
   <test name="SMS_Ln9_P256x2" grid="C96_C96_mt232" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>

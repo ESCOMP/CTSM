@@ -60,6 +60,7 @@ def print_tests_info(tree):
 def remove_duplicate_machines(tree):
     root = tree.getroot()
     seen = set()
+    empty_tests = []
     for test in root.findall('test'):
         test_tuple = (test.get('name'), test.get('grid'), test.get('compset'), test.get('testmods'))
         machines = test.find('machines')
@@ -72,12 +73,16 @@ def remove_duplicate_machines(tree):
                 seen.add(machine_tuple)
         for duplicate in duplicates:
             machines.remove(duplicate)
+        if not machines.findall('machine'):
+            empty_tests.append(test)
+    for test in empty_tests:
+        root.remove(test)
 
     return tree
 
 # Define the input and output file paths
-input_file = "cime_config/testdefs/testlist_clm.xml"
-# output_file = "test.xml"
+input_file = "../cime_config/testdefs/testlist_clm.xml"
+# output_file = "../test.xml"
 output_file = input_file
 
 # Read the input file and preserve the stuff at the top
