@@ -2262,7 +2262,8 @@
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="derecho" compiler="nvhpc" category="aux_clm"/>     <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
