@@ -1377,11 +1377,6 @@ module CLMFatesInterfaceMod
                                           this%fates(nc)%sites,  &
                                           this%fates(nc)%bc_in )
 
-      if (masterproc) then
-         write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
-                                                  bounds_clump%endg
-      end if
-
       call t_stopf('fates_dynamics_daily_driver')
 
       return
@@ -3236,7 +3231,6 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    write(iulog,*) 'Init2: calling FireInit'
     call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
