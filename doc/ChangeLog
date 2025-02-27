@@ -1,4 +1,239 @@
 ===============================================================
+Tag name: ctsm5.3.026
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 26 Feb 2025 09:55:48 AM MST
+One-line Summary: Merge b4b-dev to master: run_tower updates, reduce log noise
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master.
+
+Some run_tower updatesm, fix some issues, and improve code health. Also reduces some log noise.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves #2884 -- run_neon overwrite ignored
+  Resolves #2885 -- run_neon setup_only ignored
+  Resolves #2946 -- python tests much longer
+  Resolves #2717 -- cleanup cesm log
+  Resolves #2737 -- reduce log noise
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Two new options to run_tower:
+  --no-inputdata-check option implies --setup-only but skips the check/download of input data. This is used instead of --setup-only
+  in run_tower system testing for a speedup of ~20%.
+  --xmlchange option allows user to specify xmlchange settings to apply. E.g., --xmlchange CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=850.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Testing summary: Regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2969 -- Simplify tower types
+  #2962 -- Run tower fix and improvements
+  #2927 -- Remove log noise
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.025
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu Feb 20 14:24:45 MST 2025
+One-line Summary: FATES default parameter file update
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the default parameter file for FATES bringing in a number of updates:
+   - adds parameters for land use grazing
+   - updates the FATES z0mr turbulence parameters for consistency with CLM
+   - adds FATES pft-dependent btran model switches for a forthcoming update
+   - updates the default hydro solver switch to Picard 2D
+
+This also updates the default FATES tag which includes two issue fixes and introduces
+the aforementioned land use grazing capability.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes FATES#1316 -- z0mr parameters are all the same in the default parameter file
+   Fixes FATES#773 -- update the default hydraulics solver?
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   The FATES tag update includes new history outputs associated with land use grazing.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   The fates default parameter file has been updated.  See the associated FATES pull
+   requests for more detail.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for FATES tests only
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.80.11_api.37.0.0 -> sci.1.81.0_api.37.1.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   https://github.com/ESCOMP/CTSM/pull/2965
+   https://github.com/NGEET/fates/pull/1334
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.024
+Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
+Date: Tue Feb 11 09:56:24 MST 2025
+One-line Summary: Change choice of pressure in CLMU building energy model
+
+Purpose and description of changes
+----------------------------------
+
+ In the CLMU Building Energy Model (BEM), the choice of pressure for calculating indoor air density is changed from standard pressure to bottom layer of atmosphere pressure of the corresponding grid cell.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2755
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ From the PR: I have updated the inline documentation in the code where it's needed
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+ From the PR: Some urban variables such as urban 2m air temperature, 2m relative humidity, urban air-conditioning and heating energy fluxes will change slightly. See #2755 for details.
+
+ slevis from running aux_clm: I see larger differences that seem justified as simulations typically diverge from small initial differences.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2758
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.023
 Originator(s): afoster (Adrianna Foster)
 Date: Sat Feb  8 08:36:00 MST 2025
@@ -4220,7 +4455,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.2.010
-Originator(s): @cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
+Originator(s): xinchang (Cathy Xinchang Li, U of Illinois - Urbana-Champaign), @Face2sea, @olyson, @fang-bowen, @keerzhang1
 Date: Thu 11 Jul 2024 11:57:15 AM MDT
 One-line Summary: Explicit A/C adoption
 
