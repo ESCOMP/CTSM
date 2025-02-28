@@ -71,7 +71,7 @@ REQUIRED OPTIONS
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
                               (default current directory)
-     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for LILAC)
+     -lnd_frac "domainfile"   Land fraction file (the input domain file) (only needed with --lilac option)
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
@@ -678,6 +678,18 @@ sub setup_cmdl_chk_res {
   }
 }
 
+#-------------------------------------------------------------------------------
+
+sub begins_with
+{
+    # Arguments: long-string, substring
+    # For an input long-string check if it starts with the substring
+    # For example, if a string like NEON_PRISM starts with NEON
+    return substr($_[0], 0, length($_[1])) eq $_[1];
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_cmdl_resolution {
   my ($opts, $nl_flags, $definition, $defaults, $envxml_ref) = @_;
 
@@ -713,7 +725,7 @@ sub setup_cmdl_resolution {
   $nl_flags->{'neon'} = ".false.";
   $nl_flags->{'neonsite'} = "";
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
-    if ( $opts->{'clm_usr_name'} eq "NEON" ) {
+    if ( begins_with($opts->{'clm_usr_name'}, "NEON") ) {
        $nl_flags->{'neon'} = ".true.";
        $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
        $log->verbose_message( "This is a NEON site with NEONSITE = " . $nl_flags->{'neonsite'} );
@@ -1665,6 +1677,7 @@ sub process_namelist_inline_logic {
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
@@ -1894,7 +1907,7 @@ sub process_namelist_inline_logic {
   #################################
   # namelist group: exice_streams #
   #################################
-  setup_logic_exice($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  setup_logic_exice_streams($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   ##########################################
   # namelist group: clm_temperature_inparm #
@@ -1988,7 +2001,7 @@ sub setup_logic_lnd_frac {
                      "env variables) AND fatmlndfrac on namelist");
        }
        if ( $opts->{$var} =~ /UNSET/ ) {
-          $log->fatal_error("-lnd_frac was set as UNSET in the CTSM build-namelist set it with the env variables: LND_DOMAIN_PATH/LND_DOMAIN_FILE.");
+          $log->fatal_error("-lnd_frac was set as UNSET in the CTSM build-namelist, it's required with the --lilac option");
        }
        my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
@@ -1998,20 +2011,22 @@ sub setup_logic_lnd_frac {
      if (defined $nl->get_value('fatmlndfrc')) {
        # do nothing - use value provided by config_grid.xml and clm.cpl7.template
      } else {
-       $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
+       $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist, it is required for the --lilac option.");
      }
   #
   # For the NUOPC driver neither lnd_frac nor fatmlndfrc need to be set
   #
-  } else {
+  } elsif ($opts->{'driver'} eq "nuopc" ) {
      if ( defined($opts->{$var}) ) {
        if ( $opts->{$var} !~ /UNSET/ ) {
-          $log->fatal_error("$var should NOT be set for the NUOPC driver as it is unused" );
+          $log->fatal_error("$var should NOT be set for the NUOPC driver as it is unused (only used by the --lilac option)" );
        }
      }
      if ( defined($nl->get_value('fatmlndfrc')) ) {
        $log->fatal_error("fatmlndfrac should NOT be set in the namelist for the NUOPC driver as it is unused" );
      }
+  } else {
+       $log->fatal_error("Input --driver type of $opts->{'driver'} is an invalid option. Correct this in xml variable COMP_iINTERFACE in your case" );
   }
 }
 
@@ -2103,16 +2118,20 @@ sub setup_logic_roughness_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
-              'phys'=>$nl_flags->{'phys'} );
+              'phys'=>$nl_flags->{'phys'} , 'use_fates'=>$nl_flags->{'use_fates'});
 
   my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
   if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
     $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
   }
   my $phys = $physv->as_string();
-  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
-    if ( $var eq "Meier2022" ) {
-      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm5_1 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+  if ( $var eq "Meier2022" ) {
+    if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
+      $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+    # Make sure that fates and meier2022 are not both active due to issue #2932
+    if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007.  See issue #2932 for more information.")
     }
   }
 }
@@ -2506,8 +2525,9 @@ sub setup_logic_surface_dataset {
   # consistent with it
   # MUST BE AFTER: setup_logic_demand which is where flanduse_timeseries is set
   #
-  my ($opts, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
+  my ($opts_in, $nl_flags, $definition, $defaults, $nl, $xmlvar_ref) = @_;
 
+  my $opts = $opts_in;
   $nl_flags->{'flanduse_timeseries'} = "null";
   my $flanduse_timeseries = $nl->get_value('flanduse_timeseries');
   if (defined($flanduse_timeseries)) {
@@ -2522,6 +2542,11 @@ sub setup_logic_surface_dataset {
 
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
+  }
+  # Turn test option off for NEON until after XML is interpreted
+  my $test_files = $opts->{'test'};
+  if ( &value_is_true($nl_flags->{'neon'})) {
+     $opts->{'test'} = 0;
   }
   #
   # Always get the crop version of the datasets now and let the code turn it into the form desired
@@ -2548,7 +2573,7 @@ sub setup_logic_surface_dataset {
                  'use_crop'=>$nl_flags->{'use_crop'} );
   }
   #
-  # Expand the XML variables for NEON cases so that NEONSITE will be used
+  # Expand the XML variables for NEON cases so that NEONSITE will be used and test for existence
   #
   if ( &value_is_true($nl_flags->{'neon'}) ) {
      my $fsurdat = $nl->get_value($var);
@@ -2557,6 +2582,9 @@ sub setup_logic_surface_dataset {
         my $group = $definition->get_group_name($var);
         $nl->set_variable_value($group, $var, $newval);
         $log->verbose_message( "This is a NEON site and the fsurdat file selected is: $newval" );
+        if ( $test_files and ($newval !~ /null|none/) and (! -f remove_leading_and_trailing_quotes($newval) ) ) {
+          $log->fatal_error("file not found: $var = $newval");
+        }
      }
   }
 }
@@ -2571,17 +2599,16 @@ sub setup_logic_initial_conditions {
   #
   # MUST BE AFTER: setup_logic_demand   which is where flanduse_timeseries is set
   #         AFTER: setup_logic_irrigate which is where irrigate is set
+  #         AFTER: setup_logic_exice    which is where use_excess_ice is set
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $var = "finidat";
   my $finidat = $nl->get_value($var);
+  $nl_flags->{'excess_ice_on_finidat'} = "unknown";
   if ( $nl_flags->{'clm_start_type'} =~ /cold/ ) {
-    if (defined $finidat ) {
-      $log->warning("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incomptable with using a cold start" .
+    if (defined $finidat && !&value_is_true(($nl->get_value('use_fates')))) {
+      $log->fatal_error("setting $var (either explicitly in your user_nl_clm or by doing a hybrid or branch RUN_TYPE)\n is incompatible with using a cold start" .
               " (by setting CLM_FORCE_COLDSTART=on)." );
-      $log->warning("Overridding input $var file with one specifying that this is a cold start from arbitrary initial conditions." );
-      my $group = $definition->get_group_name($var);
-      $nl->set_variable_value($group, $var, "' '" );
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 $var, 'val'=>"' '", 'no_abspath'=>1);
@@ -2623,7 +2650,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv",
-                       "use_fates",
+                       "use_fates", "use_excess_ice",
                        "lnd_tuning_mode",
                      ) {
        $settings{$item}    = $nl_flags->{$item};
@@ -2644,6 +2671,7 @@ sub setup_logic_initial_conditions {
     my $done = 2;
     do {
        $try++;
+       $nl_flags->{'excess_ice_on_finidat'} = $settings{'use_excess_ice'};
        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, %settings );
        # If couldn't find a matching finidat file, check if can turn on interpolation and try to find one again
        $finidat = $nl->get_value($var);
@@ -2743,6 +2771,12 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
         $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
      }
   }
+
+  # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
+  if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
+     $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values from initial conditions, even if the initial conditions (finidat) file has hillslope information. If you are sure you want this behaviour, add -ignore_warnings to CLM_BLDNML_OPTS.")
+}
+
 } # end initial conditions
 
 #-------------------------------------------------------------------------------
@@ -3365,7 +3399,7 @@ sub setup_logic_mineral_nitrogen_dynamics {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept", "nfix_method" );
   if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
     foreach my $var ( @vars ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
@@ -3378,6 +3412,7 @@ sub setup_logic_mineral_nitrogen_dynamics {
        }
     }
   }
+
 }
 
 
@@ -3583,17 +3618,6 @@ sub setup_logic_luna {
   if ( &value_is_true($nl->get_value('lnc_opt') ) && not &value_is_true( $nl_flags->{'use_cn'}) ) {
      $log->fatal_error("Cannot turn lnc_opt to true when bgc=sp" );
   }
-  my $var = "jmaxb1";
-  if ( &value_is_true( $nl_flags->{'use_luna'} ) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'use_luna'=>$nl_flags->{'use_luna'} );
-  }
-  my $val = $nl->get_value($var);
-  if ( ! &value_is_true( $nl_flags->{'use_luna'} ) ) {
-     if ( defined($val) ) {
-        $log->fatal_error("Cannot set $var when use_luna is NOT on" );
-     }
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3616,6 +3640,10 @@ sub setup_logic_hillslope {
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
       $log->fatal_error("Cannot turn on use_hillslope_routing when use_hillslope is off\n" );
+  }
+  my $hillslope_file = $nl->get_value('hillslope_file');
+  if ( &value_is_true($use_hillslope) && ( ! defined($hillslope_file) ) ) {
+    $log->fatal_error("You must provide hillslope_file if use_hillslope is .true.\n" );
   }
 }
 
@@ -4503,8 +4531,6 @@ sub setup_logic_canopyhydrology {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'interception_fraction' );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'maximum_leaf_wetted_fraction' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_clm5_fpi' );
 }
 
@@ -4523,7 +4549,6 @@ sub setup_logic_snowpack {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'wind_dependent_snow_density');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_overburden_compaction_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lotmp_snowdensity_method');
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'upplim_destruct_metamorph');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_snow_glc_ela');
@@ -4745,8 +4770,6 @@ sub setup_logic_fates {
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
-              } elsif ( ! -f "$fname" ) {
-                 $log->fatal_error("$fname does NOT point to a valid filename" );
               }
            }
         }
@@ -4777,8 +4800,6 @@ sub setup_logic_fates {
                     my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
                     if ( ! defined($nl->get_value($var))  ) {
                        $log->fatal_error("$var is required when use_fates_luh is set and use_fates_potentialveg is false" );
-                    } elsif ( ! -f "$fname" ) {
-                       $log->fatal_error("$var does NOT point to a valid filename" );
                     }
                  }
               }
@@ -4791,8 +4812,6 @@ sub setup_logic_fates {
                     my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
                     if ( ! defined($nl->get_value($var))  ) {
                       $log->fatal_error("$var is required when use_fates_luh and use_fates_fixed_biogeog is set" );
-                    } elsif ( ! -f "$fname" ) {
-                      $log->fatal_error("$var does NOT point to a valid filename" );
                     }
                  }
               }
@@ -4834,8 +4853,6 @@ sub setup_logic_fates {
               my $fname = remove_leading_and_trailing_quotes( $nl->get_value($var) );
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
-              } elsif ( ! -f "$fname" ) {
-                $log->fatal_error("$var does NOT point to a valid filename" );
               }
            }
         }
@@ -4957,18 +4974,39 @@ sub setup_logic_cnmatrix {
 #-------------------------------------------------------------------------------
 sub setup_logic_exice {
   #
-  # excess ice streams
+  # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
   my $use_exice = $nl->get_value( 'use_excess_ice' );
+  # Put use_exice into nl_flags so can be referenced later
+  if ( value_is_true($use_exice) ) {
+     $nl_flags->{'use_excess_ice'} = ".true.";
+  } else {
+     $nl_flags->{'use_excess_ice'} = ".false.";
+  }
+}
+
+#-------------------------------------------------------------------------------
+sub setup_logic_exice_streams {
+  #
+  # excess ice streams
+  # Run after initial conditions found as well as after setup_logic_exice
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+  my $use_exice = $nl_flags->{'use_excess_ice'};
+  my $excess_ice_on_finidat = $nl_flags->{'excess_ice_on_finidat'};
   my $use_exice_streams = $nl->get_value( 'use_excess_ice_streams' );
   my $finidat = $nl->get_value('finidat');
   # If coldstart and use_excess_ice is on:
   if ( ( (not defined($use_exice_streams)) && value_is_true($use_exice) ) && string_is_undef_or_empty($finidat) ) {
      $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
      $use_exice_streams = '.true.';
-     # if excess ice is turned off
+  # If an finidat file was selected and use_excess_ice is on:
+  } elsif ( (not defined($use_exice_streams)) && value_is_true($use_exice) && (not value_is_true($excess_ice_on_finidat)) ) {
+     $nl->set_variable_value('exice_streams', 'use_excess_ice_streams' , '.true.');
+     $use_exice_streams = '.true.';
+  # if excess ice is turned off
   } elsif ( (not defined($use_exice_streams)) && (not value_is_true($use_exice)) ) {
      $use_exice_streams = '.false.';
   # Checking for cold clm_start_type and not finidat here since finidat can be not set set in branch/hybrid runs and
@@ -5175,6 +5213,7 @@ sub write_output_files {
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
+  push @groups, "cnfun_inparm";
   push @groups, "photosyns_inparm";
   push @groups, "cnfire_inparm";
   push @groups, "cn_general";

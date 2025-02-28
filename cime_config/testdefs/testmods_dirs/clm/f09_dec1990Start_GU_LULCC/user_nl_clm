@@ -1,5 +1,2 @@
- ! Specify a dataset that has non-zero Gross Unrepresented Land Use change fields on it
- ! And turn it on
- flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240216.nc'
- fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_0.9x1.25_hist_1850_78pfts_c240216.nc'
+ ! Turn on Gross Unrepresented Land Use
  do_grossunrep = .true.

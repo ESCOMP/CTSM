@@ -14,7 +14,7 @@
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, SSP585...)
     ATM  = [CAM40, CAM50, CAM60]
-    LND  = [CLM45, CLM50, CLM51, CLM60, SLND]
+    LND  = [CLM45, CLM50, CLM60, SLND]
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
@@ -200,12 +200,20 @@
     <alias>I1850Clm50BgcCropCmip6</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
+  <compset>
+    <alias>I1850Clm60BgcCropCmip6</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
 
   <!-- Primarily for testing the CMIP6WACCMDECK compset option -->
   <!-- Use the CMIP6 version (clm5_0) -->
   <compset>
     <alias>I1850Clm50BgcCropCmip6waccm</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I1850Clm60BgcCropCmip6waccm</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <!-- clm5_0 (CMIP6) version with BGC-Crop and CRU forcing -->
@@ -334,12 +342,6 @@
     <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
-  </compset>
-
-  <!-- Needed for testing until CAM removes used of CLM51 in compsets-->
-  <compset>
-    <alias>IHistClm51Sp</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -652,12 +654,6 @@
     <science_support grid="f19_g17"/>
     <science_support grid="ne30pg3_t232"/>
   </compset>
-  <!-- Needed for testing until removed by CESM -->
-  <compset>
-    <alias>I1850Clm51BgcCropG</alias>
-    <lname>1850_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
-  </compset>
-
 
   <!-- Primarily for testing: same as I1850Clm50SpGag but with SROF -->
   <compset>

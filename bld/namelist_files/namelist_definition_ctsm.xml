@@ -171,7 +171,7 @@ dust optics type for SNICAR snow albedo calculation
 <entry id="snicar_snw_shape" type="char*25" category="clm_physics"
        group="clm_inparm" valid_values="sphere,spheroid,hexagonal_plate,koch_snowflake" value="hexagonal_plate" >
 snow grain shape used in SNICAR snow albedo calculation
-(snicar_snw_shape='hexagonal_plate' is supported in ctsm5.1 and 'sphere' in older model versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+(snicar_snw_shape='sphere' is supported in pre-ctsm5.1 model versions and 'hexagonal place' is supported in newer versions; others are EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="snicar_use_aerosol" type="logical" category="clm_physics"
@@ -388,6 +388,11 @@ Slope of free living Nitrogen fixation with annual ET
 Intercept of free living Nitrogen fixation with zero annual ET
 </entry>
 
+<entry id="nfix_method" type="char*25" category="cnfun_inparm"
+       group="cnfun_inparm" valid_values="Houlton,Bytnerowicz" value="Houlton" >
+Choice of nfix parameterization
+</entry>
+
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
@@ -404,19 +409,9 @@ Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the 
 <default>Default: 40</default>
 </entry>
 
-<entry id="interception_fraction" type="real" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="" >
-Fraction of intercepted precipitation
-</entry>
-
 <entry id="use_clm5_fpi" type="logical" category="clm_physics"
        group="clm_canopyhydrology_inparm" valid_values="" >
 If TRUE use clm5 equation for fraction of intercepted precipitation
-</entry>
-
-<entry id="maximum_leaf_wetted_fraction" type="real" category="clm_physics"
-       group="clm_canopyhydrology_inparm" valid_values="" >
-Maximum fraction of leaf that may be wet prior to drip occuring
 </entry>
 
 <entry id="baseflow_scalar" type="real" category="clm_physics"
@@ -577,7 +572,7 @@ Only works when running with a non-stub glacier model.
 
 <entry id="glacier_region_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="multiple,virtual,single_at_atm_topo" >
+       valid_values="multiple,virtual,single_at_atm_topo,UNSET" >
 Behavior of each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -590,12 +585,21 @@ Allowed values are:
 'single_at_atm_topo': glacier landunits in these grid cells have a single column,
    whose elevation matches the atmosphere's topographic height (so that there is no
    adjustment due to downscaling)
-Behavior of 'virtual' is required in the region where we have an ice sheet model
+'UNSET': place-holder for non-existent regions
+Most (if not all) of the region where there is an ice sheet model should have a behavior
+of 'virtual': This behavior is needed to compute surface mass balance (SMB) in all
+elevation classes for the sake of vertical downscaling, and is needed to allow two-way
+feedbacks of glacier areas. You are allowed to have gridcells with non-virtual behavior in
+this domain, but this should be minimized: SMB cannot be computed there, and CLM subgrid
+areas will not remain in sync with the GLC model. (Within the icemask - i.e., the active
+glc domain - you are NOT allowed to have gridcells with non-virtual behavior that also
+have glacier_region_melt_behavior='replaced_by_ice': within the icemask, you're only
+allowed to have non-virtual behavior in places where you are not computing SMB).
 </entry>
 
 <entry id="glacier_region_melt_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="replaced_by_ice,remains_in_place" >
+       valid_values="replaced_by_ice,remains_in_place,UNSET" >
 Treatment of ice melt for each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -604,17 +608,18 @@ Allowed values are:
    this results in positive liquid runoff and negative ice runoff
 'remains_in_place': any melted ice remains in place as liquid until it refreezes;
    thus, ice melt does not result in any runoff
-IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not
-compute SMB (because negative SMB would be pretty much meaningless in
-those regions). Thus, you cannot use this behavior where GLC is
-operating.
-Regions with the 'replaced_by_ice' behavior also compute SMB for the
-vegetated column.
+'UNSET': place-holder for non-existent regions
+IMPORTANT NOTE: Regions with the 'remains_in_place' behavior also do not compute SMB
+(because negative SMB would be pretty much meaningless in those regions). Thus, most (if
+not all) of the region where there is an ice sheet model should have the 'replaced_by_ice'
+behavior; the SMB sent to the GLC model will be 0 in any gridcells with the
+'remains_in_place' behavior.
+Regions with the 'replaced_by_ice' behavior also compute SMB for the vegetated column.
 </entry>
 
 <entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
        group="clm_glacier_behavior"
-       valid_values="remains_ice,melted" >
+       valid_values="remains_ice,melted,UNSET" >
 Treatment of ice runoff for each glacier region (GLACIER_REGION in surface dataset).
 First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
@@ -625,7 +630,13 @@ Allowed values are:
 'melted': ice runoff generated by the CLM physics (primarily due to snow capping) is melted
    (generating a negative sensible heat flux) and runs off as liquid; this is appropriate in
    regions that have little iceberg calving in reality. This can be important to avoid unrealistic
-   cooling of the ocean and consequent runaway sea ice growth.
+   cooling of the ocean and consequent runaway sea ice growth. This option cannot be
+   combined with glacier_region_melt_behavior='replaced_by_ice': While there is nothing
+   fundamentally wrong with this combination, it can result in problematic, non-physical
+   fluxes (particularly, a large positive sensible heat flux during glacial melt in
+   regions where the ice sheet is not fully dynamic and two-way-coupled; see
+   https://github.com/ESCOMP/ctsm/issues/423 for details).
+'UNSET': place-holder for non-existent regions
 Only applies when melt_non_icesheet_ice_runoff is .true.
 </entry>
 
@@ -694,11 +705,6 @@ Scalar of leaf respiration to vcmax
 <entry id="zetamaxstable" type="real" category="clm_physics"
        group="friction_velocity" >
 The maximum value to use for zeta under stable conditions
-</entry>
-
-<entry id="Jmaxb1" type="real" category="clm_physics"
-       group="luna" >
-baseline proportion of nitrogen allocated for electron transport (J)
 </entry>
 
 <entry id="use_fates" type="logical" category="physics"
@@ -944,6 +950,11 @@ Full pathname datafile with fates parameters
 <entry id="fsurdat" type="char*256"     category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
+</entry>
+
+<entry id="hillslope_file" type="char*256"     category="datasets"
+       input_pathname="abs" group="clm_inparm" valid_values="" >
+Full pathname of hillslope data file.
 </entry>
 
 <entry id="fsnowoptics" type="char*256" category="datasets" 
@@ -2212,7 +2223,7 @@ Land mask description
 <!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, cam6.0, and cam7.0 for each valid physics option -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1,clm5_1_CRUv7,clm5_1_cam7.0,clm5_1_cam6.0,clm5_1_cam5.0,clm5_1_cam4.0,clm6_0_GSWP3v1,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm6_0_GSWP3v1,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
@@ -2821,11 +2832,6 @@ Vionnet2012 --- newer method, default in CLM50
 Snow density method to use for low temperatures (below -15C)
 TruncatedAnderson1976 -- Truncate the Anderson-1976 equation at the value for -15C
 Slater2017 ------------- Use equation from Slater that increases snow density for very cold temperatures  (Arctic, Antarctic)
-</entry>
-
-<entry id="upplim_destruct_metamorph" type="real" category="clm_physics"
-       group="clm_snowhydrology_inparm"   >
-Upper Limit on Destructive Metamorphism Compaction [kg/m3]
 </entry>
 
 <entry id="overburden_compress_Tfactor" type="real" category="clm_physics"
