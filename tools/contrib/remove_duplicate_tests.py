@@ -2,11 +2,24 @@
 Remove duplicate tests from testlist_clm.xml
 """
 
+import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 # Define the input and output file paths
-INPUT_FILE = "../cime_config/testdefs/testlist_clm.xml"
+rel_path = os.path.join(
+    os.pardir,
+    os.pardir,
+    "cime_config",
+    "testdefs",
+    "testlist_clm.xml",
+)
+INPUT_FILE = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    rel_path,
+)
+if not os.path.exists(INPUT_FILE):
+    raise FileNotFoundError(INPUT_FILE)
 OUTPUT_FILE = INPUT_FILE
 
 
