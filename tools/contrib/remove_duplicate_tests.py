@@ -26,7 +26,7 @@ def write_xml(tree, f):
     pretty_xml = reparsed.toprettyxml(indent="", newl="")
     # Replace &quot; with "
     pretty_xml = pretty_xml.replace("&quot;", '"')
-    # Replace this weirdness
+    # Skip version, which we did separately above the comment
     pretty_xml = pretty_xml.replace('<?xml version="1.0" ?>', '')
     # Fix indentation difference introduced by removal of duplicates
     pretty_xml = pretty_xml.replace("      </machines>", "    </machines>")
