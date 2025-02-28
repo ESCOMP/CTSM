@@ -1,11 +1,27 @@
-# %%
+"""
+Remove duplicate tests from testlist_clm.xml
+"""
+
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-# Read the input file and preserve the stuff at the top
+# Define the input and output file paths
+INPUT_FILE = "../cime_config/testdefs/testlist_clm.xml"
+OUTPUT_FILE = INPUT_FILE
+
+
 def get_front_matter(input_file):
-    with open(input_file, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    """
+    Read the input file and preserve the stuff at the top.
+
+    Args:
+        input_file (str): Path to the input XML file.
+
+    Returns:
+        list: List of lines representing the front matter.
+    """
+    with open(input_file, "r", encoding="utf-8") as file:
+        lines = file.readlines()
     front_matter = []
     for line in lines:
         front_matter.append(line)
@@ -13,92 +29,130 @@ def get_front_matter(input_file):
             break
     return front_matter
 
-# Parse the input XML file and preserve comments
+
 def parse_xml(input_file):
+    """
+    Parse the input XML file and preserve comments.
+
+    Args:
+        input_file (str): Path to the input XML file.
+
+    Returns:
+        ElementTree: Parsed XML tree.
+    """
     parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
     tree = ET.parse(input_file, parser=parser)
     return tree
 
-# Write the preserved comments and parsed XML tree to the output file
-def write_xml(tree, f):
-    rough_string = ET.tostring(tree.getroot(), 'utf-8')
+
+def write_xml(tree, file):
+    """
+    Write the preserved comments and parsed XML tree to the output file.
+
+    Args:
+        tree (ElementTree): Parsed XML tree.
+        f (file object): File object to write the XML content.
+    """
+    rough_string = ET.tostring(tree.getroot(), "utf-8")
     reparsed = minidom.parseString(rough_string)
     pretty_xml = reparsed.toprettyxml(indent="", newl="")
     # Replace &quot; with "
     pretty_xml = pretty_xml.replace("&quot;", '"')
     # Skip version, which we did separately above the comment
-    pretty_xml = pretty_xml.replace('<?xml version="1.0" ?>', '')
+    pretty_xml = pretty_xml.replace('<?xml version="1.0" ?>', "")
     # Fix indentation difference introduced by removal of duplicates
     pretty_xml = pretty_xml.replace("      </machines>", "    </machines>")
-    f.write(pretty_xml)
+    file.write(pretty_xml)
 
-# Print all the information associated with one test request
+
 def print_test_info(test):
+    """
+    Print all the information associated with one test request.
+
+    Args:
+        test (Element): XML element representing a test.
+    """
     print("Tests:")
-    for machine in test.find('machines').findall('machine'):
-        this_str = "  " + " ".join([machine.get('name'), machine.get('compiler'), machine.get('category')])
+    for machine in test.find("machines").findall("machine"):
+        this_str = "  " + " ".join(
+            [machine.get("name"), machine.get("compiler"), machine.get("category")]
+        )
         print(this_str)
 
-# Print all the information associated with each test
+
 def print_tests_info(tree):
+    """
+    Print all the information associated with each test.
+
+    Args:
+        tree (ElementTree): Parsed XML tree.
+    """
     root = tree.getroot()
-    for test in root.findall('test'):
+    for test in root.findall("test"):
         print(f"Test name: {test.get('name')}")
         print(f"Grid: {test.get('grid')}")
         print(f"Compset: {test.get('compset')}")
         print(f"Testmods: {test.get('testmods')}")
         print_test_info(test)
         print("Options:")
-        if test.find('options') is None:
+        if test.find("options") is None:
             continue
-        for option in test.find('options').findall('option'):
+        for option in test.find("options").findall("option"):
             print(f"  {option.get('name')}: {option.text}")
         print()
-    return
 
-# Identify and remove duplicate machines
+
 def remove_duplicate_machines(tree):
+    """
+    Identify and remove duplicate machines from the XML tree.
+
+    Args:
+        tree (ElementTree): Parsed XML tree.
+
+    Returns:
+        ElementTree: XML tree with duplicate machines removed.
+    """
     root = tree.getroot()
     seen = set()
     empty_tests = []
-    for test in root.findall('test'):
-        test_tuple = (test.get('name'), test.get('grid'), test.get('compset'), test.get('testmods'))
-        machines = test.find('machines')
+    for test in root.findall("test"):
+        test_tuple = (test.get("name"), test.get("grid"), test.get("compset"), test.get("testmods"))
+        machines = test.find("machines")
         duplicates = []
-        for machine in machines.findall('machine'):
-            machine_tuple = test_tuple + (machine.get('name'), machine.get('compiler'), machine.get('category'))
+        for machine in machines.findall("machine"):
+            machine_tuple = test_tuple + (
+                machine.get("name"),
+                machine.get("compiler"),
+                machine.get("category"),
+            )
             if machine_tuple in seen:
                 duplicates.append(machine)
             else:
                 seen.add(machine_tuple)
         for duplicate in duplicates:
             machines.remove(duplicate)
-        if not machines.findall('machine'):
+        if not machines.findall("machine"):
             empty_tests.append(test)
     for test in empty_tests:
         root.remove(test)
 
     return tree
 
-# Define the input and output file paths
-input_file = "../cime_config/testdefs/testlist_clm.xml"
-# output_file = "../test.xml"
-output_file = input_file
 
 # Read the input file and preserve the stuff at the top
-front_matter = get_front_matter(input_file)
+xml_front_matter = get_front_matter(INPUT_FILE)
 
 # Parse the input XML file
-tree = parse_xml(input_file)
+xml_tree = parse_xml(INPUT_FILE)
 
 # Remove duplicate machines
-tree = remove_duplicate_machines(tree)
+xml_tree = remove_duplicate_machines(xml_tree)
 
 # # Print all the information associated with each test
 # print_tests_info(tree)
 
 # Write
-with open(output_file, 'w', encoding='utf-8') as f:
-    f.writelines(front_matter)
-with open(output_file, 'a', encoding='utf-8') as f:
-    write_xml(tree, f)
+with open(OUTPUT_FILE, "w", encoding="utf-8") as f_out:
+    f_out.writelines(xml_front_matter)
+with open(OUTPUT_FILE, "a", encoding="utf-8") as f_out:
+    write_xml(xml_tree, f_out)
