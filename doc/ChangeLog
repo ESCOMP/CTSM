@@ -1,4 +1,56 @@
 ===============================================================
+Tag name: ctsm5.3.028
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Mar  3 10:57:24 MST 2025
+One-line Summary: Move Izumi intel and gnu tests to Derecho
+
+Purpose and description of changes
+----------------------------------
+
+Move all Izumi intel and gnu tests to Derecho. This should significantly speed up the testing process due to reliability issues on Izumi.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: All Izumi intel and gnu tests moved to Derecho.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #2975: ctsm5.3.028: Move Izumi intel and gnu tests to Derecho by samsrabin](https://github.com/ESCOMP/CTSM/pull/2975)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.027
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Sun Mar  2 15:27:01 PST 2025
