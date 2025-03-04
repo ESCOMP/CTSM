@@ -27,7 +27,7 @@ def lon_range_0_to_360(lon_in):
     if -180 <= lon_in < 0:
         lon_out = lon_in % 360
         logger.info(
-            "Resetting longitude from %s to %s to keep in the range " " 0 to 360",
+            "Resetting longitude from %s to %s to keep in the range 0 to 360",
             str(lon_in),
             str(lon_out),
         )

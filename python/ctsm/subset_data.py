@@ -519,9 +519,7 @@ def setup_user_mods(user_mods_dir, cesmroot):
         for line in basefile:
             user_file.write(line)
 
-    nl_datm_base = os.path.join(
-        cesmroot, "components/cdeps/datm/cime_config" "/user_nl_datm_streams"
-    )
+    nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
     with open(nl_datm_base, "r") as base_file, open(nl_datm, "w") as user_file:
         for line in base_file:
