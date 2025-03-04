@@ -197,6 +197,7 @@ def this_crop_map_to_patches(lon_points, lat_points, map_ds, vegtype_int):
 
 
 def yp_list_to_ds(yp_list, daily_ds, incl_vegtypes_str, dates_rx, longname_prefix, logger):
+    # pylint: disable=too-many-positional-arguments
     """
     Get and grid mean GDDs in GGCMI growing season
     """
@@ -261,7 +262,7 @@ def import_and_process_1yr(
     outdir_figs,
     logger,
     h1_instantaneous,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Import one year of CLM output data for GDD generation
     """
@@ -928,7 +929,7 @@ if CAN_PLOT:
         cmap=None,
         cbar_ticks=None,
         vmin=None,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Make maps
         """
@@ -1069,7 +1070,7 @@ if CAN_PLOT:
         gddharv_maps_ds=None,
         outdir_figs=None,
         linewidth=1.5,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Make map-and-boxplot figures
         """

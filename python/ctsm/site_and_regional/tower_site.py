@@ -52,7 +52,7 @@ class TowerSite:
         end_month,
         finidat,
         user_mods_dirs=None,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Initializes TowerSite with the given arguments.
         Parameters
@@ -112,7 +112,7 @@ class TowerSite:
     # pylint: disable=too-many-statements
     def build_base_case(
         self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon and plumber cases,
@@ -327,7 +327,7 @@ class TowerSite:
         experiment,
         no_input_data_check,
         xmlchange,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Run case.
 

@@ -250,7 +250,7 @@ def modify_optional(
     sai,
     hgt_top,
     hgt_bot,
-):
+):  # pylint: disable=too-many-positional-arguments
     """Modify the dataset according to the optional settings"""
 
     # Set fsurdat variables in a rectangle that could be global (default).

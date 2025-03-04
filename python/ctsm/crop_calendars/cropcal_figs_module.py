@@ -73,7 +73,7 @@ def make_map(
     vmax=None,
     vmin=None,
     vrange=None,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Make map
     """
@@ -168,6 +168,7 @@ def make_map(
 
 
 def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
+    # pylint: disable=too-many-positional-arguments
     """
     Handle settings related to ticklabels
     """

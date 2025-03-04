@@ -56,7 +56,7 @@ def loop_through_bad_patches(
     vary_crops,
     vary_crops_int,
     any_bad,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Loop through and check any patches that were "bad" according to check_constant_vars().
 
@@ -169,7 +169,7 @@ def check_one_constant_var_loop_through_timesteps(
     any_bad,
     any_bad_before_checking_rx,
     bad_patches,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     In check_one_constant_var(), loop through timesteps
     """
@@ -247,7 +247,7 @@ def check_one_constant_var_loop_through_timesteps(
 
 def check_one_constant_var(
     this_ds, case, ignore_nan, verbose, emojus, var, any_bad, any_bad_before_checking_rx
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Ensure that a variable that should be constant actually is
     """
@@ -334,7 +334,7 @@ def check_one_constant_var(
 
 def check_constant_vars(
     this_ds, case, ignore_nan, const_growing_seasons=None, verbose=True, throw_error=True
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     For variables that should stay constant, make sure they are
     """

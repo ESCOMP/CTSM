@@ -27,7 +27,7 @@ class ModifyFsurdat:
 
     def __init__(
         self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
 
         self.numurbl = 3  # Number of urban density types
         self.file = my_data
@@ -73,7 +73,7 @@ class ModifyFsurdat:
     @classmethod
     def init_from_file(
         cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
@@ -81,6 +81,7 @@ class ModifyFsurdat:
 
     @staticmethod
     def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+        # pylint: disable=too-many-positional-arguments
         """
         Description
         -----------
@@ -178,6 +179,7 @@ class ModifyFsurdat:
         )
 
     def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
+        # pylint: disable=too-many-positional-arguments
         """
         Description
         -----------

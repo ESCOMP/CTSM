@@ -33,6 +33,7 @@ def get_thisvar_da(var, this_ds):
 
 
 def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridded):
+    # pylint: disable=too-many-positional-arguments
     """
     Convert Numpy array to DataArray with coordinates, attributes and name
     """
@@ -54,6 +55,7 @@ def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridde
 
 
 def grid_the_data(thisvar_da, vt_da, ixy_da, jxy_da, new_dims, thisvar_gridded):
+    # pylint: disable=too-many-positional-arguments
     """
     Fill lat-lon array with previously-ungridded data
     """

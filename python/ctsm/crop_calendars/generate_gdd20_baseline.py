@@ -229,6 +229,7 @@ def setup_output_dataset(input_files, author, variable, year_args, ds_in):
 
 
 def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable, year_args):
+    # pylint: disable=too-many-positional-arguments
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
     """

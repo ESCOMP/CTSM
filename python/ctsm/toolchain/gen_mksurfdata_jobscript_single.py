@@ -148,7 +148,7 @@ def write_runscript_part1(
     runfile,
     descrip="input namelist",
     name="mksurfdata",
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write run script (part 1) Batch headers
     """

@@ -39,7 +39,7 @@ class TestCreateMachine(unittest.TestCase):
         account,
         create_test_retry=0,
         create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """Asserts that the basic machine info is as expected.
 
         This does NOT dive down into the job launcher"""
@@ -60,6 +60,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertEqual(launcher.get_nice_level(), nice_level)
 
     def assertQsubInfo(self, machine, queue, walltime, account, required_args, extra_args):
+        # pylint: disable=too-many-positional-arguments
         """Asserts that the machine's launcher is of type JobLauncherQsub, and has values as
         expected"""
         launcher = machine.job_launcher

@@ -98,7 +98,7 @@ def write_runscript(
     resolution_dict,
     dataset_dict,
     runfile,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write run script
     """

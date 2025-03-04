@@ -122,7 +122,7 @@ class SinglePointCase(BaseCase):
         cap_saturation,
         out_dir,
         overwrite,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         super().__init__(
             create_domain,
             create_surfdata,

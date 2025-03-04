@@ -109,7 +109,7 @@ def print_onepatch_wrong_n_gs(
     hdates_pg,
     sdates_pg2,
     hdates_pg2,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Print information about a patch (for debugging)
     """
@@ -304,7 +304,7 @@ def handle_years_with_sowing_then_inactive(
     sdates_orig_pym,
     hdates_pym2,
     sdates_pym2,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     In years with sowing that are followed by inactive years, check whether the last sowing was
     harvested before the patch was deactivated. If not, pretend the LAST [easier to implement!]
@@ -356,7 +356,7 @@ def handle_years_with_sowing_then_inactive(
 
 def ignore_harvests_planted_in_final_year(
     this_ds, verbose, n_gs, expected_valid, mxharvests, hdates_pg, sdates_pg
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Ignore any harvests that were planted in the final year, because some cells will have
     incomplete growing seasons for the final year.
@@ -413,7 +413,7 @@ def create_dataset(
     is_fake,
     discrepancy,
     unique_n_seasons,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Create Dataset with time axis as "gs" (growing season) instead of what CLM puts out
     """

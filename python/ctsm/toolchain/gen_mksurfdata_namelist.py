@@ -452,7 +452,7 @@ def get_file_paths(
     rawdata_files,
     num_pft,
     must_run_download_input_data,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Get various file paths
     """
@@ -545,7 +545,7 @@ def write_nml_outdata(
     fsurlog,
     gitdescribe,
     nlfile,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write output namelist file: output data
     """
@@ -582,7 +582,7 @@ def write_nml_rawinput(
     mksrf_ftopostats_override,
     nlfile,
     must_run_download_input_data,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write output namelist file: raw input data
     """
@@ -657,7 +657,7 @@ def write_nml_rawinput(
 
 def handle_transient_run(
     start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Settings and printout for when run_type is "transient"
     """

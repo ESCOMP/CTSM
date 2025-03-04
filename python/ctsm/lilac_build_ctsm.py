@@ -108,7 +108,7 @@ def build_ctsm(
     build_debug=False,
     build_with_openmp=False,
     inputdata_path=None,
-):
+):  # pylint: disable=too-many-positional-arguments
     """Implementation of build_ctsm command
 
     Args:
@@ -616,7 +616,7 @@ def _fill_out_machine_files(
     gptl_nano_timers=False,
     extra_fflags="",
     extra_cflags="",
-):
+):  # pylint: disable=too-many-positional-arguments
     """Fill out the machine porting templates for this machine / compiler
 
     For documentation of args, see the documentation in the build_ctsm function
@@ -690,7 +690,7 @@ def _create_case(
     build_debug=False,
     build_with_openmp=False,
     inputdata_path=None,
-):
+):  # pylint: disable=too-many-positional-arguments
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:

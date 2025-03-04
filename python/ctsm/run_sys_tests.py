@@ -115,7 +115,7 @@ def run_sys_tests(
     queue=None,
     retry=None,
     extra_create_test_args="",
-):
+):  # pylint: disable=too-many-positional-arguments
     """Implementation of run_sys_tests command
 
     Exactly one of suite_name, testfile or testlist should be provided
@@ -613,7 +613,7 @@ def _get_create_test_args(
     retry,
     rerun_existing_failures,
     extra_create_test_args,
-):
+):  # pylint: disable=too-many-positional-arguments
     args = []
     if compare_name:
         args.extend(["--compare", compare_name])
@@ -685,7 +685,7 @@ def _run_test_suite(
     create_test_args,
     dry_run,
     running_ctsm_py_tests,
-):
+):  # pylint: disable=too-many-positional-arguments
     if not suite_compilers:
         suite_compilers = _get_compilers_for_suite(suite_name, machine.name, running_ctsm_py_tests)
     for compiler in suite_compilers:
@@ -795,6 +795,7 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
 
 
 def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
+    # pylint: disable=too-many-positional-arguments
     create_test_cmd = _build_create_test_cmd(
         cime_path=cime_path,
         test_args=test_args,

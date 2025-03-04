@@ -105,7 +105,7 @@ class RegionalCase(BaseCase):
         create_mesh,
         out_dir,
         overwrite,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Initializes RegionalCase with the given arguments.
         """
@@ -425,7 +425,7 @@ class RegionalCase(BaseCase):
 
     @staticmethod
     def write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument,too-many-positional-arguments
         """
         This function writes out the subsetted mesh file.
         """

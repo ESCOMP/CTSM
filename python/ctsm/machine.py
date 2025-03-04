@@ -54,7 +54,7 @@ def create_machine(
     job_launcher_nice_level=None,
     job_launcher_extra_args=None,
     allow_missing_entries=False,
-):
+):  # pylint: disable=too-many-positional-arguments
     """Create a machine object (of type Machine, as given above)
 
     This uses the provided (non-None) arguments to override any defaults provided via the

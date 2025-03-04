@@ -326,7 +326,7 @@ def create_output_files(
     first_year,
     last_year,
     template_ds,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Create output files, one for each variable
     """
@@ -371,7 +371,7 @@ def process_ggcmi_shdates(
     regrid_template_file,
     regrid_extension,
     crop_list,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Convert GGCMI crop calendar files for use in CTSM
     """
