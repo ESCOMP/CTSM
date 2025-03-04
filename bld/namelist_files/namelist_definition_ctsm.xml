@@ -2128,7 +2128,7 @@ Time interpolation method to use with urban time varying streams
 </entry>
 
 <entry id="urbantvmapalgo" type="char*256" category="datasets"
-       group="urbantv_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="urbantv_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy,redist" >
 Mapping method from urban time varying input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
