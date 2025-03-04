@@ -7,18 +7,22 @@ module test_CNFireFactory
     use FireMethodType   , only : fire_method_type
     use CNFireFactoryMod
     use shr_kind_mod , only : r8 => shr_kind_r8
+    use clm_varctl, only : use_cn, iulog
   
     implicit none
   
-    character(len=5) :: NLFilename = 'firefactorytest_nml'
+    character(len=*), parameter :: NLFilename = 'firefactorytest_nml'
+    character(len=*), parameter :: drv_flds_NLFilename = 'drv_flds_in_nml'
 
   @TestCase
     type, extends(TestCase) :: TestCNFireFactory
+       logical :: initialized = .false.
        class(fire_method_type), allocatable :: cnfire_method
      contains
        procedure :: setUp
        procedure :: tearDown
        procedure :: Init
+       procedure :: turn_fire_emis_on
     end type TestCNFireFactory
   
   contains
@@ -26,30 +30,49 @@ module test_CNFireFactory
     !-----------------------------------------------------------------------
   
     subroutine setUp(this)
+      use shr_log_mod, only : shr_log_setLogUnit
+      use ESMF, only : ESMF_Initialize
+      use shr_sys_mod, only : shr_sys_system
       class(TestCNFireFactory), intent(inout) :: this
 
       integer :: unitn
+      logical :: file_exists
+      integer :: rc
 
+      call ESMF_Initialize()
+      use_cn = .true.
+      iulog = 6
       ! Create an exmpty namelist file for lifire namelist reading
+      inquire( file=trim(NLFilename), exist=file_exists)
+      if ( file_exists ) then
+        call shr_sys_system( "/bin/rm -f "//trim(NLFilename), rc )
+        inquire( file=trim(NLFilename), exist=file_exists)
+      end if
       open( newunit=unitn, file=trim(NLFilename), status='new' )
-      write(unitn,*) '&lifire_inparm'
-      write(unitn,*) '/'
+      write(unitn,*) '&cnfire_inparm'
       close(unitn)
+      call shr_log_setLogUnit(iulog)
+      this%initialized = .false.
 
     end subroutine setUp
     !-----------------------------------------------------------------------
   
     subroutine tearDown(this)
       use shr_sys_mod, only : shr_sys_system
+      use shr_log_mod, only : shr_log_setLogUnit
       class(TestCNFireFactory), intent(inout) :: this
 
       integer :: rc
 
       ! A clean method should be added to the fire method class structures
-      deallocate( this%cnfire_method )
+      if ( this%initialized )then
+         call this%cnfire_method%FireClean()
+         deallocate( this%cnfire_method )
+      end if
       ! Remove the namelist file
       call shr_sys_system( "/bin/rm -f "//trim(NLFilename), rc )
-      @assertEqual( rc, 0, "error in removal of temporary lifire namelist file")
+      !@assertEqual( rc, 0, "error in removal of temporary lifire namelist file")
+      this%initialized = .false.
 
     end subroutine tearDown
   
@@ -59,19 +82,74 @@ module test_CNFireFactory
       class(TestCNFireFactory), intent(inout) :: this
       character(len=*), intent(in) :: fire_method
 
+      integer :: unitn
+
+      open( newunit=unitn, file=trim(NLFilename), status='old', position='append' )
+      write(unitn,*) ' fire_method = "', trim(fire_method), '"'
+      write(unitn,*) '/'
+      write(unitn,*) '&lifire_inparm'
+      write(unitn,*) '/'
+      close(unitn)
+      call CNFireReadNML(NLFilename)
       call create_cnfire_method(NLFilename, this%cnfire_method)
+      this%initialized = .true.
 
     end subroutine Init
 
     !-----------------------------------------------------------------------
 
-    @Test
-    subroutine nofire_works(this)
+    subroutine turn_fire_emis_on(this)
+      use shr_fire_emis_mod, only : shr_fire_emis_readnl
+      use shr_sys_mod, only : shr_sys_system
       class(TestCNFireFactory), intent(inout) :: this
+      integer :: emis_nflds
+      integer :: unitn
+      logical :: file_exists
+      integer :: rc
 
-      call this%Init( fire_method = "none")
+      inquire( file=trim(drv_flds_NLFilename), exist=file_exists)
+      !@assertFalse(file_exists, "drv_flds file should NOT exist and yet does")
+      if ( .not. file_exists )then
+         open( newunit=unitn, file=trim(drv_flds_NLFilename), status='new' )
+         write(unitn,*) '&fire_emis_nl'
+         write(unitn,*) "fire_emis_specifier = 'bc_a1 = BC','pom_a1 = 1.4*OC','SO2 = SO2'"
+         write(unitn,*) "fire_emis_factors_file = 'dummy_file_that_wont_be_used.nc'"
+         write(unitn,*) '/'
+         close(unitn)
+      end if
+      call shr_fire_emis_readnl( drv_flds_NLFilename, emis_nflds)
+      call shr_sys_system( "/bin/rm -f "//trim(drv_flds_NLFilename), rc )
+    end subroutine turn_fire_emis_on
 
-    end subroutine nofire_works
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine nofire_with_fire_emis_fails(this)
+      class(TestCNFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      call this%turn_fire_emis_on()
+      call this%Init( fire_method = "nofire")
+      expected_msg = "ABORTED: fire emission requires BGC to be on and fire_method to be something besides none"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine nofire_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine spcase_with_fire_emis_fails(this)
+      use SatellitePhenologyMod, only : SatellitePhenologyInit
+      class(TestCNFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      use_cn = .false.
+      call this%turn_fire_emis_on()
+      call SatellitePhenologyInit( bounds )
+      expected_msg = "ABORTED: fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine spcase_with_fire_emis_fails
 
     !-----------------------------------------------------------------------
 
@@ -112,6 +190,24 @@ module test_CNFireFactory
       call this%Init( fire_method = "li2024gswpfrc")
 
     end subroutine li2024_works
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine all_li_options_with_fire_emis_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+      integer, parameter :: noptions = 5
+      integer :: i
+      character(len=*), parameter :: fire_method_options(noptions) = (/ 'li2014qianfrc', 'li2016crufrc ', 'li2021gswpfrc', 'li2024gswpfrc', 'li2024crujra '/)
+
+      do i = 1, noptions
+         call this%setUp()
+         call this%turn_fire_emis_on()
+         call this%Init( fire_method = fire_method_options(i) )
+         call this%tearDown()
+      end do
+
+    end subroutine all_li_options_with_fire_emis_works
 
     !-----------------------------------------------------------------------
 
