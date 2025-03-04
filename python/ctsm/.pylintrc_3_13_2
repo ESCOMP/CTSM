@@ -427,11 +427,7 @@ logging-modules=logging
 # Only show warnings with the listed confidence levels. Leave empty to show
 # all. Valid levels: HIGH, CONTROL_FLOW, INFERENCE, INFERENCE_FAILURE,
 # UNDEFINED.
-confidence=HIGH,
-           CONTROL_FLOW,
-           INFERENCE,
-           INFERENCE_FAILURE,
-           UNDEFINED
+confidence=
 
 # Disable the message, report, category or checker with the given id(s). You
 # can either give multiple identifiers separated by comma (,) or put this
@@ -442,6 +438,25 @@ confidence=HIGH,
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
+# Default: disable=raw-checker-failed,
+#                  bad-inline-option,
+#                  locally-disabled,
+#                  file-ignored,
+#                  suppressed-message,
+#                  useless-suppression,
+#                  deprecated-pragma,
+#                  use-implicit-booleaness-not-comparison-to-string,
+#                  use-implicit-booleaness-not-comparison-to-zero,
+#                  use-symbolic-message-instead,
+#                  duplicate-code,
+#                  forgotten-debug-statement,
+#                  unspecified-encoding,
+#                  consider-using-with,
+#                  consider-using-f-string,
+#                  too-many-arguments,
+#                  too-many-branches,
+#                  too-many-locals,
+#                  useless-object-inheritance
 disable=raw-checker-failed,
         bad-inline-option,
         locally-disabled,
@@ -449,17 +464,20 @@ disable=raw-checker-failed,
         suppressed-message,
         useless-suppression,
         deprecated-pragma,
-        use-implicit-booleaness-not-comparison-to-string,
-        use-implicit-booleaness-not-comparison-to-zero,
         use-symbolic-message-instead,
-        duplicate-code,
-        forgotten-debug-statement,
-        unspecified-encoding,
-        consider-using-with,
-        consider-using-f-string,
+# Options for black formatter
+        R0801,
+        W1515,
+        W1514,
+        R1732,
+        C0209,
+# While pylint's recommendations to keep the number of arguments, local
+# variables and branches low is generally a good one, I don't want it to
+# be enforced, because there are times when it's okay to break these:
         too-many-arguments,
         too-many-branches,
         too-many-locals,
+# Allow inheriting from object for the sake of python 2/3 compatibility (we need explicit inheritance from object in python2 to give new-style classes):
         useless-object-inheritance
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -521,6 +539,7 @@ msg-template=
 # studio). You can also give a reporter class, e.g.
 # mypackage.mymodule.MyReporterClass.
 #output-format=
+# Previously (ctsm_pylib 3.7.9): output-format=text
 
 # Tells whether to display a full report or only the messages.
 reports=no
