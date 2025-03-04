@@ -26,20 +26,22 @@ module FireDataBaseType
   type, abstract, extends(fire_method_type) :: fire_base_type
     private
       ! !PRIVATE MEMBER DATA:
-      real(r8), public, pointer :: forc_hdm(:)  ! Human population density
-      type(shr_strdata_type)    :: sdat_hdm     ! Human population density input data stream
-      real(r8), public, pointer :: forc_lnfm(:) ! Lightning frequency
-      type(shr_strdata_type)    :: sdat_lnfm    ! Lightning frequency input data stream
+      real(r8), public, pointer :: forc_hdm(:)  => NULL() ! Human population density
+      type(shr_strdata_type)    :: sdat_hdm     => NULL() ! Human population density input data stream
+      real(r8), public, pointer :: forc_lnfm(:) => NULL() ! Lightning frequency
+      type(shr_strdata_type)    :: sdat_lnfm    => NULL() ! Lightning frequency input data stream
       
-      real(r8), public, pointer :: gdp_lf_col(:)   ! col global real gdp data (k US$/capita)
-      real(r8), public, pointer :: peatf_lf_col(:) ! col global peatland fraction data (0-1)
-      integer , public, pointer :: abm_lf_col(:)   ! col global peak month of crop fire emissions
+      real(r8), public, pointer :: gdp_lf_col(:)   => NULL() ! col global real gdp data (k US$/capita)
+      real(r8), public, pointer :: peatf_lf_col(:) => NULL() ! col global peatland fraction data (0-1)
+      integer , public, pointer :: abm_lf_col(:)   => NULL() ! col global peak month of crop fire emissions
       
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireInit             ! Initialization of Fire
+      procedure, public :: FireClean=> BaseFireClean! Clean up data and deallocate data
+      procedure, public :: BaseFireClean            ! Clean up data and deallocate data
       procedure, public :: FireInterp               ! Interpolate fire data
       procedure(FireReadNML_interface), public, deferred :: &
            FireReadNML                              ! Read in namelist for Fire
@@ -127,6 +129,32 @@ contains
     end if
 
   end subroutine BaseFireInit
+
+  !================================================================
+  subroutine BaseFireClean( this )
+   !
+   ! !DESCRIPTION:
+   ! Clean fire data
+   ! !USES:
+   !
+   ! !ARGUMENTS:
+   class(fire_base_type) :: this
+   !-----------------------------------------------------------------------
+
+   if ( this%need_lightning_and_popdens() ) then
+      deallocate( this%forc_lnfm )
+      deallocate( this%forc_hdm )
+      deallocate( this%gdp_lf_col )
+      deallocate( this%peatf_lf_col )
+      deallocate( this%abm_lf_col )
+      this%forc_lnfm => NULL()
+      this%forc_hdm => NULL()
+      this%gdp_lf_col => NULL()
+      this%peatf_lf_col => NULL()
+      this%abm_lf_col => NULL()
+   end if
+
+  end subroutine BaseFireClean
 
   !================================================================
   subroutine FireInterp(this,bounds)
