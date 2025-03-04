@@ -12,7 +12,7 @@ import re
 from datetime import datetime
 
 import six
-from six_additions import mock, assertNotRegex
+from unittest import mock
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing
@@ -118,12 +118,12 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r"--output-root +{}\s".format(expected_testroot_path))
         six.assertRegex(self, command, r"--retry +0(\s|$)")
         six.assertRegex(self, command, r"test1 +test2(\s|$)")
-        assertNotRegex(self, command, r"--compare\s")
-        assertNotRegex(self, command, r"--generate\s")
-        assertNotRegex(self, command, r"--baseline-root\s")
+        self.assertNotRegex(command, r"--compare\s")
+        self.assertNotRegex(command, r"--generate\s")
+        self.assertNotRegex(command, r"--baseline-root\s")
         # In the machine object for this test, create_test_queue will be 'unspecified';
         # verify that this results in there being no '--queue' argument:
-        assertNotRegex(self, command, r"--queue\s")
+        self.assertNotRegex(command, r"--queue\s")
 
         expected_cs_status = os.path.join(
             self._scratch, self._expected_testroot(), "cs.status.fails"

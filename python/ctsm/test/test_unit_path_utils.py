@@ -9,7 +9,7 @@ import shutil
 import os
 
 import six
-from six_additions import mock
+from unittest import mock
 from ctsm import unit_testing
 from ctsm import path_utils
 
