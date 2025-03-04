@@ -17,7 +17,8 @@ module SatellitePhenologyMod
   use perf_mod     , only : t_startf, t_stopf
   use spmdMod      , only : masterproc, mpicom, iam
   use laiStreamMod , only : lai_init, lai_advance, lai_interp
-  use ncdio_pio
+  use ncdio_pio    , only : ncd_pio_openfile, ncd_inqfdims, check_dim_size, ncd_io
+  use ncdio_pio    , only : ncd_pio_closefile, file_desc_t
   !
   ! !PUBLIC TYPES:
   implicit none

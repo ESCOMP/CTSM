@@ -63,9 +63,11 @@ contains
           read(unitn, nml=cnfire_inparm, iostat=ierr)
           if (ierr /= 0) then
              call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+             return
           end if
        else
           call endrun(msg="ERROR finding "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          return
        end if
        call relavu( unitn )
     end if
@@ -122,6 +124,7 @@ contains
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', fire_method
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
 
     end select
     call cnfire_method%FireReadNML( NLFilename )
