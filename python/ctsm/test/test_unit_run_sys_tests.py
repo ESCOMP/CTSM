@@ -9,9 +9,9 @@ import shutil
 import os
 import re
 from datetime import datetime
+from unittest import mock
 
 import six
-from unittest import mock
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing

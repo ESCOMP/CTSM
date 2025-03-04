@@ -6,9 +6,9 @@ import unittest
 import tempfile
 import shutil
 import os
+from unittest import mock
 
 import six
-from unittest import mock
 from ctsm import unit_testing
 from ctsm import path_utils
 
