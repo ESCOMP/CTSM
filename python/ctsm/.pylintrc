@@ -60,20 +60,14 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=long-suffix,
-        old-ne-operator,
-        old-octal-literal,
-        non-ascii-bytes-literal,
-        raw-checker-failed,
+disable=raw-checker-failed,
         bad-inline-option,
         locally-disabled,
-        locally-enabled,
         file-ignored,
         suppressed-message,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead,
-        eq-without-hash,
         R0801,                         # This option to the end are options required to use black formatter
         W1515,
         W1514,
@@ -271,13 +265,6 @@ max-line-length=100       # Make sure this agrees with black
 
 # Maximum number of lines in a module.
 max-module-lines=1000
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=trailing-comma,
-               dict-separator
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
