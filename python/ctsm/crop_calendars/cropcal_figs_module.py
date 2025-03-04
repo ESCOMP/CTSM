@@ -1,6 +1,7 @@
 """
 Functions for making crop calendar figures
 """
+
 # pylint: disable=abstract-class-instantiated
 
 import numpy as np

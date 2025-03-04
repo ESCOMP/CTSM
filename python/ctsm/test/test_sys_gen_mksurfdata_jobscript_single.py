@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for gen_mksurfdata_jobscript_single
-
-"""
+"""System tests for gen_mksurfdata_jobscript_single"""
 
 import os
 

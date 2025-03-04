@@ -3,6 +3,7 @@ This module includes the definition for the TowerSite class,
 which has NeonSite and Plumber2Site child classes. This class defines common
 functionalities that are in both NeonSite and Plumber2Site classes.
 """
+
 # -- Import libraries
 
 # -- standard libraries
@@ -28,6 +29,7 @@ from CIME.case import Case
 from CIME.utils import safe_copy, expect, symlink_force
 
 logger = logging.getLogger(__name__)
+
 
 # pylint: disable=too-many-instance-attributes
 class TowerSite:

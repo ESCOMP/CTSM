@@ -2,6 +2,7 @@
 gen_mksurfdata_namelist.py generates a namelist for use with the mksurfdata
 executable. For detailed instructions, see README.
 """
+
 import os
 import sys
 import xml.etree.ElementTree as ET

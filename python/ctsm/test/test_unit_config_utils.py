@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for config_utils
-"""
+"""Unit tests for config_utils"""
 
 import unittest
 

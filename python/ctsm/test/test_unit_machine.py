@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for machine
-"""
+"""Unit tests for machine"""
 
 import unittest
 import os

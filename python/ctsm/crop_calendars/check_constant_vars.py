@@ -135,11 +135,7 @@ def ensure_all_patches_checked(this_ds, this_da, ra_sp, incl_patches):
     incl_patches += list(
         np.where(
             np.all(
-                np.isnan(
-                    ra_sp[
-                        :-1,
-                    ]
-                ),
+                np.isnan(ra_sp[:-1,]),
                 axis=0,
             )
         )[0]

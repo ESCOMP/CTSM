@@ -1,5 +1,4 @@
-"""Factory function for creating an appropriate job launcher class for a given machine.
-"""
+"""Factory function for creating an appropriate job launcher class for a given machine."""
 
 from __future__ import print_function
 

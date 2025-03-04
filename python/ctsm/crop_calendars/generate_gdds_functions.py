@@ -1,6 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
+
 # pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
@@ -730,13 +731,13 @@ def import_and_process_1yr(
                 else:
                     error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
-            gddaccum_yp_list[var][
-                year_index - 1, active_this_year_where_gs_lastyr_indices
-            ] = gddaccum_atharv_p[where_gs_lastyr]
+            gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                gddaccum_atharv_p[where_gs_lastyr]
+            )
             if save_figs:
-                gddharv_yp_list[var][
-                    year_index - 1, active_this_year_where_gs_lastyr_indices
-                ] = gddharv_atharv_p[where_gs_lastyr]
+                gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                    gddharv_atharv_p[where_gs_lastyr]
+                )
             # Last year's season should be filled out now; make sure.
             if np.any(
                 np.isnan(

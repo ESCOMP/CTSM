@@ -1,6 +1,7 @@
 """
 This module includes the definition for a RegionalCase classs.
 """
+
 # -- Import libraries
 # -- Import Python Standard Libraries
 import logging
@@ -378,9 +379,7 @@ class RegionalCase(BaseCase):
 
         for n in range(elem_count):
             endx = elem_conn[n, : num_elem_conn[n].values].values
-            endx[
-                :,
-            ] -= 1  # convert to zero based index
+            endx[:,] -= 1  # convert to zero based index
             endx = [int(xi) for xi in endx]
 
             nlon = node_coords[endx, 0].values
@@ -430,9 +429,7 @@ class RegionalCase(BaseCase):
         """
         This function writes out the subsetted mesh file.
         """
-        corner_pairs = f_in.variables["nodeCoords"][
-            subset_node,
-        ]
+        corner_pairs = f_in.variables["nodeCoords"][subset_node,]
         variables = f_in.variables
         global_attributes = f_in.attrs
 
@@ -440,9 +437,7 @@ class RegionalCase(BaseCase):
 
         elem_count = len(subset_element)
         elem_conn_out = np.empty(shape=[elem_count, max_node_dim])
-        elem_conn_index = f_in.variables["elementConn"][
-            subset_element,
-        ]
+        elem_conn_index = f_in.variables["elementConn"][subset_element,]
 
         for n in range(elem_count):
             for m in range(max_node_dim):
@@ -454,9 +449,7 @@ class RegionalCase(BaseCase):
                 elem_count,
             ]
         )
-        num_elem_conn_out[:] = f_in.variables["numElementConn"][
-            subset_element,
-        ]
+        num_elem_conn_out[:] = f_in.variables["numElementConn"][subset_element,]
 
         center_coords_out = np.empty(shape=[elem_count, 2])
         center_coords_out[:, :] = f_in.variables["centerCoords"][subset_element, :]
@@ -467,9 +460,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_mask_out[:] = f_in.variables["elementMask"][
-                subset_element,
-            ]
+            elem_mask_out[:] = f_in.variables["elementMask"][subset_element,]
 
         if "elementArea" in variables:
             elem_area_out = np.empty(
@@ -477,9 +468,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_area_out[:] = f_in.variables["elementArea"][
-                subset_element,
-            ]
+            elem_area_out[:] = f_in.variables["elementArea"][subset_element,]
 
         # -- create output dataset
         f_out = xr.Dataset()

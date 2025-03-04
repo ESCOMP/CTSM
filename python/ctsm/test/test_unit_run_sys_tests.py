@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for run_sys_tests
-"""
+"""Unit tests for run_sys_tests"""
 
 from __future__ import print_function
 import unittest
@@ -24,6 +23,7 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
 # pylint: disable=invalid-name
+
 
 # Replace the slow _record_git_status with a fake that does nothing
 @mock.patch("ctsm.run_sys_tests._record_git_status", mock.MagicMock(return_value=None))

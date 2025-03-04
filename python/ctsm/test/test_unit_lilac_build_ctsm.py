@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for lilac_build_ctsm
-"""
+"""Unit tests for lilac_build_ctsm"""
 
 import unittest
 from unittest.mock import patch

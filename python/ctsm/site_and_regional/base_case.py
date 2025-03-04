@@ -3,6 +3,7 @@ This module includes the definition for a parent class for SinglePointCase
 and RegionalCase. The common functionalities of SinglePointCase and
 RegionalCase are defined in this Class.
 """
+
 # -- Import libraries
 
 # -- standard libraries

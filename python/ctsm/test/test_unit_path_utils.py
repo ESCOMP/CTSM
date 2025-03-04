@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for path_utils
-"""
+"""Unit tests for path_utils"""
 
 import unittest
 import tempfile

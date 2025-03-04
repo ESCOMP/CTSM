@@ -1,5 +1,4 @@
-"""Factory function and class for creating and storing machine-related information.
-"""
+"""Factory function and class for creating and storing machine-related information."""
 
 import logging
 from collections import namedtuple
