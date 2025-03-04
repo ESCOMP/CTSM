@@ -34,6 +34,9 @@ module FireMethodType
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
+     ! Deallocate the fire datasets
+     procedure(FireClean_interface)   , public, deferred :: FireClean
+
   end type fire_method_type
 
   abstract interface
@@ -96,6 +99,20 @@ module FireMethodType
     !-----------------------------------------------------------------------
 
   end subroutine FireInterp_interface
+
+  !-----------------------------------------------------------------------
+  subroutine FireClean_interface(this)
+    !
+    ! !DESCRIPTION:
+    ! Deallocate Fire datasets
+    !
+    ! USES
+    import :: fire_method_type
+    ! !ARGUMENTS:
+    class(fire_method_type)     :: this
+    !-----------------------------------------------------------------------
+
+  end subroutine FireClean_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireReadParams_interface( this, ncid )
