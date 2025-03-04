@@ -40,7 +40,7 @@ module FireDataBaseType
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireInit             ! Initialization of Fire
-      procedure, public :: FireClean=> BaseFireClean! Clean up data and deallocate data
+      procedure, public :: FireClean => BaseFireClean ! Clean up data and deallocate data
       procedure, public :: BaseFireClean            ! Clean up data and deallocate data
       procedure, public :: FireInterp               ! Interpolate fire data
       procedure(FireReadNML_interface), public, deferred :: &

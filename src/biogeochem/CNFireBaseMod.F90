@@ -195,14 +195,16 @@ contains
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
     !-----------------------------------------------------------------------
-    !------------------------------------------------------------------------
+    ! Call the base class clean method
+    ! Right now this fails with: 
+    !    This is not a component name that is defined in the encompassing structure.   [BASEFIRECLEAN]
+    !call this%BaseFireClean()
+
     if ( associated(this%btran2_patch) )then
        deallocate(this%btran2_patch)
     end if
     this%btran2_patch => NULL()
-    !call this%BaseFireClean()
   end subroutine CNFireCleanBase
-
 
   !----------------------------------------------------------------------
   subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, &
