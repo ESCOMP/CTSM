@@ -1,4 +1,231 @@
 ===============================================================
+Tag name: ctsm5.3.028
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Mar  3 10:57:24 MST 2025
+One-line Summary: Move Izumi intel and gnu tests to Derecho
+
+Purpose and description of changes
+----------------------------------
+
+Move all Izumi intel and gnu tests to Derecho. This should significantly speed up the testing process due to reliability issues on Izumi.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: All Izumi intel and gnu tests moved to Derecho.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #2975: ctsm5.3.028: Move Izumi intel and gnu tests to Derecho by samsrabin](https://github.com/ESCOMP/CTSM/pull/2975)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.027
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Sun Mar  2 15:27:01 PST 2025
+One-line Summary: FATES parameter file switch migration
+
+Purpose and description of changes
+----------------------------------
+
+Move global FATES switches from the FATES parameter file to the namelist.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+The following FATES namelist options are now available:
+   - use_fates_daylength_factor
+   - fates_photosynth_acclimation
+   - fates_stomatal_model
+   - fates_stomatal_assimilation
+   - fates_leafresp_model
+   - fates_cstarvation_model
+   - fates_regeneration_model
+   - fates_hydro_solver
+   - fates_radiation_model
+
+The following FATES namelist option is available, but not yet implemented in FATES:
+   - fates_electron_transport_model
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+The FATES two stream tests no longer generation a FATES NetCDF parameter file on-the-fly.
+The need to do so is removed as the fates_radiation_model option is controlled by the
+namelist.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.81.0_api.37.1.0 -> sci.1.81.1_api.38.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/2904
+https://github.com/NGEET/fates/pull/1300
+https://github.com/NGEET/fates/pull/1344
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.026
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 26 Feb 2025 09:55:48 AM MST
+One-line Summary: Merge b4b-dev to master: run_tower updates, reduce log noise
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master.
+
+Some run_tower updatesm, fix some issues, and improve code health. Also reduces some log noise.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves #2884 -- run_neon overwrite ignored
+  Resolves #2885 -- run_neon setup_only ignored
+  Resolves #2946 -- python tests much longer
+  Resolves #2717 -- cleanup cesm log
+  Resolves #2737 -- reduce log noise
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Two new options to run_tower:
+  --no-inputdata-check option implies --setup-only but skips the check/download of input data. This is used instead of --setup-only
+  in run_tower system testing for a speedup of ~20%.
+  --xmlchange option allows user to specify xmlchange settings to apply. E.g., --xmlchange CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=850.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Testing summary: Regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #2969 -- Simplify tower types
+  #2962 -- Run tower fix and improvements
+  #2927 -- Remove log noise
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.025
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Thu Feb 20 14:24:45 MST 2025
@@ -54,8 +281,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     derecho ----- OK
