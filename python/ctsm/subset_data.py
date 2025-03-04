@@ -544,7 +544,7 @@ def determine_num_pft(crop):
         num_pft = "78"
     else:
         num_pft = "16"
-    logger.debug("crop_flag = %s => num_pft = %s", crop.__str__(), num_pft)
+    logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
 
