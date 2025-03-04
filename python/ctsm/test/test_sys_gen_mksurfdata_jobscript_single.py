@@ -72,14 +72,12 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Test that a standard simple namelist works
         """
-        # pylint: disable=no-self-use
         self.createJS(nodes="4", tasks_per_node="12")
 
     def test_casper_jobscript_single(self):
         """
         Test that a standard simple namelist works for casper
         """
-        # pylint: disable=no-self-use
         opt_list = ["--machine", "casper"]
         self.createJS(nodes="4", tasks_per_node="12", option_list=opt_list)
 
@@ -87,7 +85,6 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Test that a standard simple namelist works for asper
         """
-        # pylint: disable=no-self-use
         opt_list = ["--machine", "izumi"]
         self.createJS(nodes="4", tasks_per_node="12", option_list=opt_list)
 
@@ -95,7 +92,6 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Test aborts if the input bld-path does NOT exist
         """
-        # pylint: disable=no-self-use
         with self.assertRaisesRegex(SystemExit, "Input Build path"):
             self.createJS(nodes="4", tasks_per_node="12", option_list=["--bld-path", "zztop"])
 
@@ -103,7 +99,6 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Test aborts if the input node count is negative
         """
-        # pylint: disable=no-self-use
         with self.assertRaisesRegex(
             SystemExit,
             "Input argument --number_of_nodes is zero or negative and needs to be positive",
@@ -114,7 +109,6 @@ class TestSysGenMkSurfJSSingle(unittest.TestCase):
         """
         Test aborts if the input tasks_per_node is zero or negative
         """
-        # pylint: disable=no-self-use
         with self.assertRaisesRegex(
             SystemExit,
             "Input argument --tasks_per_node is zero or negative and needs to be positive",

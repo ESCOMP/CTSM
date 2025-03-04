@@ -226,7 +226,6 @@ class TowerSite:
             # update case_path to be the full path to the base case
         return case_path
 
-    # pylint: disable=no-self-use
     def get_batch_query(self, case):
         """
         Function for querying the batch queue query command for a case, depending on the

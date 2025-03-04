@@ -46,7 +46,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a standard simple namelist works
         """
-        # pylint: disable=no-self-use
         sys.argv.extend(
             [
                 "--start-year",
@@ -64,7 +63,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test a namelist with several options on
         """
-        # pylint: disable=no-self-use
         sys.argv.extend(
             [
                 "--start-year",
@@ -85,7 +83,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a high resolution namelist works
         """
-        # pylint: disable=no-self-use
         sys.argv.extend(
             [
                 "--start-year",
@@ -106,7 +103,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a SSP transient namelist works
         """
-        # pylint: disable=no-self-use
         sys.argv.extend(
             [
                 "--start-year",
@@ -127,7 +123,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         """
         Test that a potential vegetation namelist works
         """
-        # pylint: disable=no-self-use
         sys.argv.extend(
             [
                 "--start-year",

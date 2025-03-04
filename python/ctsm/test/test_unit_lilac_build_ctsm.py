@@ -25,7 +25,6 @@ class TestBuildCtsm(unittest.TestCase):
 
     def test_commandlineArgs_rebuild_valid(self):
         """Test _commandline_args with --rebuild, with a valid argument list (no disallowed args)"""
-        # pylint: disable=no-self-use
         _ = _commandline_args(args_to_parse=["build/directory", "--rebuild"])
 
     @patch("sys.stderr", new_callable=StringIO)
@@ -101,7 +100,6 @@ class TestBuildCtsm(unittest.TestCase):
 
         (all required things present)
         """
-        # pylint: disable=no-self-use
         _ = _commandline_args(
             args_to_parse=[
                 "build/directory",
@@ -221,7 +219,6 @@ class TestBuildCtsm(unittest.TestCase):
 
         (all required things present)
         """
-        # pylint: disable=no-self-use
         _ = _commandline_args(
             args_to_parse=[
                 "build/directory",
