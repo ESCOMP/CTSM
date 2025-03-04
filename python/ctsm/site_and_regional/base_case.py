@@ -136,6 +136,7 @@ class BaseCase:
 
         """
 
+        f_in = None
         if os.path.exists(filename):
             logger.debug("Open file: %s", filename)
 

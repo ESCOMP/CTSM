@@ -160,6 +160,7 @@ def write_runscript_part1(
     runfile.write("#PBS -k eod\n")
 
     runfile.write("#PBS -S /bin/bash\n")
+    attribs = None
     if machine == "derecho":
         attribs = {"mpilib": "default"}
         runfile.write(f"#PBS -l walltime={walltime}\n")

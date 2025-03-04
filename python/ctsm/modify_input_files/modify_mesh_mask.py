@@ -123,6 +123,7 @@ class ModifyMeshMask:
                 # All else in this function supports error checking
 
                 # lon and lat from the landmask file
+                latvar_scalar = None
                 if len(self.latvar.sizes) == 2:
                     latvar_scalar = float(self.latvar[row, col])
                     lonvar_scalar = float(self.lonvar[row, col])

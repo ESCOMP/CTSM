@@ -106,6 +106,7 @@ class ModifyFsurdat:
             # rectangles don't overlap: stradling the 0-degree meridian
             union_1 = np.logical_or(rectangle_1, rectangle_2)
 
+        union_2 = None
         if lat_1 < -90 or lat_1 > 90 or lat_2 < -90 or lat_2 > 90:
             errmsg = "lat_1 and lat_2 need to be in the range -90 to 90"
             abort(errmsg)

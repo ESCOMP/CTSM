@@ -197,6 +197,7 @@ def get_template_da_out(template_ds_in):
     """
     Get template output DataArray from input Dataset
     """
+    n_lat = None
     if "lat" in template_ds_in:
         lat, n_lat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
@@ -210,6 +211,7 @@ def get_template_da_out(template_ds_in):
         lat = lat.reindex(lat=list(reversed(lat["lat"])))
 
     # Import and format longitude
+    n_lon = None
     if "lon" in template_ds_in:
         lon, n_lon = import_coord_1d(template_ds_in, "lon")
     elif "LONGXY" in template_ds_in:

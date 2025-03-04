@@ -219,6 +219,8 @@ class MeshType:
         elif self.lat_dims == 2:
             # -- 2D mask
             mask = np.ones(self.center_lats.shape, dtype=np.int8)
+        else:
+            raise NotImplementedError(f"self.lat_dims = {self.lat_dims}")
         # mask_da = da.from_array(mask)
         mask_da = mask
         self.mask = mask_da
