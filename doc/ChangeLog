@@ -44,7 +44,7 @@ Changes to the datasets (e.g., parameter, surface or initial files):
 Notes of particular relevance for developers:
 ---------------------------------------------
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
- Once we have ne30 finidat files, we can remove the need for use_init_interp from namelist_defaults.
+ Once we have ne30 finidat files, we can remove the corresponding need for use_init_interp from namelist_defaults.
 
 Changes to tests or testing:
  Got warning from SMS_Ln9.f10_f10_mg37.I2000Clm50Sp.derecho_intel.clm-clm50cam5LndTuningModeZDustSoilErod--clm-nofireemis
