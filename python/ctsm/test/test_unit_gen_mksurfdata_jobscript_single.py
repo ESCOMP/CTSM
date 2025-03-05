@@ -44,6 +44,7 @@ def create_empty_file(filename):
 # readable
 # pylint: disable=invalid-name
 
+
 # pylint: disable=protected-access
 # pylint: disable=too-many-instance-attributes
 class TestFGenMkSurfJobscriptSingle(unittest.TestCase):

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for run_tower
-
-"""
+"""System tests for run_tower"""
 
 import glob
 import os

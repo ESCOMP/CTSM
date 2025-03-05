@@ -22,7 +22,7 @@ class JobLauncherBase(object):
         account=None,
         required_args=None,
         extra_args=None,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """Initialize a job launcher object.
 
         Note that some of these arguments (e.g., queue and walltime) aren't needed by some

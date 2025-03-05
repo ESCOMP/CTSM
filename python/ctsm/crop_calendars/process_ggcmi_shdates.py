@@ -326,7 +326,7 @@ def create_output_files(
     first_year,
     last_year,
     template_ds,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Create output files, one for each variable
     """
@@ -371,7 +371,7 @@ def process_ggcmi_shdates(
     regrid_template_file,
     regrid_extension,
     crop_list,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Convert GGCMI crop calendar files for use in CTSM
     """
@@ -447,7 +447,7 @@ def process_ggcmi_shdates(
     ### Process all crops ###
     #########################
 
-    for thiscrop_clm in crop_dict:
+    for thiscrop_clm in crop_dict:  # pylint: disable=consider-using-dict-items
 
         # Which crop are we on?
         crop_int = list(crop_dict.keys()).index(thiscrop_clm) + 1
@@ -498,7 +498,7 @@ def process_ggcmi_shdates(
             # Rearrange longitude to match destination (does nothing if not needed)
             cropcal_ds = utils.lon_idl2pm(cropcal_ds, fail_silently=True)
 
-        for thisvar_clm in variable_dict:
+        for thisvar_clm in variable_dict:  # pylint: disable=consider-using-dict-items
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
             logger.info("    Processing %s...", varname_ggcmi)
@@ -507,7 +507,7 @@ def process_ggcmi_shdates(
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
             file_clm = variable_dict[thisvar_clm]["outfile"]
             if not os.path.exists(file_clm):
-                raise Exception("Output file not found: " + file_clm)
+                raise FileNotFoundError("Output file not found: " + file_clm)
 
             # Strip dataset to just this variable
             strip_dataset(cropcal_ds, varname_ggcmi)

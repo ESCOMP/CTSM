@@ -503,7 +503,7 @@ def print_neon_data_soil_structure(obs_bot, soil_bot, bin_index):
 
 def print_soil_quality(
     inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Prints information about soil quality
     """

@@ -30,6 +30,7 @@ class ModifyMeshMask:
     # ... /islas_examples/modify_fsurdat/fill_indian_ocean/
     # Read mod_lnd_props here only for consistency checks
     def __init__(self, my_data, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname):
+        # pylint: disable=too-many-positional-arguments
 
         self.file = my_data
 
@@ -76,7 +77,7 @@ class ModifyMeshMask:
     @classmethod
     def init_from_file(
         cls, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """Initialize a ModifyMeshMask object from file_in"""
         logger.info("Opening file to be modified: %s", file_in)
         my_file = xr.open_dataset(file_in)
@@ -122,6 +123,7 @@ class ModifyMeshMask:
                 # All else in this function supports error checking
 
                 # lon and lat from the landmask file
+                latvar_scalar = None
                 if len(self.latvar.sizes) == 2:
                     latvar_scalar = float(self.latvar[row, col])
                     lonvar_scalar = float(self.lonvar[row, col])

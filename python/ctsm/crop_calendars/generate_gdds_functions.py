@@ -1,6 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
+
 # pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
@@ -196,6 +197,7 @@ def this_crop_map_to_patches(lon_points, lat_points, map_ds, vegtype_int):
 
 
 def yp_list_to_ds(yp_list, daily_ds, incl_vegtypes_str, dates_rx, longname_prefix, logger):
+    # pylint: disable=too-many-positional-arguments
     """
     Get and grid mean GDDs in GGCMI growing season
     """
@@ -260,7 +262,7 @@ def import_and_process_1yr(
     outdir_figs,
     logger,
     h1_instantaneous,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Import one year of CLM output data for GDD generation
     """
@@ -608,6 +610,7 @@ def import_and_process_1yr(
         # Get time series for each patch of this type
         this_crop_ds = xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
+        check_gddharv = False
         if save_figs:
             this_crop_gddharv_da = this_crop_ds["GDDHARV"]
             check_gddharv = True
@@ -652,6 +655,7 @@ def import_and_process_1yr(
         i_times = list(np.array(i_times)[np.array(sortorder)])
         # Select using the indexing tuple
         gddaccum_atharv_p = this_crop_gddaccum_da.values[(i_times, i_patches)]
+        gddharv_atharv_p = None
         if save_figs:
             gddharv_atharv_p = this_crop_gddharv_da.values[(i_times, i_patches)]
         if np.any(np.isnan(gddaccum_atharv_p)):
@@ -660,7 +664,7 @@ def import_and_process_1yr(
                 f"         ❗ {np.sum(np.isnan(gddaccum_atharv_p))}/{len(gddaccum_atharv_p)} "
                 + "NaN after extracting GDDs accumulated at harvest",
             )
-        if save_figs and np.any(np.isnan(gddharv_atharv_p)):
+        if save_figs and gddharv_atharv_p is not None and np.any(np.isnan(gddharv_atharv_p)):
             if np.all(np.isnan(gddharv_atharv_p)):
                 log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
                 check_gddharv = False
@@ -730,13 +734,13 @@ def import_and_process_1yr(
                 else:
                     error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
-            gddaccum_yp_list[var][
-                year_index - 1, active_this_year_where_gs_lastyr_indices
-            ] = gddaccum_atharv_p[where_gs_lastyr]
+            gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                gddaccum_atharv_p[where_gs_lastyr]
+            )
             if save_figs:
-                gddharv_yp_list[var][
-                    year_index - 1, active_this_year_where_gs_lastyr_indices
-                ] = gddharv_atharv_p[where_gs_lastyr]
+                gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                    gddharv_atharv_p[where_gs_lastyr]
+                )
             # Last year's season should be filled out now; make sure.
             if np.any(
                 np.isnan(
@@ -927,7 +931,7 @@ if CAN_PLOT:
         cmap=None,
         cbar_ticks=None,
         vmin=None,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Make maps
         """
@@ -1068,7 +1072,7 @@ if CAN_PLOT:
         gddharv_maps_ds=None,
         outdir_figs=None,
         linewidth=1.5,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Make map-and-boxplot figures
         """
@@ -1193,6 +1197,7 @@ if CAN_PLOT:
             vmax = max(np.max(gdd_map_yx), np.max(gddharv_map_yx)).values
 
             # Set up figure and first subplot
+            this_axis = None
             if layout == "3x1":
                 fig = plt.figure(figsize=(7.5, 14))
                 this_axis = fig.add_subplot(nplot_y, nplot_x, 1, projection=ccrs.PlateCarree())

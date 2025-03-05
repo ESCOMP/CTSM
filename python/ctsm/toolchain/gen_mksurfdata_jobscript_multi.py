@@ -3,6 +3,7 @@ gen_mksurfdata_jobscript_multi.py generates a jobscript for running the
 mksurfdata executable to generate many fsurdat files at once. For detailed
 instructions, see README.
 """
+
 import os
 import sys
 import logging
@@ -97,7 +98,7 @@ def write_runscript(
     resolution_dict,
     dataset_dict,
     runfile,
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write run script
     """

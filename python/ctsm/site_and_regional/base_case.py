@@ -3,6 +3,7 @@ This module includes the definition for a parent class for SinglePointCase
 and RegionalCase. The common functionalities of SinglePointCase and
 RegionalCase are defined in this Class.
 """
+
 # -- Import libraries
 
 # -- standard libraries
@@ -72,7 +73,7 @@ class BaseCase:
         create_datm,
         create_user_mods,
         overwrite,
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """
         Initializes BaseCase with the given arguments.
 
@@ -135,6 +136,7 @@ class BaseCase:
 
         """
 
+        f_in = None
         if os.path.exists(filename):
             logger.debug("Open file: %s", filename)
 

@@ -1,6 +1,7 @@
 """
 Generate maturity requirements (GDD) from outputs of a GDD-generating run
 """
+
 import os
 import sys
 import pickle
@@ -44,7 +45,7 @@ def main(
     skip_crops=None,
     logger=None,
     no_pickle=None,
-):
+):  # pylint: disable=too-many-positional-arguments
     # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
