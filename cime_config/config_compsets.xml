@@ -227,6 +227,10 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I1850Clm60BgcCropCrujraCmip6</alias>
     <lname>1850_DATM%CRUJRA2024_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
@@ -238,6 +242,10 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6waccm</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I1850Clm60BgcCropCrujraCmip6waccm</alias>
     <lname>1850_DATM%CRUJRA2024_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
