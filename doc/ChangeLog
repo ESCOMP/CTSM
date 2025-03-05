@@ -1,4 +1,87 @@
 ===============================================================
+Tag name: ctsm5.3.029
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 04 Mar 2025 05:45:27 PM MST
+One-line Summary: Make Bytnerowicz the default nfix_method for clm6
+
+Purpose and description of changes
+----------------------------------
+
+ Same as title, plus update paramfile and finidat accordingly.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #1339
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ nfix_method for clm6 defaults to Bytnerowicz now.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ clm6 f09 and ne30 1850 and 2000 now pick up new finidat files from f09 simulations.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Once we have ne30 finidat files, we can remove the need for use_init_interp from namelist_defaults.
+
+Changes to tests or testing:
+ Got warning from SMS_Ln9.f10_f10_mg37.I2000Clm50Sp.derecho_intel.clm-clm50cam5LndTuningModeZDustSoilErod--clm-nofireemis
+ that some baseline files were missing.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm6
+    - what platforms/compilers: All
+    - nature of change: Larger than roundoff, likely same climate
+
+ I confirmed that Fates cases and non-Clm6 cases do not differ from the baseline.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2972
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.028
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Mon Mar  3 10:57:24 MST 2025

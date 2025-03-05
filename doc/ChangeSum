@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.029   slevis 03/04/2025 Make Bytnerowicz the default nfix_method for clm6
        ctsm5.3.028 samrabin 03/03/2025 Move Izumi intel and gnu tests to Derecho
        ctsm5.3.027 glemieux 03/02/2025 FATES parameter file switch migration
        ctsm5.3.026 samrabin 02/26/2025 Merge b4b-dev to master: run_tower updates, reduce log noise
