@@ -150,7 +150,7 @@ module test_CNFireFactory
       use_cn = .false.
       call this%turn_fire_emis_on()
       call SatellitePhenologyInit( bounds )
-      expected_msg = "ABORTED: fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case"
+      expected_msg = "ABORTED: Fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case"
       @assertExceptionRaised(expected_msg)
 
     end subroutine spcase_with_fire_emis_fails

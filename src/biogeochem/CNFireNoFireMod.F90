@@ -70,7 +70,6 @@ contains
     ! Initialize No Fire module
     use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
     use shr_log_mod      , only : errMsg => shr_log_errMsg
-    use shr_sys_mod      , only : shr_sys_flush
     ! !ARGUMENTS:
     class(cnfire_nofire_type) :: this
     type(bounds_type), intent(in) :: bounds

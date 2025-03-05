@@ -55,6 +55,8 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
+    use shr_log_mod, only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -62,6 +64,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ier    ! error code
     !-----------------------------------------------------------------------
+    if ( shr_fire_emis_mechcomps_n > 0) then
+       write(iulog,*) "Fire emissions can NOT be active for Satellite Phenology mode (SP)" // &
+                   errMsg(sourcefile, __LINE__)
+       call endrun(msg="Fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case")
+       return
+    end if
 
     InterpMonths1 = -999  ! saved month index
 
