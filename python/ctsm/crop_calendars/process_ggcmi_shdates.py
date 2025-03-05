@@ -447,7 +447,7 @@ def process_ggcmi_shdates(
     ### Process all crops ###
     #########################
 
-    for thiscrop_clm in crop_dict:
+    for thiscrop_clm in crop_dict:  # pylint: disable=consider-using-dict-items
 
         # Which crop are we on?
         crop_int = list(crop_dict.keys()).index(thiscrop_clm) + 1
@@ -498,7 +498,7 @@ def process_ggcmi_shdates(
             # Rearrange longitude to match destination (does nothing if not needed)
             cropcal_ds = utils.lon_idl2pm(cropcal_ds, fail_silently=True)
 
-        for thisvar_clm in variable_dict:
+        for thisvar_clm in variable_dict:  # pylint: disable=consider-using-dict-items
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
             logger.info("    Processing %s...", varname_ggcmi)
