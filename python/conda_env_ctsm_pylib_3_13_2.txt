@@ -10,14 +10,14 @@
 # conda activate ctsm_pylib                                  # Do this anytime you want to run a CTSM python script
 #
 python=3.13.2
-xarray
-tqdm
-scipy
-netcdf4
-requests
-xesmf
-numba
-pylint
-black
-cartopy
-matplotlib
+xarray=2025.1.2
+tqdm=4.67.1
+scipy=1.15.2
+netcdf4=1.7.2
+requests=2.32.3
+xesmf=0.8.8
+numba=0.61.0
+pylint=3.3.4
+black=25.1.0
+cartopy=0.24.0
+matplotlib=3.10.1
