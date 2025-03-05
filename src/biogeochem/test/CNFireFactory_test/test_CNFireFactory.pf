@@ -21,7 +21,7 @@ module test_CNFireFactory
      contains
        procedure :: setUp
        procedure :: tearDown
-       procedure :: Init
+       procedure :: FireFactInit
        procedure :: turn_fire_emis_on
     end type TestCNFireFactory
   
@@ -78,7 +78,7 @@ module test_CNFireFactory
   
     !-----------------------------------------------------------------------
   
-    subroutine Init(this, fire_method)
+    subroutine FireFactInit(this, fire_method)
       class(TestCNFireFactory), intent(inout) :: this
       character(len=*), intent(in) :: fire_method
 
@@ -92,14 +92,15 @@ module test_CNFireFactory
       close(unitn)
       call CNFireReadNML(NLFilename)
       call create_cnfire_method(NLFilename, this%cnfire_method)
+      call this%cnfire_method%FireInit(bounds, NLFilename)
       this%initialized = .true.
 
-    end subroutine Init
+    end subroutine FireFactInit
 
     !-----------------------------------------------------------------------
 
     subroutine turn_fire_emis_on(this)
-      use shr_fire_emis_mod, only : shr_fire_emis_readnl
+      use shr_fire_emis_mod, only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
       use shr_sys_mod, only : shr_sys_system
       class(TestCNFireFactory), intent(inout) :: this
       integer :: emis_nflds
@@ -119,6 +120,9 @@ module test_CNFireFactory
       end if
       call shr_fire_emis_readnl( drv_flds_NLFilename, emis_nflds)
       call shr_sys_system( "/bin/rm -f "//trim(drv_flds_NLFilename), rc )
+      ! Make sure it's shown as on
+      @assertTrue( shr_fire_emis_mechcomps_n > 0 )
+      @assertEqual( shr_fire_emis_mechcomps_n, emis_nflds )
     end subroutine turn_fire_emis_on
 
     !-----------------------------------------------------------------------
@@ -129,8 +133,8 @@ module test_CNFireFactory
       character(100) :: expected_msg
 
       call this%turn_fire_emis_on()
-      call this%Init( fire_method = "nofire")
-      expected_msg = "ABORTED: fire emission requires BGC to be on and fire_method to be something besides none"
+      call this%FireFactInit( fire_method = "nofire")
+      expected_msg = "ABORTED: Having fire emissions on requires fire_method to be something besides nofire"
       @assertExceptionRaised(expected_msg)
 
     end subroutine nofire_with_fire_emis_fails
@@ -157,7 +161,7 @@ module test_CNFireFactory
     subroutine li2014_works(this)
       class(TestCNFireFactory), intent(inout) :: this
 
-      call this%Init( fire_method = "li2014qianfrc")
+      call this%FireFactInit( fire_method = "li2014qianfrc")
 
     end subroutine li2014_works
 
@@ -167,7 +171,7 @@ module test_CNFireFactory
     subroutine li2016_works(this)
       class(TestCNFireFactory), intent(inout) :: this
 
-      call this%Init( fire_method = "li2016crufrc")
+      call this%FireFactInit( fire_method = "li2016crufrc")
 
     end subroutine li2016_works
 
@@ -177,7 +181,7 @@ module test_CNFireFactory
     subroutine li2021_works(this)
       class(TestCNFireFactory), intent(inout) :: this
 
-      call this%Init( fire_method = "li2021gswpfrc")
+      call this%FireFactInit( fire_method = "li2021gswpfrc")
 
     end subroutine li2021_works
 
@@ -187,7 +191,7 @@ module test_CNFireFactory
     subroutine li2024_works(this)
       class(TestCNFireFactory), intent(inout) :: this
 
-      call this%Init( fire_method = "li2024gswpfrc")
+      call this%FireFactInit( fire_method = "li2024gswpfrc")
 
     end subroutine li2024_works
 
@@ -203,7 +207,7 @@ module test_CNFireFactory
       do i = 1, noptions
          call this%setUp()
          call this%turn_fire_emis_on()
-         call this%Init( fire_method = fire_method_options(i) )
+         call this%FireFactInit( fire_method = fire_method_options(i) )
          call this%tearDown()
       end do
 

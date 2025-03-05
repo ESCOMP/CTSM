@@ -90,7 +90,9 @@ module CNFireBaseMod
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: CNFireInit                    ! Initialization of Fire
       procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: CNFireCleanBase               ! Deallocate fire data
       procedure, public :: FireClean => CNFireCleanBase  ! Deallocate fire data
       procedure, public :: FireReadNML                   ! Read in namelist for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
@@ -196,8 +198,6 @@ contains
     class(cnfire_base_type) :: this
     !-----------------------------------------------------------------------
     ! Call the base class clean method
-    ! Right now this fails with: 
-    !    This is not a component name that is defined in the encompassing structure.   [BASEFIRECLEAN]
     !call this%BaseFireClean()
 
     if ( associated(this%btran2_patch) )then

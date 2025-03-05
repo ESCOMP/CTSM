@@ -38,10 +38,10 @@ module FireDataBaseType
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireInit             ! Initialization of Fire
-      procedure, public :: FireClean => BaseFireClean ! Clean up data and deallocate data
+      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireClean            ! Clean up data and deallocate data
+      procedure, public :: FireClean => BaseFireClean ! Clean up data and deallocate data
       procedure, public :: FireInterp               ! Interpolate fire data
       procedure(FireReadNML_interface), public, deferred :: &
            FireReadNML                              ! Read in namelist for Fire
@@ -105,7 +105,6 @@ contains
     type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
-
     if ( this%need_lightning_and_popdens() ) then
        ! Allocate lightning forcing data
        allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
