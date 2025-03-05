@@ -507,7 +507,7 @@ def process_ggcmi_shdates(
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
             file_clm = variable_dict[thisvar_clm]["outfile"]
             if not os.path.exists(file_clm):
-                raise Exception("Output file not found: " + file_clm)
+                raise FileNotFoundError("Output file not found: " + file_clm)
 
             # Strip dataset to just this variable
             strip_dataset(cropcal_ds, varname_ggcmi)

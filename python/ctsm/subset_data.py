@@ -461,7 +461,7 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
-    if args.surf_year != 1850 and args.surf_year != 2000:
+    if args.surf_year not in [1850, 2000]:
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
