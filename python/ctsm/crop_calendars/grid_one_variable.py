@@ -23,7 +23,7 @@ def get_thisvar_da(var, this_ds):
     thisvar_da = xr.DataArray(thisvar_da, dims=these_dims)
 
     # Define coordinates of this variable's DataArray
-    dims_dict = dict()
+    dims_dict = {}
     for dim in these_dims:
         dims_dict[dim] = this_ds[dim]
     thisvar_da = thisvar_da.assign_coords(dims_dict)
