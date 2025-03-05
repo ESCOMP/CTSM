@@ -49,7 +49,6 @@ module test_CNFireFactory
         inquire( file=trim(NLFilename), exist=file_exists)
       end if
       open( newunit=unitn, file=trim(NLFilename), status='new' )
-      write(unitn,*) '&cnfire_inparm'
       close(unitn)
       call shr_log_setLogUnit(iulog)
       this%initialized = .false.
@@ -85,12 +84,10 @@ module test_CNFireFactory
       integer :: unitn
 
       open( newunit=unitn, file=trim(NLFilename), status='old', position='append' )
-      write(unitn,*) ' fire_method = "', trim(fire_method), '"'
-      write(unitn,*) '/'
       write(unitn,*) '&lifire_inparm'
       write(unitn,*) '/'
       close(unitn)
-      call CNFireReadNML(NLFilename)
+      call CNFireSetFireMethod( fire_method_in=fire_method )
       call create_cnfire_method(NLFilename, this%cnfire_method)
       call this%cnfire_method%FireInit(bounds, NLFilename)
       this%initialized = .true.

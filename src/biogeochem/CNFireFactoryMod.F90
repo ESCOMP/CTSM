@@ -9,17 +9,20 @@ module CNFireFactoryMod
   use abortutils          , only : endrun
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use clm_varctl          , only : iulog
+  use shr_kind_mod        , only : CS => SHR_KIND_CS
 
   implicit none
   save
   private
   !
   ! !PUBLIC ROUTINES:
-  public :: CNFireReadNML         ! read the fire namelist
+  public :: CNFireReadNML         ! read the fire factory namelist to get the CN fire_method to use
   public :: create_cnfire_method  ! create an object of class fire_method_type
+  ! For Unit Testing:
+  public :: CNFireSetFireMethod   ! Set the fire_method
 
   ! !PRIVATE DATA MEMBERS:
-  character(len=80), private :: fire_method = "li2014qianfrc"
+  character(len=CS), private :: fire_method = "li2014qianfrc"
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -91,7 +94,6 @@ contains
     ! is determined based on a namelist parameter.
     !
     ! !USES:
-    use shr_kind_mod     , only : SHR_KIND_CL
     use FireMethodType   , only : fire_method_type
     use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
@@ -122,7 +124,7 @@ contains
        allocate(cnfire_li2024_type :: cnfire_method)
 
     case default
-       write(iulog,*) subname//' ERROR: unknown method: ', fire_method
+       write(iulog,*) subname//' ERROR: unknown method: ', trim(fire_method)
        call endrun(msg=errMsg(sourcefile, __LINE__))
        return
 
@@ -130,6 +132,20 @@ contains
     call cnfire_method%FireReadNML( NLFilename )
 
   end subroutine create_cnfire_method
+  !-----------------------------------------------------------------------
+
+  subroutine CNFireSetFireMethod( fire_method_in )
+    !
+    ! !DESCRIPTION:
+    ! Set the fire_method (to be used in unit testing)
+    !
+    ! !USES:
+    ! !ARGUMENTS:
+    character(len=*), intent(IN) :: fire_method_in
+
+    fire_method = trim(fire_method_in)
+
+  end subroutine CNFireSetFireMethod
   !-----------------------------------------------------------------------
 
 end module CNFireFactoryMod
