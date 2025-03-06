@@ -378,4 +378,27 @@
     </phase>
   </test>
 
+  <!--NORESM tests that fail-->
+
+  <test name="ERI_D_Ld9.f45_f45_mg37.I2000Clm60Fates.betzy_intel.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>CTSM#2953</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld3.ne30pg3_ne30pg3_mtn14.I2000Clm60FatesSpRsGs.betzy_intel.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>CTSM#2953</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.betzy_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
 </expectedFails>
