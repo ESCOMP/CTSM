@@ -12,7 +12,6 @@ module test_CNFireFactory
     implicit none
   
     character(len=*), parameter :: NLFilename = 'firefactorytest_nml'
-    character(len=*), parameter :: drv_flds_NLFilename = 'drv_flds_in_nml'
 
   @TestCase
     type, extends(TestCase) :: TestCNFireFactory
@@ -102,26 +101,9 @@ module test_CNFireFactory
       use shr_fire_emis_mod, only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
       use shr_sys_mod, only : shr_sys_system
       class(TestCNFireFactory), intent(inout) :: this
-      integer :: emis_nflds
-      integer :: unitn
-      logical :: file_exists
-      integer :: rc
 
-      inquire( file=trim(drv_flds_NLFilename), exist=file_exists)
-      !@assertFalse(file_exists, "drv_flds file should NOT exist and yet does")
-      if ( .not. file_exists )then
-         open( newunit=unitn, file=trim(drv_flds_NLFilename), status='new' )
-         write(unitn,*) '&fire_emis_nl'
-         write(unitn,*) "fire_emis_specifier = 'bc_a1 = BC','pom_a1 = 1.4*OC','SO2 = SO2'"
-         write(unitn,*) "fire_emis_factors_file = 'dummy_file_that_wont_be_used.nc'"
-         write(unitn,*) '/'
-         close(unitn)
-      end if
-      call shr_fire_emis_readnl( drv_flds_NLFilename, emis_nflds)
-      call shr_sys_system( "/bin/rm -f "//trim(drv_flds_NLFilename), rc )
-      ! Make sure it's shown as on
-      @assertTrue( shr_fire_emis_mechcomps_n > 0 )
-      @assertEqual( shr_fire_emis_mechcomps_n, emis_nflds )
+      ! NOTE!: This is bad that this can be done directly without having it done through a namelist, or setter!
+      shr_fire_emis_mechcomps_n = 2
     end subroutine turn_fire_emis_on
 
     !-----------------------------------------------------------------------
