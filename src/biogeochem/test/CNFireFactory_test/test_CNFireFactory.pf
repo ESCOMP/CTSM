@@ -87,7 +87,9 @@ module test_CNFireFactory
       write(unitn,*) '&lifire_inparm'
       write(unitn,*) '/'
       close(unitn)
-      call CNFireSetFireMethod( fire_method_in=fire_method )
+      if ( trim(fire_method) /= "DO_NOT_SET") then
+         call CNFireSetFireMethod( fire_method_in=fire_method )
+      end if
       call create_cnfire_method(NLFilename, this%cnfire_method)
       call this%cnfire_method%FireInit(bounds, NLFilename)
       this%initialized = .true.
@@ -121,6 +123,32 @@ module test_CNFireFactory
       @assertTrue( shr_fire_emis_mechcomps_n > 0 )
       @assertEqual( shr_fire_emis_mechcomps_n, emis_nflds )
     end subroutine turn_fire_emis_on
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fire_method_not_set_fails(this)
+      class(TestCNFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      call this%FireFactInit( fire_method = "DO_NOT_SET")
+      expected_msg = "ABORTED: Unknown option for namelist item fire_method: UNSET"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fire_method_not_set_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fire_method_bad_fails(this)
+      class(TestCNFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      call this%FireFactInit( fire_method = "ZZTOP")   ! Set to an invalid option
+      expected_msg = "ABORTED: Unknown option for namelist item fire_method: ZZTOP"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fire_method_bad_fails
 
     !-----------------------------------------------------------------------
 

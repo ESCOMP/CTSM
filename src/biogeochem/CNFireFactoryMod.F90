@@ -22,7 +22,7 @@ module CNFireFactoryMod
   public :: CNFireSetFireMethod   ! Set the fire_method
 
   ! !PRIVATE DATA MEMBERS:
-  character(len=CS), private :: fire_method = "li2014qianfrc"
+  character(len=CS), private :: fire_method = "UNSET"
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -107,7 +107,6 @@ contains
     class(fire_method_type), allocatable, intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'create_cnfire_method'
     !-----------------------------------------------------------------------
     
     select case (trim(fire_method))
@@ -124,8 +123,10 @@ contains
        allocate(cnfire_li2024_type :: cnfire_method)
 
     case default
-       write(iulog,*) subname//' ERROR: unknown method: ', trim(fire_method)
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       write(iulog,*) 'Unrecognized fire_method ' // errMsg(sourcefile, __LINE__)
+       call endrun( msg='Unknown option for namelist item fire_method: ' // trim(fire_method) )
+       ! For unit-testing, make sure a valid cnfire_method is set and return, otherwise it fails with a seg-fault
+       allocate(cnfire_nofire_type :: cnfire_method)
        return
 
     end select
