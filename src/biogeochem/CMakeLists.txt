@@ -29,6 +29,10 @@ list(APPEND clm_sources
   CNVegNitrogenFluxType.F90
   CNCIsoAtmTimeSeriesReadMod.F90
   CNVegComputeSeedMod.F90
+  FATESFireBase.F90
+  FATESFireDataMod.F90
+  FATESFireFactoryMod.F90
+  FATESFireNoDataMod.F90
   SatellitePhenologyMod.F90
   SpeciesBaseType.F90
   SpeciesIsotopeType.F90
