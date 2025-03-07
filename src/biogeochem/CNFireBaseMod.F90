@@ -85,12 +85,15 @@ module CNFireBaseMod
     private
       ! !PRIVATE MEMBER DATA:
       ! !PUBLIC MEMBER DATA (used by extensions of the base class):
-      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
+      real(r8), public, pointer :: btran2_patch   (:)  => NULL() ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: CNFireInit                    ! Initialization of Fire
       procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: CNFireCleanBase               ! Deallocate fire data
+      procedure, public :: FireClean => CNFireCleanBase  ! Deallocate fire data
       procedure, public :: FireReadNML                   ! Read in namelist for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
@@ -184,6 +187,24 @@ contains
          avgflag='A', long_name='root zone soil wetness factor', &
          ptr_patch=this%btran2_patch, l2g_scale_type='veg')
   end subroutine InitHistory
+
+  !----------------------------------------------------------------------
+
+  subroutine CNFireCleanBase( this )
+    !
+    ! Deallocate data
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    !-----------------------------------------------------------------------
+    ! Call the base class clean method
+    !call this%BaseFireClean()
+
+    if ( associated(this%btran2_patch) )then
+       deallocate(this%btran2_patch)
+    end if
+    this%btran2_patch => NULL()
+  end subroutine CNFireCleanBase
 
   !----------------------------------------------------------------------
   subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, &
@@ -331,7 +352,6 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
@@ -392,9 +412,11 @@ contains
              read(unitn, nml=lifire_inparm, iostat=ierr)
              if (ierr /= 0) then
                 call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+                return
              end if
           else
              call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+             return
           end if
           call relavu( unitn )
        end if

@@ -52,22 +52,29 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: current_case
-
-    character(len=*), parameter :: subname = 'create_fates_fire_data_method'
     !-----------------------------------------------------------------------
 
     current_case = fates_spitfire_mode
 
     select case (current_case)
 
+    ! No-fire, scalar-lightning and successful_ignitions ALL do NOT need input data from the base class
     case (no_fire:scalar_lightning)
        allocate(fates_fire_no_data_type :: fates_fire_data_method)
-    case (lightning_from_data:anthro_suppression)
+    case (successful_ignitions)
+       allocate(fates_fire_no_data_type :: fates_fire_data_method)
+   ! Lightning from data, and the anthro types (ignition and suppression) need lightning data from the base class
+    case (lightning_from_data)
+       allocate(fates_fire_data_type :: fates_fire_data_method)
+    case (anthro_ignitions:anthro_suppression)
        allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default
-       write(iulog,*) subname//' ERROR: unknown method: ', fates_spitfire_mode
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       write(iulog,*) 'Unrecognized fates_spitfire_mode option = ', fates_spitfire_mode, ' in: ', &
+                       errMsg(sourcefile, __LINE__)
+       call endrun(msg="Unknown option for namelist item fates_spitfire_mode:")
+       ! For unit-testing, make sure a valid fates_fire_data_method is set and return, otherwise it fails with a seg-fault
+       allocate(fates_fire_no_data_type :: fates_fire_data_method)
 
     end select
 
