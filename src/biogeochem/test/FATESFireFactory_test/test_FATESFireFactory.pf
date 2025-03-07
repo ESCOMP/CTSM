@@ -121,7 +121,7 @@ module test_FATESFireFactory
       call this%turn_fire_emis_on()
       fates_spitfire_mode = no_fire
       call this%FireFactInit( )
-      expected_msg = "ABORTED: Fire emission with FATES requires fates_spitfire_mode to be at least scalar_lightning mode (1)"
+      expected_msg = "ABORTED: Having fire emissions on requires fates_spitfire_mode to be something besides no_fire (0)"
       @assertExceptionRaised(expected_msg)
 
     end subroutine fates_no_spitfire_case_with_fire_emis_fails
@@ -134,12 +134,17 @@ module test_FATESFireFactory
       integer, parameter :: noptions = anthro_suppression
       integer :: i
 
-      do i = 1, noptions
-         call this%setUp()
-         call this%turn_fire_emis_on()
-         fates_spitfire_mode = i
-         call this%FireFactInit( )
-         call this%tearDown()
+      do i = scalar_lightning, noptions
+         if ( i == successful_ignitions ) then
+            cycle
+         else
+            call this%setUp()
+            call this%turn_fire_emis_on()
+            fates_spitfire_mode = i
+            use_fates_sp = .false.
+            call this%FireFactInit( )
+            call this%tearDown()
+         end if
       end do
 
     end subroutine all_fates_spitfire_options_with_fire_emis_works
