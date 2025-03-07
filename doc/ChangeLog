@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.3.03?
+Tag name: ctsm5.3.031
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: 
+Date: Fri 07 Mar 2025 12:20:38 PM MST
 One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
 
 Purpose and description of changes
@@ -55,18 +55,24 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
+  build-namelist with my PR's mods updated to ctsm5.3.029
 
     derecho - PASS
 
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+  python testing with my PR's mods updated to ctsm5.3.029
 
     derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
+    derecho ----- 
+    izumi ------- 
+
+  ctsm_sci
+    derecho ----- 
+
+  aux_cdeps with my PR's mods updated to ctsm5.3.029, compared against last cdeps1.0.55 baseline
     derecho ----- OK
-    izumi ------- OK
 
 Answer changes
 --------------
@@ -77,7 +83,7 @@ Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
  share1.1.7 to share1.1.8
- cdeps1.0.61 to ?
+ cdeps1.0.61 to cdeps1.0.68
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2956
@@ -86,6 +92,68 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.3.030
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Mar  7 10:06:35 MST 2025
+One-line Summary: Fix FATES branch runs
+
+Purpose and description of changes
+----------------------------------
+
+In FATES branch runs, prevents attempts to re-allocate arrays that already are allocated (in the restart file). This prevents run failures. However, it exposes a failure in the COMPARE_base_hybrid step of ERI tests, due to a bad hist_mfilt; this is also fixed.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves NGEET/fates#653: [FATES Issue #653: Branch runs fail at double allocation of FATES structures](https://github.com/NGEET/fates/issues/653)
+- Resolves NGEET/fates#1271: [FATES Issue #1271: FATES doesn't work in branch runs](https://github.com/NGEET/fates/issues/1271)
+- Resolves ESCOMP/CTSM#2903: [CTSM Issue #2903: FATES doesn't work in branch runs](https://github.com/ESCOMP/CTSM/issues/2903)
+- Resolves ESCOMP/CTSM#2953: [CTSM Issue #2953: Add several ERI tests to the FATES testlists](https://github.com/ESCOMP/CTSM/issues/2953)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Some FATES ERI tests added.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests:
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [CTSM PR #2955: ctsm5.3.030: Fix FATES branch runs by samsrabin](https://github.com/ESCOMP/CTSM/pull/2955)
+
 ===============================================================
 ===============================================================
 Tag name: ctsm5.3.029
