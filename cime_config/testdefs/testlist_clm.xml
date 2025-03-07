@@ -2845,6 +2845,8 @@
   </test>
   <test name="ERI_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
