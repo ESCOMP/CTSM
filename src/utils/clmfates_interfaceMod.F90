@@ -78,6 +78,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
    use clm_varctl        , only : fates_history_dimlevel
+   use clm_varctl        , only : nsrest, nsrBranch
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -497,7 +498,7 @@ module CLMFatesInterfaceMod
         ! This has no variable on the FATES side yet (RGK)
         !call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
 
-        if(is_restart()) then
+        if(is_restart() .or. nsrest .eq. nsrBranch) then
            pass_is_restart = 1
         else
            pass_is_restart = 0
