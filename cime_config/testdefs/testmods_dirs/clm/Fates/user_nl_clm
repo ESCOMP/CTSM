@@ -1,5 +1,5 @@
 !!   USES THE DEFAULT INITIALIZATION FILE SPECIFIED IN bld/namelist_files/namelist_defaults_ctsm.xml
-hist_mfilt        = 365
+hist_mfilt        = 1
 hist_nhtfrq       = -24
 hist_empty_htapes = .true.
 hist_ndens = 1
