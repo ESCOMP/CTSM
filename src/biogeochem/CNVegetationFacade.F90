@@ -302,10 +302,10 @@ contains
        ! use_cndv is true so that it can be used in associate statements (nag compiler
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
-    end if
     
-    call create_cnfire_method(NLFilename, this%cnfire_method)
-    call this%cnfire_method%CNFireReadParams( params_ncid )
+       call create_cnfire_method(NLFilename, this%cnfire_method)
+       call this%cnfire_method%CNFireReadParams( params_ncid )
+    end if
 
   end subroutine Init
 
