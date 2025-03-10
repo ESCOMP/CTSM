@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.031
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 07 Mar 2025 12:20:38 PM MST
+Date: Mon 10 Mar 2025 10:40:01 AM MDT
 One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
 
 Purpose and description of changes
@@ -31,7 +31,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- Partly addresses #1895 add crujra option for ctsm's datm inputs
+ Resolves #1895 add crujra option for ctsm's datm inputs
  Partly addresses #2960 update subset_data to use crujra
 
 Notes of particular relevance for users
@@ -40,7 +40,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
  Adding new compsets with Crujra in their names and allowing CRUJRA2024 in long compset names
 
 Changes made to namelist defaults (e.g., changed parameter values):
- Limited changes revoling around lnd_tuning_mode settings
+ Limited changes revolving around lnd_tuning_mode settings
 
 Changes to documentation:
  Not, yet
@@ -65,11 +65,11 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- 
-    izumi ------- 
+    derecho ----- OK
+    izumi ------- OK
 
   ctsm_sci
-    derecho ----- 
+    derecho ----- OK
 
   aux_cdeps with my PR's mods updated to ctsm5.3.029, compared against last cdeps1.0.55 baseline
     derecho ----- OK
