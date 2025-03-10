@@ -94,10 +94,12 @@ contains
 
   end subroutine crop_heatstress_ndays
 
-  subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
+
+subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
 
     ! !DESCRIPTION:
-    ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline)
+    ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline). function based on Apsim-Nwheat model Asseng et al. 2011:https://doi.org/10.1111/j.1365-2486.2010.02262.x
+    ! needed: different tcrit, tmax values for different crops and climatologies
 
     ! !ARGUMENTS:
     real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
@@ -111,26 +113,24 @@ contains
 
     !-----------------------------------------------------------------------
 
-    tcrit = 303.15_r8
-    tmax  = 315._r8
+    tcrit = 302.15_r8
+    tmax  = 318.15_r8
     day_min = 3
-    day_max = 14
 
     !check  if stress occurs
     if (HS_ndays == day_min) then
        ! onset heatwave
-       HS_factor = 1.05_r8
+       HS_factor = 1.5_r8
     else if (HS_ndays > day_min .and. croplive) then
        if (t_veg_day < tmax .and. t_veg_day > tcrit) then
-          HS_factor = 1._r8 + 0.5_r8 * ((t_veg_day - tcrit) / (tmax - tcrit))
-       else if (t_veg_day > tmax .and. HS_ndays < day_max) then
-          HS_factor = 1.5_r8
-       else if (t_veg_day > tmax .and. HS_ndays > day_max) then
-          HS_factor = 1.7_r8
+          HS_factor = 4 - (1 - (t_veg_day - tcrit)/2)
+       else if (t_veg_day > tmax) then
+          HS_factor = 11._r8
        end if
-     else
+    else
        HS_factor = 1._r8
-    end if
+   end if
+
 
 end subroutine calc_HS_factor 
 
