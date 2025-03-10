@@ -3960,6 +3960,15 @@
       <option name="comment">""</option>
     </options>
   </test>
+  <test name="ERI_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
+    <machines>
+      <machine name="betzy"   compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Ensure functionality of two-stream radiation option with nocomp-fixedbiogeo in FATES</option>
+    </options>
+  </test>
 
   <!-- FATES-FULL -->
 
