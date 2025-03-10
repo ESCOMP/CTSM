@@ -571,8 +571,8 @@ def setup_files(args, defaults, cesmroot):
         abort("inputdata directory does not exist")
 
     # DATM data
-    # TODO Make datm_type a user option at the command line. For reference,
-    # this option affects three .cfg files:
+    # TODO Issue #2960: Make datm_type a user option at the command
+    # line. For reference, this option affects three .cfg files:
     #      tools/site_and_regional/default_data_1850.cfg
     #      tools/site_and_regional/default_data_2000.cfg
     #      python/ctsm/test/testinputs/default_data.cfg

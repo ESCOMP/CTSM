@@ -55,11 +55,11 @@ Testing summary:
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist with my PR's mods updated to ctsm5.3.029
+  build-namelist
 
     derecho - PASS
 
-  python testing with my PR's mods updated to ctsm5.3.029
+  python testing
 
     derecho - PASS
 
@@ -71,7 +71,7 @@ Testing summary:
   ctsm_sci
     derecho ----- OK
 
-  aux_cdeps with my PR's mods updated to ctsm5.3.029, compared against last cdeps1.0.55 baseline
+  aux_cdeps with my ctsm PR's mods updated to ctsm5.3.029; compared against last (cdeps1.0.55) baseline
     derecho ----- OK
 
 Answer changes
