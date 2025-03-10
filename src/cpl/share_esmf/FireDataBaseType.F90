@@ -27,9 +27,9 @@ module FireDataBaseType
     private
       ! !PRIVATE MEMBER DATA:
       real(r8), public, pointer :: forc_hdm(:)  => NULL() ! Human population density
-      type(shr_strdata_type)    :: sdat_hdm     => NULL() ! Human population density input data stream
+      type(shr_strdata_type)    :: sdat_hdm               ! Human population density input data stream
       real(r8), public, pointer :: forc_lnfm(:) => NULL() ! Lightning frequency
-      type(shr_strdata_type)    :: sdat_lnfm    => NULL() ! Lightning frequency input data stream
+      type(shr_strdata_type)    :: sdat_lnfm              ! Lightning frequency input data stream
       
       real(r8), public, pointer :: gdp_lf_col(:)   => NULL() ! col global real gdp data (k US$/capita)
       real(r8), public, pointer :: peatf_lf_col(:) => NULL() ! col global peatland fraction data (0-1)
