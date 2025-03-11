@@ -1,33 +1,68 @@
 .. include:: ../substitutions.rst
 
-.. _pts_mode:
+.. _single_point_subset_data:
 
-****************************************************
-Running a single point using global data - PTS_MODE
-****************************************************
+****************************************
+Running a single point using global data
+****************************************
 
-``PTS_MODE`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
+``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
 
-To setup a ``PTS_MODE`` simulation you use the ``-pts_lat`` and ``-pts_lon`` arguments to ``cime/scripts/create_newcase`` to give the latitude and longitude of the point you want to simulate for (the code will pick the point on the global grid nearest to the point you give. Here's an example to setup a simulation for the nearest point at 2-degree resolution to Boulder Colorado.
-::
+1. Subset the data
+------------------
 
-   > cd cime/scripts
-   > ./create_newcase -case testPTS_MODE -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -pts_lat 40.0 -pts_lon -105
-   > cd testPTS_MODE
+For single-point cases, you need to subset a surface dataset and (optionally) DATM data. The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
 
-   # We make sure the model will start up cold rather than using initial conditions
-   > ./xmlchange CLM_FORCE_COLDSTART=on,RUN_TYPE=startup
+Note that you will need to have a python environment set up that includes the packages ``scipy``, ``xarray``, and ``numpy``. If you have conda or miniconda installed, you can create a conda environment for this and other CTSM python tools using the script ``py_env_create`` at the top level of your CTSM checkout.
 
-Then setup, build and run as normal. We make sure initial conditions are NOT used since ``PTS_MODE`` currently CAN NOT run with initial conditions.
+To subset surface data and climate forcings (DATM) for a single point, use the command:
 
-.. warning:: ``PTS_MODE`` currently does NOT restart nor is it able to startup from global initial condition files. This is a known issue we are unlikely to fix.
+.. code:: shell
 
-.. note:: You can change the point you are simulating for at run-time by changing the values of ``PTS_LAT`` and ``PTS_LON`` in the ``env_run.xml`` file.
+   tools/site_and_regional/subset_data point \
+      --lat $my_lat --lon $my_lon --site $my_site_name \
+      --create-surface --create-datm \
+      --datm-syr $my_start_year --datm-eyr $my_end_year \
+      --create-user-mods --outdir $my_output_dir
 
-==============================
- Running in a single processor
-==============================
+-  ``$my_lat``: latitude of point, *must be between -90 and 90 degrees*. E.g., Boulder, CO, USA: 40.
+-  ``$my_lon``: longitude of point, *must be between 0 and 360 degrees*. E.g., Boulder, CO, USA: 55.
+-  ``$my_site_name``: name of site, *used for file naming*
+-  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
+-  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014*
+-  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
-Note, that when running with ``PTS_MODE`` the number of processors is automatically set to one. When running a single grid point you can only use a single processor. You might also want to set the ``env_build.xml`` variable: ``MPILIB=mpi-serial`` to ``TRUE`` so that you can also run interactively without having to use MPI to start up your job.
+You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
 
-On many machines, batch queues have a minimum number of nodes or processors that can be used. On these machines you may have to change the queue and possibly the time-limits of the job, to get it to run in the batch queue. On the NCAR machine, cheyenne, this is done for you automatically, and the "share" or "caldera" queue is used for such single-processor simulations. For single point mode you also may want to consider using a smaller workstation or cluster, rather than a super-computer, because you can't take advantage of the multi-processing power of the super-computer anyway.
+**Note that this script defaults to subsetting specific surface, domain, and land-use files and GSWP3 DATM data, and can currently only be run as-is on Derecho. To update the files and file locations, you will need to modify the files and/or directories in the tools/site_and_regional/default_data_2000.cfg file.**
+
+The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` parameters. You can then use this user mods directory to set up your CTSM case, as described below.
+
+2. Create the case
+------------------
+
+You can use the user mods directory set up in the previous subset data step to tell CIME/CTSM where your subset files are located.
+
+.. code:: shell
+
+   cime/scripts/create_newcase --case $my_case_name --res CLM_USRDAT \
+      --compset $compset --run-unsupported \
+      --user-mods-dirs $my_output_dir/user_mods
+
+-  ``$my_case_name``: the path of the case directory you want to create
+-  ``$compset``: the compset you would like to use (see the `above-mentioned tutorial <https://github.com/NCAR/CTSM-Tutorial-2022/blob/main/notebooks/Day2a_GenericSinglePoint.ipynb>`__ for an example)
+   Note the use of ``$my_output_dir/user_mods`` which is the ``user_mods/`` directory that the subset data script set up within your specified ``$my_output_dir``.
+
+Following this, you should be able to update any other case-specific parameters you want to change (e.g., ``STOP_N``, ``STOP_OPTION``, etc.). You should set the values ``DATM_YR_ALIGN``, ``DATM_YR_START``, and ``DATM_YR_END`` to match your ``$my_end_year`` and ``$my_start_year`` values from above: **Shouldn’t this just be in shell_commands?**
+
+.. code:: shell
+
+   ./xmlchange DATM_YR_ALIGN=$my_start_year
+   ./xmlchange DATM_YR_START=$my_start_year
+   ./xmlchange DATM_YR_END=$my_end_year
+
+Note that ``./case.setup`` on Derecho will automatically set queue to ``develop`` and walltime to one hour. You might need a longer walltime, but the maximum walltime for ``develop`` is one hour. To change it to two hours on Derecho:
+
+.. code:: shell
+
+   ./xmlchange --subgroup case.run JOB_QUEUE=main,JOB_WALLCLOCK_TIME=2:00:00
