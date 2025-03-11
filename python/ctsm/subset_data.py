@@ -514,6 +514,16 @@ def check_args(args):
             )
             raise argparse.ArgumentError(None, err_msg)
 
+    if args.run_type == "region" and args.create_datm:
+        err_msg = textwrap.dedent(
+            """\
+                    \n ------------------------------------
+                    \nERROR: For regional cases, you can not subset datm data
+                    \n (see https://github.com/ESCOMP/CTSM/issues/2110)
+                    """
+        )
+        raise NotImplementedError(None, err_msg)
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """

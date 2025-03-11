@@ -236,6 +236,22 @@ class TestSubsetData(unittest.TestCase):
         ):
             check_args(self.args)
 
+    # When CTSM issue #2110 is resolved, this test should be removed.
+    def test_subset_region_errors_if_datm(self):
+        """
+        Test that you can't run subset_data for a region with --create-datm
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-datm",
+        ]
+        self.args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            NotImplementedError, "For regional cases, you can not subset datm data"
+        ):
+            check_args(self.args)
+
     def test_complex_option_works(self):
         """
         Test that check_args won't flag a set of complex options that is valid
@@ -253,7 +269,7 @@ class TestSubsetData(unittest.TestCase):
             "1850",
             "--create-mesh",
             "--create-domain",
-            "--create-datm",
+            # "--create-datm",  # Uncomment this when CTSM issue #2110 is resolved
             "--verbose",
             "--crop",
         ]
