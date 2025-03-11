@@ -7,7 +7,7 @@ module test_FATESFireFactory
     use FATESFireBase, only : fates_fire_base_type
     use FATESFireFactoryMod
     use shr_kind_mod , only : r8 => shr_kind_r8, CS => shr_kind_CS
-    use clm_varctl, only : iulog, fates_spitfire_mode, use_fates, use_fates_sp
+    use clm_varctl, only : iulog, fates_spitfire_mode, use_fates, use_fates_sp, use_fates_ed_st3
   
     implicit none
   
@@ -35,6 +35,7 @@ module test_FATESFireFactory
       call ESMF_Initialize()
       use_fates = .true.
       use_fates_sp = .false.
+      use_fates_ed_st3 = .false.
       fates_spitfire_mode = no_fire
       iulog = 6
       call shr_log_setLogUnit(iulog)
@@ -102,7 +103,7 @@ module test_FATESFireFactory
       class(TestFATESFireFactory), intent(inout) :: this
       character(100) :: expected_msg
 
-      use_fates_sp = .false.
+      use_fates_sp = .true.
       call this%turn_fire_emis_on()
       fates_spitfire_mode = anthro_suppression
       call this%FireFactInit( )
