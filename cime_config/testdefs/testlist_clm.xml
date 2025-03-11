@@ -1114,15 +1114,6 @@
       <option name="comment">Repeat this high res SE grid test with Crujra while Gswp is still the default</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">Delete? this high res SE grid test with Crujra while Gswp is still the default</option>
-    </options>
-  </test>
   <!-- Historical clm5_0 physics BgcCrop science support -->
   <test name="SMS_Ln9_P256x2" grid="C96_C96_mt232" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
