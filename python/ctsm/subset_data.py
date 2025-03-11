@@ -215,7 +215,11 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help="Region westernmost longitude. [default: %(default)s]",
+        help=(
+            "Region westernmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            " International Date Line rather than centered on the Prime Meridian. [default:"
+            " %(default)s]"
+            ),
         action="store",
         dest="lon1",
         required=False,
@@ -224,7 +228,11 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon2",
-        help="Region easternmost longitude. [default: %(default)s]",
+        help=(
+            "Region easternmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            " International Date Line rather than centered on the Prime Meridian. [default:"
+            " %(default)s]"
+            ),
         action="store",
         dest="lon2",
         required=False,

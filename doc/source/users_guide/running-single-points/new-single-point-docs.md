@@ -9,6 +9,7 @@ conda run -n ctsm_pylib ./subset_data point --lat 45.402252 --lon 267.201915 --s
 
 - Ran into climate data issues. Had wanted to use CRU-JRA. Manually changed something to make that happen, but we can't figure out what. File an issue to make this easier (and to make default CRU-JRA)
 - Note that `subset_data` doesn't work yet when sampling datm for a region: [Issue #2110: Don't allow users to try to subset datm for a region with subset_data: doesn't work yet](https://github.com/ESCOMP/CTSM/issues/2110)
+- Note that longitudes must be in [0, 360) format!
 
 ## 2. Make case
 ```shell

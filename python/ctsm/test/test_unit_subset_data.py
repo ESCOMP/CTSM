@@ -20,6 +20,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
 
 # pylint: disable=invalid-name
 
@@ -258,6 +259,29 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.args = self.parser.parse_args()
         check_args(self.args)
+
+    # When CTSM issue #3001 is fixed, this test should be replaced with one that checks for correct
+    # conversion of longitudes specified in the [-180, 180) format.
+    def test_negative_lon_errors(self):
+        """
+        Test that a negative longitude results in a descriptive error
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "-20",
+            "--lon2",
+            "40",
+        ]
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            self.args = self.parser.parse_args()
 
 
 if __name__ == "__main__":
