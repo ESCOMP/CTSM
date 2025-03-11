@@ -58,7 +58,6 @@ contains
     ! For FATES options that bypass fire...
     !
     if ( use_fates_sp .or. use_fates_ed_st3 )then
-      allocate(fates_fire_no_data_type :: fates_fire_data_method)
       !
       ! Make sure fire-emissions is NOT on
       !
@@ -72,8 +71,12 @@ contains
                         errMsg(sourcefile, __LINE__)
             call endrun(msg="Fire emission with FATES requires FATES to NOT be in Static Stand Structure mode" )
          end if
+         ! For unit-testing return with a FATESFireData type, so there isn't a run-time error
+         ! Also do the FATESFireData type, as using FATESFireNoData type will fail with an error
+         allocate(fates_fire_data_type :: fates_fire_data_method)
          return
       end if
+      allocate(fates_fire_no_data_type :: fates_fire_data_method)
     else
       !
       ! For regular FATES options that include fire

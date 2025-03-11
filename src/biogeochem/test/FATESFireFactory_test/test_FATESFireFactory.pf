@@ -105,12 +105,27 @@ module test_FATESFireFactory
 
       use_fates_sp = .true.
       call this%turn_fire_emis_on()
-      fates_spitfire_mode = anthro_suppression
       call this%FireFactInit( )
       expected_msg = "ABORTED: Fire emission with FATES requires FATES to NOT be in Satellite Phenology (SP) mode"
       @assertExceptionRaised(expected_msg)
 
     end subroutine fates_sp_case_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fates_st3_case_with_fire_emis_fails(this)
+      use clm_varctl, only : use_fates_ed_st3
+      class(TestFATESFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      use_fates_ed_st3 = .true.
+      call this%turn_fire_emis_on()
+      call this%FireFactInit( )
+      expected_msg = "ABORTED: Fire emission with FATES requires FATES to NOT be in Static Stand Structure mode"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fates_st3_case_with_fire_emis_fails
 
     !-----------------------------------------------------------------------
 
