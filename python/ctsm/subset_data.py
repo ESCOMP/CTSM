@@ -219,7 +219,7 @@ def get_parser():
             "Region westernmost longitude. Must be in [0, 360) format: i.e., starting at the"
             " International Date Line rather than centered on the Prime Meridian. [default:"
             " %(default)s]"
-            ),
+        ),
         action="store",
         dest="lon1",
         required=False,
@@ -232,7 +232,7 @@ def get_parser():
             "Region easternmost longitude. Must be in [0, 360) format: i.e., starting at the"
             " International Date Line rather than centered on the Prime Meridian. [default:"
             " %(default)s]"
-            ),
+        ),
         action="store",
         dest="lon2",
         required=False,
@@ -464,7 +464,8 @@ def check_args(args):
             """\
                 \n ------------------------------------
                 \n --surf-year option is NOT set to 1850 and the --create-landuse option
-                \n is selected which requires it to be 1850
+                \n is selected which requires it to be 1850 (see
+                https://github.com/ESCOMP/CTSM/issues/2018)
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
