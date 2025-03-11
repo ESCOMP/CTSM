@@ -263,10 +263,6 @@
 
   <!-- latest CLM version with BGC-Crop and CRU forcing -->
   <compset>
-    <alias>I1850Clm60BgcCropCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-  </compset>
-  <compset>
     <alias>I1850Clm60BgcCropCru</alias>
     <lname>1850_DATM%CRUv7_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
@@ -488,7 +484,7 @@
     <lname>SSP585_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>ISSP585Clm50BgcCropCrujra</alias>
+    <alias>ISSP585Clm60BgcCropCrujra</alias>
     <lname>SSP585_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
@@ -507,7 +503,7 @@
     <lname>SSP245_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>ISSP245Clm50BgcCropCrujra</alias>
+    <alias>ISSP245Clm60BgcCropCrujra</alias>
     <lname>SSP245_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
@@ -516,7 +512,7 @@
     <lname>SSP370_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>ISSP370Clm50BgcCropCrujra</alias>
+    <alias>ISSP370Clm60BgcCropCrujra</alias>
     <lname>SSP370_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
@@ -763,6 +759,10 @@
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
+  <compset>
+    <alias>I1850Clm60SpRs</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
   <compset>
     <alias>I1850Clm60SpCrujraRs</alias>
     <lname>1850_DATM%CRUJRA2024_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
