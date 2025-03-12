@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.031
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon 10 Mar 2025 10:40:01 AM MDT
+Date: Wed Mar 12 09:59:13 MDT 2025
 One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
 
 Purpose and description of changes
@@ -71,7 +71,7 @@ Testing summary:
   ctsm_sci
     derecho ----- OK
 
-  aux_cdeps with my ctsm PR's mods updated to ctsm5.3.029; compared against last (cdeps1.0.55) baseline
+  aux_cdeps compared against last (cdeps1.0.55) baseline
     derecho ----- OK
 
 Answer changes
@@ -83,7 +83,7 @@ Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
  share1.1.7 to share1.1.8
- cdeps1.0.61 to cdeps1.0.68
+ cdeps1.0.61 to cdeps1.0.70
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2956
