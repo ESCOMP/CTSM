@@ -8,7 +8,7 @@ Running a single point using global data
 
 ``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
 
-1. Subset the data
+Subset the data
 ------------------
 
 For single-point cases, you need to subset a surface dataset and (optionally) DATM data. The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
@@ -38,7 +38,7 @@ You can also have the script subset land-use data. See the help (``tools/site_an
 
 The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` parameters. You can then use this user mods directory to set up your CTSM case, as described below.
 
-2. Create the case
+Create the case
 ------------------
 
 You can use the user mods directory set up in the previous subset data step to tell CIME/CTSM where your subset files are located.
