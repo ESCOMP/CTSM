@@ -53,14 +53,6 @@ You can use the user mods directory set up in the previous subset data step to t
 -  ``$compset``: the compset you would like to use (see the `above-mentioned tutorial <https://github.com/NCAR/CTSM-Tutorial-2022/blob/main/notebooks/Day2a_GenericSinglePoint.ipynb>`__ for an example)
    Note the use of ``$my_output_dir/user_mods`` which is the ``user_mods/`` directory that the subset data script set up within your specified ``$my_output_dir``.
 
-Following this, you should be able to update any other case-specific parameters you want to change (e.g., ``STOP_N``, ``STOP_OPTION``, etc.). You should set the values ``DATM_YR_ALIGN``, ``DATM_YR_START``, and ``DATM_YR_END`` to match your ``$my_end_year`` and ``$my_start_year`` values from above: **Shouldn’t this just be in shell_commands?**
-
-.. code:: shell
-
-   ./xmlchange DATM_YR_ALIGN=$my_start_year
-   ./xmlchange DATM_YR_START=$my_start_year
-   ./xmlchange DATM_YR_END=$my_end_year
-
 Note that ``./case.setup`` on Derecho will automatically set queue to ``develop`` and walltime to one hour. You might need a longer walltime, but the maximum walltime for ``develop`` is one hour. To change it to two hours on Derecho:
 
 .. code:: shell

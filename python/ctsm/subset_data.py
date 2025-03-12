@@ -705,7 +705,10 @@ def subset_point(args, file_dict: dict):
 
     # -- Write shell commands
     if single_point.create_user_mods:
-        single_point.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+        shell_commands_file = os.path.join(args.user_mods_dir, "shell_commands")
+        single_point.write_shell_commands(
+            shell_commands_file, args.datm_syr, args.datm_eyr
+        )
 
     logger.info("Successfully ran script for single point.")
 

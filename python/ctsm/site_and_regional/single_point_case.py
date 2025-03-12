@@ -608,7 +608,7 @@ class SinglePointCase(BaseCase):
         f_in.close()
         f_out.close()
 
-    def write_shell_commands(self, file):
+    def write_shell_commands(self, file, datm_syr, datm_eyr):
         """
         writes out xml commands commands to a file (i.e. shell_commands) for single-point runs
         """
@@ -619,6 +619,10 @@ class SinglePointCase(BaseCase):
             self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
+            if self.create_datm:
+                self.write_to_file(f"./xmlchange DATM_YR_ALIGN={datm_syr}", nl_file)
+                self.write_to_file(f"./xmlchange DATM_YR_START={datm_syr}", nl_file)
+                self.write_to_file(f"./xmlchange DATM_YR_END={datm_eyr}", nl_file)
 
     def write_datm_streams_lines(self, streamname, datmfiles, file):
         """
