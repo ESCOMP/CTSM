@@ -10,7 +10,7 @@ CLM allows you to set up and run cases with a single-point or a local region as 
 
 There are two different ways to do this for normal-supported site
 
-``PTS_MODE``
+``subset_data``
   runs for a single point using global datasets.
 
 ``CLM_USRDAT_NAME``
