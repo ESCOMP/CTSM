@@ -109,7 +109,7 @@ function conda_env_exists {
 while [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; do
    read -p "Conda environment '${new_env_name}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
    case $answer in
-      [Oo]* ) conda remove -n ${new_env_name} --all --yes; break;;
+      [Oo]* ) conda remove -n ${new_env_name} --all --quiet; break;;
       [Ee]* ) read -p "New name for existing conda env: " renamed_existing; [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]] && conda rename -n ${new_env_name} ${renamed_existing} || echo "${renamed_existing} also already exists" ;;
       [Nn]* ) read -p "New name for conda env we're creating: " new_env_name;;
       [Cc]* ) exit;;
