@@ -124,10 +124,6 @@ echo "Create $new_env_name"
 cmd="conda create --force --name $new_env_name --quiet"
 echo "$cmd"
 $cmd
-if [ $? != 0 ]; then
-   echo "Error creating conda environment $new_env_name"
-   exit -1
-fi
 
 #
 # Install the environemnt
@@ -144,8 +140,11 @@ if [ "$verbose" == "Yes" ]; then
 fi
 cmd="conda install --yes $verbosity --channel conda-forge --name $new_env_name --file $condadir/$condafile $option"
 echo "$cmd"
+set +e
 $cmd
-if [ $? != 0 ]; then
+result=$?
+set -e
+if [ $result != 0 ]; then
    echo "Trouble installing the $new_env_name python environment"
    echo "There must be a problem in the $condadir/$condafile conda specification environment file"
    echo "Change the file and try again"
