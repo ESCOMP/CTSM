@@ -597,7 +597,7 @@ class SinglePointCase(BaseCase):
         f_out = f_out.expand_dims(["lat", "lon"])
 
         # specify dimension order
-        f_out = f_out.transpose("time", "lat", "lon")
+        f_out = f_out.transpose("scalar", "time", "lat", "lon")
 
         # update attributes
         self.update_metadata(f_out)
@@ -648,42 +648,46 @@ class SinglePointCase(BaseCase):
         tpqwfiles = []
         for year in range(datm_syr, datm_eyr + 1):
             ystr = str(year)
+            for month in range(FIRST_MONTH, LAST_MONTH + 1):
+                mstr = str(month)
+                if month < 10:
+                    mstr = "0" + mstr
 
-            dtag = ystr 
+                dtag = ystr + "-" + mstr
 
-            fsolar = os.path.join(
-                datm_tuple.indir,
-                datm_tuple.dir_solar,
-                "{}{}.nc".format(datm_tuple.tag_solar, dtag),
-            )
-            fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
-            fprecip = os.path.join(
-                datm_tuple.indir,
-                datm_tuple.dir_prec,
-                "{}{}.nc".format(datm_tuple.tag_prec, dtag),
-            )
-            fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
-            ftpqw = os.path.join(
-                datm_tuple.indir,
-                datm_tuple.dir_tpqw,
-                "{}{}.nc".format(datm_tuple.tag_tpqw, dtag),
-            )
-            ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
+                fsolar = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_solar,
+                    "{}{}.nc".format(datm_tuple.tag_solar, dtag),
+                )
+                fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
+                fprecip = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_prec,
+                    "{}{}.nc".format(datm_tuple.tag_prec, dtag),
+                )
+                fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
+                ftpqw = os.path.join(
+                    datm_tuple.indir,
+                    datm_tuple.dir_tpqw,
+                    "{}{}.nc".format(datm_tuple.tag_tpqw, dtag),
+                )
+                ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
 
-            outdir = os.path.join(self.out_dir, datm_tuple.outdir)
-            infile += [fsolar, fprecip, ftpqw]
-            outfile += [
-                os.path.join(outdir, fsolar2),
-                os.path.join(outdir, fprecip2),
-                os.path.join(outdir, ftpqw2),
-            ]
-            solarfiles.append(
-                os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
-            )
-            precfiles.append(
-                os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
-            )
-            tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
+                outdir = os.path.join(self.out_dir, datm_tuple.outdir)
+                infile += [fsolar, fprecip, ftpqw]
+                outfile += [
+                    os.path.join(outdir, fsolar2),
+                    os.path.join(outdir, fprecip2),
+                    os.path.join(outdir, ftpqw2),
+                ]
+                solarfiles.append(
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
+                )
+                precfiles.append(
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
+                )
+                tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         for idx, out_f in enumerate(outfile):
             logger.debug(out_f)
