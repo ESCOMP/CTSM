@@ -106,11 +106,19 @@ echo "Using the file: $condadir/$condafile"
 function conda_env_exists {
    conda env list | grep -oE "^$1\s" | wc -l
 }
+function rename_existing_env {
+   if [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]]; then
+      echo "Renaming $1 to $2 (this will take a few minutes)..."
+      conda rename -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
+   else
+      echo "${renamed_existing} also already exists"
+   fi
+}
 while [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; do
    read -p "Conda environment '${new_env_name}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
    case $answer in
       [Oo]* ) conda remove -n ${new_env_name} --all --quiet; break;;
-      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]] && conda rename -n ${new_env_name} ${renamed_existing} || echo "${renamed_existing} also already exists" ;;
+      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; rename_existing_env ${new_env_name} ${renamed_existing} ;;
       [Nn]* ) read -p "New name for conda env we're creating: " new_env_name;;
       [Cc]* ) exit;;
       * ) echo "Valid answers are o, e, n, or c";;
