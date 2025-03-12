@@ -50,7 +50,7 @@ You can use the user mods directory set up in the previous subset data step to t
       --user-mods-dirs $my_output_dir/user_mods
 
 -  ``$my_case_name``: the path of the case directory you want to create
--  ``$compset``: the compset you would like to use (see the `above-mentioned tutorial <https://github.com/NCAR/CTSM-Tutorial-2022/blob/main/notebooks/Day2a_GenericSinglePoint.ipynb>`__ for an example)
+-  ``$compset``: the compset you would like to use (for example, `I2000Clm60Bgc`)
    Note the use of ``$my_output_dir/user_mods`` which is the ``user_mods/`` directory that the subset data script set up within your specified ``$my_output_dir``.
 
 Note that ``./case.setup`` on Derecho will automatically set queue to ``develop`` and walltime to one hour. You might need a longer walltime, but the maximum walltime for ``develop`` is one hour. To change it to two hours on Derecho:
