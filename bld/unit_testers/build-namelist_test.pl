@@ -288,7 +288,7 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
-foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis" ) {
+foreach my $options ( "-drydep --bgc sp", "-megan --bgc sp", "-drydep -megan --bgc bgc", "-fire_emis --bgc bgc", "-drydep -megan -fire_emis --bgc bgc" ) {
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
@@ -576,8 +576,8 @@ foreach my $options (
                       "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
                       "-namelist \"&a dust_emis_method='Zender_2003', zender_soil_erod_source='lnd' /'\"",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
-                      "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
-                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep",
+                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -megan -light_res 360x720",
                       "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
                       "--bgc fates --light_res 360x720 --no-megan --namelist \"&a fates_spitfire_mode=2/\"",
                       "--bgc fates --light_res none --no-megan --namelist \"&a fates_spitfire_mode=1/\"",
