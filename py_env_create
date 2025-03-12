@@ -56,8 +56,6 @@ usage() {
   echo "     Default is: $condafile"
   echo "[-n|--name <environment name>]  "
   echo "     Name of the environment you wish to create. Default: ${new_env_name}"
-  echo "[-t|--testing]  "
-  echo "     Install additional Python packages for testing py_env_create"
   echo "[-o|--overwrite]  "
   echo "     Overwrite existing conda env with same name, if any"
   echo "[-r|--rename-existing] <name>  "
@@ -71,7 +69,6 @@ usage() {
 
 verbose="No"
 option=""
-testing_packages=0
 yes=""
 new_name_for_existing=""
 overwrite=0
@@ -103,9 +100,6 @@ while [ $# -gt 0 ]; do
            new_name_for_existing=$2
            shift
            ;;
-       -t|--testing )
-           testing_packages=1
-           ;;
        -y|--yes )
            yes="--yes"
            ;;
@@ -126,17 +120,6 @@ if [ ! -f $condafile ]; then
    echo "Use the --file option with a valid filename"
    exit -1
 fi
-if [[ ${testing_packages} -eq 1 ]]; then
-   testing_packages_condafile="python/python_packages_for_testing_py_env_create.txt"
-   if [[ ! -f "${testing_packages_condafile}" ]]; then
-      echo "File not found: ${testing_packages_condafile}" >&2
-      exit 1
-   fi
-   new_condafile="${condafile}.testing_packages.$(date "+%Y%m%d%H%M%S%N")"
-   cat "${condafile}" > "${new_condafile}"
-   cat "${testing_packages_condafile}" >> "${new_condafile}"
-   condafile="${new_condafile}"
-fi
 
 echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $new_env_name"
 echo "Using the file: $condafile"
@@ -153,7 +136,8 @@ function rename_existing_env {
       exit 1
    elif [[ $(conda_env_exists $2) -eq 0 ]]; then
       echo "Renaming $1 to $2 (this will take a few minutes)..."
-      conda rename ${yes} -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
+      yes_tmp=${yes/yes/force}
+      conda rename ${yes_tmp} -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
    else
       echo "$2 also already exists"
    fi
@@ -227,10 +211,3 @@ echo "Successfully installed the $new_env_name python environment"
 echo
 echo "activate the environment by doing the following..."
 echo "conda activate $new_env_name"
-
-#
-# Delete tmp file
-#
-if [[ ${testing_packages} -eq 1 ]]; then
-   rm "${new_condafile}"
-fi

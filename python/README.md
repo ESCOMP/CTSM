@@ -65,7 +65,3 @@ in order to get a clean run of pylint.
 You can run a check for the black formatting with `make black`.
 This won't change the code, but check if it would be reformatted
 with black.
-
-## py_env_create
-
-To test py_env_create, you need to have installed the right environment using `py_env_create -t -n testing_py_env_create`. With that environment active, do `python -m pytest python/ctsm/test_py_env_create/test_sys_py_env_create.py`. This may produce warnings but should not error.
