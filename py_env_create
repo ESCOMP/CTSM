@@ -100,21 +100,34 @@ echo "Use conda to install the python environment needed to run the CTSM python 
 echo "Using the file: $condadir/$condafile"
 
 #
-# Check if the environment already exists, if it does continue, if not create it
+# Ask the user how to handle an environment that already exists
 #
-conda list -n $ctsm_python >& /dev/null
+function conda_env_exists {
+   conda env list | grep -oE "^$1\s" | wc -l
+}
+while [[ $(conda_env_exists ${ctsm_python}) -gt 0 ]]; do
+   read -p "Conda environment '${ctsm_python}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
+   case $answer in
+      [Oo]* ) conda remove -n ${ctsm_python} --all --yes; break;;
+      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]] && conda rename -n ${ctsm_python} ${renamed_existing} || echo "${renamed_existing} also already exists" ;;
+      [Nn]* ) read -p "New name for conda env we're creating: " ctsm_python;;
+      [Cc]* ) exit;;
+      * ) echo "Valid answers are o, e, n, or c";;
+   esac
+done
+
+#
+# Create the environment
+#
+echo "Create $ctsm_python"
+cmd="conda create --force --name $ctsm_python --quiet"
+echo "$cmd"
+$cmd
 if [ $? != 0 ]; then
-   echo "Create $ctsm_python"
-   cmd="conda create --force --name $ctsm_python --quiet"
-   echo "$cmd"
-   $cmd
-   if [ $? != 0 ]; then
-      echo "Error creating conda environment $ctsm_python"
-      exit -1
-   fi
-else
-   echo "$ctsm_python environment already exists"
+   echo "Error creating conda environment $ctsm_python"
+   exit -1
 fi
+
 #
 # Install the environemnt
 #
