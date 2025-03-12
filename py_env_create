@@ -6,6 +6,13 @@
 # python tools using "conda".
 #
 set -e
+
+# For safety, do not allow running this while a conda environment is active
+if [[ $CONDA_PREFIX != "" ]]; then
+   echo "py_env_create must not be run within a conda environment. Try again after doing: conda deactivate" >&2
+   exit 1
+fi
+
 dir=${0%/*}
 if [ "$dir" = "$0" ];then
   dir="."
