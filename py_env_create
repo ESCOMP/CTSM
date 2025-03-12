@@ -136,7 +136,7 @@ $cmd
 #
 # Install the environemnt
 #
-echo "Install $new_env_name this can take a long time (12 to 20 minutes is expected), be patient...."
+echo "Installing $new_env_name; this can take a few minutes."
 echo "    ...."
 echo "    ...."
 echo "    ...."
