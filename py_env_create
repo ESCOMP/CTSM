@@ -25,7 +25,7 @@ if [ $error != 0 ]; then
    exit -1
 fi
 rm condahelp.txt
-ctsm_python=ctsm_pylib
+new_env_name=ctsm_pylib
 
 
 condadir="$dir/python"
@@ -50,7 +50,7 @@ usage() {
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is: $condafile"
   echo "[-n|--name <environment name>]  "
-  echo "     Name of the environment you wish to create. Default: ${ctsm_python}"
+  echo "     Name of the environment you wish to create. Default: ${new_env_name}"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
@@ -72,7 +72,7 @@ while [ $# -gt 0 ]; do
            shift
            ;;
        -n|--name )
-           ctsm_python=$2
+           new_env_name=$2
            shift
            ;;
        --option )
@@ -97,7 +97,7 @@ if [ ! -f $condadir/$condafile ]; then
    exit -1
 fi
 
-echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
+echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $new_env_name"
 echo "Using the file: $condadir/$condafile"
 
 #
@@ -106,12 +106,12 @@ echo "Using the file: $condadir/$condafile"
 function conda_env_exists {
    conda env list | grep -oE "^$1\s" | wc -l
 }
-while [[ $(conda_env_exists ${ctsm_python}) -gt 0 ]]; do
-   read -p "Conda environment '${ctsm_python}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
+while [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; do
+   read -p "Conda environment '${new_env_name}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
    case $answer in
-      [Oo]* ) conda remove -n ${ctsm_python} --all --yes; break;;
-      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]] && conda rename -n ${ctsm_python} ${renamed_existing} || echo "${renamed_existing} also already exists" ;;
-      [Nn]* ) read -p "New name for conda env we're creating: " ctsm_python;;
+      [Oo]* ) conda remove -n ${new_env_name} --all --yes; break;;
+      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; [[ $(conda_env_exists ${renamed_existing}) -eq 0 ]] && conda rename -n ${new_env_name} ${renamed_existing} || echo "${renamed_existing} also already exists" ;;
+      [Nn]* ) read -p "New name for conda env we're creating: " new_env_name;;
       [Cc]* ) exit;;
       * ) echo "Valid answers are o, e, n, or c";;
    esac
@@ -120,19 +120,19 @@ done
 #
 # Create the environment
 #
-echo "Create $ctsm_python"
-cmd="conda create --force --name $ctsm_python --quiet"
+echo "Create $new_env_name"
+cmd="conda create --force --name $new_env_name --quiet"
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
-   echo "Error creating conda environment $ctsm_python"
+   echo "Error creating conda environment $new_env_name"
    exit -1
 fi
 
 #
 # Install the environemnt
 #
-echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
+echo "Install $new_env_name this can take a long time (12 to 20 minutes is expected), be patient...."
 echo "    ...."
 echo "    ...."
 echo "    ...."
@@ -142,11 +142,11 @@ if [ "$verbose" == "Yes" ]; then
   verbosity="--verbose"
   loglevel="INFO"
 fi
-cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$condafile $option"
+cmd="conda install --yes $verbosity --channel conda-forge --name $new_env_name --file $condadir/$condafile $option"
 echo "$cmd"
 $cmd
 if [ $? != 0 ]; then
-   echo "Trouble installing the $ctsm_python python environment"
+   echo "Trouble installing the $new_env_name python environment"
    echo "There must be a problem in the $condadir/$condafile conda specification environment file"
    echo "Change the file and try again"
    exit -2
@@ -154,7 +154,7 @@ fi
 #
 # Report on success
 #
-echo "Successfully installed the $ctsm_python python environment"
+echo "Successfully installed the $new_env_name python environment"
 echo
 echo "activate the environment by doing the following..."
-echo "conda activate $ctsm_python"
+echo "conda activate $new_env_name"
