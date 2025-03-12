@@ -1,0 +1,4 @@
+# Python packages specifically for testing py_env_create
+conda=25.1.1
+py=1.11.0
+pytest=8.3.5
