@@ -563,7 +563,6 @@ def setup_files(args, defaults, cesmroot):
 
     if args.inputdatadir == "defaults.cfg":
         clmforcingindir = defaults.get("main", "clmforcingindir")
-        TRENDYdir = defaults.get("main", "TRENDYdir")
     else:
         clmforcingindir = args.inputdatadir
 
@@ -572,9 +571,9 @@ def setup_files(args, defaults, cesmroot):
         abort("inputdata directory does not exist")
 
     # DATM data
-    datm_type = "datm_crujra"
+    datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
-    dir_input_datm = os.path.join(TRENDYdir, defaults.get(datm_type, "dir"))
+    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
