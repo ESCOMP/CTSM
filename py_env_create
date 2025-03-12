@@ -5,6 +5,7 @@
 # Simple bash script to setup the python environment for the user so they can run the CTSM
 # python tools using "conda".
 #
+set -e
 dir=${0%/*}
 if [ "$dir" = "$0" ];then
   dir="."
