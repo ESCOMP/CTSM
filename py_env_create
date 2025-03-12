@@ -6,6 +6,7 @@
 # python tools using "conda".
 #
 set -e
+trap 'echo "Exiting on Ctrl+C"; exit 130' INT
 
 # For safety, do not allow running this while a conda environment is active
 if [[ $CONDA_PREFIX != "" ]]; then
