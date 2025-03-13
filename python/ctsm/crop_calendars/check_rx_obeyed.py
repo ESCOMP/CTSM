@@ -80,6 +80,7 @@ def check_rx_obeyed_setup(dates_ds, which_ds, output_var, verbose):
 
 
 def get_extreme_info(diff_array, rx_array, mxn, dims, gs_da, patches1d_lon, patches1d_lat):
+    # pylint: disable=too-many-positional-arguments
     """
     Get information about extreme gridcells (for debugging)
     """
@@ -105,6 +106,7 @@ def get_extreme_info(diff_array, rx_array, mxn, dims, gs_da, patches1d_lon, patc
 
 
 def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diffs_eg_txt):
+    # pylint: disable=too-many-positional-arguments
     """
     Summarize results
     """
@@ -125,7 +127,7 @@ def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diff
 
 def check_rx_obeyed(
     vegtype_list, rx_ds, dates_ds, which_ds, output_var, gdd_min=None, verbose=False
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Check that prescribed crop calendars were obeyed
     """

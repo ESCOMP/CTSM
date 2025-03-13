@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for the iso functions in utils
-"""
+"""Unit tests for the iso functions in utils"""
 
 import unittest
 

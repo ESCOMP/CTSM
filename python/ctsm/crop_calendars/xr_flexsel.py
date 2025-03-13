@@ -1,6 +1,7 @@
 """
 Flexibly subset time(s) and/or vegetation type(s) from an xarray Dataset or DataArray.
 """
+
 import re
 import numpy as np
 import xarray as xr
@@ -142,7 +143,7 @@ def trim_along_relevant_1d_axes(xr_object, selection, selection_type, key):
 
 def do_warn_about_seltype_interp(
     havewarned, delimiter, key, selection_type, is_inefficient, this_type
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Suggest suppressing selection type interpretation warnings
     """

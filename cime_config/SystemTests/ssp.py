@@ -12,6 +12,7 @@ this test is only valid for CLM compsets with CLM45 or CLM50
     - start from the restart files generated in (1)
     - turn MOSART off
 """
+
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 import shutil, glob, os

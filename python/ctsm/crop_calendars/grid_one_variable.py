@@ -7,6 +7,7 @@ lon) of one variable within a Dataset.
 - fill_value: Default None means grid will be filled with NaN, unless the variable in question
     already has a _FillValue, in which case that will be used.
 """
+
 import numpy as np
 import xarray as xr
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
@@ -22,7 +23,7 @@ def get_thisvar_da(var, this_ds):
     thisvar_da = xr.DataArray(thisvar_da, dims=these_dims)
 
     # Define coordinates of this variable's DataArray
-    dims_dict = dict()
+    dims_dict = {}
     for dim in these_dims:
         dims_dict[dim] = this_ds[dim]
     thisvar_da = thisvar_da.assign_coords(dims_dict)
@@ -32,6 +33,7 @@ def get_thisvar_da(var, this_ds):
 
 
 def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridded):
+    # pylint: disable=too-many-positional-arguments
     """
     Convert Numpy array to DataArray with coordinates, attributes and name
     """
@@ -53,6 +55,7 @@ def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridde
 
 
 def grid_the_data(thisvar_da, vt_da, ixy_da, jxy_da, new_dims, thisvar_gridded):
+    # pylint: disable=too-many-positional-arguments
     """
     Fill lat-lon array with previously-ungridded data
     """

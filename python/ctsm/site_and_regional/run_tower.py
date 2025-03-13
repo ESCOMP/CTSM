@@ -19,10 +19,10 @@ This script will do the following:
     2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for:
         a. AD spinup
-	b. post-AD spinup
+        b. post-AD spinup
         c. transient
-    	#---------------
-    	d. SASU or Matrix spinup
+        #---------------
+        d. SASU or Matrix spinup
     4) Build and submit the case.
 
 -------------------------------------------------------------------

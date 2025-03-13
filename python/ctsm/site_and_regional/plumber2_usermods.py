@@ -19,7 +19,7 @@ import pandas as pd
 # Big ugly function to create usermod_dirs for each site
 def write_usermods(
     lat, lon, site, start_year, end_year, start_date, start_year_actual, start_tod, atm_ncpl, stop_n
-):
+):  # pylint: disable=too-many-positional-arguments
     """
     Write information to be added to user mods
     """
