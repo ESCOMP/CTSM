@@ -4799,6 +4799,13 @@ sub setup_logic_fates {
             }
           }
         }
+        # Check that both FaTES-SP and FATES ST3 aren't both on
+        my $var = "use_fates_ed_st3";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) && &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+              $log->fatal_error("$var can NOT also be true with use_fates_sp true" );
+           }
+        }
         # check that fates landuse change mode has the necessary luh2 landuse timeseries data
         # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.
         # If fixed biogeography is on, make sure that flandusepftdat is avilable.
