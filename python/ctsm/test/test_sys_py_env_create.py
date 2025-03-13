@@ -125,6 +125,60 @@ class TestSysPyEnvCreate(unittest.TestCase):
         for env_name in self.env_names:
             assert any(os.path.split(path)[-1] == env_name for path in envs)
 
+    def test_py_env_create_error_both_r_and_o(self):
+        """
+        Ensure py_env_create errors if both -r and -o are specified
+        """
+
+        # Run py_env_create
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [
+            self.py_env_create,
+            "-n",
+            self.env_names[0],
+            "-f",
+            self.empty_condafile,
+            "--yes",
+            "-o",
+            "-r",
+            "abc123",
+        ]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check error
+        self.assertNotEqual(out.returncode, 0)
+        print(f"out.stderr: {out.stderr}")
+        for x in out.stderr:
+            print(x)
+        self.assertTrue("Only specify one of -o/--overwrite or -r/--rename-existing." in out.stderr)
+
+    def test_py_env_create_error_both_r_and_o_longnames(self):
+        """
+        Ensure py_env_create errors if both --rename-existing and --overwrite are specified
+        """
+
+        # Run py_env_create
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [
+            self.py_env_create,
+            "-n",
+            self.env_names[0],
+            "-f",
+            self.empty_condafile,
+            "--yes",
+            "--overwrite",
+            "--rename-existing",
+            "abc123",
+        ]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check error
+        self.assertNotEqual(out.returncode, 0)
+        print(f"out.stderr: {out.stderr}")
+        for x in out.stderr:
+            print(x)
+        self.assertTrue("Only specify one of -o/--overwrite or -r/--rename-existing." in out.stderr)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

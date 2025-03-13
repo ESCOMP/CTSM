@@ -152,6 +152,11 @@ function overwrite_existing_env {
    fi
 }
 
+if [[ "${new_name_for_existing}" != "" && ${overwrite} -eq 1 ]]; then
+   echo "Only specify one of -o/--overwrite or -r/--rename-existing." >&2
+   exit 1
+fi
+
 while [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; do
 
    if [[ "${new_name_for_existing}" != "" ]]; then
