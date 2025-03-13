@@ -82,6 +82,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
             if check:
                 raise RuntimeError("check=True incompatible with expect_error=True")
             check = False
+        elif check is None:
+            check = True
 
         if extra_args is not None and "-r" in extra_args:
             self.env_names.append(extra_args[extra_args.index("-r") + 1])
@@ -104,6 +106,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
                 out.returncode, 0, "Unexpected failure of py_env_create call:\n" + out.stderr
             )
 
+        # Check that env was successfully created
         if check:
             assert does_env_exist(self.env_names[-1], get_conda_envs())
 
