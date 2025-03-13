@@ -19,15 +19,26 @@ from ctsm.path_utils import path_to_ctsm_root
 # pylint: disable=invalid-name
 
 
+def get_conda_envs():
+    """
+    List the user's conda environments
+    """
+    try:
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(e.stderr) from e
+    return json.loads(out.stdout).get("envs", [])
+
+
 def get_unique_env_name(length):
     """
     Generates a unique name for a conda environment
     """
     env_name = "pec_test_" + "".join(random.choices(string.ascii_letters, k=length))
-    out = subprocess.run(
-        ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-    )
-    if any(os.path.split(path)[-1] == env_name for path in json.loads(out.stdout).get("envs", [])):
+
+    if any(os.path.split(path)[-1] == env_name for path in get_conda_envs()):
         env_name = get_unique_env_name(length)
     return env_name
 
@@ -52,10 +63,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
     def tearDown(self):
         """Run this after each test, whether it succeeded or failed"""
         # Remove test envs
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        envs = json.loads(out.stdout).get("envs", [])
+        envs = get_conda_envs()
         for env_name in self.env_names:
             if any(os.path.split(path)[-1] == env_name for path in envs):
                 cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
@@ -90,16 +98,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
             )
 
         if check:
-            try:
-                out = subprocess.run(
-                    ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-                )
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(e.stderr) from e
-            assert any(
-                os.path.split(path)[-1] == self.env_names[-1]
-                for path in json.loads(out.stdout).get("envs", [])
-            )
+            assert any(os.path.split(path)[-1] == self.env_names[-1] for path in get_conda_envs())
 
         return cmd, out
 
@@ -221,12 +220,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
         except AssertionError as e:
             print(out.stdout)
             raise e
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        envs = json.loads(out.stdout).get("envs", [])
         for env_name in self.env_names:
-            assert any(os.path.split(path)[-1] == env_name for path in envs)
+            assert any(os.path.split(path)[-1] == env_name for path in get_conda_envs())
 
 
 if __name__ == "__main__":
