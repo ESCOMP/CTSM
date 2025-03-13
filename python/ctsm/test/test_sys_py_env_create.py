@@ -120,7 +120,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
         # Run py_env_create once, making sure it was created
         self.env_names.append(get_unique_env_name(5))
         cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
-        subprocess.run(cmd, capture_output=True, text=True, check=False)
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         out = subprocess.run(
             ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
         )
