@@ -105,7 +105,7 @@ while [ $# -gt 0 ]; do
            yes="--yes"
            ;;
        * )
-           echo "ERROR:: invalid argument sent in: $2"
+           echo "ERROR:: invalid argument: '$2'"
            usage
            exit 1
            ;;
