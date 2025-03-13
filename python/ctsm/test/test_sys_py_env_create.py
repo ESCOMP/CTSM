@@ -37,6 +37,16 @@ class TestSysPyEnvCreate(unittest.TestCase):
 
     def setUp(self):
         """Run this before each test"""
+
+        # Get path to py_env_create
+        self.py_env_create = os.path.join(path_to_ctsm_root(), "py_env_create")
+        assert os.path.exists(self.py_env_create)
+
+        # Get path to testing condafile
+        self.empty_condafile = os.path.join(path_to_ctsm_root(), "python", "empty.txt")
+        assert os.path.exists(self.empty_condafile)
+
+        # Set up other variables
         self.env_names = []
 
     def tearDown(self):
@@ -48,22 +58,12 @@ class TestSysPyEnvCreate(unittest.TestCase):
 
     def test_py_env_create(self):
         """
-        A simple test to ensure that the Conda API is working right.
+        A few calls of py_env_create to ensure it's working right.
         """
-
-        # Get path to py_env_create
-        py_env_create = os.path.join(path_to_ctsm_root(), "py_env_create")
-        assert os.path.exists(py_env_create)
-
-        # Get path to testing condafile
-        condafile = os.path.join(path_to_ctsm_root(), "python", "empty.txt")
-        assert os.path.exists(condafile)
-
-        self.env_names = []
 
         # Run py_env_create once, making sure it was created
         self.env_names.append(get_unique_env_name(5))
-        cmd = [py_env_create, "-n", self.env_names[0], "-f", condafile, "--yes"]
+        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         out = subprocess.run(
             ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
@@ -77,11 +77,11 @@ class TestSysPyEnvCreate(unittest.TestCase):
         self.env_names.append(self.env_names[0])
         self.env_names[0] += "_orig"
         cmd = [
-            py_env_create,
+            self.py_env_create,
             "-n",
             self.env_names[1],
             "-f",
-            condafile,
+            self.empty_condafile,
             "-r",
             self.env_names[0],
             "--yes",
@@ -99,7 +99,15 @@ class TestSysPyEnvCreate(unittest.TestCase):
             assert any(os.path.split(path)[-1] == env_name for path in envs)
 
         # Run py_env_create again, overwriting existing
-        cmd = [py_env_create, "-n", self.env_names[1], "-f", condafile, "-o", "--yes"]
+        cmd = [
+            self.py_env_create,
+            "-n",
+            self.env_names[1],
+            "-f",
+            self.empty_condafile,
+            "-o",
+            "--yes",
+        ]
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         # Ensure both still exist
         out = subprocess.run(
