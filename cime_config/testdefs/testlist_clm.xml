@@ -425,15 +425,6 @@
       <option name="comment">Science support for I1850Clm50Sp at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm50SpCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">Repeat I1850Clm50Sp f09 test with t232 and Crujra while the defaults have not changed</option>
-    </options>
-  </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50Sp" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -441,15 +432,6 @@
     <options>
       <option name="wallclock">00:40:00</option>
       <option name="comment">Science support for I1850Clm50Sp at f19</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50SpCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">Repeat I1850Clm50Sp f19 test with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50SpCru" testmods="clm/default">
@@ -614,15 +596,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Do a test similar to FXHIST starting at a 2005 start date, will interpoalte from the 2003 IC file</option>
-    </options>
-  </test>
-  <test name="SMS_Ln9_P256x3" grid="f19_g17" compset="IHistClm50SpCrujra" testmods="clm/waccmx_offline2005Start">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat test similar to FXHIST with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <test name="SMS_D_Ln9_P128x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
@@ -805,15 +778,6 @@
       <option name="comment">Science support for 1850 clm5_0 physics for BgcCrop wtih CISM at f09</option>
     </options>
   </test>
-  <test name="SMS" grid="f09_t232" compset="I1850Clm50BgcCropCrujraG" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
-    </options>
-  </test>
   <!-- clm5_0 physics workhorse resolution BGC science test list -->
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
@@ -824,15 +788,6 @@
       <option name="comment">Science support for 1850 clm5_0 physics for Bgc at f19</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50BgcCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with Crujra while Gswp is still the default</option>
-    </options>
-  </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -840,15 +795,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for 1850 clm5_0 physics for Bgc at f09</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="I1850Clm50BgcCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <!-- clm6_0 physics workhorse resolution BGC science test list -->
@@ -894,15 +840,6 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-    </options>
-  </test>
-  <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCropCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:60:00</option>
-      <option name="comment">Repeat this ERP test with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1133,15 +1070,6 @@
       <option name="comment">Science support for Historical clm5_0 physics with BGC-Crop at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm50BgcCropCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the default have not changed</option>
-    </options>
-  </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -1149,15 +1077,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for Historical clm5_0 physics with BGC-Crop at f19</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50BgcCropCrujra" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <!-- Historical clm6_0 physics BgcCrop science support -->
@@ -2538,15 +2457,6 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50SpCrujra" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat ARCTIC test with Crujra while Gswp is still the default</option>
-    </options>
-  </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -2575,15 +2485,6 @@
       <option name="comment">Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
       <option name="comment">Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
       <option name="comment">Also --nofireemis because this is a SP compset</option>
-    </options>
-  </test>
-  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50SpCrujra" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat ARCTICGRIS test with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2634,15 +2535,6 @@
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50SpCrujra" testmods="clm/clm50cam7LndTuningMode_2013Start--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat CONUS test with Crujra while Gswp is still the default</option>
-    </options>
-  </test>
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_2013Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -2672,15 +2564,6 @@
       <option name="comment">Science support for historical clm5_0 physics with SP mode at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm50SpCrujra" testmods="clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
-    </options>
-  </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -2689,15 +2572,6 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for historical clm5_0 physics with SP mode at f19</option>
       <option name="comment">Also --nofireemis because this is a SP compset</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50SpCrujra" testmods="clm/default--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with Crujra while Gswp is still the default</option>
     </options>
   </test>
   <!-- Historical science support for clm6_0 workhorse resolutions -->
@@ -3309,15 +3183,6 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SSP_Ld4" grid="f09_t232" compset="I1850Clm50BgcCropCrujra" testmods="clm/ciso_rtmColdSSP">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this SSP test with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
