@@ -133,20 +133,20 @@ function conda_env_exists {
 }
 function rename_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
-      echo "Not going to let you rename the currently active conda env"
+      echo "Not going to let you rename the currently active conda env" >&2
       exit 1
    elif [[ $(conda_env_exists $2) -eq 0 ]]; then
       echo "Renaming $1 to $2 (this will take a few minutes)..."
       yes_tmp=${yes/yes/force}
       conda rename ${yes_tmp} -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
    else
-      echo "$2 also already exists"
+      echo "$2 also already exists" >&2
       exit 1
    fi
 }
 function overwrite_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
-      echo "Not going to let you overwrite the currently active conda env"
+      echo "Not going to let you overwrite the currently active conda env" >&2
       exit 1
    else
       conda remove ${yes} -n $1 --all --quiet
