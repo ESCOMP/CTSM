@@ -52,9 +52,17 @@ class TestSysPyEnvCreate(unittest.TestCase):
     def tearDown(self):
         """Run this after each test, whether it succeeded or failed"""
         # Remove test envs
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        envs = json.loads(out.stdout).get("envs", [])
         for env_name in self.env_names:
-            cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            if any(
+                os.path.split(path)[-1] == env_name
+                for path in envs
+            ):
+                cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
+                subprocess.run(cmd, capture_output=True, text=True, check=True)
 
     def test_py_env_create(self):
         """
