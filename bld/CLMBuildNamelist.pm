@@ -4755,29 +4755,26 @@ sub setup_logic_fates {
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
-        my $var = "use_fates_sp";
-        if ( defined($nl->get_value($var))  ) {
-           if ( &value_is_true($nl->get_value($var)) ) {
-              my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
-              foreach my $var ( @list ) {
-                 if ( ! &value_is_true($nl->get_value($var)) ) {
-                    $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
-                 }
-              }
-              # spit-fire can't be on with FATES SP mode is active
-              if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
-                    $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
-              }
+        if ( &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+           my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
+           foreach my $var ( @list ) {
+                if ( ! &value_is_true($nl->get_value($var)) ) {
+                   $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
+                }
+           }
+           # spit-fire can't be on with FATES SP mode is active
+           if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
+                 $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
+           }
 
-              # fates landuse can't be on with FATES SP mode is active
-              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
-                   $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
-              }
+           # fates landuse can't be on with FATES SP mode is active
+           if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+           }
 
-              # hydro isn't currently supported to work when FATES SP mode is active
-              if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
-                    $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
-              }
+           # hydro isn't currently supported to work when FATES SP mode is active
+           if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
+                 $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
            }
         }
         my $var = "use_fates_inventory_init";
