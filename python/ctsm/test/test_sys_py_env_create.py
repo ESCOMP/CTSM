@@ -149,7 +149,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
         _, out = self._create_empty_env(expect_error=True, new_env_name=False)
 
         # Check error
-        self.assertTrue(f"Conda environment {self.env_names[0]} already exists." in out.stderr)
+        self.assertTrue(f"Environment {self.env_names[0]} already exists." in out.stderr)
         self.assertTrue("Try again using one of:" in out.stderr)
 
     def test_py_env_create_error_exists_and_so_does_r(self):
@@ -181,7 +181,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         # Check error
-        self.assertTrue("Not going to let you rename the currently active conda env" in out.stderr)
+        self.assertTrue("Not going to let you rename the currently active env" in out.stderr)
 
     def test_py_env_create_error_overwriting_current(self):
         """
@@ -197,7 +197,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
 
         # Check error
         self.assertTrue(
-            "Not going to let you overwrite the currently active conda env" in out.stderr
+            "Not going to let you overwrite the currently active env" in out.stderr
         )
 
     def test_complete_py_env_create(self):
