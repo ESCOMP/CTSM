@@ -59,17 +59,35 @@ class TestSysPyEnvCreate(unittest.TestCase):
         for env_name in self.env_names:
             if any(os.path.split(path)[-1] == env_name for path in envs):
                 cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
-                subprocess.run(cmd, capture_output=True, text=True, check=True)
+                subprocess.run(cmd, capture_output=True, text=True, check=False)
 
-    def _create_empty_env(self, check=True):
+    def _create_empty_env(self, check=None, extra_args=None, expect_error=False, new_env_name=True):
         """Run py_env_create once, optionally making sure it was created"""
+        if expect_error:
+            if check:
+                raise RuntimeError("check=True incompatible with expect_error=True")
+            check = False
 
-        self.env_names.append(get_unique_env_name(5))
+        if extra_args is not None and "-r" in extra_args:
+            self.env_names.append(extra_args[extra_args.index("-r") + 1])
+        if new_env_name:
+            self.env_names.append(get_unique_env_name(5))
+
+        # Form and run command
         cmd = [self.py_env_create, "-n", self.env_names[-1], "-f", self.empty_condafile, "--yes"]
-        try:
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.stderr) from e
+        if extra_args:
+            cmd += extra_args
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check result
+        if expect_error:
+            self.assertNotEqual(
+                out.returncode, 0, "Unexpected success of py_env_create call:\n" + out.stdout
+            )
+        else:
+            self.assertEqual(
+                out.returncode, 0, "Unexpected failure of py_env_create call:\n" + out.stderr
+            )
 
         if check:
             try:
@@ -83,7 +101,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
                 for path in json.loads(out.stdout).get("envs", [])
             )
 
-        return cmd
+        return cmd, out
 
     def test_py_env_create_error_both_r_and_o(self):
         """
@@ -91,22 +109,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create
-        self.env_names.append(get_unique_env_name(5))
-        cmd = [
-            self.py_env_create,
-            "-n",
-            self.env_names[0],
-            "-f",
-            self.empty_condafile,
-            "--yes",
-            "-o",
-            "-r",
-            "abc123",
-        ]
-        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        _, out = self._create_empty_env(extra_args=["-o", "-r", "abc123"], expect_error=True)
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
         print(f"out.stderr: {out.stderr}")
         for x in out.stderr:
             print(x)
@@ -118,22 +123,12 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create
-        self.env_names.append(get_unique_env_name(5))
-        cmd = [
-            self.py_env_create,
-            "-n",
-            self.env_names[0],
-            "-f",
-            self.empty_condafile,
-            "--yes",
-            "--overwrite",
-            "--rename-existing",
-            "abc123",
-        ]
-        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        _, out = self._create_empty_env(
+            extra_args=["--overwrite", "--rename-existing", "abc123"],
+            expect_error=True,
+        )
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
         self.assertTrue("Only specify one of -o/--overwrite or -r/--rename-existing." in out.stderr)
 
     def test_py_env_create_error_exists_without_r_or_o(self):
@@ -142,13 +137,12 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create once, making sure it was created
-        cmd = self._create_empty_env()
+        self._create_empty_env()
 
         # Try doing it again without specifying -o or -r
-        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        _, out = self._create_empty_env(expect_error=True, new_env_name=False)
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
         self.assertTrue(f"Conda environment {self.env_names[0]} already exists." in out.stderr)
         self.assertTrue("Try again using one of:" in out.stderr)
 
@@ -158,19 +152,15 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create once, making sure it was created
-        cmd = self._create_empty_env()
+        self._create_empty_env()
 
         # Try doing it again with an existing name in -r
-        cmd += ["-r", self.env_names[0]]
-        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        _, out = self._create_empty_env(
+            expect_error=True, new_env_name=False, extra_args=["-r", self.env_names[0]]
+        )
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
-        try:
-            self.assertTrue(f"{self.env_names[0]} also already exists" in out.stderr)
-        except AssertionError as e:
-            print(f"stdout:\n{out.stdout}")
-            raise e
+        self.assertTrue(f"{self.env_names[0]} also already exists" in out.stderr)
 
     def test_py_env_create_error_renaming_current(self):
         """
@@ -178,19 +168,14 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create once, making sure it was created
-        cmd = self._create_empty_env()
+        cmd, _ = self._create_empty_env()
 
         # Try doing it again in that conda env with its name in -r
         cmd = ["conda", "run", "-n", self.env_names[0]] + cmd + ["-r", self.env_names[0]]
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
-        try:
-            self.assertTrue("Not going to let you rename the currently active conda env" in out.stderr)
-        except AssertionError as e:
-            print(f"stdout:\n{out.stdout}")
-            raise e
+        self.assertTrue("Not going to let you rename the currently active conda env" in out.stderr)
 
     def test_py_env_create_error_overwriting_current(self):
         """
@@ -198,19 +183,16 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create once, making sure it was created
-        cmd = self._create_empty_env()
+        cmd, _ = self._create_empty_env()
 
         # Try doing it again in that conda env with -o
         cmd = ["conda", "run", "-n", self.env_names[0]] + cmd + ["-o"]
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         # Check error
-        self.assertNotEqual(out.returncode, 0)
-        try:
-            self.assertTrue("Not going to let you overwrite the currently active conda env" in out.stderr)
-        except AssertionError as e:
-            print(f"stdout:\n{out.stdout}")
-            raise e
+        self.assertTrue(
+            "Not going to let you overwrite the currently active conda env" in out.stderr
+        )
 
     def test_complete_py_env_create(self):
         """
@@ -218,30 +200,27 @@ class TestSysPyEnvCreate(unittest.TestCase):
         """
 
         # Run py_env_create once, making sure it was created
-        self._create_empty_env()
-
-        # Run py_env_create again, renaming existing
-        self._create_empty_env(check=False)
-        # Ensure both exist now
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        envs = json.loads(out.stdout).get("envs", [])
-        for env_name in self.env_names:
-            assert any(os.path.split(path)[-1] == env_name for path in envs)
+        self._create_empty_env(check=True)
 
         # Run py_env_create again, overwriting existing
-        cmd = [
-            self.py_env_create,
-            "--name",
-            self.env_names[1],
-            "--file",
-            self.empty_condafile,
-            "-o",
-            "--yes",
-        ]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        # Ensure both still exist
+        _, out = self._create_empty_env(new_env_name=False, extra_args=["-o"], check=True)
+        # Ensure we only added one
+        try:
+            self.assertEqual(len(self.env_names), 1)
+        except AssertionError as e:
+            print(out.stdout)
+            raise e
+
+        # Run py_env_create again, renaming existing
+        _, out = self._create_empty_env(
+            new_env_name=False, extra_args=["-r", self.env_names[-1] + "_orig"]
+        )
+        # Ensure both exist now
+        try:
+            self.assertEqual(len(self.env_names), 2)
+        except AssertionError as e:
+            print(out.stdout)
+            raise e
         out = subprocess.run(
             ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
         )
