@@ -141,6 +141,7 @@ function rename_existing_env {
       conda rename ${yes_tmp} -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
    else
       echo "$2 also already exists"
+      exit 1
    fi
 }
 function overwrite_existing_env {
@@ -157,25 +158,22 @@ if [[ "${new_name_for_existing}" != "" && ${overwrite} -eq 1 ]]; then
    exit 1
 fi
 
-while [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; do
+if [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; then
 
    if [[ "${new_name_for_existing}" != "" ]]; then
       rename_existing_env ${new_env_name} ${new_name_for_existing}
-      break
    elif [[ ${overwrite} -eq 1 ]]; then
       overwrite_existing_env ${new_env_name}
-      break
+   else
+      echo "Conda environment ${new_env_name} already exists." >&2
+      echo "Try again using one of:" >&2
+      echo "   -n/--name <name>             to choose a different name for the new env" >&2
+      echo "   -r/--rename-existing <name>  to choose a different name for the existing env" >&2
+      echo "   -o/--overwrite <name>        to overwrite the existing env" >&2
+      exit 1
    fi
 
-   read -p "Conda environment '${new_env_name}' already exists. [o]verwrite, change [e]xisting env name, change [n]ew env name, or [c]ancel? " answer
-   case $answer in
-      [Oo]* ) overwrite_existing_env ${new_env_name}; break;;
-      [Ee]* ) read -p "New name for existing conda env: " renamed_existing; rename_existing_env ${new_env_name} ${renamed_existing} ;;
-      [Nn]* ) read -p "New name for conda env we're creating: " new_env_name;;
-      [Cc]* ) exit;;
-      * ) echo "Valid answers are o, e, n, or c";;
-   esac
-done
+fi
 
 #
 # Create the environment

@@ -174,10 +174,32 @@ class TestSysPyEnvCreate(unittest.TestCase):
 
         # Check error
         self.assertNotEqual(out.returncode, 0)
-        print(f"out.stderr: {out.stderr}")
-        for x in out.stderr:
-            print(x)
         self.assertTrue("Only specify one of -o/--overwrite or -r/--rename-existing." in out.stderr)
+
+    def test_py_env_create_error_exists_without_r_or_o(self):
+        """
+        Ensure py_env_create errors if environment already exists without -o or -r
+        """
+
+        # Run py_env_create once, making sure it was created
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
+        subprocess.run(cmd, capture_output=True, text=True, check=False)
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        assert any(
+            os.path.split(path)[-1] == self.env_names[0]
+            for path in json.loads(out.stdout).get("envs", [])
+        )
+
+        # Try doing it again without specifying -o or -r
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check error
+        self.assertNotEqual(out.returncode, 0)
+        self.assertTrue(f"Conda environment {self.env_names[0]} already exists." in out.stderr)
+        self.assertTrue("Try again using one of:" in out.stderr)
 
 
 if __name__ == "__main__":
