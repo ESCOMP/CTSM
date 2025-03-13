@@ -57,73 +57,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         )
         envs = json.loads(out.stdout).get("envs", [])
         for env_name in self.env_names:
-            if any(
-                os.path.split(path)[-1] == env_name
-                for path in envs
-            ):
+            if any(os.path.split(path)[-1] == env_name for path in envs):
                 cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
                 subprocess.run(cmd, capture_output=True, text=True, check=True)
-
-    def test_complete_py_env_create(self):
-        """
-        A few calls of py_env_create to ensure it's working right.
-        """
-
-        # Run py_env_create once, making sure it was created
-        self.env_names.append(get_unique_env_name(5))
-        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        assert any(
-            os.path.split(path)[-1] == self.env_names[0]
-            for path in json.loads(out.stdout).get("envs", [])
-        )
-
-        # Run py_env_create again, renaming existing
-        self.env_names.append(self.env_names[0])
-        self.env_names[0] += "_orig"
-        cmd = [
-            self.py_env_create,
-            "-n",
-            self.env_names[1],
-            "-f",
-            self.empty_condafile,
-            "-r",
-            self.env_names[0],
-            "-y",
-        ]
-        try:
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(e.stderr) from e
-        # Ensure both exist now
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        envs = json.loads(out.stdout).get("envs", [])
-        for env_name in self.env_names:
-            assert any(os.path.split(path)[-1] == env_name for path in envs)
-
-        # Run py_env_create again, overwriting existing
-        cmd = [
-            self.py_env_create,
-            "--name",
-            self.env_names[1],
-            "--file",
-            self.empty_condafile,
-            "-o",
-            "--yes",
-        ]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        # Ensure both still exist
-        out = subprocess.run(
-            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
-        )
-        envs = json.loads(out.stdout).get("envs", [])
-        for env_name in self.env_names:
-            assert any(os.path.split(path)[-1] == env_name for path in envs)
 
     def test_py_env_create_error_both_r_and_o(self):
         """
@@ -200,6 +136,67 @@ class TestSysPyEnvCreate(unittest.TestCase):
         self.assertNotEqual(out.returncode, 0)
         self.assertTrue(f"Conda environment {self.env_names[0]} already exists." in out.stderr)
         self.assertTrue("Try again using one of:" in out.stderr)
+
+    def test_complete_py_env_create(self):
+        """
+        A few calls of py_env_create to ensure it's working right.
+        """
+
+        # Run py_env_create once, making sure it was created
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        assert any(
+            os.path.split(path)[-1] == self.env_names[0]
+            for path in json.loads(out.stdout).get("envs", [])
+        )
+
+        # Run py_env_create again, renaming existing
+        self.env_names.append(self.env_names[0])
+        self.env_names[0] += "_orig"
+        cmd = [
+            self.py_env_create,
+            "-n",
+            self.env_names[1],
+            "-f",
+            self.empty_condafile,
+            "-r",
+            self.env_names[0],
+            "-y",
+        ]
+        try:
+            subprocess.run(cmd, capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.stderr) from e
+        # Ensure both exist now
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        envs = json.loads(out.stdout).get("envs", [])
+        for env_name in self.env_names:
+            assert any(os.path.split(path)[-1] == env_name for path in envs)
+
+        # Run py_env_create again, overwriting existing
+        cmd = [
+            self.py_env_create,
+            "--name",
+            self.env_names[1],
+            "--file",
+            self.empty_condafile,
+            "-o",
+            "--yes",
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Ensure both still exist
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        envs = json.loads(out.stdout).get("envs", [])
+        for env_name in self.env_names:
+            assert any(os.path.split(path)[-1] == env_name for path in envs)
 
 
 if __name__ == "__main__":
