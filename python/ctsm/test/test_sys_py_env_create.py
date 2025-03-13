@@ -32,13 +32,20 @@ def get_conda_envs():
     return json.loads(out.stdout).get("envs", [])
 
 
+def does_env_exist(this_env, env_paths):
+    """
+    Checks whether the user has a certain conda env
+    """
+    return any(os.path.split(path)[-1] == this_env for path in env_paths)
+
+
 def get_unique_env_name(length):
     """
     Generates a unique name for a conda environment
     """
     env_name = "pec_test_" + "".join(random.choices(string.ascii_letters, k=length))
 
-    if any(os.path.split(path)[-1] == env_name for path in get_conda_envs()):
+    if does_env_exist(env_name, get_conda_envs()):
         env_name = get_unique_env_name(length)
     return env_name
 
@@ -65,7 +72,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
         # Remove test envs
         envs = get_conda_envs()
         for env_name in self.env_names:
-            if any(os.path.split(path)[-1] == env_name for path in envs):
+            if does_env_exist(env_name, envs):
                 cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
                 subprocess.run(cmd, capture_output=True, text=True, check=False)
 
@@ -98,7 +105,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
             )
 
         if check:
-            assert any(os.path.split(path)[-1] == self.env_names[-1] for path in get_conda_envs())
+            assert does_env_exist(self.env_names[-1], get_conda_envs())
 
         return cmd, out
 
@@ -111,9 +118,6 @@ class TestSysPyEnvCreate(unittest.TestCase):
         _, out = self._create_empty_env(extra_args=["-o", "-r", "abc123"], expect_error=True)
 
         # Check error
-        print(f"out.stderr: {out.stderr}")
-        for x in out.stderr:
-            print(x)
         self.assertTrue("Only specify one of -o/--overwrite or -r/--rename-existing." in out.stderr)
 
     def test_py_env_create_error_both_r_and_o_longnames(self):
@@ -220,8 +224,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         except AssertionError as e:
             print(out.stdout)
             raise e
+        env_list = get_conda_envs()
         for env_name in self.env_names:
-            assert any(os.path.split(path)[-1] == env_name for path in get_conda_envs())
+            assert does_env_exist(env_name, env_list)
 
 
 if __name__ == "__main__":
