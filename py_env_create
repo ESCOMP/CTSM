@@ -35,7 +35,6 @@ default_new_env_name=ctsm_pylib
 
 condadir="$dir/python"
 
-domain=`domainname`
 condafile="${condadir}/conda_env_ctsm_py.txt"
 #----------------------------------------------------------------------
 # Usage subroutine
