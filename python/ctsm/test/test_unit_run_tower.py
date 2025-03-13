@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Unit tests for run_neon
+Unit tests for run_tower
 
 You can run this by:
-    python -m unittest test_unit_run_neon.py
+    python -m unittest test_unit_run_tower.py
 """
 
 import unittest
@@ -18,14 +18,14 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.site_and_regional.run_neon import check_neon_listing
+from ctsm.site_and_regional.run_tower import check_neon_listing
 
 # pylint: disable=invalid-name
 
 
-class TestRunNeon(unittest.TestCase):
+class TestRunTower(unittest.TestCase):
     """
-    Basic class for testing run_neon.py.
+    Basic class for testing run_tower.py.
     """
 
     def setUp(self):
