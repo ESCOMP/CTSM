@@ -196,9 +196,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         # Check error
-        self.assertTrue(
-            "Not going to let you overwrite the currently active env" in out.stderr
-        )
+        self.assertTrue("Not going to let you overwrite the currently active env" in out.stderr)
 
     def test_complete_py_env_create(self):
         """
