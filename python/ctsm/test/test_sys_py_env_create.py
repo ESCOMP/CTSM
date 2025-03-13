@@ -92,7 +92,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
             self.empty_condafile,
             "-r",
             self.env_names[0],
-            "--yes",
+            "-y",
         ]
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -109,9 +109,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         # Run py_env_create again, overwriting existing
         cmd = [
             self.py_env_create,
-            "-n",
+            "--name",
             self.env_names[1],
-            "-f",
+            "--file",
             self.empty_condafile,
             "-o",
             "--yes",
