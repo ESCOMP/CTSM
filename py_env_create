@@ -30,7 +30,7 @@ if [ $error != 0 ]; then
    exit -1
 fi
 rm condahelp.txt
-new_env_name=ctsm_pylib
+default_new_env_name=ctsm_pylib
 
 
 condadir="$dir/python"
@@ -55,7 +55,7 @@ usage() {
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is: $condafile"
   echo "[-n|--name <environment name>]  "
-  echo "     Name of the environment you wish to create. Default: ${new_env_name}"
+  echo "     Name of the environment you wish to create. Default: ${default_new_env_name}"
   echo "[-o|--overwrite]  "
   echo "     Overwrite existing conda env with same name, if any"
   echo "[-r|--rename-existing] <name>  "
@@ -70,6 +70,7 @@ usage() {
 verbose="No"
 option=""
 yes=""
+new_env_name=${default_new_env_name}
 new_name_for_existing=""
 overwrite=0
 while [ $# -gt 0 ]; do
