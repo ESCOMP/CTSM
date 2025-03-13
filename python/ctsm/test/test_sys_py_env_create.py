@@ -168,6 +168,68 @@ class TestSysPyEnvCreate(unittest.TestCase):
             print(f"stdout:\n{out.stdout}")
             raise e
 
+    def test_py_env_create_error_renaming_current(self):
+        """
+        Ensure py_env_create errors if trying to rename current env
+        """
+
+        # Run py_env_create once, making sure it was created
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if out.returncode != 0:
+            raise subprocess.SubprocessError(out.stderr)
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        assert any(
+            os.path.split(path)[-1] == self.env_names[0]
+            for path in json.loads(out.stdout).get("envs", [])
+        )
+
+        # Try doing it again in that conda env with its name in -r
+        cmd = ["conda", "run", "-n", self.env_names[0]] + cmd + ["-r", self.env_names[0]]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check error
+        self.assertNotEqual(out.returncode, 0)
+        try:
+            self.assertTrue("Not going to let you rename the currently active conda env" in out.stderr)
+        except AssertionError as e:
+            print(f"stdout:\n{out.stdout}")
+            raise e
+
+    def test_py_env_create_error_overwriting_current(self):
+        """
+        Ensure py_env_create errors if trying to overwrite current env
+        """
+
+        # Run py_env_create once, making sure it was created
+        self.env_names.append(get_unique_env_name(5))
+        cmd = [self.py_env_create, "-n", self.env_names[0], "-f", self.empty_condafile, "--yes"]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if out.returncode != 0:
+            raise subprocess.SubprocessError(out.stderr)
+        out = subprocess.run(
+            ["conda", "env", "list", "--json"], capture_output=True, text=True, check=True
+        )
+        assert any(
+            os.path.split(path)[-1] == self.env_names[0]
+            for path in json.loads(out.stdout).get("envs", [])
+        )
+
+        # Try doing it again in that conda env with -o
+        cmd = ["conda", "run", "-n", self.env_names[0]] + cmd + ["-o"]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        # Check error
+        self.assertNotEqual(out.returncode, 0)
+        try:
+            self.assertTrue("Not going to let you overwrite the currently active conda env" in out.stderr)
+        except AssertionError as e:
+            print(f"stdout:\n{out.stdout}")
+            raise e
+
     def test_complete_py_env_create(self):
         """
         A few calls of py_env_create to ensure it's working right.
