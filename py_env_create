@@ -157,9 +157,10 @@ function rename_existing_env {
       echo "Renaming $1 to $2 (this will take a few minutes)..."
       yes_tmp=${yes/yes/force}
       if [[ "${quiet}" == "--quiet" ]]; then
-         ${condamamba} rename ${yes_tmp} -n $1 $2 1>/dev/null  # -q/--quiet option not available on Derecho
+         # -q/--quiet option not available on Derecho
+         (set -x; ${condamamba} rename ${yes_tmp} -n $1 $2 1>/dev/null)
       else
-         ${condamamba} rename ${yes_tmp} ${verbose} -n $1 $2
+         (set -x; ${condamamba} rename ${yes_tmp} ${verbose} -n $1 $2)
       fi
    else
       echo "$2 also already exists" >&2
@@ -170,8 +171,11 @@ function overwrite_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
       echo "Not going to let you overwrite the currently active env" >&2
       exit 1
+   elif [[ "${quiet}" == "--quiet" ]]; then
+      # -q/--quiet option not available on Derecho
+      (set -x; ${condamamba} remove ${yes} -n $1 --all ${quiet} 1>/dev/null)
    else
-      ${condamamba} remove ${yes} -n $1 --all ${quiet} ${verbose}
+      (set -x; ${condamamba} remove ${yes} -n $1 --all ${verbose})
    fi
 }
 
@@ -201,28 +205,22 @@ fi
 # Create the environment
 #
 echo "Create $new_env_name"
-cmd="${condamamba} create ${yes} --name $new_env_name ${quiet} ${verbose}"
-echo "$cmd"
-$cmd
+if [[ "${quiet}" == "--quiet" ]]; then
+   (set -x; ${condamamba} create ${yes} --name $new_env_name ${quiet} 1>/dev/null)
+else
+   (set -x; ${condamamba} create ${yes} --name $new_env_name ${verbose})
+fi
 
 #
 # Install the environment
 #
 echo "Installing $new_env_name; this can take a few minutes."
-echo "    ...."
-echo "    ...."
-echo "    ...."
-cmd="${condamamba} install ${yes} ${quiet} ${verbose} --channel conda-forge --name $new_env_name --file $condafile $option"
-echo "$cmd"
-set +e
-$cmd
-result=$?
-set -e
-if [ $result != 0 ]; then
-   echo "Trouble installing the $new_env_name python environment"
-   echo "There must be a problem in the $condafile conda specification environment file"
-   echo "Change the file and try again"
-   exit -2
+cmd=""
+if [[ "${quiet}" == "--quiet" ]]; then
+   # -q/--quiet option not available on Derecho
+   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${quiet} 1>/dev/null)
+else
+   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${verbose})
 fi
 #
 # Report on success
