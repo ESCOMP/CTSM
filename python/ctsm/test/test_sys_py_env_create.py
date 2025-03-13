@@ -64,7 +64,7 @@ class TestSysPyEnvCreate(unittest.TestCase):
                 cmd = ["conda", "remove", "--all", "--name", env_name, "--yes"]
                 subprocess.run(cmd, capture_output=True, text=True, check=True)
 
-    def test_py_env_create(self):
+    def test_complete_py_env_create(self):
         """
         A few calls of py_env_create to ensure it's working right.
         """
