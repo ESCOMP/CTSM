@@ -2545,8 +2545,7 @@ module CLMFatesInterfaceMod
    end subroutine wrap_btran
 
    ! ====================================================================================                   
-   subroutine wrap_drydep(this, nc, bounds, &
-          canopystate_inst)
+   subroutine wrap_drydep(this, nc, canopystate_inst)
 
      class(hlm_fates_interface_type), intent(inout) :: this
      type(bounds_type),intent(in)                   :: bounds_clump
@@ -2565,6 +2564,12 @@ module CLMFatesInterfaceMod
                wesley_season_index_patch => canopystate_inst%wesley_season_index_patch
                )
                
+      ! Call thee FATES routine to set the PFT and season indices for the drydep routines in CLM
+      call set_fates_drydep_indice(this%fates(nc)%nsites, &
+           this%fates(nc)%sites,  &
+           this%fates(nc)%bc_out ) 
+
+      ! Load the dry deposition indices from the FATES output structure into the CLM variables. 
       do s = 1,this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
           g = col%gridcell(c)
