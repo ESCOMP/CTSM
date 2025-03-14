@@ -29,12 +29,12 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 -  ``$my_lon``: longitude of point, *must be between 0 and 360 degrees*. E.g., Boulder, CO, USA: 55.
 -  ``$my_site_name``: name of site, *used for file naming*
 -  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
--  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014*
+-  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2015; see note below about switching the default DATM data*
 -  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
 You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
 
-**Note that this script defaults to subsetting specific surface, domain, and land-use files and GSWP3 DATM data, and can currently only be run as-is on Derecho. To update the files and file locations, you will need to modify the files and/or directories in the tools/site_and_regional/default_data_2000.cfg file.**
+**Note that this script defaults to subsetting specific surface, domain, and land-use files and the CRUJRA2024 DATM data, and can currently only be run as-is on Derecho. To update the files and file locations, you will need to modify the files and/or directories in the tools/site_and_regional/default_data_2000.cfg file. Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire datm_type = "datm_gswp3" (instead of the default "datm_crujra") in python/ctsm/subset_data.py.**
 
 The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` parameters. You can then use this user mods directory to set up your CTSM case, as described below.
 
