@@ -113,6 +113,7 @@ module CLMFatesInterfaceMod
    use landunit_varcon   , only : istsoil
    use abortutils        , only : endrun
    use shr_log_mod       , only : errMsg => shr_log_errMsg
+   use shr_drydep_mod    , only : n_drydep
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
    use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
@@ -303,7 +304,8 @@ module CLMFatesInterfaceMod
      integer,intent(out)                            :: maxsoil_patches
      integer                                        :: pass_biogeog
      integer                                        :: pass_nocomp
-     integer                                        :: pass_sp
+     integer                                        :: pass_sp = 0
+     integer                                        :: pass_drydep
      integer                                        :: pass_masterproc
      logical                                        :: verbose_output
      type(fates_param_reader_ctsm_impl)             :: var_reader
@@ -340,7 +342,14 @@ module CLMFatesInterfaceMod
            pass_sp = 0
         end if
         call set_fates_ctrlparms('use_sp',ival=pass_sp)
-        
+
+        if(n_drydep>0) then
+           pass_drydep = 1
+        else
+           pass_drydep = 0
+        endif
+        call set_fates_ctrlparms('use_drydep',ival=pass_drydep)
+
         if(masterproc)then
            pass_masterproc = 1
         else
