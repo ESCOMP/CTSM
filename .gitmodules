@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/samsrabin/CDEPS.git
-fxtag = 93e59c0f19110d2ace7a94c6906b19ca3bfa98f0  # Branch ssp-fix: Fix indentation.
+fxtag = 196957fce5b9604d723efbd643fe9aa72b98477f  # Branch ssp-fix: buildnml now errors on mismatch between anomaly forcing and DATM_MODE.
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
