@@ -107,19 +107,20 @@
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
+  <!-- Three compsets for mizuRoute -->
   <compset>
-    <alias>I2000Clm50SpMizGs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+    <alias>I2000Clm60SpMizGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I2000Clm50SpMizGsNldas</alias>
-    <lname>2000_DATM%NLDAS2_CLM50%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+    <alias>I2000Clm60SpMizGsNldas</alias>
+    <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I2000Clm50NwpSpMizGsNldas</alias>
-    <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+    <alias>I2000Clm60NwpSpMizGsNldas</alias>
+    <lname>2000_DATM%NLDAS2_CLM60%NWP-SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
   </compset>
 
   <compset>
