@@ -579,7 +579,7 @@ contains
             avgflag='A', long_name='urban heating flux', &
             ptr_col=this%eflx_urban_heat_col, set_nourb=0._r8, c2l_scale_type='urbanf')
     else
-       this%eflx_urban_ac_lun(begl:endl) = spval
+       this%eflx_building_lun(begl:endl) = spval
        call hist_addfld1d (fname='EFLXBUILD', units='W/m^2',  &
             avgflag='A', long_name='building heat flux from change in interior building air temperature', &
             ptr_lunit=this%eflx_building_lun, set_nourb=0._r8, l2g_scale_type='unity')
@@ -988,7 +988,7 @@ contains
     !
     ! USES
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field
     use abortutils       , only : endrun
     !
     ! !ARGUMENTS:

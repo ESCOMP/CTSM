@@ -106,7 +106,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         # Which conda environment should we use?
         self._get_conda_env()
 
-    def _run_phase(self, skip_gen=False):
+    def _run_phase(self, skip_gen=False, h1_inst=False):
         # Modeling this after the SSP test, we create a clone to be the case whose outputs we don't
         # want to be saved as baseline.
 
@@ -129,12 +129,13 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._set_active_case(case_gddgen)
 
         # Set up stuff that applies to both tests
-        self._setup_all()
+        self._setup_all(h1_inst)
 
         # Add stuff specific to GDD-Generating run
         logger.info("RXCROPMATURITY log:  modify user_nl files: generate GDDs")
         self._append_to_user_nl_clm(
             [
+                "stream_fldFileName_cultivar_gdds = ''",
                 "generate_crop_gdds = .true.",
                 "use_mxmat = .false.",
                 " ",
@@ -195,7 +196,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._set_active_case(case_rxboth)
 
         # Set up stuff that applies to both tests
-        self._setup_all()
+        self._setup_all(h1_inst)
 
         # Add stuff specific to Prescribed Calendars run
         logger.info("RXCROPMATURITY log:  modify user_nl files: Prescribed Calendars")
@@ -263,7 +264,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
             logger.error(error_message)
             raise RuntimeError(error_message)
 
-    def _setup_all(self):
+    def _setup_all(self, h1_inst):
         logger.info("RXCROPMATURITY log:  _setup_all start")
 
         # Get some info
@@ -273,7 +274,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
 
         # Set sowing dates file (and other crop calendar settings) for all runs
         logger.info("RXCROPMATURITY log:  modify user_nl files: all tests")
-        self._modify_user_nl_allruns()
+        self._modify_user_nl_allruns(h1_inst)
         logger.info("RXCROPMATURITY log:  _setup_all done")
 
     # Make a surface dataset that has every crop in every gridcell
@@ -398,14 +399,16 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
             tool_path,
         )
 
-    def _modify_user_nl_allruns(self):
+    def _modify_user_nl_allruns(self, h1_inst):
         nl_additions = [
+            "cropcals_rx = .true.",
+            "cropcals_rx_adapt = .false.",
             "stream_meshfile_cropcal = '{}'".format(self._case.get_value("LND_DOMAIN_MESH")),
             "stream_fldFileName_swindow_start = '{}'".format(self._sdatefile),
             "stream_fldFileName_swindow_end   = '{}'".format(self._sdatefile),
-            "stream_year_first_cropcal = 2000",
-            "stream_year_last_cropcal = 2000",
-            "model_year_align_cropcal = 2000",
+            "stream_year_first_cropcal_swindows = 2000",
+            "stream_year_last_cropcal_swindows = 2000",
+            "model_year_align_cropcal_swindows = 2000",
             " ",
             "! (h1) Annual outputs on sowing or harvest axis",
             "hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'",
@@ -414,6 +417,8 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
             "hist_type1d_pertape(2) = 'PFTS'",
             "hist_dov2xy(2) = .false.",
         ]
+        if h1_inst:
+            nl_additions.append("hist_avgflag_pertape(2) = 'I'")
         self._append_to_user_nl_clm(nl_additions)
 
     def _run_generate_gdds(self, case_gddgen):
@@ -442,7 +447,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 f"--sdates-file {sdates_file}",
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
-                f"--skip-crops miscanthus,irrigated_miscanthus",
+                f"--skip-crops miscanthus,irrigated_miscanthus,switchgrass,irrigated_switchgrass",
             ]
         )
         stu.run_python_script(

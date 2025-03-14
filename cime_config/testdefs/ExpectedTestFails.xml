@@ -32,30 +32,77 @@
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>CDEPS/#243</issue>
+      <issue>CDEPS/#243 and/or #2122</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld5.f09_g17.IHistClm50Sp.derecho_intel.clm-nofire">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2784</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f19_g17.IHistClm50Sp.derecho_intel.clm-nofire">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2784</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_g17.IHistClm60Sp.derecho_intel.clm-nofire">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2784</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f19_g17.IHistClm60Sp.derecho_intel.clm-nofire">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2784</issue>
     </phase>
   </test>
 
   <!-- aux_clm test suite failures -->
-  <test name="ERP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+  <test name="ERS_Ly3.f10_f10_mg37.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+  <test name="SMS_Lm1.f10_f10_mg37.I1850Clm50BgcCropCmip6waccm.derecho_gnu.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2787</issue>
+      <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the following REP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Lm13.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rep2">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the preceding ERP failure.</comment>
     </phase>
   </test>
-
-  <test name="SMS_D_Ld10.f10_f10_mg37.I2000Clm50BgcCrop.izumi_intel.clm-tracer_consistency">
-    <phase name="RUN">
+  <test name="REP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+    <phase name="BASELINE">
       <status>FAIL</status>
-      <issue>#2444</issue>
+      <issue>#2619</issue>
+      <comment>This failure relates to the preceding ERP failure.</comment>
     </phase>
   </test>
 
@@ -79,7 +126,7 @@
       <issue>#2310</issue>
     </phase>
   </test>
-  
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.derecho_gnu.clm-NEON-MOAB--clm-PRISM">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -91,6 +138,24 @@
     </phase>
   </test>
   
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-NEON-MOAB--clm-PRISM">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2310</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_gnu.clm-FatesPRISM--clm-NEON-FATES-YELL">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -113,20 +178,6 @@
     </phase>
   </test>
 
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_intel.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
-    </phase>
-  </test>
-
   <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
     <phase name="RUN">
       <status>FAIL</status>
@@ -134,10 +185,21 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
-    <phase name="CREATE_NEWCASE">
+  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
       <status>FAIL</status>
-      <issue>#2454</issue>
+      <issue>#2325</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_Ld60.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdST3">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2867</issue>
     </phase>
   </test>
 
@@ -165,7 +227,7 @@
 
   <!-- fates test suite failures -->
 
-  <test name="ERS_D_Ld3.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2653</issue>
@@ -186,17 +248,6 @@
     </phase>
   </test>
       
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdHydro">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2373</issue>
-    </phase>
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>FATES#701</issue>
-    </phase>
-  </test>
-
   <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm60FatesRs.derecho_intel.clm-mimicsFatesCold">
     <phase name="RUN">
       <status>FAIL</status>
@@ -212,48 +263,38 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld15.f10_f10_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.f10_f10_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="PEM_D_Ld15.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="SMS_D_Ld5.5x5_amazon.I1850Clm51Bgc.derecho_gnu.clm-HillslopeC">
+  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2325</issue>
+    </phase>
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#2423</issue>
+      <issue>#2325</issue>
     </phase>
   </test>
 
-  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
+  <test name="ERS_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#2325</issue>
     </phase>
   </test>
-
-  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-
+  
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
@@ -261,9 +302,30 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLandUse">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2810</issue>
+    </phase>
+  </test>
+  
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse">
+    <phase name="SHAREDLIB_BUILD">
+      <status>FAIL</status>
+      <issue>#2810</issue>
+    </phase>
+  </test>
+
+  <test name="PVT_Lm3.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesLUPFT">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2919</issue>
+    </phase>
+  </test>
+
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
-  <test name="SMS_Lh3.f10_f10_mg37.I2000Clm51Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
+  <test name="SMS_Lh3.f10_f10_mg37.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
     <phase name="CREATE_NEWCASE">
       <status>FAIL</status>
       <issue>MOSART#91</issue>

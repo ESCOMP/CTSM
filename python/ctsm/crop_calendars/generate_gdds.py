@@ -43,6 +43,7 @@ def main(
     unlimited_season_length=False,
     skip_crops=None,
     logger=None,
+    no_pickle=None,
 ):
     # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
@@ -109,7 +110,7 @@ def main(
 
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
         h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
-        if os.path.exists(pickle_file):
+        if os.path.exists(pickle_file) and not no_pickle:
             with open(pickle_file, "rb") as file:
                 (
                     first_season,
@@ -144,6 +145,7 @@ def main(
         else:
             mxmats = None
 
+        h1_instantaneous = None
         for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
             if this_yr <= pickle_year:
                 continue
@@ -160,6 +162,7 @@ def main(
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
+                h1_instantaneous,
             ) = gddfn.import_and_process_1yr(
                 first_season,
                 last_season,
@@ -178,7 +181,9 @@ def main(
                 mxmats,
                 cc.get_gs_len_da,
                 skip_crops,
+                outdir_figs,
                 logger,
+                h1_instantaneous,
             )
 
             gddfn.log(logger, f"   Saving pickle file ({pickle_file})...")
@@ -469,6 +474,12 @@ if __name__ == "__main__":
         type=str,
         default="",
     )
+    parser.add_argument(
+        "--no-pickle",
+        help="Don't read from existing pickle file; instead, overwrite. For troubleshooting.",
+        action="store_true",
+        default=False,
+    )
 
     # Get arguments
     args = parser.parse_args(sys.argv[1:])
@@ -492,4 +503,5 @@ if __name__ == "__main__":
         last_land_use_year=args.last_land_use_year,
         unlimited_season_length=args.unlimited_season_length,
         skip_crops=args.skip_crops,
+        no_pickle=args.no_pickle,
     )

@@ -9,9 +9,12 @@
 hist_fincl2  += 'DYN_COL_SOIL_ADJUSTMENTS_C'
 
 
-! Annual crop variables on per-sowing/per-harvest axes, per PFT.
-hist_fincl3 = 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'GRAINN_TO_FOOD_PERHARV', 'GRAINN_TO_FOOD_ANN', 'GRAINC_TO_SEED_PERHARV', 'GRAINC_TO_SEED_ANN', 'GRAINN_TO_SEED_PERHARV', 'GRAINN_TO_SEED_ANN', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV', 'SWINDOW_STARTS', 'SWINDOW_ENDS'
-hist_nhtfrq(3) = 17520
-hist_mfilt(3) = 1
+! Instantaneous crop variables (including per-sowing/per-harvest axes), per PFT.
+! Note that, under normal circumstances, these should only be saved annually.
+! That's needed for the mxsowings and mxharvests axes to make sense.
+! However, for testing purposes, it makes sense to save more frequently.
+hist_fincl3 = 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'GRAINN_TO_FOOD_PERHARV', 'GRAINN_TO_FOOD_ANN', 'GRAINC_TO_SEED_PERHARV', 'GRAINC_TO_SEED_ANN', 'GRAINN_TO_SEED_PERHARV', 'GRAINN_TO_SEED_ANN', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV', 'SWINDOW_STARTS', 'SWINDOW_ENDS', 'GDD20_BASELINE', 'GDD20_SEASON_START', 'GDD20_SEASON_END'
+hist_nhtfrq = -24,-8,-24
+hist_mfilt  = 1,1,1
 hist_type1d_pertape(3) = 'PFTS'
-hist_dov2xy(3) = .false.
+hist_dov2xy    = .true.,.false.,.false.
