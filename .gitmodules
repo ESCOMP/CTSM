@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/samsrabin/CDEPS.git
-fxtag = 196957fce5b9604d723efbd643fe9aa72b98477f  # Branch ssp-fix-202503: Merge tag 'cdeps1.0.61' into ssp-fix-202503
+fxtag = 9b35f06bb00ebf99ce0ff71373023092e656db34  # Branch ssp-fix: Merge branch 'ssp-fix-202503' into ssp-fix
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
