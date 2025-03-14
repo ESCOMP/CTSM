@@ -116,7 +116,7 @@ contains
        allocate(cnfire_li2016_type :: cnfire_method)
     case ("li2021gswpfrc")
        allocate(cnfire_li2021_type :: cnfire_method)
-    case ("li2024gswpfrc")
+    case ("li2024gswpfrc", "li2024crujra")
        allocate(cnfire_li2024_type :: cnfire_method)
 
     case default

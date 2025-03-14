@@ -930,7 +930,7 @@ contains
     ! Update nyrs when it's the end of the year (unless it's the very start of the
     ! run). This assumes that, if this patch is active at the end of the year, then it was
     ! active for the whole year.
-    if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
+    if ((kmo == 1 .and. kda == 1 .and. mcsec == 0)) then
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 

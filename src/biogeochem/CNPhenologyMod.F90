@@ -94,7 +94,6 @@ module CNPhenologyMod
      real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) 
                                        ! (Birch et. all 2021 it was 720 see line below)
                                        ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude (Birch et. al 2021)
-     real(r8) :: ndays_on              ! number of days to complete leaf onset
      real(r8) :: ndays_off             ! number of days to complete leaf offset
      real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
      real(r8) :: crit_onset_fdd        ! critical number of freezing days to set gdd counter
@@ -113,7 +112,6 @@ module CNPhenologyMod
   real(r8) :: dt                            ! time step delta t (seconds)
   real(r8) :: fracday                       ! dtime as a fraction of day
   real(r8) :: crit_dayl                     ! critical daylength for offset (seconds)
-  real(r8) :: ndays_on                      ! number of days to complete onset
   real(r8) :: ndays_off                     ! number of days to complete offset
   real(r8) :: fstor2tran                    ! fraction of storage to move to transfer on each onset
   real(r8) :: crit_onset_fdd                ! critical number of freezing days
@@ -279,7 +277,6 @@ contains
     params_inst%crit_dayl             = 39200._r8     ! Seconds
     params_inst%crit_dayl_at_high_lat = 54000._r8     ! Seconds
     params_inst%crit_dayl_lat_slope   = 720._r8       ! Seconds / degree
-    params_inst%ndays_on              = 15._r8        ! Days
     params_inst%ndays_off             = 30._r8        ! Days
     params_inst%fstor2tran            = 0.5           ! Fraction
     params_inst%crit_onset_fdd        = 15._r8        ! Days
@@ -313,7 +310,6 @@ contains
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
     call readNcdioScalar(ncid, 'crit_dayl_at_high_lat', subname, params_inst%crit_dayl_at_high_lat)
     call readNcdioScalar(ncid, 'crit_dayl_lat_slope', subname, params_inst%crit_dayl_lat_slope)
-    call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
     call readNcdioScalar(ncid, 'crit_onset_fdd', subname, params_inst%crit_onset_fdd)
@@ -396,19 +392,7 @@ contains
             soilstate_inst, temperature_inst, atm2lnd_inst, wateratm2lndbulk_inst, cnveg_state_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       ! BACKWARDS_COMPATIBILITY(wjs, 2022-02-03) Old restart files generated at the end
-       ! of the year can indicate that a crop was panted on Jan 1, because that used to be
-       ! the time given to the last time step of the year. This would cause problems if we
-       ! ran CropPhenology in time step 0, because now time step 0 is labeled as Dec 31,
-       ! so CropPhenology would see the crop as having been planted 364 days ago, and so
-       ! would want to harvest this newly-planted crop. To avoid this situation, we avoid
-       ! calling CropPhenology on time step 0.
-       !
-       ! This .not. is_first_step() condition can be removed either when we can rely on
-       ! all restart files having been generated with
-       ! https://github.com/ESCOMP/CTSM/issues/1623 resolved, or we stop having a time
-       ! step 0 (https://github.com/ESCOMP/CTSM/issues/925).
-       if (num_pcropp > 0 .and. .not. is_first_step()) then
+       if (num_pcropp > 0) then
           call CropPhenology(num_pcropp, filter_pcropp, &
                waterdiagnosticbulk_inst, temperature_inst, crop_inst, canopystate_inst, cnveg_state_inst, &
                cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
@@ -474,7 +458,6 @@ contains
     crit_dayl=params_inst%crit_dayl
 
     ! Set constants for CNSeasonDecidPhenology and CNStressDecidPhenology
-    ndays_on=params_inst%ndays_on
     ndays_off=params_inst%ndays_off
 
     ! set transfer parameters
@@ -885,6 +868,8 @@ contains
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          soila10                             =>    temperature_inst%soila10_col                                , & ! Input:  [real(r8) (:)   ] 
@@ -1019,7 +1004,8 @@ contains
             lgsf(p) = 0._r8
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
 
             ! set flag for solstice period (winter->summer = 1, summer->winter = 0)
             if (dayl(g) >= prev_dayl(g)) then
@@ -1112,7 +1098,8 @@ contains
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
                   do_onset = .false.
-                  onset_counter(p) = ndays_on * secspday
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
+
 
                   ! move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.
@@ -1402,7 +1389,10 @@ contains
          stress_decid                        =>    pftcon%stress_decid                                         , & ! Input:  binary flag for stress-deciduous leaf habit (0 or 1)
          leafcn                              =>    pftcon%leafcn                                               , & ! Input:  leaf C:N (gC/gN)
          frootcn                             =>    pftcon%frootcn                                              , & ! Input:  fine root C:N (gC/gN) 
-         
+
+         crit_onset_gdd_sf                   =>    pftcon%crit_onset_gdd_sf                                    , & ! Input:  scale factor for crit_onset_gdd (unitless)
+         ndays_on                            =>    pftcon%ndays_on                                             , & ! Input:  number of days to complete leaf onset (days)
+
          soilpsi                             =>    soilstate_inst%soilpsi_col                                  , & ! Input:  [real(r8)  (:,:) ]  soil water potential in each soil layer (MPa)   
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
@@ -1535,8 +1525,8 @@ contains
             psi = soilpsi(c, phenology_soil_layer)
 
             ! onset gdd sum from Biome-BGC, v4.1.2
-            crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) - SHR_CONST_TKFRZ))
-
+            crit_onset_gdd = crit_onset_gdd_sf(ivt(p)) * exp(4.8_r8 + 0.13_r8*(annavg_t2m(p) &
+                             - SHR_CONST_TKFRZ))
 
             ! update offset_counter and test for the end of the offset period
             if (offset_flag(p) == 1._r8) then
@@ -1676,7 +1666,7 @@ contains
                   onset_fdd(p) = 0._r8
                   onset_gdd(p) = 0._r8
                   onset_swi(p) = 0._r8
-                  onset_counter(p) = ndays_on * secspday
+                  onset_counter(p) = ndays_on(ivt(p)) * secspday
 
                   ! call subroutine to move all the storage pools into transfer pools,
                   ! where they will be transfered to displayed growth over the onset period.

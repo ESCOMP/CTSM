@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3352;
+my $ntests = 3997;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1990;
+   $ntests += 2437;
 }
 plan( tests=>$ntests );
 
@@ -393,9 +393,67 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    my $namelistfile = "temp.namelistinfile_$site";
    &cat_and_create_namelistinfile( $neondefaultfile, $neonsitefile, $namelistfile );
    #
+   # Now run  the site for both bgc and non-FATES
+   #
+   foreach my $bgc ( "bgc", "fates") {
+      if ( ($bgc eq "bgc") or ($site ne "STER" and $site ne "KONA")) {
+         my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc $bgc --use_case 2018_control --infile $namelistfile";
+         eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+         is( $@, '', "options: $options" );
+         $cfiles->checkfilesexist( "$options", $mode );
+         $cfiles->shownmldiff( "default", $mode );
+         if ( defined($opts{'compare'}) ) {
+            $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+            $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+            $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+         }
+         if ( defined($opts{'generate'}) ) {
+            $cfiles->copyfiles( "$options", $mode );
+         }
+      }
+   }
+   system( "/bin/rm $namelistfile" );
+   &cleanup();
+}
+print "\n===============================================================================\n";
+print "Test the PLUMBER2 sites\n";
+print "=================================================================================\n";
+my $phys = "clm6_0";
+$mode = "-phys $phys";
+&make_config_cache($phys);
+my $plumdir      = "../../cime_config/usermods_dirs/PLUMBER2";
+foreach my $site ( 
+    "AR-SLu",  "AU-Emr",  "AU-TTE",  "CA-NS1",  "CA-SF3",  "CN-HaM",  "DE-Obe",  "ES-ES1",  "FR-Gri",  "IE-Dri",  "IT-LMa",  "IT-SRo",  "RU-Fyo",  "US-Aud",  "US-Ho1",  "US-Ne2",  "US-Syv",  "ZM-Mon",
+    "AT-Neu",  "AU-Gin",  "AU-Tum",  "CA-NS2",  "CH-Cha",  "CN-Qia",  "DE-Seh",  "ES-ES2",  "FR-Hes",  "IT-Amp",  "IT-Mal",  "JP-SMF",  "RU-Zot",  "US-Bar",  "US-KS2",  "US-Ne3",  "US-Ton",
+    "AU-ASM",  "AU-GWW",  "AU-Whr",  "CA-NS4",  "CH-Dav",  "CZ-wet",  "DE-SfN",  "ES-LgS",  "FR-LBr",  "IT-BCi",  "IT-MBo",  "NL-Ca1",  "SD-Dem",  "US-Bkg",  "US-Los",  "US-NR1",  "US-Tw4",
+    "AU-Cow",  "AU-How",  "AU-Wrr",  "CA-NS5",  "CH-Fru",  "DE-Bay",  "DE-Tha",  "ES-LMa",  "FR-Lq1",  "IT-CA1",  "IT-Noe",  "NL-Hor",  "SE-Deg",  "US-Blo",  "US-Me2",  "US-PFa",  "US-Twt",
+    "AU-Cpr",  "AU-Lit",  "AU-Ync",  "CA-NS6",  "CH-Oe1",             "DE-Wet",  "ES-VDA",  "FR-Lq2",  "IT-CA2",  "IT-Non",  "NL-Loo",  "UK-Gri",  "US-Bo1",  "US-Me4",  "US-Prr",  "US-UMB",
+    "AU-Ctr",  "AU-Otw",  "BE-Bra",  "CA-NS7",  "CN-Cha",  "DE-Geb",  "DK-Fou",  "FI-Hyy",  "FR-Pue",  "IT-CA3",  "IT-PT1",  "PL-wet",  "UK-Ham",  "US-Cop",  "US-Me6",  "US-SP1",  "US-Var",
+    "AU-Cum",  "AU-Rig",  "BE-Lon",  "CA-Qcu",  "CN-Cng",  "DE-Gri",  "DK-Lva",  "FI-Kaa",  "GF-Guy",  "IT-Col",  "IT-Ren",  "PT-Esp",  "UK-PL3",  "US-FPe",  "US-MMS",  "US-SP2",  "US-WCr",
+    "AU-DaP",  "AU-Rob",  "BE-Vie",  "CA-Qfo",  "CN-Dan",  "DE-Hai",  "DK-Ris",  "FI-Lom",  "HU-Bug",  "IT-Cpz",  "IT-Ro1",  "PT-Mi1",  "US-AR1",  "US-GLE",  "US-MOz",  "US-SP3",  "US-Whs",
+    "AU-DaS",  "AU-Sam",  "BR-Sa3",  "CA-SF1",  "CN-Din",  "DE-Kli",  "DK-Sor",  "FI-Sod",  "ID-Pag",  "IT-Isp",  "IT-Ro2",  "PT-Mi2",  "US-AR2",  "US-Goo",  "US-Myb",  "US-SRG",  "US-Wkg",
+    "AU-Dry",  "AU-Stp",  "BW-Ma1",  "CA-SF2",  "CN-Du2",  "DE-Meh",  "DK-ZaH",  "FR-Fon",  "IE-Ca1",  "IT-Lav",  "IT-SR2",  "RU-Che",  "US-ARM",  "US-Ha1",  "US-Ne1",  "US-SRM",  "ZA-Kru"
+ ) {
+   &make_env_run( PLUMBER2SITE=>"$site" );
+   #
+   # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
+   #
+   if ( ! -d "$plumdir/$site" ) {
+      print "PLUMBER2 directory is not there: $plumdir/$site\n";
+      die "ERROR:: PLUMBER2 site does not exist: $site\n";
+   }
+   my $plumdefaultfile = "$plumdir/defaults/user_nl_clm";
+   my $plumsitefile = "$plumdir/$site/user_nl_clm";
+   if ( ! -f $plumsitefile )  {
+      $plumsitefile = undef;
+   }
+   $ENV{'PLUMBER2'} = $site;
+   my $namelistfile = "temp.namelistinfile_$site";
+   &cat_and_create_namelistinfile( $plumdefaultfile, $plumsitefile, $namelistfile );
+   #
    # Now run  the site
    #
-   my $options = "--res CLM_USRDAT --clm_usr_name NEON --no-megan --bgc bgc --use_case 2018_control --infile $namelistfile";
+   my $options = "--res CLM_USRDAT --clm_usr_name PLUMBER2 --no-megan --bgc sp --infile $namelistfile";
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
    $cfiles->checkfilesexist( "$options", $mode );
@@ -447,7 +505,32 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
       &cleanup();
    }
 }
-
+print "\n===============================================================================\n";
+print "Test setting drv_flds_in fields in CAM";
+print "=================================================================================\n";
+foreach my $phys ( "clm5_0", "clm6_0" ) {
+   $mode = "-phys $phys CAM_SETS_DRV_FLDS";
+   &make_config_cache($phys);
+   foreach my $options (
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                     ) {
+      &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
+      eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", $mode );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
 print "\n==============================================================\n";
 print "Test several use_cases and specific configurations for clm5_0\n";
 print "==============================================================\n";
@@ -518,7 +601,7 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
-                                     namelst=>"use_prigent_roughness=.false.",
+                                     namelst=>"use_prigent_roughness=.true.",
                                      phys=>"clm5_1",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
@@ -1068,14 +1151,6 @@ my %failtest = (
                                      namelst=>"use_hydrstress=.true.",
                                      phys=>"clm5_0",
                                    },
-     "specWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
-                                     namelst=>"fire_emis_specifier='bc_a1 = BC'",
-                                     phys=>"clm5_0",
-                                   },
-     "elevWOfireemis"            =>{ options=>"-envxml_dir . -no-fire_emis",
-                                     namelst=>"fire_emis_elevated=.false.",
-                                     phys=>"clm5_0",
-                                   },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1160,10 +1235,6 @@ my %failtest = (
                                      namelst=>"use_luna=.true., lnc_opt=.true.",
                                      phys=>"clm5_0",
                                    },
-     "NOlunabutsetJmaxb1"        =>{ options=>"-envxml_dir . -bgc sp",
-                                     namelst=>"use_luna=.false., jmaxb1=1.0",
-                                     phys=>"clm5_0",
-                                   },
      "envxml_not_dir"            =>{ options=>"-envxml_dir myuser_nl_clm",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1212,6 +1283,13 @@ my %failtest = (
                );
 foreach my $key ( keys(%failtest) ) {
    print( "$key\n" );
+   my $var;
+   foreach $var ( "phys" , "options", "namelst" ) {
+      if ( not exists $failtest{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for failtest $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    &make_config_cache($failtest{$key}{"phys"});
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
@@ -1236,10 +1314,6 @@ print "=========================================================================
 
 my %warntest = (
      # Warnings without the -ignore_warnings option given
-     "coldwfinidat"              =>{ options=>"-envxml_dir . -clm_start_type cold",
-                                     namelst=>"finidat = 'testfile.nc'",
-                                     phys=>"clm5_0",
-                                   },
      "bgcspin_w_suplnitro"       =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup on",
                                      namelst=>"suplnitro='ALL'",
                                      phys=>"clm5_0",
@@ -1261,7 +1335,7 @@ my %warntest = (
                                      phys=>"clm5_0",
                                    },
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
-                                     namelst=>"megan_specifier='ZZTOP=zztop'",
+                                     namelst=>"megan_specifier='ZZTOP=zztop%'",
                                      phys=>"clm4_5",
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
@@ -1284,9 +1358,21 @@ my %warntest = (
                                      namelst=>"fsurdat='build-namelist_test.pl'",
                                      phys=>"clm6_0",
                                    },
+     "hillslope with init_interp"=>{ options=>"--res 10x15 --bgc bgc --envxml_dir .",
+                                     namelst=>"use_init_interp=.true.,use_hillslope=.true.,hillslope_file='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
                );
 foreach my $key ( keys(%warntest) ) {
    print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "options", "namelst" ) {
+      if ( not exists $warntest{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for warntest $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    &make_config_cache($warntest{$key}{"phys"});
    my $options  = $warntest{$key}{"options"};
    my $namelist = $warntest{$key}{"namelst"};
@@ -1306,6 +1392,56 @@ foreach my $key ( keys(%warntest) ) {
    is( $?, 0, $key );
    is( $@, '', "$options" );
    system( "cat $tempfile" );
+}
+
+print "\n===============================================================================\n";
+print "Ensure cold starts with finidat are handled properly \n";
+print "=================================================================================\n";
+
+my %coldwfinidat = (
+     "bgc"   => { options=>"-envxml_dir . -clm_start_type cold",
+                  namelst=>"finidat = 'testfile.nc'",
+                  phys=>"clm5_0",
+                  expected_fail=>1,
+                },
+     "fates" => { options=>"-envxml_dir . -clm_start_type cold -bgc fates -no-megan",
+                  namelst=>"finidat = 'testfile.nc', use_fates = .true.",
+                  phys=>"clm5_0",
+                  expected_fail=>0,
+                },
+);
+my $finidat;
+foreach my $key ( keys(%coldwfinidat) ) {
+   print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "options", "namelst", "expected_fail" ) {
+      if ( not exists $coldwfinidat{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for coldwfinidat $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
+   &make_config_cache($coldwfinidat{$key}{"phys"});
+   my $options  = $coldwfinidat{$key}{"options"};
+   my $namelist = $coldwfinidat{$key}{"namelst"};
+   my $expected_fail = $coldwfinidat{$key}{"expected_fail"};
+   my %settings;
+   &make_env_run( %settings );
+
+   # Should fail if expected to, pass otherwise
+   eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+   is( $? eq 0, $expected_fail eq 0, "coldwfinidat $key run");
+
+   if ( $expected_fail ) {
+      # Now run with -ignore_warnings and make sure it still doesn't work
+      $options .= " -ignore_warnings";
+      eval{ system( "$bldnml $options -namelist \"&clmexp $namelist /\" > $tempfile 2>&1 " ); };
+      isnt( $?, 0, "coldwfinidat $key run -ignore_warnings" );
+   } else {
+      # Check that finidat was correctly set
+      $finidat = `grep finidat lnd_in`;
+      ok ( $finidat =~ "testfile.nc", "coldwfinidat $key finidat? $finidat" );
+   }
 }
 
 #
@@ -1516,6 +1652,14 @@ my %finidat_files = (
 
 foreach my $key ( keys(%finidat_files) ) {
    print( "$key\n" );
+
+   my $var;
+   foreach $var ( "phys" , "atm_forc", "res", "bgc", "crop", "use_case", "start_ymd", "namelist" ) {
+      if ( not exists $finidat_files{$key}{$var} ) {
+         die  "ERROR: Subkey $var does not exist for finidat_file $key\nERROR:Check if you spelled $var correctly\n"
+      }
+   }
+
    my $phys = $finidat_files{$key}{'phys'};
    print "physics = $phys\n";
    &make_config_cache($phys);

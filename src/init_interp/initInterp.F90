@@ -1397,7 +1397,7 @@ contains
           write(iulog,*) 'Proceeding despite missing c13 and/or c14 fields on input finidat file,'
           write(iulog,*) 'because for_testing_allow_interp_non_ciso_to_ciso is set.'
           write(iulog,*) ' '
-       else
+       else if (masterproc) then
           write(iulog,*) ' '
           write(iulog,*) 'for_testing_allow_interp_non_ciso_to_ciso is .true., but it appears to be unnecessary in this run'
           write(iulog,*) '(this is informational only - it does not indicate a problem)'
