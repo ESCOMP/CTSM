@@ -28,7 +28,8 @@ module CropHeatStress
 
   !
   ! !PUBLIC FOR UNIT TESTING
-  real(r8), public, parameter :: tcrit = 303.15_r8
+  real(r8), public, parameter :: tcrit = 302.15_r8
+  real(r8), public, parameter :: tmax = 318.15_r8
   real(r8), public, parameter :: HS_ndays_min = 3._r8
 
   character(len=*), parameter, private :: sourcefile = &
@@ -95,11 +96,11 @@ contains
   end subroutine crop_heatstress_ndays
 
 
-subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
+  subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
 
     ! !DESCRIPTION:
     ! function to calculate heat stress instensity by applying a factor to bglfr (increasing LAI decline). function based on Apsim-Nwheat model Asseng et al. 2011:https://doi.org/10.1111/j.1365-2486.2010.02262.x
-    ! needed: different tcrit, tmax values for different crops and climatologies
+    ! WIP: different tcrit, tmax values for different crops or climatologies
 
     ! !ARGUMENTS:
     real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
@@ -108,31 +109,28 @@ subroutine calc_HS_factor(HS_factor, HS_ndays, t_veg_day, croplive)
     logical,         intent(in)        :: croplive              ! crop between sowing and harvest
 
     ! !LOCAL VARIABLES:
-    real(r8) :: tcrit, tmax            ! placeholders for input parameters (will be seperate development)
-    integer  :: day_min, day_max
+    integer  :: day_min
 
     !-----------------------------------------------------------------------
 
-    tcrit = 302.15_r8
-    tmax  = 318.15_r8
     day_min = 3
 
     !check  if stress occurs
-    if (HS_ndays == day_min) then
+    if (HS_ndays == day_min .and. croplive .and. t_veg_day >= tcrit) then
        ! onset heatwave
        HS_factor = 1.5_r8
-    else if (HS_ndays > day_min .and. croplive) then
-       if (t_veg_day < tmax .and. t_veg_day > tcrit) then
+    else if (HS_ndays > day_min .and. croplive .and. t_veg_day >= tcrit) then
+      if (t_veg_day <= tmax ) then
           HS_factor = 4 - (1 - (t_veg_day - tcrit)/2)
-       else if (t_veg_day > tmax) then
+      else
           HS_factor = 11._r8
-       end if
+      end if
     else
        HS_factor = 1._r8
-   end if
+    end if
 
 
-end subroutine calc_HS_factor 
+  end subroutine calc_HS_factor 
 
 
 end module CropHeatStress
