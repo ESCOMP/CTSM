@@ -160,9 +160,11 @@ contains
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
+    use shr_dust_emis_mod , only : shr_dust_emis_readnl
     use shr_fire_emis_mod , only : shr_fire_emis_readnl
     use clm_varctl        , only : ndep_from_cpl
     use controlMod        , only : NLFilename
+    use spmdMod           , only : mpicom
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -236,6 +238,9 @@ contains
     end if
 
     ! The following namelist reads should always be called regardless of the send_to_atm value
+
+    ! Dust emissions from land to atmosphere
+    call shr_dust_emis_readnl( mpicom, "drv_flds_in")
 
     ! Dry Deposition velocities from land - ALSO initialize drydep here
     call shr_drydep_readnl("drv_flds_in", drydep_nflds)

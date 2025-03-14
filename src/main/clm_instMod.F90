@@ -11,6 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use clm_varctl      , only : use_excess_ice
   use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, no_soil_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
@@ -187,12 +188,14 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
-    use controlMod                         , only : nlfilename, fsurdat
+    use controlMod                         , only : nlfilename, fsurdat, hillslope_file
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
+    use clm_varctl                         , only : use_excess_ice
+    use ExcessIceStreamType                , only : excessicestream_type, UseExcessIceStreams
     
     use initVerticalMod                    , only : initVertical
     use SnowHydrologyMod                   , only : InitSnowLayers
@@ -220,6 +223,8 @@ contains
     type(file_desc_t)     :: params_ncid  ! pio netCDF file id for parameter file
     real(r8), allocatable :: h2osno_col(:)
     real(r8), allocatable :: snow_depth_col(:)
+    real(r8), allocatable :: exice_init_conc_col(:) ! initial coldstart excess ice concentration (from the stream file or 0.0) (-)
+    type(excessicestream_type)  :: exice_stream
 
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
@@ -275,7 +280,7 @@ contains
 
     ! Set hillslope column bedrock values
     if (use_hillslope) then
-       call SetHillslopeSoilThickness(bounds,fsurdat, &
+       call SetHillslopeSoilThickness(bounds, hillslope_file, &
             soil_depth_lowland_in=8.5_r8,&
             soil_depth_upland_in =2.0_r8)
        call setSoilLayerClass(bounds)
@@ -297,12 +302,23 @@ contains
 
     ! Initialization of public data types
 
+    ! If excess ice is read from the stream, it has to be read before we coldstart the temperature
+    allocate(exice_init_conc_col(bounds%begc:bounds%endc))
+    exice_init_conc_col(bounds%begc:bounds%endc) = 0.0_r8
+    if (use_excess_ice) then
+       call exice_stream%Init(bounds, NLFilename)
+       if (UseExcessIceStreams()) then
+          call exice_stream%CalcExcessIce(bounds, exice_init_conc_col(bounds%begc:bounds%endc))
+       endif
+    endif
+
     call temperature_inst%Init(bounds,           &
          em_roof_lun=urbanparams_inst%em_roof(begl:endl),    &
          em_wall_lun=urbanparams_inst%em_wall(begl:endl),    &
          em_improad_lun=urbanparams_inst%em_improad(begl:endl), &
          em_perroad_lun=urbanparams_inst%em_perroad(begl:endl), &
-         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp() )
+         is_simple_buildtemp=IsSimpleBuildTemp(), is_prog_buildtemp=IsProgBuildTemp(), &
+         exice_init_conc_col=exice_init_conc_col(bounds%begc:bounds%endc) , NLFileName=NLFilename)
 
     call active_layer_inst%Init(bounds)
 
@@ -316,7 +332,9 @@ contains
          snow_depth_col = snow_depth_col(begc:endc), &
          watsat_col = soilstate_inst%watsat_col(begc:endc, 1:), &
          t_soisno_col = temperature_inst%t_soisno_col(begc:endc, -nlevsno+1:), &
-         use_aquifer_layer = use_aquifer_layer())
+         use_aquifer_layer = use_aquifer_layer(), &
+         exice_coldstart_depth = temperature_inst%excess_ice_coldstart_depth, &
+         exice_init_conc_col = exice_init_conc_col(begc:endc))
 
     call glacier_smb_inst%Init(bounds)
 
@@ -454,6 +472,7 @@ contains
 
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
+    deallocate (exice_init_conc_col)
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields

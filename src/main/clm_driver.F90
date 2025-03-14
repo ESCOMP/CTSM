@@ -475,7 +475,7 @@ contains
 
     ! When crop calendar streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if (use_cropcal_streams .and. is_beg_curr_year()) then
+    if (use_crop .and. use_cropcal_streams .and. is_beg_curr_year()) then
       call cropcal_advance( bounds_proc )
     end if
 
@@ -815,11 +815,11 @@ contains
        call dust_emis_inst%DustDryDep(bounds_clump, &
             atm2lnd_inst, frictionvel_inst)
 
-       ! VOC emission (A. Guenther's MEGAN (2006) model)
+       ! VOC emission (A. Guenther's MEGAN (2006) model; Wang et al., 2022, 2024a, 2024b)
        call VOCEmission(bounds_clump,                                         &
                filter(nc)%num_soilp, filter(nc)%soilp,                           &
                atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
-               vocemis_inst)
+               vocemis_inst, energyflux_inst)
 
        call t_stopf('bgc')
 
@@ -1073,11 +1073,12 @@ contains
             frictionvel_inst, photosyns_inst, drydepvel_inst)
        call t_stopf('depvel')
 
-       if (use_cropcal_streams .and. is_beg_curr_year()) then
+       if (use_crop .and. use_cropcal_streams .and. is_beg_curr_year()) then
           ! ============================================================================
           ! Update crop calendars
           ! ============================================================================
-          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, filter_inactive_and_active(nc)%pcropp, crop_inst)
+          call cropcal_interp(bounds_clump, filter_inactive_and_active(nc)%num_pcropp, &
+               filter_inactive_and_active(nc)%pcropp, .false., crop_inst)
        end if
 
        ! ============================================================================
@@ -1367,40 +1368,38 @@ contains
     ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
     ! use_fates) then statement ... double check if this is required and why
 
-    if (nstep > 0) then
-       call t_startf('accum')
+    call t_startf('accum')
 
-       call atm2lnd_inst%UpdateAccVars(bounds_proc)
+    call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
-       call temperature_inst%UpdateAccVars(bounds_proc)
+    call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
 
-       call canopystate_inst%UpdateAccVars(bounds_proc)
+    call canopystate_inst%UpdateAccVars(bounds_proc)
 
-       call water_inst%UpdateAccVars(bounds_proc)
+    call water_inst%UpdateAccVars(bounds_proc)
 
-       call energyflux_inst%UpdateAccVars(bounds_proc)
+    call energyflux_inst%UpdateAccVars(bounds_proc)
 
-       ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
-       ! compiling this threaded, I needed to change the dummy arguments to be
-       ! pointers, and get rid of the explicit bounds in the subroutine call.
-       ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-       !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-       !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-       call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-            t_a10_patch=temperature_inst%t_a10_patch, &
-            t_ref2m_patch=temperature_inst%t_ref2m_patch)
+    ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+    ! compiling this threaded, I needed to change the dummy arguments to be
+    ! pointers, and get rid of the explicit bounds in the subroutine call.
+    ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+    !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+    !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+    call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+         t_a10_patch=temperature_inst%t_a10_patch, &
+         t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-       if (use_crop) then
-          call crop_inst%CropUpdateAccVars(bounds_proc, &
-               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
-       end if
-
-       if(use_fates) then
-          call clm_fates%UpdateAccVars(bounds_proc)
-       end if
-
-       call t_stopf('accum')
+    if (use_crop) then
+       call crop_inst%CropUpdateAccVars(bounds_proc, &
+            temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
     end if
+
+    if(use_fates) then
+       call clm_fates%UpdateAccVars(bounds_proc)
+    end if
+
+    call t_stopf('accum')
 
     ! ============================================================================
     ! Update history buffer

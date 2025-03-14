@@ -88,7 +88,7 @@ contains
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
        wateratm2lndbulk_inst, waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area
@@ -99,6 +99,7 @@ contains
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     use dynSubgridControlMod , only: run_has_transient_landcover
+    use CropType             , only: crop_type
     !
     ! !ARGUMENTS:
     class(cnfire_li2014_type)                             :: this
@@ -121,6 +122,7 @@ contains
     class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
+    type(crop_type)                       , intent(in)    :: crop_inst  ! Dummy argument; not used in this version of CNFireArea
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
     real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
@@ -170,6 +172,11 @@ contains
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
          pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
          boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
+         defo_fire_precip_thresh_bet  => cnfire_const%defo_fire_precip_thresh_bet, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf evergreen trees
+         defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
+         borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
+         nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
+
 
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
@@ -530,10 +537,10 @@ contains
         g= col%gridcell(c)
         if(grc%latdeg(g) < cnfire_const%borealat )then
            baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
-                min(1._r8,(4.0_r8-prec60_col(c)*secspday)/ &
+                min(1._r8,(4.0_r8-prec60_col(c)*secspday/nonborpeat_fire_precip_denom)/ &
                 4.0_r8))**2*peatf_lf(c)*(1._r8-fsat(c))
         else
-           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/0.3_r8))* &
+           baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/borpeat_fire_soilmoist_denom))* &
                 max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
                 (1._r8-fsat(c))
         end if
@@ -605,7 +612,11 @@ contains
                     fbac1(c)        = 0._r8
                     farea_burned(c) = baf_crop(c)+baf_peatf(c)
                  else
-                    cri = (4.0_r8*trotr1_col(c)+1.8_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
+                    ! Calculate the precip threshold as the area-weighted mean of that for BET and BDT
+                    cri = (defo_fire_precip_thresh_bet * trotr1_col(c) &
+                         + defo_fire_precip_thresh_bdt * trotr2_col(c)) &
+                         / (trotr1_col(c) + trotr2_col(c))
+
                     cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
                          (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
                          max(0.0005_r8,min(1._r8,19._r8*dtrotr_col(c)*dayspyr*secspday/dt-0.001_r8))* &

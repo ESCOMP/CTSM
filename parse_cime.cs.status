@@ -204,7 +204,11 @@ sub run_csstatus {
          do {
             $newline = shift(@lines);
             if (       $newline =~ /FAIL[ ]+$test ([^ ]+)/ ) {
-               $fails .= " $1";
+               if ( $fails eq "" ) {
+                  $fails = $1;
+               } else {
+                  $fails .= " $1";
+               }
                chomp( $fails );
                if ( $1 eq "BASELINE" ) {
                  if ( $newline =~ /ERROR BFAIL baseline directory/ ) {
@@ -290,7 +294,33 @@ sub print_sumperline {
    }
 }
 
-
+sub expectedFails {
+   # Query expected fail file for the input testname key
+   my ($key, $message, @failfiles) = @_;
+   my $expect = "";
+   my $expectedfails = "";
+   foreach my $expectedfailfile ( @failfiles ) {
+      my $fh = IO::File->new($expectedfailfile, '<') or die "ERROR:: failure opening $expectedfailfile\n";
+      while( my $line = <$fh> ) {
+         if ( $line =~ /$key/ ) {
+            $expect = $message;
+            # Read past the testname until the test end is found...
+            # Keep track of all of the expected fails and return it at the end
+            while( my $testline = <$fh> ) {
+               if ( $testline =~ /phase\s+name\s*=\s*\"([a-zA-Z0-9_]+)/ ) {
+                  if ( $expectedfails eq "" ) {
+                    $expectedfails = $1;
+                  } else {
+                    $expectedfails = "$expectedfails $1";
+                  }
+               }
+               if ( $testline =~ /\<\/test\>/ ) { last; }
+            }
+         }
+      }
+   }
+   return( $expect, $expectedfails );
+}
 
 sub print_categories {
    # Seperate tests into categories
@@ -302,6 +332,9 @@ sub print_categories {
    if ( ! -f $expectedfailfile ) {
       $expectedfailfile = "$scrdir/cime_config/testdefs/ExpectedTestFails.xml";
    }
+   my @failfiles = (  $expectedfailfile, "$scrdir/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml",
+                      #"$scrdir/components/mosart/cime_config/testdefs/ExpectedTestFails.xml",
+                      "$scrdir/components/cmeps/cime_config/ExpectedTestFails.xml" );
    my @passes;
    my @fails;
    my @pendings;
@@ -340,9 +373,9 @@ sub print_categories {
       print( "These tests passed\n" );
       print( "================================================================================\n" );
       foreach my $key ( @passes ) {
-         my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
+         my ($expect, $expectFails) = &expectedFails( $key, "FAILED PREVIOUSLY", @failfiles );
+         if ( $expect ne "" ) { $expect = "$expect ($expectFails)"; }
+         if ($expectFails =~ /BASELINE/ ) { $expect = ""; }
          print( "$key\t\t\t$expect\n" );
       }
    }
@@ -351,7 +384,9 @@ sub print_categories {
       print( "These tests compare different to the baseline\n" );
       print( "================================================================================\n" );
       foreach my $key ( @compares_diff ) {
-         print( "$key\n" );
+         my ($expect, $expectFails) = &expectedFails( $key, "EXPECTED POSSIBILITY", @failfiles );
+         if ($expectFails !~ /BASELINE/ ) { $expect = ""; }
+         print( "$key\t\t$expect\n" );
       }
    }
    if ( $#compares_diff_nobase >= 0 ) {
@@ -367,21 +402,21 @@ sub print_categories {
       print( "These tests are pending (some tests may fail in the pending state)\n" );
       print( "================================================================================\n" );
       foreach my $key ( @pendings ) {
-         my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         my ($expect, $expectFails) = &expectedFails( $key, "EXPECTED", @failfiles );
+         if ( $expect ne "" ) { $expect = "$expect ($expectFails)"; }
          print( "$key\t\t$expect\n" );
       }
    }
    if ( $#fails >= 0 ) {
       print( "================================================================================\n" );
       print( "These tests failed\n" );
+      print( "Test (what Failed) EXPECTED (what expected to fail)\n" );
       print( "================================================================================\n" );
       foreach my $key ( @fails ) {
-         my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "EXPECTED"; }
-         print( "$key\t\t$expect\n" );
+         my ($expect, $expectFails) = &expectedFails( $key, "EXPECTED", @failfiles );
+         if ( $expect ne "" ) { $expect = "$expect ($expectFails)"; }
+         my $fails = $csstatus{$key}{'FAIL'};
+         print( "$key\t($fails)\t\t$expect\n" );
       }
    }
 }

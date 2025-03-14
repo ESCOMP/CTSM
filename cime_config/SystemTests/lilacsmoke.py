@@ -25,7 +25,8 @@ import os
 import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy, append_testlog
+from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy
+from CIME.status import append_testlog
 from CIME.build import post_build
 from CIME.test_status import (
     NAMELIST_PHASE,
@@ -38,7 +39,7 @@ from CIME.XML.standard_module_setup import *
 
 logger = logging.getLogger(__name__)
 
-_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "lilac_in"]
+_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "drv_flds_in", "lilac_in"]
 
 
 class LILACSMOKE(SystemTestsCommon):

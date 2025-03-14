@@ -23,7 +23,7 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies CTSM physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies CTSM physics</entry>
 </config_definition>
 """
 
@@ -52,16 +52,8 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_interface = case.get_value("COMP_INTERFACE")
     lilac_mode = case.get_value("LILAC_MODE")
-    if comp_interface == "nuopc":
-        yr_start = case.get_value("DATM_YR_START")
-        yr_end = case.get_value("DATM_YR_END")
-    else:
-        yr_start = case.get_value("DATM_CLMNCEP_YR_START")
-        yr_end = case.get_value("DATM_CLMNCEP_YR_END")
-
-    if yr_start != None and yr_start < 0:
-        yr_start = case.get_value("DATM_CPLHIST_YR_START")
-        yr_end = case.get_value("DATM_CPLHIST_YR_END")
+    yr_start = case.get_value("DATM_YR_START")
+    yr_end = case.get_value("DATM_YR_END")
 
     # For LILAC
     if yr_start == None or lilac_mode == "on":
@@ -71,6 +63,7 @@ def buildnml(case, caseroot, compname):
     yr_start = int(yr_start)
     yr_end = int(yr_end)
 
+    clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
     ninst_lnd = case.get_value("NINST_LND")
@@ -80,6 +73,7 @@ def buildnml(case, caseroot, compname):
     run_refcase = case.get_value("RUN_REFCASE")
     run_refdate = case.get_value("RUN_REFDATE")
     run_reftod = case.get_value("RUN_REFTOD")
+    start_tod = case.get_value("START_TOD")
     glc_nec = case.get_value("GLC_NEC")
     glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
@@ -111,11 +105,6 @@ def buildnml(case, caseroot, compname):
         "clm5_0_QIAN": "clm5_0_GSWP3v1",
         "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
         "clm5_0_ERA5": "clm5_0_GSWP3v1",
-        "clm5_1_1PT": "clm5_1_GSWP3v1",
-        "clm5_1_QIAN": "clm5_1_GSWP3v1",
-        "clm5_1_NLDAS2": "clm5_1_GSWP3v1",
-        "clm5_1_ERA5": "clm5_1_GSWP3v1",
-        "clm5_1_CRUv7": "clm5_1_GSWP3v1",
         "clm6_0_1PT": "clm6_0_GSWP3v1",
         "clm6_0_QIAN": "clm6_0_GSWP3v1",
         "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
@@ -142,13 +131,9 @@ def buildnml(case, caseroot, compname):
     #  to the CAM version)
     tuning_based_on = {
         "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
-        "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
         "clm6_0_cam6.0": "clm5_0_cam6.0",
         "clm6_0_cam5.0": "clm5_0_cam6.0",
         "clm6_0_cam4.0": "clm5_0_cam6.0",
-        "clm5_1_cam6.0": "clm5_0_cam6.0",
-        "clm5_1_cam5.0": "clm5_0_cam6.0",
-        "clm5_1_cam4.0": "clm5_0_cam6.0",
         "clm5_0_cam5.0": "clm5_0_cam6.0",
         "clm5_0_cam4.0": "clm5_0_cam6.0",
         "clm4_5_cam6.0": "clm5_0_cam6.0",
@@ -224,11 +209,24 @@ def buildnml(case, caseroot, compname):
         clm_usrdat_name = case.get_value("CLM_USRDAT_NAME")
         clmusr = " -clm_usr_name %s " % clm_usrdat_name
         # Write warning about initial condition data
-        if "NEON" in clm_usrdat_name and clm_force_coldstart == "off":
-            if ("_transient" in clm_nml_use_case) and (
-                re.fullmatch(r"\w\w\w\w\.transient", casename) is None
-                or clm_usrdat_name is "NEON.PRISM"
-            ):
+        if (
+            "NEON" in clm_usrdat_name
+            or "PLUMBER2" in clm_usrdat_name
+            and clm_force_coldstart == "off"
+        ):
+            warning_init_conditions = False
+            if "NEON" in clm_usrdat_name:
+                if ("_transient" in clm_nml_use_case) and (
+                    re.fullmatch(r"\w\w\w\w\.transient", casename) is None
+                    or clm_usrdat_name is "NEON.PRISM"
+                ):
+                    warning_init_conditions = True
+            if "PLUMBER2" in clm_usrdat_name:
+                if ("_transient" in clm_nml_use_case) and (
+                    re.fullmatch(r"\w\w-\w\w\w\.transient", casename) is None
+                ):
+                    warning_init_conditions = True
+            if warning_init_conditions == True:
                 logger.warning(
                     "WARNING: Do you have appropriate initial conditions for this simulation?"
                     + " Check that the finidat file used in the lnd_in namelist is appropriately spunup for your case"
@@ -340,12 +338,19 @@ def buildnml(case, caseroot, compname):
         if run_type == "hybrid" or run_type == "branch":
             compnames = ["clm4", "clm5", "clm2"]
             for comp in compnames:
+                if "PLUMBER2" in clm_usrdat_name:
+                    # start_tod is supplied for PLUMBER cases
+                    tod = start_tod
+                else:
+                    # run_reftod is supplied for other cases
+                    tod = run_reftod
+
                 clm_startfile = "%s.%s%s.r.%s-%s.nc" % (
                     run_refcase,
                     comp,
                     inst_string,
                     run_refdate,
-                    run_reftod,
+                    tod,
                 )
                 if os.path.exists(os.path.join(rundir, clm_startfile)):
                     break
@@ -364,7 +369,7 @@ def buildnml(case, caseroot, compname):
                         break
 
             if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                logger.warning("WARNING: Could NOT find a start file to use using" + clm_startfile)
+                logger.warning("WARNING: Could NOT find a start file named " + clm_startfile)
             clm_icfile = "%s = '%s'" % (startfile_type, clm_startfile)
         else:
             clm_icfile = ""

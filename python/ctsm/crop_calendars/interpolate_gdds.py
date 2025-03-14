@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import logging
+import re
 import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run this stand-alone)
@@ -65,6 +66,14 @@ def _setup_process_args():
         required=True,
     )
     parser.add_argument(
+        "-p",
+        "--variable-prefix",
+        help="Interpolate variables whose names start with this string",
+        type=str,
+        required=False,
+        default="gdd1_",
+    )
+    parser.add_argument(
         "--overwrite",
         help="If output file exists, overwrite it.",
         action="store_true",
@@ -110,8 +119,12 @@ def interpolate_gdds(args):
     for var in ds_in:
 
         # Check variable
-        if "gdd1_" not in var:
-            raise RuntimeError(f"Unexpected variable {var} on input file")
+        if "lat" not in ds_in[var].dims and "lon" not in ds_in[var].dims:
+            print(f"Skipping variable {var} with dimensions {ds_in[var].dims}")
+            continue
+        if not re.compile("^" + args.variable_prefix).match(var):
+            print(f"Unexpected variable {var} on input file. Skipping.")
+            continue
         if args.dry_run:
             continue
 

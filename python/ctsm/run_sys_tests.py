@@ -8,6 +8,7 @@ import subprocess
 from datetime import datetime
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
+from CIME.test_utils import test_to_string  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
 from ctsm.ctsm_logging import (
@@ -736,12 +737,28 @@ def _check_py_env(test_attributes):
     # whether import is possible.
     # pylint: disable=import-error disable
 
-    # Check requirements for FSURDATMODIFYCTSM, if needed
-    if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
+    # Check requirements for using modify_fsurdat Python module, if needed
+    modify_fsurdat_users = ["FSURDATMODIFYCTSM", "RXCROPMATURITY"]
+    if any(any(u in t for u in modify_fsurdat_users) for t in test_attributes):
         try:
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+
+    # Check requirements for RXCROPMATURITY, if needed
+    if any("RXCROPMATURITY" in t for t in test_attributes):
+        try:
+            import ctsm.crop_calendars.check_rxboth_run
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("check_rxboth_run" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.generate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("generate_gdds" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.interpolate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("interpolate_gdds" + err_msg) from err
 
     # Check that list for any testmods that use modify_fates_paramfile.py
     testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
@@ -764,6 +781,11 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
+    if logger.getEffectiveLevel() <= logging.INFO:
+        logger.info("Tests:")
+        for test in test_data:
+            test_string = test_to_string(test).split(" ")[1]
+            logger.info("   %s", test_string)
     if not running_ctsm_py_tests:
         _check_py_env([t["testname"] for t in test_data])
         _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
