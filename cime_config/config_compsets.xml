@@ -417,6 +417,7 @@
     <science_support grid="f19_g17"/>
   </compset>
 
+  <compset>
     <alias>IHistClm50SpCru</alias>
     <lname>HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
