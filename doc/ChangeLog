@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.3.031
+Tag name: ctsm5.3.032
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Wed Mar 12 09:59:13 MDT 2025
+Date: Fri 14 Mar 2025 10:26:05 AM MDT
 One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
 
 Purpose and description of changes
@@ -43,12 +43,12 @@ Changes made to namelist defaults (e.g., changed parameter values):
  Limited changes revolving around lnd_tuning_mode settings
 
 Changes to documentation:
- Not, yet
+ Updated only subset_data documentation to explain how to subset gswp datm files instead of the default crujra files
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
- New tests exercising the Crujra compsets
+ New tests exercising Crujra compsets
 
 Testing summary:
 ----------------
@@ -88,6 +88,68 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2956
  https://github.com/ESCOMP/CDEPS/pull/322
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.031
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 13 Mar 2025 02:37:18 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+ Remove fates parameter setup "includes" where they are not needed anymore (by mvdebolskiy)
+ Add Spectral Element grid equilibrium script to tools/contrib (by oleson)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Merges PR #2996 Remove redundant fates setup includes
+ Merges PR #2991 Add Spectral Element grid equilibrium script to tools/contrib
+ Resolves   #821 Spinup stability/equilibrium script needed for SE grids
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Keith updated the README about the script changes in tools/contrib
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2996
+ https://github.com/ESCOMP/ctsm/pull/2991
 
 ===============================================================
 ===============================================================
