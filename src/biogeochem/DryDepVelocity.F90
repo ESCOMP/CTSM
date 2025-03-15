@@ -84,7 +84,8 @@ Module DryDepVelocity
 
      real(r8), pointer, public  :: velocity_patch (:,:) ! Dry Deposition Velocity
      real(r8), pointer, private :: rs_drydep_patch (:)  ! Stomatal resistance associated with dry deposition velocity for Ozone
-
+     integer ,  pointer :: wesley_veg_index_patch   (:)   ! Wesley PFT index for FATES dry deposition calculations
+     integer ,  pointer :: wesley_season_index_patch (:)   ! Season for dry deposition calculations
    contains
 
      procedure , public  :: Init
@@ -138,6 +139,9 @@ CONTAINS
     if ( n_drydep > 0 )then
        allocate(this%velocity_patch(begp:endp, n_drydep));  this%velocity_patch(:,:) = nan
        allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan
+       allocate(this%wesley_veg_index_patch   (begp:endp)) ;  ! is an integer so can't be nan 
+       allocate(this%wesley_season_index_patch   (begp:endp)) ! is an integer so can't be nan 
+       
     end if
 
   end subroutine InitAllocate
@@ -310,7 +314,9 @@ CONTAINS
          annlai     =>    canopystate_inst%annlai_patch         , & ! Input:  [real(r8) (:,:) ] 12 months of monthly lai from input data set
 
          velocity   =>    drydepvel_inst%velocity_patch         , & ! Output: [real(r8) (:,:) ] cm/sec
-         rs_drydep  =>    drydepvel_inst%rs_drydep_patch          & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         rs_drydep  =>    drydepvel_inst%rs_drydep_patch        ,  & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
+         wesley_veg_index    =>  drydepvel_inst%wesley_veg_index_patch , &
+         wesley_season_index =>  drydepvel_inst%wesley_season_index_patch &
          )
 
       !_________________________________________________________________
@@ -362,7 +368,7 @@ CONTAINS
             
              if(use_fates)then
                 if(patch%is_fates(pi))then
-                   wesveg = canopystate_inst%wesley_veg_index_patch(pi)
+                   wesveg = wesley_veg_index(pi)
                 else
                    wesveg = 8 !make bare ground for non-fates patches. Some of these are overwritten below.
                 endif
@@ -420,7 +426,7 @@ CONTAINS
             
             if(use_fates.and.index_season<1)then 
                if(patch%is_fates(pi))then
-                  index_season = canopystate_inst%wesley_season_index_patch(pi)
+                  index_season = wesley_season_index(pi)
                else
                   index_season = 2 !set intermediate spring seson for bare ground. (as for urban)
                endif
