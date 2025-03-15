@@ -131,6 +131,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
+   use FatesInterfaceMod     , only :   set_fates_drydep_indices
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
    
@@ -2548,7 +2549,6 @@ module CLMFatesInterfaceMod
    subroutine wrap_drydep(this, nc, canopystate_inst)
 
      class(hlm_fates_interface_type), intent(inout) :: this
-     type(bounds_type),intent(in)                   :: bounds_clump
      integer                 , intent(in)           :: nc
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
      
@@ -2559,13 +2559,11 @@ module CLMFatesInterfaceMod
      integer :: c       ! column index
      integer :: g       ! grid cell
 
-     associate(
-               wesley_veg_index_patch => canopystate_inst%wesley_veg_index_patch, &
-               wesley_season_index_patch => canopystate_inst%wesley_season_index_patch
-               )
+     associate(wesley_veg_index_patch => canopystate_inst%wesley_veg_index_patch, &
+               wesley_season_index_patch => canopystate_inst%wesley_season_index_patch)
                
       ! Call thee FATES routine to set the PFT and season indices for the drydep routines in CLM
-      call set_fates_drydep_indice(this%fates(nc)%nsites, &
+      call set_fates_drydep_indices(this%fates(nc)%nsites, &
            this%fates(nc)%sites,  &
            this%fates(nc)%bc_out ) 
 
@@ -2586,7 +2584,7 @@ module CLMFatesInterfaceMod
 
           end do
        end do
-
+     end associate
    end subroutine wrap_drydep
    
    ! ====================================================================================

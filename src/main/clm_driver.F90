@@ -1067,7 +1067,7 @@ contains
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
        !  TODO PUT FAteS DRYDEP wrapper here
        if(use_fates.and. n_drydep >0)then
-          call clmfates%wrap_drydep(this, nc, canopystate_inst)
+          call clm_fates%wrap_drydep(nc, canopystate_inst)
        end if 
        call t_startf('depvel')
        call depvel_compute(bounds_clump, &
@@ -1130,7 +1130,6 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
