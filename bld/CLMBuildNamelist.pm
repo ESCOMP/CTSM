@@ -4024,10 +4024,12 @@ sub setup_logic_dry_deposition {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
   }
-  if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+  # fates-sp will set use_fates_nocomp in the setup logic for fates earlier
+  if ( &value_is_true( $nl_flags->{'use_fates'}) && 
+       not &value_is_true($nl->get_value('use_fates_nocomp'))) {
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
-           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
+           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-NOCOMP mode is on.\n" .
                          "   Use the '--no-drydep' option when '-bgc fates' is activated");
         }
      }
