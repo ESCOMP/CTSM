@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.032
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 14 Mar 2025 10:26:05 AM MDT
+Date: Mon 17 Mar 2025 09:49:08 AM MDT
 One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
 
 Purpose and description of changes
@@ -68,10 +68,10 @@ Testing summary:
     derecho ----- OK
     izumi ------- OK
 
-  ctsm_sci
+  ctsm_sci compared against most recent (ctsm_sci-ctsm5.3.021) baseline
     derecho ----- OK
 
-  aux_cdeps compared against last (cdeps1.0.55) baseline
+  aux_cdeps compared against cdeps1.0.55 and then against cdeps1.0.70 baselines
     derecho ----- OK
 
 Answer changes

@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.3.032   slevis 03/14/2025 Add option to use CRUJRA2024 with clm6 and clm5
+       ctsm5.3.032   slevis 03/17/2025 Add option to use CRUJRA2024 with clm6 and clm5
        ctsm5.3.031   slevis 03/13/2025 Merge b4b-dev
        ctsm5.3.030 samrabin 03/07/2025 Fix FATES branch runs
        ctsm5.3.029   slevis 03/05/2025 Make Bytnerowicz the default nfix_method for clm6
