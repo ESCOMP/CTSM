@@ -48,7 +48,7 @@ contains
     ! Should be called once for every test that uses the time manager.
     !
     ! !USES:
-    use ESMF, only : ESMF_Initialize, ESMF_SUCCESS
+    use ESMF, only : ESMF_Initialize, ESMF_IsInitialized, ESMF_SUCCESS
     use clm_time_manager, only : set_timemgr_init, timemgr_init, NO_LEAP_C, GREGORIAN_C
     !
     ! !ARGUMENTS:
@@ -59,6 +59,7 @@ contains
     integer :: l_dtime  ! local version of dtime
     logical :: l_use_gregorian_calendar  ! local version of use_gregorian_calendar
     character(len=:), allocatable :: calendar
+    logical :: esmf_is_initialized
     integer :: rc ! return code
 
     integer, parameter :: dtime_default = 1800  ! time step (seconds)
@@ -89,9 +90,15 @@ contains
        l_use_gregorian_calendar = .false.
     end if
 
-    call ESMF_Initialize(rc=rc)
+    esmf_is_initialized = ESMF_IsInitialized(rc=rc)
     if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_Initialize'
+       stop 'Error in ESMF_IsInitialized'
+    end if
+    if (.not. esmf_is_initialized) then
+       call ESMF_Initialize(rc=rc)
+       if (rc /= ESMF_SUCCESS) then
+          stop 'Error in ESMF_Initialize'
+       end if
     end if
 
     if (l_use_gregorian_calendar) then
@@ -219,10 +226,12 @@ contains
     
     call timemgr_reset()
 
-    call ESMF_Finalize(rc=rc)
-    if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_Finalize'
-    end if
+    ! If this is the end of the executable, we should call
+    ! ESMF_Finalize. But the timemgr setup and teardown routines can
+    ! be called multiple times within a single unit test executable,
+    ! and it's an error to re-call ESMF_Initialize after calling
+    ! ESMF_Finalize. So for now we just won't attempt to do an
+    ! ESMF_Finalize.
 
   end subroutine unittest_timemgr_teardown
 
