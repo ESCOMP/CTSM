@@ -1,4 +1,96 @@
 ===============================================================
+Tag name: ctsm5.3.032
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon 17 Mar 2025 09:49:08 AM MDT
+One-line Summary: Add option to use CRUJRA2024 with clm6 and clm5
+
+Purpose and description of changes
+----------------------------------
+
+ Added the option and included explicit Crujra compsets with clm6 and clm5.
+ This required changes in cdeps.
+ Unrelated updates in cdeps required updating share.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1895 add crujra option for ctsm's datm inputs
+ Partly addresses #2960 update subset_data to use crujra
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Adding new compsets with Crujra in their names and allowing CRUJRA2024 in long compset names
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Limited changes revolving around lnd_tuning_mode settings
+
+Changes to documentation:
+ Updated only subset_data documentation to explain how to subset gswp datm files instead of the default crujra files
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New tests exercising Crujra compsets
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist
+
+    derecho - PASS
+
+  python testing
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci compared against most recent (ctsm_sci-ctsm5.3.021) baseline
+    derecho ----- OK
+
+  aux_cdeps compared against cdeps1.0.55 and then against cdeps1.0.70 baselines
+    derecho ----- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ share1.1.7 to share1.1.8
+ cdeps1.0.61 to cdeps1.0.70
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2956
+ https://github.com/ESCOMP/CDEPS/pull/322
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.031
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 13 Mar 2025 02:37:18 PM MDT
