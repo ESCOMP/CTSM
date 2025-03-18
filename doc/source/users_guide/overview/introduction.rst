@@ -62,6 +62,8 @@ In :ref:`running-special-cases-section`, again for the expert user, we give deta
 
 :ref:`running-single-points` outlines how to do single-point or regional simulations using |version|. This is useful to either compare |version| simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization. There are several different ways given on how to perform single-point simulations which range from simple sampling of existing inputs to more complex where you create all your own datasets, tying into :ref:`using-clm-tools-section` and also :ref:`adding-new-resolutions-section` to add the files into the build-namelist XML database.
 
+There is also :ref:`pts_mode`, which is useful for running single points as part of the Single Column Atmospheric Model (SCAM).
+
 :ref:`troubleshooting-index` gives some guidance on trouble-shooting problems when using |version|. It doesn't cover all possible problems with CLM, but gives you some guidelines for things that can be done for some common problems.
 
 :ref:`testing_section` goes over the automated testing scripts for validating that the CLM is working correctly. The test scripts run many different configurations and options with CLM4.0 physics as well and |version| physics making sure that they work, as well as doing automated testing to verify restarts are working correctly, and testing at many different resolutions. In general this is an activity important only for a developer of |version|, but could also be used by users who are doing extensive code modifications and want to ensure that the model continues to work correctly.
