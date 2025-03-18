@@ -35,6 +35,7 @@ module BalanceCheckMod
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
+  use clm_varctl         , only : use_hillslope_routing
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -215,6 +216,7 @@ contains
     !
     ! !USES:
     use subgridAveMod, only: c2g
+    use LandunitType , only : lun
     !
     ! !ARGUMENTS:
     type(bounds_type)          , intent(in)    :: bounds
@@ -231,8 +233,8 @@ contains
     character(len=5)           , intent(in)    :: flag  ! specifies begwb or endwb
     !
     ! !LOCAL VARIABLES:
-    integer :: g  ! indices
-    integer :: begc, endc, begg, endg  ! bounds
+    integer :: g, l  ! indices
+    integer :: begc, endc, begl, endl, begg, endg  ! bounds
     real(r8) :: wb_col(bounds%begc:bounds%endc)  ! temporary column-level water mass
     real(r8) :: wb_grc(bounds%begg:bounds%endg)  ! temporary grid cell-level water mass
     real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux
@@ -250,6 +252,8 @@ contains
 
     begc = bounds%begc
     endc = bounds%endc
+    begl = bounds%begl
+    endl = bounds%endl
     begg = bounds%begg
     endg = bounds%endg
 
@@ -266,6 +270,15 @@ contains
     call c2g(bounds, wb_col(begc:endc), wb_grc(begg:endg), &
              c2l_scale_type='urbanf', l2g_scale_type='unity')
 
+    ! add landunit level state variable, convert from (m3) to (kg m-2)
+    if (use_hillslope_routing) then
+       do l = begl, endl
+          g = lun%gridcell(l)
+          wb_grc(g) = wb_grc(g) +  waterstate_inst%stream_water_volume_lun(l) &
+               *1e3_r8/(grc%area(g)*1.e6_r8)
+       enddo
+    endif
+    
     ! Call the beginning or ending version of the subroutine according
     ! to flag value
     if (flag == 'begwb') then
@@ -500,8 +513,9 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
-          forc_solad              =>    atm2lnd_inst%forc_solad_grc             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
-          forc_solai              =>    atm2lnd_inst%forc_solai_grc             , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
+          forc_solad_col    =>    atm2lnd_inst%forc_solad_downscaled_col        , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solad        =>    atm2lnd_inst%forc_solad_not_downscaled_grc    , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_rain         =>    wateratm2lnd_inst%forc_rain_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level rain rate [mm/s]
           forc_rain_grc     =>    wateratm2lnd_inst%forc_rain_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level rain rate [mm/s]
           forc_snow         =>    wateratm2lnd_inst%forc_snow_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level snow rate [mm/s]
@@ -546,6 +560,7 @@ contains
           qflx_qrgwl_grc          =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
           qflx_drain_col          =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
           qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
+          qflx_streamflow_grc     =>    waterlnd2atm_inst%qflx_rofliq_stream_grc, & ! Input: [real(r8) (:)   ] streamflow [mm H2O/s]
           qflx_ice_runoff_col     =>    waterlnd2atm_inst%qflx_ice_runoff_col   , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc       , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
@@ -561,6 +576,7 @@ contains
           eflx_lh_tot             =>    energyflux_inst%eflx_lh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total latent heat flux (W/m**2)  [+ to atm]
           eflx_soil_grnd          =>    energyflux_inst%eflx_soil_grnd_patch    , & ! Input:  [real(r8) (:)   ]  soil heat flux (W/m**2) [+ = into soil] 
           eflx_wasteheat_patch    =>    energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+          eflx_ventilation_patch  =>    energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
           eflx_heat_from_ac_patch =>    energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
           eflx_traffic_patch      =>    energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
           eflx_dynbal             =>    energyflux_inst%eflx_dynbal_grc         , & ! Input:  [real(r8) (:)   ]  energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
@@ -724,6 +740,15 @@ contains
                - qflx_snwcp_discarded_ice_grc(g)) * dtime
        end do
 
+       ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
+       if (use_hillslope_routing) then
+          ! output water flux from streamflow (+)
+          do g = bounds%begg, bounds%endg
+             errh2o_grc(g) = errh2o_grc(g) &
+                  +  qflx_streamflow_grc(g) * dtime
+          enddo
+       endif
+
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
        ! BUG(rgk, 2021-04-13, ESCOMP/CTSM#1314) Temporarily bypassing gridcell-level check with use_fates_planthydro until issue 1314 is resolved
@@ -882,8 +907,8 @@ contains
              ! level because of interactions between columns and since a separate check is done
              ! in the urban radiation module
              if (.not. lun%urbpoi(l)) then
-                errsol(p) = fsa(p) + fsr(p) &
-                     - (forc_solad(g,1) + forc_solad(g,2) + forc_solai(g,1) + forc_solai(g,2))
+                   errsol(p) = fsa(p) + fsr(p) &
+                        - (forc_solad_col(c,1) + forc_solad_col(c,2) + forc_solai(g,1) + forc_solai(g,2))
              else
                 errsol(p) = spval
              end if
@@ -911,7 +936,8 @@ contains
                 errseb(p) = sabv(p) + sabg(p) &
                      - eflx_lwrad_net(p) &
                      - eflx_sh_tot(p) - eflx_lh_tot(p) - eflx_soil_grnd(p) &
-                     + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p)
+                     + eflx_wasteheat_patch(p) + eflx_heat_from_ac_patch(p) + eflx_traffic_patch(p) &
+                     + eflx_ventilation_patch(p)
              end if
              !TODO MV - move this calculation to a better place - does not belong in BalanceCheck 
              netrad(p) = fsa(p) - eflx_lwrad_net(p)

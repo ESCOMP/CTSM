@@ -4,7 +4,7 @@ module NutrientCompetitionMethodMod
   ! !DESCRIPTION:
   ! Abstract base class for functions to calculate nutrient competition
   !
-  ! Created by Jinyun Tang, following Bill Sack's implementation of polymorphism
+  ! Created by Jinyun Tang, following Bill Sacks's implementation of polymorphism
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   implicit none
@@ -20,9 +20,6 @@ module NutrientCompetitionMethodMod
      ! initialization
      procedure(init_interface), public, deferred :: init
 
-     ! Read in parameters
-     procedure, public :: readParams
-
       ! compute plant nutrient demand
      procedure(calc_plant_nutrient_demand_interface), public, deferred :: calc_plant_nutrient_demand
 
@@ -30,12 +27,6 @@ module NutrientCompetitionMethodMod
      procedure(calc_plant_nutrient_competition_interface), public, deferred :: calc_plant_nutrient_competition
 
   end type nutrient_competition_method_type
-
-  type, public :: params_type
-     real(r8) :: dayscrecover      ! number of days to recover negative cpool
-  end type params_type
-  !
-  type(params_type), public, protected  :: params_inst  ! params_inst is populated in readParamsMod
 
   abstract interface
 
@@ -68,14 +59,13 @@ module NutrientCompetitionMethodMod
      end subroutine init_interface
 
      !---------------------------------------------------------------------------     
-     subroutine calc_plant_nutrient_demand_interface (this, bounds, num_soilp, filter_soilp, &
-          photosyns_inst, crop_inst, canopystate_inst,                             &
+     subroutine calc_plant_nutrient_demand_interface (this, bounds,                &
+          num_p, filter_p, call_is_for_pcrop,                                      &
+          crop_inst, canopystate_inst,                                             &
           cnveg_state_inst, cnveg_carbonstate_inst, cnveg_carbonflux_inst,         &
-          c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst,                    &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
           soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenstate_inst, &
-          energyflux_inst,      &
-          aroot, arepr)
+          energyflux_inst)
        !
        ! DESCRIPTION
        ! calculate nutrient yield after considering competition between different components
@@ -83,7 +73,6 @@ module NutrientCompetitionMethodMod
        ! USES
        use shr_kind_mod           , only : r8 => shr_kind_r8
        use decompMod              , only : bounds_type       
-       use PhotosynthesisMod      , only : photosyns_type
        use CropType               , only : crop_type
        use CanopyStateType        , only : canopystate_type
        use CNVegStateType         , only : cnveg_state_type
@@ -99,23 +88,28 @@ module NutrientCompetitionMethodMod
        ! !ARGUMENTS:
        class(nutrient_competition_method_type) , intent(inout)    :: this
        type(bounds_type)               , intent(in)    :: bounds
-       integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
-       integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
-       type(photosyns_type)            , intent(in)    :: photosyns_inst
+
+       ! This subroutine is meant to be called separately for non-prognostic-crop points and
+       ! prognostic-crop points. (The reason for this is so that the call for prognostic-crop
+       ! points can be skipped when a separate crop model is calculating these variables.) In
+       ! the call for non-prognostic-crop points, this filter should be the soilnopcropp
+       ! filter and call_is_for_pcrop should be false; in the call for prognostic-crop
+       ! points, this filter should be the pcropp filter and call_is_for_pcrop should be
+       ! true.
+       integer                         , intent(in)    :: num_p        ! number of patches in filter
+       integer                         , intent(in)    :: filter_p(:)  ! patch filter
+       logical                         , intent(in)    :: call_is_for_pcrop
+
        type(crop_type)                 , intent(in)    :: crop_inst
        type(canopystate_type)          , intent(in)    :: canopystate_inst
        type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
-       type(cnveg_carbonstate_type)    , intent(inout) :: cnveg_carbonstate_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: cnveg_carbonflux_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
-       type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
+       type(cnveg_carbonstate_type)    , intent(in)    :: cnveg_carbonstate_inst
+       type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
        type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
        type(soilbiogeochem_carbonflux_type), intent(in) :: soilbiogeochem_carbonflux_inst
        type(soilbiogeochem_nitrogenstate_type), intent(in) :: soilbiogeochem_nitrogenstate_inst
        type(energyflux_type)           , intent(in)    :: energyflux_inst   
-       real(r8)                        , intent(out)   :: aroot(bounds%begp:)
-       real(r8)                        , intent(out)   :: arepr(bounds%begp:)
 
      end subroutine calc_plant_nutrient_demand_interface
 
@@ -126,8 +120,7 @@ module NutrientCompetitionMethodMod
           cnveg_carbonstate_inst, cnveg_carbonflux_inst, &
           c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, &
           cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-          soilbiogeochem_nitrogenstate_inst, &
-          aroot, arepr, fpg_col)                                              
+          soilbiogeochem_nitrogenstate_inst, fpg_col)
        !
        ! !USES:
        use shr_kind_mod          , only : r8 => shr_kind_r8
@@ -157,46 +150,10 @@ module NutrientCompetitionMethodMod
        type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
        type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
        type(soilbiogeochem_nitrogenstate_type), intent(in)    :: soilbiogeochem_nitrogenstate_inst
-       real(r8)                        , intent(in)    :: aroot(bounds%begp:)
-       real(r8)                        , intent(in)    :: arepr(bounds%begp:)
        real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
 
      end subroutine calc_plant_nutrient_competition_interface
 
   end interface
-
-  character(len=*), parameter, private :: sourcefile = &
-       __FILE__
-
-contains
-
-  !-----------------------------------------------------------------------
-  subroutine readParams (this, ncid )
-    !
-    ! !USES:
-    use shr_log_mod , only : errMsg => shr_log_errMsg
-    use ncdio_pio   , only : file_desc_t,ncd_io
-    use abortutils  , only : endrun
-    !
-    ! !ARGUMENTS:
-    class(nutrient_competition_method_type), intent(in) :: this
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNAllocParamsType'
-    character(len=100) :: errCode = '-Error reading in parameters file:'
-    logical            :: readv ! has variable been read in or not
-    real(r8)           :: tempr ! temporary to read in parameter
-    character(len=100) :: tString ! temp. var for reading
-    !-----------------------------------------------------------------------
-
-    ! read in parameters
-
-    tString='dayscrecover'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%dayscrecover=tempr
-
-  end subroutine readParams
 
 end module NutrientCompetitionMethodMod

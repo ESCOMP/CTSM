@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=TREE
+./xmlchange PTS_LON=270.41252
+./xmlchange PTS_LAT=45.49266

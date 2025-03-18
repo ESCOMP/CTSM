@@ -105,8 +105,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
-    integer                        , intent(in)    :: num_filter                        ! number of column non-lake points in patch filter
-    integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
+    integer                        , intent(in)    :: num_filter                        ! number of column points in patch filter
+    integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter points
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
     !

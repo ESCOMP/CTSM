@@ -9,7 +9,7 @@ _CIMEROOT = os.environ.get("CIMEROOT")
 if _CIMEROOT is None:
     raise SystemExit("ERROR: must set CIMEROOT environment variable")
 
-_LIBDIR = os.path.join(_CIMEROOT, "scripts", "Tools")
+_LIBDIR = os.path.join(_CIMEROOT, "CIME", "Tools")
 sys.path.append(_LIBDIR)
 
 from standard_script_setup import *
@@ -27,19 +27,26 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
     This file can be included by atmosphere model builds outside of cime.
     """
 
-    cime_output_file = os.path.join(exeroot, 'cime_variables.mk')
+    cime_output_file = os.path.join(exeroot, "cime_variables.mk")
     # Set COMP_NAME=driver because some link flags are set differently when COMP_NAME=driver, and
     # those are the ones we want here.
-    cmd = ("{gmake} write_include_and_link_flags OUTPUT_FILE={cime_output_file} "
-           "COMP_NAME=driver {gmake_opts} -f {makefile} ").format(
-               gmake=gmake, cime_output_file=cime_output_file, gmake_opts=gmake_opts, makefile=makefile)
+    cmd = (
+        "{gmake} write_include_and_link_flags OUTPUT_FILE={cime_output_file} "
+        "COMP_NAME=driver {gmake_opts} -f {makefile} "
+    ).format(
+        gmake=gmake,
+        cime_output_file=cime_output_file,
+        gmake_opts=gmake_opts,
+        makefile=makefile,
+    )
     rc, out, err = run_cmd(cmd)
-    logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
+    logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n" % (cmd, out, err))
     expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
 
-    ctsm_mk_path = os.path.join(exeroot, 'ctsm.mk')
-    with open(ctsm_mk_path, 'w') as ctsm_mk:
-        ctsm_mk.write("""
+    ctsm_mk_path = os.path.join(exeroot, "ctsm.mk")
+    with open(ctsm_mk_path, "w") as ctsm_mk:
+        ctsm_mk.write(
+            """
 # ======================================================================
 # Include this file to get makefile variables needed to include / link
 # LILAC/CTSM in an atmosphere model's build
@@ -54,13 +61,15 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
 # should not be included directly in an atmosphere model's build.
 # ======================================================================
 
-""")
+"""
+        )
         with open(cime_output_file) as infile:
             ctsm_mk.write(infile.read())
 
     ctsm_bld_dir = os.path.abspath(os.path.join(libroot, os.pardir))
-    with open(ctsm_mk_path, 'a') as ctsm_mk:
-        ctsm_mk.write("""
+    with open(ctsm_mk_path, "a") as ctsm_mk:
+        ctsm_mk.write(
+            """
 # ======================================================================
 # The following settings are meant for internal use, and generally
 # should not be included directly in an atmosphere model's build.
@@ -77,11 +86,15 @@ CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
 
 CTSM_INCLUDES = $(CIME_ESMF_F90COMPILEPATHS) -I$(CIME_CSM_SHR_INCLUDE) -I$(CTSM_INC)
 CTSM_LIBS = -L$(CTSM_BLD_DIR)/lib -lclm $(CIME_ULIBS) $(CIME_SLIBS) $(CIME_MLIBS) $(CIME_F90_LDFLAGS)
-""".format(ctsm_bld_dir=ctsm_bld_dir))
+""".format(
+                ctsm_bld_dir=ctsm_bld_dir
+            )
+        )
+
 
 ###############################################################################
 def _main_func():
-###############################################################################
+    ###############################################################################
 
     caseroot, libroot, bldroot = parse_input(sys.argv)
 
@@ -96,77 +109,89 @@ def _main_func():
         driver = case.get_value("COMP_INTERFACE").lower()
         lilac_mode = case.get_value("LILAC_MODE")
 
-        if lilac_mode == 'on':
+        if lilac_mode == "on":
             driver = "lilac"
 
-        #-------------------------------------------------------
+        # -------------------------------------------------------
         # create Filepath file
-        #-------------------------------------------------------
+        # -------------------------------------------------------
         compname = case.get_value("COMP_LND")
-        filepath_file = os.path.join(bldroot,"Filepath")
+        filepath_file = os.path.join(bldroot, "Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
-            expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
+            expect(
+                ((compname == "clm") or (compname == "ctsm")),
+                "Unexpected COMP_LND name: %s" % (compname),
+            )
 
-            paths = [os.path.join(caseroot,"SourceMods","src."+compname),
-                     os.path.join(lnd_root,"src","cpl",driver),
-                     os.path.join(lnd_root,"src","main"),
-                     os.path.join(lnd_root,"src","biogeophys"),
-                     os.path.join(lnd_root,"src","biogeochem"),
-                     os.path.join(lnd_root,"src","soilbiogeochem"),
-                     os.path.join(lnd_root,"src","dyn_subgrid"),
-                     os.path.join(lnd_root,"src","init_interp"),
-                     os.path.join(lnd_root,"src","self_tests"),
-                     os.path.join(lnd_root,"src","fates"),
-                     os.path.join(lnd_root,"src","fates","main"),
-                     os.path.join(lnd_root,"src","fates","biogeophys"),
-                     os.path.join(lnd_root,"src","fates","biogeochem"),
-                     os.path.join(lnd_root,"src","fates","fire"),
-                     os.path.join(lnd_root,"src","fates","parteh"),
-                     os.path.join(lnd_root,"src","utils"),
-                     os.path.join(lnd_root,"src","cpl"),
-                     os.path.join(lnd_root,"src","cpl","utils")]
+            paths = [
+                os.path.join(caseroot, "SourceMods", "src." + compname),
+                os.path.join(lnd_root, "src", "cpl", driver),
+                os.path.join(lnd_root, "src", "main"),
+                os.path.join(lnd_root, "src", "biogeophys"),
+                os.path.join(lnd_root, "src", "biogeochem"),
+                os.path.join(lnd_root, "src", "soilbiogeochem"),
+                os.path.join(lnd_root, "src", "dyn_subgrid"),
+                os.path.join(lnd_root, "src", "init_interp"),
+                os.path.join(lnd_root, "src", "self_tests"),
+                os.path.join(lnd_root, "src", "fates"),
+                os.path.join(lnd_root, "src", "fates", "main"),
+                os.path.join(lnd_root, "src", "fates", "biogeophys"),
+                os.path.join(lnd_root, "src", "fates", "biogeochem"),
+                os.path.join(lnd_root, "src", "fates", "fire"),
+                os.path.join(lnd_root, "src", "fates", "parteh"),
+                os.path.join(lnd_root, "src", "fates", "radiation"),
+                os.path.join(lnd_root, "src", "utils"),
+                os.path.join(lnd_root, "src", "cpl"),
+                os.path.join(lnd_root, "src", "cpl", "utils"),
+            ]
 
-            if lilac_mode == 'on':
-                paths.append(os.path.join(lnd_root,"lilac","src"))
+            if lilac_mode == "on":
+                paths.append(os.path.join(lnd_root, "lilac", "src"))
                 # If we want to build with a real river model (e.g., MOSART), we'll need
                 # to use its directories in place of stub_rof
-                paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
+                paths.append(os.path.join(lnd_root, "lilac", "stub_rof"))
 
-            if (driver == 'lilac' or driver == 'nuopc'):
-                paths.append(os.path.join(lnd_root,"src","cpl","share_esmf"))
+            if driver == "lilac" or driver == "nuopc":
+                paths.append(os.path.join(lnd_root, "src", "cpl", "share_esmf"))
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
                 filepath.write("\n")
 
-        #-------------------------------------------------------
+        # -------------------------------------------------------
         # create the library in libroot
-        #-------------------------------------------------------
+        # -------------------------------------------------------
 
-        complib = os.path.join(libroot,"lib%s.a"%(compname))
+        complib = os.path.join(libroot, "lib%s.a" % (compname))
 
-        cmd = "{} complib -j {} COMP_NAME={} COMPLIB={} -f {} {}" \
-              .format(gmake, gmake_j, compname, complib, makefile, gmake_opts)
+        cmd = "{} complib -j {} COMP_NAME={} COMPLIB={} -f {} {}".format(
+            gmake, gmake_j, compname, complib, makefile, gmake_opts
+        )
 
         rc, out, err = run_cmd(cmd)
-        logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))
+        logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n" % (cmd, out, err))
         expect(rc == 0, "Command %s failed with rc=%s" % (cmd, rc))
 
         # ------------------------------------------------------------------------
         # for lilac usage, we need a file containing some Makefile variables (for the atmosphere model's build)
         # ------------------------------------------------------------------------
 
-        if lilac_mode == 'on':
-            _write_ctsm_mk(gmake=gmake,
-                           gmake_opts=gmake_opts,
-                           makefile=makefile,
-                           exeroot=case.get_value("EXEROOT"),
-                           libroot=libroot)
+        if lilac_mode == "on":
+            _write_ctsm_mk(
+                gmake=gmake,
+                gmake_opts=gmake_opts,
+                makefile=makefile,
+                exeroot=case.get_value("EXEROOT"),
+                libroot=libroot,
+            )
+
 
 ###############################################################################
 
 if __name__ == "__main__":
-    logger.warning( "WARNING: buildlib is being called as a program rather than a subroutine as " +
-                    "it is expected to be in the CESM context" )
+    logger.warning(
+        "WARNING: buildlib is being called as a program rather than a subroutine as "
+        + "it is expected to be in the CESM context"
+    )
     _main_func()

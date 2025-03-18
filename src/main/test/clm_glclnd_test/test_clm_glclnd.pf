@@ -2,7 +2,7 @@ module test_clm_glclnd
 
   ! Tests of clm_glclnd
 
-  use pfunit_mod
+  use funit
   use unittestSubgridMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use lnd2glcMod

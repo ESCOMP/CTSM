@@ -31,6 +31,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def setup_logging_pre_config():
     """Setup logging for a script / application
 
@@ -41,11 +42,13 @@ def setup_logging_pre_config():
     """
     setup_logging(level=logging.WARNING)
 
+
 def setup_logging_for_tests(enable_critical=False):
     """Setup logging as appropriate for unit tests"""
     setup_logging(level=logging.CRITICAL)
     if not enable_critical:
         logging.disable(logging.CRITICAL)
+
 
 def setup_logging(level=logging.WARNING):
     """Setup logging for a script / application
@@ -54,18 +57,25 @@ def setup_logging(level=logging.WARNING):
     do NOT intend to allow the user to control logging preferences via command-line
     arguments, so that all of the final logging options are set here.
     """
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=level)
+
 
 def add_logging_args(parser):
     """Add common logging-related options to the argument parser"""
 
     logging_level = parser.add_mutually_exclusive_group()
 
-    logging_level.add_argument('-v', '--verbose', action='store_true',
-                               help='Output extra logging info')
+    logging_level.add_argument(
+        "-v", "--verbose", action="store_true", help="Output extra logging info"
+    )
+    logging_level.add_argument("--silent", action="store_true", help="Only output errors")
 
-    logging_level.add_argument('--debug', action='store_true',
-                               help='Output even more logging info for debugging')
+    logging_level.add_argument(
+        "--debug",
+        action="store_true",
+        help="Output even more logging info for debugging",
+    )
+
 
 def process_logging_args(args):
     """Configure logging based on the logging-related args added by add_logging_args"""
@@ -75,5 +85,17 @@ def process_logging_args(args):
         root_logger.setLevel(logging.DEBUG)
     elif args.verbose:
         root_logger.setLevel(logging.INFO)
+    elif args.silent:
+        root_logger.setLevel(logging.ERROR)
     else:
         root_logger.setLevel(logging.WARNING)
+
+
+def output_to_file(file_path, message, log_to_logger=False):
+    """
+    helper function to write to log file.
+    """
+    with open(file_path, "a") as log_file:
+        log_file.write(message)
+    if log_to_logger:
+        logger.info(message)

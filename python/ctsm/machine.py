@@ -4,8 +4,15 @@
 import logging
 from collections import namedtuple
 from CIME.utils import get_project  # pylint: disable=import-error
-from ctsm.joblauncher.job_launcher_factory import \
-    create_job_launcher, JOB_LAUNCHER_NOBATCH
+from ctsm.joblauncher.job_launcher_factory import (
+    create_job_launcher,
+    JOB_LAUNCHER_NOBATCH,
+)
+
+# Value of create_test_queue for which we don't actually add a '--queue' option to
+# create_test, but instead leave that value unspecified, allowing CIME to pick an
+# appropriate queue for each test using its standard mechanisms.
+CREATE_TEST_QUEUE_UNSPECIFIED = "unspecified"
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +30,32 @@ logger = logging.getLogger(__name__)
 # user of the machine object to check for that possibility if need be.
 #
 # Similar notes apply to baseline_dir.
-Machine = namedtuple('Machine', ['name',              # str
-                                 'scratch_dir',       # str
-                                 'baseline_dir',      # str
-                                 'account',           # str or None
-                                 'create_test_retry', # int
-                                 'job_launcher'])     # subclass of JobLauncherBase
+Machine = namedtuple(
+    "Machine",
+    [
+        "name",  # str
+        "scratch_dir",  # str
+        "baseline_dir",  # str
+        "account",  # str or None
+        "create_test_retry",  # int
+        "create_test_queue",  # str
+        "job_launcher",
+    ],
+)  # subclass of JobLauncherBase
 
-def create_machine(machine_name, defaults, job_launcher_type=None,
-                   scratch_dir=None, account=None,
-                   job_launcher_queue=None, job_launcher_walltime=None,
-                   job_launcher_nice_level=None,
-                   job_launcher_extra_args=None,
-                   allow_missing_entries=False):
+
+def create_machine(
+    machine_name,
+    defaults,
+    job_launcher_type=None,
+    scratch_dir=None,
+    account=None,
+    job_launcher_queue=None,
+    job_launcher_walltime=None,
+    job_launcher_nice_level=None,
+    job_launcher_extra_args=None,
+    allow_missing_entries=False,
+):
     """Create a machine object (of type Machine, as given above)
 
     This uses the provided (non-None) arguments to override any defaults provided via the
@@ -80,6 +100,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     mach_defaults = defaults.get(machine_name)
     baseline_dir = None
     create_test_retry = 0
+    create_test_queue = CREATE_TEST_QUEUE_UNSPECIFIED
     if mach_defaults is not None:
         if job_launcher_type is None:
             job_launcher_type = mach_defaults.job_launcher_type
@@ -95,18 +116,22 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
         # generation and comparison, or making a link in some temporary location that
         # points to the standard baselines).
         baseline_dir = mach_defaults.baseline_dir
-        # We also don't provide a way to override the default create_test_retry in the
-        # machine object: this will always give the default value for this machine, and
-        # other mechanisms will be given for overriding this in a particular case.
+        # We also don't provide a way to override the default create_test_retry or
+        # create_test_queue in the machine object: these will always give the default
+        # value for this machine, and other mechanisms will be given for overriding these
+        # in a particular case.
         create_test_retry = mach_defaults.create_test_retry
+        create_test_queue = mach_defaults.create_test_queue
         if account is None and mach_defaults.account_required and not allow_missing_entries:
             raise RuntimeError("Could not find an account code")
     else:
         if not allow_missing_entries:
             # This isn't exactly a missing entry, but the times we don't care about this
             # warning tend to be the same as the times when allow_missing_entries is true
-            logger.warning("machine %s not recognized; using generic no-batch settings",
-                           machine_name)
+            logger.warning(
+                "machine %s not recognized; using generic no-batch settings",
+                machine_name,
+            )
         if job_launcher_type is None:
             job_launcher_type = JOB_LAUNCHER_NOBATCH
 
@@ -118,7 +143,7 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     # sense to have these in the argument list for this function: they should only come
     # from the defaults structure. If the user wants to provide their own arguments, those
     # should be provided via extra_args.
-    job_launcher_required_args = ''
+    job_launcher_required_args = ""
 
     if mach_defaults is not None:
         these_defaults = mach_defaults.job_launcher_defaults.get(job_launcher_type)
@@ -135,21 +160,27 @@ def create_machine(machine_name, defaults, job_launcher_type=None,
     # Create the job launcher and the full machine object
     # ------------------------------------------------------------------------
 
-    job_launcher = create_job_launcher(job_launcher_type=job_launcher_type,
-                                       account=account,
-                                       queue=job_launcher_queue,
-                                       walltime=job_launcher_walltime,
-                                       nice_level=job_launcher_nice_level,
-                                       required_args=job_launcher_required_args,
-                                       extra_args=job_launcher_extra_args,
-                                       allow_missing_entries=allow_missing_entries)
+    job_launcher = create_job_launcher(
+        job_launcher_type=job_launcher_type,
+        account=account,
+        queue=job_launcher_queue,
+        walltime=job_launcher_walltime,
+        nice_level=job_launcher_nice_level,
+        required_args=job_launcher_required_args,
+        extra_args=job_launcher_extra_args,
+        allow_missing_entries=allow_missing_entries,
+    )
 
-    return Machine(name=machine_name,
-                   scratch_dir=scratch_dir,
-                   baseline_dir=baseline_dir,
-                   account=account,
-                   create_test_retry=create_test_retry,
-                   job_launcher=job_launcher)
+    return Machine(
+        name=machine_name,
+        scratch_dir=scratch_dir,
+        baseline_dir=baseline_dir,
+        account=account,
+        create_test_retry=create_test_retry,
+        create_test_queue=create_test_queue,
+        job_launcher=job_launcher,
+    )
+
 
 def get_possibly_overridden_mach_value(machine, varname, value=None):
     """Get the value to use for the given machine variable
@@ -165,6 +196,7 @@ def get_possibly_overridden_mach_value(machine, varname, value=None):
     if value is not None:
         return value
     return getattr(machine, varname)
+
 
 def _get_account():
     account = get_project()

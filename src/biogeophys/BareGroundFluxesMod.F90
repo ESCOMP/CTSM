@@ -20,6 +20,7 @@ module BareGroundFluxesMod
   use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
   use HumanIndexMod        , only : humanindex_type
+  use CanopyStateType      , only : canopystate_type
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
@@ -71,7 +72,7 @@ contains
        atm2lnd_inst, soilstate_inst, &
        frictionvel_inst, ch4_inst, energyflux_inst, temperature_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst)
+       wateratm2lndbulk_inst, photosyns_inst, humanindex_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Compute sensible and latent fluxes and their derivatives with respect
@@ -81,7 +82,8 @@ contains
     use shr_const_mod        , only : SHR_CONST_RGAS
     use clm_varpar           , only : nlevgrnd
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
-    use clm_varctl           , only : use_lch4
+    use clm_varcon           , only : beta_param, nu_param, meier_param3
+    use clm_varctl           , only : use_lch4, z0param_method
     use landunit_varcon      , only : istsoil, istcrop
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
@@ -89,6 +91,8 @@ contains
                                       Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
+    use CanopyStateType      , only : canopystate_type
+
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -107,13 +111,13 @@ contains
     type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
     type(humanindex_type)  , intent(inout) :: humanindex_inst
+    type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
     integer, parameter  :: niters = 3            ! maximum number of iterations for surface temperature
     integer  :: p,c,g,f,j,l                      ! indices
     integer  :: iter                             ! iteration index
     real(r8) :: zldis(bounds%begp:bounds%endp)   ! reference height "minus" zero displacement height [m]
-    real(r8) :: displa(bounds%begp:bounds%endp)  ! displacement height [m]
     real(r8) :: zeta                             ! dimensionless height used in Monin-Obukhov theory
     real(r8) :: wc                               ! convective velocity [m/s]
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
@@ -137,9 +141,6 @@ contains
     real(r8) :: raih                             ! temporary variable [kg/m2/s]
     real(r8) :: raiw                             ! temporary variable [kg/m2/s]
     real(r8) :: fm(bounds%begp:bounds%endp)      ! needed for BGC only to diagnose 10m wind speed
-    real(r8) :: z0mg_patch(bounds%begp:bounds%endp)
-    real(r8) :: z0hg_patch(bounds%begp:bounds%endp)
-    real(r8) :: z0qg_patch(bounds%begp:bounds%endp)
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: www                              ! surface soil wetness [-]
@@ -189,8 +190,12 @@ contains
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_t                 => atm2lnd_inst%forc_t_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin) 
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
-         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
-         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col           , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)
+         forc_hgt_t             => atm2lnd_inst%forc_hgt_t_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of temperature [m]
+         forc_hgt_u             => atm2lnd_inst%forc_hgt_u_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of wind [m]
+         forc_hgt_q             => atm2lnd_inst%forc_hgt_q_grc                  , & ! Input:  [real(r8) (:)   ]  observational height of specific humidity [m]
+
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)
 
          watsat                 => soilstate_inst%watsat_col                    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)                      
          soilbeta               => soilstate_inst%soilbeta_col                  , & ! Input:  [real(r8) (:)   ]  soil wetness relative to field capacity                               
@@ -234,12 +239,22 @@ contains
          rh_ref2m_r             => waterdiagnosticbulk_inst%rh_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
          rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
 
-         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Input:
+         forc_hgt_u_patch       => frictionvel_inst%forc_hgt_u_patch            , & ! Output: [real(r8) (:)   ] observational height of wind at patch level [m]
+         forc_hgt_t_patch       => frictionvel_inst%forc_hgt_t_patch            , & ! Output: [real(r8) (:)   ] observational height of temperature at patch level [m]
+         forc_hgt_q_patch       => frictionvel_inst%forc_hgt_q_patch            , & ! Output: [real(r8) (:)   ] observational height of specific humidity at patch level [m]
          u10_clm                => frictionvel_inst%u10_clm_patch               , & ! Input:  [real(r8) (:)   ]  10 m height winds (m/s)
          zetamax                => frictionvel_inst%zetamaxstable               , & ! Input:  [real(r8)       ]  max zeta value under stable conditions
+         zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]
+         z0mg_patch             => frictionvel_inst%z0mg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, momentum [m]
+         z0hg_patch             => frictionvel_inst%z0hg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, sensible heat [m]
+         z0qg_patch             => frictionvel_inst%z0qg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, latent heat [m]
+         z0mv                   => frictionvel_inst%z0mv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, momentum [m]
+         z0hv                   => frictionvel_inst%z0hv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, sensible heat [m]
+         z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, latent heat [m]
+         kbm1                   => frictionvel_inst%kbm1_patch                  , & ! Output: [real(r8) (:)   ]  natural logarithm of z0mg_p/z0hg_p [-]
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
@@ -253,6 +268,8 @@ contains
 
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
+
+         displa                 => canopystate_inst%displa_patch                , & ! Output: [real(r8) (:)   ]  displacement height (m)
 
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                    &
@@ -286,6 +303,9 @@ contains
          ! Initialization variables
 
          displa(p) = 0._r8
+         z0mv(p)   = 0._r8
+         z0hv(p)   = 0._r8
+         z0qv(p)   = 0._r8
          dlrad(p)  = 0._r8
          ulrad(p)  = 0._r8
          dhsdt_canopy(p) = 0._r8
@@ -329,20 +349,37 @@ contains
 
             tstar = temp1(p)*dth(p)
             qstar = temp2(p)*dqh(p)
-            z0hg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
-            z0qg_patch(p) = z0hg_patch(p)
-            thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
-            zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
-            if (zeta >= 0._r8) then                   !stable
-               zeta = min(zetamax,max(zeta,0.01_r8))
+            select case (z0param_method)
+            case ('ZengWang2007')
+               z0hg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / nu_param)**params_inst%a_exp)
+            case ('Meier2022')
+
+               ! After Yang et al. (2008)
+               ! (...)**0.5 = sqrt(...) and (...)**0.25 = sqrt(sqrt(...))
+               ! likely more efficient to calculate as exponents
+               z0hg_patch(p) = meier_param3 * nu_param / ustar(p) * exp( -beta_param * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8))
+
+            end select
+
+            z0qg_patch(p) = z0hg_patch(p)
+            ! Update the forcing heights for new roughness lengths
+            forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg_patch(p) + displa(p)
+            forc_hgt_t_patch(p) = forc_hgt_t(g) + z0hg_patch(p) + displa(p)
+            forc_hgt_q_patch(p) = forc_hgt_q(g) + z0qg_patch(p) + displa(p)
+
+            thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
+            zeta(p) = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
+
+            if (zeta(p) >= 0._r8) then                   !stable
+               zeta(p) = min(zetamax,max(zeta(p),0.01_r8))
                um(p) = max(ur(p),0.1_r8)
             else                                      !unstable
-               zeta = max(-100._r8,min(zeta,-0.01_r8))
+               zeta(p) = max(-100._r8,min(zeta(p),-0.01_r8))
                wc = beta(c)*(-grav*ustar(p)*thvstar*zii(c)/thv(c))**0.333_r8
                um(p) = sqrt(ur(p)*ur(p) + wc*wc)
             end if
-            obu(p) = zldis(p)/zeta
+            obu(p) = zldis(p)/zeta(p)
 
             num_iter(p) = iter
          end do
@@ -432,6 +469,14 @@ contains
             rh_ref2m_r(p) = rh_ref2m(p)
             t_ref2m_r(p) = t_ref2m(p)
          end if
+
+         kbm1(p) = log(z0mg_patch(p) / z0hg_patch(p))
+
+         ! Copy local patch ground roughness back to column arrays for history output which
+         ! uses the column arrays. z0mg is unchanged so only need to copy z0hg and z0qg
+
+         z0hg_col(c) = z0hg_patch(p)
+         z0qg_col(c) = z0qg_patch(p)
 
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then

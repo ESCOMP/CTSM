@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<!-- This use-case is mainly in use for NEON sites -->
+
+<namelist_defaults>
+
+<use_case_desc use_cn=".true.">Simulate transient Nitrogen-deposition, aerosol deposition, urban, and fire related (pop-density, lightning) changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+<use_case_desc use_cn=".false." use_fates=".true.">Simulate transient Nitrogen-deposition, aerosol deposition, urban, and fire related (pop-density, lightning) changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+<use_case_desc use_cn=".false." use_fates=".false.">Simulate transient urban and aerosol deposition changes from 2018 to current day with a mix of historical data, and future scenario data</use_case_desc>
+
+<!-- Have a minimal list of things set here, sim_year, sim_year_range, and ssp_rcp, other things should be dependent on these and
+     set in a namelist_defaults xml file -->
+
+<sim_year>2018</sim_year>
+
+<sim_year_range>1850-2100</sim_year_range>
+
+<!-- Use future data as needed from the SSP3-7.0 scenario-->
+<ssp_rcp>SSP3-7.0</ssp_rcp>
+
+<stream_year_first_ndep use_cn=".true."   >2018</stream_year_first_ndep>
+<stream_year_last_ndep  use_cn=".true."   >2022</stream_year_last_ndep>
+<model_year_align_ndep  use_cn=".true."   >2018</model_year_align_ndep>
+
+<stream_year_first_popdens cnfireson=".true."   >2018</stream_year_first_popdens>
+<stream_year_last_popdens  cnfireson=".true."   >2022</stream_year_last_popdens>
+<model_year_align_popdens  cnfireson=".true."   >2018</model_year_align_popdens>
+
+<stream_year_first_urbantv >2018</stream_year_first_urbantv>
+<stream_year_last_urbantv  >2022</stream_year_last_urbantv>
+<model_year_align_urbantv  >2018</model_year_align_urbantv>
+
+</namelist_defaults>

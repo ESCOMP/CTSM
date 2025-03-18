@@ -15,8 +15,9 @@ CTSM Master Tag This Corresponds To:
 Summary of changes:
 -------------------
 
-Issues fixed (include CTSM Issue #): [If none, remove this line]
-CIME Issues fixed (include issue #): [If none, remove this line]
+CTSM issues fixed (include CTSM Issue #): [If none, remove this line]
+
+Externals issues fixed (include issue #): [If none, remove this line]
 
 Science changes since: 
 
@@ -31,41 +32,31 @@ Testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    derecho - 
 
   unit-tests (components/clm/src):
 
-    cheyenne - 
+    derecho - 
     izumi ----
-
-  tools-tests (components/clm/test/tools):
-
-    cheyenne - 
-    izumi ----
-
-  PTCLM testing (components/clm/tools/shared/PTCLM/test):
-
-     cheyenne - 
-     izumi ----
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
+    derecho_intel ---- 
+    derecho_gnu ------ 
     izumi_nag --------- 
     izumi_pgi --------- 
     izumi_intel ------- 
 
   regular tests (prealpha):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
+    derecho_gnu ---
     izumi_nag ------
 
   regular tests (prebeta):
 
-    cheyenne_intel -
-    cheyenne_gnu ---
+    derecho_intel -
+    derecho_gnu ---
     izumi_nag ------
 
 Summary of Answer changes:

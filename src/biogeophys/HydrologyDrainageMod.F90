@@ -40,7 +40,7 @@ contains
        num_hydrologyc, filter_hydrologyc,            &
        num_urbanc, filter_urbanc,                    &
        num_do_smb_c, filter_do_smb_c,                &
-       atm2lnd_inst, glc2lnd_inst, temperature_inst, &
+       glc2lnd_inst, temperature_inst, &
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst, &
        waterdiagnosticbulk_inst, waterbalancebulk_inst, waterfluxbulk_inst, &
        wateratm2lndbulk_inst, glacier_smb_inst)
@@ -52,11 +52,12 @@ contains
     use landunit_varcon  , only : istwet, istsoil, istice, istcrop
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
-    use clm_varctl       , only : use_vichydro
+    use clm_varctl       , only : use_vichydro, use_hillslope, use_hillslope_routing
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size_real, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
+    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, SubsurfaceLateralFlow
     use SoilWaterMovementMod , only : use_aquifer_layer
+    use HillslopeHydrologyMod, only : streamflow_manning, HillslopeStreamOutflow, HillslopeUpdateStreamWater
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -66,18 +67,18 @@ contains
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
-    integer                  , intent(in)    :: num_do_smb_c         ! number of columns in which SMB is calculated, in column filter    
-    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare landwhere SMB is calculated
-    type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
+    integer                  , intent(in)    :: num_do_smb_c         ! number of bareland columns in which SMB is calculated, in column filter    
+    integer                  , intent(in)    :: filter_do_smb_c(:)   ! column filter for bare land SMB columns
+
     type(glc2lnd_type)       , intent(in)    :: glc2lnd_inst
     type(temperature_type)   , intent(in)    :: temperature_inst
     type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
+    type(waterbalance_type)      , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
-    type(wateratm2lndbulk_type)     , intent(inout) :: wateratm2lndbulk_inst
+    type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
     ! !LOCAL VARIABLES:
@@ -112,11 +113,11 @@ contains
          qflx_surf          => waterfluxbulk_inst%qflx_surf_col          , & ! surface runoff (mm H2O /s)      
          qflx_infl          => waterfluxbulk_inst%qflx_infl_col          , & ! infiltration (mm H2O /s)   
          qflx_qrgwl         => waterfluxbulk_inst%qflx_qrgwl_col         , & ! qflx_surf at glaciers, wetlands, lakes
+         qflx_latflow_out   => waterfluxbulk_inst%qflx_latflow_out_col   , & ! lateral subsurface flow
          qflx_runoff        => waterfluxbulk_inst%qflx_runoff_col        , & ! total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
          qflx_runoff_u      => waterfluxbulk_inst%qflx_runoff_u_col      , & ! Urban total runoff (qflx_drain+qflx_surf) (mm H2O /s)
          qflx_runoff_r      => waterfluxbulk_inst%qflx_runoff_r_col      , & ! Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
-         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col, &  ! solid runoff from snow capping (mm H2O /s)
-         qflx_sfc_irrig     => waterfluxbulk_inst%qflx_sfc_irrig_col       & ! surface irrigation flux (mm H2O /s)   
+         qflx_ice_runoff_snwcp => waterfluxbulk_inst%qflx_ice_runoff_snwcp_col &  ! solid runoff from snow capping (mm H2O /s)
          )
 
       ! Determine time step and step size
@@ -136,16 +137,26 @@ contains
       else
          
          call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              waterstatebulk_inst, waterfluxbulk_inst)
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 wateratm2lndbulk_inst)
+         call SubsurfaceLateralFlow(bounds, &
+                 num_hydrologyc, filter_hydrologyc, &
+                 num_urbanc, filter_urbanc,&
+                 soilhydrology_inst, soilstate_inst, &
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 wateratm2lndbulk_inst)
 
+         if (use_hillslope_routing) then
+            call HillslopeStreamOutflow(bounds,&
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 streamflow_method=streamflow_manning)
+
+            call HillslopeUpdateStreamWater(bounds, &
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 waterdiagnosticbulk_inst)
+         endif
          
-         call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              waterstatebulk_inst, waterfluxbulk_inst)
-
       endif
 
       do j = 1, nlevgrnd
@@ -183,6 +194,7 @@ contains
 
          if (lun%itype(l)==istwet .or. lun%itype(l)==istice) then
 
+            qflx_latflow_out(c)   = 0._r8
             qflx_drain(c)         = 0._r8
             qflx_drain_perched(c) = 0._r8
             qflx_surf(c)          = 0._r8
@@ -217,9 +229,6 @@ contains
 
          qflx_runoff(c) = qflx_drain(c) + qflx_surf(c) + qflx_qrgwl(c) + qflx_drain_perched(c)
 
-         if ((lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) .and. col%active(c)) then
-            qflx_runoff(c) = qflx_runoff(c) - qflx_sfc_irrig(c)
-         end if
          if (lun%urbpoi(l)) then
             qflx_runoff_u(c) = qflx_runoff(c)
          else if (lun%itype(l)==istsoil .or. lun%itype(l)==istcrop) then

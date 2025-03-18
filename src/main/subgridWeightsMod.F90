@@ -301,6 +301,7 @@ contains
     !
     ! !USES:
     use landunit_varcon, only : istsoil, istice, isturb_MIN, isturb_MAX, istdlak
+    use clm_instur     , only : pct_urban_max
     !
     ! !ARGUMENTS:
     implicit none
@@ -309,6 +310,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! grid cell index
+    integer :: dens_index ! urban density index
     !------------------------------------------------------------------------
 
     if (all_active) then
@@ -334,8 +336,14 @@ contains
           is_active_l = .true.
        end if
 
-       if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
-            run_zero_weight_urban) then
+       ! Set urban land units to active, as long as memory has been allocated for such land units, either
+       ! through the run_zero_weight_urban setting which runs all urban landunits in each grid cell or
+       ! through pct_urban_max which is the maximum percent urban for each density type in a transient run.
+       ! (See subgridMod.F90 for this logic).
+       ! By doing this, urban land units are also run virtually in grid cells which will grow
+       ! urban during the transient run.
+
+       if ( (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) ) then
           is_active_l = .true.
        end if
 
@@ -687,6 +695,10 @@ contains
        write(iulog,*) 'For the above-mentioned grid cell(s):'
        write(iulog,*) 'The matching input grid cell had some non-zero-weight subgrid type'
        write(iulog,*) 'that is not present in memory in the new run.'
+       write(iulog,*) ' '
+       write(iulog,*) 'If you are using a ctsm5.2 or later fsurdat file containing'
+       write(iulog,*) 'PCT_OCEAN > 0, then you may solve the error by setting'
+       write(iulog,*) 'convert_ocean_to_land = .true.'
        write(iulog,*) ' '
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if

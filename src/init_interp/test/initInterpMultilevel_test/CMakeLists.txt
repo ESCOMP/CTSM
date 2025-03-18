@@ -8,7 +8,7 @@ set (pfunit_sources
 set (extra_sources
   multilevel_interp_factory.F90)
 
-create_pFUnit_test(initInterpMultilevel test_initInterpMultilevel_exe
-  "${pfunit_sources}" "${extra_sources}")
-
-target_link_libraries(test_initInterpMultilevel_exe clm csm_share)
+add_pfunit_ctest(initInterpMultilevel
+  TEST_SOURCES "${pfunit_sources}"
+  OTHER_SOURCES "${extra_sources}"
+  LINK_LIBRARIES clm csm_share)

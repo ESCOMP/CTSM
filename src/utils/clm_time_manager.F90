@@ -6,7 +6,11 @@ module clm_time_manager
    use spmdMod     , only: masterproc
    use clm_varctl  , only: iulog
    use clm_varcon  , only: isecspday
-   use ESMF
+   use ESMF        , only: ESMF_Clock, ESMF_Calendar, ESMF_MAXSTR, ESMF_Time, ESMF_TimeInterval
+   use ESMF        , only: ESMF_TimeIntervalSet, ESMF_TimeSet, ESMF_TimeGet, ESMF_ClockGet
+   use ESMF        , only: operator(==), operator(+), operator(<=), operator(>=)
+   use ESMF        , only: operator(>), operator(<), operator(-)
+   use ESMF        , only: ESMF_KIND_I8, ESMF_TimeIntervalGet
 
    implicit none
    private
@@ -15,9 +19,9 @@ module clm_time_manager
 
    public ::&
         set_timemgr_init,         &! setup startup values
-        timemgr_init,             &! time manager initialization
+        timemgr_init,             &! time manager initialization, called always
         timemgr_restart_io,       &! read/write time manager restart info and restart time manager
-        timemgr_restart,          &! restart the time manager using info from timemgr_restart
+        timemgr_restart,          &! check that time manager is setup coorectly upcon restart
         timemgr_datediff,         &! calculate difference between two time instants
         advance_timestep,         &! increment timestep number
         get_curr_ESMF_Time,       &! get current time in terms of the ESMF_Time
@@ -35,8 +39,11 @@ module clm_time_manager
         get_curr_time,            &! return components of elapsed time since reference date at end of current timestep
         get_prev_time,            &! return components of elapsed time since reference date at beg of current timestep
         get_curr_calday,          &! return calendar day at end of current timestep
+        get_prev_calday,          &! return calendar day at beginning of current timestep
         get_calday,               &! return calendar day from input date
         get_calendar,             &! return calendar
+        get_doy_tomorrow,         &! return next day of year
+        get_average_days_per_year,&! return the average number of days per year for the given calendar
         get_curr_days_per_year,   &! return the days per year for year as of the end of the current time step
         get_prev_days_per_year,   &! return the days per year for year as of the beginning of the current time step
         get_curr_yearfrac,        &! return the fractional position in the current year, as of the end of the current timestep
@@ -53,6 +60,8 @@ module clm_time_manager
         is_beg_curr_year,         &! return true on first timestep in current year
         is_end_curr_year,         &! return true on last timestep in current year
         is_perpetual,             &! return true if perpetual calendar is in use
+        is_doy_in_interval,       &! return true if day of year is in the provided interval
+        is_today_in_doy_interval, &! return true if today's day of year is in the provided interval
         is_near_local_noon,       &! return true if near local noon
         is_restart,               &! return true if this is a restart run
         update_rad_dtime,         &! track radiation interval via nstep
@@ -91,10 +100,11 @@ module clm_time_manager
         ref_ymd       = uninit_int,  &! reference date for time coordinate in yearmmdd format
         ref_tod       = 0             ! reference time of day for time coordinate in seconds
    type(ESMF_Calendar), target, save   :: tm_cal       ! calendar
-   type(ESMF_Clock),    save   :: tm_clock     ! model clock   
+   type(ESMF_Clock),    save   :: tm_clock     ! model clock
+   integer,             save   :: tm_clock_step_size_sec ! Cache of clock timestep.
    type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
-   ! Data required to restart time manager:
+   ! Data required to restart time manager (only set if timemgr_restart_io is called):
    integer, save :: rst_step_sec          = uninit_int ! timestep size seconds
    integer, save :: rst_start_ymd         = uninit_int ! start date
    integer, save :: rst_start_tod         = uninit_int ! start time of day
@@ -122,6 +132,9 @@ module clm_time_manager
    private :: TimeGetymd
    private :: check_timemgr_initialized
 
+   character(len=*), parameter, private :: sourcefile = &
+        __FILE__
+
    !=========================================================================================
 contains
   !=========================================================================================
@@ -144,7 +157,7 @@ contains
     !
     character(len=*), parameter :: sub = 'clm::set_timemgr_init'
 
-    if ( timemgr_set ) call shr_sys_abort( sub//":: timemgr_init or timemgr_restart already called" )
+    if ( timemgr_set ) call shr_sys_abort( sub//":: timemgr_init already called" )
     if (present(calendar_in)      ) calendar         = trim(calendar_in)
     if (present(start_ymd_in)     ) start_ymd        = start_ymd_in
     if (present(start_tod_in)     ) start_tod        = start_tod_in
@@ -164,7 +177,11 @@ contains
 
   !=========================================================================================
 
-  subroutine timemgr_init( )
+  subroutine timemgr_init(curr_date_in )
+
+    use clm_varctl, only : nsrest, nsrContinue, nsrBranch
+
+    type(ESMF_Time), intent(in), optional :: curr_date_in 
 
     !---------------------------------------------------------------------------------
     ! Initialize the ESMF time manager from the sync clock
@@ -174,8 +191,8 @@ contains
     character(len=*), parameter :: sub = 'clm::timemgr_init'
     integer :: rc                            ! return code
     type(ESMF_Time) :: start_date            ! start date for run
-    type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_Time) :: ref_date              ! reference date for time coordinate
+    type(ESMF_Time) :: curr_date             ! temporary date used in logic
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
     !---------------------------------------------------------------------------------
@@ -198,8 +215,11 @@ contains
     start_date = TimeSetymd( start_ymd, start_tod, "start_date" )
 
     ! Initialize current date
-
-    curr_date = start_date
+    if(present(curr_date_in)) then
+       curr_date = curr_date_in
+    else
+       curr_date = start_date
+    endif
 
     call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
@@ -225,6 +245,11 @@ contains
        tm_perp_date = TimeSetymd( perpetual_ymd, 0, "tm_perp_date" )
     end if
 
+    ! Advance time step to start at nstep=1
+    if (nsrest /= nsrContinue .and. nsrest /= nsrBranch) then
+       call advance_timestep()
+    end if
+
     ! Print configuration summary to log file (stdout).
 
     if (masterproc) call timemgr_print()
@@ -240,6 +265,8 @@ contains
     !---------------------------------------------------------------------------------
     ! Purpose: Initialize the clock based on the start_date, ref_date and curr_date
     !
+    use ESMF       , only : ESMF_ClockCreate, ESMF_ClockAdvance, esmf_clockiscreated
+
     type(ESMF_Time), intent(in) :: start_date  ! start date for run
     type(ESMF_Time), intent(in) :: ref_date    ! reference date for time coordinate
     type(ESMF_Time), intent(in) :: curr_date   ! current date (equal to start_date)
@@ -262,6 +289,7 @@ contains
     ! manager included in cime appears to require stopTime.
     call ESMF_TimeSet(stop_date, yy=really_big_year, mm=12, dd=31, s=0, &
          calendar=tm_cal, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
 
     ! Error check 
 
@@ -284,9 +312,10 @@ contains
 
     ! Initialize the clock
 
+    
     tm_clock = ESMF_ClockCreate(name="CLM Time-manager clock", timeStep=step_size, startTime=start_date, &
          stopTime=stop_date, refTime=ref_date, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockSetup')
+    call chkrc(rc, sub//': error return from ESMF_ClockCreate')
 
     ! Advance clock to the current time (in case of a restart)
 
@@ -298,6 +327,12 @@ contains
        call ESMF_ClockGet(tm_clock, currTime=current )
        call chkrc(rc, sub//': error return from ESMF_ClockGet')
     end do
+
+
+    ! Cache step size, we query it a lot.
+    call ESMF_TimeIntervalGet(step_size, s=tm_clock_step_size_sec, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+
   end subroutine init_clock
 
   !=========================================================================================
@@ -475,11 +510,15 @@ contains
 
   !=========================================================================================
 
-  subroutine timemgr_restart( )
+  subroutine timemgr_restart()
 
     !---------------------------------------------------------------------------------
-    ! Restart the ESMF time manager using the synclock for ending date.
+    ! On restart do some checkcing to make sure time is synchronized with the clock from CESM.
+    ! Set a couple of variables, and advance the clock, so time is aligned properly.
+   !
+    ! timemgr_init MIST be called before this
     !
+
     character(len=*), parameter :: sub = 'clm::timemgr_restart'
     integer :: rc                            ! return code
     integer :: yr, mon, day, tod             ! Year, month, day, and second as integers
@@ -489,26 +528,22 @@ contains
     type(ESMF_TimeInterval) :: day_step_size ! day step size
     type(ESMF_TimeInterval) :: step_size     ! timestep size
     !---------------------------------------------------------------------------------
-    call timemgr_spmdbcast( )
+    ! Check that timemgr_init was already called
+    if ( .not. check_timemgr_initialized(sub) ) return
 
-    ! Initialize calendar from restart info
-
-    call init_calendar()
-
-    ! Initialize the timestep from restart info
+    ! Initialize the timestep
 
     dtime = rst_step_sec
 
-    ! Initialize start date from restart info
+    ! Check start date from restart info
 
-    start_date = TimeSetymd( rst_start_ymd, rst_start_tod, "start_date" )
+    if (rst_start_ymd .ne. start_ymd .or. rst_start_tod .ne. start_tod) then
+       call shr_sys_abort(sub//'ERROR: mismatch in start date with restart file')
+    endif
 
-    ! Initialize current date from restart info
-
-    curr_date = TimeSetymd( rst_curr_ymd, rst_curr_tod, "curr_date" )
-
-    call ESMF_TimeIntervalSet( step_size, s=dtime, rc=rc )
-    call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting step_size')
+    if (rst_ref_ymd .ne. ref_ymd .or. rst_ref_tod .ne. ref_tod) then
+       call shr_sys_abort(sub//'ERROR: mismatch in reference date with restart file')
+    endif
 
     call ESMF_TimeIntervalSet( day_step_size, d=1, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet: setting day_step_size')
@@ -519,12 +554,6 @@ contains
 
     ! Initialize ref date from restart info
 
-    ref_date = TimeSetymd( rst_ref_ymd, rst_ref_tod, "ref_date" )
-
-    ! Initialize clock 
-
-    call init_clock( start_date, ref_date, curr_date)
-
     ! Advance the timestep.  
     ! Data from the restart file corresponds to the last timestep of the previous run.
 
@@ -534,12 +563,6 @@ contains
 
     tm_first_restart_step = .true.
 
-    ! Print configuration summary to log file (stdout).
-
-    if (masterproc) call timemgr_print()
-
-    timemgr_set = .true.
-
   end subroutine timemgr_restart
 
   !=========================================================================================
@@ -548,6 +571,8 @@ contains
 
     !---------------------------------------------------------------------------------
     ! Initialize calendar
+    use ESMF        , only : ESMF_CalKind_Flag, ESMF_CALKIND_NOLEAP
+    use ESMF        , only : ESMF_CALKIND_GREGORIAN, ESMF_CalendarCreate
     !
     ! Local variables
     !
@@ -647,6 +672,7 @@ contains
   subroutine advance_timestep()
 
     ! Increment the timestep number.
+    use ESMF       , only : ESMF_ClockAdvance
 
     character(len=*), parameter :: sub = 'clm::advance_timestep'
     integer :: rc
@@ -682,16 +708,10 @@ contains
     ! Return the step size in seconds.
 
     character(len=*), parameter :: sub = 'clm::get_step_size'
-    type(ESMF_TimeInterval) :: step_size       ! timestep size
-    integer :: rc
 
     if ( .not. check_timemgr_initialized(sub) ) return
 
-    call ESMF_ClockGet(tm_clock, timeStep=step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockGet')
-
-    call ESMF_TimeIntervalGet(step_size, s=get_step_size, rc=rc)
-    call chkrc(rc, sub//': error return from ESMF_ClockTimeIntervalGet')
+    get_step_size = tm_clock_step_size_sec
 
   end function get_step_size
 
@@ -1153,6 +1173,34 @@ contains
 
   !=========================================================================================
 
+  function get_prev_calday(reuse_day_365_for_day_366)
+
+    ! Return calendar day at beginning of current timestep.
+    ! Calendar day 1.0 = 0Z on Jan 1.
+
+    ! If present and true, then day 366 (i.e., the last day of the year on leap years when
+    ! using a Gregorian calendar) reuses day 365. Note that this leads to non-monotonic
+    ! values throughout the year. This is needed in situations where the calday is used
+    ! in code that assumes a 365 day year and won't work right for day 366, such as
+    ! shr_orb_decl.
+    logical, optional, intent(in) :: reuse_day_365_for_day_366
+
+    ! Return value
+    real(r8) :: get_prev_calday
+
+    character(len=*), parameter :: sub = 'clm::get_prev_calday'
+    !-----------------------------------------------------------------------------------------
+
+    if ( .not. check_timemgr_initialized(sub) ) return
+
+    get_prev_calday = get_curr_calday( &
+         offset = -dtime, &
+         reuse_day_365_for_day_366 = reuse_day_365_for_day_366)
+
+  end function get_prev_calday
+
+  !=========================================================================================
+
   function get_calday(ymd, tod, reuse_day_365_for_day_366)
 
     ! Return calendar day corresponding to specified time instant.
@@ -1226,6 +1274,91 @@ contains
     get_calendar = calendar
 
   end function get_calendar
+
+  !=========================================================================================
+
+  function get_doy_tomorrow(doy_today) result(doy_tomorrow)
+
+    !---------------------------------------------------------------------------------
+    ! Given a day of the year (doy_today), return the next day of the year
+
+    integer, intent(in) :: doy_today
+    integer             :: doy_tomorrow
+    integer             :: days_in_year
+    character(len=*), parameter :: sub = 'clm::get_doy_tomorrow'
+
+    ! Use get_prev_days_per_year() instead of get_curr_days_per_year() because the latter, in the last timestep of a year, actually returns the number of days in the NEXT year.
+    days_in_year = get_prev_days_per_year()
+
+    if ( doy_today < 1 .or. doy_today > days_in_year )then
+       write(iulog,*) 'doy_today    = ', doy_today
+       write(iulog,*) 'days_in_year = ', days_in_year
+       call shr_sys_abort( sub//': error doy_today out of range' )
+    end if
+
+    if (doy_today == days_in_year) then
+        doy_tomorrow = 1
+    else
+        doy_tomorrow = doy_today + 1
+    end if
+  end function get_doy_tomorrow
+
+  !=========================================================================================
+
+  real(r8) function get_average_days_per_year()
+
+    !---------------------------------------------------------------------------------
+    ! Get the average number of days per year for the given calendar.
+    !
+    ! This should be used, for example, when converting a parameter from units of
+    ! per-year to units of per-second (so that the parameter will have a fixed, constant
+    ! value rather than a slightly different value on leap years vs. non-leap years).
+
+    real(r8) :: avg_days_per_year
+    real(r8) :: curr_days_per_year
+
+    real(r8), parameter :: days_per_year_noleap = 365._r8
+
+    ! From the definition of ESMF_CALKIND_GREGORIAN in
+    ! https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node6.html: "In the
+    ! Gregorian calendar every fourth year is a leap year in which February has 29 and not
+    ! 28 days; however, years divisible by 100 are not leap years unless they are also
+    ! divisible by 400." This results in an average number of days per year of 365.2425.
+    real(r8), parameter :: days_per_year_gregorian = 365.2425_r8
+
+    character(len=*), parameter :: subname = 'get_average_days_per_year'
+    !---------------------------------------------------------------------------------
+
+    ! BUG(wjs, 2022-02-01, ESCOMP/CTSM#1624) Ideally we would use ESMF_CalendarGet here,
+    ! but that currently isn't possible (see notes in issue 1624 for details)
+    if (to_upper(calendar) == NO_LEAP_C) then
+       avg_days_per_year = days_per_year_noleap
+    else if (to_upper(calendar) == GREGORIAN_C) then
+       avg_days_per_year = days_per_year_gregorian
+    else
+       call shr_sys_abort(subname//' ERROR: unrecognized calendar specified= '//trim(calendar))
+    end if
+
+    ! Paranoia: Since we're using a hard-coded value, let's make sure that the user hasn't
+    ! done some customizations to the calendar that change the days per year from what we
+    ! expect: Compare the hard-coded value with the number of days per year in the
+    ! current year, which comes from the actual ESMF calendar; the two should be close.
+    ! (This check can be removed once we address issue 1624, making the results of this
+    ! function depend on the actual ESMF calendar instead of a hard-coded value.)
+    curr_days_per_year = get_curr_days_per_year()
+    if (abs(avg_days_per_year - curr_days_per_year) > 1._r8) then
+       write(iulog,*) 'ERROR: hard-coded average days per year differs by more than expected'
+       write(iulog,*) 'from current days per year. Are you using a non-standard calendar?'
+       write(iulog,*) 'avg_days_per_year (hard-coded)          = ', avg_days_per_year
+       write(iulog,*) 'curr_days_per_year (from ESMF calendar) = ', curr_days_per_year
+       write(iulog,*) 'You can fix this by changing the hard-coded parameters in '//subname
+       write(iulog,*) 'in file: '//sourcefile
+       call shr_sys_abort(subname//' ERROR: hard-coded average days per year differs by more than expected')
+    end if
+
+    get_average_days_per_year = avg_days_per_year
+
+  end function get_average_days_per_year
 
   !=========================================================================================
 
@@ -1600,7 +1733,7 @@ contains
   logical function is_first_step()
 
     !---------------------------------------------------------------------------------
-    ! Return true on first step of initial run only.
+    ! Return true on first step of startup and hybrid runs.
 
     ! Local variables
     character(len=*), parameter :: sub = 'clm::is_first_step'
@@ -1614,7 +1747,7 @@ contains
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
     nstep = step_no
-    is_first_step = (nstep == 0)
+    is_first_step = (nstep == 1)
 
   end function is_first_step
   !=========================================================================================
@@ -1659,6 +1792,58 @@ contains
 
   !=========================================================================================
 
+  logical function is_doy_in_interval(start, end, doy)
+
+    ! Return true if day of year is in the provided interval.
+    ! Does not treat leap years differently from normal years.
+    ! Arguments
+    integer, intent(in) :: start ! start of interval (day of year)
+    integer, intent(in) :: end ! end of interval (day of year)
+    integer, intent(in) :: doy ! day of year to query
+    
+    ! Local variables
+    logical :: window_crosses_newyear
+
+    character(len=*), parameter :: sub = 'clm::is_doy_in_interval'
+
+    window_crosses_newyear = end < start
+
+    if (window_crosses_newyear .and. &
+        (doy >= start .or. doy <= end)) then
+       is_doy_in_interval = .true.
+    else if (.not. window_crosses_newyear .and. &
+        (doy >= start .and. doy <= end)) then
+       is_doy_in_interval = .true.
+    else
+       is_doy_in_interval = .false.
+    end if
+    
+  end function is_doy_in_interval
+
+  !=========================================================================================
+
+  logical function is_today_in_doy_interval(start, end)
+
+    ! Return true if today's day of year is in the provided interval.
+    ! Does not treat leap years differently from normal years.
+    ! Arguments
+    integer, intent(in) :: start ! start of interval (day of year)
+    integer, intent(in) :: end ! end of interval (day of year)
+
+    ! Local variable(s)
+    integer :: doy_today
+
+    character(len=*), parameter :: sub = 'clm::is_today_in_doy_interval'
+
+    ! Get doy of beginning of current timestep
+    doy_today = get_prev_calday()
+
+    is_today_in_doy_interval = is_doy_in_interval(start, end, doy_today)
+
+  end function is_today_in_doy_interval
+
+  !=========================================================================================
+
   subroutine timemgr_datediff(ymd1, tod1, ymd2, tod2, days)
 
     ! Calculate the difference (ymd2,tod2) - (ymd1,tod1) and return the result in days.
@@ -1692,6 +1877,7 @@ contains
   !=========================================================================================
 
   subroutine chkrc(rc, mes)
+    use ESMF        , only : ESMF_SUCCESS
     integer, intent(in)          :: rc   ! return code from time management library
     character(len=*), intent(in) :: mes  ! error message
     if ( rc == ESMF_SUCCESS ) return
@@ -1796,6 +1982,7 @@ contains
     ! does not explicitly initialize all variables).
     !
     ! !USES:
+    use ESMF      , only : ESMF_ClockDestroy
     !
     ! !ARGUMENTS:
     !
@@ -1873,6 +2060,7 @@ contains
     ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
+    use ESMF    , only : ESMF_ClockSet
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year

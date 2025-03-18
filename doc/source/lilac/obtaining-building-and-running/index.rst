@@ -9,4 +9,5 @@
 
    obtaining-and-building-ctsm.rst
    setting-ctsm-runtime-options.rst
+   notes-on-running-ctsm.rst
    restarting.rst

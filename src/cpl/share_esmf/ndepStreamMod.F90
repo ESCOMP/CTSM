@@ -7,7 +7,7 @@ module ndepStreamMod
   ! interpolation.
   !
   ! !USES
-  use ESMF
+  use ESMF             , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT
   use dshr_strdata_mod , only : shr_strdata_type 
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use spmdMod          , only : mpicom, masterproc, iam

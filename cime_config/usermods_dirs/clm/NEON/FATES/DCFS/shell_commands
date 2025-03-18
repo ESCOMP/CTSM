@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=DCFS
+./xmlchange PTS_LON=260.88749
+./xmlchange PTS_LAT=47.15919

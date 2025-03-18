@@ -7,7 +7,7 @@
 #
 [tool.black]
 
-   line-length = 88                               # This is the black default
+   line-length = 100                              # 88 is the black default, have this match the pylint length
    target-version = ['py37']
    include = '(run_ctsm_py_tests|\.py$)'          # Files to include
    exclude = '(\.pylintrc|\.pyc)'                 # Files to explicitly exclude pylint file and compiled python

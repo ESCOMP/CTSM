@@ -72,6 +72,8 @@ module CanopyStateType
      procedure, public  :: UpdateAccVars
      procedure, public  :: Restart
 
+     procedure, public  :: SetNMLForTesting ! Set namelist for unit-testing
+
   end type CanopyState_type
 
   character(len=*), parameter, private :: sourcefile = &
@@ -211,8 +213,8 @@ contains
 
        this%displa_patch(begp:endp) = spval
        call hist_addfld1d (fname='DISPLA', units='m', &
-            avgflag='A', long_name='displacement height', &
-            ptr_patch=this%displa_patch, default='inactive')
+            avgflag='A', long_name='displacement height (vegetated landunits only)', &
+            ptr_patch=this%displa_patch, default='inactive', l2g_scale_type='veg')
 
        if(use_fates_sp)then
           this%htop_hist_patch(begp:endp) = spval
@@ -225,9 +227,7 @@ contains
               avgflag='A', long_name='canopy top', &
               ptr_patch=this%htop_patch)
        endif
-
-
-    endif !fates or CN
+    endif
 
     if(use_fates_sp)then
       this%tlai_hist_patch(begp:endp) = spval
@@ -254,9 +254,9 @@ contains
     endif !FATES_SP
 
     this%z0m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='Z0M', units='m', &
-         avgflag='A', long_name='momentum roughness length', &
-          ptr_patch=this%z0m_patch, default='inactive')
+    call hist_addfld1d (fname='Z0MV_DENSE', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, momentum, for dense canopy', &
+          ptr_patch=this%z0m_patch, default='inactive', l2g_scale_type='veg')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval
@@ -443,6 +443,21 @@ contains
     this%leaf_mr_vcm = leaf_mr_vcm
 
   end subroutine ReadNML
+
+ !-----------------------------------------------------------------------
+
+  subroutine SetNMLForTesting( this )
+     !
+     ! Set canopy parameter namelist control settings for unit-testing
+     !
+     class(canopystate_type)      :: this
+     ! LOCAL VARIABLES:
+     !-----------------------------------------------------------------------
+ 
+     
+     this%leaf_mr_vcm = 0.015_r8
+   
+   end subroutine SetNMLForTesting
 
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars (this, bounds)

@@ -70,34 +70,40 @@ contains
     !------------------------------------------------------------------------
 
     ! get local file name from full name
-
     locfn = get_filename( fulpath )
     if (len_trim(locfn) == 0) then
-       if (masterproc) write(iulog,*)'(GETFIL): local filename has zero length'
+       if (masterproc) then
+          write(iulog,'(a)')'(GETFIL): full pathname is '//trim(fulpath)
+          write(iulog,'(a)')'(GETFIL): local filename has zero length'
+       end if
        call shr_sys_abort
     else
-       if (masterproc) write(iulog,*)'(GETFIL): attempting to find local file ',  &
-            trim(locfn)
+       if (masterproc) then
+          write(iulog,'(a)')'(GETFIL): attempting to find local file ',trim(locfn)
+       end if
     endif
 
     ! first check if file is in current working directory.
-
     inquire (file=locfn,exist=lexist)
     if (lexist) then
-       if (masterproc) write(iulog,*) '(GETFIL): using ',trim(locfn), &
-            ' in current working directory'
+       if (masterproc) then
+          write(iulog,'(a)') '(GETFIL): using '//trim(locfn)//' in current working directory'
+       end if
        RETURN
     endif
 
     ! second check for full pathname on disk
     locfn = fulpath
-
     inquire (file=fulpath,exist=lexist)
     if (lexist) then
-       if (masterproc) write(iulog,*) '(GETFIL): using ',trim(fulpath)
+       if (masterproc) then
+          write(iulog,'(a)') '(GETFIL): using '//trim(fulpath)
+       end if
        RETURN
     else
-       if (masterproc) write(iulog,*)'(GETFIL): failed getting file from full path: ', fulpath
+       if (masterproc) then
+          write(iulog,'(a)')'(GETFIL): failed getting file from full path: '//fulpath
+       end if
        if (iflag==0) then
           call shr_sys_abort ('GETFIL: FAILED to get '//trim(fulpath))
        else

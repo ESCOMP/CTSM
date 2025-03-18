@@ -140,6 +140,12 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
+        R0801,                         # This option to the end are options required to use black formatter
+        W1515,
+        W1514,
+        R1732,
+        C0209,
+        C0326,                         # This and the next are the two options that black documentation tells us to ignore
         C0330,                         # This is an option that the formatter "black" requires us to disable
 # --- default list is above here, our own list is below here ---
 # While pylint's recommendations to keep the number of arguments, local
@@ -329,7 +335,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=100       # Make sure this agrees with black
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -427,10 +433,21 @@ good-names=i,
            k,
            ex,
            Run,
+           ds,
+           m,
+           n,
+           ni,
+           nj,
+           l1,
+           l2,
+           ax,
            _,
 # --- default list is above here, our own list is below here ---
 # Allow logger as a global name in each module, because this seems to follow general recommended convention:
-           logger
+           logger,
+# Allow these names, which are commonly used in matplotlib instructions
+           ax,
+           im
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no

@@ -2,7 +2,7 @@ module test_calc_tracer_from_bulk
 
   ! Tests of WaterTracerUtils: CalcTracerFromBulk
 
-  use pfunit_mod
+  use funit
   use WaterTracerUtils
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod, only : subgrid_level_unspecified

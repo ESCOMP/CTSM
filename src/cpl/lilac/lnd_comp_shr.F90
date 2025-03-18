@@ -2,7 +2,7 @@ module lnd_comp_shr
 
   ! Model mesh info is here in order to be leveraged by CDEPS in line calls
 
-  use ESMF
+  use ESMF        , only : ESMF_Clock, ESMF_Mesh
   use shr_kind_mod, only : r8 => shr_kind_r8, cl=>shr_kind_cl
 
   implicit none

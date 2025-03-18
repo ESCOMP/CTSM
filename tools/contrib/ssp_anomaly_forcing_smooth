@@ -1,343 +1,707 @@
 #! /usr/bin/env python3
-#
-#  ssp_anomaly_forcing_smooth
-#
-# Create anomoly forcing datasets for SSP scenarios that can be used by CESM datm model
-#
+"""
+
+ssp_anomaly_forcing_smooth
+
+Create anomaly forcing datasets for SSP scenarios that can be used by CESM datm model
+
+load proper modules first, i.e.
+
+../../py_env_create
+conda activate ctsm_pylib
+
+"""
 import sys
 import os
-import string
 import subprocess
 import datetime
+import argparse
+from getpass import getuser
 import numpy as np
-import matplotlib.pyplot as plt
 import netCDF4 as netcdf4
-from scipy import interpolate
 
-# load proper modules first, i.e.
-# cheyenne
-'''
-module load python/2.7.16  
-ncar_pylib
-#module load numpy/1.12.0
-#module load matplotlib/2.0.0
-#module load scipy/0.18.1
-#module load intel/16.0.3         
-#module load ncarcompilers/0.3.5
-#module load netcdf/4.4.1.1
-#module load netcdf4-python/1.2.7
-'''
 
-# caldera / geyser
+# Adds global attributes, returning hdir and fdir
+def add_global_attributes(ds, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag):
+    ds.Created_on = timetag
 
-'''
-module load python/2.7.7  
-module load numpy/1.11.0
-module load pyside/1.1.2
-module load matplotlib/1.5.1
-module load scipy/0.18.1
-module load netcdf4python/1.2.4
-'''
+    ds.title = "anomaly forcing data"
+    ds.note1 = (
+            "Anomaly/scale factors calculated relative to "
+            + str(climo_year - (climo_base_nyrs - 1) / 2)
+            + "-"
+            + str(climo_year + (climo_base_nyrs - 1) / 2)
+        )
+    ds.history = historydate + ": created by " + sys.argv[0]
+    stdout = os.popen("git describe")
+    ds.gitdescribe = stdout.read().rstrip()
+    ds.Source = "CMIP6 CESM simulations"
+    ds.Conventions = "CF-1.0"
+    ds.comment = (
+            "Monthly scale factors for given SSP scenario compared to a climatology based on"
+            + " data centered on "
+            + str(climo_year)
+            + " over the range given in note1"
+        )
+    ds.number_of_ensemble_members = str(num_ens)
+    ds.Created_by = getuser()
 
-#-------------------------------------------------------
-"""
+    for nens in range(num_ens):
+        hdir = dpath + histdir[nens] + dfile
+        fdir = dpath + sspdir[nens] + dfile
+        if nens == 0:
+            ds.Created_from_historical_dirs = hdir
+            ds.Created_from_scenario_dirs = fdir
+        else:
+            ds.Created_from_historical_dirs += ", " + hdir
+            ds.Created_from_scenario_dirs += ", " + fdir
 
-This script creates CLM anomaly forcing data
+    ds.History_years = str(hist_yrstart) + "," + str(hist_yrend)
+    ds.Scenario_years = str(ssp_yrstart) + "," + str(ssp_yrend)
+    ds.institution = "National Center for Atmospheric Research"
+    return hdir,fdir
 
-"""
-#-------------------------------------------------------
 
-#--  end of function definitions  ---------------------------------
-#0
+def create_fill_latlon(ds, data, var_name):
+    
+    ds.createDimension(var_name, int(data.size))
+    wl = ds.createVariable(var_name, np.float64, (var_name,))
+    
+    if var_name == "lat":
+        wl.units = "degrees_north"
+        wl.long_name = "Latitude"
+    elif var_name == "lon":
+        wl.units = "degrees_east"
+        wl.long_name = "Longitude"
+    wl.mode = "time-invariant"
+    
+    wl[:] = data
+        
+    return ds
 
-print( "Create anomoly forcing data that can be used by CTSM in CESM" )
+
+def create_fill_time(ds, time, ntime, ssp_time_units=None, ssp_time_longname=None, adj_time=False):
+    if ntime is not None:
+        ntime = int(ntime)
+    ds.createDimension("time", ntime)
+    
+    wtime = ds.createVariable("time", np.float64, ("time",))
+    
+    if ssp_time_units is not None:
+        wtime.units = ssp_time_units
+    if ssp_time_longname is not None:
+        wtime.long_name = ssp_time_longname
+    wtime.calendar = "noleap"
+    
+    # adjust time to middle of month
+    if adj_time:
+        wtime_offset = 15 - time[0]
+        wtime[:] = time + wtime_offset
+    else:
+        wtime[:] = time
+    
+    return ds
+
+
+def create_fill_ancillary_vars(ds, landfrac, landmask, area):
+    
+    wmask = ds.createVariable("landmask", np.int32, ("lat", "lon"))
+    warea = ds.createVariable("area", np.float64, ("lat", "lon"))
+    wfrac = ds.createVariable("landfrac", np.float64, ("lat", "lon"))
+    
+    warea.units = "km2"
+    wfrac.units = "unitless"
+    wmask.units = "unitless"
+
+    warea.long_name = "Grid cell area"
+    wfrac.long_name = "Grid cell land fraction"
+    wmask.long_name = "Grid cell land mask"
+    
+    warea.mode = "time-invariant"
+    wfrac.mode = "time-invariant"
+    wmask.mode = "time-invariant"
+
+    # write to file  --------------------------------------------        
+    wmask[:, :] = landmask
+    wfrac[:, :] = landfrac
+    warea[:, :] = area
+    
+    return ds
+
+
+def add_to_dataset(ds, var_name, data, units=None, mode=None, historical_source_files=None, scenario_source_files=None, long_name=None, cell_methods=None):
+    dims = ("time", "lat", "lon")
+    data_type = np.float64
+    
+    wvar = ds.createVariable(
+        var_name,
+        data_type,
+        dims,
+        fill_value=data_type(1.0e36),
+    )
+    
+    wvar[:, :, :] = data
+    
+    if units is not None:
+        wvar.units = units
+    if mode is not None:
+        wvar.mode = mode
+    if historical_source_files is not None:
+        wvar.historical_source_files = historical_source_files
+    if scenario_source_files is not None:
+        wvar.scenario_source_files = scenario_source_files
+    if long_name is not None:
+        wvar.long_name = long_name
+    if cell_methods is not None:
+        wvar.cell_methods = cell_methods
+    
+    return ds
+
+
+def create_fill_forcing(ds, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld):
+    
+    historical_source_files = "".join(histfiles).replace(hdir, "")
+    scenario_source_files = "".join(sspfiles).replace(fdir, "")
+    mode = "time-dependent"
+    
+    if field_out[f] == "sfcWind":
+        long_name = str(long_name) + " U component " + anomsf[f]
+        var_name = field_out_wind[0]
+        data = anom_fld / np.sqrt(2)
+    else:
+        long_name = str(long_name) + " " + anomsf[f]
+        var_name = field_out[f]
+        data = anom_fld
+    # Was missing cell_methods attribute in original
+    ds = add_to_dataset(ds, var_name, data, units=units[f], mode=mode, historical_source_files=historical_source_files, scenario_source_files=scenario_source_files, long_name=long_name)
+    
+    if field_out[f] == "sfcWind":
+        long_name = long_name.replace("U component", "V component")
+        var_name = field_out_wind[1]
+        # Was missing mode attribute in original
+        ds = add_to_dataset(ds, var_name, data, units=units[f], historical_source_files=historical_source_files, scenario_source_files=scenario_source_files, long_name=long_name, cell_methods="time: mean")
+
+    return ds
+
+
+parser = argparse.ArgumentParser(description="Create anomaly forcing")
+parser.add_argument(
+    "sspnum",
+    help="scenario number (1=SSP1-2.6, 2=SSP2-4.5, 3=SSP3-7.0, 4=SSP5-8.5)",
+    nargs="?",
+    type=int,
+    default=0,
+)
+parser.add_argument(
+    "--write_climo",
+    "--write-climo",
+    help="write out climatology files and exit",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
+    "--print_ssps",
+    "--print-ssps",
+    help="Just print out directory names and exit",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
+    "--output_dir", "--output-dir",
+    help="Top-level output directory (default: ./anomaly_forcing/). Sub-directory will be created for the selected scenario.",
+    type=str,
+    default=os.path.join(".", "anomaly_forcing"),
+)
+
+
+args = parser.parse_args()
+if args.sspnum == 0:
+    sys.exit("choose valid ssp number")
+
+# -------------------------------------------------------
+
+print("Create anomaly forcing data that can be used by CTSM in CESM")
 # Input and output directories make sure they exist
-datapath = "/glade/p/cgd/tss/historyfiles/"   # Path on cheyenne
-spath                 = './'
-if ( os.path.exists(datapath) ):
-   print( "Input data directory:"+datapath )
+datapath = "/glade/campaign/collections/cmip/CMIP6/timeseries-cmip6/"  # Path on casper
+
+"""
+The corrected SSP simulations:
+
+    b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.101
+    b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.102 (MOAR)
+    b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.103
+
+    b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.101
+    b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.102 (MOAR)
+    b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.103
+
+    b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.101
+    b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.102 (MOAR)
+    b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.103
+
+    b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.101
+    b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.102 (MOAR)
+    b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.103
+
+historical runs used to initialize SSPs:
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.002-old/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.003.oldTag/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.004.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP245.f09_g17.CMIP6-SSP2-4.5.001.BAD/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010_v2.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.003/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.004/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.005/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.006/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.010.clm2.r.2015-01-01-00000.nc'
+b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.002/CaseDocs/lnd_in: finidat = \
+              'b.e21.BHIST.f09_g17.CMIP6-historical.011.clm2.r.2015-01-01-00000.nc'
+
+_v2 is just used for restart files that have been spatially interpolated
+
+"""
+
+if os.path.exists(datapath):
+    print("Input data directory:" + datapath)
 else:
-   sys.exit( "Could not find input directory: "+datapath )
-if ( os.path.exists(spath) ):
-   print( "Output data directory:"+spath )
-else:
-   sys.exit( "Could not find output directory: "+spath )
+    sys.exit("Could not find input directory: " + datapath)
+if not os.path.exists(args.output_dir):
+    os.makedirs(args.output_dir)
+print("Output data directory:" + args.output_dir)
 
 # Settings to run with
 today = datetime.date.today()
-creationdate = "_c"+today.strftime( "%Y%m%d" )
-historydate = today.strftime( "%a %b %d %Y" ) 
-sspnum = 4
-smoothsize = 5
+creationdate = "_c" + today.strftime("%Y%m%d")
+historydate = today.strftime("%a %b %d %Y")
 
-hist_case = 'b.e21.BHIST.f09_g17.CMIP6-historical.010'
+sspdir_full = [
+    "b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.101/",
+    "b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.102/",
+    "b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.103/",
+    "b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.101/",
+    "b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.102/",
+    "b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.103/",
+    "b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.101/",
+    "b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.102/",
+    "b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.103/",
+    "b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.101/",
+    "b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.102/",
+    "b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.103/",
+]
+
+histdir_full = [
+    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.010/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.011/",
+    "b.e21.BHIST.f09_g17.CMIP6-historical.004/",
+]
+
+sim_pairs = zip(sspdir_full, histdir_full)
+# print simulation pairs and exit
+if args.print_ssps:
+    print(datapath, "\n")
+    for sim in sim_pairs:
+        print("SSP: ", sim[0])
+        print("historical: ", sim[1], "\n")
+    sys.exit()
+
+sspnum = args.sspnum
 
 if sspnum == 1:
     # SSP1-26
-    ssptag = 'SSP1-2.6'
-    fut_case = 'b.e21.BSSP126cmip6.f09_g17.CMIP6-SSP1-2.6.001'
+    ssptag = "SSP1-2.6"
+    histdir = histdir_full[0:3]
+    sspdir = sspdir_full[0:3]
 elif sspnum == 2:
-    # SSP3-70
-    ssptag = 'SSP3-7.0'
-    fut_case = 'b.e21.BSSP370cmip6.f09_g17.CMIP6-SSP3-7.0.001'
-elif sspnum == 3:
-    # SSP5-85
-    ssptag = 'SSP5-8.5'
-    fut_case = 'b.e21.BSSP585cmip6.f09_g17.CMIP6-SSP5-8.5.001'
-elif sspnum == 4:
     # SSP2-45
-    ssptag = 'SSP2-4.5'
-    fut_case = 'b.e21.BSSP245cmip6.f09_g17.CMIP6-SSP2-4.5.001'
+    ssptag = "SSP2-4.5"
+    histdir = histdir_full[3:6]
+    sspdir = sspdir_full[3:6]
+elif sspnum == 3:
+    # SSP3-70
+    ssptag = "SSP3-7.0"
+    histdir = histdir_full[6:9]
+    sspdir = sspdir_full[6:9]
+elif sspnum == 4:
+    # SSP5-85
+    ssptag = "SSP5-8.5"
+    histdir = histdir_full[9:12]
+    sspdir = sspdir_full[9:12]
 else:
-    sys.exit( "sspnum is out of range: "+sspnum )
+    sys.exit("sspnum is out of range: " + sspnum)
 
-sspoutdir = 'anomaly_forcing/CMIP6-'+ssptag
+num_ens = len(sspdir)
+if num_ens != len(histdir):
+    print("number of ensemble members not the same")
+    sys.exit("number of members different")
 
-outdir = spath + sspoutdir
-if ( not os.path.exists(outdir) ):
-   os.makedirs( outdir )
+# Setup output directory
+sspoutdir = "CMIP6-" + ssptag
 
-print( "Output specific data directory :"+outdir )
+outdir = os.path.join(args.output_dir, sspoutdir)
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
 
+print("Output specific data directory :" + outdir)
 
-hist_yrstart          = 2000
-hist_yrend            = 2014
-hist_nyrs             = hist_yrend - hist_yrstart + 1
+climo_year = 2015
+# ten years on either side (21 years total)
+climo_base_nyrs = 21
 
-fut1_yrstart          = 2015
-fut1_yrend            = 2064
-fut1_nyrs             = fut1_yrend - fut1_yrstart + 1
+write_climo = args.write_climo
 
-fut2_yrstart          = 2065
-fut2_yrend            = 2100
-fut2_nyrs             = fut2_yrend - fut2_yrstart + 1
+nmo = 12
 
-fut_yrstart           = 2015
-fut_yrend             = 2100
-fut_nyrs              = fut_yrend - fut_yrstart + 1
-
-tot_yrstart           = 2000
-tot_yrend             = 2100
-tot_nyrs              = tot_yrend - tot_yrstart + 1
-
-nmo                   = 12
-histnm                = nmo*hist_nyrs
-futnm                 = nmo*fut_nyrs
-totnm                 = nmo*tot_nyrs
-outnm                 = nmo*fut_nyrs
-
-dpath                 = datapath
-dfile                 = '/lnd/proc/tseries/month_1/'
-hdir                  = dpath+hist_case+dfile
-fdir                  = dpath+fut_case+dfile
-
-# Check that directories exist
-if ( os.path.exists(hdir) ):
-   print( "Data file directory:"+hdir )
-else:
-   sys.exit( "Could not find directory: "+hdir )
-if ( os.path.exists(fdir) ):
-   print( "Data file directory:"+fdir )
-else:
-   sys.exit( "Could not find directory: "+fdir )
-
-print( "\n\n\n" )
+print("\n\n\n")
 
 # needed to use QBOT and U10, not using V and U(for sfcwind)
-field_in              = [   'TBOT',        'RAIN',        'SNOW',        'FSDS',        'FLDS',   'QBOT',   'PBOT']
-field_combine         = [        0,             1,             1,             0,             0,        0,        0]
-field_out             = [    'tas',          'pr',          'pr',        'rsds',        'rlds',   'huss',     'ps']
-units                 = [      'K',           ' ',           ' ',           ' ',           ' ',  'kg/kg',     'Pa']
-units_disp            = [      'K',        'mm/s',        'mm/s',   'W m!U-2!N',   'W m!U-2!N',  'kg/kg',     'Pa']
-anomsf                = ['anomaly','scale factor','scale factor','scale factor','scale factor','anomaly','anomaly']
+field_in = ["TBOT", "RAIN", "FSDS", "FLDS", "QBOT", "PBOT", "WIND"]
+field_out = ["tas", "pr", "rsds", "rlds", "huss", "ps", "sfcWind"]
+units = ["K", "mm/s", "W m!U-2!N", "W m!U-2!N", "kg/kg", "Pa", "m/s"]
+units_disp = ["K", "mm/s", "W m!U-2!N", "W m!U-2!N", "kg/kg", "Pa", "m/s"]
+anomsf = [
+    "anomaly",
+    "scale factor",
+    "scale factor",
+    "scale factor",
+    "anomaly",
+    "anomaly",
+    "anomaly",
+]
 
-nfields               = len(field_in)
+field_out_wind = ["uas", "vas"]
 
-#--  Read coordinates
-landfile              = hdir+hist_case+'.clm2.h0.TBOT.'+str(hist_yrstart)+'01-'+str(hist_yrend)+'12.nc'
-if ( os.path.exists(landfile) ):
-   print( "Land File: "+landfile )
-else:
-   sys.exit( "Could not find land file: "+landfile )
+nfields = len(field_in)
 
-f1 = netcdf4.Dataset(landfile, 'r')
-landfrac=np.asfarray(f1.variables['landfrac'][:,:],np.float64)
-landmask=np.asfarray(f1.variables['landmask'][:,:],np.float64)
-area=np.asfarray(f1.variables['area'][:,:],np.float64)
-lon   = np.asfarray(f1.variables['lon'][:],np.float64)
-lat   = np.asfarray(f1.variables['lat'][:],np.float64)
-nlat  = lat.size
-nlon  = lon.size
-f1.close()
-ind=np.where(landfrac > 1.e10)
-landfrac[ind]=0
+output_format = "NETCDF3_64BIT_DATA"
 
-#--  Loop over forcing fields  ------------------------------------
-fieldskip = 0
+# --  Loop over forcing fields  ------------------------------------
+
+
 for f in range(nfields):
-    # read in last ten years of historical data  ------------------
 
-    infieldname1 = field_in[f]
-    infieldcombine1 = field_combine[f]
-    if ((infieldcombine1 == 1 and fieldskip == 0) or (infieldcombine1 == 0 and fieldskip == 0)):
-        hvarfile1 = hdir+hist_case+'.clm2.h0.'+infieldname1+'.'+str(hist_yrstart)+'01-'+str(hist_yrend)+'12.nc'
-        fvarfile1 = fdir+fut_case+'.clm2.h0.'+infieldname1+'.'+str(fut1_yrstart)+'01-'+str(fut1_yrend)+'12.nc'
-        fvarfile2 = fdir+fut_case+'.clm2.h0.'+infieldname1+'.'+str(fut2_yrstart)+'01-'+str(fut2_yrend)+'12.nc'
-        hf1 = netcdf4.Dataset(hvarfile1, 'r')
-        ff1 = netcdf4.Dataset(fvarfile1, 'r')
-        ff2 = netcdf4.Dataset(fvarfile2, 'r')
-        hvarvalues1 = np.asfarray(hf1.variables[infieldname1][:],np.float64)
-        htime1 = np.asfarray(hf1.variables['time'][:],np.float64)
-        print( 'Reading: ' + hvarfile1 )
-        fvarvalues1 = np.asfarray(ff1.variables[infieldname1][:],np.float64)
-        ftime1 = np.asfarray(ff1.variables['time'][:],np.float64)
-        long_name = ff1.variables[field_in[f]].long_name
-        print( 'Reading: ' + fvarfile1 )
-        fvarvalues2 = np.asfarray(ff2.variables[infieldname1][:],np.float64)
-        ftime2 = np.asfarray(ff2.variables['time'][:],np.float64)
-        print( 'Reading: ' + fvarfile2 )
-        hf1.close()
-        ff1.close()
-        ff2.close()
-        if (infieldcombine1 == 1):
-            infieldname2 = field_in[f+1]
-            infieldcombine2 = field_combine[f+1]
-            hvarfile2 = hdir+hist_case+'.clm2.h0.'+infieldname2+'.'+str(hist_yrstart)+'01-'+str(hist_yrend)+'12.nc'
-            fvarfile3 = fdir+fut_case+'.clm2.h0.'+infieldname2+'.'+str(fut1_yrstart)+'01-'+str(fut1_yrend)+'12.nc'
-            fvarfile4 = fdir+fut_case+'.clm2.h0.'+infieldname2+'.'+str(fut2_yrstart)+'01-'+str(fut2_yrend)+'12.nc'
-            hf2 = netcdf4.Dataset(hvarfile2, 'r')
-            ff3 = netcdf4.Dataset(fvarfile3, 'r')
-            ff4 = netcdf4.Dataset(fvarfile4, 'r')
-            hvarvalues1 = hvarvalues1 + np.asfarray(hf2.variables[infieldname2][:],np.float64)
-            print( 'Reading: ' + hvarfile2 )
-            fvarvalues1 = fvarvalues1 + np.asfarray(ff3.variables[infieldname2][:],np.float64)
-            print( 'Reading: ' + fvarfile3 )
-            fvarvalues2 = fvarvalues2 + np.asfarray(ff4.variables[infieldname2][:],np.float64)
-            print( 'Reading: ' + fvarfile4 )
-            hf2.close()
-            ff3.close()
-            ff4.close()
-            fieldskip = 1
+    # --  Loop over ensemble members  ------------------------------
+    for nens in range(num_ens):
+        print("Beginning ensemble number ", nens + 1)
 
-        allvarvalues = np.concatenate((hvarvalues1,fvarvalues1,fvarvalues2),axis=0)
-        alltime = np.concatenate((htime1,ftime1,ftime2),axis=0)
-        ftime = np.concatenate((ftime1,ftime2),axis=0)
-        outtime = ftime - 16
-        histavgvalues = np.zeros((nmo,nlat,nlon))
-        histavgcount = np.zeros((nmo))
-        runningavgvalues = np.zeros((nlat,nlon))
-        runningavgcount = 0.0
-        outputvarvalues = np.zeros((outnm,nlat,nlon))
+        hist_case = histdir[nens]
+        fut_case = sspdir[nens]
+        dpath = datapath
+        dfile = "/lnd/proc/tseries/month_1/"
+        hdir = dpath + hist_case + dfile
+        fdir = dpath + fut_case + dfile
 
-        for hmonthindex in range(histnm):
-            havgmonthnum = (hmonthindex) % 12 + 1
-            havgmonthindex = havgmonthnum - 1
-            histavgvalues[havgmonthindex,:,:] = histavgvalues[havgmonthindex,:,:] * histavgcount[havgmonthindex]
-            histavgvalues[havgmonthindex,:,:] = histavgvalues[havgmonthindex,:,:] + allvarvalues[hmonthindex,:,:]
-            histavgcount[havgmonthindex] = histavgcount[havgmonthindex] + 1.0
-            histavgvalues[havgmonthindex,:,:] = histavgvalues[havgmonthindex,:,:] / histavgcount[havgmonthindex]
+        # Check that directories exist
+        if not os.path.exists(hdir):
+            sys.exit("Could not find directory: " + hdir)
+        if not os.path.exists(fdir):
+            sys.exit("Could not find directory: " + fdir)
 
-        for fmonthindex in range(futnm):
-            allmonthindex = fmonthindex + histnm
-            allyearindex = int(allmonthindex / nmo)
-            favgmonthnum = (allmonthindex) % 12 + 1
-            favgmonthindex = favgmonthnum - 1
+        # --  Get historical and SSP filenames  --------------------
+        command = "ls " + hdir + "*." + field_in[f] + ".*.nc"
+        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
+        x = x2.communicate()
+        histfiles = x[0].decode("utf-8").split("\n")
+        histfiles.remove("")
 
-            firstmonthindex = allmonthindex - nmo * smoothsize
-            if allyearindex <= (tot_nyrs - smoothsize):
-                lastmonthindex = allmonthindex + nmo * smoothsize
-            else:
-                lastmonthindex = allmonthindex + nmo * (tot_nyrs - allyearindex)
+        command = "ls " + fdir + "*." + field_in[f] + ".*.nc"
+        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
+        x = x2.communicate()
+        sspfiles = x[0].decode("utf-8").split("\n")
+        sspfiles.remove("")
 
-            runningavgvalues = 0.0
-            runningavgcount = 0.0
-            for smonthindex in range(firstmonthindex,lastmonthindex,nmo):
-                runningavgvalues = runningavgvalues * runningavgcount
-                runningavgvalues = runningavgvalues + allvarvalues[smonthindex,:,:]
-                runningavgcount = runningavgcount + 1.0
-                runningavgvalues = runningavgvalues / runningavgcount
+        for hfile in histfiles:
+            print(hfile.split("month_1/")[-1])
+            if not os.path.exists(hfile):
+                sys.exit(hfile + " does not exist")
+        for sfile in sspfiles:
+            print(sfile.split("month_1/")[-1])
+            if not os.path.exists(sfile):
+                sys.exit(sfile + " does not exist")
 
-            climoavgvalues = histavgvalues[favgmonthindex,:,:]
-            if anomsf[f] == 'anomaly':
-                anomvalues = runningavgvalues - climoavgvalues
+        # --  Read in historical data  -----------
+        f1 = netcdf4.MFDataset(histfiles, "r")
+        if nens == 0:
+            # read in coordinates
+            lon = np.asfarray(f1.variables["lon"][:], np.float64)
+            lat = np.asfarray(f1.variables["lat"][:], np.float64)
+            hist_time = np.asfarray(f1.variables["time"][:], np.float64)
+            time_units = f1.variables["time"].units
 
-            if anomsf[f] == 'scale factor':
-                anomvalues = np.ones((nlat,nlon),dtype=np.float64)
-                
-                nonzeroindex = np.where(climoavgvalues != 0.0)
-                anomvalues[nonzeroindex] = runningavgvalues[nonzeroindex]/climoavgvalues[nonzeroindex]
+            # read landfrac, landmask, and area
+            landfrac = np.asfarray(f1.variables["landfrac"][:, :], np.float64)
+            landmask = np.asfarray(f1.variables["landmask"][:, :], np.float64)
+            area = np.asfarray(f1.variables["area"][:, :], np.float64)
+            ind = np.where(landfrac > 1.0e10)
+            landfrac[ind] = 0
 
-                max_scale_factor = 5.
-                if field_in[f] == 'FSDS':
-                    max_scale_factor = 2.
-                overmaxindex=np.where(anomvalues > max_scale_factor)
-                anomvalues[overmaxindex] = max_scale_factor
-            
-            outputvarvalues[fmonthindex,:,:] = anomvalues
+            x = time_units.split()[2]
+            ref_year = float(x.split("-")[0])
+            hist_yrstart = np.min(hist_time / 365.0 + ref_year).astype(int)
+            # overwrite hist_yrstart to select just 20 years prior to climo_year
+            hist_yrstart = climo_year - (climo_base_nyrs - 1)
+            hist_yrend = (np.max(hist_time / 365.0 + ref_year) - 1).astype(int)
+            hist_nyrs = hist_yrend - hist_yrstart + 1
+            if f == 0:
+                print("hist years: ", hist_yrstart, hist_yrend, hist_nyrs)
 
-        # create netcdf file  ---------------------------------
+            hist_ind = np.where(
+                np.logical_and(
+                    hist_time / 365.0 + ref_year > hist_yrstart,
+                    hist_time / 365.0 + ref_year <= (hist_yrend + 1),
+                )
+            )[0]
+            hist_time = hist_time[hist_ind]
 
-        outfilename = outdir + '/'+'af.'+field_out[f]+'.cesm2.'+ssptag+'.'+str(fut_yrstart)+'-'+str(fut_yrend)+creationdate+'.nc'
-        print( 'Creating: ' + outfilename )
-        outfile = netcdf4.Dataset(outfilename, 'w')
+            nlat = lat.size
+            nlon = lon.size
+            ntime = hist_time.size
+            hist_fld = np.zeros((ntime, nlat, nlon))
 
-        outfile.source_file1 = hvarfile1
-        outfile.source_file2 = fvarfile1
-        outfile.source_file3 = fvarfile2
-        outfile.title = 'anomaly forcing data'
-        outfile.note1 = 'Anomaly/scale factors calculated relative to ' \
-        +str(hist_yrstart)+'-'+str(hist_yrend) \
-        +' climatology from CESM2 historical simulation (case name: '+hist_case+')'
-        outfile.note2 = ssptag+' '+str(fut_yrstart)+'-'+str(fut_yrend) \
-        +' from CESM simulations (case names: '+fut_case[0]+' and '+fut_case[1]+')'
-        outfile.smoothsize = str(smoothsize)
-        outfile.history = historydate + ": created by "+sys.argv[0]
-        stdout = os.popen( "git describe" )
-        outfile.gitdescribe = stdout.read().rstrip()
+        hist_fld += np.asfarray(f1.variables[field_in[f]][hist_ind, :, :], np.float64)
+        f1.close()
 
-        outfile.createDimension('lat', size=int(nlat))
-        outfile.createDimension('lon', size=int(nlon))
-        outfile.createDimension('time', size=None)
-    
-        wtime = outfile.createVariable('time',np.float64,('time',))
-        wlat  = outfile.createVariable('lat',np.float64,('lat',))
-        wlon  = outfile.createVariable('lon',np.float64,('lon',))
-        wmask = outfile.createVariable('landmask',np.int32,('lat','lon'))
-        warea = outfile.createVariable('area',np.float64,('lat','lon'))
-        wfrac = outfile.createVariable('landfrac',np.float64,('lat','lon'))
-        wvar  = outfile.createVariable(field_out[f],np.float64,('time','lat','lon'),fill_value=np.float64(1.e36))
-    
-        wtime.units = 'days since ' + str(fut_yrstart) + '-01-01 00:00:00'
-        wlon.units  = 'degrees'
-        wlat.units  = 'degrees'
-        wvar.units = units[f]
-        warea.units = 'km2'
-        wfrac.units = 'unitless'
-        wmask.units = 'unitless'
+        # add SNOW to RAIN
+        if field_in[f] == "RAIN":
+            histfiles2 = [file.replace("RAIN", "SNOW") for file in histfiles]
+            f1 = netcdf4.MFDataset(histfiles2, "r")
+            hist_fld += np.asfarray(f1.variables["SNOW"][hist_ind, :, :], np.float64)
+            f1.close()
 
-        #wtime.long_name = 'Months since January '+str(fut_yrstart)
-        wtime.long_name = 'days since ' + str(fut_yrstart) + '-01-01 00:00:00'
-        wlon.long_name  = 'Longitude'
-        wlat.long_name  = 'Latitude'
-        wvar.long_name  = str(long_name)+' '+anomsf[f]
-        warea.long_name = 'Grid cell area'
-        wfrac.long_name = 'Grid cell land fraction'
-        wmask.long_name = 'Grid cell land mask'
+        if f == 0:
+            print(
+                "hist_time: ",
+                hist_time[0] / 365.0 + ref_year,
+                hist_time[-1] / 365.0 + ref_year,
+            )
 
-        wtime.calendar = 'noleap'
-      
-        # write to file  --------------------------------------------
-        #wtime[:]   = month
-        wtime[:]   = outtime
-        wlon[:]    = lon
-        wlat[:]    = lat
-        wmask[:,:] = landmask
-        wfrac[:,:] = landfrac
-        warea[:,:] = area
-        wvar[:,:,:] = outputvarvalues
+        # read in future data  ---------------------
 
-    else:
-        fieldskip = 0
-    
+        f1 = netcdf4.MFDataset(sspfiles, "r")
+        if nens == 0:
+            ssp_time = np.asfarray(f1.variables["time"][:], np.float64)
+            ssp_time_units = f1.variables["time"].units
+            ssp_time_longname = f1.variables["time"].long_name
+            x = ssp_time_units.split()[2]
+            ssp_ref_year = float(x.split("-")[0])
 
-print( "\n\nSuccessfully made anomoly forcing datasets\n" )
+            # adjust ssp_time to reference time of hist_time
+            # ssp_time += 365*(ssp_ref_year - ref_year)
+            # ssp_ref_year = ref_year
+            # adjust hist_time to reference time of ssp_time
+            hist_time += 365 * (ref_year - ssp_ref_year)
+            ref_year = ssp_ref_year
+
+            # ssp_ind could be modified to subset data if needed...
+            ssp_ind = np.arange(ssp_time.size, dtype=int)
+
+            ssp_time = ssp_time[ssp_ind]
+            long_name = f1.variables[field_in[f]].long_name
+            ntime_ssp = ssp_time.size
+            ssp_fld = np.zeros((ntime_ssp, nlat, nlon))
+
+            ssp_yrstart = np.min(ssp_time / 365.0 + ref_year).astype(int)
+            ssp_yrend = (np.max(ssp_time / 365.0 + ref_year) - 1).astype(int)
+            ssp_nyrs = ssp_yrend - ssp_yrstart + 1
+            if f == 0:
+                print("SSP years: ", ssp_yrstart, ssp_yrend, ssp_nyrs)
+            tot_nyrs = hist_nyrs + ssp_nyrs
+            outfile_suffix = (
+                ".CESM."
+                + ssptag
+                + "."
+                + str(ssp_yrstart)
+                + "-"
+                + str(ssp_yrend)
+                + creationdate
+                + ".nc"
+            )
+
+        ssp_fld += np.asfarray(f1.variables[field_in[f]][ssp_ind, :, :], np.float64)
+        f1.close()
+
+        # add SNOW to RAIN
+        if field_in[f] == "RAIN":
+            sspfiles2 = [file.replace("RAIN", "SNOW") for file in sspfiles]
+            f1 = netcdf4.MFDataset(sspfiles2, "r")
+            ssp_fld += np.asfarray(f1.variables["SNOW"][ssp_ind, :, :], np.float64)
+            f1.close()
+
+        if f == 0:
+            print(
+                "ssp_time: ",
+                ssp_time[0] / 365.0 + ssp_ref_year,
+                ssp_time[-1] / 365.0 + ssp_ref_year,
+                ssp_time.size,
+            )
+    # --  end Loop over ensemble members  ------------------------------
+
+    # normalize summed fields by number of ensemble members
+    hist_fld = hist_fld / float(num_ens)
+    ssp_fld = ssp_fld / float(num_ens)
+    # concatenate arrays to form contiguous time series
+    temp_fld = np.concatenate((hist_fld, ssp_fld), axis=0)
+    time = np.concatenate((hist_time, ssp_time), axis=0)
+    tm = time.size
+
+    # smooth data by applying boxcar averaging to sequence of months
+    stemp_fld = np.copy(temp_fld)
+    for n in range(tm):
+        # 21 years of jan, feb, etc. centered on each month in data
+        ind = nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2) + n
+        # account for edges
+        m = np.where(np.logical_and(ind >= 0, ind < tm))[0]
+        ind2 = ind[m].astype(int)
+
+        stemp_fld[n, :, :] = np.sum(temp_fld[ind2, :, :], axis=0) / float(ind2.size)
+
+    if f == 0:
+        print(
+            "full time: ",
+            time[0] / 365.0 + ref_year,
+            time[-1] / 365.0 + ref_year,
+            time.size,
+        )
+
+    # create climatology of smoothed data
+    climo = np.zeros((nmo, nlat, nlon))
+    t_climo_year = np.argmin(np.abs((time / 365.0 + ref_year) - climo_year))
+    # shift to january of climo_year
+    t_climo_year += 1
+    if f == 0:
+        print((time[t_climo_year] / 365.0 + ref_year))
+    for n in range(nmo):
+        ind = (
+            nmo * (np.arange(climo_base_nyrs) - (climo_base_nyrs - 1) / 2)
+            + t_climo_year
+            + n
+        ).astype(int)
+        climo[n, :, :] = np.sum(stemp_fld[ind, :, :], axis=0) / float(ind.size)
+
+    if f == 0:
+        print("climo calculated")
+
+    # extract smoothed SSP data
+    t_ssp_start = (ssp_yrstart - hist_yrstart) * nmo
+    if f == 0:
+        print((time[t_ssp_start] / 365.0 + ref_year))
+    ssp_fld_smoothed = stemp_fld[t_ssp_start:, :, :]
+
+    # calculate anomaly relative to climatology
+    anom_fld = np.zeros((ssp_fld_smoothed.shape))
+    for y in range(ssp_nyrs):
+        ind = (np.arange(nmo) + y * nmo).astype(int)
+        if anomsf[f] == "anomaly":
+            anom_fld[ind, :, :] = ssp_fld_smoothed[ind, :, :] - climo
+
+        if anomsf[f] == "scale factor":
+            tmp = ssp_fld_smoothed[ind, :, :]
+            ind2 = np.where(climo != 0.0)
+            # initialize scalar anomaly to 1
+            tmp2 = np.ones(tmp.shape)
+            # calculate scalar anomaly
+            tmp2[ind2] = tmp[ind2] / climo[ind2]
+
+            # place upper limit on scalar anomalies
+            max_scale_factor = 5.0
+            if field_in[f] == "FSDS":
+                max_scale_factor = 2.0
+            ind2 = np.where(tmp2 > max_scale_factor)
+            tmp2[ind2] = max_scale_factor
+            anom_fld[ind, :, :] = tmp2
+    # ----- end of year loop -------
+
+    # write out climo to check field  -------------------------
+    if write_climo:
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
+        w = netcdf4.Dataset(
+            os.path.join(outdir, field_out[f] + "_climo" + creationdate + ".nc"),
+            "w",
+            format=output_format,
+        )
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
+        w = create_fill_time(w, time[0:12], nmo)
+        
+        add_to_dataset(w, field_out[f], climo)
+        w.close()
+
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
+        w = netcdf4.Dataset(
+            os.path.join(outdir, field_out[f] + "_smooth" + creationdate + ".nc"),
+            "w",
+            format=output_format,
+        )
+        w = create_fill_latlon(w, lat, "lat")
+        w = create_fill_latlon(w, lon, "lon")
+        w = create_fill_time(w, time, tm)
+        
+        add_to_dataset(w, field_out[f], temp_fld)
+        add_to_dataset(w, "smooth_" + field_out[f], stemp_fld)
+        w.close()
+        
+        print("Exit early after writing out climatology\n\n")
+        sys.exit()
+
+    # create netcdf file  ---------------------------------
+
+    if f == 0:
+        # Use NetCDF4 format, because using older NetCDF formats are too slow
+        # Will need to convert to CDF5 format at the end, as we can't seem to
+        # output in CDF5 format using netCDF4 python interfaces
+        outfilename = os.path.join(outdir, "af.allvars" + outfile_suffix)
+        print("Creating: " + outfilename)
+        outfile = netcdf4.Dataset(outfilename, "w", format=output_format)
+
+        # creation date on the file
+        command = 'date "+%Y/%m/%d"'
+        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
+        x = x2.communicate()
+        timetag = x[0].decode("utf-8").strip()
+
+        # Add global attributes and get hdir/fdir
+        hdir, fdir = add_global_attributes(outfile, historydate, histdir, sspdir, num_ens, climo_year, climo_base_nyrs, dpath, dfile, hist_yrstart, hist_yrend, ssp_yrstart, ssp_yrend, timetag)
+
+        # Create dimensions
+        outfile = create_fill_latlon(outfile, lat, "lat")
+        outfile = create_fill_latlon(outfile, lon, "lon")
+        outfile = create_fill_time(outfile, ssp_time, None, ssp_time_units=ssp_time_units, ssp_time_longname=ssp_time_longname, adj_time=True)
+
+        # Create and fill ancillary variables
+        outfile = create_fill_ancillary_vars(outfile, landfrac, landmask, area)
+    # -- End if on open file
+
+    outfile = create_fill_forcing(outfile, field_out, units, anomsf, field_out_wind, f, hdir, fdir, histfiles, sspfiles, long_name, anom_fld)
+
+# --  End Loop over forcing fields  ------------------------------------
+outfile.close()
+
+print("\n\nSuccessfully made anomaly forcing datasets\n")

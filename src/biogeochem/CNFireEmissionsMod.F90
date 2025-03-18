@@ -3,18 +3,18 @@ module CNFireEmissionsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Gathers carbon emissions from fire sources to be sent to CAM-Chem via
-  ! the coupler .... 
+  ! the coupler ....
   ! Created by F. Vitt, and revised by F. Li
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
-  use PatchType,    only : patch                
+  use PatchType,    only : patch
   use decompMod,    only : bounds_type
   use shr_fire_emis_mod,  only : shr_fire_emis_comps_n, shr_fire_emis_comp_t, shr_fire_emis_linkedlist
   use shr_fire_emis_mod,  only : shr_fire_emis_mechcomps_n, shr_fire_emis_mechcomps
   !
   implicit none
-  private 
+  private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
    public :: CNFireEmisUpdate
@@ -71,7 +71,7 @@ contains
        emis_cmp => emis_cmp%next_emiscomp
     enddo
 
-    call this%InitAllocate(bounds) 
+    call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
 
   end subroutine Init
@@ -85,7 +85,7 @@ contains
 
     ! !ARGUMENTS:
     class(fireemis_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: beg, end, i
@@ -128,12 +128,13 @@ contains
 
     ! !ARGUMENTS:
     class(fireemis_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     ! !LOCAL VARIABLES
     integer :: begp, endp
     integer :: imech, icomp
     type(shr_fire_emis_comp_t), pointer :: emis_cmp
+    character(len=16) :: units
 
     if (shr_fire_emis_mechcomps_n>0) then
 
@@ -143,8 +144,13 @@ contains
        emis_cmp_loop: do while(associated(emis_cmp))
 
           icomp = emis_cmp%index
+          if (emis_cmp%name(1:4) == 'num_') then
+             units = 'molecules/m2/sec'
+          else
+             units = 'kg/m2/sec'
+          endif
 
-          call hist_addfld1d (fname='FireComp_'//trim(emis_cmp%name), units='kg/m2/sec', &
+          call hist_addfld1d (fname='FireComp_'//trim(emis_cmp%name), units=units, &
                avgflag='A', long_name='fire emissions flux of '//trim(emis_cmp%name), &
                ptr_patch=this%comp(icomp)%emis, default='inactive')
 
@@ -154,8 +160,13 @@ contains
 
        ! loop over atm chem mechanism species
        do imech = 1,shr_fire_emis_mechcomps_n
+          if (shr_fire_emis_mechcomps(imech)%name(1:4) == 'num_') then
+             units = 'molecules/m2/sec'
+          else
+             units = 'kg/m2/sec'
+          endif
 
-          call hist_addfld1d (fname='FireMech_'//trim(shr_fire_emis_mechcomps(imech)%name), units='kg/m2/sec', &
+          call hist_addfld1d (fname='FireMech_'//trim(shr_fire_emis_mechcomps(imech)%name), units=units, &
                avgflag='A', long_name='fire emissions flux of '//trim(shr_fire_emis_mechcomps(imech)%name), &
                ptr_patch=this%mech(imech)%emis, default='inactive')
 
@@ -170,29 +181,29 @@ contains
             ptr_patch=this%ztop_patch, default='inactive')
     endif
 
- 
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine CNFireEmisUpdate(bounds, num_soilp, filter_soilp, cnveg_cf_inst, cnveg_cs_inst, fireemis_inst )
+  subroutine CNFireEmisUpdate(bounds, num_bgc_vegp, filter_bgc_vegp, cnveg_cf_inst, cnveg_cs_inst, fireemis_inst )
 
     use CNVegcarbonfluxType,  only : cnveg_carbonflux_type
-    use CNVegCarbonStateType, only : cnveg_carbonstate_type 
+    use CNVegCarbonStateType, only : cnveg_carbonstate_type
     use clm_varpar,           only : ndecomp_pools, nlevdecomp
     use clm_varcon,           only : dzsoi_decomp
 
     !ARGUMENTS:
-    type(bounds_type),           intent(in)    :: bounds                  
-    integer,                     intent(in)    :: num_soilp       ! number of soil pfts in filter
-    integer,                     intent(in)    :: filter_soilp(:) ! filter for soil pfts
+    type(bounds_type),           intent(in)    :: bounds
+    integer,                     intent(in)    :: num_bgc_vegp       ! number of bgc veg patches
+    integer,                     intent(in)    :: filter_bgc_vegp(:) ! filter for bgc veg patches
     type(cnveg_carbonflux_type), intent(in)    :: cnveg_cf_inst
-    type(cnveg_carbonstate_type),intent(in)    :: cnveg_cs_inst 
+    type(cnveg_carbonstate_type),intent(in)    :: cnveg_cs_inst
     type(fireemis_type),         intent(inout) :: fireemis_inst
 
     !LOCAL VARIABLES:
     real(r8) :: fire_flux
-    real(r8) :: fire_flux_lf 
-    real(r8) :: fire_flux_lf1 
+    real(r8) :: fire_flux_lf
+    real(r8) :: fire_flux_lf1
     type(shr_fire_emis_comp_t), pointer :: emis_cmp
     real(r8) :: emis_flux(shr_fire_emis_comps_n)
     integer  :: fp,p,g,c                ! indices
@@ -201,7 +212,7 @@ contains
 
     if ( shr_fire_emis_mechcomps_n < 1) return
 
-    associate( & 
+    associate( &
          fire_emis => fireemis_inst%fireflx_patch, &
          totfire   => fireemis_inst%totfire, &
          mech      => fireemis_inst%mech, &
@@ -224,8 +235,8 @@ contains
 
       ! Begin loop over points
       !_______________________________________________________________________________
-      do fp = 1,num_soilp
-         p = filter_soilp(fp)
+      do fp = 1,num_bgc_vegp
+         p = filter_bgc_vegp(fp)
          g = patch%gridcell(p)
          c = patch%column(p)
 
@@ -236,7 +247,7 @@ contains
          ! calculate fire emissions for non-bare ground PFTs
          if (patch%itype(p) > 0)then
             if(cnveg_cs_inst%totvegc_col(c) > 0._r8)then
-               fire_flux_lf1=0._r8 
+               fire_flux_lf1=0._r8
                do l = 1, ndecomp_pools
                   do j = 1, nlevdecomp
                      fire_flux_lf1 = fire_flux_lf1 + &
@@ -245,7 +256,7 @@ contains
                end do
                fire_flux_lf = fire_flux_lf1*cnveg_cs_inst%totvegc_patch(p)/cnveg_cs_inst%totvegc_col(c)
             else
-               fire_flux_lf=0._r8 
+               fire_flux_lf=0._r8
             end if
             fire_flux = fire_flux_lf &
                  + cnveg_cf_inst%m_leafc_to_fire_patch                     (p) & ! (gC/m2/s) fire C emissions from leafc
@@ -261,13 +272,13 @@ contains
                  + cnveg_cf_inst%m_frootc_storage_to_fire_patch            (p) & ! (gC/m2/s) fire C emissions from frootc_storage
                  + cnveg_cf_inst%m_frootc_xfer_to_fire_patch               (p) & ! (gC/m2/s) fire C emissions from frootc_xfer
                  + cnveg_cf_inst%m_livecrootc_to_fire_patch                (p) & ! (gC/m2/s) fire C emissions from livecrootc
-                 + cnveg_cf_inst%m_livecrootc_storage_to_fire_patch        (p) & ! (gC/m2/s) fire C emissions from livecrootc_storage 
+                 + cnveg_cf_inst%m_livecrootc_storage_to_fire_patch        (p) & ! (gC/m2/s) fire C emissions from livecrootc_storage
                  + cnveg_cf_inst%m_livecrootc_xfer_to_fire_patch           (p) & ! (gC/m2/s) fire C emissions from livecrootc_xfer
                  + cnveg_cf_inst%m_deadcrootc_to_fire_patch                (p) & ! (gC/m2/s) fire C emissions from deadcrootc
                  + cnveg_cf_inst%m_deadcrootc_storage_to_fire_patch        (p) & ! (gC/m2/s) fire C emissions from deadcrootc_storage
                  + cnveg_cf_inst%m_deadcrootc_xfer_to_fire_patch           (p) & ! (gC/m2/s) fire C emissions from deadcrootc_xfer
                  + cnveg_cf_inst%m_gresp_storage_to_fire_patch             (p) & ! (gC/m2/s) fire C emissions from gresp_storage
-                 + cnveg_cf_inst%m_gresp_xfer_to_fire_patch                (p)   ! (gC/m2/s) fire C emissions from gresp_xfer 
+                 + cnveg_cf_inst%m_gresp_xfer_to_fire_patch                (p)   ! (gC/m2/s) fire C emissions from gresp_xfer
             ! for diagnostics
             totfire%emis(p) = fire_flux !  gC/m2/sec
 
@@ -279,27 +290,27 @@ contains
                epsilon = emis_cmp%emis_factors(patch%itype(p))
 
                comp(icomp)%emis(p) = epsilon * fire_flux* 1.e-3_r8/0.5_r8  ! (to convert gC/m2/sec to kg species/m2/sec)
-               emis_flux(icomp) = emis_cmp%coeff*comp(icomp)%emis(p)
+               emis_flux(icomp) = comp(icomp)%emis(p)
 
                emis_cmp => emis_cmp%next_emiscomp
 
             enddo emis_cmp_loop
 
-            ! sum up the emissions compontent fluxes for the fluxes of chem mechanism compounds 
+            ! sum up the emissions compontent fluxes for the fluxes of chem mechanism compounds
             do imech = 1,shr_fire_emis_mechcomps_n
                n_emis_comps = shr_fire_emis_mechcomps(imech)%n_emis_comps
                do icomp = 1,n_emis_comps ! loop over number of emission components that make up the nth mechanism compoud
                   ii = shr_fire_emis_mechcomps(imech)%emis_comps(icomp)%ptr%index
-                  fire_emis(p,imech) = fire_emis(p,imech) + emis_flux(ii)
-                  mech(imech)%emis(p) = fire_emis(p,imech)
+                  fire_emis(p,imech) = fire_emis(p,imech) + shr_fire_emis_mechcomps(imech)%coeffs(icomp)*emis_flux(ii)
                enddo
+               mech(imech)%emis(p) = fire_emis(p,imech)
             enddo
 
             ztop(p) = vert_dist_top( patch%itype(p) )
 
          end if ! ivt(1:15 only)
 
-      enddo ! fp 
+      enddo ! fp
     end associate
 
   end subroutine CNFireEmisUpdate
@@ -307,23 +318,23 @@ contains
 ! Private methods
 !-----------------------------------------------------------------------
 !ztop compiled from Val Martin et al ACP 2010, Tosca et al. JGR  2011 and Jian et al., ACP 2013
-!st ztop updated based on Val Martin pers. communication Jan2015 
+!st ztop updated based on Val Martin pers. communication Jan2015
 !-----------------------------------------------------------------------
-!   not_vegetated    500 m                      
+!   not_vegetated    500 m
 !PFT1: needleleaf_evergreen_temperate_tree     4000 m
 !2: needleleaf_evergreen_boreal_tree    4000 m
-!3: needleleaf_deciduous_boreal_tree    3000 m    
-!4: broadleaf_evergreen_tropical_tree     2500 m  
-!5: broadleaf_evergreen_temperate_tree   3000 m   
-!6: broadleaf_deciduous_tropical_tree     2500 m  
-!7: broadleaf_deciduous_temperate_tree  3000 m    
-!8: broadleaf_deciduous_boreal_tree      3000 m   
-!9: broadleaf_evergreen_shrub   2000 m            
-!10: broadleaf_deciduous_temperate_shrub  2000 m  
-!11: broadleaf_deciduous_boreal_shrub    2000 m    
-!12: c3_arctic_grass   1000 m                      
-!13: c3_non-arctic_grass  1000 m              
-!14: c4_grass   1000 m                             
+!3: needleleaf_deciduous_boreal_tree    3000 m
+!4: broadleaf_evergreen_tropical_tree     2500 m
+!5: broadleaf_evergreen_temperate_tree   3000 m
+!6: broadleaf_deciduous_tropical_tree     2500 m
+!7: broadleaf_deciduous_temperate_tree  3000 m
+!8: broadleaf_deciduous_boreal_tree      3000 m
+!9: broadleaf_evergreen_shrub   2000 m
+!10: broadleaf_deciduous_temperate_shrub  2000 m
+!11: broadleaf_deciduous_boreal_shrub    2000 m
+!12: c3_arctic_grass   1000 m
+!13: c3_non-arctic_grass  1000 m
+!14: c4_grass   1000 m
 !15: c3_crop      1000 m
 !(and all new crops: 1000m)
 
@@ -374,4 +385,3 @@ contains
   end function vert_dist_top
 
 end module CNFireEmissionsMod
-

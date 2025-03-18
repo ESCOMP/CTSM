@@ -2,7 +2,7 @@ module test_balance
 
    ! Some tests of the balance check system
 
-  use pfunit_mod
+  use funit
   
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown

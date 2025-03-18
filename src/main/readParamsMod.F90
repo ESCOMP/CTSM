@@ -24,10 +24,11 @@ module readParamsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine readParameters (nutrient_competition_method, photosyns_inst)
+  subroutine readParameters (photosyns_inst)
     !
     ! ! USES:
     use CNSharedParamsMod                 , only : CNParamsReadShared
+    use CNAllocationMod                   , only : readCNAllocParams                      => readParams
     use CNGapMortalityMod                 , only : readCNGapMortParams                    => readParams
     use CNMRespMod                        , only : readCNMRespParams                      => readParams
     use CNFUNMod                          , only : readCNFUNParams                        => readParams
@@ -38,6 +39,7 @@ contains
     use SoilBiogeochemLittVertTranspMod   , only : readSoilBiogeochemLittVertTranspParams => readParams
     use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
     use SoilBiogeochemDecompMod           , only : readSoilBiogeochemDecompParams         => readParams
+    use TillageMod                        , only : readTillageParams                      => readParams
     use SoilBiogeochemDecompCascadeMIMICSMod, only : readSoilBiogeochemDecompMimicsParams => readParams
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
@@ -59,13 +61,11 @@ contains
     use initVerticalMod                   , only : readParams_initVertical                => readParams
     use SurfaceWaterMod                   , only : readParams_SurfaceWater                => readParams
     use SoilHydrologyInitTimeConstMod     , only : readParams_SoilHydrologyInitTimeConst  => readParams
-    use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
     !
     ! !ARGUMENTS:
     type(photosyns_type)                   , intent(in) :: photosyns_inst
-    class(nutrient_competition_method_type), intent(in) :: nutrient_competition_method
     !
     ! !LOCAL VARIABLES:
     character(len=256) :: locfn ! local file name
@@ -88,7 +88,7 @@ contains
     ! Above ground biogeochemistry...
     !
     if (use_cn) then
-       call nutrient_competition_method%readParams(ncid)
+       call readCNAllocParams(ncid)
        call readCNGapMortParams(ncid)
        call readCNMRespParams(ncid)
        call readCNFUNParams(ncid)
@@ -106,6 +106,7 @@ contains
           call readSoilBiogeochemDecompBgcParams(ncid)
        end if
        call readSoilBiogeochemDecompParams(ncid)
+       call readTillageParams(ncid, NLFilename_in)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
        call readSoilBiogeochemNLeachingParams(ncid)

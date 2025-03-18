@@ -16,5 +16,6 @@ if six.PY3:
 else:
     _assertNotRegex = "assertNotRegexpMatches"
 
+
 def assertNotRegex(self, *args, **kwargs):
     return getattr(self, _assertNotRegex)(*args, **kwargs)

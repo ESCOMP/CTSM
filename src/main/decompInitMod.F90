@@ -566,8 +566,6 @@ contains
        call shr_sys_flush(iulog)
        call mpi_barrier(mpicom,ier)
     end do
-    write(iulog,*)
-    call shr_sys_flush(iulog)
 
   end subroutine decompInit_clumps
 

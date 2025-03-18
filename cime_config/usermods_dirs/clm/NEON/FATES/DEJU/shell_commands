@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=DEJU
+./xmlchange PTS_LON=214.25235
+./xmlchange PTS_LAT=63.87983

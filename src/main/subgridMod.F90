@@ -39,6 +39,7 @@ module subgridMod
   public :: subgrid_get_info_crop
   public :: crop_patch_exists ! returns true if the given crop patch should be created in memory
   public :: lake_landunit_exists ! returns true if the lake landunit should be created in memory
+  public :: urban_landunit_exists ! returns true if the urban landunit should be created in memory
   
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: subgrid_get_info_urban
@@ -74,6 +75,8 @@ contains
     ! atm_topo is arbitrary for the sake of getting these counts. We don't have a true
     ! atm_topo value at the point of this call, so use 0.
     real(r8), parameter :: atm_topo = 0._r8
+
+
     !------------------------------------------------------------------------------
 
     npatches = 0
@@ -83,6 +86,11 @@ contains
 
     call subgrid_get_info_natveg(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
+
+    ! call this after natveg call because we allocate space for
+    ! FATES cohorts based on the number of naturally vegetated columns
+    ! and nothing else
+    call subgrid_get_info_cohort(gi, ncols_temp, ncohorts)
 
     call subgrid_get_info_urban_tbd(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
@@ -106,8 +114,6 @@ contains
     call subgrid_get_info_crop(gi, npatches_temp, ncols_temp, nlunits_temp)
     call accumulate_counters()
    
-    call subgrid_get_info_cohort(gi,ncohorts)
-
   contains
     subroutine accumulate_counters
       ! Accumulate running sums of patches, columns and landunits.
@@ -130,9 +136,12 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_instur, only : ncolumns_hillslope
+    use clm_varctl, only : use_hillslope
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+
     integer, intent(out) :: npatches  ! number of nat veg patches in this grid cell
     integer, intent(out) :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: nlunits   ! number of nat veg landunits in this grid cell
@@ -152,9 +161,16 @@ contains
     end do
 
     if (npatches > 0) then
-       ! Assume that the vegetated landunit has one column
-       ncols = 1
        nlunits = 1
+       if (use_hillslope) then
+          ! ensure ncols is > 0
+          ncols = max(ncolumns_hillslope(gi),1)
+       else
+          ncols = 1
+       endif
+       ! Assume that each PFT present in the grid cell is present in every column
+       npatches = ncols*npatches
+
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
        ! every grid cell. This means that npatches should be at least 1 in every grid
@@ -218,7 +234,7 @@ contains
 
   ! -----------------------------------------------------------------------------
 
-  subroutine subgrid_get_info_cohort(gi, ncohorts)
+  subroutine subgrid_get_info_cohort(gi, ncols, ncohorts)
     !
     ! !DESCRIPTION:
     ! Obtain cohort counts per each gridcell.
@@ -228,6 +244,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
+    integer, intent(in)  :: ncols     ! number of nat veg columns in this grid cell
     integer, intent(out) :: ncohorts  ! number of cohorts in this grid cell
     !
     ! !LOCAL VARIABLES:
@@ -246,10 +263,9 @@ contains
     ! restart vector will just be a little sparse.
     ! -------------------------------------------------------------------------
     
-    ncohorts = fates_maxElementsPerSite
+    ncohorts = ncols*fates_maxElementsPerSite
     
  end subroutine subgrid_get_info_cohort
-
 
   !-----------------------------------------------------------------------
   subroutine subgrid_get_info_urban_tbd(gi, npatches, ncols, nlunits)
@@ -348,6 +364,10 @@ contains
     !
     ! In either case, for simplicity, we always allocate space for all columns on any
     ! allocated urban landunits.
+    
+    ! For dynamic urban: to improve efficiency, 'PCT_URBAN_MAX' is added in landuse.timeseries
+    ! that tells if any urban landunit ever grows in a given grid cell in a transient
+    ! run. The urban landunit is allocated only if PCT_URBAN_MAX is greater than 0. (#1572)
 
     if (run_zero_weight_urban) then
        if (urban_valid(gi)) then
@@ -356,11 +376,11 @@ contains
           this_landunit_exists = .false.
        end if
     else
-       if (wt_lunit(gi, ltype) > 0.0_r8) then
-          this_landunit_exists = .true.
-       else
-          this_landunit_exists = .false.
-       end if
+      if (urban_landunit_exists(gi, ltype)) then
+         this_landunit_exists = .true.
+      else
+         this_landunit_exists = .false.
+      end if
     end if
 
     if (this_landunit_exists) then
@@ -563,11 +583,11 @@ contains
     !
     ! !DESCRIPTION:
     ! Returns true if a land unit for lakes should be created in memory
-    ! which is defined for gridcells which will grow lake, given by haslake
+    ! which is defined for gridcells which will grow lake, given by pct_lake_max
     ! 
     ! !USES:
     use dynSubgridControlMod , only : get_do_transient_lakes
-    use clm_instur           , only : haslake
+    use clm_instur           , only : pct_lake_max
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
@@ -579,10 +599,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (get_do_transient_lakes()) then
-       ! To support dynamic landunits, we initialise a lake land unit in each grid cell in which there are lakes. 
-       ! This is defined by the haslake variable
+       ! To support dynamic landunits, we initialise a lake land unit in
+       ! each grid cell in which there are lakes as defined by pct_lake_max
        
-       if (haslake(gi)) then
+       if (pct_lake_max(gi) > 0._r8) then
             exists = .true.
        else
             exists = .false.
@@ -599,4 +619,50 @@ contains
 
   end function lake_landunit_exists
 
+!-----------------------------------------------------------------------
+  function urban_landunit_exists(gi, ltype) result(exists)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if a landunit for urban should be created in memory
+    ! which is defined for gridcells which will grow urban, given by pct_urban_max
+    ! 
+    ! !USES:
+    use dynSubgridControlMod , only : get_do_transient_urban
+    use clm_instur           , only : pct_urban_max
+    use landunit_varcon      , only : isturb_MIN
+    !
+    ! !ARGUMENTS:
+    logical :: exists  ! function result
+    integer, intent(in) :: gi  ! grid cell index
+    integer, intent(in) :: ltype   !landunit type (isturb_tbd, etc.)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: dens_index ! urban density type index
+
+    character(len=*), parameter :: subname = 'urban_landunit_exists'
+    !-----------------------------------------------------------------------
+
+    if (get_do_transient_urban()) then
+       ! To support dynamic landunits, we initialize an urban land unit in each grid cell 
+       ! in which there are urban. This is defined by the pct_urban_max variable.
+       
+       dens_index = ltype - isturb_MIN + 1
+       if (pct_urban_max(gi,dens_index) > 0.0_r8) then
+            exists = .true.
+       else
+            exists = .false.
+       end if
+        
+    else 
+        ! For a run without transient urban, only allocate memory for urban land units
+        ! actually present in run.
+        if (wt_lunit(gi, ltype) > 0.0_r8) then
+            exists = .true.
+        else
+            exists = .false.
+        end if
+    end if
+
+  end function urban_landunit_exists
+    
 end module subgridMod

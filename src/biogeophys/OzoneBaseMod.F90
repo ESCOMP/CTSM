@@ -51,10 +51,10 @@ module OzoneBaseMod
        character(len=*),        intent(in) :: o3_veg_stress_method
 
      end subroutine Init_interface
-  
+
      subroutine Restart_interface(this, bounds, ncid, flag)
        use decompMod , only : bounds_type
-       use ncdio_pio , only : file_desc_t       
+       use ncdio_pio , only : file_desc_t
        import :: ozone_base_type
 
        class(ozone_base_type)            :: this
@@ -64,7 +64,7 @@ module OzoneBaseMod
      end subroutine Restart_interface
 
      subroutine CalcOzoneUptake_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3)
        use decompMod    , only : bounds_type
        use shr_kind_mod , only : r8 => shr_kind_r8
        import :: ozone_base_type
@@ -80,6 +80,7 @@ module OzoneBaseMod
        real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
        real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
+       real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! atmospheric ozone (mol/mol)
      end subroutine CalcOzoneUptake_interface
 
      subroutine CalcOzoneStress_interface(this, bounds, &
@@ -96,9 +97,9 @@ module OzoneBaseMod
        integer                , intent(in)    :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
      end subroutine CalcOzoneStress_interface
   end interface
-     
+
 contains
-  
+
   !-----------------------------------------------------------------------
   subroutine InitAllocateBase(this, bounds)
     !
@@ -114,7 +115,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitAllocateBase'
     !-----------------------------------------------------------------------
 
@@ -127,7 +128,7 @@ contains
     allocate(this%o3coefgsun_patch(begp:endp))  ; this%o3coefgsun_patch(:)               = nan
     allocate(this%o3coefjmaxsha_patch(begp:endp))  ; this%o3coefjmaxsha_patch(:) = nan
     allocate(this%o3coefjmaxsun_patch(begp:endp))  ; this%o3coefjmaxsun_patch(:) = nan
-    
+
 
   end subroutine InitAllocateBase
 
@@ -148,7 +149,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
-    
+
     character(len=*), parameter :: subname = 'InitColdBase'
     !-----------------------------------------------------------------------
 

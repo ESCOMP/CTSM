@@ -11,15 +11,17 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif
-  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
+  use clm_varctl                         , only : use_nitrif_denitrif, use_fates_bgc
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, vector_type
+  use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -28,6 +30,9 @@ module SoilBiogeochemNitrogenStateType
   type, public :: soilbiogeochem_nitrogenstate_type
 
      real(r8), pointer :: decomp_npools_vr_col         (:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
+     real(r8), pointer :: decomp0_npools_vr_col        (:,:,:) ! col (gN/m3) vertically-resolved N baseline (initial value of this year) in decomposing (litter, cwd, soil) pools in dimension (col,nlev,npools)
+     real(r8), pointer :: decomp_npools_vr_SASUsave_col(:,:,:) ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools
+
      real(r8), pointer :: decomp_soiln_vr_col          (:,:)   ! col (gN/m3) vertically-resolved decomposing total soil N pool
 
      real(r8), pointer :: sminn_vr_col                 (:,:)   ! col (gN/m3) vertically-resolved soil mineral N
@@ -57,6 +62,23 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: dyn_no3bal_adjustments_col (:) ! (gN/m2) NO3 adjustments to each column made in this timestep via dynamic column area adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8), pointer :: dyn_nh4bal_adjustments_col (:) ! (gN/m2) NH4 adjustments to each column made in this timestep via dynamic column adjustments (only makes sense at the column-level: meaningless if averaged to the gridcell-level)
      real(r8)          :: totvegcthresh                  ! threshold for total vegetation carbon to zero out decomposition pools
+     
+     real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
+     real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
+     
+     ! Matrix-cn
+     real(r8), pointer :: matrix_cap_decomp_npools_col    (:,:)   ! col (gN/m2) N capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
+     real(r8), pointer :: matrix_cap_decomp_npools_vr_col (:,:,:) ! col (gN/m3) vertically-resolved N capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
+     real(r8), pointer :: in_nacc                         (:,:)   ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev*npools)
+     real(r8), pointer :: in_nacc_2d                      (:,:,:) ! col (gN/m3/yr) accumulated litter fall N input per year in dimension(col,nlev,npools)
+     real(r8), pointer :: tran_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools)
+     real(r8), pointer :: vert_up_tran_nacc               (:,:,:) ! col (gN/m3/yr) accumulated upward vertical N transport in dimension(col,nlev,npools)
+     real(r8), pointer :: vert_down_tran_nacc             (:,:,:) ! col (gN/m3/yr) accumulated downward vertical N transport in dimension(col,nlev,npools)
+     real(r8), pointer :: exit_nacc                       (:,:,:) ! col (gN/m3/yr) accumulated exit N in dimension(col,nlev,npools)
+     real(r8), pointer :: hori_tran_nacc                  (:,:,:) ! col (gN/m3/yr) accumulated N transport between pools at the same level in dimension(col,nlev,ntransfers)
+     type(sparse_matrix_type) :: AKXnacc                          ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
+     type(vector_type) :: matrix_Ninter                           ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
 
    contains
 
@@ -130,12 +152,45 @@ contains
     allocate(this%dyn_nh4bal_adjustments_col (begc:endc)) ; this%dyn_nh4bal_adjustments_col (:) = nan
     allocate(this%decomp_npools_col    (begc:endc,1:ndecomp_pools))   ; this%decomp_npools_col    (:,:) = nan
     allocate(this%decomp_npools_1m_col (begc:endc,1:ndecomp_pools))   ; this%decomp_npools_1m_col (:,:) = nan
+    if(use_soil_matrixcn)then
+       allocate(this%matrix_cap_decomp_npools_col    (begc:endc,1:ndecomp_pools))   ; this%matrix_cap_decomp_npools_col    (:,:) = nan
+    end if
 
     allocate(this%decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
     this%decomp_npools_vr_col(:,:,:)= nan
+    if(use_soil_matrixcn)then
+       allocate(this%matrix_cap_decomp_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
+       this%matrix_cap_decomp_npools_vr_col(:,:,:)= nan
+! for matrix-spinup
+       allocate(this%decomp0_npools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
+       this%decomp0_npools_vr_col(:,:,:)= nan
+       allocate(this%decomp_npools_vr_SASUsave_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools));
+       this%decomp_npools_vr_SASUsave_col(:,:,:)= nan
+       allocate(this%in_nacc(begc:endc,1:nlevdecomp*ndecomp_pools))
+       this%in_nacc(:,:)= nan
+       allocate(this%tran_nacc(begc:endc,1:nlevdecomp*ndecomp_pools,1:nlevdecomp*ndecomp_pools))
+       this%tran_nacc(:,:,:)= nan
+
+       allocate(this%in_nacc_2d(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%in_nacc_2d(:,:,:)= nan
+       allocate(this%vert_up_tran_nacc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%vert_up_tran_nacc(:,:,:)= nan
+       allocate(this%vert_down_tran_nacc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%vert_down_tran_nacc(:,:,:)= nan
+       allocate(this%exit_nacc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%exit_nacc(:,:,:)= nan
+       allocate(this%hori_tran_nacc(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+       this%hori_tran_nacc(:,:,:)= nan
+       call this%AKXnacc%InitSM(ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%n_all_entries)
+       call this%matrix_Ninter%InitV (ndecomp_pools*nlevdecomp,begc,endc)
+    end if
     allocate(this%decomp_soiln_vr_col(begc:endc,1:nlevdecomp_full))
     this%decomp_soiln_vr_col(:,:)= nan
 
+    allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
+    allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
+    allocate(this%totn_grc                 (bounds%begg:bounds%endg)) ; this%totn_grc                            (:) = nan
+    
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -177,28 +232,52 @@ contains
     if ( nlevdecomp_full > 1 ) then
        this%decomp_npools_vr_col(begc:endc,:,:) = spval
        this%decomp_npools_1m_col(begc:endc,:) = spval
+       if(use_soil_matrixcn)then
+          this%matrix_cap_decomp_npools_vr_col(begc:endc,:,:) = spval
+       end if
     end if
     this%decomp_npools_col(begc:endc,:) = spval
+    if(use_soil_matrixcn)then
+       this%matrix_cap_decomp_npools_col(begc:endc,:) = spval
+    end if
     do l  = 1, ndecomp_pools
        if ( nlevdecomp_full > 1 ) then
           data2dptr => this%decomp_npools_vr_col(:,:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_vr'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N_vr'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N (vertically resolved)'
           call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr)
+          if(use_soil_matrixcn)then
+             data2dptr => this%matrix_cap_decomp_npools_vr_col(:,:,l)
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_Cap_vr'
+             longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N capacity (vertically resolved)'
+             call hist_addfld2d (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
+                  avgflag='I', long_name=longname, &
+                  ptr_col=data2dptr)
+          end if
        endif
 
        data1dptr => this%decomp_npools_col(:,l)
-       fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N'
+       fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N'
        longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N'
        call hist_addfld1d (fname=fieldname, units='gN/m^2', &
             avgflag='A', long_name=longname, &
             ptr_col=data1dptr)
+       if(nlevdecomp_full .eq. 1)then
+          if(use_soil_matrixcn)then
+             data1dptr => this%matrix_cap_decomp_npools_col(:,l)
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_Cap'
+             longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N capacity'
+             call hist_addfld1d (fname=fieldname, units='gN/m^2', &
+                  avgflag='I', long_name=longname, &
+                  ptr_col=data1dptr)
+          end if
+       end if
 
        if ( nlevdecomp_full > 1 ) then
           data1dptr => this%decomp_npools_1m_col(:,l)
-          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'N_1m'
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'_N_1m'
           longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' N to 1 meter'
           call hist_addfld1d (fname=fieldname, units='gN/m^2', &
                avgflag='A', long_name=longname, &
@@ -279,10 +358,12 @@ contains
          avgflag='A', long_name='total litter N', &
          ptr_col=this%totlitn_col)
 
-    this%totmicn_col(begc:endc) = spval
-    call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
+    if (decomp_method == mimics_decomp ) then
+       this%totmicn_col(begc:endc) = spval
+       call hist_addfld1d (fname='TOTMICN', units='gN/m^2', &
          avgflag='A', long_name='total microbial N', &
          ptr_col=this%totmicn_col)
+    end if
 
     this%totsomn_col(begc:endc) = spval
     call hist_addfld1d (fname='TOTSOMN', units='gN/m^2', &
@@ -309,6 +390,17 @@ contains
             &only makes sense at the column level: should not be averaged to gridcell', &
             ptr_col=this%dyn_nh4bal_adjustments_col, default='inactive')
     end if
+
+    this%totecosysn_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTECOSYSN', units='gN/m^2', &
+         avgflag='A', long_name='total ecosystem N, excluding product pools', &
+         ptr_col=this%totecosysn_col)
+
+    this%totn_col(begc:endc) = spval
+    call hist_addfld1d (fname='TOTCOLN', units='gN/m^2', &
+         avgflag='A', long_name='total column-level N, excluding product pools', &
+         ptr_col=this%totn_col)
+    
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -340,6 +432,11 @@ contains
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
+       ! matrix-spinup
+       if(use_soil_matrixcn)then
+          this%in_nacc(c,:) = 0._r8
+       end if
+
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           ! column nitrogen state variables
@@ -348,15 +445,50 @@ contains
           do j = 1, nlevdecomp
              do k = 1, ndecomp_pools
                 this%decomp_npools_vr_col(c,j,k) = decomp_cpools_vr_col(c,j,k) / decomp_cascade_con%initial_cn_ratio(k)
-             end do
+                if(use_soil_matrixcn)then
+                   this%matrix_cap_decomp_npools_vr_col(c,j,k) = decomp_cpools_vr_col(c,j,k) / decomp_cascade_con%initial_cn_ratio(k)
+                   this%in_nacc_2d(c,j,k) = 0._r8
+                   this%vert_up_tran_nacc(c,j,k) = 0._r8
+                   this%vert_down_tran_nacc(c,j,k) = 0._r8
+                   this%exit_nacc(c,j,k) = 0._r8
+                   this%decomp0_npools_vr_col(c,j,k) = max(this%decomp_npools_vr_col(c,j,k),1.e-30_r8)
+                   this%decomp_npools_vr_SASUsave_col(c,j,k) = 0._r8
+                end if
+            end do
+            if(use_soil_matrixcn)then
+               do k = 1, ndecomp_cascade_transitions
+                  this%hori_tran_nacc(c,j,k) = 0._r8
+               end do
+            end if
+
              this%sminn_vr_col(c,j) = 0._r8
              this%ntrunc_vr_col(c,j) = 0._r8
           end do
+
+          if(use_soil_matrixcn)then
+             do j = 1,decomp_cascade_con%n_all_entries
+                this%AKXnacc%M(c,j) = 0._r8
+             end do
+          end if
+ 
           if ( nlevdecomp > 1 ) then
              do j = nlevdecomp+1, nlevdecomp_full
                 do k = 1, ndecomp_pools
                    this%decomp_npools_vr_col(c,j,k) = 0._r8
+                   if(use_soil_matrixcn)then
+                      this%matrix_cap_decomp_npools_vr_col(c,j,k) = 0._r8
+                      this%in_nacc_2d(c,j,k) = 0._r8
+                      this%vert_up_tran_nacc(c,j,k) = 0._r8
+                      this%vert_down_tran_nacc(c,j,k) = 0._r8
+                      this%exit_nacc(c,j,k) = 0._r8
+                      this%decomp0_npools_vr_col(c,j,k) = this%decomp_npools_vr_col(c,j,k)
+                   end if
                 end do
+                if(use_soil_matrixcn)then
+                   do k = 1, ndecomp_cascade_transitions
+                      this%hori_tran_nacc(c,j,k) = 0._r8
+                   end do
+                end if
                 this%sminn_vr_col(c,j) = 0._r8
                 this%ntrunc_vr_col(c,j) = 0._r8
              end do
@@ -364,6 +496,9 @@ contains
           do k = 1, ndecomp_pools
              this%decomp_npools_col(c,k)    = decomp_cpools_col(c,k)    / decomp_cascade_con%initial_cn_ratio(k)
              this%decomp_npools_1m_col(c,k) = decomp_cpools_1m_col(c,k) / decomp_cascade_con%initial_cn_ratio(k)
+             if(use_soil_matrixcn)then
+                this%matrix_cap_decomp_npools_col(c,k)    = decomp_cpools_col(c,k)    / decomp_cascade_con%initial_cn_ratio(k)
+             end if
           end do
 
           if (use_nitrif_denitrif) then
@@ -395,6 +530,21 @@ contains
        end if
     end do
 
+    do c = bounds%begc, bounds%endc
+       l = col%landunit(c)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          ! total nitrogen pools
+          this%totecosysn_col(c) = 0._r8
+          this%totn_col(c)       = 0._r8
+       end if
+    end do
+
+
+    do g = bounds%begg, bounds%endg
+       this%totn_grc(g)  = 0._r8
+    end do
+    
+    
     call this%SetValues (num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
   end subroutine InitCold
@@ -420,11 +570,12 @@ contains
 
     !
     ! !LOCAL VARIABLES:
-    integer            :: i,j,k,l,c
+    integer            :: i,j,k,l,c,fc
     logical            :: readvar
     integer            :: idata
     logical            :: exit_spinup = .false.
     logical            :: enter_spinup = .false.
+    logical            :: found = .false.
     real(r8)           :: m          ! multiplier for the exit_spinup code
     real(r8), pointer  :: ptr2d(:,:) ! temp. pointers for slicing larger arrays
     real(r8), pointer  :: ptr1d(:)   ! temp. pointers for slicing larger arrays
@@ -435,6 +586,7 @@ contains
     integer            :: restart_file_spinup_state 
     ! flags for comparing the model and restart decomposition cascades
     integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
+    integer            :: i_decomp,j_decomp,i_lev,j_lev
     !------------------------------------------------------------------------
 
     ! sminn
@@ -463,7 +615,131 @@ contains
                errMsg(sourcefile, __LINE__))
        end if
     end do
+    if(use_soil_matrixcn)then
+       if(flag=='write')then
+          do i = 1,ndecomp_pools
+             do j = 1,nlevdecomp
+                this%in_nacc_2d(:,j,i) = this%in_nacc(:,j+(i-1)*nlevdecomp)
+             end do
+          end do
+          do i = 1,decomp_cascade_con%n_all_entries
+             found = .false.
+             j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+             j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+             i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+             i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+             if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                this%vert_up_tran_nacc(:,i_lev,i_decomp) = this%AKXnacc%M(:,i)
+                found = .true.
+             else
+                if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                   this%vert_down_tran_nacc(:,i_lev,i_decomp) =  this%AKXnacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                      this%exit_nacc(:,i_lev,i_decomp) = this%AKXnacc%M(:,i)
+                      found = .true.
+                   else
+                      do k=1,ndecomp_cascade_transitions
+                         if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                            i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                            j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                            this%hori_tran_nacc(:,i_lev,k) = this%AKXnacc%M(:,i)
+                            found = .true.
+                         end if
+                      end do
+                   end if
+                end if
+             end if
+             if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i,i_decomp,j_decomp,i_lev,j_lev
+          end do
+       end if
 
+       do k = 1, ndecomp_pools
+          varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'n'
+          ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)  
+          ptr2d => this%decomp0_npools_vr_col(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double, &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d)   
+          ptr2d => this%in_nacc_2d(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%vert_up_tran_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%vert_down_tran_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          ptr2d => this%exit_nacc(:,:,k)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_nacc_vr", xtype=ncd_double,  &
+             dim1name='column', dim2name='levgrnd', switchdim=.true., &
+             long_name='',  units='', scale_by_thickness=.false., &
+             interpinic_flag='interp', readvar=readvar, data=ptr2d)
+       end do
+
+       do i = 1, ndecomp_cascade_transitions
+          varname=trim(decomp_cascade_con%cascade_step_name(i))//'n'
+          ptr2d => this%hori_tran_nacc(:,:,i)
+          call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc_vr", xtype=ncd_double,  &
+              dim1name='column', dim2name='levgrnd', switchdim=.true., &
+              long_name='',  units='', scale_by_thickness=.false., &
+              interpinic_flag='interp', readvar=readvar, data=ptr2d)
+       end do
+    end if
+
+    if(use_soil_matrixcn)then
+       if(flag=='read')then
+          do i = 1,ndecomp_pools
+             do j = 1,nlevdecomp
+                this%in_nacc(:,j+(i-1)*nlevdecomp) = this%in_nacc_2d(:,j,i)
+             end do
+          end do
+          do i = 1,decomp_cascade_con%n_all_entries
+             found = .false.
+             j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+             j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+             i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+             i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+             if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                this%AKXnacc%M(:,i) = this%vert_up_tran_nacc(:,i_lev,i_decomp) 
+                found = .true.
+             else
+                if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                   this%AKXnacc%M(:,i) = this%vert_down_tran_nacc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                      this%AKXnacc%M(:,i) = this%exit_nacc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      do k=1,ndecomp_cascade_transitions
+                         if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                            i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                            j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                            this%AKXnacc%M(:,i) = this%hori_tran_nacc(:,i_lev,k) 
+                            found = .true.
+                         end if
+                      end do
+                   end if
+                end if
+             end if
+             if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+          end do
+       end if
+    end if
+          
     ptr2d => this%ntrunc_vr_col
     call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
@@ -690,6 +966,9 @@ contains
           i = filter_column(fi)
           this%decomp_npools_col(i,k)    = value_column
           this%decomp_npools_1m_col(i,k) = value_column
+          if(use_soil_matrixcn)then
+             this%matrix_cap_decomp_npools_col(i,k)    = value_column
+          end if
        end do
     end do
 
@@ -699,25 +978,76 @@ contains
           do fi = 1,num_column
              i = filter_column(fi)
              this%decomp_npools_vr_col(i,j,k) = value_column
+             if(use_soil_matrixcn)then
+                this%matrix_cap_decomp_npools_vr_col(i,j,k) = value_column
+                this%decomp0_npools_vr_col(i,j,k) = value_column
+             end if
           end do
        end do
     end do
 
+    do fi = 1,num_column
+       i = filter_column(fi)
+       this%totecosysn_col(i)                                            = value_column
+       this%totn_col(i)                                                  = value_column
+    end do
+    
+    ! Set values for the matrix solution
+    if(use_soil_matrixcn)then
+       do j = 1,nlevdecomp
+          do k = 1, ndecomp_pools
+             do fi = 1, num_column
+                i = filter_column(fi)
+                this%in_nacc_2d(i,j,k)          = value_column
+                this%vert_up_tran_nacc(i,j,k)   = value_column
+                this%vert_down_tran_nacc(i,j,k) = value_column
+                this%exit_nacc(i,j,k) = value_column
+             end do
+          end do
+          do k = 1, ndecomp_cascade_transitions
+             do fi = 1, num_column
+                i = filter_column(fi)
+                this%hori_tran_nacc(i,j,k)   = value_column
+             end do
+          end do
+       end do
+    end if
+
+    if(use_soil_matrixcn)then
+       do j = 1,decomp_cascade_con%n_all_entries
+          do fi = 1, num_column
+             i = filter_column(fi)
+             this%AKXnacc%M(i,j) = value_column
+          end do
+       end do
+    end if
+
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_allc, filter_allc)
+
+  subroutine Summary(this, bounds, num_allc, filter_allc, num_bgc_soilc, filter_bgc_soilc, cnveg_nitrogenstate_inst)
+
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
-    integer           , intent(in) :: num_allc       ! number of columns in allc filter
-    integer           , intent(in) :: filter_allc(:) ! filter for all active columns
+    integer           , intent(in) :: num_allc       ! number of bgc columns in soilc filter
+    integer           , intent(in) :: filter_allc(:) ! filter for bgc columns
+    integer           , intent(in) :: num_bgc_soilc       ! number of bgc columns in soilc filter
+    integer           , intent(in) :: filter_bgc_soilc(:) ! filter for bgc columns
+    type(cnveg_nitrogenstate_type)    , intent(inout) :: cnveg_nitrogenstate_inst
+
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l     ! indices
     integer  :: fc          ! lake filter indices
+    integer  :: num_local   ! we do summary on different set when fates is
+                            ! active becuase the CN variables aren't allocated
+                            ! this preserves B4B
     real(r8) :: maxdepth    ! depth to integrate soil variables
+    real(r8) :: totvegn_col ! local total ecosys veg N, allows 0 for fates
+    real(r8) :: ecovegn_col ! local total veg N, allows 0 for fates
     !-----------------------------------------------------------------------
 
    ! vertically integrate NO3 NH4 N2O pools
@@ -747,6 +1077,9 @@ contains
       do fc = 1,num_allc
          c = filter_allc(fc)
          this%decomp_npools_col(c,l) = 0._r8
+         if(use_soil_matrixcn)then
+            this%matrix_cap_decomp_npools_col(c,l) = 0._r8
+         end if
       end do
       do j = 1, nlevdecomp
          do fc = 1,num_allc
@@ -754,6 +1087,11 @@ contains
             this%decomp_npools_col(c,l) = &
                  this%decomp_npools_col(c,l) + &
                  this%decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
+            if(use_soil_matrixcn)then
+               this%matrix_cap_decomp_npools_col(c,l) = &
+                    this%matrix_cap_decomp_npools_col(c,l) + &
+                    this%matrix_cap_decomp_npools_vr_col(c,j,l) * dzsoi_decomp(j)
+            end if
          end do
       end do
    end do
@@ -891,21 +1229,6 @@ contains
       end if
    end do
    
-   ! total cwdn
-   do fc = 1,num_allc
-      c = filter_allc(fc)
-      this%cwdn_col(c) = 0._r8
-   end do
-   do l = 1, ndecomp_pools
-      if ( decomp_cascade_con%is_cwd(l) ) then
-         do fc = 1,num_allc
-            c = filter_allc(fc)
-            this%cwdn_col(c) = this%cwdn_col(c) + &
-                 this%decomp_npools_col(c,l)
-         end do
-      end if
-   end do
-
    ! total sminn
    do fc = 1,num_allc
       c = filter_allc(fc)
@@ -932,6 +1255,61 @@ contains
       end do
    end do
 
+   ! total cwdn
+   do fc = 1,num_allc
+      c = filter_allc(fc)
+      this%cwdn_col(c) = 0._r8
+   end do
+
+   if(use_fates_bgc)then
+      num_local = num_bgc_soilc
+   else
+      num_local = num_allc
+   end if
+   
+   do fc = 1,num_local
+      if(use_fates_bgc) then
+         c = filter_bgc_soilc(fc)
+      else
+         c = filter_allc(fc)
+      end if
+      
+      if(col%is_fates(c)) then
+         totvegn_col = 0._r8
+         ecovegn_col = 0._r8
+      else
+         do l = 1, ndecomp_pools
+            if ( decomp_cascade_con%is_cwd(l) ) then
+               this%cwdn_col(c) = this%cwdn_col(c) + &
+                    this%decomp_npools_col(c,l)
+            end if
+         end do
+         totvegn_col = cnveg_nitrogenstate_inst%totn_p2c_col(c)
+         ecovegn_col = cnveg_nitrogenstate_inst%totvegn_col(c)
+      end if
+      
+      ! total ecosystem nitrogen, including veg (TOTECOSYSN)
+      this%totecosysn_col(c) =    &
+           this%cwdn_col(c)    + &
+           this%totlitn_col(c) + &
+           this%totmicn_col(c) + &
+           this%totsomn_col(c) + &
+           this%sminn_col(c)   + &
+           ecovegn_col 
+      
+      ! total column nitrogen, including patch (TOTCOLN)
+      
+      this%totn_col(c) =  & 
+           this%cwdn_col(c)    + &
+           this%totlitn_col(c) + &
+           this%totmicn_col(c) + &
+           this%totsomn_col(c) + &
+           this%sminn_col(c)   + &
+           this%ntrunc_col(c)  + &
+           totvegn_col
+      
+   end do
+   
  end subroutine Summary
 
  !-----------------------------------------------------------------------

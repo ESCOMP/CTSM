@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=SERC
+./xmlchange PTS_LON=283.44115999999997
+./xmlchange PTS_LAT=38.89124
