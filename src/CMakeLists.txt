@@ -17,21 +17,6 @@ set(CLM_ROOT "..")
 # NetCDF is required -- because PIO and NetCDF are required by the standard default ESMF libraries
 find_package(NetCDF 4.7.4 REQUIRED Fortran)
 
-# The following - for finding PIO - is copied from the share CMakeLists.txt
-if (DEFINED ENV{PIO_ROOT})
-  message("PIO_ROOT is $ENV{PIO_ROOT}")
-else()
-  if (DEFINED PIO)
-    set(PIO_PATH ${PIO})
-  else()
-    set(PIO_PATH $ENV{PIO})
-  endif()
-  find_package(PIO REQUIRED COMPONENT C Fortran PATH ${PIO_PATH})
-endif()
-# The following line differs a bit from what's in the share CMakeLists.txt
-include_directories(${PIO_Fortran_INCLUDE_DIR})
-link_libraries(${PIO_Fortran_LIBRARIES})
-
 # The following - for finding ESMF - is copied from the share CMakeLists.txt
 if (DEFINED ENV{ESMF_ROOT})
   list(APPEND CMAKE_MODULE_PATH $ENV{ESMF_ROOT}/cmake)
@@ -69,14 +54,25 @@ add_subdirectory(${CLM_ROOT}/src/self_tests clm_self_tests)
 add_subdirectory(unit_test_stubs)
 add_subdirectory(unit_test_shr)
 
-# Remove shr_mpi_mod from share_sources.
-# This is needed because we want to use the mock shr_mpi_mod in place of the real one
+# Remove some things from share_sources
 #
 # TODO: this should be moved into a general-purpose function in Sourcelist_utils.
-# Then this block of code could be replaced with a single call, like:
+# Then each removal could be replaced with a single call, like:
 # remove_source_file(${share_sources} "shr_mpi_mod.F90")
 foreach (sourcefile ${share_sources})
+  # Remove shr_mpi_mod from share_sources.
+  # This is needed because we want to use the mock shr_mpi_mod in place of the real one
   string(REGEX MATCH "shr_mpi_mod.F90" match_found ${sourcefile})
+  if(match_found)
+    list(REMOVE_ITEM share_sources ${sourcefile})
+  endif()
+
+  # Remove shr_pio_mod from share_sources. This is needed to avoid an explicit dependency
+  # on PIO. It appears that this removal is needed on some systems but not on others: the
+  # unit test build works without this removal on a Mac with a pre-built PIO library, but
+  # I think didn't work on a Mac without a pre-built PIO (where ESMF was built with its
+  # internal PIO).
+  string(REGEX MATCH "shr_pio_mod.F90" match_found ${sourcefile})
   if(match_found)
     list(REMOVE_ITEM share_sources ${sourcefile})
   endif()
