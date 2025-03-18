@@ -2074,7 +2074,7 @@ contains
     associate(                                                                   & 
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
          
-         leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)                              
+         leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)
          leafcn            =>    cnveg_nitrogenstate_inst%leafcn_patch         , & ! Input:  leaf C:N (gC/gN)
          manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
          minplanttemp      =>    pftcon%minplanttemp                           , & ! Input:  

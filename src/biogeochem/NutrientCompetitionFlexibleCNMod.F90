@@ -1520,8 +1520,8 @@ contains
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
 
-         leafcn_min = leafcn(ivt(p)) - 10.0_r8
-         leafcn_max = leafcn(ivt(p)) + 10.0_r8
+         leafcn_min = leafcn(p) - 10.0_r8
+         leafcn_max = leafcn(p) + 10.0_r8
 
          this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
          this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
