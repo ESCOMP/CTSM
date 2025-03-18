@@ -5,7 +5,7 @@ include(CIME_initial_setup)
 
 #list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../tools/mksurfdata_esmf/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../share/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../component/cmeps/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../components/cmeps/cmake")
 
 project(clm_tests Fortran C)
 
@@ -14,9 +14,33 @@ include(CIME_utils)
 set(CLM_ROOT "..")
 
 # find needed external packages
-# This is where ESMF could be asked for, but it's already included in the share build brought in below
 # NetCDF is required -- because PIO and NetCDF are required by the standard default ESMF libraries
 find_package(NetCDF 4.7.4 REQUIRED Fortran)
+
+# The following - for finding PIO - is copied from the share CMakeLists.txt
+if (DEFINED ENV{PIO_ROOT})
+  message("PIO_ROOT is $ENV{PIO_ROOT}")
+else()
+  if (DEFINED PIO)
+    set(PIO_PATH ${PIO})
+  else()
+    set(PIO_PATH $ENV{PIO})
+  endif()
+  find_package(PIO REQUIRED COMPONENT C Fortran PATH ${PIO_PATH})
+endif()
+# The following line differs a bit from what's in the share CMakeLists.txt
+include_directories(${PIO_Fortran_INCLUDE_DIR})
+link_libraries(${PIO_Fortran_LIBRARIES})
+
+# The following - for finding ESMF - is copied from the share CMakeLists.txt
+if (DEFINED ENV{ESMF_ROOT})
+  list(APPEND CMAKE_MODULE_PATH $ENV{ESMF_ROOT}/cmake)
+endif()
+find_package(ESMF REQUIRED)
+# This adds include directories needed for ESMF
+set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_F90COMPILEPATHS} ")
+# The following line differs a bit from what's in the share CMakeLists.txt
+link_directories(${ESMF_LIBSDIR})
 
 # Add source directories from other share code (csm_share, etc.). This should be
 # done first, so that in case of name collisions, the CLM versions take
@@ -58,16 +82,8 @@ foreach (sourcefile ${share_sources})
   endif()
 endforeach()
 
-# Bring in PIO, jsut because it's needed for the default ESMF library and included in other submodules like share and cmeps
-if (DEFINED PIO)
-  set(PIO_PATH ${PIO})
-else()
-  set(PIO_PATH $ENV{PIO})
-endif()
-
 # Build libraries containing stuff needed for the unit tests.
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
-# This line of bringing in the share library also brings in ESMF and PIO
 add_library(csm_share ${share_sources} ${drv_sources_needed})
 declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(clm ${clm_sources})
@@ -77,24 +93,13 @@ add_dependencies(clm csm_share esmf)
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CLM_ROOT}/share/include)
 
-
-# PIO2 library to the include and the linking step
-add_compile_definitions(PIO2)
-
-add_library(pioc STATIC IMPORTED)
-add_library(piof STATIC IMPORTED)
-set_property(TARGET pioc PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpioc.so)
-set_property(TARGET piof PROPERTY IMPORTED_LOCATION $ENV{PIO}/lib/libpiof.so)
-
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories (${ESMF_F90COMPILEPATHS})
-include_directories ($ENV{PIO}/include)
 include_directories (${NETCDF}/include)
 
 # Directories and libraries to include in the link step
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
-link_libraries( pioc piof netcdf )
+link_libraries( netcdf )
 
 # Add the test directories
 # Note: it's possible that these could be added by each source directory that
