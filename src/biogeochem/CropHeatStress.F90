@@ -106,7 +106,7 @@ contains
     real(r8),        intent(inout)     :: HS_factor         ! keep track if heatwave is activated
     real(r8),        intent(in)        :: HS_ndays          ! number of crop heat stress days (ndays) should be integer at final implementation
     real(r8),        intent(in)        :: t_veg_day         ! daily vegetation temperature (Kelvin)
-    logical,         intent(in)        :: croplive              ! crop between sowing and harvest
+    logical,         intent(in)        :: croplive          ! crop between sowing and harvest
 
     ! !LOCAL VARIABLES:
     integer  :: day_min
