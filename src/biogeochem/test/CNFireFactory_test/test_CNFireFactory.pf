@@ -6,6 +6,7 @@ module test_CNFireFactory
     use unittestSubgridMod, only : bounds
     use FireMethodType   , only : fire_method_type
     use CNFireFactoryMod
+    use ESMF, only : ESMF_SUCCESS
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clm_varctl, only : use_cn, iulog
   
@@ -30,15 +31,25 @@ module test_CNFireFactory
   
     subroutine setUp(this)
       use shr_log_mod, only : shr_log_setLogUnit
-      use ESMF, only : ESMF_Initialize
+      use ESMF, only : ESMF_Initialize, ESMF_IsInitialized
       use shr_sys_mod, only : shr_sys_system
       class(TestCNFireFactory), intent(inout) :: this
 
       integer :: unitn
       logical :: file_exists
       integer :: rc
+      logical :: esmf_initialized
 
-      call ESMF_Initialize()
+      esmf_initialized = ESMF_IsInitialized( rc=rc )
+      if (rc /= ESMF_SUCCESS) then
+         stop 'Error in ESMF_IsInitialized'
+      end if
+      if ( .not. esmf_initialized )then
+         call ESMF_Initialize( rc=rc )
+         if (rc /= ESMF_SUCCESS) then
+            stop 'Error in ESMF_Initialize'
+         end if
+      end if
       use_cn = .true.
       iulog = 6
       ! Create an exmpty namelist file for lifire namelist reading
@@ -67,6 +78,8 @@ module test_CNFireFactory
          call this%cnfire_method%FireClean()
          deallocate( this%cnfire_method )
       end if
+      ! IMPORTANT NOTE: DO NOT CALL ESMF_Finalize HERE!
+      ! Calling ESMF_Finalize here, with full ESMF, means you couldn't call ESMF_Initialize again
       ! Remove the namelist file
       call shr_sys_system( "/bin/rm -f "//trim(NLFilename), rc )
       !@assertEqual( rc, 0, "error in removal of temporary lifire namelist file")
