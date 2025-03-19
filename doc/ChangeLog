@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.3.0??
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: ??? ?? Mar 2025 ??:??:?? ?? MDT
+Tag name: ctsm5.3.033
+Originator(s): wwieder, slevis (Will Wieder, Sam Levis, UCAR/TSS)
+Date: Wed 19 Mar 2025 11:37:40 AM MDT
 One-line Summary: Add new mimics_fi param = frac of litter inputs bypassing litter pools
 
 Purpose and description of changes
@@ -54,7 +54,7 @@ Testing summary:
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi -------
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -77,8 +77,6 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
-||||||| 7ff60613d
-=======
 Tag name: ctsm5.3.032
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 17 Mar 2025 09:49:08 AM MDT
@@ -233,7 +231,6 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
->>>>>>> ctsm5.3.032
 Tag name: ctsm5.3.030
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Mar  7 10:06:35 MST 2025
