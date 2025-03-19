@@ -342,7 +342,6 @@ contains
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
     
 
-    allocate(this%leafcn_patch                           (begp:endp)) ; this%leafcn_patch                        (:) = nan
     if(use_matrixcn)then
        allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
        allocate(this%leafn0_storage_patch                (begp:endp)) ; this%leafn0_storage_patch                (:) = nan     
@@ -840,6 +839,8 @@ contains
        l = patch%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
+          this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
+
           if (patch%itype(p) == noveg) then
              this%leafn_patch(p)                           = 0._r8
              this%leafn_storage_patch(p)                   = 0._r8
@@ -856,7 +857,6 @@ contains
                 end if
              end if 
           else
-             this%leafcn_patch(p)                          = pftcon%leafcn(patch%itype(p))
              this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_patch(p)
              this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_patch(p)
              if(use_matrixcn)then
@@ -2305,9 +2305,14 @@ contains
     !
     ! !DESCRIPTION:
     ! Update time-evolving parameters
+    ! In the current implementation, we call this subroutine from clm_drv
+    ! first thing, before anything else. Hence we allocate leafcn_patch
+    ! to memory if_first_step here instead of waiting for the call to
+    ! InitAllocate.
     !
     ! !USES:
     use pftconMod, only : pftcon
+    use clm_time_manager, only : is_first_step
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type) :: this
@@ -2315,7 +2320,7 @@ contains
     type(atm2lnd_type), intent(in)  :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: g, c, p  ! indices
+    integer :: g, l, c, p  ! indices
     real(r8) :: co2_ppmv  ! atm co2 concentration
     ! Could use 355 value from clm_varctl.F90 to avoid this hardwiring?
     real(r8), parameter :: co2_base = 310._r8  ! units ppmv
@@ -2324,14 +2329,20 @@ contains
     character(len=*), parameter :: subname = 'time_evolv_leafcn'
     !-----------------------------------------------------------------------
 
+    if (is_first_step()) then
+       allocate(this%leafcn_patch(bounds%begp:bounds%endp)); this%leafcn_patch(:) = nan
+    end if
     ! Loop to get leafcn_col
     do p = bounds%begp, bounds%endp
        c = patch%column(p)
+       l = patch%landunit(p)
        g = patch%gridcell(p)
-       co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
-                            atm2lnd_inst%forc_pbot_downscaled_col(c)
-       this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
-          max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
+                               atm2lnd_inst%forc_pbot_downscaled_col(c)
+          this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
+             max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
+       end if
     end do
 
   end subroutine time_evolv_leafcn
