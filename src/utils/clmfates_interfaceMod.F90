@@ -94,7 +94,6 @@ module CLMFatesInterfaceMod
    use PhotosynthesisMod , only : photosyns_type
    use atm2lndType       , only : atm2lnd_type
    use SurfaceAlbedoType , only : surfalb_type
-   use SurfaceAlbedoMod  , only : UpdateZenithAngles
    use SolarAbsorbedType , only : solarabs_type
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
@@ -2847,7 +2846,7 @@ module CLMFatesInterfaceMod
  
  ! ======================================================================================
 
- subroutine wrap_canopy_radiation(this, bounds_clump, nc, fcansno, surfalb_inst,nextsw_cday,declinp1)
+ subroutine wrap_canopy_radiation(this, bounds_clump, nc, fcansno, surfalb_inst)
 
 
     ! Pass boundary conditions (zenith angle, ground albedo and snow-cover)
@@ -2864,7 +2863,6 @@ module CLMFatesInterfaceMod
     integer            , intent(in)            :: nc ! clump index
     real(r8)           , intent(in)            :: fcansno( bounds_clump%begp: )
     type(surfalb_type) , intent(inout)         :: surfalb_inst
-    real(r8),intent(in) :: nextsw_cday,declinp1
     
     ! locals
     integer                                    :: s,c,p,ifp,g
@@ -2884,9 +2882,6 @@ module CLMFatesInterfaceMod
          ftii         =>    surfalb_inst%ftii_patch)            !out
 
 
-    ! Update grid and (of relevance here) column zenith angles
-    call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
-      
     do s = 1, this%fates(nc)%nsites
 
        c = this%f2hmap(nc)%fcolumn(s)

@@ -480,7 +480,7 @@ contains
           )
 
 
-    call UpdateZenithAngles(bounds_clump,surfalb_inst, nextsw_cday, declinp1)
+    call UpdateZenithAngles(bounds,surfalb_inst, nextsw_cday, declinp1)
      
     ! Apply column level zenith angles to the patch level
     do fp = 1,num_nourbanp
@@ -1083,7 +1083,7 @@ contains
 
     if (use_fates) then
           
-       call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst, nextsw_cday, declinp1)
+       call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst)
 
     else
 
