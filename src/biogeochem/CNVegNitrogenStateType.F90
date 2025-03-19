@@ -340,8 +340,8 @@ contains
     allocate(this%seedn_grc                              (begg:endg)) ; this%seedn_grc                           (:) = nan
     allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
-    
 
+    allocate(this%leafcn_patch                           (begp:endp)) ; this%leafcn_patch                        (:) = nan
     if(use_matrixcn)then
        allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
        allocate(this%leafn0_storage_patch                (begp:endp)) ; this%leafn0_storage_patch                (:) = nan     
@@ -2303,12 +2303,15 @@ contains
   !-----------------------------------------------------------------------
   subroutine time_evolv_leafcn(this, bounds, atm2lnd_inst)
     !
+    ! AUTHOR: slevis
+    !
     ! !DESCRIPTION:
     ! Update time-evolving parameters
-    ! In the current implementation, we call this subroutine from clm_drv
-    ! first thing, before anything else. Hence we allocate leafcn_patch
-    ! to memory if_first_step here instead of waiting for the call to
-    ! InitAllocate.
+    ! In the current implementation, I call this subroutine from clm_drv
+    ! first thing, before anything else. Hence I allocate leafcn_patch
+    ! to memory if_first_step here to prevent an error in some tests.
+    ! I allocate again in InitAllocate to prevent a similar error in
+    ! InitHistory in other tests.
     !
     ! !USES:
     use pftconMod, only : pftcon
