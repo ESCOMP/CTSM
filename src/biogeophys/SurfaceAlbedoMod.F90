@@ -479,6 +479,9 @@ contains
           fabi_sha_z    =>    surfalb_inst%fabi_sha_z_patch         & ! Output:  [real(r8) (:,:) ]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
           )
 
+
+    call UpdateZenithAngles(bounds_clump,surfalb_inst, nextsw_cday, declinp1)
+     
     ! Apply column level zenith angles to the patch level
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
@@ -1080,7 +1083,7 @@ contains
 
     if (use_fates) then
           
-       call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst)
+       call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst, nextsw_cday, declinp1)
 
     else
 
