@@ -71,7 +71,7 @@ path = ccs_config
 url = https://github.com/ekluzek/ccs_config_cesm.git
 #fxtag = ccs_config_cesm1.0.20
 # On branch: mizumomgridandfixes
-fxtag = f91cae45d8e500b95cf54a9b5781cef1d7a06e73
+fxtag = 6b6870b3b7c4a240ab32e9975ec88560fa21ce60
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
