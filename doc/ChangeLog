@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.033
 Originator(s): wwieder, slevis (Will Wieder, Sam Levis, UCAR/TSS)
-Date: Wed 19 Mar 2025 11:37:40 AM MDT
+Date: Wed 19 Mar 2025 02:43:55 PM MDT
 One-line Summary: Add new mimics_fi param = frac of litter inputs bypassing litter pools
 
 Purpose and description of changes
@@ -68,7 +68,7 @@ Changes answers relative to baseline: Yes
 
  Soil C stocks will change in mimics cases with these code and parameter updates.
 
- Also, two ciso_cwd_hr tests show diffs because the most recent previous ciso paramfile had roundoff diffs from the rest of the paramfiles for no reason that wwieder and slevis could identify. The new ciso paramfile does not have such diffs.
+ Also, three ciso_cwd_hr tests show diffs because the most recent previous ciso paramfile had roundoff diffs from the rest of the paramfiles for no reason that wwieder and slevis could identify. The new ciso paramfile does not have such diffs.
 
 Other details
 -------------
