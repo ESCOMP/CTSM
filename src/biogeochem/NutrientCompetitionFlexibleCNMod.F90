@@ -635,6 +635,7 @@ contains
                  f3 = f3, &
                  f4 = f4, &
                  f5 = f5, &
+                 leafcn = leafcn(p), &
 
                  ! Outputs
                  npool_to_leafn = npool_to_leafn(p), &
@@ -930,7 +931,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_npool_to_components_flexiblecn( &
-       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, &
+       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, leafcn, &
        npool_to_leafn, npool_to_leafn_storage, &
        npool_to_frootn, npool_to_frootn_storage, &
        npool_to_livestemn, npool_to_livestemn_storage, &
@@ -952,6 +953,7 @@ contains
     real(r8), intent(in) :: f3 ! C allocation parameter - stem:leaf ratio
     real(r8), intent(in) :: f4 ! C allocation parameter - fraction of new wood that is live
     real(r8), intent(in) :: f5(:) ! C allocation parameter - repr:leaf ratio for each crop reproductive pool
+    real(r8), intent(in) :: leafcn  ! leaf C:N (gC/gN)
 
     ! Each of the following output variables is in units of gN/m2/s; they are
     ! intent(inout) because some may remain unchanged in some circumstances.
@@ -1018,7 +1020,6 @@ contains
 
     associate( &
          woody    => pftcon%woody    , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
-         leafcn   => cnveg_nitrogenstate_inst%leafcn_patch, &  ! Input:  leaf C:N (gC/gN)
          frootcn  => pftcon%frootcn  , & ! Input:  fine root C:N (gC/gN)
          livewdcn => pftcon%livewdcn , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn => pftcon%deadwdcn , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -1027,7 +1028,7 @@ contains
 
     dt = get_step_size_real()
 
-    cnl  = leafcn(p)
+    cnl  = leafcn
     cnfr = frootcn(ivt)
     cnlw = livewdcn(ivt)
     cndw = deadwdcn(ivt)
