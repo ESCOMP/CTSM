@@ -1841,9 +1841,7 @@ contains
                end if
                ci_z(p,iv) = 0._r8
                rh_leaf(p) = 0._r8
-               !
-               ! This sets the  variables GSSUN and GSSHA
-               !
+               ! This sets the variables GSSUN and GSSHA
                ! Write stomatal conductance to the appropriate phase
                if (phase=='sun') then
                   gs_mol_sun(p,iv) = cf/rs_z(p,iv)
