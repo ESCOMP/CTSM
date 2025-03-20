@@ -140,6 +140,7 @@ def check_parser_args(args):
 
 
 def write_runscript_part1(
+    *,
     number_of_nodes,
     tasks_per_node,
     machine,
@@ -148,7 +149,7 @@ def write_runscript_part1(
     runfile,
     descrip="input namelist",
     name="mksurfdata",
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Write run script (part 1) Batch headers
     """
@@ -291,7 +292,12 @@ def main():
         # Write batch header (part 1)
         # --------------------------
         attribs = write_runscript_part1(
-            number_of_nodes, tasks_per_node, machine, account, walltime, runfile
+            number_of_nodes=number_of_nodes,
+            tasks_per_node=tasks_per_node,
+            machine=machine,
+            account=account,
+            walltime=walltime,
+            runfile=runfile,
         )
         # --------------------------
         # Obtain mpirun command from env_mach_specific.xml

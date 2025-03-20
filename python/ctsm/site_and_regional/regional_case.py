@@ -358,10 +358,10 @@ class RegionalCase(BaseCase):
 
         self.mesh = mesh_out
 
-        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+        _, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
         f_in = xr.open_dataset(mesh_in)
-        self.write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
+        self.write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out)
 
     def subset_mesh_at_reg(self, mesh_in):
         """
@@ -424,8 +424,7 @@ class RegionalCase(BaseCase):
         return node_coords, subset_element, subset_node, conn_dict
 
     @staticmethod
-    def write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
-        # pylint: disable=unused-argument,too-many-positional-arguments
+    def write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out):
         """
         This function writes out the subsetted mesh file.
         """

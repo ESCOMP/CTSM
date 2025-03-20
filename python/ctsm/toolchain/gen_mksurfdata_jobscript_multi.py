@@ -107,12 +107,12 @@ def write_runscript(
     # --------------------------
     name = f"mksrf_{scenario}"
     attribs = write_runscript_part1(
-        number_of_nodes,
-        tasks_per_node,
-        args.machine,
-        account,
-        walltime,
-        runfile,
+        number_of_nodes=number_of_nodes,
+        tasks_per_node=tasks_per_node,
+        machine=args.machine,
+        account=account,
+        walltime=walltime,
+        runfile=runfile,
         descrip=scenario,
         name=name,
     )
