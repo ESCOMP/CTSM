@@ -2,7 +2,7 @@
 
 Use these user mods as you would any other user_mods, e.g.:
 
-`./create_newcase --case FATES_ABBY_test --res CLM_USRDAT --compset I1PtClm51Fates --run-unsupported --user-mods-dir /glade/work/$user/CTSM/cime_config/usermods_dirs/NEON/FATES/ABBY`
+`./create_newcase --case FATES_ABBY_test --res CLM_USRDAT --compset I1PtClm60Fates --run-unsupported --user-mods-dir clm/NEON/FATES/ABBY`
 
 ## Note on crop sites KONA and STER
 
