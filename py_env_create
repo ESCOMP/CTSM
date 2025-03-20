@@ -38,11 +38,11 @@ if [[ ${result} != 0 ]]; then
    result=$?
    set -e
    if [[ ${result} != 0 ]]; then
-      echo "Neither conda nor mamba seem to be available and working."
-      echo "Maybe they're not on your path?"
-      echo "on Derecho/Casper/etc use: module load conda"
-      echo "on izumi/CGD systems use: module unload lang/python; module load lang/anaconda/23.11.0/base"
-      echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
+      echo "Neither conda nor mamba seem to be available and working." >&2
+      echo "Maybe they're not on your path?" >&2
+      echo "on Derecho/Casper/etc use: module load conda" >&2
+      echo "on izumi/CGD systems use: module unload lang/python; module load lang/anaconda/23.11.0/base" >&2
+      echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html" >&2
       exit ${result}
    fi
 fi
