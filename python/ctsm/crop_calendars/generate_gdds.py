@@ -21,6 +21,10 @@ sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 # Global constants
 PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
 MY_CLM_VER = 51
@@ -340,7 +344,7 @@ def main(
 
     def add_attrs_to_map_ds(
         map_ds, incl_vegtypes_str, dummy_fill, outdir_figs, first_season, last_season
-    ):  # pylint: disable=too-many-positional-arguments
+    ):
         return map_ds.assign_attrs(
             {
                 "incl_vegtypes_str": incl_vegtypes_str,

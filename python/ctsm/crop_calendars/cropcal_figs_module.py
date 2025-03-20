@@ -16,6 +16,10 @@ import matplotlib.collections as mplcol
 
 # pylint: disable=abstract-class-instantiated
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 # Colormaps (maps)
 cropcal_colors = {
     "seq_timeofyear": "twilight_shifted",
@@ -169,7 +173,6 @@ def make_map(
 
 
 def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
-    # pylint: disable=too-many-positional-arguments
     """
     Handle settings related to ticklabels
     """

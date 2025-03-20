@@ -12,6 +12,10 @@ import numpy as np
 import xarray as xr
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def get_thisvar_da(var, this_ds):
     """
@@ -33,7 +37,6 @@ def get_thisvar_da(var, this_ds):
 
 
 def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridded):
-    # pylint: disable=too-many-positional-arguments
     """
     Convert Numpy array to DataArray with coordinates, attributes and name
     """
@@ -55,7 +58,6 @@ def convert_to_da(this_ds, var, fill_value, thisvar_da, new_dims, thisvar_gridde
 
 
 def grid_the_data(thisvar_da, vt_da, ixy_da, jxy_da, new_dims, thisvar_gridded):
-    # pylint: disable=too-many-positional-arguments
     """
     Fill lat-lon array with previously-ungridded data
     """

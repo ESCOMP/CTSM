@@ -8,6 +8,10 @@ import xarray as xr
 
 from ctsm.crop_calendars.cropcal_utils import vegtype_str2int, is_each_vegtype
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=True, **kwargs):
     """
@@ -143,7 +147,7 @@ def trim_along_relevant_1d_axes(xr_object, selection, selection_type, key):
 
 def do_warn_about_seltype_interp(
     havewarned, delimiter, key, selection_type, is_inefficient, this_type
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Suggest suppressing selection type interpretation warnings
     """

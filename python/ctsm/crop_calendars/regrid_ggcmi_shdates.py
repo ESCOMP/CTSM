@@ -22,6 +22,10 @@ from ctsm.ctsm_pylib_dependent_utils import (  # pylint: disable=wrong-import-po
 )
 from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 logger = logging.getLogger(__name__)
 
 
@@ -110,7 +114,7 @@ def regrid_ggcmi_shdates(
     regrid_output_directory,
     regrid_extension,
     crop_list,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Regrid GGCMI sowing and harvest date files
     """

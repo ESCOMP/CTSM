@@ -20,6 +20,10 @@ from ctsm import ctsm_logging
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.regrid_ggcmi_shdates as regrid
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 logger = logging.getLogger(__name__)
 
 
@@ -326,7 +330,7 @@ def create_output_files(
     first_year,
     last_year,
     template_ds,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Create output files, one for each variable
     """
@@ -371,7 +375,7 @@ def process_ggcmi_shdates(
     regrid_template_file,
     regrid_extension,
     crop_list,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Convert GGCMI crop calendar files for use in CTSM
     """
