@@ -38,7 +38,8 @@ if [[ ${result} != 0 ]]; then
    result=$?
    set -e
    if [[ ${result} != 0 ]]; then
-      echo "Neither conda nor mamba are on your path. Add one with modules or whatever is required on your system to get it in your path."
+      echo "Neither conda nor mamba seem to be available and working."
+      echo "Maybe they're not on your path?"
       echo "on Derecho/Casper/etc use: module load conda"
       echo "on izumi/CGD systems use: module unload lang/python; module load lang/anaconda/23.11.0/base"
       echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
