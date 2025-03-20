@@ -45,6 +45,7 @@ class TowerSite:
     def __init__(
         self,
         tower_type,
+        *,
         name,
         start_year,
         end_year,
@@ -52,7 +53,7 @@ class TowerSite:
         end_month,
         finidat,
         user_mods_dirs=None,
-    ):  # pylint: disable=too-many-positional-arguments
+    ):
         """
         Initializes TowerSite with the given arguments.
         Parameters
@@ -316,6 +317,7 @@ class TowerSite:
     # TODO: This code should be broken up into smaller pieces
     def run_case(
         self,
+        *,
         base_case_root,
         run_type,
         prism,
@@ -327,7 +329,7 @@ class TowerSite:
         experiment,
         no_input_data_check,
         xmlchange,
-    ):  # pylint: disable=too-many-positional-arguments
+    ):
         """
         Run case.
 

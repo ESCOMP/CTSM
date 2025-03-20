@@ -92,6 +92,7 @@ class RegionalCase(BaseCase):
 
     def __init__(
         self,
+        *,
         lat1,
         lat2,
         lon1,
@@ -105,7 +106,7 @@ class RegionalCase(BaseCase):
         create_mesh,
         out_dir,
         overwrite,
-    ):  # pylint: disable=too-many-positional-arguments
+    ):
         """
         Initializes RegionalCase with the given arguments.
         """

@@ -325,16 +325,16 @@ def main():
         fsurlog,
         must_run_download_input_data,
     ) = get_file_paths(
-        args,
-        start_year,
-        end_year,
-        ssp_rcp,
-        res,
-        pft_years,
-        run_type,
-        rawdata_files,
-        num_pft,
-        must_run_download_input_data,
+        args=args,
+        start_year=start_year,
+        end_year=end_year,
+        ssp_rcp=ssp_rcp,
+        res=res,
+        pft_years=pft_years,
+        run_type=run_type,
+        rawdata_files=rawdata_files,
+        num_pft=num_pft,
+        must_run_download_input_data=must_run_download_input_data,
     )
 
     git_desc_cmd = f"git -C {tool_path} describe"
@@ -372,32 +372,32 @@ def main():
         # raw input data
         # -------------------
         must_run_download_input_data = write_nml_rawinput(
-            start_year,
-            force_model_mesh_file,
-            force_model_mesh_nx,
-            force_model_mesh_ny,
-            rawdata_files,
-            landuse_fname,
-            mksrf_ftopostats_override,
-            nlfile,
-            must_run_download_input_data,
+            start_year=start_year,
+            force_model_mesh_file=force_model_mesh_file,
+            force_model_mesh_nx=force_model_mesh_nx,
+            force_model_mesh_ny=force_model_mesh_ny,
+            rawdata_files=rawdata_files,
+            landuse_fname=landuse_fname,
+            mksrf_ftopostats_override=mksrf_ftopostats_override,
+            nlfile=nlfile,
+            must_run_download_input_data=must_run_download_input_data,
         )
 
         # -------------------
         # output data
         # -------------------
         write_nml_outdata(
-            nosurfdata_flag,
-            inlandwet,
-            glc_flag,
-            hostname,
-            logname,
-            num_pft,
-            fdyndat,
-            fsurdat,
-            fsurlog,
-            gitdescribe,
-            nlfile,
+            nosurfdata_flag=nosurfdata_flag,
+            inlandwet=inlandwet,
+            glc_flag=glc_flag,
+            hostname=hostname,
+            logname=logname,
+            num_pft=num_pft,
+            fdyndat=fdyndat,
+            fsurdat=fsurdat,
+            fsurlog=fsurlog,
+            gitdescribe=gitdescribe,
+            nlfile=nlfile,
         )
 
         nlfile.write("/ \n")
@@ -442,6 +442,7 @@ def check_ssp_years(start_year, end_year):
 
 
 def get_file_paths(
+    *,
     args,
     start_year,
     end_year,
@@ -452,13 +453,18 @@ def get_file_paths(
     rawdata_files,
     num_pft,
     must_run_download_input_data,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Get various file paths
     """
     if run_type == "transient":
         landuse_fname, must_run_download_input_data = handle_transient_run(
-            start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
+            start_year=start_year,
+            end_year=end_year,
+            ssp_rcp=ssp_rcp,
+            rawdata_files=rawdata_files,
+            num_pft=num_pft,
+            must_run_download_input_data=must_run_download_input_data,
         )
         print(f"Successfully created input landuse file {landuse_fname}")
     else:
@@ -534,6 +540,7 @@ def determine_pft_years(start_year, end_year, potveg):
 
 
 def write_nml_outdata(
+    *,
     nosurfdata_flag,
     inlandwet,
     glc_flag,
@@ -545,7 +552,7 @@ def write_nml_outdata(
     fsurlog,
     gitdescribe,
     nlfile,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Write output namelist file: output data
     """
@@ -573,6 +580,7 @@ def write_nml_outdata(
 
 
 def write_nml_rawinput(
+    *,
     start_year,
     force_model_mesh_file,
     force_model_mesh_nx,
@@ -582,7 +590,7 @@ def write_nml_rawinput(
     mksrf_ftopostats_override,
     nlfile,
     must_run_download_input_data,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Write output namelist file: raw input data
     """
@@ -656,8 +664,8 @@ def write_nml_rawinput(
 
 
 def handle_transient_run(
-    start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
-):  # pylint: disable=too-many-positional-arguments
+    *, start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
+):
     """
     Settings and printout for when run_type is "transient"
     """

@@ -72,8 +72,8 @@ class ModifyFsurdat:
 
     @classmethod
     def init_from_file(
-        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
-    ):  # pylint: disable=too-many-positional-arguments
+        cls, *, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+    ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)

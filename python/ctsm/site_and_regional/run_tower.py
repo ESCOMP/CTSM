@@ -160,7 +160,14 @@ def parse_neon_listing(listing_file, valid_neon_sites):
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
 
-            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
+            neon_site = NeonSite(
+                name=site_name,
+                start_year=start_year,
+                end_year=end_year,
+                start_month=start_month,
+                end_month=end_month,
+                finidat=finidat,
+            )
             logger.debug(neon_site)
             available_list.append(neon_site)
 
@@ -192,7 +199,12 @@ def setup_plumber_data(valid_plumber_sites):
         finidat = None
 
         plumber_site = Plumber2Site(
-            site_name, start_year, end_year, start_month, end_month, finidat
+            name=site_name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
         )
         available_list.append(plumber_site)
 
@@ -276,10 +288,10 @@ def main(description):
                 logger.info("Running CTSM for neon site : %s", neon_site.name)
 
                 neon_site.run_case(
-                    base_case_root,
-                    run_type,
-                    prism,
-                    user_version,
+                    base_case_root=base_case_root,
+                    run_type=run_type,
+                    prism=prism,
+                    user_version=user_version,
                     overwrite=overwrite,
                     setup_only=setup_only,
                     no_batch=no_batch,
@@ -311,10 +323,10 @@ def main(description):
                 logger.info("-----------------------------------")
                 logger.info("Running CTSM for plumber site : %s", plumber_site.name)
                 plumber_site.run_case(
-                    base_case_root,
-                    run_type,
-                    prism,
-                    user_version,
+                    base_case_root=base_case_root,
+                    run_type=run_type,
+                    prism=prism,
+                    user_version=user_version,
                     overwrite=overwrite,
                     setup_only=setup_only,
                     no_batch=no_batch,

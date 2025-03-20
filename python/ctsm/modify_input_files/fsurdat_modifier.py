@@ -572,14 +572,14 @@ def fsurdat_modifier(parser):
     ) = read_cfg_required_basic_opts(config, section, cfg_path)
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
-        fsurdat_in,
-        lnd_lon_1,
-        lnd_lon_2,
-        lnd_lat_1,
-        lnd_lat_2,
-        landmask_file,
-        lat_dimname,
-        lon_dimname,
+        fsurdat_in=fsurdat_in,
+        lon_1=lnd_lon_1,
+        lon_2=lnd_lon_2,
+        lat_1=lnd_lat_1,
+        lat_2=lnd_lat_2,
+        landmask_file=landmask_file,
+        lat_dimname=lat_dimname,
+        lon_dimname=lon_dimname,
     )
 
     # Read control information about the optional sections
