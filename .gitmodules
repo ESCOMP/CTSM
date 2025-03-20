@@ -28,18 +28,18 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/NorESMhub/fates
-fxtag = sci.1.78.3_api.36.1.0_noresm_v2
+fxtag = sci.1.81.1_api.38.0.0_noresm_v0
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/fates-release
 
 [submodule "cism"]
 path = components/cism
-url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_005
+url = https://github.com/NorESMhub/CISM-wrapper
+fxtag = cismwrap_2_2_006_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
+fxDONOTUSEurl = https://github.com/NorESMhub/CISM-wrapper
 
 [submodule "rtm"]
 path = components/rtm
@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/NorESMhub/ccs_config_noresm.git
-fxtag = ccs_config_noresm0.0.40
+fxtag = ccs_config_noresm0.0.44
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/ccs_config_noresm
@@ -76,7 +76,7 @@ fxDONOTUSEurl = https://github.com/NorESMhub/ccs_config_noresm
 [submodule "cime"]
 path = cime
 url = https://github.com/NorESMhub/cime
-fxtag = cime6.1.28_noresm_v0
+fxtag = cime6.1.73_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -84,26 +84,26 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/NorESMhub/CMEPS.git
-fxtag = cmeps1.0.20_noresm_v0
+fxtag = cmeps1.0.39_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
 [submodule "cdeps"]
 path = components/cdeps
-url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.53
+url = https://github.com/NorESMhub/CDEPS.git
+fxtag = cdeps1.0.70_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
+fxDONOTUSEurl = https://github.com/NorESMhub/CDEPS.git
 
 [submodule "share"]
 path = share
 url = https://github.com/NorESMhub/NorESM_share
-fxtag = share1.1.2_noresm_v0
+fxtag = share1.1.9_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
+fxDONOTUSEurl = https://github.com/NorESMhub/NorESM_share
 
 [submodule "parallelio"]
 path = libraries/parallelio
