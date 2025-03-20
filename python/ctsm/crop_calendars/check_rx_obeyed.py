@@ -126,8 +126,8 @@ def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diff
 
 
 def check_rx_obeyed(
-    vegtype_list, rx_ds, dates_ds, which_ds, output_var, gdd_min=None, verbose=False
-):  # pylint: disable=too-many-positional-arguments
+    vegtype_list, rx_ds, dates_ds, which_ds, output_var, *, gdd_min=None, verbose=False
+):
     """
     Check that prescribed crop calendars were obeyed
     """

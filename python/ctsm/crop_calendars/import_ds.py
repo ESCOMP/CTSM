@@ -194,13 +194,14 @@ def process_inputs(filelist, my_vars, my_vegtypes, my_vars_missing_ok):
 
 def import_ds(
     filelist,
+    *,
     my_vars=None,
     my_vegtypes=None,
     time_slice=None,
     my_vars_missing_ok=None,
     rename_lsmlatlon=False,
     chunks=None,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Import a dataset that can be spread over multiple files, only including specified variables
     and/or vegetation types and/or timesteps, concatenating by time.

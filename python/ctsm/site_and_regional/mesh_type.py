@@ -25,8 +25,7 @@ class MeshType:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None, area=None):
-        # pylint: disable=too-many-positional-arguments
+    def __init__(self, center_lats, center_lons, *, mask=None, mesh_name=None, area=None):
         """
         Construct a mesh object
 

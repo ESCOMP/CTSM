@@ -52,6 +52,7 @@ def make_map(
     ax,
     this_map,
     fontsize,
+    *,
     bounds=None,
     cbar=None,
     cbar_labelpad=4.0,
@@ -73,7 +74,7 @@ def make_map(
     vmax=None,
     vmin=None,
     vrange=None,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Make map
     """

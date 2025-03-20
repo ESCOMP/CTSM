@@ -111,8 +111,8 @@ class TowerSite:
     # TODO: Refactor to shorten this so the disable can be removed
     # pylint: disable=too-many-statements
     def build_base_case(
-        self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
-    ):  # pylint: disable=too-many-positional-arguments
+        self, cesmroot, output_root, res, compset, *, overwrite=False, setup_only=False
+    ):
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon and plumber cases,

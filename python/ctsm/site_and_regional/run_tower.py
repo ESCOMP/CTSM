@@ -265,7 +265,12 @@ def main(description):
                 if not base_case_root:
                     neon_site.set_default_user_mods_dirs()
                     base_case_root = neon_site.build_base_case(
-                        cesmroot, output_root, res, compset, overwrite, setup_only
+                        cesmroot,
+                        output_root,
+                        res,
+                        compset,
+                        overwrite=overwrite,
+                        setup_only=setup_only,
                     )
                 logger.info("-----------------------------------")
                 logger.info("Running CTSM for neon site : %s", neon_site.name)
@@ -296,7 +301,12 @@ def main(description):
                 if not base_case_root:
                     plumber_site.set_default_user_mods_dirs()
                     base_case_root = plumber_site.build_base_case(
-                        cesmroot, output_root, res, compset, overwrite, setup_only
+                        cesmroot,
+                        output_root,
+                        res,
+                        compset,
+                        overwrite=overwrite,
+                        setup_only=setup_only,
                     )
                 logger.info("-----------------------------------")
                 logger.info("Running CTSM for plumber site : %s", plumber_site.name)

@@ -333,8 +333,8 @@ def check_one_constant_var(
 
 
 def check_constant_vars(
-    this_ds, case, ignore_nan, const_growing_seasons=None, verbose=True, throw_error=True
-):  # pylint: disable=too-many-positional-arguments
+    this_ds, case, ignore_nan, *, const_growing_seasons=None, verbose=True, throw_error=True
+):
     """
     For variables that should stay constant, make sure they are
     """

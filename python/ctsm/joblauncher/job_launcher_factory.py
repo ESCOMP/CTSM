@@ -17,6 +17,7 @@ JOB_LAUNCHER_FAKE = "fake"
 
 def create_job_launcher(
     job_launcher_type,
+    *,
     account=None,
     queue=None,
     walltime=None,
@@ -24,7 +25,7 @@ def create_job_launcher(
     required_args=None,
     extra_args=None,
     allow_missing_entries=False,
-):  # pylint: disable=too-many-positional-arguments
+):
     """
     Creates and returns a job launcher object of the specified type
 

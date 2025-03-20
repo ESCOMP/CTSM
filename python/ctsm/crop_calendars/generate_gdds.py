@@ -28,6 +28,7 @@ MY_CLM_SUBVER = "c211112"
 
 
 def main(
+    *,
     input_dir=None,
     first_season=None,
     last_season=None,
@@ -45,8 +46,7 @@ def main(
     skip_crops=None,
     logger=None,
     no_pickle=None,
-):  # pylint: disable=too-many-positional-arguments
-    # pylint: disable=missing-function-docstring,too-many-statements
+):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
         if only_make_figs:
@@ -340,7 +340,7 @@ def main(
 
     def add_attrs_to_map_ds(
         map_ds, incl_vegtypes_str, dummy_fill, outdir_figs, first_season, last_season
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         return map_ds.assign_attrs(
             {
                 "incl_vegtypes_str": incl_vegtypes_str,

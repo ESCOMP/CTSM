@@ -45,12 +45,13 @@ def get_config_value(
     section,
     item,
     file_path,
+    *,
     allowed_values=None,
     default=None,
     is_list=False,
     convert_to_type=None,
     can_be_unset=False,
-):  # pylint: disable=too-many-positional-arguments
+):
     """Get a given item from a given section of the config object
     Give a helpful error message if we can't find the given section or item
     Note that the file_path argument is only used for the sake of the error message
@@ -121,8 +122,8 @@ def get_config_value_or_array(
 
 
 def _handle_config_value(
-    var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
-):  # pylint: disable=too-many-positional-arguments
+    *, var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
+):
     """
     Description
     -----------

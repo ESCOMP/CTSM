@@ -91,6 +91,7 @@ def build_ctsm(
     cime_path,
     build_dir,
     compiler,
+    *,
     no_build=False,
     machine=None,
     os_type=None,
@@ -108,7 +109,7 @@ def build_ctsm(
     build_debug=False,
     build_with_openmp=False,
     inputdata_path=None,
-):  # pylint: disable=too-many-positional-arguments
+):
     """Implementation of build_ctsm command
 
     Args:
@@ -611,6 +612,7 @@ def _fill_out_machine_files(
     max_mpitasks_per_node,
     gmake,
     gmake_j,
+    *,
     pnetcdf_path=None,
     pio_filesystem_hints=None,
     gptl_nano_timers=False,
@@ -686,11 +688,12 @@ def _create_case(
     cime_path,
     build_dir,
     compiler,
+    *,
     machine=None,
     build_debug=False,
     build_with_openmp=False,
     inputdata_path=None,
-):  # pylint: disable=too-many-positional-arguments
+):
     """Create a case that can later be used to build the CTSM library and its dependencies
 
     Args:
