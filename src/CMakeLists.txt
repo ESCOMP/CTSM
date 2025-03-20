@@ -24,8 +24,10 @@ endif()
 find_package(ESMF REQUIRED)
 # This adds include directories needed for ESMF
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_F90COMPILEPATHS} ")
-# The following line differs a bit from what's in the share CMakeLists.txt
-link_directories(${ESMF_LIBSDIR})
+# This (which is *not* done in the share CMakeLists.txt) adds all directories and
+# libraries needed when linking ESMF, including any dependencies of ESMF (but it does
+# *not* include the "-lesmf" itself).
+link_libraries(${ESMF_INTERFACE_LINK_LIBRARIES})
 
 # Add source directories from other share code (csm_share, etc.). This should be
 # done first, so that in case of name collisions, the CLM versions take
