@@ -110,12 +110,12 @@ class RegionalCase(BaseCase):
         Initializes RegionalCase with the given arguments.
         """
         super().__init__(
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-            create_user_mods,
-            overwrite,
+            create_domain=create_domain,
+            create_surfdata=create_surfdata,
+            create_landuse=create_landuse,
+            create_datm=create_datm,
+            create_user_mods=create_user_mods,
+            overwrite=overwrite,
         )
         self.lat1 = lat1
         self.lat2 = lat2

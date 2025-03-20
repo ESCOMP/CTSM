@@ -67,13 +67,14 @@ class BaseCase:
 
     def __init__(
         self,
+        *,
         create_domain,
         create_surfdata,
         create_landuse,
         create_datm,
         create_user_mods,
         overwrite,
-    ):  # pylint: disable=too-many-positional-arguments
+    ):
         """
         Initializes BaseCase with the given arguments.
 

@@ -604,6 +604,7 @@ def _create_build_dir(build_dir, existing_inputdata):
 
 
 def _fill_out_machine_files(
+    *,
     build_dir,
     os_type,
     compiler,
@@ -612,13 +613,12 @@ def _fill_out_machine_files(
     max_mpitasks_per_node,
     gmake,
     gmake_j,
-    *,
     pnetcdf_path=None,
     pio_filesystem_hints=None,
     gptl_nano_timers=False,
     extra_fflags="",
     extra_cflags="",
-):  # pylint: disable=too-many-positional-arguments
+):
     """Fill out the machine porting templates for this machine / compiler
 
     For documentation of args, see the documentation in the build_ctsm function

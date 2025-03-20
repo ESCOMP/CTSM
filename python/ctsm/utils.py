@@ -121,8 +121,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     return fname_out
 
 
-def update_metadata(file, title, summary, contact, data_script, description):
-    # pylint: disable=too-many-positional-arguments
+def update_metadata(file, *, title, summary, contact, data_script, description):
     """
     Description
     -----------
