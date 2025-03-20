@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.3.033
+Originator(s): wwieder, slevis (Will Wieder, Sam Levis, UCAR/TSS)
+Date: Wed 19 Mar 2025 02:43:55 PM MDT
+One-line Summary: Add new mimics_fi param = frac of litter inputs bypassing litter pools
+
+Purpose and description of changes
+----------------------------------
+
+ Summary from the PR: removes NPP control on turnover
+                      fixes density dependent control on turnover
+                      adds litterfall fluxes that bypass litter pools, directly contributing to SOM
+
+ This PR also addresses the issue of varying microbial turnover with depth.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #2361 MIMICS todo list
+ Fixes #2248 Should microbial turnover vary with depth in MIMICS?
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Updated values in the default mimics parameters
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ New parameter files
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: MIMICS
+    - what platforms/compilers: All
+    - nature of change: Larger than roundoff/same climate
+
+ Soil C stocks will change in mimics cases with these code and parameter updates.
+
+ Also, three ciso_cwd_hr tests show diffs because the most recent previous ciso paramfile had roundoff diffs from the rest of the paramfiles for no reason that wwieder and slevis could identify. The new ciso paramfile does not have such diffs.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2365 MIMICS updates
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.032
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 17 Mar 2025 09:49:08 AM MDT
