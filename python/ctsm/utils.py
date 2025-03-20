@@ -105,6 +105,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
             abort(err_msg)
     today = date.today()
     today_string = today.strftime("%y%m%d")
+    fname_out = None
     if not replace_res:
         fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
     else:
@@ -120,7 +121,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     return fname_out
 
 
-def update_metadata(file, title, summary, contact, data_script, description):
+def update_metadata(file, *, title, summary, contact, data_script, description):
     """
     Description
     -----------

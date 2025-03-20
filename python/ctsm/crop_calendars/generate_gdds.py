@@ -1,6 +1,7 @@
 """
 Generate maturity requirements (GDD) from outputs of a GDD-generating run
 """
+
 import os
 import sys
 import pickle
@@ -20,6 +21,10 @@ sys.path.insert(1, _CTSM_PYTHON)
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 # Global constants
 PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
 MY_CLM_VER = 51
@@ -27,6 +32,7 @@ MY_CLM_SUBVER = "c211112"
 
 
 def main(
+    *,
     input_dir=None,
     first_season=None,
     last_season=None,
@@ -44,8 +50,7 @@ def main(
     skip_crops=None,
     logger=None,
     no_pickle=None,
-):
-    # pylint: disable=missing-function-docstring,too-many-statements
+):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
         if only_make_figs:

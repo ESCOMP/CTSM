@@ -7,9 +7,14 @@ lon) of one variable within a Dataset.
 - fill_value: Default None means grid will be filled with NaN, unless the variable in question
     already has a _FillValue, in which case that will be used.
 """
+
 import numpy as np
 import xarray as xr
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 
 def get_thisvar_da(var, this_ds):
@@ -22,7 +27,7 @@ def get_thisvar_da(var, this_ds):
     thisvar_da = xr.DataArray(thisvar_da, dims=these_dims)
 
     # Define coordinates of this variable's DataArray
-    dims_dict = dict()
+    dims_dict = {}
     for dim in these_dims:
         dims_dict[dim] = this_ds[dim]
     thisvar_da = thisvar_da.assign_coords(dims_dict)

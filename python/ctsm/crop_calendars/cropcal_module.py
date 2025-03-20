@@ -339,6 +339,7 @@ def check_no_zeros(this_ds, varlist_no_zero, which_file, verbose):
 def import_output(
     filename,
     my_vars,
+    *,
     year_1=None,
     year_n=None,
     my_vegtypes=utils.define_mgdcrop_list_withgrasses(),

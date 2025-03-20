@@ -44,6 +44,7 @@ def create_empty_file(filename):
 # readable
 # pylint: disable=invalid-name
 
+
 # pylint: disable=protected-access
 # pylint: disable=too-many-instance-attributes
 class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
@@ -127,7 +128,12 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(
-                nodes, tasks, machine, self._account, args.walltime, runfile
+                number_of_nodes=nodes,
+                tasks_per_node=tasks,
+                machine=machine,
+                account=self._account,
+                walltime=args.walltime,
+                runfile=runfile,
             )
             self.assertEqual({"mpilib": "default"}, attribs, msg="attribs not as expected")
 
@@ -164,7 +170,12 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         expected_attribs = {"mpilib": "default"}
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
             attribs = write_runscript_part1(
-                nodes, tasks, machine, self._account, args.walltime, runfile
+                number_of_nodes=nodes,
+                tasks_per_node=tasks,
+                machine=machine,
+                account=self._account,
+                walltime=args.walltime,
+                runfile=runfile,
             )
             self.assertEqual(attribs, expected_attribs)
             (executable, mksurfdata_path, env_mach_path) = get_mpirun(args, attribs)
@@ -187,7 +198,14 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
                 "Number of tasks per node exceeds the number of processors per node"
                 + " on this machine",
             ):
-                write_runscript_part1(nodes, tasks, machine, self._account, args.walltime, runfile)
+                write_runscript_part1(
+                    number_of_nodes=nodes,
+                    tasks_per_node=tasks,
+                    machine=machine,
+                    account=self._account,
+                    walltime=args.walltime,
+                    runfile=runfile,
+                )
 
     def test_zero_tasks(self):
         """test for fail on zero tasks"""

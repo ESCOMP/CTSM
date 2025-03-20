@@ -62,9 +62,14 @@ class TestNeonSite(unittest.TestCase):
         rundir = ""
 
         # create NeonSite object and update namelist
-        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
-            case_root, run_type, rundir
-        )
+        NeonSite(
+            name=name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
+        ).modify_user_nl(case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")
@@ -97,9 +102,14 @@ class TestNeonSite(unittest.TestCase):
         rundir = ""
 
         # create NeonSite object and update namelist
-        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
-            case_root, run_type, rundir
-        )
+        NeonSite(
+            name=name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
+        ).modify_user_nl(case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")

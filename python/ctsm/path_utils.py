@@ -1,5 +1,4 @@
-"""Utility functions related to getting paths to various important places
-"""
+"""Utility functions related to getting paths to various important places"""
 
 from __future__ import print_function
 
