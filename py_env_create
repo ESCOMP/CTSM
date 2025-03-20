@@ -7,10 +7,12 @@
 #
 
 # Exit on errors
-set -e
+
 
 # Exit on Ctrl-C
-trap 'echo "Exiting on Ctrl+C"; exit 130' INT
+# Exit on errors
+set -e
+# Get the directory where py_env_create is located
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd "${SCRIPT_DIR}"
