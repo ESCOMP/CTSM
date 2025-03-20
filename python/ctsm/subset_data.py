@@ -65,9 +65,10 @@ from argparse import ArgumentParser
 from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
-from ctsm.args_utils import plon_type, plat_type
+from ctsm.args_utils import plat_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
+from ctsm.config_utils import convert_lon_0to360
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -108,16 +109,27 @@ def get_parser():
         dest="plat",
         required=False,
         type=plat_type,
-        default=42.5,
+        default=None,
     )
     pt_parser.add_argument(
         "--lon",
         help="Single point longitude. [default: %(default)s]",
-        action="store",
+        type=float,
         dest="plon",
         required=False,
-        type=plon_type,
-        default=287.8,
+        default=None,
+    )
+    pt_parser.add_argument(
+        "--lon-type",
+        help=(
+            "Whether longitudes are in the [-180, 180] format (i.e., centered around the Prime"
+            " Meridian) or the [0, 360] format (i.e., centered around the International Date Line)."
+            " Choose by specifying the upper limit."
+        ),
+        required=False,
+        default=None,
+        type=int,
+        choices=[180, 360],
     )
     pt_parser.add_argument(
         "--site",
@@ -216,28 +228,38 @@ def get_parser():
     rg_parser.add_argument(
         "--lon1",
         help=(
-            "Region westernmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            "Region westernmost longitude. Must be in [0, 360] format: i.e., starting at the"
             " International Date Line rather than centered on the Prime Meridian. [default:"
             " %(default)s]"
         ),
-        action="store",
+        type=float,
         dest="lon1",
         required=False,
-        type=plon_type,
-        default=275.0,
+        default=None,
     )
     rg_parser.add_argument(
         "--lon2",
         help=(
-            "Region easternmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            "Region easternmost longitude. Must be in [0, 360] format: i.e., starting at the"
             " International Date Line rather than centered on the Prime Meridian. [default:"
             " %(default)s]"
         ),
-        action="store",
+        type=float,
         dest="lon2",
         required=False,
-        type=plon_type,
-        default=330.0,
+        default=None,
+    )
+    rg_parser.add_argument(
+        "--lon-type",
+        help=(
+            "Whether longitudes are in the [-180, 180] format (i.e., centered around the Prime"
+            " Meridian) or the [0, 360] format (i.e., centered around the International Date Line)."
+            " Choose by specifying the upper limit."
+        ),
+        required=False,
+        default=None,
+        type=int,
+        choices=[180, 360],
     )
     rg_parser.add_argument(
         "--reg",
@@ -400,6 +422,41 @@ def get_parser():
     return parser
 
 
+def check_surf_year(args):
+    """
+    Check command-line arguments w/r/t --surf-year
+    """
+    if args.surf_year != 2000 and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is set to something besides the default of 2000
+                \n without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.create_landuse:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is NOT set to 1850 and the --create-landuse option
+                \n is selected which requires it to be 1850 (see
+                https://github.com/ESCOMP/CTSM/issues/2018)
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.surf_year != 2000:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option can only be set to 1850 or 2000
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+
 def check_args(args):
     """Check the command line arguments"""
     # --------------------------------- #
@@ -412,6 +469,8 @@ def check_args(args):
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
+
+    args = process_args(args)
 
     if not any([args.create_surfdata, args.create_landuse, args.create_datm, args.create_domain]):
         err_msg = textwrap.dedent(
@@ -449,35 +508,9 @@ def check_args(args):
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
-    if args.surf_year != 2000 and not args.create_surfdata:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option is set to something besides the default of 2000
-                \n without the --create-surface option"
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
 
-    if args.surf_year != 1850 and args.create_landuse:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option is NOT set to 1850 and the --create-landuse option
-                \n is selected which requires it to be 1850 (see
-                https://github.com/ESCOMP/CTSM/issues/2018)
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
-
-    if args.surf_year != 1850 and args.surf_year != 2000:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option can only be set to 1850 or 2000
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
+    # Checks related to --surf-year
+    check_surf_year(args)
 
     if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
         err_msg = textwrap.dedent(
@@ -524,6 +557,29 @@ def check_args(args):
                     """
         )
         raise NotImplementedError(None, err_msg)
+
+    if hasattr(args, "lon1"):
+        if (args.lon1 is None) != (args.lon2 is None):
+            err_msg = textwrap.dedent(
+                """\
+                        \n ------------------------------------
+                        \nERROR: If providing --lon1, you must also provide --lon2
+                        """
+            )
+            raise argparse.ArgumentError(None, err_msg)
+        if args.lon1 is not None and args.lon1 >= args.lon2:
+            msg = "--lon1 must be < --lon2"
+            if args.lon_type == 180:
+                msg += "\nIf you want your longitude range to cross the International Date Line,"
+                msg += " use --lon-type 360 instead, converting your longitudes to [0, 360] format"
+            elif args.lon_type == 360:
+                msg += "\nIf you want your longitude range to cross the Prime Meridian,"
+                msg += (
+                    " use --lon-type 180 instead, converting your longitudes to [-180, 180] format"
+                )
+            raise ValueError(msg)
+
+    return args
 
 
 def setup_user_mods(user_mods_dir, cesmroot):
@@ -778,6 +834,37 @@ def subset_region(args, file_dict: dict):
     logger.info("Successfully ran script for a regional case.")
 
 
+def process_args(args):
+    """
+    Process arguments after parsing
+    """
+    # process logging args (i.e. debug and verbose)
+    process_logging_args(args)
+
+    # process longitude args
+    lon_args = [var for var in ["lon", "lon1", "lon2"] if hasattr(args, var)]
+    if any(getattr(args, var) is not None for var in lon_args):
+        if args.lon_type is None:
+            if hasattr(args, "lon"):
+                msg = "When providing --lon, you must specify --lon-type 180 or 360"
+            else:
+                msg = "When providing --lon1/--lon2, you must specify --lon-type 180 or 360"
+            raise argparse.ArgumentTypeError(msg)
+        for var in lon_args:
+            val = getattr(args, var)
+            if val is None:
+                continue
+            if args.lon_type == 180:
+                # Value range is checked by convert_lon_0to360()
+                setattr(args, var, convert_lon_0to360(val))
+            elif args.lon_type == 360:
+                if val < 0 or val > 360:
+                    raise ValueError(f"lon_in needs to be in the range [0, 360]: {val}")
+            else:
+                raise argparse.ArgumentTypeError("--lon-type can only be 180 or 360")
+    return args
+
+
 def main():
     """
     Calls functions that subset surface, landuse, domain, and/or DATM files for a region or a
@@ -790,10 +877,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    check_args(args)
     # --------------------------------- #
-    # process logging args (i.e. debug and verbose)
-    process_logging_args(args)
+    args = check_args(args)
 
     # --------------------------------- #
     # parse defaults file

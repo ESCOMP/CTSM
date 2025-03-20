@@ -498,6 +498,13 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
         file_path=cfg_path,
         convert_to_type=float,
     )
+    lon_type = get_config_value(
+        config=config,
+        section=section,
+        item="lon_type",
+        file_path=cfg_path,
+        convert_to_type=int,
+    )
 
     landmask_file = get_config_value(
         config=config,
@@ -513,7 +520,16 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
     lon_dimname = get_config_value(
         config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
     )
-    return (lnd_lat_1, lnd_lat_2, lnd_lon_1, lnd_lon_2, landmask_file, lat_dimname, lon_dimname)
+    return (
+        lnd_lat_1,
+        lnd_lat_2,
+        lnd_lon_1,
+        lnd_lon_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type,
+    )
 
 
 def fsurdat_modifier(parser):
@@ -568,6 +584,7 @@ def fsurdat_modifier(parser):
         landmask_file,
         lat_dimname,
         lon_dimname,
+        lon_type,
     ) = read_cfg_required_basic_opts(config, section, cfg_path)
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
@@ -579,6 +596,7 @@ def fsurdat_modifier(parser):
         landmask_file,
         lat_dimname,
         lon_dimname,
+        lon_type,
     )
 
     # Read control information about the optional sections
