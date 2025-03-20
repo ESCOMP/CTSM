@@ -8,8 +8,7 @@ import unittest
 from configparser import ConfigParser
 
 from ctsm import unit_testing
-from ctsm.config_utils import lon_range_0_to_360, get_config_value_or_array
-from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
+from ctsm.config_utils import convert_lon_0to360, get_config_value_or_array
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -30,47 +29,42 @@ class TestConfigUtils(unittest.TestCase):
         self.file_path = "path_to_file"
         self.config[self.section] = {}
 
+    def test_positive_lon(self):
+        """Test convert_lon_0to360 for a middle positive longitude"""
+        lon = 80
+        lon_new = convert_lon_0to360(lon)
+        self.assertEqual(lon_new, 260)
+
     def test_negative_lon(self):
-        """Test lon_range_0_to_360 for a negative longitude"""
+        """Test convert_lon_0to360 for a middle negative longitude"""
+        lon = -80
+        lon_new = convert_lon_0to360(lon)
+        self.assertEqual(lon_new, 100)
+
+    def test_lowerbound_lon(self):
+        """Test convert_lon_0to360 at the lower bound of [-180, 180]"""
         lon = -180.0
+        lon_new = convert_lon_0to360(lon)
+        self.assertEqual(lon_new, 0)
 
-        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
-        # rest of this test uncommented
-        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
-            lon_range_0_to_360(lon)
+    def test_upperbound_lon(self):
+        """Test convert_lon_0to360 at the upper bound of [-180, 180]"""
+        lon = 180.0
+        lon_new = convert_lon_0to360(lon)
+        self.assertEqual(lon_new, 360)
 
-        # lon_new = lon_range_0_to_360(lon)
-        # self.assertEqual(lon_new, 180.0, "lon not as expected")
+    def test_toohigh_lon(self):
+        """Test convert_lon_0to360 for a value > 180: Should error"""
+        lon = 555
+        with self.assertRaisesRegex(ValueError, r"lon_in needs to be in the range \[-180, 180\]"):
+            convert_lon_0to360(lon)
 
-    def test_negative2_lon(self):
-        """Test lon_range_0_to_360 for a negative longitude"""
-        lon = -5.0
+    def test_toolow_lon(self):
+        """Test convert_lon_0to360 for a value < -180: Should error"""
+        lon = -555
 
-        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
-        # rest of this test uncommented
-        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
-            lon_range_0_to_360(lon)
-
-        # lon_new = lon_range_0_to_360(lon)
-        # self.assertEqual(lon_new, 355.0, "lon not as expected")
-
-    def test_regular_lon(self):
-        """Test lon_range_0_to_360 for a regular longitude"""
-        lon = 22.567
-        lon_new = lon_range_0_to_360(lon)
-        self.assertEqual(lon_new, lon, "lon not as expected")
-
-    def test_lon_out_of_range(self):
-        """Test lon_range_0_to_360 for longitude out of range"""
-        lon = 361.0
-        with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-            lon_range_0_to_360(lon)
-
-    def test_lon_out_of_range_negative(self):
-        """Test lon_range_0_to_360 for longitude out of range"""
-        lon = -181.0
-        with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-            lon_range_0_to_360(lon)
+        with self.assertRaisesRegex(ValueError, r"lon_in needs to be in the range \[-180, 180\]"):
+            convert_lon_0to360(lon)
 
     def test_config_value_or_array_single_value(self):
         """Simple test of get_config_value_or_array"""

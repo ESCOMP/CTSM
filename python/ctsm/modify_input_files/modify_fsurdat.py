@@ -14,7 +14,7 @@ import xarray as xr
 
 from ctsm.utils import abort, update_metadata
 from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.config_utils import lon_range_0_to_360
+from ctsm.config_utils import convert_lon_0to360
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ModifyFsurdat:
     """
 
     def __init__(
-        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname, lon_type
     ):
 
         self.numurbl = 3  # Number of urban density types
@@ -36,6 +36,7 @@ class ModifyFsurdat:
         else:
             abort("numurbl is not a dimension on the input surface dataset file and needs to be")
 
+        self.lon_type = lon_type
         self.rectangle = self._get_rectangle(
             lon_1=lon_1,
             lon_2=lon_2,
@@ -43,6 +44,7 @@ class ModifyFsurdat:
             lat_2=lat_2,
             longxy=self.file.LONGXY,
             latixy=self.file.LATIXY,
+            lon_type=self.lon_type,
         )
 
         if landmask_file is not None:
@@ -72,23 +74,37 @@ class ModifyFsurdat:
 
     @classmethod
     def init_from_file(
-        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        cls,
+        fsurdat_in,
+        lon_1,
+        lon_2,
+        lat_1,
+        lat_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type,
     ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname)
+        return cls(
+            my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname, lon_type
+        )
 
     @staticmethod
-    def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy, lon_type):
         """
         Description
         -----------
         """
 
         # ensure that lon ranges 0-360 in case user entered -180 to 180
-        lon_1 = lon_range_0_to_360(lon_1)
-        lon_2 = lon_range_0_to_360(lon_2)
+        if lon_type == 180:
+            lon_1 = convert_lon_0to360(lon_1)
+            lon_2 = convert_lon_0to360(lon_2)
+        elif lon_type != 360:
+            raise ValueError("lon_type must be either 180 or 360")
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work

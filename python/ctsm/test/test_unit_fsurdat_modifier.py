@@ -62,6 +62,7 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config = ConfigParser()
         self.config.read(self.cfg_path)
         my_data = xr.open_dataset(self._fsurdat_in)
+        self.lon_type = 360
         self.modify_fsurdat = ModifyFsurdat(
             my_data=my_data,
             lon_1=0.0,
@@ -71,6 +72,7 @@ class TestFSurdatModifier(unittest.TestCase):
             landmask_file=None,
             lat_dimname=None,
             lon_dimname=None,
+            lon_type=self.lon_type,
         )
 
     def tearDown(self):

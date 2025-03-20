@@ -20,9 +20,8 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,too-many-public-methods
 
 
 class TestSubsetData(unittest.TestCase):
@@ -45,7 +44,7 @@ class TestSubsetData(unittest.TestCase):
         """
         Test
         """
-        check_args(self.args)
+        self.args = check_args(self.args)
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_in"],
@@ -67,7 +66,7 @@ class TestSubsetData(unittest.TestCase):
         """
         Test that inputdata directory does not exist
         """
-        check_args(self.args)
+        self.args = check_args(self.args)
         self.defaults.set("main", "clmforcingindir", "/zztop")
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
@@ -108,7 +107,7 @@ class TestSubsetData(unittest.TestCase):
         """
         sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
-        check_args(self.args)
+        self.args = check_args(self.args)
         files = setup_files(self.args, self.defaults, self.cesmroot)
         self.assertEqual(
             files["fsurf_out"],
@@ -203,7 +202,7 @@ class TestSubsetData(unittest.TestCase):
         """
         Test that inputdata directory provided on command line does not exist if it's bad
         """
-        check_args(self.args)
+        self.args = check_args(self.args)
         self.args.inputdatadir = "/zztop"
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
             setup_files(self.args, self.defaults, self.cesmroot)
@@ -276,11 +275,281 @@ class TestSubsetData(unittest.TestCase):
         self.args = self.parser.parse_args()
         check_args(self.args)
 
-    # When CTSM issue #3001 is fixed, this test should be replaced with one that checks for correct
-    # conversion of longitudes specified in the [-180, 180) format.
-    def test_negative_lon_errors(self):
+    def test_region_lon_type_360_ok(self):
         """
-        Test that a negative longitude results in a descriptive error
+        In region mode, test that --lon-type 360 works with valid longitudes
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "360",
+            "--lon1",
+            "320",
+            "--lon2",
+            "340",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        self.args = check_args(args)
+        self.assertEqual(args.lon1, 320)
+        self.assertEqual(args.lon2, 340)
+
+    def test_region_lon_type_360_toolow(self):
+        """
+        In region mode, test that --lon-type 360 fails with a longitude value that's below [0, 360]
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "360",
+            "--lon1",
+            "-1",
+            "--lon2",
+            "360",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            r"lon_in needs to be in the range \[0, 360\]",
+        ):
+            check_args(args)
+
+    def test_region_lon_type_360_ok_at_360(self):
+        """
+        In region mode, test that --lon-type 360 passes with a longitude value of 360
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "360",
+            "--lon1",
+            "320",
+            "--lon2",
+            "360",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        check_args(args)
+
+    def test_region_lon_type_361_toohigh(self):
+        """
+        In region mode, test that --lon-type 360 fails with a longitude value that's above [0, 360]
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "360",
+            "--lon1",
+            "320",
+            "--lon2",
+            "361",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            r"lon_in needs to be in the range \[0, 360\]",
+        ):
+            check_args(args)
+
+    def test_region_lon_type_360_crosses_pm_errors(self):
+        """
+        In region mode, test that --lon-type 360 errors if lon range crosses Prime Meridian
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "360",
+            "--lon1",
+            "320",
+            "--lon2",
+            "300",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            "If you want your longitude range to cross the Prime Meridian",
+        ):
+            check_args(args)
+
+    def test_region_lon_type_180_ok(self):
+        """
+        In region mode, test that --lon-type 180 works with valid longitudes
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            "-24",
+            "--lon2",
+            "87",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        self.args = check_args(args)
+        self.assertEqual(args.lon1, 156)
+        self.assertEqual(args.lon2, 267)
+
+    def test_region_lon_type_180_ok_at_180(self):
+        """
+        In region mode, test that --lon-type 180 passes at lon 180
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            "-24",
+            "--lon2",
+            "180",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        self.args = check_args(args)
+        self.assertEqual(args.lon1, 156)
+        self.assertEqual(args.lon2, 360)
+
+    def test_region_lon_type_180_toolow(self):
+        """
+        In region mode, test that --lon-type 180 fails with a longitude value that's below
+        [-180, 180]
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            "-181",
+            "--lon2",
+            "15",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            r"lon_in needs to be in the range \[-180, 180\]",
+        ):
+            check_args(args)
+
+    def test_region_lon_type_180_toohigh(self):
+        """
+        In region mode, test that --lon-type 180 fails with a longitude value that's above
+        [-180, 180]
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            "87",
+            "--lon2",
+            "180.1",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            r"lon_in needs to be in the range \[-180, 180\]",
+        ):
+            check_args(args)
+
+    def test_region_lon_type_180_crosses_idl_errors(self):
+        """
+        In region mode, test that --lon-type 180 errors if lon range crosses Int'l Date Line
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            "167",
+            "--lon2",
+            "-150",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            ValueError,
+            "If you want your longitude range to cross the International Date Line",
+        ):
+            check_args(args)
+
+    def test_no_lontype_errors_region(self):
+        """
+        In region mode, test that you get an error if you specify longitude without --lon-type
         """
         sys.argv = [
             "subset_data",
@@ -296,8 +565,13 @@ class TestSubsetData(unittest.TestCase):
             "--lon2",
             "40",
         ]
-        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
-            self.args = self.parser.parse_args()
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError,
+            "When providing --lon1/--lon2, you must specify --lon-type 180 or 360",
+        ):
+            check_args(args)
 
 
 if __name__ == "__main__":
