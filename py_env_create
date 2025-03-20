@@ -5,7 +5,11 @@
 # Simple bash script to setup the python environment for the user so they can run the CTSM
 # python tools using "conda" or "mamba".
 #
+
+# Exit on errors
 set -e
+
+# Exit on Ctrl-C
 trap 'echo "Exiting on Ctrl+C"; exit 130' INT
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
