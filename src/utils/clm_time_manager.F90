@@ -1973,6 +1973,9 @@ contains
     ! All unit tests that modify the time manager should call this routine in their
     ! teardown section.
     !
+    ! It is safe to call this subroutine even if the time manager hasn't been initialized.
+    ! (In this case, this reset routine won't do anything.)
+    !
     ! Note: we could probably get away with doing much less resetting than is currently
     ! done here. For example, we could simply set timemgr_set = .false., and deallocate
     ! anything that needs deallocation. That would provide the benefit of less
@@ -2000,6 +2003,13 @@ contains
     ! derived type, which had default initialization of its components. Then this routine
     ! could simply set to time manager instance to a new instance of the derived type.
     ! ------------------------------------------------------------------------
+
+    if (.not. timemgr_set) then
+       ! If the time manager hasn't been initialized, then we don't need to do anything.
+       ! This logic makes it safe to call this reset routine even in cases where the time
+       ! manager hasn't been initialized.
+       return
+    end if
 
     calendar = NO_LEAP_C
 
