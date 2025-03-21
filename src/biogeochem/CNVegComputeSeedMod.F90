@@ -39,6 +39,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeSeedAmounts(bounds, &
        num_soilp_with_inactive, filter_soilp_with_inactive, &
+       leafcn_patch, &
        species, &
        leafc_seed, deadstemc_seed, &
        leaf_patch, leaf_storage_patch, leaf_xfer_patch, &
@@ -66,6 +67,7 @@ contains
     integer                        , intent(in) :: species                       ! which C/N species we're operating on; should be one of the values in CNSpeciesMod
     real(r8)                       , intent(in) :: leafc_seed                    ! seed amount for leaf C
     real(r8)                       , intent(in) :: deadstemc_seed                ! seed amount for deadstem C
+    real(r8)                       , intent(in) :: leafcn_patch( bounds%begp: )   ! current leaf C:N (gC/gN)
     real(r8)                       , intent(in) :: leaf_patch( bounds%begp: )   ! current leaf C or N content (g/m2)
     real(r8)                       , intent(in) :: leaf_storage_patch( bounds%begp: ) ! current leaf C or N storage content (g/m2)
     real(r8)                       , intent(in) :: leaf_xfer_patch( bounds%begp: )    ! current leaf C or N xfer content (g/m2)
@@ -88,6 +90,7 @@ contains
     real(r8) :: my_leaf_seed
     real(r8) :: my_deadstem_seed
     integer  :: pft_type
+    real(r8) :: leafcn
     real(r8) :: pleaf
     real(r8) :: pstor
     real(r8) :: pxfer
@@ -118,6 +121,7 @@ contains
           my_deadstem_seed = 0._r8
 
           pft_type = patch%itype(p)
+          leafcn = leafcn_patch(p)
 
           call LeafProportions( &
                ignore_current_state = ignore_current_state_patch(p), &
@@ -131,10 +135,10 @@ contains
 
           if (pft_type /= noveg) then
              my_leaf_seed = leafc_seed * &
-                  SpeciesTypeMultiplier(species, pft_type, COMPONENT_LEAF)
+                  SpeciesTypeMultiplier(species, pft_type, leafcn, COMPONENT_LEAF)
              if (pftcon%woody(pft_type) == 1._r8) then
                 my_deadstem_seed = deadstemc_seed * &
-                     SpeciesTypeMultiplier(species, pft_type, COMPONENT_DEADWOOD)
+                     SpeciesTypeMultiplier(species, pft_type, leafcn, COMPONENT_DEADWOOD)
              end if
           end if
 
@@ -150,7 +154,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  function SpeciesTypeMultiplier(species, pft_type, component) result(multiplier)
+  function SpeciesTypeMultiplier(species, pft_type, leafcn, component) result(multiplier)
     !
     ! !DESCRIPTION:
     ! Returns a multiplier based on the species type. This multiplier is
@@ -163,6 +167,7 @@ contains
     real(r8) :: multiplier  ! function result
     integer, intent(in) :: species ! which C/N species we're operating on; should be one of the values in CNSpeciesMod
     integer, intent(in) :: pft_type
+    real(r8), intent(in) :: leafcn
     integer, intent(in) :: component ! which plant component; should be one of the COMPONENT_* parameters defined in this module
     !
     ! !LOCAL VARIABLES:
@@ -188,7 +193,7 @@ contains
     case (CN_SPECIES_N)
        select case (component)
        case (COMPONENT_LEAF)
-          multiplier = 1._r8 / pftcon%leafcn(pft_type)
+          multiplier = 1._r8 / leafcn
        case (COMPONENT_DEADWOOD)
           multiplier = 1._r8 / pftcon%deadwdcn(pft_type)
        case default
