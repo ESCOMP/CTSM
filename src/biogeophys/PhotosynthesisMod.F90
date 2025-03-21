@@ -1355,6 +1355,7 @@ contains
 
     real(r8) :: sum_nscaler              
     real(r8) :: total_lai                
+    real(r8) :: leafcn_local
     integer  :: nptreemax                
 
     real(r8) :: dtime                           ! land model time step (sec)
@@ -1381,7 +1382,8 @@ contains
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
 	 crop       => pftcon%crop                           , & ! Input:  crop or not (0 =not crop and 1 = crop)
-         leafcn     => cnveg_nitrogenstate_inst%leafcn_patch , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_patch,  & ! Input:  leaf C:N (gC/gN)
+         leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
          slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
@@ -1547,13 +1549,17 @@ contains
       do f = 1, fn
          p = filterp(f)
 
-         if (lnc_opt .eqv. .false.) then     
+         if (.not. lnc_opt) then
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
-            
-           if ( (slatop(patch%itype(p)) * leafcn(p)) .le. 0.0_r8)then
+           if (use_cn) then
+              leafcn_local = leafcn_t_evolving(p)
+           else
+              leafcn_local = leafcn(ivt(p))
+           end if
+           if ( (slatop(ivt(p)) * leafcn_local) <= 0.0_r8)then
               call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg="ERROR: slatop or leafcn is zero")
            end if
-           lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(p))
+           lnc(p) = 1._r8 / (slatop(ivt(p)) * leafcn_local)
          end if   
 
          ! Using the actual nitrogen allocated to the leaf after
@@ -2881,6 +2887,7 @@ contains
     real(r8) , pointer :: o3coefg_sha     (:)   ! o3 coefficient used in rs calculation, shaded
     real(r8) :: sum_nscaler
     real(r8) :: total_lai                
+    real(r8) :: leafcn_local
     integer  :: nptreemax                
     real(r8) :: dtime                           ! land model time step (sec)
     integer  :: j,g                     ! index
@@ -2942,7 +2949,8 @@ contains
          tsai         => canopystate_inst%tsai_patch         , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
          crop       => pftcon%crop                           , & ! Input:  crop or not (0 =not crop and 1 = crop)
-         leafcn     => cnveg_nitrogenstate_inst%leafcn_patch , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_patch, & ! Input:  leaf C:N (gC/gN)
+         leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
          slatop     => pftcon%slatop                         , & ! Input:  specific leaf area at top of canopy, projected area basis [m^2/gC]
@@ -3162,9 +3170,14 @@ contains
       do f = 1, fn
          p = filterp(f)
 
-         if (lnc_opt .eqv. .false.) then     
+         if (.not. lnc_opt) then
+            if (use_cn) then
+               leafcn_local = leafcn_t_evolving(p)
+            else
+               leafcn_local = leafcn(ivt(p))
+            end if
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
-            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(p))
+            lnc(p) = 1._r8 / (slatop(ivt(p)) * leafcn_local)
          end if   
 
          ! Using the actual nitrogen allocated to the leaf after
