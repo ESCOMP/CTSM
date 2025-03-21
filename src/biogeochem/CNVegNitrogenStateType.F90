@@ -836,10 +836,10 @@ contains
 
     do p = bounds%begp,bounds%endp
 
+       this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
+
        l = patch%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-
-          this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
 
           if (patch%itype(p) == noveg) then
              this%leafn_patch(p)                           = 0._r8
@@ -1649,10 +1649,6 @@ contains
          dim1name='pft', long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%ntrunc_patch) 
 
-    call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_TARGET', xtype=ncd_double,  &
-         dim1name='pft', long_name='Target leaf C:N; compare against leafC/leafN', units='gC/gN', &
-         interpinic_flag='interp', readvar=readvar, data=this%leafcn_patch)
-
     if (use_crop) then
        do k = 1, nrepr
           data1dptr => this%reproductiven_patch(:,k)
@@ -2333,7 +2329,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (is_first_step()) then
-       allocate(this%leafcn_patch(bounds%begp:bounds%endp)); this%leafcn_patch(:) = nan
+       allocate(this%leafcn_patch(bounds%begp:bounds%endp)); this%leafcn_patch(:) = pftcon%leafcn(patch%itype(:))
     end if
     ! Loop to get leafcn_col
     do p = bounds%begp, bounds%endp

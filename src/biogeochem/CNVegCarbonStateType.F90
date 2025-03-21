@@ -1794,7 +1794,6 @@ contains
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
-    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
     use landunit_varcon  , only : istsoil, istcrop 
     use spmdMod          , only : mpicom
