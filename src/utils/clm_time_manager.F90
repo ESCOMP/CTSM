@@ -2067,10 +2067,21 @@ contains
     ! !DESCRIPTION:
     ! Sets the current date - i.e., the date at the end of the time step
     !
+    ! This is done in a way that mimics what would happen if the clock advanced from the
+    ! previous time step to the specified time (so, in particular, sets the previous time
+    ! as if that's what happened).
+    !
+    ! Note that, because of the method used to do this setting, it is an error to try to
+    ! call this with the earliest possible time (yr,mon,day,tod = 1,1,1,0): instead, it
+    ! needs to be called with a time at least one time step later.
+    !
+    ! Also note that an unavoidable side-effect of this method is that the time step count
+    ! is incremented by 1.
+    !
     ! *** Should only be used in unit tests!!! ***
     !
     ! !USES:
-    use ESMF    , only : ESMF_ClockSet
+    use ESMF    , only : ESMF_ClockSet, ESMF_ClockAdvance
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year
@@ -2079,18 +2090,45 @@ contains
     integer, intent(in) :: tod ! time of day (seconds past 0Z)
     !
     ! !LOCAL VARIABLES:
-    type(ESMF_Time) :: my_time ! ESMF Time corresponding to the inputs
+    type(ESMF_Time) :: input_time ! ESMF Time corresponding to the inputs
+    type(ESMF_TimeInterval) :: interval_dtime
+    type(ESMF_Time) :: input_time_minus_dtime
     integer :: rc ! return code
 
     character(len=*), parameter :: sub = 'for_test_set_curr_date'
     !-----------------------------------------------------------------------
     
-    call ESMF_TimeSet(my_time, yy=yr, mm=mon, dd=day, s=tod, &
+    ! Rather than simply setting the clock to the specified date, we instead set it to one
+    ! time step before the specified date, then advance the clock by a time step. This is
+    ! needed so that the clock's previous time is set as if we reached the specified time
+    ! through a typical one-time-step advance of the clock, rather than via an arbitrary
+    ! jump.
+
+    ! Because of this method of setting the clock, though, it is an error to call this
+    ! with yr,mon,day,tod = 1,1,1,0; catch that common error here and give a meaningful
+    ! error message.
+    if (yr == 1 .and. mon == 1 .and. day == 1 .and. tod == 0) then
+       call shr_sys_abort(sub//': need to use a time later than yr,mon,day,tod = 1,1,1,0')
+    end if
+
+    call ESMF_TimeSet(input_time, yy=yr, mm=mon, dd=day, s=tod, &
          calendar=tm_cal, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_TimeSet')
+
+    call ESMF_TimeIntervalSet(interval_dtime, s=dtime, rc=rc)
+    call chkrc(rc, sub//': error return from ESMF_TimeIntervalSet')
+
+    input_time_minus_dtime = input_time - interval_dtime
     
-    call ESMF_ClockSet(tm_clock, CurrTime=my_time, rc=rc)
+    call ESMF_ClockSet(tm_clock, CurrTime=input_time_minus_dtime, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockSet')
+
+    ! Note that this ClockAdvance call increments the time step count; this seems like an
+    ! unavoidable side effect of this technique of starting with an earlier time and
+    ! advancing the clock (which we do in order to get the clock's previous time set
+    ! correctly).
+    call ESMF_ClockAdvance( tm_clock, rc=rc )
+    call chkrc(rc, sub//': error return from ESMF_ClockAdvance')
 
   end subroutine for_test_set_curr_date
 

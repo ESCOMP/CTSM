@@ -69,12 +69,6 @@ contains
     integer, parameter :: ref_ymd = start_ymd
     integer, parameter :: perpetual_ymd = start_ymd
 
-    ! Set current time to be at the start of year 1
-    integer, parameter :: curr_yr = 1
-    integer, parameter :: curr_mon = 1
-    integer, parameter :: curr_day = 1
-    integer, parameter :: curr_tod = 0
-
     character(len=*), parameter :: subname = 'unittest_timemgr_setup'
     !-----------------------------------------------------------------------
     
@@ -119,12 +113,6 @@ contains
 
     call timemgr_init()
 
-    call unittest_timemgr_set_curr_date( &
-         yr = curr_yr, &
-         mon = curr_mon, &
-         day = curr_day, &
-         tod = curr_tod)
-
   end subroutine unittest_timemgr_setup
 
   !-----------------------------------------------------------------------
@@ -133,6 +121,9 @@ contains
     ! !DESCRIPTION:
     ! Set the current model date in the time manager. This is the time at the END of the
     ! time step.
+    !
+    ! Note that a side effect of this subroutine is that the time step count is
+    ! incremented by 1 (because of the method used by for_test_set_curr_date).
     !
     ! !USES:
     use clm_time_manager, only : for_test_set_curr_date
