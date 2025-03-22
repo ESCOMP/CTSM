@@ -26,6 +26,8 @@ module unittestTimeManagerMod
   ! clm_time_manager. The routines in this unittest-specific file, in contrast, tend to be
   ! higher-level wrappers.
 
+  use shr_sys_mod, only : shr_sys_abort
+
   implicit none
   private
   save
@@ -86,12 +88,12 @@ contains
 
     esmf_is_initialized = ESMF_IsInitialized(rc=rc)
     if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_IsInitialized'
+       call shr_sys_abort(subname//': Error in ESMF_IsInitialized')
     end if
     if (.not. esmf_is_initialized) then
        call ESMF_Initialize(rc=rc)
        if (rc /= ESMF_SUCCESS) then
-          stop 'Error in ESMF_Initialize'
+          call shr_sys_abort(subname//': Error in ESMF_Initialize')
        end if
     end if
 

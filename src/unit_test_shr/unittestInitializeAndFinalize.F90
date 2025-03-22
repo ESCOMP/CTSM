@@ -37,13 +37,17 @@ contains
 
     esmf_is_initialized = ESMF_IsInitialized(rc=rc)
     if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_IsInitialized'
+       ! Calling shr_sys_abort from this finalization routine leads to a pFUnit test
+       ! result of pass instead of fail. Doing a 'stop 1' leads to a failure, as desired.
+       print *, 'Error in ESMF_IsInitialized'
+       stop 1
     end if
     if (esmf_is_initialized) then
        print *, 'Finalizing ESMF'
        call ESMF_Finalize(rc=rc)
        if (rc /= ESMF_SUCCESS) then
-          stop 'Error in ESMF_Finalize'
+          print *, 'Error in ESMF_Finalize'
+          stop 1
        end if
     end if
   end subroutine unittest_finalize_esmf
