@@ -554,8 +554,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 
 <!-- <fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.1.0_14pft_c241003.nc</fates_paramfile> -->
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.1.0_14pft_c250131_megan_drydep.nc</fates_paramfile>
-
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.1.0_14pft_c250131_megan_drydep_revert.nc</fates_paramfile>
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
 <!-- ================================================================== -->
