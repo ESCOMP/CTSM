@@ -1,4 +1,4 @@
-module CLMFatesInterfaceMod
+1;95;0cmodule CLMFatesInterfaceMod
 
    ! -------------------------------------------------------------------------------------
    ! This module contains various functions and definitions to aid in the
@@ -2575,16 +2575,12 @@ module CLMFatesInterfaceMod
           c = this%f2hmap(nc)%fcolumn(s)
           g = col%gridcell(c)
           
-          ! for the bareground patches
-          wesley_veg_index_patch(col%patchi(c)+1:col%patchf(c)) = 0
-          wesley_season_index_patch(col%patchi(c)+1:col%patchf(c)) = 0
 
           do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
              ! for the vegetated patches
              p = ifp+col%patchi(c)
              wesley_veg_index_patch(p) = this%fates(nc)%bc_out(s)%wesley_pft_label_pa(ifp)
              wesley_season_index_patch(p) = this%fates(nc)%bc_out(s)%drydep_season_pa(ifp)
-
           end do
        end do
      end associate
