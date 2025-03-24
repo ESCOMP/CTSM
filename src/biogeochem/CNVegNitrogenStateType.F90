@@ -21,14 +21,20 @@ module CNVegNitrogenStateType
   use CNSpeciesMod   , only : CN_SPECIES_N
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
   use CropReprPoolsMod                       , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
+  use ncdio_pio
   !
   ! !PUBLIC TYPES:
   implicit none
 
   private
 
-
+  type :: cnveg_nstate_params_type
+     real(r8) :: leafcn_co2_base  ! ppm CO2 for target leaf CN scaling
+     real(r8) :: leafcn_co2_slope  ! CO2 effects on target leaf CN scaling (unitless)
+  end type cnveg_nstate_params_type
   !
+  type(cnveg_nstate_params_type), public, protected :: params_inst  ! params_inst is populated in readParams
+
   type, public :: cnveg_nitrogenstate_type
 
      real(r8), pointer :: leafcn_patch                        (:) ! patch leafcn
@@ -220,6 +226,7 @@ module CNVegNitrogenStateType
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
+     procedure , private :: ReadParams
      procedure , public  :: time_evolv_leafcn  ! updates time-evolving leafcn
 
   end type cnveg_nitrogenstate_type
@@ -234,10 +241,11 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds,  &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-       deadstemc_patch, alloc_full_veg)
+       deadstemc_patch, alloc_full_veg, params_ncid)
 
     class(cnveg_nitrogenstate_type)   :: this
     type(bounds_type) , intent(in)    :: bounds  
+    type(file_desc_t) , intent(inout) :: params_ncid  ! pio netCDF file id
     real(r8)          , intent(in)    :: leafc_patch         (:) !(begp:)
     real(r8)          , intent(in)    :: leafc_storage_patch (:) !(begp:)
     real(r8)          , intent(in)    :: frootc_patch        (:) !(begp:)     
@@ -251,6 +259,7 @@ contains
        call this%InitCold ( bounds, &
             leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
     end if
+    call this%ReadParams( params_ncid )
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -1118,7 +1127,6 @@ contains
     !
     ! !USES:
     use restUtilMod
-    use ncdio_pio
     use clm_varctl             , only : spinup_state, use_cndv
     use clm_time_manager       , only : get_nstep, is_restart
     use clm_varctl             , only : MM_Nuptake_opt   
@@ -2297,6 +2305,32 @@ contains
   end subroutine Summary_nitrogenstate
 
   !-----------------------------------------------------------------------
+  subroutine ReadParams ( this, ncid )
+    !
+    ! !USES:
+    use paramUtilMod, only: readNcdioScalar
+
+    implicit none
+
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) :: this
+    type(file_desc_t), intent(inout) :: ncid  ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    ! read in parameters
+
+    ! read in the scalar parameters
+
+    ! ppm CO2 for target leaf CN scaling (ppmv)
+    call readNcdioScalar(ncid, 'leafcn_co2_base', sourcefile, params_inst%leafcn_co2_base)
+    ! CO2 effects on target leaf CN scaling (unitless)
+    call readNcdioScalar(ncid, 'leafcn_co2_slope', sourcefile, params_inst%leafcn_co2_slope)
+
+  end subroutine ReadParams
+
+  !-----------------------------------------------------------------------
   subroutine time_evolv_leafcn(this, bounds, atm2lnd_inst)
     !
     ! AUTHOR: slevis
@@ -2321,11 +2355,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g, l, c, p  ! indices
     real(r8) :: co2_ppmv  ! atm co2 concentration
-    ! Could use 355 value from clm_varctl.F90 to avoid this hardwiring?
-    real(r8), parameter :: co2_base = 310._r8  ! units ppmv
-    real(r8), parameter :: cn_slope = 0._r8
-
-    character(len=*), parameter :: subname = 'time_evolv_leafcn'
     !-----------------------------------------------------------------------
 
     if (is_first_step()) then
@@ -2340,7 +2369,7 @@ contains
           co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
                                atm2lnd_inst%forc_pbot_downscaled_col(c)
           this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
-             max(cn_slope * log(co2_ppmv / co2_base), 0._r8)
+             max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
        end if
     end do
 
@@ -2393,8 +2422,6 @@ contains
     real(r8) :: seed_leafn_storage_patch(bounds%begp:bounds%endp)
     real(r8) :: seed_leafn_xfer_patch(bounds%begp:bounds%endp)
     real(r8) :: seed_deadstemn_patch(bounds%begp:bounds%endp)
-
-    character(len=*), parameter :: subname = 'DynamicPatchAdjustments'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
