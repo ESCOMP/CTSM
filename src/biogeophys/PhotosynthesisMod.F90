@@ -1382,7 +1382,6 @@ contains
     associate(                                                 &
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
 	 crop       => pftcon%crop                           , & ! Input:  crop or not (0 =not crop and 1 = crop)
-         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_patch,  & ! Input:  leaf C:N (gC/gN)
          leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
@@ -1552,7 +1551,7 @@ contains
          if (.not. lnc_opt) then
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
            if (use_cn) then
-              leafcn_local = leafcn_t_evolving(p)
+              leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
            else
               leafcn_local = leafcn(ivt(p))
            end if
@@ -2949,7 +2948,6 @@ contains
          tsai         => canopystate_inst%tsai_patch         , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
          c3psn      => pftcon%c3psn                          , & ! Input:  photosynthetic pathway: 0. = c4, 1. = c3
          crop       => pftcon%crop                           , & ! Input:  crop or not (0 =not crop and 1 = crop)
-         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_patch, & ! Input:  leaf C:N (gC/gN)
          leafcn     => pftcon%leafcn                         , & ! Input:  leaf C:N (gC/gN)
          flnr       => pftcon%flnr                           , & ! Input:  fraction of leaf N in the Rubisco enzyme (gN Rubisco / gN leaf)
          fnitr      => pftcon%fnitr                          , & ! Input:  foliage nitrogen limitation factor (-)
@@ -3172,7 +3170,7 @@ contains
 
          if (.not. lnc_opt) then
             if (use_cn) then
-               leafcn_local = leafcn_t_evolving(p)
+               leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
             else
                leafcn_local = leafcn(ivt(p))
             end if
