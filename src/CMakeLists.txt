@@ -25,8 +25,13 @@ find_package(ESMF REQUIRED)
 # This adds include directories needed for ESMF
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ESMF_F90COMPILEPATHS} ")
 # This (which is *not* done in the share CMakeLists.txt) adds all directories and
-# libraries needed when linking ESMF, including any dependencies of ESMF (but it does
-# *not* include the "-lesmf" itself).
+# libraries needed when linking ESMF, including any dependencies of ESMF. (But note that
+# this does *not* include the "-lesmf" itself). In particular, note that this includes any
+# link flags needed to link against PIO, which is needed on some systems (including
+# derecho); bringing in these PIO-related link flags via this ESMF mechanism allows us to
+# avoid explicitly including PIO as a link library, which wouldn't work on systems where
+# there is no separate PIO library and instead ESMF is built with its internal PIO
+# library.
 link_libraries(${ESMF_INTERFACE_LINK_LIBRARIES})
 
 # Add source directories from other share code (csm_share, etc.). This should be
@@ -70,10 +75,10 @@ foreach (sourcefile ${share_sources})
   endif()
 
   # Remove shr_pio_mod from share_sources. This is needed to avoid an explicit dependency
-  # on PIO. It appears that this removal is needed on some systems but not on others: the
-  # unit test build works without this removal on a Mac with a pre-built PIO library, but
-  # I think didn't work on a Mac without a pre-built PIO (where ESMF was built with its
-  # internal PIO).
+  # on PIO. This removal is needed on some systems but not on others: the unit test build
+  # works without this removal on a Mac with a pre-built PIO library, but failed (with
+  # error message, "Cannot open module file 'pio.mod'") on a Mac without a pre-built PIO
+  # (where ESMF was built with its internal PIO).
   string(REGEX MATCH "shr_pio_mod.F90" match_found ${sourcefile})
   if(match_found)
     list(REMOVE_ITEM share_sources ${sourcefile})
