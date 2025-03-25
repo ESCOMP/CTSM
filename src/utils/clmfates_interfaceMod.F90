@@ -1,4 +1,4 @@
-1;95;0cmodule CLMFatesInterfaceMod
+module CLMFatesInterfaceMod
 
    ! -------------------------------------------------------------------------------------
    ! This module contains various functions and definitions to aid in the
@@ -318,6 +318,7 @@
      integer                                        :: pass_use_fixed_biogeog
      integer                                        :: pass_use_nocomp
      integer                                        :: pass_use_sp
+     integer                                        :: pass_use_drydep
      integer                                        :: pass_masterproc
      integer                                        :: pass_use_luh2
      logical                                        :: verbose_output
@@ -354,14 +355,14 @@
         else
            pass_use_sp = 0
         end if
-        call set_fates_ctrlparms('use_sp',ival=pass_sp)
+        call set_fates_ctrlparms('use_sp',ival=pass_use_sp)
 
         if(n_drydep>0) then
-           pass_drydep = 1
+           pass_use_drydep = 1
         else
-           pass_drydep = 0
+           pass_use_drydep = 0
         endif
-        call set_fates_ctrlparms('use_drydep',ival=pass_drydep)
+        call set_fates_ctrlparms('use_drydep',ival=pass_use_drydep)
 
         if(masterproc)then
            pass_masterproc = 1
