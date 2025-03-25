@@ -1370,40 +1370,38 @@ contains
     ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
     ! use_fates) then statement ... double check if this is required and why
 
-    if (nstep > 0) then
-       call t_startf('accum')
+    call t_startf('accum')
 
-       call atm2lnd_inst%UpdateAccVars(bounds_proc)
+    call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
-       call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
+    call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
 
-       call canopystate_inst%UpdateAccVars(bounds_proc)
+    call canopystate_inst%UpdateAccVars(bounds_proc)
 
-       call water_inst%UpdateAccVars(bounds_proc)
+    call water_inst%UpdateAccVars(bounds_proc)
 
-       call energyflux_inst%UpdateAccVars(bounds_proc)
+    call energyflux_inst%UpdateAccVars(bounds_proc)
 
-       ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
-       ! compiling this threaded, I needed to change the dummy arguments to be
-       ! pointers, and get rid of the explicit bounds in the subroutine call.
-       ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-       !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-       !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-       call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-            t_a10_patch=temperature_inst%t_a10_patch, &
-            t_ref2m_patch=temperature_inst%t_ref2m_patch)
+    ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+    ! compiling this threaded, I needed to change the dummy arguments to be
+    ! pointers, and get rid of the explicit bounds in the subroutine call.
+    ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+    !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+    !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+    call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+         t_a10_patch=temperature_inst%t_a10_patch, &
+         t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-       if (use_crop) then
-          call crop_inst%CropUpdateAccVars(bounds_proc, &
-               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
-       end if
-
-       if(use_fates) then
-          call clm_fates%UpdateAccVars(bounds_proc)
-       end if
-
-       call t_stopf('accum')
+    if (use_crop) then
+       call crop_inst%CropUpdateAccVars(bounds_proc, &
+            temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
     end if
+
+    if(use_fates) then
+       call clm_fates%UpdateAccVars(bounds_proc)
+    end if
+
+    call t_stopf('accum')
 
     ! ============================================================================
     ! Update history buffer
