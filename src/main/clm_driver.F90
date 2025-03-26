@@ -171,9 +171,11 @@ contains
 
     ! -------------------------------------------------
     ! Obtain updated values of time-evolving parameters
+    !
     ! As of ctsm5.4
-    ! - We have this capability for leafcn by calculating this parameter in subroutine time_evolv_leafcn
-    ! - We default the time evolving leafcn calculation to leafcn's paramfile values
+    ! - We have this capability for leafcn by calculating leafcn_t_evolving_patch in subr. time_evolv_leafcn
+    ! - leafcn_t_evolving_patch's calculation defaults to leafcn's paramfile values
+    ! - This needs to be called before calling dynSubgrid_driver
     ! -------------------------------------------------
     if (use_cn) then
        call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
