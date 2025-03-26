@@ -2328,11 +2328,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Update time-evolving parameters
-    ! In the current implementation, I call this subroutine from clm_drv
-    ! first thing, before anything else. Hence I allocate leafcn_t_evolving_patch
-    ! to memory if_first_step here to prevent an error in some tests.
-    ! I allocate again in InitAllocate to prevent a similar error in
-    ! InitHistory in other tests.
     !
     ! Calculate time evolving leafcn from co2_ppmv and three paramfile
     ! parameters. Of the three parameters, leafcn_co2_slope is set to 0
@@ -2352,9 +2347,6 @@ contains
     real(r8) :: co2_ppmv  ! atm co2 concentration
     !-----------------------------------------------------------------------
 
-    if (is_first_step()) then
-       allocate(this%leafcn_t_evolving_patch(bounds%begp:bounds%endp)); this%leafcn_t_evolving_patch(:) = pftcon%leafcn(patch%itype(:))
-    end if
     ! Loop to get leafcn_col
     do p = bounds%begp, bounds%endp
        c = patch%column(p)
