@@ -37,7 +37,7 @@ module CNVegNitrogenStateType
 
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: leafcn_patch                        (:) ! patch leafcn
+     real(r8), pointer :: leafcn_patch(:) ! time evolving leafcn calculated in subroutine time_evolv_leafcn from co2_ppmv and three paramfile parameters; of the three parameters, leafcn_co2_slope is set to 0 (as of ctsm5.4) so leafcn_patch defaults to the values of paramfile parameter leafcn
      real(r8), pointer :: reproductiven_patch               (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
      real(r8), pointer :: reproductiven_storage_patch       (:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
      real(r8), pointer :: reproductiven_xfer_patch          (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
@@ -2441,7 +2441,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
-         leafcn_patch = this%leafcn_patch(begp:endp), &
+         leafcn_t_evolving = this%leafcn_patch(begp:endp), &
          species = CN_SPECIES_N, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &

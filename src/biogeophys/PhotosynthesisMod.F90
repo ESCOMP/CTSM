@@ -1550,9 +1550,9 @@ contains
 
          if (.not. lnc_opt) then
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
-           if (use_cn) then
+           if (use_cn) then  ! use the leafcn calculated in subroutine time_evolv_leafcn
               leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
-           else
+           else  ! use the leafcn prescribed in the paramfile
               leafcn_local = leafcn(ivt(p))
            end if
            if ( (slatop(ivt(p)) * leafcn_local) <= 0.0_r8)then
@@ -3169,9 +3169,9 @@ contains
          p = filterp(f)
 
          if (.not. lnc_opt) then
-            if (use_cn) then
+            if (use_cn) then  ! use the leafcn calculated in subroutine time_evolv_leafcn
                leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
-            else
+            else  ! use the leafcn prescribed in the paramfile
                leafcn_local = leafcn(ivt(p))
             end if
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)

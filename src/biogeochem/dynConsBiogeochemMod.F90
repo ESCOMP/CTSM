@@ -445,7 +445,7 @@ contains
          patch_state_updater, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &
-         leafcn_patch = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
+         leafcn_t_evolving = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
          conv_cflux = conv_cflux(begp:endp), &
          wood_product_cflux = wood_product_cflux(begp:endp), &
          crop_product_cflux = crop_product_cflux(begp:endp), &
@@ -469,7 +469,7 @@ contains
             patch_state_updater, &
             leafc_seed = leafc_seed, &
             deadstemc_seed = deadstemc_seed, &
-            leafcn_patch = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
+            leafcn_t_evolving = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
             conv_cflux = conv_c13flux(begp:endp), &
             wood_product_cflux = wood_product_c13flux(begp:endp), &
             crop_product_cflux = crop_product_c13flux(begp:endp), &
@@ -495,7 +495,7 @@ contains
             patch_state_updater, &
             leafc_seed = leafc_seed, &
             deadstemc_seed = deadstemc_seed, &
-            leafcn_patch = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
+            leafcn_t_evolving = cnveg_nitrogenstate_inst%leafcn_patch(begp:endp), &
             conv_cflux = conv_c14flux(begp:endp), &
             wood_product_cflux = wood_product_c14flux(begp:endp), &
             crop_product_cflux = crop_product_c14flux(begp:endp), &

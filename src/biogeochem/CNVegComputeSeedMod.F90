@@ -39,7 +39,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeSeedAmounts(bounds, &
        num_soilp_with_inactive, filter_soilp_with_inactive, &
-       leafcn_patch, &
+       leafcn_t_evolving, &
        species, &
        leafc_seed, deadstemc_seed, &
        leaf_patch, leaf_storage_patch, leaf_xfer_patch, &
@@ -67,7 +67,7 @@ contains
     integer                        , intent(in) :: species                       ! which C/N species we're operating on; should be one of the values in CNSpeciesMod
     real(r8)                       , intent(in) :: leafc_seed                    ! seed amount for leaf C
     real(r8)                       , intent(in) :: deadstemc_seed                ! seed amount for deadstem C
-    real(r8)                       , intent(in) :: leafcn_patch( bounds%begp: )   ! current leaf C:N (gC/gN)
+    real(r8)                       , intent(in) :: leafcn_t_evolving( bounds%begp: )  ! current leaf C:N (gC/gN)
     real(r8)                       , intent(in) :: leaf_patch( bounds%begp: )   ! current leaf C or N content (g/m2)
     real(r8)                       , intent(in) :: leaf_storage_patch( bounds%begp: ) ! current leaf C or N storage content (g/m2)
     real(r8)                       , intent(in) :: leaf_xfer_patch( bounds%begp: )    ! current leaf C or N xfer content (g/m2)
@@ -121,7 +121,7 @@ contains
           my_deadstem_seed = 0._r8
 
           pft_type = patch%itype(p)
-          leafcn = leafcn_patch(p)
+          leafcn = leafcn_t_evolving(p)
 
           call LeafProportions( &
                ignore_current_state = ignore_current_state_patch(p), &

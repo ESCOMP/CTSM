@@ -171,6 +171,9 @@ contains
 
     ! -------------------------------------------------
     ! Obtain updated values of time-evolving parameters
+    ! As of ctsm5.4
+    ! - We have this capability for leafcn by calculating this parameter in subroutine time_evolv_leafcn
+    ! - We default the time evolving leafcn calculation to leafcn's paramfile values
     ! -------------------------------------------------
     if (use_cn) then
        call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &

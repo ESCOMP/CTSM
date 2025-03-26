@@ -178,7 +178,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => cnveg_nitrogenstate_inst%leafcn_patch                     , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving            => cnveg_nitrogenstate_inst%leafcn_patch                     , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -275,7 +275,7 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(p)
+         cnl  = leafcn_t_evolving(p)
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
@@ -551,7 +551,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn                => cnveg_nitrogenstate_inst%leafcn_patch            , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     => cnveg_nitrogenstate_inst%leafcn_patch            , & ! Input:  leaf C:N (gC/gN)
          frootcn               => pftcon%frootcn                                   ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn              => pftcon%livewdcn                                  , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          graincn               => pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)
@@ -644,7 +644,7 @@ contains
                      if (grain_flag(p) == 0._r8)then
                         if(.not.use_fun) then
                            t1 = 1 / dt
-                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(p)) - (leafc(p) / &
+                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn_t_evolving(p)) - (leafc(p) / &
                                 fleafcn(ivt(p))))
                            livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
                                 fstemcn(ivt(p))))
