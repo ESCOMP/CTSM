@@ -216,7 +216,7 @@ module CNFUNMod
 
 ! Set local pointers
   associate(ivt                    => patch%itype                                          , & ! Input:  [integer  (:)   ]  p
-         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_patch                , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch     , & ! Input:  leaf C:N (gC/gN)
          leafcn_offset          => cnveg_state_inst%leafcn_offset_patch                 , & ! Output:
          !  [real(r8) (:)   ]  Leaf C:N used by FUN  
          leafc_storage_xfer_acc => cnveg_carbonstate_inst%leafc_storage_xfer_acc_patch  , & ! Output: [real(r8) (:)
@@ -573,7 +573,7 @@ module CNFUNMod
   !--------------------------------------------------------------------
   !---------------------------------
   associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
-         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_patch                , & ! Input:   leaf C:N (gC/gN)
+         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch     , & ! Input:   leaf C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress

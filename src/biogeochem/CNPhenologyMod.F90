@@ -2075,7 +2075,7 @@ contains
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
          
          leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)
-         leafcn_t_evolving =>    cnveg_nitrogenstate_inst%leafcn_patch         , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving =>    cnveg_nitrogenstate_inst%leafcn_t_evolving_patch, & ! Input:  leaf C:N (gC/gN)
          manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
          minplanttemp      =>    pftcon%minplanttemp                           , & ! Input:  
          planttemp         =>    pftcon%planttemp                              , & ! Input:  
@@ -3388,7 +3388,7 @@ contains
     associate(                                                                           & 
          ivt                   =>    patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         leafcn_t_evolving     =>    cnveg_nitrogenstate_inst%leafcn_patch             , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     =>    cnveg_nitrogenstate_inst%leafcn_t_evolving_patch  , & ! Input:  leaf C:N (gC/gN)
          
          biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-)
          repr_structure_harvfrac =>  pftcon%repr_structure_harvfrac                    , & ! Input:  fraction of each reproductive structure component that is harvested and sent to the crop products pool
@@ -3888,7 +3888,7 @@ contains
     associate(                                                                     & 
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         leafcn_t_evolving =>    cnveg_nitrogenstate_inst%leafcn_patch           , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving =>    cnveg_nitrogenstate_inst%leafcn_t_evolving_patch, & ! Input:  leaf C:N (gC/gN)
          lflitcn           =>    pftcon%lflitcn                                  , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn           =>    pftcon%frootcn                                  , & ! Input:  fine root C:N (gC/gN)                             
 

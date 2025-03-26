@@ -466,7 +466,7 @@ contains
          croot_stem  => pftcon%croot_stem                      ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf   => pftcon%stem_leaf                       ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd     => pftcon%flivewd                         ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_patch,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch,  & ! Input:  leaf C:N (gC/gN)
          frootcn     => pftcon%frootcn                         ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn    => pftcon%livewdcn                        ,  & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn    => pftcon%deadwdcn                        ,  & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)

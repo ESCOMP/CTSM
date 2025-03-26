@@ -1551,7 +1551,7 @@ contains
          if (.not. lnc_opt) then
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
            if (use_cn) then  ! use the leafcn calculated in subroutine time_evolv_leafcn
-              leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
+              leafcn_local = cnveg_nitrogenstate_inst%leafcn_t_evolving_patch(p)
            else  ! use the leafcn prescribed in the paramfile
               leafcn_local = leafcn(ivt(p))
            end if
@@ -3170,7 +3170,7 @@ contains
 
          if (.not. lnc_opt) then
             if (use_cn) then  ! use the leafcn calculated in subroutine time_evolv_leafcn
-               leafcn_local = cnveg_nitrogenstate_inst%leafcn_patch(p)
+               leafcn_local = cnveg_nitrogenstate_inst%leafcn_t_evolving_patch(p)
             else  ! use the leafcn prescribed in the paramfile
                leafcn_local = leafcn(ivt(p))
             end if

@@ -37,7 +37,7 @@ module CNVegNitrogenStateType
 
   type, public :: cnveg_nitrogenstate_type
 
-     real(r8), pointer :: leafcn_patch(:) ! time evolving leafcn calculated in subroutine time_evolv_leafcn from co2_ppmv and three paramfile parameters; of the three parameters, leafcn_co2_slope is set to 0 (as of ctsm5.4) so leafcn_patch defaults to the values of paramfile parameter leafcn
+     real(r8), pointer :: leafcn_t_evolving_patch             (:) ! (gC/gN) time evolving leafcn
      real(r8), pointer :: reproductiven_patch               (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
      real(r8), pointer :: reproductiven_storage_patch       (:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
      real(r8), pointer :: reproductiven_xfer_patch          (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
@@ -350,7 +350,7 @@ contains
     allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
 
-    allocate(this%leafcn_patch                           (begp:endp)) ; this%leafcn_patch                        (:) = nan
+    allocate(this%leafcn_t_evolving_patch                (begp:endp)) ; this%leafcn_t_evolving_patch             (:) = nan
     if(use_matrixcn)then
        allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
        allocate(this%leafn0_storage_patch                (begp:endp)) ; this%leafn0_storage_patch                (:) = nan     
@@ -505,10 +505,10 @@ contains
     ! patch state variables 
     !-------------------------------
 
-    this%leafcn_patch(begp:endp) = spval
+    this%leafcn_t_evolving_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
         avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
-        ptr_patch=this%leafcn_patch)
+        ptr_patch=this%leafcn_t_evolving_patch)
     
     if (use_crop) then
        this%reproductiven_patch(begp:endp,:) = spval
@@ -845,7 +845,7 @@ contains
 
     do p = bounds%begp,bounds%endp
 
-       this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
+       this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p))
 
        l = patch%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -866,11 +866,11 @@ contains
                 end if
              end if 
           else
-             this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_patch(p)
-             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_patch(p)
+             this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
              if(use_matrixcn)then
-                this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_patch(p)
-                this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_patch(p)
+                this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
              end if
              if (MM_Nuptake_opt .eqv. .true.) then  
                 this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
@@ -1833,20 +1833,20 @@ contains
                    end if
                 end if 
              else
-                ! max in next line ensures leafcn_patch equals at least the
+                ! max in next line ensures leafcn_t_evolving_patch equals at least the
                 ! leafcn for bare ground (noveg) to avoid div by 0 when the
-                ! initial file doesn't include leafcn_patch. In that situation
+                ! initial file doesn't include leafcn_t_evolving_patch. In that situation
                 ! it seems, however, like a better initial condition to set
-                ! this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p))
-                ! ...but leafcn_patch does get updated before anything else
+                ! this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p))
+                ! ...but leafcn_t_evolving_patch does get updated before anything else
                 ! in clm_driver, so either option may give the same answer.
-                this%leafcn_patch(p)                          = max(pftcon%leafcn(noveg), &
-                                                                    this%leafcn_patch(p))
-                this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_patch(p)
-                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_patch(p)
+                this%leafcn_t_evolving_patch(p)               = max(pftcon%leafcn(noveg), &
+                                                                this%leafcn_t_evolving_patch(p))
+                this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
                 if(use_matrixcn)then
-                   this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_patch(p)
-                   this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_patch(p)
+                   this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                   this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
                 end if
                 if (MM_Nuptake_opt .eqv. .true.) then  
                    this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
@@ -2003,7 +2003,7 @@ contains
     do fi = 1,num_patch
        i = filter_patch(fi)
 
-       this%leafcn_patch(i)                           = value_patch
+       this%leafcn_t_evolving_patch(i)                = value_patch
        this%leafn_patch(i)                            = value_patch
        this%leafn_storage_patch(i)                    = value_patch
        this%leafn_xfer_patch(i)                       = value_patch
@@ -2338,11 +2338,15 @@ contains
     ! !DESCRIPTION:
     ! Update time-evolving parameters
     ! In the current implementation, I call this subroutine from clm_drv
-    ! first thing, before anything else. Hence I allocate leafcn_patch
+    ! first thing, before anything else. Hence I allocate leafcn_t_evolving_patch
     ! to memory if_first_step here to prevent an error in some tests.
     ! I allocate again in InitAllocate to prevent a similar error in
     ! InitHistory in other tests.
     !
+    ! Calculate time evolving leafcn from co2_ppmv and three paramfile
+    ! parameters. Of the three parameters, leafcn_co2_slope is set to 0
+    ! (as of ctsm5.4) so leafcn_t_evolving_patch defaults to the values of
+    ! paramfile parameter leafcn
     ! !USES:
     use pftconMod, only : pftcon
     use clm_time_manager, only : is_first_step
@@ -2358,7 +2362,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (is_first_step()) then
-       allocate(this%leafcn_patch(bounds%begp:bounds%endp)); this%leafcn_patch(:) = pftcon%leafcn(patch%itype(:))
+       allocate(this%leafcn_t_evolving_patch(bounds%begp:bounds%endp)); this%leafcn_t_evolving_patch(:) = pftcon%leafcn(patch%itype(:))
     end if
     ! Loop to get leafcn_col
     do p = bounds%begp, bounds%endp
@@ -2368,7 +2372,7 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
                                atm2lnd_inst%forc_pbot_downscaled_col(c)
-          this%leafcn_patch(p) = pftcon%leafcn(patch%itype(p)) + &
+          this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p)) + &
              max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
        end if
     end do
@@ -2441,7 +2445,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
-         leafcn_t_evolving = this%leafcn_patch(begp:endp), &
+         leafcn_t_evolving = this%leafcn_t_evolving_patch(begp:endp), &
          species = CN_SPECIES_N, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &
