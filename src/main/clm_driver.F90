@@ -178,8 +178,14 @@ contains
     ! - This needs to be called before calling dynSubgrid_driver
     ! -------------------------------------------------
     if (use_cn) then
-       call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
-          bounds_proc, atm2lnd_inst)
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1, nclumps
+          call get_clump_bounds(nc, bounds_clump)
+
+          call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
+             bounds_clump, atm2lnd_inst)
+       end do
+       !$OMP END PARALLEL DO
     end if
 
     ! ========================================================================
