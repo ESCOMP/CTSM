@@ -1833,15 +1833,6 @@ contains
                    end if
                 end if 
              else
-                ! max in next line ensures leafcn_t_evolving_patch equals at least the
-                ! leafcn for bare ground (noveg) to avoid div by 0 when the
-                ! initial file doesn't include leafcn_t_evolving_patch. In that situation
-                ! it seems, however, like a better initial condition to set
-                ! this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p))
-                ! ...but leafcn_t_evolving_patch does get updated before anything else
-                ! in clm_driver, so either option may give the same answer.
-                this%leafcn_t_evolving_patch(p)               = max(pftcon%leafcn(noveg), &
-                                                                this%leafcn_t_evolving_patch(p))
                 this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
                 this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
                 if(use_matrixcn)then
