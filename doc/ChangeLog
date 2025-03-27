@@ -1,4 +1,76 @@
 ===============================================================
+Tag name: ctsm5.3.034
+Originator(s): rgknox (Ryan Knox)
+Date: Thu Mar 27 16:03:56 MDT 2025
+One-line Summary: Fixes to enable passing FATES two-stream ERS and ERI restart tests.
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes refactors the calculation of zenith angles by putting them
+into a separate call, and enables FATES to make updates to its albedo solve
+on all timesteps regardless of the doalb flag. The FATES side of the code
+will not perform calculations unless the zenith angle is positive anyway.
+These refactors were necessary to have restart tests passing for FATES
+when two-stream radiation is enabled. Further, the zenith angle boundary
+condition is now passed to fates at the column level, which is more
+scale consistent.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+This set of changes to ctsm code does not make any significant changes that affect model results.
+This set of changes does update the pointer to the FATES tag, which since the previous
+ctsm api change with fates, has improved code stability for photosynthesis. Those
+changes result in non-trivial but non-significant deviations in answers in FATES
+configurations.
+
+There are no changes to non-FATES answers.
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+ Fixes 2903: FATES doesn't work in branch runs
+ Fixes 2325: ERS FatesColdTwoStreamNoCompFixedBioGeo Restart Test Fails
+
+Notes of particular relevance for users
+---------------------------------------
+
+This set of changes is a necessary milestone towards FATES using
+two-stream radiation as its default configuration.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Added ERS_D_Ld20_f45_f45_mg37_I2000Clm50FatesRs_FatesColdTwoStreamNoCompFixedBioGeo to aux_clm
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK (new passes)
+    izumi ------- OK
+
+Answer changes
+--------------
+
+As mentioned above, answers only changed for FATES.
+Answers changed trivially due to zenith angle coupling changes and updates to the FATES tag.
+
+
+Other details
+-------------
+
+The FATES git-fleximod pointer was updated to sci.1.82.3_api.39.0.0
+
+Pull Requests that document the changes (include PR ids):
+2949: https://github.com/ESCOMP/CTSM/pull/2949
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.033
 Originator(s): wwieder, slevis (Will Wieder, Sam Levis, UCAR/TSS)
 Date: Wed 19 Mar 2025 02:43:55 PM MDT
