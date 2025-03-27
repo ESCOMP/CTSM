@@ -18,6 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm.args_utils import plon_type, plat_type
 from ctsm import unit_testing
+from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
 
 # pylint: disable=invalid-name
 
@@ -40,8 +41,13 @@ class TestArgsPlon(unittest.TestCase):
         """
         Test of negative plon between -180 and 0
         """
-        result = plon_type(-30)
-        self.assertEqual(result, 330.0)
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            plon_type(-30)
+
+        # result = plon_type(-30)
+        # self.assertEqual(result, 330.0)
 
     # -- > 360
     def test_plonType_outOfBounds_positive(self):
@@ -64,8 +70,13 @@ class TestArgsPlon(unittest.TestCase):
         """
         Test for when plon values are  -180
         """
-        result = plon_type(-180)
-        self.assertEqual(result, 180.0)
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            plon_type(-180)
+
+        # result = plon_type(-180)
+        # self.assertEqual(result, 180.0)
 
     # -- = 0
     def test_plonType_zero(self):
