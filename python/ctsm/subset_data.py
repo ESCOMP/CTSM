@@ -520,6 +520,7 @@ def check_args(args):
                     \n ------------------------------------
                     \nERROR: For regional cases, you can not subset datm data
                     \n (see https://github.com/ESCOMP/CTSM/issues/2110)
+                    \n but you can just use the global data instead
                     """
         )
         raise NotImplementedError(None, err_msg)
