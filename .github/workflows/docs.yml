@@ -1,0 +1,75 @@
+name: docs
+
+on:
+  push:
+    paths:
+      - 'doc/**'
+
+  pull_request:
+    paths:
+      - 'doc/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+
+  test-build-makefile:
+    if: ${{ always() }}
+    name: Test building documentation with makefile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Install python 3.13.2
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13.2'
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          pip install -r doc/ctsm-docs_container/requirements.txt
+      # Build documentation under ${PWD}/_build
+      - name: Build Sphinx docs with makefile
+        run: |
+          make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+
+  test-doc-builder:
+    if: ${{ always() }}
+    name: Test building documentation with doc-builder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Install python 3.13.2
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13.2'
+      # https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          pip install -r doc/ctsm-docs_container/requirements.txt
+      # Build documentation under ${PWD}/_build
+      - name: Build Sphinx docs with doc-builder
+        run: |
+          bin/git-fleximod update --optional && \
+          cd doc && ./build_docs -b ${PWD}/_build -c
