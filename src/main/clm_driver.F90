@@ -902,7 +902,7 @@ contains
             water_inst, soilhydrology_inst, &
             saturated_excess_runoff_inst, &
             infiltration_excess_runoff_inst, &
-            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
+            aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst, glc_behavior)
 
        ! The following needs to be done after HydrologyNoDrainage (because it needs
        ! waterfluxbulk_inst%qflx_snwcp_ice_col), but before HydrologyDrainage (because
@@ -944,7 +944,7 @@ contains
             filter(nc)%num_lakenosnowc, filter(nc)%lakenosnowc,                              &
             scf_method, water_inst, &
             atm2lnd_inst, temperature_inst, soilstate_inst, &
-            energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
+            energyflux_inst, aerosol_inst, lakestate_inst, topo_inst, glc_behavior)
 
        !  Calculate column-integrated aerosol masses, and
        !  mass concentrations for radiative calculations and output

@@ -42,6 +42,7 @@ module SnowHydrologyMod
   use LakeCon         , only : lsadz
   use NumericsMod     , only : truncate_small_values_one_lev
   use WaterTracerUtils, only : CalcTracerFromBulk, CalcTracerFromBulkMasked
+  use glcBehaviorMod  , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -3119,7 +3120,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCapping(bounds, num_initc, filter_initc, num_snowc, filter_snowc, &
-       topo_inst, aerosol_inst, water_inst )
+       topo_inst, glc_behavior, aerosol_inst, water_inst )
     !
     ! !DESCRIPTION:
     ! Removes mass from bottom snow layer for columns that exceed the maximum snow depth.
@@ -3136,6 +3137,7 @@ contains
     integer                , intent(in)    :: num_snowc       ! number of column snow points in column filter
     integer                , intent(in)    :: filter_snowc(:) ! column filter for snow points
     class(topo_type)       , intent(in)    :: topo_inst
+    type(glc_behavior_type), intent(in)    :: glc_behavior
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(water_type)       , intent(inout) :: water_inst
     !
@@ -3152,6 +3154,8 @@ contains
     associate( &
          begc => bounds%begc, &
          endc => bounds%endc, &
+         begg => bounds%begg, &
+         endg => bounds%endg, &
 
          b_waterflux_inst  => water_inst%waterfluxbulk_inst, &
          b_waterstate_inst => water_inst%waterstatebulk_inst &
@@ -3183,6 +3187,7 @@ contains
          h2osno_total             = h2osno_total(begc:endc), &
          h2osoi_ice_bottom        = b_waterstate_inst%h2osoi_ice_col(begc:endc, 0), &
          h2osoi_liq_bottom        = b_waterstate_inst%h2osoi_liq_col(begc:endc, 0), &
+         do_reset_snow            = glc_behavior%do_reset_snow_grc(begg:endg), &
          ! Outputs
          snow_capping_filterc     = snow_capping_filterc, &
          rho_orig_bottom          = rho_orig_bottom(begc:endc), &
@@ -3286,7 +3291,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkFlux_SnowCappingFluxes(bounds, num_snowc, filter_snowc, &
-       dtime, dz_bottom, topo, h2osno_total, h2osoi_ice_bottom, h2osoi_liq_bottom, &
+       dtime, dz_bottom, topo, h2osno_total, h2osoi_ice_bottom, h2osoi_liq_bottom, do_reset_snow, &
        snow_capping_filterc, rho_orig_bottom, frac_adjust, &
        qflx_snwcp_ice, qflx_snwcp_liq, qflx_snwcp_discarded_ice, qflx_snwcp_discarded_liq)
     !
@@ -3307,6 +3312,7 @@ contains
     real(r8) , intent(in) :: h2osno_total( bounds%begc: )      ! total snow water (mm H2O)
     real(r8) , intent(in) :: h2osoi_ice_bottom( bounds%begc: ) ! ice lens in bottom snow layer (kg/m2)
     real(r8) , intent(in) :: h2osoi_liq_bottom( bounds%begc: ) ! liquid water in bottom snow layer (kg/m2)
+    logical  , intent(in) :: do_reset_snow( bounds%begg: )     ! whether reset_snow and reset_snow_glc apply to the given grid cell
 
     type(filter_col_type) , intent(out)   :: snow_capping_filterc                     ! column filter: columns undergoing snow capping
     real(r8)              , intent(inout) :: rho_orig_bottom( bounds%begc: )          ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno) (kg/m3)
@@ -3339,6 +3345,7 @@ contains
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_ice_bottom, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osoi_liq_bottom, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(do_reset_snow, 1) == bounds%endg), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(rho_orig_bottom, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(frac_adjust, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(qflx_snwcp_ice, 1) == bounds%endc), sourcefile, __LINE__)
@@ -3349,6 +3356,7 @@ contains
     call SnowCappingExcess(bounds, num_snowc, filter_snowc, &
          h2osno = h2osno_total(bounds%begc:bounds%endc), &
          topo = topo(bounds%begc:bounds%endc), &
+         do_reset_snow = do_reset_snow(bounds%begg:bounds%endg), &
          h2osno_excess = h2osno_excess(bounds%begc:bounds%endc), &
          apply_runoff = apply_runoff(bounds%begc:bounds%endc))
 
@@ -3395,7 +3403,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SnowCappingExcess(bounds, num_snowc, filter_snowc, &
-       h2osno, topo, h2osno_excess, apply_runoff)
+       h2osno, topo, do_reset_snow, h2osno_excess, apply_runoff)
     !
     ! !DESCRIPTION:
     ! Determine the amount of excess snow that needs to be capped
@@ -3408,11 +3416,12 @@ contains
     integer  , intent(in)  :: filter_snowc(:)               ! column filter for snow points
     real(r8) , intent(in)  :: h2osno( bounds%begc: )        ! snow water (mm H2O)
     real(r8) , intent(in)  :: topo( bounds%begc: )          ! column surface height (m)
+    logical  , intent(in)  :: do_reset_snow( bounds%begg: ) ! whether reset_snow and reset_snow_glc apply to the given grid cell
     real(r8) , intent(out) :: h2osno_excess( bounds%begc: ) ! excess snow that needs to be capped (mm H2O)
     logical  , intent(out) :: apply_runoff( bounds%begc: )  ! whether capped snow should be sent to runoff; only valid where h2osno_excess > 0
     !
     ! !LOCAL VARIABLES:
-    integer :: fc, c, l
+    integer :: fc, c, l, g
     integer :: reset_snow_timesteps
     logical :: is_reset_snow_active  ! whether snow resetting is active in this time step for at least some points
 
@@ -3421,6 +3430,7 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(h2osno) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(topo) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(do_reset_snow) == (/bounds%endg/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(h2osno_excess) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(apply_runoff) == (/bounds%endc/)), sourcefile, __LINE__)
 
@@ -3456,17 +3466,20 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           l = col%landunit(c)
-          if ((lun%itype(l) /= istice) .and. &
-               reset_snow .and. &
-               (h2osno(c) > reset_snow_h2osno)) then
-             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
-             apply_runoff(c) = .false.
-          else if ((lun%itype(l) == istice) .and. &
-               reset_snow_glc .and. &
-               (h2osno(c) > reset_snow_h2osno) .and. &
-               (topo(c) <= reset_snow_glc_ela)) then
-             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
-             apply_runoff(c) = .false.
+          g = col%gridcell(c)
+          if (do_reset_snow(g)) then
+             if ((lun%itype(l) /= istice) .and. &
+                  reset_snow .and. &
+                  (h2osno(c) > reset_snow_h2osno)) then
+                h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+                apply_runoff(c) = .false.
+             else if ((lun%itype(l) == istice) .and. &
+                  reset_snow_glc .and. &
+                  (h2osno(c) > reset_snow_h2osno) .and. &
+                  (topo(c) <= reset_snow_glc_ela)) then
+                h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+                apply_runoff(c) = .false.
+             end if
           end if
        end do
     end if

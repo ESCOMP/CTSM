@@ -84,6 +84,9 @@ module glcBehaviorMod
      ! sent to the river model as ice (a crude parameterization of iceberg calving).
      logical, allocatable, public :: ice_runoff_melted_grc(:)
 
+     ! Whether reset_snow and reset_snow_glc apply to the given grid cell
+     logical, allocatable, public :: do_reset_snow_grc(:)
+
      ! ------------------------------------------------------------------------
      ! Private data
      ! ------------------------------------------------------------------------
@@ -357,6 +360,16 @@ contains
           this%collapse_to_atm_topo_grc(g) = .false.
           this%allow_multiple_columns_grc(g) = .true.
        end if
+
+       ! FIXME:(wjs, 2025-03-27) If we keep this behavior of having reset_snow depend on
+       ! the glacier region, then this should come from a new glacier region behavior
+       ! namelist variable rather than being hard-coded like it currently is
+       if (my_id == 2) then
+          ! Greenland
+          this%do_reset_snow_grc(g) = .true.
+       else
+          this%do_reset_snow_grc(g) = .false.
+       end if
     end do
 
   contains
@@ -562,6 +575,7 @@ contains
     allocate(this%melt_replaced_by_ice_grc(begg:endg)); this%melt_replaced_by_ice_grc(:) = .false.
     allocate(this%collapse_to_atm_topo_grc(begg:endg)); this%collapse_to_atm_topo_grc(:) = .false.
     allocate(this%ice_runoff_melted_grc(begg:endg)); this%ice_runoff_melted_grc(:) = .false.
+    allocate(this%do_reset_snow_grc(begg:endg)); this%do_reset_snow_grc(:) = .false.
 
   end subroutine InitAllocate
 
