@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.034
 Originator(s): rgknox (Ryan Knox)
-Date: Wed Mar 26 02:53:31 PM EDT 2025
+Date: Thu Mar 27 16:03:56 MDT 2025
 One-line Summary: Fixes to enable passing FATES two-stream ERS and ERI restart tests.
 
 Purpose and description of changes
@@ -32,8 +32,8 @@ Bugs fixed
 ----------
 
 List of CTSM issues fixed:
-2903: FATES doesn't work in branch runs
-2325: ERS FatesColdTwoStreamNoCompFixedBioGeo Restart Test Fails
+ Fixes 2903: FATES doesn't work in branch runs
+ Fixes 2325: ERS FatesColdTwoStreamNoCompFixedBioGeo Restart Test Fails
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -43,14 +43,8 @@ two-stream radiation as its default configuration.
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
-
-Added: ERS_D_Ld20_f45_f45_mg37_I2000Clm50FatesRs_FatesColdTwoStreamNoCompFixedBioGeo to aux_clm
+ Added ERS_D_Ld20_f45_f45_mg37_I2000Clm50FatesRs_FatesColdTwoStreamNoCompFixedBioGeo to aux_clm
 
 Testing summary:
 ----------------
