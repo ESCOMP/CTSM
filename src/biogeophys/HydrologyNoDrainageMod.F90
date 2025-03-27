@@ -29,6 +29,7 @@ Module HydrologyNoDrainageMod
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use CanopyStateType   , only : canopystate_type
+  use glcBehaviorMod    , only : glc_behavior_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
   use TopoMod, only : topo_type
@@ -141,7 +142,7 @@ contains
        atm2lnd_inst, soilstate_inst, energyflux_inst, temperature_inst, &
        water_inst, &
        soilhydrology_inst, saturated_excess_runoff_inst, infiltration_excess_runoff_inst, &
-       aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst)
+       aerosol_inst, canopystate_inst, scf_method, soil_water_retention_curve, topo_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! This is the main subroutine to execute the calculation of soil/snow
@@ -194,6 +195,7 @@ contains
     class(snow_cover_fraction_base_type), intent(in) :: scf_method
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     class(topo_type)   , intent(in)    :: topo_inst
+    type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,j,fc                    ! indices
@@ -385,7 +387,7 @@ contains
 
       ! Snow capping
       call SnowCapping(bounds, num_nolakec, filter_nolakec, num_snowc, filter_snowc, &
-           topo_inst, aerosol_inst, water_inst)
+           topo_inst, glc_behavior, aerosol_inst, water_inst)
 
       ! Natural compaction and metamorphosis.
       call SnowCompaction(bounds, num_snowc, filter_snowc, &

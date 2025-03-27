@@ -27,6 +27,7 @@ module LakeHydrologyMod
   use AerosolMod           , only : aerosol_type
   use EnergyFluxType       , only : energyflux_type
   use FrictionVelocityMod  , only : frictionvel_type
+  use glcBehaviorMod       , only : glc_behavior_type
   use LakeStateType        , only : lakestate_type
   use SoilStateType        , only : soilstate_type
   use TemperatureType      , only : temperature_type
@@ -57,7 +58,7 @@ contains
        num_shlakesnowc, filter_shlakesnowc, num_shlakenosnowc, filter_shlakenosnowc, &
        scf_method, water_inst, &
        atm2lnd_inst, temperature_inst, soilstate_inst, &
-       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst)
+       energyflux_inst, aerosol_inst, lakestate_inst, topo_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
@@ -106,6 +107,7 @@ contains
     type(aerosol_type)     , intent(inout) :: aerosol_inst
     type(lakestate_type)   , intent(inout) :: lakestate_inst
     class(topo_type)   , intent(in)    :: topo_inst
+    type(glc_behavior_type), intent(in)    :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer  :: p,fp,g,l,c,j,fc,jtop                            ! indices
@@ -411,7 +413,7 @@ contains
          atm2lnd_inst, aerosol_inst, water_inst)
 
     call SnowCapping(bounds, num_lakec, filter_lakec, num_shlakesnowc, filter_shlakesnowc, &
-         topo_inst, aerosol_inst, water_inst)
+         topo_inst, glc_behavior, aerosol_inst, water_inst)
 
     ! Natural compaction and metamorphosis.
 
