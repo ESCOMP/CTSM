@@ -3,6 +3,7 @@ This module includes the definition for the TowerSite class,
 which has NeonSite and Plumber2Site child classes. This class defines common
 functionalities that are in both NeonSite and Plumber2Site classes.
 """
+
 # -- Import libraries
 
 # -- standard libraries
@@ -29,6 +30,7 @@ from CIME.utils import safe_copy, expect, symlink_force
 
 logger = logging.getLogger(__name__)
 
+
 # pylint: disable=too-many-instance-attributes
 class TowerSite:
     """
@@ -43,6 +45,7 @@ class TowerSite:
     def __init__(
         self,
         tower_type,
+        *,
         name,
         start_year,
         end_year,
@@ -109,7 +112,7 @@ class TowerSite:
     # TODO: Refactor to shorten this so the disable can be removed
     # pylint: disable=too-many-statements
     def build_base_case(
-        self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False
+        self, cesmroot, output_root, res, compset, *, overwrite=False, setup_only=False
     ):
         """
         Function for building a base_case to clone.
@@ -224,7 +227,6 @@ class TowerSite:
             # update case_path to be the full path to the base case
         return case_path
 
-    # pylint: disable=no-self-use
     def get_batch_query(self, case):
         """
         Function for querying the batch queue query command for a case, depending on the
@@ -315,6 +317,7 @@ class TowerSite:
     # TODO: This code should be broken up into smaller pieces
     def run_case(
         self,
+        *,
         base_case_root,
         run_type,
         prism,

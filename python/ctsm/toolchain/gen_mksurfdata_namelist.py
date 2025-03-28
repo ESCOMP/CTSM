@@ -2,6 +2,7 @@
 gen_mksurfdata_namelist.py generates a namelist for use with the mksurfdata
 executable. For detailed instructions, see README.
 """
+
 import os
 import sys
 import xml.etree.ElementTree as ET
@@ -324,16 +325,16 @@ def main():
         fsurlog,
         must_run_download_input_data,
     ) = get_file_paths(
-        args,
-        start_year,
-        end_year,
-        ssp_rcp,
-        res,
-        pft_years,
-        run_type,
-        rawdata_files,
-        num_pft,
-        must_run_download_input_data,
+        args=args,
+        start_year=start_year,
+        end_year=end_year,
+        ssp_rcp=ssp_rcp,
+        res=res,
+        pft_years=pft_years,
+        run_type=run_type,
+        rawdata_files=rawdata_files,
+        num_pft=num_pft,
+        must_run_download_input_data=must_run_download_input_data,
     )
 
     git_desc_cmd = f"git -C {tool_path} describe"
@@ -371,32 +372,32 @@ def main():
         # raw input data
         # -------------------
         must_run_download_input_data = write_nml_rawinput(
-            start_year,
-            force_model_mesh_file,
-            force_model_mesh_nx,
-            force_model_mesh_ny,
-            rawdata_files,
-            landuse_fname,
-            mksrf_ftopostats_override,
-            nlfile,
-            must_run_download_input_data,
+            start_year=start_year,
+            force_model_mesh_file=force_model_mesh_file,
+            force_model_mesh_nx=force_model_mesh_nx,
+            force_model_mesh_ny=force_model_mesh_ny,
+            rawdata_files=rawdata_files,
+            landuse_fname=landuse_fname,
+            mksrf_ftopostats_override=mksrf_ftopostats_override,
+            nlfile=nlfile,
+            must_run_download_input_data=must_run_download_input_data,
         )
 
         # -------------------
         # output data
         # -------------------
         write_nml_outdata(
-            nosurfdata_flag,
-            inlandwet,
-            glc_flag,
-            hostname,
-            logname,
-            num_pft,
-            fdyndat,
-            fsurdat,
-            fsurlog,
-            gitdescribe,
-            nlfile,
+            nosurfdata_flag=nosurfdata_flag,
+            inlandwet=inlandwet,
+            glc_flag=glc_flag,
+            hostname=hostname,
+            logname=logname,
+            num_pft=num_pft,
+            fdyndat=fdyndat,
+            fsurdat=fsurdat,
+            fsurlog=fsurlog,
+            gitdescribe=gitdescribe,
+            nlfile=nlfile,
         )
 
         nlfile.write("/ \n")
@@ -441,6 +442,7 @@ def check_ssp_years(start_year, end_year):
 
 
 def get_file_paths(
+    *,
     args,
     start_year,
     end_year,
@@ -457,7 +459,12 @@ def get_file_paths(
     """
     if run_type == "transient":
         landuse_fname, must_run_download_input_data = handle_transient_run(
-            start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
+            start_year=start_year,
+            end_year=end_year,
+            ssp_rcp=ssp_rcp,
+            rawdata_files=rawdata_files,
+            num_pft=num_pft,
+            must_run_download_input_data=must_run_download_input_data,
         )
         print(f"Successfully created input landuse file {landuse_fname}")
     else:
@@ -533,6 +540,7 @@ def determine_pft_years(start_year, end_year, potveg):
 
 
 def write_nml_outdata(
+    *,
     nosurfdata_flag,
     inlandwet,
     glc_flag,
@@ -572,6 +580,7 @@ def write_nml_outdata(
 
 
 def write_nml_rawinput(
+    *,
     start_year,
     force_model_mesh_file,
     force_model_mesh_nx,
@@ -629,19 +638,19 @@ def write_nml_rawinput(
         mksrf_furban = mksrf_furban.replace("%y", str(start_year))
     if not os.path.isfile(mksrf_fvegtyp):
         print("WARNING: input mksrf_fvegtyp file " f"{mksrf_fvegtyp} does not exist")
-        print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+        print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
         must_run_download_input_data = True
     if not os.path.isfile(mksrf_fhrvtyp):
         print("WARNING: input mksrf_fhrvtyp file " f"{mksrf_fhrvtyp} does not exist")
-        print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+        print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
         must_run_download_input_data = True
     if not os.path.isfile(mksrf_fpctlak):
         print("WARNING: input mksrf_fpctlak file " f"{mksrf_fpctlak} does not exist")
-        print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+        print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
         must_run_download_input_data = True
     if not os.path.isfile(mksrf_furban):
         print("WARNING: input mksrf_furban file " f"{mksrf_furban} does not exist")
-        print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+        print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
         must_run_download_input_data = True
     nlfile.write(f"  mksrf_fvegtyp = '{mksrf_fvegtyp}' \n")
     nlfile.write(f"  mksrf_fvegtyp_mesh = '{mksrf_fvegtyp_mesh}' \n")
@@ -655,7 +664,7 @@ def write_nml_rawinput(
 
 
 def handle_transient_run(
-    start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
+    *, start_year, end_year, ssp_rcp, rawdata_files, num_pft, must_run_download_input_data
 ):
     """
     Settings and printout for when run_type is "transient"
@@ -682,15 +691,15 @@ def handle_transient_run(
             landuse_input_fnam3 = file3.replace("%y", year_str)
             if not os.path.isfile(landuse_input_fname):
                 print("WARNING: landunit_input_fname: " f"{landuse_input_fname} does not exist")
-                print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+                print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                 must_run_download_input_data = True
             if not os.path.isfile(landuse_input_fnam2):
                 print("WARNING: landunit_input_fnam2: " f"{landuse_input_fnam2} does not exist")
-                print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+                print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                 must_run_download_input_data = True
             if not os.path.isfile(landuse_input_fnam3):
                 print("WARNING: landunit_input_fnam3: " f"{landuse_input_fnam3} does not exist")
-                print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+                print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                 must_run_download_input_data = True
 
             # -- Each line is written twice in the original perl code:
@@ -811,9 +820,7 @@ def determine_input_rawdata(start_year, input_path, attribute_list):
                             f"{rawdata_files[child1.tag]} for {child1.tag} "
                             "does not exist"
                         )
-                        print(
-                            "WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES"
-                        )
+                        print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                         must_run_download_input_data = True
 
             if item.tag == "mesh_filename":
@@ -821,7 +828,7 @@ def determine_input_rawdata(start_year, input_path, attribute_list):
                 rawdata_files[new_key] = os.path.join(input_path, item.text)
                 if not os.path.isfile(rawdata_files[new_key]):
                     print("WARNING: input mesh file " f"{rawdata_files[new_key]} does not exist")
-                    print("WARNING: run ./download_input_data to try TO " "OBTAIN MISSING FILES")
+                    print("WARNING: run ./download_input_data to try TO OBTAIN MISSING FILES")
                     must_run_download_input_data = True
 
             if item.tag == "lake_filename":

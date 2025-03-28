@@ -7,6 +7,10 @@ import numpy as np
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def get_pct_harv_at_mature(harvest_reason_da):
     """
@@ -124,7 +128,7 @@ def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diff
 
 
 def check_rx_obeyed(
-    vegtype_list, rx_ds, dates_ds, which_ds, output_var, gdd_min=None, verbose=False
+    vegtype_list, rx_ds, dates_ds, which_ds, output_var, *, gdd_min=None, verbose=False
 ):
     """
     Check that prescribed crop calendars were obeyed

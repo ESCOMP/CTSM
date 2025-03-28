@@ -1,5 +1,4 @@
-"""Factory function and class for creating and storing machine-related information.
-"""
+"""Factory function and class for creating and storing machine-related information."""
 
 import logging
 from collections import namedtuple
@@ -47,6 +46,7 @@ Machine = namedtuple(
 def create_machine(
     machine_name,
     defaults,
+    *,
     job_launcher_type=None,
     scratch_dir=None,
     account=None,

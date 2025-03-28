@@ -3,6 +3,7 @@ gen_mksurfdata_jobscript_multi.py generates a jobscript for running the
 mksurfdata executable to generate many fsurdat files at once. For detailed
 instructions, see README.
 """
+
 import os
 import sys
 import logging
@@ -85,6 +86,7 @@ def get_parser():
 
 
 def write_runscript(
+    *,
     args,
     scenario,
     jobscript_file,
@@ -92,7 +94,6 @@ def write_runscript(
     tasks_per_node,
     account,
     walltime,
-    machine,
     target_list,
     resolution_dict,
     dataset_dict,
@@ -106,12 +107,12 @@ def write_runscript(
     # --------------------------
     name = f"mksrf_{scenario}"
     attribs = write_runscript_part1(
-        number_of_nodes,
-        tasks_per_node,
-        machine,
-        account,
-        walltime,
-        runfile,
+        number_of_nodes=number_of_nodes,
+        tasks_per_node=tasks_per_node,
+        machine=args.machine,
+        account=account,
+        walltime=walltime,
+        runfile=runfile,
         descrip=scenario,
         name=name,
     )
@@ -408,18 +409,17 @@ def main():
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
 
         write_runscript(
-            args,
-            scenario,
-            jobscript_file,
-            number_of_nodes,
-            tasks_per_node,
-            account,
-            walltime,
-            args.machine,
-            target_list,
-            resolution_dict,
-            dataset_dict,
-            runfile,
+            args=args,
+            scenario=scenario,
+            jobscript_file=jobscript_file,
+            number_of_nodes=number_of_nodes,
+            tasks_per_node=tasks_per_node,
+            account=account,
+            walltime=walltime,
+            target_list=target_list,
+            resolution_dict=resolution_dict,
+            dataset_dict=dataset_dict,
+            runfile=runfile,
         )
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")

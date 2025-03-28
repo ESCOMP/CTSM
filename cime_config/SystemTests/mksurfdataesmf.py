@@ -10,6 +10,7 @@ Currently casper complains that `git -C` is not a valid option.
 I added -C to the `git describe` in gen_mksurfdata_namelist for this
 system test to work.
 """
+
 import os
 import sys
 import subprocess

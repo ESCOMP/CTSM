@@ -18,20 +18,20 @@ jobs:
              options: "--check --config python/pyproject.toml"
              src: "./python"
              # Version should be coordinated with the ctsm_pylib conda environment under the python directory
-             version: "22.3.0"
+             version: "25.1.0"
           # Actions identical to above for each directory and source file we need to check (arrays aren't allowed for src: field)
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
              src: "./cime_config/SystemTests"
-             version: "22.3.0"
+             version: "25.1.0"
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
              src: "./cime_config/buildlib"
-             version: "22.3.0"
+             version: "25.1.0"
         - uses: psf/black@stable
           with:
              options: "--check --config python/pyproject.toml"
              src: "./cime_config/buildnml"
-             version: "22.3.0"
+             version: "25.1.0"
