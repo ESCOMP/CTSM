@@ -64,7 +64,7 @@ module OzoneBaseMod
      end subroutine Restart_interface
 
      subroutine CalcOzoneUptake_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3)
+          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai, forc_o3, sabv)
        use decompMod    , only : bounds_type
        use shr_kind_mod , only : r8 => shr_kind_r8
        import :: ozone_base_type
@@ -81,6 +81,8 @@ module OzoneBaseMod
        real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
        real(r8) , intent(in) :: forc_o3( bounds%begg: )   ! atmospheric ozone (mol/mol)
+       real(r8) , intent(in) :: sabv ( bounds%begp: )     ! solar radiation absorbed by vegetation (W/m**2)
+
      end subroutine CalcOzoneUptake_interface
 
      subroutine CalcOzoneStress_interface(this, bounds, &
