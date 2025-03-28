@@ -43,7 +43,7 @@ module FATESFireNoDataMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine FATESNoFireInit( this, bounds, NLFilename )
+  subroutine FATESNoFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize No Fire data module for FATES
@@ -53,7 +53,6 @@ contains
     ! !ARGUMENTS:
     class(fates_fire_no_data_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
 
     if ( (shr_fire_emis_mechcomps_n > 0) .and. (fates_spitfire_mode == 0) ) then
       write(iulog,*) "Fire emissions can NOT be active for fates_spitfire_mode=0 (no_fire)",  &
@@ -61,7 +60,7 @@ contains
       call endrun(msg="Having fire emissions on requires fates_spitfire_mode to be something besides no_fire (0)" )
       return
     end if
-    call this%CNFireInit( bounds, NLFilename)
+    call this%CNFireInit( bounds )
 
   end subroutine FATESNoFireInit
 

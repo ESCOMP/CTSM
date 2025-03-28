@@ -102,8 +102,8 @@ module test_CNFireFactory
       if ( trim(fire_method) /= "DO_NOT_SET") then
          call CNFireSetFireMethod( fire_method_in=fire_method )
       end if
-      call create_cnfire_method(NLFilename, this%cnfire_method)
-      call this%cnfire_method%FireInit(bounds, NLFilename)
+      call create_cnfire_method(this%cnfire_method)
+      call this%cnfire_method%FireInit(bounds)
       this%initialized = .true.
 
     end subroutine FireFactInit

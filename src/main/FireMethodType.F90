@@ -55,7 +55,7 @@ module FireMethodType
      !   consistent between different implementations.
      !
      !---------------------------------------------------------------------------
-  subroutine FireInit_interface(this, bounds, NLFilename )
+  subroutine FireInit_interface(this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize Fire datasets
@@ -66,20 +66,21 @@ module FireMethodType
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
   end subroutine FireInit_interface
 
-  subroutine FireReadNML_interface(this, NLFilename )
+  subroutine FireReadNML_interface(this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read general fire namelist
     !
     ! USES
+    use decompMod              , only : bounds_type
     import :: fire_method_type
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 

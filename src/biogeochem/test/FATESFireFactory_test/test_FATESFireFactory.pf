@@ -62,10 +62,8 @@ module test_FATESFireFactory
     subroutine FireFactInit(this)
       class(TestFATESFireFactory), intent(inout) :: this
 
-      character(len=*), parameter :: NLFilename = 'unused_nlfilename'
-
       call create_fates_fire_data_method(this%fates_fire_method)
-      call this%fates_fire_method%FireInit(bounds, NLFilename)
+      call this%fates_fire_method%FireInit(bounds)
       this%initialized = .true.
 
     end subroutine FireFactInit

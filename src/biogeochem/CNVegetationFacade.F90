@@ -304,6 +304,7 @@ contains
        call this%dgvs_inst%Init(bounds)
     
        call create_cnfire_method(NLFilename, this%cnfire_method)
+       call this%cnfire_method%FireReadNML( bounds, NLFilename )
        call this%cnfire_method%CNFireReadParams( params_ncid )
     end if
 

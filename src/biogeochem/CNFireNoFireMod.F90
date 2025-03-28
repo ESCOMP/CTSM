@@ -64,7 +64,7 @@ contains
   end function need_lightning_and_popdens
 
   !-----------------------------------------------------------------------
-  subroutine NoFireInit( this, bounds, NLFilename )
+  subroutine NoFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize No Fire module
@@ -73,7 +73,6 @@ contains
     ! !ARGUMENTS:
     class(cnfire_nofire_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
 
     if ( shr_fire_emis_mechcomps_n > 0) then
       write(iulog,*) "Fire emissions can NOT be active for fire_method=nofire" // &
@@ -81,7 +80,7 @@ contains
       call endrun(msg="Having fire emissions on requires fire_method to be something besides nofire" )
       return
     end if
-    call this%CNFireInit( bounds, NLFilename )
+    call this%CNFireInit( bounds )
 
   end subroutine NoFireInit
   !-----------------------------------------------------------------------

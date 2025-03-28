@@ -37,11 +37,11 @@ module FireDataBaseType
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireInit             ! Initialization of Fire
+      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: FireInterp               ! Interpolate fire data
-      procedure(FireReadNML_interface), public, deferred :: &
-           FireReadNML                              ! Read in namelist for Fire
+      procedure, public :: BaseFireReadNML          ! Read in the namelist
+      procedure, public :: FireReadNML => BaseFireReadNML  ! Read in the namelist
       procedure(need_lightning_and_popdens_interface), public, deferred :: &
            need_lightning_and_popdens               ! Returns true if need lightning & popdens
 
@@ -71,7 +71,7 @@ module FireDataBaseType
 contains
 !==============================================================================
 
-  subroutine FireReadNML_interface( this, NLFilename )
+  subroutine BaseFireReadNML( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for Fire
@@ -80,11 +80,12 @@ contains
     !
     ! !ARGUMENTS:
     class(fire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-  end subroutine FireReadNML_interface
+  end subroutine BaseFireReadNML
 
   !================================================================
-  subroutine BaseFireInit( this, bounds, NLFilename )
+  subroutine BaseFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
@@ -94,7 +95,6 @@ contains
     ! !ARGUMENTS:
     class(fire_base_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
     if ( this%need_lightning_and_popdens() ) then

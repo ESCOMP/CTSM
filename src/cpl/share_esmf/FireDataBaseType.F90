@@ -43,8 +43,8 @@ module FireDataBaseType
       procedure, public :: BaseFireClean            ! Clean up data and deallocate data
       procedure, public :: FireClean => BaseFireClean ! Clean up data and deallocate data
       procedure, public :: FireInterp               ! Interpolate fire data
-      procedure(FireReadNML_interface), public, deferred :: &
-           FireReadNML                              ! Read in namelist for Fire
+      procedure, public :: BaseFireReadNML          ! Read in the namelist for fire
+      procedure, public :: ReadFireNML => BaseFireReadNML ! Read in the namelist for fire
       procedure(need_lightning_and_popdens_interface), public, deferred :: &
            need_lightning_and_popdens               ! Returns true if need lightning & popdens
       !
@@ -80,7 +80,7 @@ module FireDataBaseType
 contains
 !==============================================================================
 
-  subroutine FireReadNML_interface( this, NLFilename )
+  subroutine BaseFireReadNML( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for Fire
@@ -89,11 +89,21 @@ contains
     !
     ! !ARGUMENTS:
     class(fire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-  end subroutine FireReadNML_interface
+
+    ! Read the namelists for the fire data and do the preparation needed on them
+    if ( this%need_lightning_and_popdens() ) then
+       call this%hdm_init(bounds, NLFilename)
+       call this%hdm_interp(bounds)
+       call this%lnfm_init(bounds, NLFilename)
+       call this%lnfm_interp(bounds)
+       call this%surfdataread(bounds)
+    end if
+  end subroutine BaseFireReadNML
 
   !================================================================
-  subroutine BaseFireInit( this, bounds, NLFilename )
+  subroutine BaseFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
@@ -103,7 +113,6 @@ contains
     ! !ARGUMENTS:
     class(fire_base_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
     if ( this%need_lightning_and_popdens() ) then
        ! Allocate lightning forcing data
@@ -119,12 +128,6 @@ contains
        allocate(this%peatf_lf_col(bounds%begc:bounds%endc))
        ! Allocates peak month of crop fire emissions
        allocate(this%abm_lf_col(bounds%begc:bounds%endc))
-
-       call this%hdm_init(bounds, NLFilename)
-       call this%hdm_interp(bounds)
-       call this%lnfm_init(bounds, NLFilename)
-       call this%lnfm_interp(bounds)
-       call this%surfdataread(bounds)
     end if
 
   end subroutine BaseFireInit

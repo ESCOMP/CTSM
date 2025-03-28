@@ -87,7 +87,7 @@ contains
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  subroutine create_cnfire_method( NLFilename, cnfire_method )
+  subroutine create_cnfire_method( cnfire_method )
     !
     ! !DESCRIPTION:
     ! Create and return an object of fire_method_type. The particular type
@@ -103,7 +103,6 @@ contains
     use decompMod        , only : bounds_type
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(fire_method_type), allocatable, intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
@@ -130,7 +129,6 @@ contains
        return
 
     end select
-    call cnfire_method%FireReadNML( NLFilename )
 
   end subroutine create_cnfire_method
   !-----------------------------------------------------------------------
