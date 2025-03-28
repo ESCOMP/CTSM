@@ -187,6 +187,11 @@ module test_CNFireFactory
 
     !-----------------------------------------------------------------------
 
+    !
+    ! Test that default settings with ALL of the Li Fire options work by default
+    ! (These tests are done one by one which makes them dead simple, but take up more code
+    !  see the looping option below)
+    !
     @Test
     subroutine li2016_works(this)
       class(TestCNFireFactory), intent(inout) :: this
@@ -218,6 +223,24 @@ module test_CNFireFactory
     !-----------------------------------------------------------------------
 
     @Test
+    subroutine li2024crujra_works(this)
+      class(TestCNFireFactory), intent(inout) :: this
+
+      call this%FireFactInit( fire_method = "li2024crujra")
+
+    end subroutine li2024crujra_works
+
+    !-----------------------------------------------------------------------
+
+    !
+    ! Test that default settings with ALL of the Li Fire options work when fire emissions
+    ! are turned on. This test is done with a loop rather than one by one as above.
+    ! This cuts down on the total test code, but also means that setUp and tearDown have
+    ! to be explicitly called for example. Setup is always called before a test, and tearDown
+    ! after each test)
+    !
+
+    @Test
     subroutine all_li_options_with_fire_emis_works(this)
       class(TestCNFireFactory), intent(inout) :: this
       integer, parameter :: noptions = 5
@@ -225,10 +248,10 @@ module test_CNFireFactory
       character(len=*), parameter :: fire_method_options(noptions) = (/ 'li2014qianfrc', 'li2016crufrc ', 'li2021gswpfrc', 'li2024gswpfrc', 'li2024crujra '/)
 
       do i = 1, noptions
-         call this%setUp()
+         call this%setUp()       ! This is needed because of the loop over all options
          call this%turn_fire_emis_on()
          call this%FireFactInit( fire_method = fire_method_options(i) )
-         call this%tearDown()
+         call this%tearDown()    ! This is needed because of the loop over all options
       end do
 
     end subroutine all_li_options_with_fire_emis_works
