@@ -182,8 +182,11 @@ contains
        do nc = 1, nclumps
           call get_clump_bounds(nc, bounds_clump)
 
-          call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn( &
-             bounds_clump, atm2lnd_inst)
+          call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn(  &
+             bounds_clump,  &
+             filter_inactive_and_active(nc)%num_bgc_vegp,  &
+             filter_inactive_and_active(nc)%bgc_vegp,  &
+             atm2lnd_inst)
        end do
        !$OMP END PARALLEL DO
     end if

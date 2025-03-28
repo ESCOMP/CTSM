@@ -2322,7 +2322,7 @@ contains
   end subroutine ReadParams
 
   !-----------------------------------------------------------------------
-  subroutine time_evolv_leafcn(this, bounds, atm2lnd_inst)
+  subroutine time_evolv_leafcn(this, bounds, num_bgc_vegp, filter_bgc_vegp, atm2lnd_inst)
     !
     ! AUTHOR: slevis
     !
@@ -2339,25 +2339,25 @@ contains
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type) :: this
-    type(bounds_type) , intent(in)  :: bounds
-    type(atm2lnd_type), intent(in)  :: atm2lnd_inst
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_bgc_vegp  ! number of veg patches in filter
+    integer, intent(in) :: filter_bgc_vegp(:)  ! filter for veg patches
+    type(atm2lnd_type), intent(in) :: atm2lnd_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: g, l, c, p  ! indices
+    integer :: g, c, p, fp  ! indices
     real(r8) :: co2_ppmv  ! atm co2 concentration
     !-----------------------------------------------------------------------
 
     ! Loop to get leafcn_col
-    do p = bounds%begp, bounds%endp
+    do fp = 1, num_bgc_vegp
+       p = filter_bgc_vegp(fp)
        c = patch%column(p)
-       l = patch%landunit(p)
        g = patch%gridcell(p)
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
-                               atm2lnd_inst%forc_pbot_downscaled_col(c)
-          this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p)) + &
-             max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
-       end if
+       co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
+                            atm2lnd_inst%forc_pbot_downscaled_col(c)
+       this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p)) + &
+          max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
     end do
 
   end subroutine time_evolv_leafcn
