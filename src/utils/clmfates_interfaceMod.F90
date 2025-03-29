@@ -2647,7 +2647,7 @@ module CLMFatesInterfaceMod
      
      class(hlm_fates_interface_type), intent(inout) :: this
      integer                 , intent(in)           :: nc
-     type(drydepvel_type)  , intent(inout)        :: drydepvel_inst
+     type(drydepvel_type)  , intent(inout)          :: drydepvel_inst
      
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
@@ -2656,8 +2656,10 @@ module CLMFatesInterfaceMod
      integer :: c       ! column index
      integer :: g       ! grid cell
 
-     associate(wesley_veg_index_patch => drydepvel_inst%wesley_veg_index_patch, &
-               wesley_season_index_patch => drydepvel_inst%wesley_season_index_patch)
+     associate( &
+               wesley_veg_index    => drydepvel_inst%wesley_veg_index_patch  , &
+               wesley_season_index => drydepvel_inst%wesley_season_index_patch &
+              )
                
       ! Call thee FATES routine to set the PFT and season indices for the drydep routines in CLM
       call set_fates_drydep_indices(this%fates(nc)%nsites, &
@@ -2668,16 +2670,16 @@ module CLMFatesInterfaceMod
       do s = 1,this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
           g = col%gridcell(c)
-          
-
           do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
              ! for the vegetated patches
              p = ifp+col%patchi(c)
-             wesley_veg_index_patch(p) = this%fates(nc)%bc_out(s)%wesley_pft_label_pa(ifp)
-             wesley_season_index_patch(p) = this%fates(nc)%bc_out(s)%drydep_season_pa(ifp)
+             wesley_veg_index(p) = this%fates(nc)%bc_out(s)%wesley_pft_label_pa(ifp)
+             wesley_season_index(p) = this%fates(nc)%bc_out(s)%drydep_season_pa(ifp)
           end do
        end do
+
      end associate
+
    end subroutine wrap_drydep
    
    ! ====================================================================================

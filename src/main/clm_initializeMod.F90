@@ -485,7 +485,7 @@ contains
        ! Also for FATES with Dry-Deposition on as well (see above)
        ! For now don't allow for dry-deposition with full fates
        ! because of issues in #1044 EBK Jun/17/2022
-       if( use_fates_nocomp .or. (.not. use_fates )) then
+       if( use_fates_sp .or. (.not. use_fates )) then
           if (masterproc) then
              write(iulog,'(a)')'Initializing Satellite Phenology'
           end if
