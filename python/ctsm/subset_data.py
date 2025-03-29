@@ -591,7 +591,12 @@ def setup_files(args, defaults, cesmroot):
         abort("inputdata directory does not exist")
 
     # DATM data
-    datm_type = "datm_gswp3"
+    # TODO Issue #2960: Make datm_type a user option at the command
+    # line. For reference, this option affects three .cfg files:
+    #      tools/site_and_regional/default_data_1850.cfg
+    #      tools/site_and_regional/default_data_2000.cfg
+    #      python/ctsm/test/testinputs/default_data.cfg
+    datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
     dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
