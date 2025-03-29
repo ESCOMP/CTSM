@@ -58,6 +58,7 @@ Module DryDepVelocity
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use abortutils           , only : endrun
   use clm_time_manager     , only : get_nstep, get_curr_date, get_curr_time
+  use clm_varcon           , only : ispval
   use spmdMod              , only : masterproc
   use shr_drydep_mod       , only : n_drydep, drydep_list
   use shr_drydep_mod       , only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx
@@ -137,10 +138,10 @@ CONTAINS
 
     ! Dry Deposition Velocity
     if ( n_drydep > 0 )then
-       allocate(this%velocity_patch(begp:endp, n_drydep));  this%velocity_patch(:,:) = nan
-       allocate(this%rs_drydep_patch(begp:endp))         ;  this%rs_drydep_patch(:)  = nan
-       allocate(this%wesley_veg_index_patch   (begp:endp)) ;  ! is an integer so can't be nan 
-       allocate(this%wesley_season_index_patch   (begp:endp)) ! is an integer so can't be nan 
+       allocate(this%velocity_patch(begp:endp, n_drydep))    ;  this%velocity_patch(:,:) = nan
+       allocate(this%rs_drydep_patch(begp:endp))             ;  this%rs_drydep_patch(:)  = nan
+       allocate(this%wesley_veg_index_patch   (begp:endp))   ;  this%wesley_veg_index_patch(:) = ispval
+       allocate(this%wesley_season_index_patch   (begp:endp));  this%wesley_season_index_patch(:) = ispval
        
     end if
 
@@ -315,8 +316,8 @@ CONTAINS
 
          velocity   =>    drydepvel_inst%velocity_patch         , & ! Output: [real(r8) (:,:) ] cm/sec
          rs_drydep  =>    drydepvel_inst%rs_drydep_patch        ,  & ! Output: [real(r8) (:)   ]  stomatal resistance associated with Ozone dry deposition velocity (s/m)
-         wesley_veg_index    =>  drydepvel_inst%wesley_veg_index_patch , &
-         wesley_season_index =>  drydepvel_inst%wesley_season_index_patch &
+         wesley_veg_index    =>  drydepvel_inst%wesley_veg_index_patch , &  ! Input:  [integer (:)   ] wesely vegegation index if calculated elsewhere (f.e. in FATES)
+         wesley_season_index =>  drydepvel_inst%wesley_season_index_patch & ! Input:  [integer (:)   ] wesely season index if calculated elsewhere (f.e. in FATES)
          )
 
       !_________________________________________________________________
@@ -420,7 +421,7 @@ CONTAINS
                end if
             else if ( snow_depth(c) > 0 ) then
                index_season = 4
-            else if(.not.use_fates .and. elai(pi) > 0.5_r8*maxlai) then
+            else if( (.not. use_fates) .and. elai(pi) > 0.5_r8*maxlai) then
                index_season = 1
             endif
             
