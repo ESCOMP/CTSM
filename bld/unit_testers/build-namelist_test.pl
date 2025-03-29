@@ -1980,11 +1980,12 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  @forclist = ( "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
+  @forclist = ( "CRUJRA2024", "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
-        if ( $lndtuningmode eq "clm6_0_CRUv7" ) {
+        if ( $lndtuningmode eq "clm6_0_CRUv7" or
+             $lndtuningmode eq "clm4_5_CRUJRA2024") {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

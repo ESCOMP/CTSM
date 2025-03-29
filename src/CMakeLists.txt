@@ -102,7 +102,7 @@ include_directories (${NETCDF}/include)
 
 # Directories and libraries to include in the link step
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
-link_libraries( netcdf )
+link_libraries( netcdf esmf )
 
 # Add the test directories
 # Note: it's possible that these could be added by each source directory that
