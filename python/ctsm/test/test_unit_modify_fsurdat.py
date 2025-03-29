@@ -10,7 +10,7 @@ import numpy as np
 import xarray as xr
 
 from ctsm import unit_testing
-from ctsm.config_utils import lon_range_0_to_360
+from ctsm.config_utils import convert_lon_0to360
 from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -34,8 +34,13 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         self.min_lon = 2  # expects min_lon < max_lon
         self.min_lat = 3  # expects min_lat < max_lat
+        self.lon_type = 360
         longxy, latixy, self.cols, self.rows = self._get_longxy_latixy(
-            _min_lon=self.min_lon, _max_lon=10, _min_lat=self.min_lat, _max_lat=12
+            _min_lon=self.min_lon,
+            _max_lon=10,
+            _min_lat=self.min_lat,
+            _max_lat=12,
+            lon_type=self.lon_type,
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -77,6 +82,7 @@ class TestModifyFsurdat(unittest.TestCase):
             landmask_file=None,
             lat_dimname=None,
             lon_dimname=None,
+            lon_type=self.lon_type,
         )
 
     def test_setvarLev(self):
@@ -130,7 +136,7 @@ class TestModifyFsurdat(unittest.TestCase):
         min_lon = 2  # expects min_lon < max_lon
         min_lat = 3  # expects min_lat < max_lat
         longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=7, _min_lat=min_lat, _max_lat=8
+            _min_lon=min_lon, _max_lon=7, _min_lat=min_lat, _max_lat=8, lon_type=self.lon_type
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -145,6 +151,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             longxy=longxy,
             latixy=latixy,
+            lon_type=self.lon_type,
         )
         not_rectangle = np.logical_not(rectangle)
         compare = np.ones((rows, cols))
@@ -171,8 +178,9 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         min_lon = -3  # expects min_lon < max_lon
         min_lat = -2  # expects min_lat < max_lat
+
         longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=6, _min_lat=min_lat, _max_lat=5
+            _min_lon=min_lon, _max_lon=6, _min_lat=min_lat, _max_lat=5, lon_type=self.lon_type
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -189,6 +197,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             longxy=longxy,
             latixy=latixy,
+            lon_type=self.lon_type,
         )
         not_rectangle = np.logical_not(rectangle)
         compare = np.ones((rows, cols))
@@ -217,7 +226,7 @@ class TestModifyFsurdat(unittest.TestCase):
         min_lon = 1  # expects min_lon < max_lon
         min_lat = 1  # expects min_lat < max_lat
         longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=90
+            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=90, lon_type=self.lon_type
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -234,6 +243,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             longxy=longxy,
             latixy=latixy,
+            lon_type=self.lon_type,
         )
         not_rectangle = np.logical_not(rectangle)
         compare = np.ones((rows, cols))
@@ -261,10 +271,10 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         min_lon = -8  # expects min_lon < max_lon
         min_lat = -9  # expects min_lat < max_lat
-        longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=5, _min_lat=min_lat, _max_lat=6
-        )
 
+        longxy, latixy, cols, rows = self._get_longxy_latixy(
+            _min_lon=min_lon, _max_lon=5, _min_lat=min_lat, _max_lat=6, lon_type=self.lon_type
+        )
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
         # I have chosen the lon/lat ranges to match their corresponding index
         # values to keep this simple (see usage below)
@@ -279,6 +289,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             longxy=longxy,
             latixy=latixy,
+            lon_type=self.lon_type,
         )
         not_rectangle = np.logical_not(rectangle)
         compare = np.ones((rows, cols))
@@ -309,7 +320,7 @@ class TestModifyFsurdat(unittest.TestCase):
         min_lon = 0  # expects min_lon < max_lon
         min_lat = -5  # expects min_lat < max_lat
         longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=5
+            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=5, lon_type=self.lon_type
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -326,6 +337,7 @@ class TestModifyFsurdat(unittest.TestCase):
             lat_2=lat_2,
             longxy=longxy,
             latixy=latixy,
+            lon_type=self.lon_type,
         )
         not_rectangle = np.logical_not(rectangle)
         compare = np.ones((rows, cols))
@@ -352,7 +364,7 @@ class TestModifyFsurdat(unittest.TestCase):
         min_lon = 0  # expects min_lon < max_lon
         min_lat = -5  # expects min_lat < max_lat
         longxy, latixy, _, _ = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=5
+            _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=5, lon_type=self.lon_type
         )
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -372,6 +384,7 @@ class TestModifyFsurdat(unittest.TestCase):
                 lat_2=lat_2,
                 longxy=longxy,
                 latixy=latixy,
+                lon_type=self.lon_type,
             )
 
     def test_check_varlist_lists(self):
@@ -459,7 +472,7 @@ class TestModifyFsurdat(unittest.TestCase):
         ):
             self.modify_fsurdat.check_varlist(settings, allow_uppercase_vars=True)
 
-    def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat):
+    def _get_longxy_latixy(self, _min_lon, _max_lon, _min_lat, _max_lat, lon_type):
         """
         Return longxy, latixy, cols, rows
         """
@@ -467,7 +480,8 @@ class TestModifyFsurdat(unittest.TestCase):
         rows = _max_lat - _min_lat + 1
 
         long = np.arange(_min_lon, _max_lon + 1)
-        long = [lon_range_0_to_360(longitude) for longitude in long]
+        if lon_type == 180:
+            long = [convert_lon_0to360(longitude) for longitude in long]
         longxy = long * np.ones((rows, cols))
         compare = np.repeat([long], rows, axis=0)  # alternative way to form
         # assert this to confirm intuitive understanding of these matrices

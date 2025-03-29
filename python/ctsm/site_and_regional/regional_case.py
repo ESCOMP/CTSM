@@ -154,19 +154,20 @@ class RegionalCase(BaseCase):
         Check for the regional lon bounds
         """
         if self.lon1 >= self.lon2:
-            err_msg = """
-            \n
-            ERROR: lon1 is bigger than lon2.
-            lon1 points to the westernmost longitude of the region. {}
-            lon2 points to the easternmost longitude of the region. {}
-            Please make sure lon1 is smaller than lon2.
+            pass
+            # err_msg = """
+            # \n
+            # ERROR: lon1 is bigger than lon2.
+            # lon1 points to the westernmost longitude of the region. {}
+            # lon2 points to the easternmost longitude of the region. {}
+            # Please make sure lon1 is smaller than lon2.
 
-            Please note that if longitude in -180-0, the code automatically
-            convert it to 0-360.
-            """.format(
-                self.lon1, self.lon2
-            )
-            raise argparse.ArgumentTypeError(err_msg)
+            # Please note that if longitude in -180-0, the code automatically
+            # convert it to 0-360.
+            # """.format(
+            #     self.lon1, self.lon2
+            # )
+            # raise argparse.ArgumentTypeError(err_msg)
 
     def check_region_lats(self):
         """

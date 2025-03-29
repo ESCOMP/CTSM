@@ -6,7 +6,7 @@
  Running Single Point Configurations
 ******************************************
 
-In addition to ``PTS_MODE`` (Sect. :numref:`pts_mode`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
+In addition to running with the outputs of ``subset_data`` (Sect. :numref:`single_point_subset_data`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
 
 To get the list of supported dataset resolutions do this:
 ::
@@ -32,7 +32,7 @@ The resolution names that have an underscore in them ("_") are all single-point 
 .. note:: When running a single point, the number of processors is automatically set to one, which is the only value allowed.
 
 .. warning::
-   Just like ``PTS_MODE`` (Sect. :numref:`pts_mode`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+   Just like running with the outputs from ``subset_data`` (Sect. :numref:`single_point_subset_data`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
 
 .. _single-point-global-climate:
 
