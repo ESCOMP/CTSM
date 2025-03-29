@@ -533,7 +533,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 
 <!-- <fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.1.0_14pft_c241003.nc</fates_paramfile> -->
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.39.0.0_14pft_c250328_noresm.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.39.0.0_14pft_c250329_noresm_v1.nc</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
