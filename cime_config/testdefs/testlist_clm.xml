@@ -4380,15 +4380,6 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3" grid="ne30pg3_ne30pg3_mtn14" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdSatPhen_prescribed">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"></option>
-    </options>
-  </test>
 
   <!-- FATES-NOCOMP -->
 
@@ -4401,7 +4392,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdDryDepSatPhen">
+  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdMeganNoComp">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
