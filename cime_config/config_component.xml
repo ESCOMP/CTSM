@@ -64,6 +64,7 @@
           Options for all combinations of CLM physics and atm forcing are given. The buildnml and namelist_defaults will narrow it down to the ones
           that have been tuned. The buildnml will also warn you if a tuning combination is based on another set.
           Atm forcing options:
+               CRUJRA2024
                CRUv7
                GSWP3
                CAM4.0
@@ -77,14 +78,13 @@
           Other atm forcing options are invalid to run CLM and will result in an error.
     </desc>
     <default_value>UNSET</default_value>
-    <!-- 10 forcing options for each CLM physics option: CRUv7, GSWP3, cam7.0, cam6.0, cam5.0, cam4.0, QIAN, 1PT, NLDAS2, ERA5 -->
-    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_cam5.0,clm4_5_cam4.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
+    <!-- List of forcing options for each CLM physics option: CRUJRA2024, CRUv7, GSWP3, cam7.0, cam6.0, cam5.0, cam4.0, QIAN, 1PT, NLDAS2, ERA5 -->
+    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUJRA2024,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_cam5.0,clm4_5_cam4.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_CRUJRA2024,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
     <values match="last">
-      <!-- Options for atm forcing are: CRU, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), cam5.0, cam4.0, QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
+      <!-- Options for atm forcing are: CRUJRA2024, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), cam5.0, cam4.0, QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm4_5 physics options -->
       <value compset="SATM_CLM45"        >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
-      <value compset="DATM%CRU_CLM45"    >clm4_5_CRUv7</value>
       <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
       <value compset="CAM40[^_]*_CLM45"  >clm4_5_cam4.0</value>
@@ -98,8 +98,8 @@
       <value compset="DATM%NLDAS2_CLM45" >clm4_5_NLDAS2</value>
       <value compset="DATM%ERA5_CLM45"   >clm4_5_ERA5</value>
       <!-- All the clm5_0 physics options -->
+      <value compset="DATM%CRUJRA2024_CLM50">clm5_0_CRUJRA2024</value>
       <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
-      <value compset="DATM%CRU_CLM50"    >clm5_0_CRUv7</value>
       <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
@@ -114,8 +114,8 @@
       <value compset="DATM%NLDAS2_CLM50" >clm5_0_NLDAS2</value>
       <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
       <!-- All the clm6_0 physics options -->
+      <value compset="DATM%CRUJRA2024_CLM60">clm6_0_CRUJRA2024</value>
       <value compset="DATM%CRUv7_CLM60"  >clm6_0_CRUv7</value>
-      <value compset="DATM%CRU_CLM60"    >clm6_0_CRUv7</value>
       <value compset="SATM_CLM60"        >clm6_0_GSWP3v1</value>
       <value compset="DATM%GSWP3v1_CLM60">clm6_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM60"    >clm6_0_cam6.0</value>

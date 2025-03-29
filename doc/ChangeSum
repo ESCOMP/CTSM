@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.034   rgknox 03/27/2025 Fixes to enable passing FATES two-stream ERS and ERI restart tests.
+       ctsm5.3.033 multiple 03/19/2025 Add new mimics_fi param = frac of litter inputs bypassing litter pools
+       ctsm5.3.032   slevis 03/17/2025 Add option to use CRUJRA2024 with clm6 and clm5
+       ctsm5.3.031   slevis 03/13/2025 Merge b4b-dev
        ctsm5.3.030 samrabin 03/07/2025 Fix FATES branch runs
        ctsm5.3.029   slevis 03/05/2025 Make Bytnerowicz the default nfix_method for clm6
        ctsm5.3.028 samrabin 03/03/2025 Move Izumi intel and gnu tests to Derecho
