@@ -92,7 +92,7 @@ contains
 
     if ( shr_megan_mechcomps_n > 0) then
        if (use_fates) then
-          if (.not. use_fates_nocomp) then
+          if (.not. use_fates_nocomp) then ! SP implies NOCOMP is on.
              call endrun( msg='ERROR: MEGAN currently only works with when FATES is in SP and/or NOCOMP mode '//&
                   errMsg(sourcefile, __LINE__))
           end if
@@ -416,6 +416,8 @@ contains
     !
     ! !USES:
     use subgridAveMod        , only : p2g
+    use clm_varctl           , only : use_fates
+    use GridcellType         , only : grc
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                  
@@ -451,6 +453,9 @@ contains
     real(r8) :: par240_sha              ! temporary
     
     integer                            :: class_num, n_meg_comps, imech, imeg, ii
+    integer                            :: l_pft_itype(bounds%begp:bounds%endp) ! local index of pft type 
+                                                      ! that corresponds to pfts on megan factors 
+                                                      ! for BGC it will be 1 to 1 with pftcon%itype(p)
     character(len=16)                  :: mech_name
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     real(r8)                           :: cp, alpha,  Eopt, topt  ! for history output
@@ -497,7 +502,6 @@ contains
          fsun240       => canopystate_inst%fsun240_patch        , & ! Input:  [real(r8) (:)   ]  sunlit fraction of canopy last 240 hrs            
          elai          => canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          elai240       => canopystate_inst%elai240_patch        , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow last 240 hrs
-
          cisun_z       => photosyns_inst%cisun_z_patch          , & ! Input:  [real(r8) (:,:) ]  sunlit intracellular CO2 (Pa)
          cisha_z       => photosyns_inst%cisha_z_patch          , & ! Input:  [real(r8) (:,:) ]  shaded intracellular CO2 (Pa)
          
@@ -529,11 +533,29 @@ contains
     ! initialize variables which get passed to the atmosphere
     vocflx(bounds%begp:bounds%endp,:)   = 0._r8
     vocflx_tot(bounds%begp:bounds%endp) = 0._r8
-
+    
     do imeg=1,shr_megan_megcomps_n
       meg_out(imeg)%flux_out(bounds%begp:bounds%endp) = 0._r8
     enddo
-          
+    
+    ! Get local pft types:
+    ! this has to be done earlier, so if use_fates, we locally know what is not bare ground
+    ! voc_pft_index comes from fates-internal mapping between pft's in megan_factors_file and fates pfts
+    l_pft_itype(bounds%begp:bounds%endp) = 0
+    if (use_fates) then
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+          if (patch%is_fates(p)) then
+            l_pft_itype(p) = canopystate_inst%voc_pftindex_patch(p)
+          endif
+       end do
+    else
+       do fp = 1,num_soilp
+          p = filter_soilp(fp)
+          l_pft_itype(p) = patch%itype(p)
+       end do
+    end if
+
     ! Begin loop over points
     !_______________________________________________________________________________
     do fp = 1,num_soilp
@@ -549,7 +571,7 @@ contains
        vocflx_meg(:) = 0._r8
 
        ! calculate VOC emissions for non-bare ground Patches
-       if (patch%itype(p) > 0) then 
+       if (l_pft_itype(p) > 0) then 
           gamma=0._r8
 
           ! Calculate PAR: multiply w/m2 by 4.6 to get umol/m2/s for par (added 8/14/02)
@@ -582,32 +604,39 @@ contains
              ! set emis factor
              ! if specified, set EF for isoprene with mapped values
              if ( trim(meg_cmp%name) == 'isoprene' .and. shr_megan_mapped_emisfctrs) then
-                epsilon = get_map_EF(patch%itype(p),g, vocemis_inst)
+                epsilon = get_map_EF(l_pft_itype(p),g, vocemis_inst)
              else
-                epsilon = meg_cmp%emis_factors(patch%itype(p))
+                epsilon = meg_cmp%emis_factors(l_pft_itype(p))
              end if
 
+             
              class_num = meg_cmp%class_number
 
              ! Activity factor for PPFD
              gamma_p = get_gamma_P(par_sun, par24_sun, par240_sun, par_sha, par24_sha, par240_sha, &
                   fsun(p), fsun240(p), forc_solad240(p),forc_solai240(p), LDF(class_num), cp, alpha)
-
+             
              ! Activity factor for T
              gamma_t = get_gamma_T(t_veg240(p), t_veg24(p),t_veg(p), ct1(class_num), ct2(class_num),&
-                                   betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt, patch%itype(p))
+                                   betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt, l_pft_itype(p))
 
              ! Activity factor for Leaf Age
-             gamma_a = get_gamma_A(patch%itype(p), elai240(p),elai(p),class_num)
+             gamma_a = get_gamma_A(l_pft_itype(p), elai240(p),elai(p),class_num)
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then 
                 co2_ppmv = 1.e6_r8*forc_pco2(g)/forc_pbot(c)
                 gamma_c = get_gamma_C(cisun_z(p,1),cisha_z(p,1),forc_pbot(c),fsun(p), co2_ppmv)
+                ! Check of valid intercellular co2 pressure values.
+                if (debug .and. (cisha_z(p,1) < 0.0_r8 .or. cisun_z(p,1) < 0.0_r8)) then
+                   write(iulog,*) 'WARNINIG at ', __FILE__,__LINE__
+                   write(iulog,*) 'Invalid intercellular co2 pressure (sunlit, shaded), gamma_c: ',cisun_z(p,1),cisha_z(p,1), gamma_c
+                   write(iulog,*) 'Lat,Lon, voc patch type ',grc%latdeg(g),grc%londeg(g), l_pft_itype(p)
+                endif
              else
                 gamma_c = 1._r8
              end if
-
+             
              ! Calculate total scaling factor
              gamma = gamma_l * gamma_sm * gamma_a * gamma_p * gamma_T * gamma_c
 
@@ -618,7 +647,6 @@ contains
                 ! assign to arrays for history file output (not weighted by landfrac)
                 meg_out(imeg)%flux_out(p) = meg_out(imeg)%flux_out(p) &
                                           + epsilon * gamma * megemis_units_factor*1.e-3_r8 ! Kg/m2/sec
-
                 if (imeg==1) then 
                    ! 
                    gamma_out(p)=gamma
@@ -692,7 +720,6 @@ contains
     ! vocemis_inst%efisop_patch ! Output: [real(r8) (:,:)]  emission factors for isoprene for each patch [ug m-2 h-1]
 
     get_map_EF = 0._r8
-    
     if (     ivt_in == ndllf_evr_tmp_tree  &
          .or.     ivt_in == ndllf_evr_brl_tree) then   !fineleaf evergreen
        get_map_EF = vocemis_inst%efisop_grc(2,g_in)
@@ -710,7 +737,7 @@ contains
     else if (ivt_in >= nc3crop) then                   !crops
        get_map_EF = vocemis_inst%efisop_grc(6,g_in)
     end if
-
+    
   end function get_map_EF
 
   !-----------------------------------------------------------------------

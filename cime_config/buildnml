@@ -23,7 +23,7 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies CTSM physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies CTSM physics</entry>
 </config_definition>
 """
 
@@ -52,16 +52,8 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_interface = case.get_value("COMP_INTERFACE")
     lilac_mode = case.get_value("LILAC_MODE")
-    if comp_interface == "nuopc":
-        yr_start = case.get_value("DATM_YR_START")
-        yr_end = case.get_value("DATM_YR_END")
-    else:
-        yr_start = case.get_value("DATM_CLMNCEP_YR_START")
-        yr_end = case.get_value("DATM_CLMNCEP_YR_END")
-
-    if yr_start != None and yr_start < 0:
-        yr_start = case.get_value("DATM_CPLHIST_YR_START")
-        yr_end = case.get_value("DATM_CPLHIST_YR_END")
+    yr_start = case.get_value("DATM_YR_START")
+    yr_end = case.get_value("DATM_YR_END")
 
     # For LILAC
     if yr_start == None or lilac_mode == "on":
@@ -83,8 +75,7 @@ def buildnml(case, caseroot, compname):
     run_reftod = case.get_value("RUN_REFTOD")
     start_tod = case.get_value("START_TOD")
     glc_nec = case.get_value("GLC_NEC")
-    cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
-    dglc_use_antarctica = case.get_value("DGLC_USE_ANTARCTICA")
+    glc_use_antarctica = case.get_value("GLC_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
     driver = case.get_value("COMP_INTERFACE").lower()
 
@@ -114,11 +105,6 @@ def buildnml(case, caseroot, compname):
         "clm5_0_QIAN": "clm5_0_GSWP3v1",
         "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
         "clm5_0_ERA5": "clm5_0_GSWP3v1",
-        "clm5_1_1PT": "clm5_1_GSWP3v1",
-        "clm5_1_QIAN": "clm5_1_GSWP3v1",
-        "clm5_1_NLDAS2": "clm5_1_GSWP3v1",
-        "clm5_1_ERA5": "clm5_1_GSWP3v1",
-        "clm5_1_CRUv7": "clm5_1_GSWP3v1",
         "clm6_0_1PT": "clm6_0_GSWP3v1",
         "clm6_0_QIAN": "clm6_0_GSWP3v1",
         "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
@@ -145,13 +131,9 @@ def buildnml(case, caseroot, compname):
     #  to the CAM version)
     tuning_based_on = {
         "clm6_0_GSWP3v1": "clm5_0_GSWP3v1",
-        "clm5_1_GSWP3v1": "clm5_0_GSWP3v1",
         "clm6_0_cam6.0": "clm5_0_cam6.0",
         "clm6_0_cam5.0": "clm5_0_cam6.0",
         "clm6_0_cam4.0": "clm5_0_cam6.0",
-        "clm5_1_cam6.0": "clm5_0_cam6.0",
-        "clm5_1_cam5.0": "clm5_0_cam6.0",
-        "clm5_1_cam4.0": "clm5_0_cam6.0",
         "clm5_0_cam5.0": "clm5_0_cam6.0",
         "clm5_0_cam4.0": "clm5_0_cam6.0",
         "clm4_5_cam6.0": "clm5_0_cam6.0",
@@ -255,12 +237,9 @@ def buildnml(case, caseroot, compname):
     else:
         nomeg = ""
 
-    glc_use_antarctica = cism_use_antarctica
     if glc_use_antarctica is None:
-        glc_use_antarctica = dglc_use_antarctica
-    if glc_use_antarctica is None:
-        # This is the case for compsets without CISM or DGLC, where the
-        # CISM_USE_ANTARCTICA and DGLC_USE_ANTARCTICA xml variables are not defined
+        # This is the case for compsets with SGLC where the GLC_USE_ANTARCTICA xml
+        # variable isn't defined
         glc_use_antarctica_flag = ""
     elif isinstance(glc_use_antarctica, bool):
         if glc_use_antarctica:
@@ -268,16 +247,10 @@ def buildnml(case, caseroot, compname):
         else:
             glc_use_antarctica_flag = ""
     else:
-        if cism_use_antarctia:
-            expect(
-                False,
-                "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica),
-            )
-        else:
-            expect(
-                False,
-                "Unexpected value for DGLC_USE_ANTARCTICA: {}".format(dglc_use_antarctica),
-            )
+        expect(
+            False,
+            "Unexpected value for GLC_USE_ANTARCTICA: {}".format(glc_use_antarctica),
+        )
 
     if clm_nml_use_case != "UNSET":
         usecase = "-use_case %s" % clm_nml_use_case

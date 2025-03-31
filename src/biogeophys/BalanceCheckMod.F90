@@ -12,7 +12,7 @@ module BalanceCheckMod
   use decompMod          , only : subgrid_level_gridcell, subgrid_level_column, subgrid_level_patch
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
-  use clm_varctl         , only : use_fates_planthydro
+  use clm_varctl         , only : use_fates_planthydro, use_fates
   use clm_varpar         , only : nlevsoi
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
@@ -952,14 +952,15 @@ contains
 
        errsol_max_val = maxval( abs(errsol(bounds%begp:bounds%endp)), mask = (errsol(bounds%begp:bounds%endp) /= spval) ) 
 
-       if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps)) then
+       if  ((errsol_max_val > energy_warning_thresh) .and. (DAnstep > skip_steps) ) then
 
            indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
            indexg = patch%gridcell(indexp)
-           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
-           write(iulog,*)'nstep         = ',nstep
-           write(iulog,*)'errsol        = ',errsol(indexp)
-           
+           if (.not. use_fates) then
+              write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
+              write(iulog,*)'nstep         = ',nstep
+              write(iulog,*)'errsol        = ',errsol(indexp)
+           endif
            if (errsol_max_val > error_thresh) then
                write(iulog,*)'CTSM is stopping because errsol > ', error_thresh, ' W/m2'
                write(iulog,*)'fsa           = ',fsa(indexp)

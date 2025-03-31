@@ -58,9 +58,9 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! MEGAN compound name
-    real(r8),        intent(out) :: factors(npfts) ! vegitation type factors for the compound of intrest
-    integer,         intent(out) :: class_n        ! MEGAN class number for the compound of intrest
-    real(r8),        intent(out) :: molecwght      ! molecular weight of the compound of intrest
+    real(r8),        intent(out) :: factors(npfts) ! vegetation type factors for the compound of interest
+    integer,         intent(out) :: class_n        ! MEGAN class number for the compound of interest
+    real(r8),        intent(out) :: molecwght      ! molecular weight of the compound of interest
     !
     ! LOCAL VARS:
     integer :: hashkey, ndx
