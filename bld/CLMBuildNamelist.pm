@@ -4074,7 +4074,7 @@ sub setup_logic_fire_emis {
           $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
                       "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
         } elsif ( ! &value_is_true( $nl_flags->{'use_cn'} ) ) {
-          $log->fatal_error("Fire emission option $var can NOT be on BGC SP Satellite Phenology.\n" .
+          $log->fatal_error("Fire emission option $var can NOT be on when BGC SP (i.e.e Satellite Phenology) is also on.\n" .
                            "  DON'T use the '--fire_emis' option when '--bgc sp' is activated");
         } elsif ( &value_is_true( $nl_flags->{'use_cn'}) ) {
           my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
