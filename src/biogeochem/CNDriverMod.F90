@@ -79,7 +79,7 @@ contains
     call SoilBiogeochemCompetitionInit(bounds)
     if(use_cn)then
        call CNPhenologyInit(bounds)
-       call cnfire_method%FireInit(bounds, NLFilename)
+       call cnfire_method%FireInit(bounds)
     end if
   end subroutine CNDriverInit
 
