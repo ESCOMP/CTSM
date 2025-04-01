@@ -1,6 +1,7 @@
 """
 Functions for making crop calendar figures
 """
+# pylint: disable=abstract-class-instantiated
 
 import numpy as np
 
@@ -12,6 +13,7 @@ import matplotlib.colors as mcolors
 from matplotlib import cm
 import matplotlib.collections as mplcol
 
+# pylint: disable=abstract-class-instantiated
 
 # Colormaps (maps)
 cropcal_colors = {

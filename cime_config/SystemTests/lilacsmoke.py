@@ -25,7 +25,8 @@ import os
 import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy, append_testlog
+from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy
+from CIME.status import append_testlog
 from CIME.build import post_build
 from CIME.test_status import (
     NAMELIST_PHASE,

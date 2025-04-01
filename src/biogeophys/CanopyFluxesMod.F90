@@ -753,6 +753,7 @@ bioms:   do f = 1, fn
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
+               sa_leaf(p) = sa_leaf(p) + esai(p)
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass

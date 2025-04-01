@@ -1,7 +1,7 @@
 """
 Functions to support generate_gdds.py
 """
-# pylint: disable=too-many-lines,too-many-statements
+# pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
 import glob
@@ -10,6 +10,7 @@ from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import is_instantaneous
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
@@ -60,6 +61,7 @@ def error(logger, string):
     """
     Simultaneously print ERROR messages to console and to log file
     """
+    print(string)
     logger.error(string)
     raise RuntimeError(string)
 
@@ -257,6 +259,7 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
+    h1_instantaneous,
 ):
     """
     Import one year of CLM output data for GDD generation
@@ -271,7 +274,7 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h2 file (list)
+    # Get h1 file (list)
     h1_pattern = os.path.join(indir, "*h1.*.nc")
     h1_filelist = glob.glob(h1_pattern)
     if not h1_filelist:
@@ -286,12 +289,19 @@ def import_and_process_1yr(
     else:
         crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
-    print(h1_filelist)
+    # Are h1 files instantaneous?
+    if h1_instantaneous is None:
+        h1_instantaneous = is_instantaneous(xr.open_dataset(h1_filelist[0])["time"])
+
+    if h1_instantaneous:
+        slice_year = this_year
+    else:
+        slice_year = this_year - 1
     dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
-        time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
+        time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
     )
     for timestep in dates_ds["time"].values:
@@ -551,13 +561,14 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc")
-    h2_files = glob.glob(pattern)
-    if not h2_files:
-        pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc.base")
+    patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
-        if not h2_files:
-            error(logger, f"No files found matching pattern '*h2.{this_year-1}-01-01*.nc(.base)'")
+        if h2_files:
+            break
+    if not h2_files:
+        error(logger, f"No files found matching patterns: {patterns}")
     h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
@@ -808,6 +819,7 @@ def import_and_process_1yr(
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
+        h1_instantaneous,
     )
 
 

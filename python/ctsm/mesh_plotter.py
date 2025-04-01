@@ -62,10 +62,24 @@ def get_parser():
 
     parser.add_argument(
         "--overwrite",
-        help="If plots  xists, overwrite them.",
+        help="If plots exist, overwrite them.",
         action="store_true",
         dest="overwrite",
         required=False,
+    )
+
+    parser.add_argument(
+        "--no-center-coords",
+        help="Do not include red Xs at center of grid cells.",
+        action="store_true",
+        required=False,
+    )
+
+    default_dpi = 300
+    parser.add_argument(
+        "--dpi",
+        help=f"Dots per square inch in output; default {default_dpi}",
+        type=float,
     )
 
     add_logging_args(parser)
@@ -98,9 +112,10 @@ def process_and_check_args(args):
 
         today = datetime.today()
         today_string = today.strftime("%y%m%d")
+        input_filename = os.path.basename(args.input)
         args.output = os.path.join(
             args.out_dir,
-            os.path.splitext(args.input)[0] + "_c" + today_string,
+            os.path.splitext(input_filename)[0] + "_c" + today_string,
         )
 
     if not os.path.isfile(args.input):
@@ -148,10 +163,15 @@ def main():
     this_mesh.read_file(ds)
 
     plot_regional = os.path.splitext(mesh_out)[0] + "_regional" + ".png"
+    file_exists_msg = "File already exists but --overwrite not given: "
+    if os.path.exists(plot_regional) and not args.overwrite:
+        raise FileExistsError(file_exists_msg + plot_regional)
 
     plot_global = os.path.splitext(mesh_out)[0] + "_global" + ".png"
+    if os.path.exists(plot_global) and not args.overwrite:
+        raise FileExistsError(file_exists_msg + plot_global)
 
-    this_mesh.make_mesh_plot(plot_regional, plot_global)
+    this_mesh.make_mesh_plot(plot_regional, plot_global, args)
 
 
 if __name__ == "__main__":

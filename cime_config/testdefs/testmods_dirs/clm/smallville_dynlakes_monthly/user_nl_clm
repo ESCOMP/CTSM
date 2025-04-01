@@ -6,7 +6,7 @@ do_transient_lakes = .true.
 ! Key points are that lake area starts as 0, increases after the first year, then decreases after the second year.
 ! PCT_CROP is also changed so that PCT_LAKE + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_LAKE in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.)
 ! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_1x1_smallvilleIA_SSP2-4.5_1850-1855_78pfts_dynLakes_c240221.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/landuse.timeseries_1x1_smallvilleIA_synth_SSP2-4.5_1850-1855_78pfts_dynLakes_c240912.nc'
 
 ! NOTE slevis (2024/2/23) Adding option for tests to pass. In the long term
 ! ensure that subset_data generates fsurdat and landuse files consistent with

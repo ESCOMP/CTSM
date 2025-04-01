@@ -18,7 +18,10 @@ SCRIP grid files for all the standard model resolutions and the raw surface data
 Using mknocnmap.pl to create grid and maps for single-point regional grids
 --------------------------------------------------------------------------
 
-If you want to create a regular latitude/longitude single-point or regional grid, we suggest you use **mknoocnmap.pl** in ``$CTSMROOT/tools/mkmapdata`` which will create both the SCRIP grid file you need (using ``$CTSMROOT/tools/mkmapgrids/mkscripgrid.ncl`` AND an identity mapping file assuming there is NO ocean in your grid domain. If you HAVE ocean in your domain you could modify the mask in the SCRIP grid file for ocean, and then use **ESMF_RegridWeightGen** to create the mapping file, and **gen_domain** to create the domain file. Like other tools, ``./mkmapdata/mknoocnmap.pl`` has a help option with the following:
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
+If you want to create a regular latitude/longitude single-point or regional grid, we suggest you use ``mknoocnmap.pl`` in ``$CTSMROOT/tools/mkmapdata`` which will create both the SCRIP grid file you need (using ``$CTSMROOT/tools/mkmapgrids/mkscripgrid.ncl``) AND an identity mapping file assuming there is NO ocean in your grid domain. If you HAVE ocean in your domain you could modify the mask in the SCRIP grid file for ocean, and then use ``ESMF_RegridWeightGen`` to create the mapping file, and ``gen_domain`` to create the domain file. Like other tools, ``./mkmapdata/mknoocnmap.pl`` has a help option with the following:
 ::
 
    SYNOPSIS

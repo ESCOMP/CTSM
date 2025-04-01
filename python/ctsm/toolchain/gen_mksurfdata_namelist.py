@@ -167,16 +167,6 @@ def get_parser():
         default="/glade/campaign/cesm/cesmdata/inputdata/",
     )
     parser.add_argument(
-        "--vic",
-        help="""
-            Flag for adding the fields required for the VIC model.
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="vic_flag",
-        default=False,
-    )
-    parser.add_argument(
         "--inlandwet",
         help="""
             Flag for including inland wetlands.
@@ -194,19 +184,6 @@ def get_parser():
             """,
         action="store_true",
         dest="glc_flag",
-        default=False,
-    )
-    parser.add_argument(
-        "--hires_pft",
-        help="""
-            If you want to use the high-resolution pft dataset rather
-            than the default lower resolution dataset.
-            (Low resolution is at quarter-degree, high resolution at 3-minute)
-            [Note: hires only available for 1850 and 2005.]
-            [default: %(default)s]
-            """,
-        action="store_true",
-        dest="hres_pft",
         default=False,
     )
     parser.add_argument(
@@ -273,13 +250,12 @@ def main():
     input_path = args.input_path
     nocrop_flag = args.crop_flag
     nosurfdata_flag = args.surfdata_flag
-    vic_flag = args.vic_flag
     inlandwet = args.inlandwet
     glc_flag = args.glc_flag
     potveg = args.potveg_flag
     glc_nec = args.glc_nec
 
-    hires_pft, hires_soitex = process_hires_options(args, start_year, end_year)
+    hires_soitex = process_hires_options(args)
 
     if force_model_mesh_file is not None:
         open_mesh_file(force_model_mesh_file, force_model_mesh_nx, force_model_mesh_ny)
@@ -310,7 +286,6 @@ def main():
 
     # create attribute list for parsing xml file
     attribute_list = {
-        "hires_pft": hires_pft,
         "hires_soitex": hires_soitex,
         "pft_years": pft_years,
         "pft_years_ssp": pft_years_ssp,
@@ -400,7 +375,6 @@ def main():
             force_model_mesh_file,
             force_model_mesh_nx,
             force_model_mesh_ny,
-            vic_flag,
             rawdata_files,
             landuse_fname,
             mksrf_ftopostats_override,
@@ -413,7 +387,6 @@ def main():
         # -------------------
         write_nml_outdata(
             nosurfdata_flag,
-            vic_flag,
             inlandwet,
             glc_flag,
             hostname,
@@ -436,43 +409,31 @@ def main():
     print(f"Successfully created input namelist file {nlfname}")
 
 
-def process_hires_options(args, start_year, end_year):
+def process_hires_options(args):
     """
     Process options related to hi-res
     """
-    if args.hres_pft:
-        if (start_year == 1850 and end_year == 1850) or (start_year == 2005 and end_year == 2005):
-            hires_pft = "on"
-        else:
-            error_msg = (
-                "ERROR: for --hires_pft you must set both start-year "
-                "and end-year to 1850 or to 2005"
-            )
-            sys.exit(error_msg)
-    else:
-        hires_pft = "off"
-
     if args.hres_soitex:
         hires_soitex = "on"
     else:
         hires_soitex = "off"
-    return hires_pft, hires_soitex
+    return hires_soitex
 
 
 def check_ssp_years(start_year, end_year):
     """
     Check years associated with SSP period
     """
-    if int(start_year) > 2015:
+    if int(start_year) > 2023:
         error_msg = (
-            "ERROR: if start-year > 2015 must add an --ssp_rcp "
+            "ERROR: if start-year > 2023 must add an --ssp_rcp "
             "argument that is not none: valid opts for ssp-rcp "
             f"are {valid_opts}"
         )
         sys.exit(error_msg)
-    elif int(end_year) > 2015:
+    elif int(end_year) > 2023:
         error_msg = (
-            "ERROR: if end-year > 2015 must add an --ssp-rcp "
+            "ERROR: if end-year > 2023 must add an --ssp-rcp "
             "argument that is not none: valid opts for ssp-rcp "
             f"are {valid_opts}"
         )
@@ -537,6 +498,8 @@ def determine_pft_years(start_year, end_year, potveg):
     pft_years_ssp = "-999"
     if potveg:
         pft_years = "PtVg"
+    elif int(start_year) == 1700 and int(end_year) == 1700:
+        pft_years = "1700"
     elif int(start_year) == 1850 and int(end_year) == 1850:
         pft_years = "1850"
     elif int(start_year) == 2000 and int(end_year) == 2000:
@@ -545,21 +508,21 @@ def determine_pft_years(start_year, end_year, potveg):
         pft_years = "2005"
     elif int(start_year) >= 850 and int(end_year) <= 1849:
         pft_years = "0850-1849"
-    elif int(start_year) >= 1850 and int(start_year) <= 2100 and int(end_year) <= 2015:
-        pft_years = "1850-2015"
-    elif int(start_year) >= 1850 and int(start_year) <= 2100 and int(end_year) <= 2100:
-        pft_years = "1850-2015"
-        pft_years_ssp = "2016-2100"
-    elif int(start_year) >= 2016 and int(start_year) <= 2100 and int(end_year) <= 2100:
+    elif int(start_year) >= 1700 and int(start_year) <= 2100 and int(end_year) <= 2023:
+        pft_years = "1700-2023"
+    elif int(start_year) >= 1700 and int(start_year) <= 2100 and int(end_year) <= 2100:
+        pft_years = "1700-2023"
+        pft_years_ssp = "2024-2100"
+    elif int(start_year) >= 2023 and int(start_year) <= 2100 and int(end_year) <= 2100:
         pft_years = "-999"
-        pft_years_ssp = "2016-2100"
+        pft_years_ssp = "2024-2100"
     else:
         error_msg = (
             f"ERROR: start_year is {start_year} and end_year is "
             f"{end_year}; expected start/end-year options are: "
-            "- 1850, 2000, 2005 for time-slice options "
+            "- 1700, 1850, 2000, 2005 for time-slice options "
             "- in the range from 850 to 1849 "
-            "- in the range from 1850 to 2100 "
+            "- in the range from 1700 to 2100 "
             "- TODO in the range from 2101 to 2300 "
             "- OR user must set the potveg_flag "
         )
@@ -571,7 +534,6 @@ def determine_pft_years(start_year, end_year, potveg):
 
 def write_nml_outdata(
     nosurfdata_flag,
-    vic_flag,
     inlandwet,
     glc_flag,
     hostname,
@@ -602,7 +564,6 @@ def write_nml_outdata(
     nlfile.write(f"  numpft = {num_pft} \n")
     nlfile.write(f"  no_inlandwet = .{str(not inlandwet).lower()}. \n")
     nlfile.write(f"  outnc_3dglc = .{str(glc_flag).lower()}. \n")
-    nlfile.write(f"  outnc_vic = .{str(vic_flag).lower()}. \n")
     nlfile.write("  outnc_large_files = .false. \n")
     nlfile.write("  outnc_double = .true. \n")
     nlfile.write(f"  logname = '{logname}' \n")
@@ -615,7 +576,6 @@ def write_nml_rawinput(
     force_model_mesh_file,
     force_model_mesh_nx,
     force_model_mesh_ny,
-    vic_flag,
     rawdata_files,
     landuse_fname,
     mksrf_ftopostats_override,
@@ -641,11 +601,11 @@ def write_nml_rawinput(
     for key, value in rawdata_files.items():
         if key == "mksrf_ftopostats" and mksrf_ftopostats_override != "":
             nlfile.write(f"  mksrf_ftopostats_override = '{mksrf_ftopostats_override}' \n")
-        elif "_fvic" not in key and "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
+        elif "mksrf_fvegtyp" not in key and "mksrf_fgrid" not in key:
             # write everything else
             nlfile.write(f"  {key} = '{value}' \n")
 
-    if start_year <= 2015:
+    if start_year <= 2023:
         mksrf_fvegtyp = rawdata_files["mksrf_fvegtyp"]
         mksrf_fvegtyp_mesh = rawdata_files["mksrf_fvegtyp_mesh"]
         mksrf_fhrvtyp = rawdata_files["mksrf_fvegtyp"]
@@ -690,12 +650,6 @@ def write_nml_rawinput(
     nlfile.write(f"  mksrf_fpctlak = '{mksrf_fpctlak}' \n")
     nlfile.write(f"  mksrf_furban = '{mksrf_furban}' \n")
 
-    if vic_flag:
-        mksrf_fvic = rawdata_files["mksrf_fvic"]
-        nlfile.write(f"  mksrf_fvic = '{mksrf_fvic}' \n")
-        mksrf_fvic_mesh = rawdata_files["mksrf_fvic_mesh"]
-        nlfile.write(f"  mksrf_fvic_mesh = '{mksrf_fvic_mesh}' \n")
-
     nlfile.write(f"  mksrf_fdynuse = '{landuse_fname} ' \n")
     return must_run_download_input_data
 
@@ -714,7 +668,7 @@ def handle_transient_run(
     with open(landuse_fname, "w", encoding="utf-8") as landuse_file:
         for year in range(start_year, end_year + 1):
             year_str = str(year)
-            if year <= 2015:
+            if year <= 2023:
                 file1 = rawdata_files["mksrf_fvegtyp"]
                 file2 = rawdata_files["mksrf_fvegtyp_urban"]
                 file3 = rawdata_files["mksrf_fvegtyp_lake"]
@@ -832,16 +786,15 @@ def determine_input_rawdata(start_year, input_path, attribute_list):
                     max_match_child = child2
 
         if max_match_child is None:
-            # TODO slevis: Are these if-statements backwards?
-            # For years greater than 2015 - mksrf_fvegtyp_ssp must have a match
-            if start_year <= 2015:
+            # For years greater than 2023 - mksrf_fvegtyp_ssp must have a match
+            if start_year > 2023:
                 if "mksrf_fvegtyp_ssp" not in child1.tag:
                     error_msg = f"ERROR: {child1.tag} has no matches"
                     sys.exit(error_msg)
                 else:
                     continue
             else:
-                # For years less than 2015 - mksrf_fvegtyp must have a match
+                # For years less than 2023 - mksrf_fvegtyp must have a match
                 if "mksrf_fvegtyp" not in child1.tag:
                     error_msg = f"ERROR: {child1.tag} has no matches"
                     sys.exit(error_msg)

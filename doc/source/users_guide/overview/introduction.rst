@@ -60,9 +60,9 @@ As a followup to the tools chapter, :ref:`adding-new-resolutions-section` tells 
 
 In :ref:`running-special-cases-section`, again for the expert user, we give details on how to do some particularly difficult special cases. For example, we give the protocol for spinning up the |version|-BGC and CLMCN models as well as CLM with dynamic vegetation active (CNDV). We give instructions to do a spinup case from a previous case with Coupler history output for atmospheric forcing. We also give instructions on running both the prognostic crop and irrigation models. Lastly we tell the user how to use the DATM model to send historical CO2 data to CLM.
 
-:ref:`running-single-points` outlines how to do single-point or regional simulations using |version|. This is useful to either compare |version| simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization. There are several different ways given on how to perform single-point simulations which range from simple PTS_MODE to more complex where you create all your own datasets, tying into :ref:`using-clm-tools-section` and also :ref:`adding-new-resolutions-section` to add the files into the build-namelist XML database. The PTCLM python script to run single-point simulations was added back in for this release (but it has bugs that don't allow it to work out of the box). CLM4 in CESM1.0.5 has a fully working versions of PTCLM.
+:ref:`running-single-points` outlines how to do single-point or regional simulations using |version|. This is useful to either compare |version| simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization. There are several different ways given on how to perform single-point simulations which range from simple sampling of existing inputs to more complex where you create all your own datasets, tying into :ref:`using-clm-tools-section` and also :ref:`adding-new-resolutions-section` to add the files into the build-namelist XML database.
 
-Need :ref:`running-PTCLM` blurb...
+There is also :ref:`pts_mode`, which is useful for running single points as part of the Single Column Atmospheric Model (SCAM).
 
 :ref:`troubleshooting-index` gives some guidance on trouble-shooting problems when using |version|. It doesn't cover all possible problems with CLM, but gives you some guidelines for things that can be done for some common problems.
 
@@ -109,7 +109,7 @@ The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
 A CTSM versus a CESM checkout
 =============================
 
-The directory structure for |version| is different depending on if it's checked out from |release| or |cesmrelease|. If |version| is checked out from |ctsm_gh| the CLM source code is directly under the top level directory. If |cesmrelease| is checkout out from |cesm_gh| then the CLM source directories are under "components/clm" from the top level directory. We will refer to this directory for the CLM source directories in the User's Guide as "$CTSMROOT".
+The directory structure for |version| is different depending on if it's checked out from |release| or |cesmrelease|. If |version| is checked out from |ctsm_gh| the CLM source code is directly under the top level directory. If |cesmrelease| is checkout out from |cesm_gh| then the CLM source directories are under ``components/clm`` from the top-level directory. We will refer to this directory for the CLM source directories in the User's Guide as ``$CTSMROOT``.
 
 .. _how-to-use-this-document:
 

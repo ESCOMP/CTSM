@@ -332,7 +332,9 @@ sub print_categories {
    if ( ! -f $expectedfailfile ) {
       $expectedfailfile = "$scrdir/cime_config/testdefs/ExpectedTestFails.xml";
    }
-   my @failfiles = (  $expectedfailfile, "$scrdir/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml" );
+   my @failfiles = (  $expectedfailfile, "$scrdir/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml",
+                      #"$scrdir/components/mosart/cime_config/testdefs/ExpectedTestFails.xml",
+                      "$scrdir/components/cmeps/cime_config/ExpectedTestFails.xml" );
    my @passes;
    my @fails;
    my @pendings;

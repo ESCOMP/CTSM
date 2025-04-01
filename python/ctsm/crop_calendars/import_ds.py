@@ -10,6 +10,7 @@ import warnings
 from importlib.util import find_spec
 import numpy as np
 import xarray as xr
+from ctsm.utils import is_instantaneous
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 
@@ -23,7 +24,8 @@ def compute_derived_vars(ds_in, var):
         and "HDATES" in ds_in
         and ds_in.HDATES.dims == ("time", "mxharvests", "patch")
     ):
-        year_list = np.array([np.float32(x.year - 1) for x in ds_in.time.values])
+        year_adj = 1 if is_instantaneous(ds_in["time"]) else 0
+        year_list = np.array([np.float32(x.year - year_adj) for x in ds_in.time.values])
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),

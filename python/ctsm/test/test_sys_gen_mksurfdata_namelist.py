@@ -62,7 +62,7 @@ class TestSysGenMkSurfNML(unittest.TestCase):
         main()
         self.assertTrue(os.path.exists(self.outfile), "Output surface dataset file should exist")
 
-    def test_vic_nocrop_inlandwet_glc_namelist(self):
+    def test_nocrop_inlandwet_glc_namelist(self):
         """
         Test a namelist with several options on
         """
@@ -75,7 +75,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
                 "1850",
                 "--res",
                 "1.9x2.5",
-                "--vic",
                 "--nocrop",
                 "--inlandwet",
                 "--glc",
@@ -99,7 +98,6 @@ class TestSysGenMkSurfNML(unittest.TestCase):
                 "mpasa15",
                 "--glc-nec",
                 "10",
-                "--hires_pft",
                 "--hires_soitex",
             ]
         )

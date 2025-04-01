@@ -6,7 +6,7 @@
  Running Single Point Configurations
 ******************************************
 
-In addition to ``PTS_MODE`` (Sect. :numref:`pts_mode`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
+In addition to running with the outputs of ``subset_data`` (Sect. :numref:`single_point_subset_data`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
 
 To get the list of supported dataset resolutions do this:
 ::
@@ -32,7 +32,7 @@ The resolution names that have an underscore in them ("_") are all single-point 
 .. note:: When running a single point, the number of processors is automatically set to one, which is the only value allowed.
 
 .. warning::
-   Just like ``PTS_MODE`` (Sect. :numref:`pts_mode`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+   Just like running with the outputs from ``subset_data`` (Sect. :numref:`single_point_subset_data`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
 
 .. _single-point-global-climate:
 
@@ -45,7 +45,7 @@ Example: Use global forcings at a site without its own special forcings
 This example uses the single-point site in Brazil.
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > set SITE=1x1_brazil
    > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs
    > cd testSPDATASET
@@ -59,7 +59,7 @@ The urban Mexico City test site has its own atmosphere forcing data (see Sect. :
 
 ::
 
-   > cd scripts
+   > cd cime/scripts
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_mexicocityMEX
    > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs
@@ -74,14 +74,17 @@ Supported single-point runs for sites with their own atmospheric forcing
 
 Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked. If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
 
-When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the **queryDefaultNamelist.pl** script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
+.. todo::
+    Update the below, as ``queryDefaultNamelist.pl`` no longer exists.
+
+When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the ``queryDefaultNamelist.pl`` script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
 
 Example: Use site-specific atmospheric forcings
 -----------------------------------------------
 In this example, we show how to use the atmospheric forcings specific to the Vancouver, Canada point.
 ::
 
-   > cd scripts
+   > cd cime/scripts
 
    # Set a variable to the site you want to use (as it's used several times below)
    > set SITE=1x1_vancouverCAN
@@ -121,7 +124,7 @@ Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a spe
 -----------------------------------------------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case my_userdataset_test -res CLM_USRDAT -compset I2000Clm50BgcCruGs
    > cd my_userdataset_test/
    > set GRIDNAME=13x12pt_f19_alaskaUSA
@@ -142,6 +145,9 @@ The first step is to create the domain and surface datasets using the process ou
 
 Example: Creating a surface dataset for a single point
 ---------------------------------------------------------------------
+.. todo::
+    Update the below, as ``mksurfdata.pl`` no longer exists and domain files aren't needed with nuopc.
+
 ::
 
    # set the GRIDNAME and creation date that will be used later
@@ -176,6 +182,13 @@ The next step is to create a case that points to the files you created above. We
 
 Example: Setting up a case from the single-point surface dataset just created
 --------------------------------------------------------------------------------------------
+
+.. todo::
+    Change this to provide instructions for a CTSM checkout instead of a CESM one.
+
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
 ::
 
    # First setup an environment variable that points to the top of the CESM directory.
@@ -188,7 +201,7 @@ Example: Setting up a case from the single-point surface dataset just created
    # naming convention (leave off the creation date)
    > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_esmf/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
    $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
-   > cd $CESMROOT/scripts
+   > cd $CESMROOT/cime/scripts
    > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
    -mach cheyenne_intel
    > cd my_usernldatasets_test
@@ -199,4 +212,4 @@ Example: Setting up a case from the single-point surface dataset just created
    > ./xmlchange CLM_USRDAT_NAME=$GRIDNAME
    > ./case.setup
 
-.. note:: With this and previous versions of the model we recommended using ``CLM_USRDAT_NAME`` as a way to identify your own datasets without having to enter them into the XML database. This has the down-side that you can't include creation dates in your filenames, which means you can't keep track of different versions by date. It also means you HAVE to rename the files after you created them with **mksurfdata.pl**. Now, since ``user_nl`` files are supported for ALL model components, and the same domain files are read by both CLM and DATM and set using the envxml variables: ``ATM_DOMAIN_PATH``, ``ATM_DOMAIN_FILE``, ``LND_DOMAIN_PATH``, and ``LND_DOMAIN_FILE`` -- you can use this mechanism (``user_nl_clm`` and ``user_nl_datm`` and those envxml variables) to point to your datasets in any location. In the future we will deprecate ``CLM_USRDAT_NAME`` and recommend ``user_nl_clm`` and ``user_nl_datm`` and the ``DOMAIN`` envxml variables.
+.. note:: With this and previous versions of the model we recommended using ``CLM_USRDAT_NAME`` as a way to identify your own datasets without having to enter them into the XML database. This has the down-side that you can't include creation dates in your filenames, which means you can't keep track of different versions by date. It also means you HAVE to rename the files after you created them with ``mksurfdata.pl``. Now, since ``user_nl`` files are supported for ALL model components, and the same domain files are read by both CLM and DATM and set using the envxml variables: ``ATM_DOMAIN_PATH``, ``ATM_DOMAIN_FILE``, ``LND_DOMAIN_PATH``, and ``LND_DOMAIN_FILE`` -- you can use this mechanism (``user_nl_clm`` and ``user_nl_datm`` and those envxml variables) to point to your datasets in any location. In the future we will deprecate ``CLM_USRDAT_NAME`` and recommend ``user_nl_clm`` and ``user_nl_datm`` and the ``DOMAIN`` envxml variables.

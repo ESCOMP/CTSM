@@ -1285,7 +1285,7 @@ contains
        ! Call dv (dynamic vegetation) at last time step of year
 
        call t_startf('d2dgvm')
-       if (is_end_curr_year() .and. .not. is_first_step())  then
+       if (is_end_curr_year())  then
 
           ! Get date info.  kyr is used in lpj().  At end of first year, kyr = 2.
           call get_curr_date(yr, mon, day, sec)
@@ -1337,7 +1337,7 @@ contains
 
     ! Write to CNDV history buffer if appropriate
     if (use_cndv) then
-       if (is_end_curr_year() .and. .not. is_first_step())  then
+       if (is_end_curr_year())  then
           call t_startf('clm_drv_io_hdgvm')
           call CNDVHist( bounds, this%dgvs_inst )
           if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'

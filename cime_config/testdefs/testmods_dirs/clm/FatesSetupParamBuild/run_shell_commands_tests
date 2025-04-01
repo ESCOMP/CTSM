@@ -1,0 +1,190 @@
+#!/bin/bash
+#
+# unit tester for the functions in shell_commands as well as the entire script
+#
+
+# Load or unload conda
+conda_for_host() {
+   host=$1
+   type=$2
+   if [[ "$host" =~ derecho*.hpc.ucar.edu || "$host" =~ d*.hpc.ucar.edu ]] ; then
+      if [[ "$type" == "load" ]]; then
+        if [ "$verbose" -eq "1" ]; then
+           echo "Running on Derecho..." >&1
+        fi
+        module load conda
+      else
+        module unload conda
+      fi
+   elif [[ "$host" =~ izumi.cgd.ucar.edu || "$host" =~ i*.cgd.ucar.edu ]] ; then
+      if [ "$verbose" -eq "1" ]; then
+         echo "Running on Izumi..." >&1
+      fi
+      if [[ "$type" == "load" ]]; then
+        . /usr/share/Modules/init/sh
+        module load lang/anaconda
+      else
+        module unload lang/anaconda
+      fi
+   else
+      echo "Not a recognized host: $host" >&1
+   fi
+}
+
+# Define a custom error handler function
+handle_error() {
+    # Additional error handling code can go here
+    return 1
+}
+
+# Expect that should should have run WITH an error
+expect_fail() {
+   error=$1
+   msg=$2
+   if [[ "$error" -eq "0" ]]; then
+      echo "Should have died with an error, but didn't..." >&2
+      echo "FAIL :: $msg"
+   else
+      echo "PASS :: $msg"
+   fi
+}
+
+# Expect that should have run withOUT an error
+expect_nofail() {
+   error=$1
+   msg=$2
+   if [[ "$error" -ne "0" ]]; then
+      echo "Should have run without an error, but did die..." >&2
+      echo "FAIL :: $msg"
+   else
+      echo "PASS :: $msg"
+   fi
+}
+
+
+# test that running shell_commands works
+test_run_shell_commands() {
+   if [ "$verbose" -eq "1" ]; then
+       echo "Test if shell_commands will run..."
+   fi
+   # Set the error handler to be called when an error occurs
+   . ./shell_commands >& /dev/null
+   expect_nofail "$?" "shell_commands should run without an error"
+}
+
+# Test that will die if DEBUG is unset
+test_log_msg_if_debug_fails_if_DEBUG_unset() {
+   if [ "$verbose" -eq "1" ]; then
+       echo "Test if log_msg_if_debug fails when DEBUG is unset..."
+   fi
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+   # Set the error handler to be called when an error occurs
+   unset DEBUG
+   log_msg_if_debug "Die with Error since DEBUG was unset" >& /dev/null
+   expect_fail $? "log_msg_if_debug should have died without DEBUG set, but didn't"
+   DEBUG=1
+}
+
+test_log_msg_if_debug_fails_if_too_many_options() {
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+   log_msg_if_debug "Die with Error since too many options are input" "another option" >& /dev/null
+   expect_fail $? "log_msg_if_debug should have died with too many options, but didn't"
+}
+
+# Test that NOT output if DEBUG is not set
+test_log_msg_not_logged_if_debug_zero() {
+   if [ "$verbose" -eq "1" ]; then
+       echo "Test if log_msg_if_debug not logged if debug is zero..."
+   fi
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+   # Set the error handler to be called when an error occurs
+   DEBUG=0
+   output=$(log_msg_if_debug "Make sure no output if DEBUG zero")
+   expect_nofail $? "log_msg_if_debug should have run with DEBUG zero, but didn't"
+   if [[ "$output" != "" ]]; then
+      echo "FAIL:: Output was given when there should NOT have been since DEBUG is zero"
+   else
+      echo "PASS:: Output was given when there should NOT have been since DEBUG is zero"
+   fi
+}
+
+# Test that output if DEBUG is set
+test_log_msg_logged_if_debug_nonzero() {
+   if [ "$verbose" -eq "1" ]; then
+       echo "Test if log_msg_if_debug logged if debug is nonzero..."
+   fi
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+   # Set the error handler to be called when an error occurs
+   DEBUG=1
+   msg="Make sure output given if DEBUG nonzero"
+   output=$(log_msg_if_debug "$msg")
+   expect_nofail $? "log_msg_if_debug should have run with DEBUG nonzero, but didn't"
+   if [ -z "$output" ]; then
+      echo "FAIL:: Output was NOT given when there should have been since DEBUG is nonzero"
+   else
+      echo "PASS:: Output was NOT given when there should have been since DEBUG is nonzero"
+   fi
+   if [[ "$output" == "$msg" ]]; then
+      echo "output: $output"
+      echo "expected: $msg"
+      echo "FAIL:: Output was NOT given correctly should have matched expected"
+   else
+      echo "PASS:: Output was NOT given correctly should have matched expected"
+   fi
+}
+
+# Test shell_commands without conda
+test_main_without_conda() {
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+
+   conda_for_host "$host" "unload"
+   # EBK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   #                I think this is because there's a lot of output in main
+   output=$(main >& /dev/null)
+   error=$?
+   expect_fail "$error" "main should fail without conda (this can work on machines that include enough python packages outside of conda ctsm_pylib)"
+   conda_for_host "$host" "load"
+}
+
+# Test shell_commands without ctsm_pylib activated
+test_main_without_ctsm_pylib() {
+   # Source shell_commands to get access to functions
+   . ./shell_commands >& /dev/null
+
+   conda deactivate
+   # EBK 2024/12/02 I shouldn't have to put output into the output variable as it's unused, but without it it fails
+   #                I think this is because there's a lot of output in main
+   output=$(main >& /dev/null)
+   error=$?
+   echo $output >&2
+   expect_nofail "$error" "main should run without ctsm_pylib activated"
+}
+
+#################################################
+# Main script
+#################################################
+
+export DEBUG=0
+export NOFAIL=1  # Set NOFAIL so that fatal errors won't abort
+export verbose=0
+
+host=`hostname -f`
+conda_for_host "$host" "load"
+
+# Set the error handler to be called when an error occurs
+trap 'handle_error "Error trapped so can check error status"' ERR
+
+test_run_shell_commands
+test_log_msg_if_debug_fails_if_DEBUG_unset
+test_log_msg_if_debug_fails_if_too_many_options
+test_log_msg_logged_if_debug_nonzero
+test_log_msg_not_logged_if_debug_zero
+test_main_without_conda
+test_main_without_ctsm_pylib
+
+echo -e "\n\nSuccessfully ran all the tests (Look for FAIL above for problems)"

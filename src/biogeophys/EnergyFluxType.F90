@@ -579,7 +579,7 @@ contains
             avgflag='A', long_name='urban heating flux', &
             ptr_col=this%eflx_urban_heat_col, set_nourb=0._r8, c2l_scale_type='urbanf')
     else
-       this%eflx_urban_ac_lun(begl:endl) = spval
+       this%eflx_building_lun(begl:endl) = spval
        call hist_addfld1d (fname='EFLXBUILD', units='W/m^2',  &
             avgflag='A', long_name='building heat flux from change in interior building air temperature', &
             ptr_lunit=this%eflx_building_lun, set_nourb=0._r8, l2g_scale_type='unity')

@@ -76,9 +76,9 @@ cp original_user_nl_clm user_nl_clm
 ./xmlchange STOP_N=21
 ./xmlchange CONTINUE_RUN=FALSE
 ./xmlchange RESUBMIT=0
-./xmlchange DATM_CLMNCEP_YR_ALIGN=1901
-./xmlchange DATM_CLMNCEP_YR_START=1901
-./xmlchange DATM_CLMNCEP_YR_END=1920
+./xmlchange DATM_YR_ALIGN=1901
+./xmlchange DATM_YR_START=1901
+./xmlchange DATM_YR_END=1920
 
 # need to use user_nl_datm files to get years right
 cp user_nl_datm1901-1920 user_nl_datm
@@ -203,9 +203,9 @@ gzip $DDIR$CASENAME*.bin
 # we have to resubmit the job 3 times.
 ./xmlchange STOP_OPTION=nyears
 ./xmlchange STOP_N=22
-./xmlchange DATM_CLMNCEP_YR_ALIGN=1901
-./xmlchange DATM_CLMNCEP_YR_START=1901
-./xmlchange DATM_CLMNCEP_YR_END=2014
+./xmlchange DATM_YR_ALIGN=1901
+./xmlchange DATM_YR_START=1901
+./xmlchange DATM_YR_END=2014
 ./xmlchange CONTINUE_RUN=TRUE
 ./xmlchange RESUBMIT=3
 

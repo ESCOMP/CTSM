@@ -11,8 +11,6 @@ I.  General directory structure:
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
 
         mkmapgrids ------- Create regular lat/lon SCRIP grid files
-        mkprocdata_map --- Convert output unstructured grids into a 2D format that
-                           can be plotted easily
 
         site_and_regional  Scripts for handling input datasets for site and regional cases.
                            These scripts both help with creation of datasets using the 
@@ -32,49 +30,6 @@ I.  General directory structure:
             gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.
 
 II. Notes on building/running for each of the above tools:
-
-    mkprocdata_map has the following files to facilitate building the FORTRAN code:
-
-	README ------- Specific help for using the specific tool and help on specific 
-                       files in that directory.
-	src/Filepath ----- List of directories needed to build the tool 
-                           (some files in ../src directories are required).
-	src/Makefile ----- GNU Makefile to build the tool 
-                           (these are identical between tools.
-	src/Macros.custom  Customization of make macros for the particular tool in question
-	src/Srcfiles ----- List of source files that are needed.
-        src/Mkdepends ---- Dependency generator program
-
-    To build:
-
-	cd <directory>
-        setenv INC_NETCDF <path-to-NetCDF-include-files>
-        setenv LIB_NETCDF <path-to-NetCDF-library-files>
-	gmake
-
-    The process will create a file called "Depends" which has the dependencies
-    for the build of each file on other files.
-
-      By default some codes may be compiled non-optimized 
-      so that you can use the debugger, and with bounds-checking, and float trapping on. 
-      To speed up do the following...
-
-   gmake OPT=TRUE
-
-      Also some of the tools allow for OpenMP shared memory parallelism 
-      (such as mksurfdata) with
-
-   gmake SMP=TRUE
-
-    To run a program with a namelist:
-
-        ./program < namelist
-
-    To run a program built with SMP=TRUE:
-
-        setenv OMP_NUM_THREADS=<number_of_threads_to_use>
-
-        run normally as above
 
     mksurfdata_esmf has a cime configure and CMake based build using the following files:
 

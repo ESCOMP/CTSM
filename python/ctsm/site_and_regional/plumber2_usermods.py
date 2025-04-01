@@ -24,7 +24,7 @@ def write_usermods(
     Write information to be added to user mods
     """
 
-    site_dir = os.path.join("../../cime_config/usermods_dirs/PLUMBER2/", site)
+    site_dir = os.path.join("../../cime_config/usermods_dirs/clm/PLUMBER2/", site)
 
     if not os.path.isdir(site_dir):
         os.makedirs(site_dir, exist_ok=True)
