@@ -1,4 +1,74 @@
 ===============================================================
+Tag name: ctsm5.3.036
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue Apr  1 11:36:27 MDT 2025
+One-line Summary: Add history output to FATES LUH testmods
+
+Purpose and description of changes
+----------------------------------
+
+Expands the list of history output for FatesColdLUH2 testmods
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #3020: Update FatesColdLUH2 with more history output via fincl1] (https://github.com/ESCOMP/CTSM/issues/3020)
+- [Issue #2968: Change one derecho_nvhpc.clm-crop test to expected fail in RUN](https://github.com/ESCOMP/CTSM/issues/2968)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+   - All FatesColdLUH2 testmod variants now have an expanded list of output that matches the base
+     Fates testmod including FATES landuse specific history
+
+   - SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop expected failure has been updated
+     from SHAREDLIB_BUILD to RUN
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: FIELDLIST diffs only for FatesColdLUH2 testmods
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+- [Pull Request #3022: Update FatesColdLUH2 testmod history output](https://github.com/ESCOMP/CTSM/pull/3022)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.035
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Mar 28 14:31:29 MDT 2025
