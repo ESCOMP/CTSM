@@ -15,33 +15,6 @@ set -e
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd "${SCRIPT_DIR}"
 
-# Try falling back to mamba if conda doesn't work for some reason.
-# Check whether that's needed by trying to create an empty environment,
-# which will later be deleted.
-condamamba="conda"
-tmp_env_name="tmp_env_$(date "+%Y%m%d%H%M%S")"
-set +e
-${condamamba} create --name ${tmp_env_name} --yes --quiet 1>/dev/null 2>&1
-result=$?
-set -e
-if [[ ${result} != 0 ]]; then
-   condamamba="mamba"
-   set +e
-   ${condamamba} create --name ${tmp_env_name} --yes --quiet 1>/dev/null 2>&1
-   result=$?
-   set -e
-   if [[ ${result} != 0 ]]; then
-      echo "Neither conda nor mamba seem to be available and working." >&2
-      echo "Maybe they're not on your path?" >&2
-      echo "on Derecho/Casper/etc use: module load conda" >&2
-      echo "on izumi/CGD systems use: module unload lang/python; module load lang/anaconda/23.11.0/base" >&2
-      echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html" >&2
-      exit ${result}
-   fi
-fi
-# Delete the test environment we made
-${condamamba} remove --all --name ${tmp_env_name} --yes --quiet 1>/dev/null 2>&1
-
 default_new_env_name=ctsm_pylib
 default_old_env_name=ctsm_pylib_3_7_9
 
@@ -67,6 +40,9 @@ usage() {
   echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
   echo "     Default is '$condafile' (unless --old is given)"
+  echo "[-m|--mamba]  "
+  echo "     Use mamba instead of conda. This shouldn't be necessary on most systems because modern"
+  echo "     conda installations use mamba as their backend."
   echo "[-n|--name <environment name>]  "
   echo "     Name of the environment you wish to create. Default: ${default_new_env_name} (unless --old is given)"
   echo "[-o|--overwrite]  "
@@ -84,7 +60,7 @@ usage() {
   echo "[-y|--yes]  "
   echo "     Do not ask for confirmation"
   echo "[--option <option>]  "
-  echo "     Option(s) to pass to '${condamamba} install' step"
+  echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
 }
 
@@ -96,6 +72,7 @@ new_env_name=${default_new_env_name}
 new_name_for_existing=""
 overwrite=0
 dry_run=0
+condamamba="conda"
 while [ $# -gt 0 ]; do
    case $1 in
        -h|--help )
@@ -108,6 +85,9 @@ while [ $# -gt 0 ]; do
        -f|--file )
            condafile=$2
            shift
+           ;;
+       -m|--mamba )
+           condamamba="mamba"
            ;;
        -n|--name )
            new_env_name=$2
