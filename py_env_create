@@ -15,11 +15,6 @@ set -e
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd "${SCRIPT_DIR}"
 
-dir=${0%/*}
-if [ "$dir" = "$0" ];then
-  dir="."
-fi
-
 # Try falling back to mamba if conda doesn't work for some reason.
 # Check whether that's needed by trying to create an empty environment,
 # which will later be deleted.
@@ -50,7 +45,7 @@ ${condamamba} remove --all --name ${tmp_env_name} --yes --quiet 1>/dev/null 2>&1
 default_new_env_name=ctsm_pylib
 
 
-condadir="$dir/python"
+condadir="${SCRIPT_DIR}/python"
 
 condafile="${condadir}/conda_env_ctsm_py.txt"
 #----------------------------------------------------------------------
