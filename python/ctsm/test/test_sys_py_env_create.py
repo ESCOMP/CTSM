@@ -85,8 +85,6 @@ class TestSysPyEnvCreate(unittest.TestCase):
         elif check is None:
             check = True
 
-        if extra_args is not None and "-r" in extra_args:
-            self.env_names.append(extra_args[extra_args.index("-r") + 1])
         if new_env_name:
             self.env_names.append(get_unique_env_name(5))
 
@@ -96,12 +94,18 @@ class TestSysPyEnvCreate(unittest.TestCase):
             cmd += extra_args
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
+        print("cmd: " + " ".join(cmd))
+        print("STDOUT:\n" + out.stdout)
+        print("STDERR:\n" + out.stderr)
+        print(f"RETURN CODE: {out.returncode}")
+
         # Check result
         if expect_error:
             self.assertNotEqual(
                 out.returncode, 0, "Unexpected success of py_env_create call:\n" + out.stdout
             )
         else:
+
             self.assertEqual(
                 out.returncode, 0, "Unexpected failure of py_env_create call:\n" + out.stderr
             )
@@ -110,7 +114,91 @@ class TestSysPyEnvCreate(unittest.TestCase):
         if check:
             assert does_env_exist(self.env_names[-1], get_conda_envs())
 
+        # If you renamed something, make sure it gets deleted in tearDown
+        if extra_args is not None and "-r" in extra_args:
+            self.env_names.append(extra_args[extra_args.index("-r") + 1])
+
         return cmd, out
+
+    def _check_dry_run(self, stdout):
+        self.assertTrue("to install the python environment" in stdout)
+        self.assertTrue("Using the file" in stdout)
+        self.assertTrue(
+            stdout.endswith("Exiting before any actions taken, due to -d/--dry-run option.\n")
+        )
+
+    def test_py_env_create_dry_run_short(self):
+        """
+        Ensure py_env_create doesn't do anything if -d given
+        """
+
+        # Run py_env_create
+        _, out = self._create_empty_env(extra_args=["-d"], check=False)
+
+        # Check stdout
+        self._check_dry_run(out.stdout)
+
+    def test_py_env_create_dry_run_long(self):
+        """
+        Ensure py_env_create doesn't do anything if --dry-run given
+        """
+
+        # Run py_env_create
+        _, out = self._create_empty_env(extra_args=["--dry-run"], check=False)
+
+        # Check stdout
+        self._check_dry_run(out.stdout)
+
+    def test_py_env_create_dry_run_o(self):
+        """
+        Ensure py_env_create doesn't do anything if -d and -o given
+        """
+
+        # Create env
+        self._create_empty_env(check=True)
+
+        # Run py_env_create in dry run mode with overwrite
+        _, out = self._create_empty_env(extra_args=["-d", "-o"], check=False, new_env_name=False)
+
+        # Check stdout
+        self._check_dry_run(out.stdout)
+        self.assertTrue("Overwriting existing" in out.stdout)
+
+    def test_py_env_create_dry_run_r(self):
+        """
+        Ensure py_env_create doesn't do anything if -d and -r given
+        """
+
+        # Create env
+        self._create_empty_env(check=True)
+
+        # Run py_env_create in dry run mode with rename existing
+        _, out = self._create_empty_env(
+            extra_args=["-d", "-r", "abc123"], check=False, new_env_name=False
+        )
+
+        # Check stdout
+        self._check_dry_run(out.stdout)
+        self.assertTrue("Renaming existing" in out.stdout)
+
+    def test_py_env_create_old(self):
+        """
+        Ensure py_env_create works with --old
+        """
+
+        # Generate env name
+        self.env_names.append(get_unique_env_name(5))
+
+        # Run py_env_create
+        cmd = [self.py_env_create, "--old", "-n", self.env_names[-1], "--dry-run"]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        print("STDOUT")
+        print(out.stdout)
+        print("STDERR")
+        print(out.stderr)
+
+        # Check stdout
+        self._check_dry_run(out.stdout)
 
     def test_py_env_create_error_both_r_and_o(self):
         """
@@ -218,6 +306,37 @@ class TestSysPyEnvCreate(unittest.TestCase):
         # Run py_env_create again, renaming existing
         _, out = self._create_empty_env(
             new_env_name=False, extra_args=["-r", self.env_names[-1] + "_orig"]
+        )
+        # Ensure both exist now
+        try:
+            self.assertEqual(len(self.env_names), 2)
+        except AssertionError as e:
+            print(out.stdout)
+            raise e
+        env_list = get_conda_envs()
+        for env_name in self.env_names:
+            assert does_env_exist(env_name, env_list)
+
+    def test_complete_py_env_create_mamba(self):
+        """
+        A few calls of py_env_create to ensure it's working right with mamba instead of conda
+        """
+
+        # Run py_env_create once, making sure it was created
+        self._create_empty_env(check=True, extra_args=["-m"])
+
+        # Run py_env_create again, overwriting existing
+        _, out = self._create_empty_env(new_env_name=False, extra_args=["-o", "-m"], check=True)
+        # Ensure we only added one
+        try:
+            self.assertEqual(len(self.env_names), 1)
+        except AssertionError as e:
+            print(out.stdout)
+            raise e
+
+        # Run py_env_create again, renaming existing
+        _, out = self._create_empty_env(
+            new_env_name=False, extra_args=["-r", self.env_names[-1] + "_orig", "--mamba"]
         )
         # Ensure both exist now
         try:
