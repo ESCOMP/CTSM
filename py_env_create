@@ -61,6 +61,8 @@ usage() {
   echo "valid arguments: "
   echo "[-h|--help]  "
   echo "     Displays this help message"
+  echo "[-d|--dry-run]  "
+  echo "     Dry run: Print what would happen but don't actually do it."
   echo "[-f|--file <file>]  "
   echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
@@ -93,11 +95,15 @@ yes=""
 new_env_name=${default_new_env_name}
 new_name_for_existing=""
 overwrite=0
+dry_run=0
 while [ $# -gt 0 ]; do
    case $1 in
        -h|--help )
            usage
            exit 0
+           ;;
+       -d|--dry-run )
+           dry_run=1
            ;;
        -f|--file )
            condafile=$2
@@ -153,11 +159,8 @@ if [ ! -f $condafile ]; then
    exit -1
 fi
 
-echo "Using ${condamamba} to install the python environment needed to run the CTSM python tools in the ${condamamba} environment: $new_env_name"
-echo "Using the file: $condafile"
-
 #
-# Ask the user how to handle an environment that already exists
+# Handle an environment that already exists
 #
 function conda_env_exists {
    ${condamamba} env list | grep -oE "/$1$" | wc -l
@@ -197,21 +200,45 @@ if [[ "${new_name_for_existing}" != "" && ${overwrite} -eq 1 ]]; then
    exit 1
 fi
 
-if [[ $(conda_env_exists ${new_env_name}) -gt 0 ]]; then
+# Print plan (and check for unhandled existing env)
+echo "Using ${condamamba} to install the python environment needed to run the CTSM python tools in the ${condamamba} environment: $new_env_name"
+echo "Using the file: $condafile"
+conda_env_does_exist=$(conda_env_exists ${new_env_name})
+if [[ ${conda_env_does_exist} -gt 0 ]]; then
 
    if [[ "${new_name_for_existing}" != "" ]]; then
-      rename_existing_env ${new_env_name} ${new_name_for_existing}
+      echo "Renaming existing ${new_env_name} to ${new_name_for_existing}"
    elif [[ ${overwrite} -eq 1 ]]; then
-      overwrite_existing_env ${new_env_name}
+      echo "Overwriting existing ${new_env_name}"
    else
       echo "Environment ${new_env_name} already exists." >&2
       echo "Try again using one of:" >&2
       echo "   -n/--name <name>             to choose a different name for the new env" >&2
       echo "   -r/--rename-existing <name>  to choose a different name for the existing env" >&2
       echo "   -o/--overwrite <name>        to overwrite the existing env" >&2
-      exit 1
+      if [[ ${dry_run} -eq 0 ]]; then
+         exit 1
+      fi
    fi
 
+fi
+
+# Exit if doing dry run
+if [[ ${dry_run} -ne 0 ]]; then
+   echo "Exiting before any actions taken, due to -d/--dry-run option."
+   exit 0
+fi
+
+# Rename or overwrite existing
+if [[ ${conda_env_does_exist} -gt 0 ]]; then
+   if [[ "${new_name_for_existing}" != "" ]]; then
+      rename_existing_env ${new_env_name} ${new_name_for_existing}
+   elif [[ ${overwrite} -eq 1 ]]; then
+      overwrite_existing_env ${new_env_name}
+   else
+      echo "How did you get here?" >&2
+      exit 1
+   fi
 fi
 
 #
