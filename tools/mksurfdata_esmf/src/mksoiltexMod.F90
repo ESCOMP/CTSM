@@ -52,7 +52,7 @@ contains
     ! Local variables
     integer :: l
     integer :: ier
-    logical :: is_neg_4
+    logical :: is_sand_dune
     logical :: organic2
     real(r4), allocatable  :: organic_i(:,:,:)
 
@@ -87,8 +87,8 @@ contains
 
     ! Handle cases where no positive value was found
     if (data_o(no,1) < 0._r4) then
-       is_neg_4 = int(data_o(no,1)) == -4  ! TODO: Rename. Maybe indicates sand dune?
-       if (is_neg_4) then
+       is_sand_dune = int(data_o(no,1)) == -4
+       if (is_sand_dune) then
           data_o(no,:) = val_neg_4
           if (organic2) organic_o(no,:) = val_neg_4  ! TODO: This should probably be under conditionals looking at organic_o instead of data_o, but that's not how it was in the original
        else
