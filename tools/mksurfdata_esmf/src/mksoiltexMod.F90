@@ -35,6 +35,19 @@ module mksoiltexMod
 contains
 !=================================================================================
 
+  subroutine mksoiltex_check_layer_negative(data, no, lookup_index, name)
+    !
+    ! Arguments
+    real(r4), intent(in) :: data
+    integer, intent(in) :: no
+    integer, intent(in) :: lookup_index
+    character(*), intent(in) :: name
+    if (data < 0._r4) then
+       write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
+       call shr_sys_abort('could not find a value >= 0 for '//name)
+    end if
+  end subroutine mksoiltex_check_layer_negative
+
   subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o, data_modifier, organic_o)
     !
     ! Arguments
@@ -90,13 +103,8 @@ contains
        end if
     end if
 
-    ! Ensure negative values are handled
-    ! TODO: Remove as unnecessary?
-    ! TODO: Also handle organic_o? Not handled in original
-    if (data_o(no,1) < 0._r4) then
-       write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
-       call shr_sys_abort('could not find a value >= 0 for '//name)
-    end if
+    ! Error on negative values in top layer
+    call mksoiltex_check_layer_negative(data_o(no,1), no, lookup_index, name)
 
     ! Top soil layer is filled above. Here, we fill the other layers.
     do l = 2,nlay
@@ -433,6 +441,8 @@ contains
           do l = 1, nlay
              organic_o(no,l) = orgc_o(no,l) * bulk_o(no,l) * &
                   (100._r4 - cfrag_o(no,l)) * 0.01_r4 / 0.58_r4
+             ! Error on negative values in any layer
+             call mksoiltex_check_layer_negative(organic_o(no,l), no, lookup_index, "organic")
           end do
 
        end if
