@@ -93,7 +93,7 @@ contains
     ! Ensure negative values are handled
     ! TODO: Remove as unnecessary?
     ! TODO: Also handle organic_o? Not handled in original
-    if (data_o(no,1) < 0._r4 .and. trim(name) /= "sand") then
+    if (data_o(no,1) < 0._r4) then
        write(6,*)'ERROR: at no, lookup_index = ',no,lookup_index
        call shr_sys_abort('could not find a value >= 0 for '//name)
     end if
