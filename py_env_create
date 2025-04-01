@@ -43,11 +43,13 @@ fi
 ${condamamba} remove --all --name ${tmp_env_name} --yes --quiet 1>/dev/null 2>&1
 
 default_new_env_name=ctsm_pylib
+default_old_env_name=ctsm_pylib_3_7_9
 
 
 condadir="${SCRIPT_DIR}/python"
 
 condafile="${condadir}/conda_env_ctsm_py.txt"
+condafile_old="${condadir}/conda_env_ctsm_py_old_3.7.9.txt"
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -62,11 +64,15 @@ usage() {
   echo "[-f|--file <file>]  "
   echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
-  echo "     Default is: $condafile"
+  echo "     Default is '$condafile' (unless --old is given)"
   echo "[-n|--name <environment name>]  "
-  echo "     Name of the environment you wish to create. Default: ${default_new_env_name}"
+  echo "     Name of the environment you wish to create. Default: ${default_new_env_name} (unless --old is given)"
   echo "[-o|--overwrite]  "
   echo "     Overwrite existing env with same name, if any. Incompatible with -r/--rename-existing."
+  echo "[--old]  "
+  echo "     Install the previous version of ctsm_pylib (Python 3.7.9). Changes these to old-version defaults:"
+  echo "        env name: ${default_old_env_name}
+  echo "        file: ${condafile_old}
   echo "[-q|--quiet]  "
   echo "     Run with quiet mode to minimize Conda messages. Incompatible with -v/--verbose. May fail to quiet things if you don't also specify -y/--yes."
   echo "[-r|--rename-existing] <name>  "
@@ -103,6 +109,10 @@ while [ $# -gt 0 ]; do
            ;;
        -o|--overwrite )
            overwrite=1
+           ;;
+       --old )
+           condafile="${condafile_old}"
+           new_env_name=${default_old_env_name}
            ;;
        -q|--quiet )
            quiet="--quiet"
