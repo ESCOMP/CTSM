@@ -152,11 +152,13 @@ function rename_existing_env {
    elif [[ $(conda_env_exists $2) -eq 0 ]]; then
       echo "Renaming $1 to $2 (this will take a few minutes)..."
       yes_tmp=${yes/yes/force}
+      # Use conda instead of $condamamba because, at least as of mamba 1.5.9 / conda 24.7.1,
+      # rename is not supported through mamba.
       if [[ "${quiet}" == "--quiet" ]]; then
          # -q/--quiet option not available on Derecho
-         (set -x; ${condamamba} rename ${yes_tmp} -n $1 $2 1>/dev/null)
+         (set -x; conda rename ${yes_tmp} -n $1 $2 1>/dev/null)
       else
-         (set -x; ${condamamba} rename ${yes_tmp} ${verbose} -n $1 $2)
+         (set -x; conda rename ${yes_tmp} ${verbose} -n $1 $2)
       fi
    else
       echo "$2 also already exists" >&2
