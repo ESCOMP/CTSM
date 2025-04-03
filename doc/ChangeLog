@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: ctsm5.3.037
+Originator(s): olyson/heroldn/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 02 Apr 2025 11:28:26 PM MDT
+One-line Summary: Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
+
+Purpose and description of changes
+----------------------------------
+
+GSSUN (gs_mol_sun) and GSSHA (gs_mol_sha) were not being calculated at nighttime in both subroutine Photosynthesis (use_hydrstress = .false.) and PhotosynthesisHydraulicStress (use_hydrstress = .true.), resulting in "striping" in these fields in history file averages. This fixes that.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes: #3021 -- gs_mol_sun (GSSUN) and gs_mol_sha (GSSHA) aren't calculated at nighttime, resulting in "striping" in history outpu
+
+Notes of particular relevance for users
+---------------------------------------
+
+None
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+None
+
+Testing summary:  regular
+----------------
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: non-FATES
+    - what platforms/compilers: all
+    - nature of change: two diagnostic variables are different: GSSUN and GSSHA
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #3021 --  Add calculations for GSSUN and GSSHA at night
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.036
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Tue Apr  1 11:36:27 MDT 2025
