@@ -11,7 +11,7 @@ module FireDataBaseType
   use dshr_strdata_mod , only : shr_strdata_type 
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use spmdMod          , only : masterproc, mpicom, iam
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
@@ -171,8 +171,8 @@ contains
    integer            :: stream_year_first_popdens     ! first year in pop. dens. stream to use
    integer            :: stream_year_last_popdens      ! last year in pop. dens. stream to use
    integer            :: model_year_align_popdens      ! align stream_year_first_hdm with
-   character(len=CL)  :: stream_fldFileName_popdens    ! population density streams filename
-   character(len=CL)  :: stream_meshfile_popdens       ! population density streams filename
+   character(len=FL)  :: stream_fldFileName_popdens    ! population density streams filename
+   character(len=FL)  :: stream_meshfile_popdens       ! population density streams filename
    character(len=CL)  :: popdensmapalgo                ! mapping alogrithm for population density
    character(len=CL)  :: popdens_tintalgo              ! time interpolation alogrithm for population density
    integer            :: rc
@@ -338,8 +338,8 @@ contains
   integer            :: stream_year_first_lightng  ! first year in Lightning stream to use
   integer            :: stream_year_last_lightng   ! last year in Lightning stream to use
   integer            :: model_year_align_lightng   ! align stream_year_first_lnfm with
-  character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
-  character(len=CL)  :: stream_meshfile_lightng    ! lightning stream filename to read
+  character(len=FL)  :: stream_fldFileName_lightng ! lightning stream filename to read
+  character(len=FL)  :: stream_meshfile_lightng    ! lightning stream filename to read
   character(len=CL)  :: lightng_tintalgo           ! stream -> model time interpolation alogrithm
   character(len=CL)  :: lightngmapalgo             ! stream-> model mapping alogrithm
   integer            :: rc

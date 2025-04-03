@@ -14,6 +14,7 @@ module cropcalStreamMod
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
+  use clm_varctl       , only : FL => fname_len
   use clm_varctl       , only : use_crop
   use clm_varctl       , only : use_cropcal_rx_swindows, use_cropcal_rx_cultivar_gdds, use_cropcal_streams
   use clm_varctl       , only : adapt_cropcal_rx_cultivar_gdds
@@ -47,16 +48,16 @@ module cropcalStreamMod
   character(len=CS), allocatable :: stream_varnames_gdd20_season_enddate(:) ! start uses stream_varnames_sdate
   integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
   logical                     :: allow_invalid_swindow_inputs ! Fall back on paramfile sowing windows in cases of invalid values in stream_fldFileName_swindow_start and _end?
-  character(len=CL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
-  character(len=CL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
-  character(len=CL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
-  character(len=CL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
+  character(len=FL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
+  character(len=FL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
+  character(len=FL)       :: stream_fldFileName_cultivar_gdds ! cultivar growing degree-days stream filename to read
+  character(len=FL)       :: stream_fldFileName_gdd20_baseline ! GDD20 baseline stream filename to read
   logical                 :: cropcals_rx ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
   logical                 :: cropcals_rx_adapt ! Used only for setting input files in namelist; does nothing in code, but needs to be here so namelist read doesn't crash
   logical :: stream_gdd20_seasons  ! Read start and end dates for gdd20 seasons from streams instead of using hemisphere-specific values
   logical                     :: allow_invalid_gdd20_season_inputs ! Fall back on hemisphere "warm periods" in cases of invalid values in stream_fldFileName_gdd20_season_start and _end?
-  character(len=CL)       :: stream_fldFileName_gdd20_season_start ! Stream filename to read for start of gdd20 season
-  character(len=CL)       :: stream_fldFileName_gdd20_season_end ! Stream filename to read for end of gdd20 season
+  character(len=FL)       :: stream_fldFileName_gdd20_season_start ! Stream filename to read for start of gdd20 season
+  character(len=FL)       :: stream_fldFileName_gdd20_season_end ! Stream filename to read for end of gdd20 season
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -89,7 +90,7 @@ contains
     integer                 :: model_year_align_cropcal_cultivar_gdds   ! alignment year for cultivar gdd stream
     integer                 :: nu_nml                     ! unit for namelist file
     integer                 :: nml_error                  ! namelist i/o error flag
-    character(len=CL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
+    character(len=FL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
     character(len=CL)       :: cropcal_mapalgo  = 'nn'        ! Mapping alogrithm
     character(len=CL)       :: cropcal_tintalgo = 'nearest'   ! Time interpolation alogrithm
     integer                 :: cropcal_offset = 0             ! Offset in time for dataset (sec)

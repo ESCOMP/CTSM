@@ -12,7 +12,7 @@ module ndepStreamMod
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use spmdMod          , only : mpicom, masterproc, iam
   use decompMod        , only : bounds_type
-  use clm_varctl       , only : iulog, inst_name
+  use clm_varctl       , only : iulog, inst_name, FL => fname_len
   use abortutils       , only : endrun
 
   ! !PUBLIC TYPES:
@@ -66,8 +66,8 @@ contains
     character(len=CS)       :: ndep_taxmode = 'extend'
     character(len=CL)       :: ndep_varlist = 'NDEP_year'
     integer                 :: ndep_offset = 0        ! Offset in time for dataset (sec)
-    character(len=CL)       :: stream_fldFileName_ndep
-    character(len=CL)       :: stream_meshfile_ndep
+    character(len=FL)       :: stream_fldFileName_ndep
+    character(len=FL)       :: stream_meshfile_ndep
     integer                 :: stream_nflds
     integer                 :: rc
     character(*), parameter :: subName = "('ndepdyn_init')"

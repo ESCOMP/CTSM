@@ -9,7 +9,7 @@ module SatellitePhenologyMod
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
-  use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
+  use shr_kind_mod , only : r8 => shr_kind_r8, CS => shr_kind_CS
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun

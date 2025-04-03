@@ -5,7 +5,7 @@ module clm_varctl
   ! Module containing run control variables
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CX
   use shr_sys_mod , only: shr_sys_abort ! cannot use endrun here due to circular dependency
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -21,7 +21,7 @@ module clm_varctl
   !
   integer , parameter, public ::  iundef = -9999999
   real(r8), parameter, public ::  rundef = -9999999._r8
-  integer , parameter, public ::  fname_len = SHR_KIND_CL   ! max length of file names in this module
+  integer , parameter, public ::  fname_len = SHR_KIND_CX   ! max length of file names in this module
   !----------------------------------------------------------
   !
   ! Run control variables
@@ -535,7 +535,7 @@ module clm_varctl
   !----------------------------------------------------------
   ! To retrieve namelist
   !----------------------------------------------------------
-  character(len=SHR_KIND_CL), public :: NLFilename_in ! Namelist filename
+  character(len=SHR_KIND_CX), public :: NLFilename_in ! Namelist filename
   !
   logical, private :: clmvarctl_isset = .false.
  !-----------------------------------------------------------------------

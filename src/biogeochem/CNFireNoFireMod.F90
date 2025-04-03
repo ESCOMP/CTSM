@@ -7,7 +7,7 @@ module CNFireNoFireMod
   ! module for fire dynamics with fire explicitly turned off
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
   use decompMod                          , only : bounds_type
   use atm2lndType                        , only : atm2lnd_type
   use CNVegStateType                     , only : cnveg_state_type

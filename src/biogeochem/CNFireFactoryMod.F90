@@ -89,7 +89,6 @@ contains
     ! is determined based on a namelist parameter.
     !
     ! !USES:
-    use shr_kind_mod     , only : SHR_KIND_CL
     use FireMethodType   , only : fire_method_type
     use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
