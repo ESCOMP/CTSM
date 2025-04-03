@@ -708,6 +708,13 @@ contains
        allocate(froot_carbon(bounds_clump%begp:bounds_clump%endp))
        allocate(croot_carbon(bounds_clump%begp:bounds_clump%endp))
 
+       ! The get functions for these four patch arrays are relevant only
+       ! for native cn vegetation. More importantly, they utilize patch%itype(p)
+       ! which is invalid for fates patches and cannot be accessed without failure
+       ! These arrays must be passed as arguments, so we clearly fill them here
+       ! with unusuable special values when fates is active, and meaningful values
+       ! when fates is not active.
+
        if(use_fates)then
           downreg_patch(:) = spval
           leafn_patch(:) = spval
