@@ -834,6 +834,15 @@ def subset_region(args, file_dict: dict):
     logger.info("Successfully ran script for a regional case.")
 
 
+def _detect_lon_type(lon_in):
+    lon_type = None
+    if lon_in < 0:
+        lon_type = 180
+    elif lon_in > 180:
+        lon_type = 360
+    return lon_type
+
+
 def process_args(args):
     """
     Process arguments after parsing
@@ -842,14 +851,23 @@ def process_args(args):
     process_logging_args(args)
 
     # process longitude args
-    lon_args = [var for var in ["lon", "lon1", "lon2"] if hasattr(args, var)]
-    if any(getattr(args, var) is not None for var in lon_args):
+    lon_args = [var for var in ["plon", "lon1", "lon2"] if hasattr(args, var)]
+    lon_arg_values = [getattr(args, var) is not None for var in lon_args]
+    if any(lon_arg_values):
         if args.lon_type is None:
-            if hasattr(args, "lon"):
-                msg = "When providing --lon, you must specify --lon-type 180 or 360"
+            msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
+            if hasattr(args, "plon"):
+                lon_type = _detect_lon_type(args.plon)
+                print(f"lon_type: {lon_type}")
+                if lon_type is None:
+                    raise argparse.ArgumentTypeError(msg)
+                args.lon_type = lon_type
             else:
-                msg = "When providing --lon1/--lon2, you must specify --lon-type 180 or 360"
-            raise argparse.ArgumentTypeError(msg)
+                lon1_type = _detect_lon_type(args.lon1)
+                lon2_type = _detect_lon_type(args.lon2)
+                if lon1_type != lon2_type or lon1_type is None:
+                    raise argparse.ArgumentTypeError(msg)
+                args.lon_type = lon1_type
         for var in lon_args:
             val = getattr(args, var)
             if val is None:
@@ -861,7 +879,9 @@ def process_args(args):
                 if val < 0 or val > 360:
                     raise ValueError(f"lon_in needs to be in the range [0, 360]: {val}")
             else:
-                raise argparse.ArgumentTypeError("--lon-type can only be 180 or 360")
+                raise argparse.ArgumentTypeError(
+                    f"--lon-type can only be 180 or 360, not {args.lon_type}"
+                )
     return args
 
 

@@ -435,6 +435,167 @@ class TestSubsetData(unittest.TestCase):
         self.assertEqual(args.lon1, 156)
         self.assertEqual(args.lon2, 267)
 
+    def test_point_ambiguous_lon_errors(self):
+        """
+        In point mode, test that an error is thrown if you give it an ambiguous longitude without
+        also giving --lon-type
+        """
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--create-domain",
+            "--verbose",
+            "--lat",
+            "0",
+            "--lon",
+            "87",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError,
+            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+        ):
+            check_args(args)
+
+    def test_point_unambiguous_lon_180_ok(self):
+        """
+        In point mode, test that no error is thrown if an unambiguous longitude is given without
+        specifying --lon-type 180
+        """
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--create-domain",
+            "--verbose",
+            "--lat",
+            "0",
+            "--lon",
+            "-87",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        check_args(args)
+
+    def test_point_unambiguous_lon_360_ok(self):
+        """
+        In point mode, test that no error is thrown if an unambiguous longitude is given without
+        specifying --lon-type 360
+        """
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--create-domain",
+            "--verbose",
+            "--lat",
+            "0",
+            "--lon",
+            "194",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        check_args(args)
+
+    def test_region_ambiguous_lon_errors(self):
+        """
+        In region mode, test that an error is thrown if you give it one ambiguous longitude without
+        also giving --lon-type
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "-24",
+            "--lon2",
+            "87",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError,
+            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+        ):
+            check_args(args)
+
+    def test_region_ambiguous_lons_errors(self):
+        """
+        In region mode, test that an error is thrown if you give two ambiguous longitudes without
+        also giving --lon-type
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "24",
+            "--lon2",
+            "87",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError,
+            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+        ):
+            check_args(args)
+
+    def test_region_unambiguous_lons_180_ok(self):
+        """
+        In region mode, test that no error is thrown if two unambiguous longitudes are given without
+        specifying --lon-type 180
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "-87",
+            "--lon2",
+            "-24",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        check_args(args)
+
+    def test_region_unambiguous_lons_360_ok(self):
+        """
+        In region mode, test that no error is thrown if two unambiguous longitudes are given without
+        specifying --lon-type 360
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "194",
+            "--lon2",
+            "287",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        check_args(args)
+
     def test_region_lon_type_180_ok_at_180(self):
         """
         In region mode, test that --lon-type 180 passes at lon 180
@@ -544,32 +705,6 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError,
             "If you want your longitude range to cross the International Date Line",
-        ):
-            check_args(args)
-
-    def test_no_lontype_errors_region(self):
-        """
-        In region mode, test that you get an error if you specify longitude without --lon-type
-        """
-        sys.argv = [
-            "subset_data",
-            "region",
-            "--create-domain",
-            "--verbose",
-            "--lat1",
-            "0",
-            "--lat2",
-            "40",
-            "--lon1",
-            "-20",
-            "--lon2",
-            "40",
-        ]
-        self.parser = get_parser()
-        args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError,
-            "When providing --lon1/--lon2, you must specify --lon-type 180 or 360",
         ):
             check_args(args)
 
