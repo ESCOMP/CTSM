@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.037
 Originator(s): olyson/heroldn/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed 02 Apr 2025 10:49:18 AM MDT
+Date: Wed 02 Apr 2025 11:28:26 PM MDT
 One-line Summary: Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
 
 Purpose and description of changes
