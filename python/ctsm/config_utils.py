@@ -37,6 +37,38 @@ def convert_lon_0to360(lon_in):
     return lon_out
 
 
+def convert_lons_if_needed(lon_1, lon_2, lon_type):
+    """
+    Description
+    -----------
+    Given two longitudes, if their type is 180 (i.e., between -180 and 180), convert them to 0-360
+    """
+    if lon_type == 180:
+        lon_1 = convert_lon_0to360(lon_1)
+        lon_2 = convert_lon_0to360(lon_2)
+    elif lon_type != 360:
+        raise ValueError("lon_type must be either 180 or 360")
+    return lon_1, lon_2
+
+
+def check_lon1_lt_lon2(lon1, lon2, lon_type):
+    """
+    Description
+    -----------
+    Given two longitudes, check that lon1 is < lon2. Useful for avoiding CTSM Issue #2017, but note
+    that to use this function properly for that purpose, you need to have already converted
+    longitudes from lon_type 180 to 360.
+    """
+    if lon1 < lon2:
+        return
+
+    msg = f"--lon1 ({lon1}) must be < --lon2 ({lon2})\n"
+    msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
+    if lon_type == 180:
+        msg = "After converting to --lon-type 360, " + msg
+    raise ValueError(msg)
+
+
 def get_config_value(
     config,
     section,

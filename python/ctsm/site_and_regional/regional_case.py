@@ -17,6 +17,7 @@ from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
+from ctsm.config_utils import convert_lons_if_needed, check_lon1_lt_lon2
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,8 @@ class RegionalCase(BaseCase):
         first (bottom) longitude of a region.
     lon2 : float
         second (top) longitude of a region.
+    lon_type : int
+        180 if longitudes are in [-180, 180], 360 if they're in [0, 360]
     reg_name: str -- default = None
         Region's name
     create_domain : bool
@@ -63,9 +66,6 @@ class RegionalCase(BaseCase):
 
     check_region_bounds
         Check for the regional bounds
-
-    check_region_lons
-        Check for the regional lons
 
     check_region_lats
         Check for the regional lats
@@ -95,6 +95,7 @@ class RegionalCase(BaseCase):
         lat2,
         lon1,
         lon2,
+        lon_type,
         reg_name,
         create_domain,
         create_surfdata,
@@ -116,6 +117,11 @@ class RegionalCase(BaseCase):
             create_user_mods,
             overwrite,
         )
+
+        # Convert longitudes. This should have already been done in subset_data, but adding it here
+        # just in case RegionalCase is ever used elsewhere.
+        lon1, lon2 = convert_lons_if_needed(lon1, lon2, lon_type)
+
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
@@ -146,28 +152,9 @@ class RegionalCase(BaseCase):
         """
         Check for the regional bounds
         """
-        self.check_region_lons()
+        # By now, you need to have already converted to longitude [0, 360]
+        check_lon1_lt_lon2(self.lon1, self.lon2, 360)
         self.check_region_lats()
-
-    def check_region_lons(self):
-        """
-        Check for the regional lon bounds
-        """
-        if self.lon1 >= self.lon2:
-            pass
-            # err_msg = """
-            # \n
-            # ERROR: lon1 is bigger than lon2.
-            # lon1 points to the westernmost longitude of the region. {}
-            # lon2 points to the easternmost longitude of the region. {}
-            # Please make sure lon1 is smaller than lon2.
-
-            # Please note that if longitude in -180-0, the code automatically
-            # convert it to 0-360.
-            # """.format(
-            #     self.lon1, self.lon2
-            # )
-            # raise argparse.ArgumentTypeError(err_msg)
 
     def check_region_lats(self):
         """

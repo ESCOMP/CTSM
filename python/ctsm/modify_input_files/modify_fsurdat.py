@@ -14,7 +14,7 @@ import xarray as xr
 
 from ctsm.utils import abort, update_metadata
 from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.config_utils import convert_lon_0to360
+from ctsm.config_utils import convert_lons_if_needed
 
 logger = logging.getLogger(__name__)
 
@@ -100,11 +100,7 @@ class ModifyFsurdat:
         """
 
         # ensure that lon ranges 0-360 in case user entered -180 to 180
-        if lon_type == 180:
-            lon_1 = convert_lon_0to360(lon_1)
-            lon_2 = convert_lon_0to360(lon_2)
-        elif lon_type != 360:
-            raise ValueError("lon_type must be either 180 or 360")
+        lon_1, lon_2 = convert_lons_if_needed(lon_1, lon_2, lon_type)
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work

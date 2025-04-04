@@ -68,7 +68,7 @@ from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plat_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
-from ctsm.config_utils import convert_lon_0to360
+from ctsm.config_utils import convert_lon_0to360, check_lon1_lt_lon2
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -554,12 +554,8 @@ def check_args(args):
                         """
             )
             raise argparse.ArgumentError(None, err_msg)
-        if args.lon1 is not None and args.lon1 >= args.lon2:
-            msg = f"--lon1 ({args.lon1}) must be < --lon2 ({args.lon2})\n"
-            msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
-            if args.lon_type == 180:
-                msg = "After converting to --lon-type 360, " + msg
-            raise ValueError(msg)
+        if args.lon1 is not None:
+            check_lon1_lt_lon2(args.lon1, args.lon2, args.lon_type)
 
     return args
 
@@ -769,6 +765,7 @@ def subset_region(args, file_dict: dict):
         lat2=args.lat2,
         lon1=args.lon1,
         lon2=args.lon2,
+        lon_type=args.lon_type,
         reg_name=args.reg_name,
         create_domain=args.create_domain,
         create_surfdata=args.create_surfdata,
