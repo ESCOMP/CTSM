@@ -82,6 +82,22 @@ DEFAULTS_CONFIG = "tools/site_and_regional/default_data_2000.cfg"
 logger = logging.getLogger(__name__)
 
 
+def _add_lon_type_arg(this_parser):
+    lon_type_help_str = (
+        "Whether longitudes are in the [-180, 180] format (centered around the Prime"
+        " Meridian) or the [0, 360] format (centered around the International Date Line)."
+        " Choose by specifying the upper limit."
+    )
+    this_parser.add_argument(
+        "--lon-type",
+        help=lon_type_help_str,
+        required=False,
+        default=None,
+        type=int,
+        choices=[180, 360],
+    )
+    return this_parser
+
 def get_parser():
     """
     Get the parser object for subset_data.py script.
@@ -101,12 +117,6 @@ def get_parser():
     pt_parser = subparsers.add_parser("point", help="Run script for a single point.")
     rg_parser = subparsers.add_parser("region", help="Run script for a region.")
 
-    lon_type_help_str = (
-        "Whether longitudes are in the [-180, 180] format (centered around the Prime"
-        " Meridian) or the [0, 360] format (centered around the International Date Line)."
-        " Choose by specifying the upper limit."
-    )
-
     # -- single point parser options
     pt_parser.add_argument(
         "--lat",
@@ -125,14 +135,7 @@ def get_parser():
         required=False,
         default=None,
     )
-    pt_parser.add_argument(
-        "--lon-type",
-        help=lon_type_help_str,
-        required=False,
-        default=None,
-        type=int,
-        choices=[180, 360],
-    )
+    pt_parser = _add_lon_type_arg(pt_parser)
     pt_parser.add_argument(
         "--site",
         help="Site name or tag. [default: %(default)s]",
@@ -247,14 +250,7 @@ def get_parser():
         required=False,
         default=None,
     )
-    rg_parser.add_argument(
-        "--lon-type",
-        help=lon_type_help_str,
-        required=False,
-        default=None,
-        type=int,
-        choices=[180, 360],
-    )
+    rg_parser = _add_lon_type_arg(rg_parser)
     rg_parser.add_argument(
         "--reg",
         help="Region name or tag. [default: %(default)s]",
