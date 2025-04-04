@@ -131,6 +131,7 @@ def get_parser():
     pt_parser.add_argument(
         "--lon",
         help="Single point longitude. [default: %(default)s]",
+        action="store",
         dest="plon",
         required=False,
         type=float,
@@ -234,6 +235,7 @@ def get_parser():
     rg_parser.add_argument(
         "--lon1",
         help=("Region westernmost longitude. [default: %(default)s]"),
+        action="store",
         dest="lon1",
         required=False,
         type=float,
@@ -242,6 +244,7 @@ def get_parser():
     rg_parser.add_argument(
         "--lon2",
         help=("Region easternmost longitude. [default: %(default)s]"),
+        action="store",
         dest="lon2",
         required=False,
         type=float,
