@@ -564,15 +564,9 @@ def check_args(args):
             )
             raise argparse.ArgumentError(None, err_msg)
         if args.lon1 is not None and args.lon1 >= args.lon2:
-            msg = "--lon1 must be < --lon2"
+            msg = f"--lon1 ({args.lon1}) must be < --lon2 ({args.lon2})"
             if args.lon_type == 180:
-                msg += "\nIf you want your longitude range to cross the International Date Line,"
-                msg += " use --lon-type 360 instead, converting your longitudes to [0, 360] format"
-            elif args.lon_type == 360:
-                msg += "\nIf you want your longitude range to cross the Prime Meridian,"
-                msg += (
-                    " use --lon-type 180 instead, converting your longitudes to [-180, 180] format"
-                )
+                msg = "After converting to --lon type 360, " + msg
             raise ValueError(msg)
 
     return args

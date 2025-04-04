@@ -385,6 +385,8 @@ class TestSubsetData(unittest.TestCase):
         """
         In region mode, test that --lon-type 360 errors if lon range crosses Prime Meridian
         """
+        lon1 = 320
+        lon2 = 300
         sys.argv = [
             "subset_data",
             "region",
@@ -397,16 +399,46 @@ class TestSubsetData(unittest.TestCase):
             "--lon-type",
             "360",
             "--lon1",
-            "320",
+            str(lon1),
             "--lon2",
-            "300",
+            str(lon2),
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            ValueError,
-            "If you want your longitude range to cross the Prime Meridian",
-        ):
+
+        expected_err_msg = fr"--lon1 \({lon1}[\.\d]*\) must be < --lon2 \({lon2}[\.\d]*\)"
+        with self.assertRaisesRegex(ValueError, expected_err_msg):
+            check_args(args)
+
+    def test_region_lon_type_180_crosses_pm_errors(self):
+        """
+        In region mode, test that --lon-type 180 errors if lon range crosses Prime Meridian
+        """
+        lon1 = -5
+        lon2 = 5
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            str(lon1),
+            "--lon2",
+            str(lon2),
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+
+        lon1_conv = lon1 % 360
+        lon2_conv = lon2 % 360
+        expected_err_msg = fr"--lon1 \({lon1_conv}[\.\d]*\) must be < --lon2 \({lon2_conv}[\.\d]*\)"
+        with self.assertRaisesRegex(ValueError, expected_err_msg):
             check_args(args)
 
     def test_region_lon_type_180_ok(self):
@@ -677,34 +709,6 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError,
             r"lon_in needs to be in the range \[-180, 180\]",
-        ):
-            check_args(args)
-
-    def test_region_lon_type_180_crosses_idl_errors(self):
-        """
-        In region mode, test that --lon-type 180 errors if lon range crosses Int'l Date Line
-        """
-        sys.argv = [
-            "subset_data",
-            "region",
-            "--create-domain",
-            "--verbose",
-            "--lat1",
-            "0",
-            "--lat2",
-            "40",
-            "--lon-type",
-            "180",
-            "--lon1",
-            "167",
-            "--lon2",
-            "-150",
-        ]
-        self.parser = get_parser()
-        args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            ValueError,
-            "If you want your longitude range to cross the International Date Line",
         ):
             check_args(args)
 
