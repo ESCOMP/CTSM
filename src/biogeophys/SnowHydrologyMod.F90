@@ -36,6 +36,7 @@ module SnowHydrologyMod
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
+  use GridcellType    , only : grc
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice, istcrop
   use clm_time_manager, only : get_step_size_real, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
@@ -3412,9 +3413,10 @@ contains
     logical  , intent(out) :: apply_runoff( bounds%begc: )  ! whether capped snow should be sent to runoff; only valid where h2osno_excess > 0
     !
     ! !LOCAL VARIABLES:
-    integer :: fc, c, l
+    integer :: fc, c, l, g
     integer :: reset_snow_timesteps
     logical :: is_reset_snow_active  ! whether snow resetting is active in this time step for at least some points
+    real(r8) :: lon  ! positive longitude (degrees)
 
     character(len=*), parameter :: subname = 'SnowCappingExcess'
     !-----------------------------------------------------------------------
@@ -3456,17 +3458,27 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           l = col%landunit(c)
-          if ((lun%itype(l) /= istice) .and. &
-               reset_snow .and. &
-               (h2osno(c) > reset_snow_h2osno)) then
-             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
-             apply_runoff(c) = .false.
-          else if ((lun%itype(l) == istice) .and. &
-               reset_snow_glc .and. &
-               (h2osno(c) > reset_snow_h2osno) .and. &
-               (topo(c) <= reset_snow_glc_ela)) then
-             h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
-             apply_runoff(c) = .false.
+          g = col%gridcell(c)
+
+          lon = grc%londeg(g)
+          if (lon < 0.0_r8) then
+            ! Convert from -180..180 to 0..360
+            lon = lon + 360._r8
+          end if
+
+          if (grc%latdeg(g) >= 45._r8 .and. lon >= 260._r8) then
+             if ((lun%itype(l) /= istice) .and. &
+                  reset_snow .and. &
+                  (h2osno(c) > reset_snow_h2osno)) then
+                h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+                apply_runoff(c) = .false.
+             else if ((lun%itype(l) == istice) .and. &
+                  reset_snow_glc .and. &
+                  (h2osno(c) > reset_snow_h2osno) .and. &
+                  (topo(c) <= reset_snow_glc_ela)) then
+                h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
+                apply_runoff(c) = .false.
+             end if
           end if
        end do
     end if
