@@ -846,7 +846,6 @@ def process_args(args):
             msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
             if hasattr(args, "plon"):
                 lon_type = _detect_lon_type(args.plon)
-                print(f"lon_type: {lon_type}")
                 if lon_type is None:
                     raise argparse.ArgumentTypeError(msg)
                 args.lon_type = lon_type
