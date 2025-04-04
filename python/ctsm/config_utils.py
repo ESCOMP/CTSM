@@ -27,7 +27,7 @@ def convert_lon_0to360(lon_in):
     """
     if not -180 <= lon_in <= 180:
         raise ValueError(f"lon_in needs to be in the range [-180, 180]: {lon_in}")
-    lon_out = 180 + lon_in
+    lon_out = lon_in % 360
     logger.info(
         "Converting longitude from [-180, 180] to [0, 360]: %s to %s",
         str(lon_in),
