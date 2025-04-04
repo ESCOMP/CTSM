@@ -122,8 +122,8 @@ def get_parser():
     pt_parser.add_argument(
         "--lon-type",
         help=(
-            "Whether longitudes are in the [-180, 180] format (i.e., centered around the Prime"
-            " Meridian) or the [0, 360] format (i.e., centered around the International Date Line)."
+            "Whether longitudes are in the [-180, 180] format (centered around the Prime"
+            " Meridian) or the [0, 360] format (centered around the International Date Line)."
             " Choose by specifying the upper limit."
         ),
         required=False,
@@ -228,9 +228,7 @@ def get_parser():
     rg_parser.add_argument(
         "--lon1",
         help=(
-            "Region westernmost longitude. Must be in [0, 360] format: i.e., starting at the"
-            " International Date Line rather than centered on the Prime Meridian. [default:"
-            " %(default)s]"
+            "Region westernmost longitude. [default: %(default)s]"
         ),
         type=float,
         dest="lon1",
@@ -240,9 +238,7 @@ def get_parser():
     rg_parser.add_argument(
         "--lon2",
         help=(
-            "Region easternmost longitude. Must be in [0, 360] format: i.e., starting at the"
-            " International Date Line rather than centered on the Prime Meridian. [default:"
-            " %(default)s]"
+            "Region easternmost longitude. [default: %(default)s]"
         ),
         type=float,
         dest="lon2",
