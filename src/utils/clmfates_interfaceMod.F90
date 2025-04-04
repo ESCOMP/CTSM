@@ -124,6 +124,7 @@ module CLMFatesInterfaceMod
    use landunit_varcon   , only : istsoil
    use abortutils        , only : endrun
    use shr_log_mod       , only : errMsg => shr_log_errMsg
+   use shr_drydep_mod    , only : n_drydep
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
    use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
@@ -141,6 +142,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
+   use FatesInterfaceMod     , only : set_fates_drydep_indices
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
    
@@ -251,6 +253,7 @@ module CLMFatesInterfaceMod
       procedure, public :: dynamics_driv
       procedure, public :: wrap_sunfrac
       procedure, public :: wrap_btran
+      procedure, public :: wrap_drydep      
       procedure, public :: wrap_photosynthesis
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
@@ -315,6 +318,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_use_fixed_biogeog
      integer                                        :: pass_use_nocomp
      integer                                        :: pass_use_sp
+     integer                                        :: pass_use_drydep
      integer                                        :: pass_masterproc
      integer                                        :: pass_use_luh2
      logical                                        :: verbose_output
@@ -352,7 +356,14 @@ module CLMFatesInterfaceMod
            pass_use_sp = 0
         end if
         call set_fates_ctrlparms('use_sp',ival=pass_use_sp)
-        
+
+        if(n_drydep>0) then
+           pass_use_drydep = 1
+        else
+           pass_use_drydep = 0
+        endif
+        call set_fates_ctrlparms('use_drydep',ival=pass_use_drydep)
+
         if(masterproc)then
            pass_masterproc = 1
         else
@@ -1770,6 +1781,7 @@ module CLMFatesInterfaceMod
              displa(p) = this%fates(nc)%bc_out(s)%displa_pa(ifp)
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
              voc_pftindex(p) = this%fates(nc)%bc_out(s)%nocomp_MEGAN_pft_label_pa(ifp)
+
           end do ! veg pach
 
           if(abs(areacheck - 1.0_r8).gt.1.e-9_r8)then
@@ -2627,6 +2639,49 @@ module CLMFatesInterfaceMod
 
    end subroutine wrap_btran
 
+   ! ====================================================================================                   
+   subroutine wrap_drydep(this, nc,  drydepvel_inst)
+
+
+     use DryDepVelocity, only : drydepvel_type
+     
+     class(hlm_fates_interface_type), intent(inout) :: this
+     integer                 , intent(in)           :: nc
+     type(drydepvel_type)  , intent(inout)          :: drydepvel_inst
+     
+     integer :: npatch  ! number of patches in each site
+     integer :: ifp     ! index FATES patch
+     integer :: p       ! HLM patch index
+     integer :: s       ! site index
+     integer :: c       ! column index
+     integer :: g       ! grid cell
+
+     associate( &
+               wesley_veg_index    => drydepvel_inst%wesley_veg_index_patch  , &
+               wesley_season_index => drydepvel_inst%wesley_season_index_patch &
+              )
+               
+      ! Call thee FATES routine to set the PFT and season indices for the drydep routines in CLM
+      call set_fates_drydep_indices(this%fates(nc)%nsites, &
+           this%fates(nc)%sites,  &
+           this%fates(nc)%bc_out ) 
+
+      ! Load the dry deposition indices from the FATES output structure into the CLM variables. 
+      do s = 1,this%fates(nc)%nsites
+          c = this%f2hmap(nc)%fcolumn(s)
+          g = col%gridcell(c)
+          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+             ! for the vegetated patches
+             p = ifp+col%patchi(c)
+             wesley_veg_index(p) = this%fates(nc)%bc_out(s)%wesley_pft_label_pa(ifp)
+             wesley_season_index(p) = this%fates(nc)%bc_out(s)%drydep_season_pa(ifp)
+          end do
+       end do
+
+     end associate
+
+   end subroutine wrap_drydep
+   
    ! ====================================================================================
 
    subroutine wrap_photosynthesis(this, nc, bounds, fn, filterp, &

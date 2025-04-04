@@ -957,10 +957,11 @@ contains
            indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
            indexg = patch%gridcell(indexp)
            indexc = patch%column(indexp)
-           write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
-           write(iulog,*)'nstep         = ',nstep
-           write(iulog,*)'errsol        = ',errsol(indexp)
-           
+           if ( .not. use_fates ) then
+              write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
+              write(iulog,*)'nstep         = ',nstep
+              write(iulog,*)'errsol        = ',errsol(indexp)
+           endif
            if (errsol_max_val > error_thresh) then
                write(iulog,*)'CTSM is stopping because errsol > ', error_thresh, ' W/m2'
                write(iulog,*)'fsa           = ',fsa(indexp)

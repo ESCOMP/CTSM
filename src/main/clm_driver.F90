@@ -1066,7 +1066,10 @@ contains
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
-
+       !  TODO PUT FAteS DRYDEP wrapper here
+       if(use_fates.and. n_drydep >0)then
+          call clm_fates%wrap_drydep(nc, drydepvel_inst)
+       end if 
        call t_startf('depvel')
        call depvel_compute(bounds_clump, &
             atm2lnd_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
@@ -1128,7 +1131,6 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
@@ -1225,21 +1227,7 @@ contains
        ! Determine albedos for next time step
        ! ============================================================================
        
-       if (.not.doalb) then
-
-
-          if(use_fates) then
-             ! During branch runs and non continue_run restarts, the doalb flag
-             ! does not trigger correctly for fates runs (and non-fates?), and thus
-             ! the zenith angles are not calculated and ready when radiation scattering
-             ! needs to occur.
-             call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
-             call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
-                  water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
-                  surfalb_inst)
-          end if
-          
-       else
+       if (doalb) then
 
           ! Albedos for non-urban columns
           call t_startf('surfalb')

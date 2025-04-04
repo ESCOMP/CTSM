@@ -4401,6 +4401,15 @@
       <option name="comment">""</option>
     </options>
   </test>
+  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdDryDepNoComp">
+    <machines>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:32:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
     <machines>
       <machine name="betzy"   compiler="gnu" category="aux_clm_noresm"/>

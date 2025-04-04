@@ -50,9 +50,10 @@ module CanopyStateType
      real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy
      real(r8) , pointer :: fsun240_patch            (:)   ! patch 240hr average of sunlit fraction of canopy
 
-     real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
-     ! for non-ED/FATES this is the same as pftcon%dleaf()
+     real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]  for non-ED/FATES this is the same as pftcon%dleaf()          
+
      integer ,  pointer :: voc_pftindex_patch      (:)   ! FATES specific MEGAN pft index. 
+
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
