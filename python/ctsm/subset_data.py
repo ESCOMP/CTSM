@@ -101,6 +101,12 @@ def get_parser():
     pt_parser = subparsers.add_parser("point", help="Run script for a single point.")
     rg_parser = subparsers.add_parser("region", help="Run script for a region.")
 
+    lon_type_help_str = (
+        "Whether longitudes are in the [-180, 180] format (centered around the Prime"
+        " Meridian) or the [0, 360] format (centered around the International Date Line)."
+        " Choose by specifying the upper limit."
+    )
+
     # -- single point parser options
     pt_parser.add_argument(
         "--lat",
@@ -121,11 +127,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--lon-type",
-        help=(
-            "Whether longitudes are in the [-180, 180] format (centered around the Prime"
-            " Meridian) or the [0, 360] format (centered around the International Date Line)."
-            " Choose by specifying the upper limit."
-        ),
+        help=lon_type_help_str,
         required=False,
         default=None,
         type=int,
@@ -247,11 +249,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon-type",
-        help=(
-            "Whether longitudes are in the [-180, 180] format (i.e., centered around the Prime"
-            " Meridian) or the [0, 360] format (i.e., centered around the International Date Line)."
-            " Choose by specifying the upper limit."
-        ),
+        help=lon_type_help_str,
         required=False,
         default=None,
         type=int,

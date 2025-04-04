@@ -355,8 +355,7 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
 
 def lon_idl2pm(lons_in, fail_silently=False):
     """
-    Convert a longitude axis that's -180 to 180 around the international date line to one that's 0
-    to 360 around the prime meridian.
+    Convert a longitude axis that's -180 to 180 to one that's 0 to 360
 
     - If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it
       assumes you're passing in numeric data.
