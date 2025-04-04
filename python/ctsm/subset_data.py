@@ -98,6 +98,7 @@ def _add_lon_type_arg(this_parser):
     )
     return this_parser
 
+
 def get_parser():
     """
     Get the parser object for subset_data.py script.
@@ -232,9 +233,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help=(
-            "Region westernmost longitude. [default: %(default)s]"
-        ),
+        help=("Region westernmost longitude. [default: %(default)s]"),
         type=float,
         dest="lon1",
         required=False,
@@ -242,9 +241,7 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon2",
-        help=(
-            "Region easternmost longitude. [default: %(default)s]"
-        ),
+        help=("Region easternmost longitude. [default: %(default)s]"),
         type=float,
         dest="lon2",
         required=False,
