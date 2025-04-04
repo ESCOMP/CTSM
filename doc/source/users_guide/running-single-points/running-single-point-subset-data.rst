@@ -20,13 +20,14 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 .. code:: shell
 
    tools/site_and_regional/subset_data point \
-      --lat $my_lat --lon $my_lon --site $my_site_name \
+      --lat $my_lat --lon $my_lon --lon-type $my_lon_type --site $my_site_name \
       --create-surface --create-datm \
       --datm-syr $my_start_year --datm-eyr $my_end_year \
       --create-user-mods --outdir $my_output_dir
 
 -  ``$my_lat``: latitude of point, *must be between -90 and 90 degrees*. E.g., Boulder, CO, USA: 40.
--  ``$my_lon``: longitude of point, *must be between 0 and 360 degrees*. E.g., Boulder, CO, USA: 55.
+-  ``$my_lon``: longitude of point. *Must be between -180 and 360 degrees.* E.g., Boulder, CO, USA: 255 or -105.
+-  ``$my_lon_type``: 180 if your longitude is in the [-180, 180] format (i.e., centered at the Prime Meridian); 360 if it's in the [0, 360] format (i.e., centered at the International Date Line). Note that ``--lon-type $my_lon_type`` is not necessary if your longitude is unambiguous---i.e., it's only needed if your longitude is in the range [0, 180].
 -  ``$my_site_name``: name of site, *used for file naming*
 -  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
 -  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2015; see note below about switching the default DATM data*
