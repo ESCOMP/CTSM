@@ -19,6 +19,7 @@ module clm_driver
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
   use clm_varcon             , only : spval
+  use shr_infnan_mod         , only : nan => shr_infnan_nan, assignment(=)
   use clm_varorb             , only : obliqr
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
@@ -716,10 +717,10 @@ contains
        ! when fates is not active.
 
        if(use_fates)then
-          downreg_patch(:) = spval
-          leafn_patch(:) = spval
-          froot_carbon(:) = spval
-          croot_carbon(:) = spval
+          downreg_patch(:) = nan
+          leafn_patch(:) = nan
+          froot_carbon(:) = nan
+          croot_carbon(:) = nan
        else
           downreg_patch = bgc_vegetation_inst%get_downreg_patch(bounds_clump)
           leafn_patch = bgc_vegetation_inst%get_leafn_patch(bounds_clump)
