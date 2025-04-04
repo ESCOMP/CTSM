@@ -47,7 +47,7 @@ def convert_lons_if_needed(lon_1, lon_2, lon_type):
         lon_1 = convert_lon_0to360(lon_1)
         lon_2 = convert_lon_0to360(lon_2)
     elif lon_type != 360:
-        raise ValueError("lon_type must be either 180 or 360")
+        raise ValueError(f"lon_type must be either 180 or 360, not {lon_type}")
     return lon_1, lon_2
 
 

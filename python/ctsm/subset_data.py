@@ -126,15 +126,15 @@ def get_parser():
         dest="plat",
         required=False,
         type=plat_type,
-        default=None,
+        default=42.5,
     )
     pt_parser.add_argument(
         "--lon",
         help="Single point longitude. [default: %(default)s]",
-        type=float,
         dest="plon",
         required=False,
-        default=None,
+        type=float,
+        default=287.8,
     )
     pt_parser = _add_lon_type_arg(pt_parser)
     pt_parser.add_argument(
@@ -234,18 +234,18 @@ def get_parser():
     rg_parser.add_argument(
         "--lon1",
         help=("Region westernmost longitude. [default: %(default)s]"),
-        type=float,
         dest="lon1",
         required=False,
-        default=None,
+        type=float,
+        default=275.0,  # Must be unambiguous: Either < 0 or > 180
     )
     rg_parser.add_argument(
         "--lon2",
         help=("Region easternmost longitude. [default: %(default)s]"),
-        type=float,
         dest="lon2",
         required=False,
-        default=None,
+        type=float,
+        default=330.0,  # Must be unambiguous: Either < 0 or > 180
     )
     rg_parser = _add_lon_type_arg(rg_parser)
     rg_parser.add_argument(
@@ -751,21 +751,15 @@ def subset_point(args, file_dict: dict):
     logger.info("Successfully ran script for single point.")
 
 
-def subset_region(args, file_dict: dict):
+def _set_up_regional_case(args):
     """
-    Subsets surface, domain, land use, and/or DATM files for a region
+    Set up regional case
     """
-
-    logger.info("----------------------------------------------------------------------------")
-    logger.info("This script extracts a region from the global CTSM datasets.")
-
-    # --  Create Region Object
     region = RegionalCase(
         lat1=args.lat1,
         lat2=args.lat2,
         lon1=args.lon1,
         lon2=args.lon2,
-        lon_type=args.lon_type,
         reg_name=args.reg_name,
         create_domain=args.create_domain,
         create_surfdata=args.create_surfdata,
@@ -776,8 +770,20 @@ def subset_region(args, file_dict: dict):
         out_dir=args.out_dir,
         overwrite=args.overwrite,
     )
-
     logger.debug(region)
+    return region
+
+
+def subset_region(args, file_dict: dict):
+    """
+    Subsets surface, domain, land use, and/or DATM files for a region
+    """
+
+    logger.info("----------------------------------------------------------------------------")
+    logger.info("This script extracts a region from the global CTSM datasets.")
+
+    # --  Create Region Object
+    region = _set_up_regional_case(args)
 
     # --  Create CTSM domain file
     if region.create_domain:

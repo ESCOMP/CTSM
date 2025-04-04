@@ -17,7 +17,7 @@ from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
-from ctsm.config_utils import convert_lons_if_needed, check_lon1_lt_lon2
+from ctsm.config_utils import check_lon1_lt_lon2
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,6 @@ class RegionalCase(BaseCase):
         lat2,
         lon1,
         lon2,
-        lon_type,
         reg_name,
         create_domain,
         create_surfdata,
@@ -117,10 +116,6 @@ class RegionalCase(BaseCase):
             create_user_mods,
             overwrite,
         )
-
-        # Convert longitudes. This should have already been done in subset_data, but adding it here
-        # just in case RegionalCase is ever used elsewhere.
-        lon1, lon2 = convert_lons_if_needed(lon1, lon2, lon_type)
 
         self.lat1 = lat1
         self.lat2 = lat2
@@ -152,6 +147,15 @@ class RegionalCase(BaseCase):
         """
         Check for the regional bounds
         """
+        # If you're calling this, lat/lon bounds need to have been provided
+        if any(x is None for x in [self.lon1, self.lon2, self.lat1, self.lat2]):
+            raise argparse.ArgumentTypeError(
+                "Latitude and longitude bounds must be provided and not None.\n"
+                + f"   lon1: {self.lon1}\n"
+                + f"   lon2: {self.lon2}\n"
+                + f"   lat1: {self.lat1}\n"
+                + f"   lat2: {self.lat2}"
+            )
         # By now, you need to have already converted to longitude [0, 360]
         check_lon1_lt_lon2(self.lon1, self.lon2, 360)
         self.check_region_lats()

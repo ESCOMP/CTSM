@@ -18,7 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.subset_data import get_parser, setup_files, check_args
+from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
 from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name,too-many-public-methods
@@ -272,8 +272,9 @@ class TestSubsetData(unittest.TestCase):
             "--verbose",
             "--crop",
         ]
-        self.args = self.parser.parse_args()
-        check_args(self.args)
+        args = self.parser.parse_args()
+        args = check_args(args)
+        _set_up_regional_case(args)
 
     def test_region_lon_type_360_ok(self):
         """
@@ -297,9 +298,10 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        self.args = check_args(args)
+        args = check_args(args)
         self.assertEqual(args.lon1, 320)
         self.assertEqual(args.lon2, 340)
+        _set_up_regional_case(args)
 
     def test_region_lon_type_360_toolow(self):
         """
@@ -331,7 +333,7 @@ class TestSubsetData(unittest.TestCase):
 
     def test_region_lon_type_360_ok_at_360(self):
         """
-        In region mode, test that --lon-type 360 passes with a longitude value of 360
+        In region mode, test that --lon-type 360 works with a longitude value of 360
         """
         sys.argv = [
             "subset_data",
@@ -351,7 +353,8 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        check_args(args)
+        args = check_args(args)
+        _set_up_regional_case(args)
 
     def test_region_lon_type_361_toohigh(self):
         """
@@ -444,9 +447,38 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, expected_err_msg):
             check_args(args)
 
-    def test_region_lon_type_180_ok(self):
+    def test_region_lon_type_180_neg_ok(self):
         """
-        In region mode, test that --lon-type 180 works with valid longitudes
+        In region mode, test that --lon-type 180 works with valid negative longitudes
+        """
+        lon1 = -87
+        lon2 = -24
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon-type",
+            "180",
+            "--lon1",
+            str(lon1),
+            "--lon2",
+            str(lon2),
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        self.assertEqual(args.lon1, lon1 % 360)
+        self.assertEqual(args.lon2, lon2 % 360)
+        _set_up_regional_case(args)
+
+    def test_region_lon_type_180_pos_ok(self):
+        """
+        In region mode, test that --lon-type 180 works with valid positive longitudes
         """
         lon1 = 24
         lon2 = 87
@@ -468,9 +500,10 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        self.args = check_args(args)
+        args = check_args(args)
         self.assertEqual(args.lon1, lon1 % 360)
         self.assertEqual(args.lon2, lon2 % 360)
+        _set_up_regional_case(args)
 
     def test_point_ambiguous_lon_errors(self):
         """
@@ -608,7 +641,8 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        check_args(args)
+        args = check_args(args)
+        _set_up_regional_case(args)
 
     def test_region_unambiguous_lons_360_ok(self):
         """
@@ -631,7 +665,8 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        check_args(args)
+        args = check_args(args)
+        _set_up_regional_case(args)
 
     def test_region_lon_type_180_ok_at_180(self):
         """
@@ -657,9 +692,10 @@ class TestSubsetData(unittest.TestCase):
         ]
         self.parser = get_parser()
         args = self.parser.parse_args()
-        self.args = check_args(args)
+        args = check_args(args)
         self.assertEqual(args.lon1, lon1 % 360)
         self.assertEqual(args.lon2, lon2 % 360)
+        _set_up_regional_case(args)
 
     def test_region_lon_type_180_toolow(self):
         """
