@@ -7,9 +7,9 @@
 
 .. _running-single-points:
 
-#####################################
-Running Single Point Regional Cases
-#####################################
+#######################################
+Running Single Point and Regional Cases
+#######################################
 
 .. toctree::
    :maxdepth: 2

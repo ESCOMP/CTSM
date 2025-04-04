@@ -18,24 +18,55 @@ _CONFIG_PLACEHOLDER = "FILL_THIS_IN"
 _CONFIG_UNSET = "UNSET"
 
 
-def lon_range_0_to_360(lon_in):
+def convert_lon_0to360(lon_in):
     """
     Description
     -----------
-    Restrict longitude to 0 to 360 when given as -180 to 180.
+    Convert a longitude from [-180, 180] format (i.e., centered around Prime Meridian) to [0, 360]
+    format (i.e., centered around International Date Line).
     """
-    if -180 <= lon_in < 0:
-        raise NotImplementedError(
-            "A negative longitude suggests you input longitudes in the range [-180, 0)---"
-            "i.e., centered around the Prime Meridian. This code requires longitudes in the "
-            "range [0, 360)---i.e., starting at the International Date Line."
-        )
-    if not (0 <= lon_in <= 360 or lon_in is None):
-        errmsg = "lon_in needs to be in the range 0 to 360"
-        abort(errmsg)
-    lon_out = lon_in
+    if not -180 <= lon_in <= 180:
+        raise ValueError(f"lon_in needs to be in the range [-180, 180]: {lon_in}")
+    lon_out = lon_in % 360
+    logger.info(
+        "Converting longitude from [-180, 180] to [0, 360]: %s to %s",
+        str(lon_in),
+        str(lon_out),
+    )
 
     return lon_out
+
+
+def convert_lons_if_needed(lon_1, lon_2, lon_type):
+    """
+    Description
+    -----------
+    Given two longitudes, if their type is 180 (i.e., between -180 and 180), convert them to 0-360
+    """
+    if lon_type == 180:
+        lon_1 = convert_lon_0to360(lon_1)
+        lon_2 = convert_lon_0to360(lon_2)
+    elif lon_type != 360:
+        raise ValueError(f"lon_type must be either 180 or 360, not {lon_type}")
+    return lon_1, lon_2
+
+
+def check_lon1_lt_lon2(lon1, lon2, lon_type):
+    """
+    Description
+    -----------
+    Given two longitudes, check that lon1 is < lon2. Useful for avoiding CTSM Issue #2017, but note
+    that to use this function properly for that purpose, you need to have already converted
+    longitudes from lon_type 180 to 360.
+    """
+    if lon1 < lon2:
+        return
+
+    msg = f"--lon1 ({lon1}) must be < --lon2 ({lon2})\n"
+    msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
+    if lon_type == 180:
+        msg = "After converting to --lon-type 360, " + msg
+    raise ValueError(msg)
 
 
 def get_config_value(
