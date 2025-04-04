@@ -437,7 +437,10 @@ class TestSubsetData(unittest.TestCase):
 
         lon1_conv = lon1 % 360
         lon2_conv = lon2 % 360
-        expected_err_msg = rf"After converting to --lon-type 360, --lon1 \({lon1_conv}[\.\d]*\) must be < --lon2 \({lon2_conv}[\.\d]*\)"
+        expected_err_msg = (
+            "After converting to --lon-type 360, "
+            + rf"--lon1 \({lon1_conv}[\.\d]*\) must be < --lon2 \({lon2_conv}[\.\d]*\)"
+        )
         with self.assertRaisesRegex(ValueError, expected_err_msg):
             check_args(args)
 
