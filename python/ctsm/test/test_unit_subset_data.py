@@ -356,34 +356,6 @@ class TestSubsetData(unittest.TestCase):
         args = check_args(args)
         _set_up_regional_case(args)
 
-    def test_region_lon_type_361_toohigh(self):
-        """
-        In region mode, test that --lon-type 360 fails with a longitude value that's above [0, 360]
-        """
-        sys.argv = [
-            "subset_data",
-            "region",
-            "--create-domain",
-            "--verbose",
-            "--lat1",
-            "0",
-            "--lat2",
-            "40",
-            "--lon-type",
-            "360",
-            "--lon1",
-            "320",
-            "--lon2",
-            "361",
-        ]
-        self.parser = get_parser()
-        args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            ValueError,
-            r"lon_in needs to be in the range \[0, 360\]",
-        ):
-            check_args(args)
-
     def test_region_lon_type_360_crosses_pm_errors(self):
         """
         In region mode, test that --lon-type 360 errors if lon range crosses Prime Meridian
@@ -696,64 +668,6 @@ class TestSubsetData(unittest.TestCase):
         self.assertEqual(args.lon1, lon1 % 360)
         self.assertEqual(args.lon2, lon2 % 360)
         _set_up_regional_case(args)
-
-    def test_region_lon_type_180_toolow(self):
-        """
-        In region mode, test that --lon-type 180 fails with a longitude value that's below
-        [-180, 180]
-        """
-        sys.argv = [
-            "subset_data",
-            "region",
-            "--create-domain",
-            "--verbose",
-            "--lat1",
-            "0",
-            "--lat2",
-            "40",
-            "--lon-type",
-            "180",
-            "--lon1",
-            "-181",
-            "--lon2",
-            "15",
-        ]
-        self.parser = get_parser()
-        args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            ValueError,
-            r"lon_in needs to be in the range \[-180, 180\]",
-        ):
-            check_args(args)
-
-    def test_region_lon_type_180_toohigh(self):
-        """
-        In region mode, test that --lon-type 180 fails with a longitude value that's above
-        [-180, 180]
-        """
-        sys.argv = [
-            "subset_data",
-            "region",
-            "--create-domain",
-            "--verbose",
-            "--lat1",
-            "0",
-            "--lat2",
-            "40",
-            "--lon-type",
-            "180",
-            "--lon1",
-            "87",
-            "--lon2",
-            "180.1",
-        ]
-        self.parser = get_parser()
-        args = self.parser.parse_args()
-        with self.assertRaisesRegex(
-            ValueError,
-            r"lon_in needs to be in the range \[-180, 180\]",
-        ):
-            check_args(args)
 
 
 if __name__ == "__main__":

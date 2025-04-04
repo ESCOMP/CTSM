@@ -65,7 +65,7 @@ from argparse import ArgumentParser
 from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
-from ctsm.args_utils import plat_type
+from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import convert_lon_0to360, check_lon1_lt_lon2
@@ -134,7 +134,7 @@ def get_parser():
         action="store",
         dest="plon",
         required=False,
-        type=float,
+        type=plon_type,
         default=287.8,
     )
     pt_parser = _add_lon_type_arg(pt_parser)
@@ -238,7 +238,7 @@ def get_parser():
         action="store",
         dest="lon1",
         required=False,
-        type=float,
+        type=plon_type,
         default=275.0,  # Must be unambiguous: Either < 0 or > 180
     )
     rg_parser.add_argument(
@@ -247,7 +247,7 @@ def get_parser():
         action="store",
         dest="lon2",
         required=False,
-        type=float,
+        type=plon_type,
         default=330.0,  # Must be unambiguous: Either < 0 or > 180
     )
     rg_parser = _add_lon_type_arg(rg_parser)
