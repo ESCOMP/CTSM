@@ -564,7 +564,8 @@ def check_args(args):
             )
             raise argparse.ArgumentError(None, err_msg)
         if args.lon1 is not None and args.lon1 >= args.lon2:
-            msg = f"--lon1 ({args.lon1}) must be < --lon2 ({args.lon2})"
+            msg = f"--lon1 ({args.lon1}) must be < --lon2 ({args.lon2})\n"
+            msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
             if args.lon_type == 180:
                 msg = "After converting to --lon type 360, " + msg
             raise ValueError(msg)
