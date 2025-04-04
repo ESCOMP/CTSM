@@ -567,7 +567,7 @@ def check_args(args):
             msg = f"--lon1 ({args.lon1}) must be < --lon2 ({args.lon2})\n"
             msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
             if args.lon_type == 180:
-                msg = "After converting to --lon type 360, " + msg
+                msg = "After converting to --lon-type 360, " + msg
             raise ValueError(msg)
 
     return args
