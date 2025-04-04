@@ -57,7 +57,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_varname = None
         self._lat_dimname = None
         self._lon_dimname = None
-        self._lon_type = None
+        self._lon_type = 360
 
         self._previous_dir = os.getcwd()
         os.chdir(self._tempdir)  # cd to tempdir
