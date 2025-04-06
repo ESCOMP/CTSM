@@ -15,6 +15,9 @@ from ctsm.config_utils import lon_range_0_to_360, _handle_config_value
 # to make readable unit test names
 # pylint: disable=invalid-name
 
+# When CTSM Issue #3001 is resolved, this should be deleted
+wrong_lon_type_error_regex = r"\[-180, 0\).*\[0, 360\)"
+
 
 class TestUtilsFillTemplateFile(unittest.TestCase):
     """Tests of utils: fill_template_file"""
@@ -63,16 +66,28 @@ class TestUtilsLonRange0to360(unittest.TestCase):
         Tests that negative inputs to lon_range_0_to_360 get 360 added to them
         """
         inval = -180
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval + 360)
+
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            lon_range_0_to_360(inval)
+
+        # result = lon_range_0_to_360(inval)
+        # self.assertEqual(result, inval + 360)
 
     def test_lonRange0To360_lonIsNegGreaterThan1(self):
         """
         Tests that negative inputs to lon_range_0_to_360 get 360 added to them
         """
         inval = -0.001
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval + 360)
+
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            lon_range_0_to_360(inval)
+
+        # result = lon_range_0_to_360(inval)
+        # self.assertEqual(result, inval + 360)
 
     def test_lonRange0To360_lonIs0(self):
         """

@@ -215,7 +215,11 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help="Region westernmost longitude. [default: %(default)s]",
+        help=(
+            "Region westernmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            " International Date Line rather than centered on the Prime Meridian. [default:"
+            " %(default)s]"
+        ),
         action="store",
         dest="lon1",
         required=False,
@@ -224,7 +228,11 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon2",
-        help="Region easternmost longitude. [default: %(default)s]",
+        help=(
+            "Region easternmost longitude. Must be in [0, 360) format: i.e., starting at the"
+            " International Date Line rather than centered on the Prime Meridian. [default:"
+            " %(default)s]"
+        ),
         action="store",
         dest="lon2",
         required=False,
@@ -456,7 +464,8 @@ def check_args(args):
             """\
                 \n ------------------------------------
                 \n --surf-year option is NOT set to 1850 and the --create-landuse option
-                \n is selected which requires it to be 1850
+                \n is selected which requires it to be 1850 (see
+                https://github.com/ESCOMP/CTSM/issues/2018)
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
@@ -504,6 +513,17 @@ def check_args(args):
                       """
             )
             raise argparse.ArgumentError(None, err_msg)
+
+    if args.run_type == "region" and args.create_datm:
+        err_msg = textwrap.dedent(
+            """\
+                    \n ------------------------------------
+                    \nERROR: For regional cases, you can not subset datm data
+                    \n (see https://github.com/ESCOMP/CTSM/issues/2110)
+                    \n but you can just use the global data instead
+                    """
+        )
+        raise NotImplementedError(None, err_msg)
 
 
 def setup_user_mods(user_mods_dir, cesmroot):
@@ -569,7 +589,12 @@ def setup_files(args, defaults, cesmroot):
         abort("inputdata directory does not exist")
 
     # DATM data
-    datm_type = "datm_gswp3"
+    # TODO Issue #2960: Make datm_type a user option at the command
+    # line. For reference, this option affects three .cfg files:
+    #      tools/site_and_regional/default_data_1850.cfg
+    #      tools/site_and_regional/default_data_2000.cfg
+    #      python/ctsm/test/testinputs/default_data.cfg
+    datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
     dir_output_datm = "datmdata"
     dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
@@ -684,7 +709,8 @@ def subset_point(args, file_dict: dict):
 
     # -- Write shell commands
     if single_point.create_user_mods:
-        single_point.write_shell_commands(os.path.join(args.user_mods_dir, "shell_commands"))
+        shell_commands_file = os.path.join(args.user_mods_dir, "shell_commands")
+        single_point.write_shell_commands(shell_commands_file, args.datm_syr, args.datm_eyr)
 
     logger.info("Successfully ran script for single point.")
 
