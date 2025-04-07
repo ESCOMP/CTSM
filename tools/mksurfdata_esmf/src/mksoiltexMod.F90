@@ -409,13 +409,13 @@ contains
                "orgc", 1._r4, 0._r4, orgc_i, orgc_o)
 
           ! ---------------------------------------------------------------
-          ! organic_o OPTION 1, as we plan to calculate organic in the CTSM
+          ! Calculating organic_o
           ! ---------------------------------------------------------------
           ! Calculate organic from orgc_o, cfrag_o, and bulk_o, i.e. after
           ! these terms have been regridded. The plan is to move this
           ! calculation step from here to the CTSM. This approach keeps
           ! ORGC the same in fsurdat as in the raw data.
-          ! Alternative approach considered but not selected: Regrid organic_i
+          !     Alternative approach previously available: Regrid organic_i
           ! (calculated from orgc_i, cfrag_i, and bulk_i) to organic_o. This
           ! approach first calculates organic_i and then regrids to organic_o
           ! rather than regridding all the terms first and then calculating
