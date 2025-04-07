@@ -50,6 +50,8 @@ contains
 
   subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o)
     !
+    ! Fill output soil layers for a given texture component
+    !
     ! Arguments
     integer, intent(in) :: no
     integer, intent(in) :: lookup_index
