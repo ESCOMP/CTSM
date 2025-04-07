@@ -48,7 +48,7 @@ contains
     end if
   end subroutine mksoiltex_check_layer_negative
 
-  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o, data_modifier, organic_o)
+  subroutine mksoiltex_i_to_o(no, lookup_index, n_scid, nlay, n_mapunits, name, val_neg_4, val_neg_other, data_i, data_o)
     !
     ! Arguments
     integer, intent(in) :: no
@@ -59,28 +59,11 @@ contains
     real(r4), intent(in) :: val_neg_other  ! Fallback value if read-in value is negative but not -4
     real(r4), intent(in) :: data_i(:,:,:)
     real(r4), intent(out) :: data_o(:,:)
-    real(r4), optional, intent(in) :: data_modifier(:,:,:)
-    real(r4), optional, intent(out) :: organic_o(:,:)
     !
     ! Local variables
     integer :: l
     integer :: ier
     logical :: is_sand_dune
-    real(r4), allocatable  :: organic_i(:,:,:)
-
-    ! Apply data_modifer, if needed (organic_o OPTION 2)
-    if (present(data_modifier)) then
-       if (.not. present(organic_o)) then
-          call shr_sys_abort('mksoiltex_i_to_o: data_modifier not needed if not providing organic_o')
-       else if (trim(name) /= 'orgc') then
-          call shr_sys_abort('mksoiltex_i_to_o: organic_o should only be provided along with orgc')
-       end if
-       allocate(organic_i(nlay,n_scid,n_mapunits), stat=ier)
-       if (ier/=0) call shr_sys_abort()
-       organic_i = data_i * data_modifier
-    else if (present(organic_o)) then
-       call shr_sys_abort('mksoiltex_i_to_o: If providing organic_o, also provide data_modifier')
-    end if
 
     ! Fill first layer of output array with first positive value on SCID dim of input array
     data_o(no,1) = data_i(1,1,lookup_index)
