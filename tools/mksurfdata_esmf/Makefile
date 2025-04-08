@@ -37,13 +37,16 @@ ifeq ($(BUILT),0)
 endif
 
 # Set a few things needed for batch handling
-PROJECT = $(shell cat $(HOME)/.cesm_proj)
+PROJECT := ${PROJECT}
+ifeq ($(PROJECT),$(null))
+   PROJECT = $(shell cat $(HOME)/.cesm_proj)
+endif
 LOGOUT = $@.stdout.txt
 PWD = $(shell pwd)
 
 BATCHJOBS_ch = qsub
 ifeq ($(PROJECT),$(null))
-   $(error Can NOT find PROJECT number from ~/.cesm_proj file create it and try again)
+   $(error Can't get project number from either PROJECT environment variable or ~/.cesm_proj file. Try calling make like "PROJECT=P12345678 make ..." or put your project number in ~/.cesm_proj)
 endif
 BATCHJOBS = $(BATCHJOBS_ch)
 
