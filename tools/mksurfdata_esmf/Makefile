@@ -1,5 +1,7 @@
 # -*- mode:Makefile -*-
 #
+# Running with this Makefile requires that you build the code first.
+#
 # Before running "make urban-alpha" or any target that includes it,
 # execute "module load nco" first.
 #
@@ -27,6 +29,12 @@
 
 # Set up special characters
 null  :=
+
+# Check that code has been built
+BUILT = $(shell ls -d tool_bld | wc -l)
+ifeq ($(BUILT),0)
+   $(error Build the mksurfdata_esmf code before using this Makefile)
+endif
 
 # Set a few things needed for batch handling
 PROJECT = $(shell cat $(HOME)/.cesm_proj)
