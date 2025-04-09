@@ -34,13 +34,16 @@ def base_get_parser(default_js_name="mksurfdata_jobscript_single.sh"):
     parser.print_usage = parser.print_help
     add_logging_args(parser)
 
+    default_account = os.environ.get("ACCOUNT")
+    if default_account is None:
+        default_account = "P93300641"
     parser.add_argument(
         "--account",
         help="""account number (default: %(default)s)""",
         action="store",
         dest="account",
         required=False,
-        default="P93300641",
+        default=default_account,
     )
     parser.add_argument(
         "--number-of-nodes",
