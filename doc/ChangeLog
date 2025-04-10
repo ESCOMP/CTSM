@@ -1,4 +1,49 @@
 ===============================================================
+Tag name: ctsm5.3.038
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Apr 10 12:07:20 MDT 2025
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Merging b4b-dev into ctsm5.3.037.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3059: ctsm5.3.038: Merge b4b-dev into master by samsrabin](https://github.com/ESCOMP/CTSM/pull/3059)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.037
 Originator(s): olyson/heroldn/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 02 Apr 2025 11:28:26 PM MDT
