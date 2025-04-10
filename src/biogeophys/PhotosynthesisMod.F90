@@ -1841,6 +1841,13 @@ contains
                end if
                ci_z(p,iv) = 0._r8
                rh_leaf(p) = 0._r8
+               ! This sets the variables GSSUN and GSSHA
+               ! Write stomatal conductance to the appropriate phase
+               if (phase=='sun') then
+                  gs_mol_sun(p,iv) = cf/rs_z(p,iv)
+               else if (phase=='sha') then
+                  gs_mol_sha(p,iv) = cf/rs_z(p,iv)
+               end if
 
             else                                     ! day time
 
@@ -1897,9 +1904,7 @@ contains
                   end if
                end if
 
-               !
-               ! This sets the  variables GSSUN and GSSHA
-               !
+               ! This sets the variables GSSUN and GSSHA
                ! Write stomatal conductance to the appropriate phase
                if (phase=='sun') then
                   gs_mol_sun(p,iv) = gs_mol(p,iv)
@@ -3524,6 +3529,9 @@ contains
                rs_z_sha(p,iv) = min(rsmax0, 1._r8/(max( bsha(p)*gsminsha, 1._r8 )) * cf)
                ci_z_sha(p,iv) = 0._r8
                rh_leaf_sha(p) = 0._r8
+               ! This sets the variables GSSUN and GSSHA
+               gs_mol_sun(p,iv) = cf/rs_z_sun(p,iv)
+               gs_mol_sha(p,iv) = cf/rs_z_sha(p,iv)
 
             else                                     ! day time
 
