@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.038 samrabin 04/10/2025 Merge b4b-dev
+       ctsm5.3.037     erik 04/02/2025 Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
+       ctsm5.3.036 glemieux 04/01/2025 Add history output to FATES LUH testmods
        ctsm5.3.035 samrabin 03/28/2025 Merge b4b-dev
        ctsm5.3.034   rgknox 03/27/2025 Fixes to enable passing FATES two-stream ERS and ERI restart tests.
        ctsm5.3.033 multiple 03/19/2025 Add new mimics_fi param = frac of litter inputs bypassing litter pools
