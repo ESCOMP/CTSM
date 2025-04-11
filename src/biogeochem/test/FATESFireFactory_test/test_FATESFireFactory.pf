@@ -149,16 +149,12 @@ module test_FATESFireFactory
       integer :: i
 
       do i = scalar_lightning, noptions
-         if ( i == successful_ignitions ) then
-            cycle
-         else
-            call this%setUp()
-            call this%turn_fire_emis_on()
-            fates_spitfire_mode = i
-            use_fates_sp = .false.
-            call this%FireFactInit( )
-            call this%tearDown()
-         end if
+          call this%setUp()
+          call this%turn_fire_emis_on()
+          fates_spitfire_mode = i
+          use_fates_sp = .false.
+          call this%FireFactInit( )
+          call this%tearDown()
       end do
 
     end subroutine all_fates_spitfire_options_with_fire_emis_works
