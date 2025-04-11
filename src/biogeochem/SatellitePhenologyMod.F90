@@ -24,8 +24,8 @@ module SatellitePhenologyMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: GetSatellitePhenologyInputs ! put the data into the correct format
-  public :: SetSatellitePhenologyBGCCanopyStructs ! CLM(BGC)-SP phenology and vegetation
+  public :: CalcSatellitePhenologyTimeInterp ! put the data into the correct format
+  public :: UpdateSatellitePhenologyCanopy ! CLM(BGC)-SP phenology and vegetation
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
@@ -89,7 +89,7 @@ contains
   end subroutine SatellitePhenologyInit
 
   !================================================================
-  subroutine GetSatellitePhenologyInputs(bounds, num_filter, filter, canopystate_inst)
+  subroutine CalcSatellitePhenologyTimeInterp(bounds, num_filter, filter, canopystate_inst)
     !
     ! !DESCRIPTION:
     ! Ecosystem dynamics: phenology, vegetation
@@ -155,11 +155,11 @@ contains
       end do
       end associate
       
-   end subroutine GetSatellitePhenologyInputs
+   end subroutine CalcSatellitePhenologyTimeInterp
    
    !==============================================================================
    
-   subroutine SetSatellitePhenologyBGCCanopyStructs(bounds, num_filter, filter, &
+   subroutine UpdateSatellitePhenologyCanopy(bounds, num_filter, filter, &
     waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -186,8 +186,8 @@ contains
     real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb                                ! fraction of canopy layer covered by snow
     
-    if (use_fates_sp) then 
-      write(iulog,*) 'SetSatellitePhenologyBGCCanopyStructs', 'should not be calling this method when use_fates_sp == .true.'
+    if (use_fates) then 
+      write(iulog,*) 'Should not be calling this method when use_fates == .true.'
      call endrun(msg=errMsg(sourcefile, __LINE__))
     end if 
     
@@ -251,7 +251,7 @@ contains
 
     end associate
 
-  end subroutine SetSatellitePhenologyBGCCanopyStructs
+  end subroutine UpdateSatellitePhenologyCanopy
 
   !==============================================================================
   subroutine interpMonthlyVeg (bounds, canopystate_inst)
