@@ -102,6 +102,18 @@ contains
             allocate(fates_fire_no_data_type :: fates_fire_data_method)
 
       end select
+      ! -------------------------------------------------------------------------------------------------------
+      ! For now we die with a error whenever fire-emissions are turned on -- because this isn't setup in FATES
+      !
+      if ( fates_spitfire_mode /= no_fire ) then
+         if ( shr_fire_emis_mechcomps_n > 0 )then
+            write(iulog,*) "Fire emissions can NOT be on with FATES currently: ", &
+                        errMsg(sourcefile, __LINE__)
+            call endrun(msg="Fire emission with FATES can NOT currently be turned on (see issue #1045)" )
+            return
+         end if
+      end if
+      ! -------------------------------------------------------------------------------------------------------
     end if
 
   end subroutine create_fates_fire_data_method
