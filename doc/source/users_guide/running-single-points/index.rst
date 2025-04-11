@@ -15,6 +15,7 @@ Running Single Point Regional Cases
    :maxdepth: 2
 
    single-point-and-regional-grid-configurations.rst
-   running-pts_mode-configurations.rst
+   running-single-point-subset-data.rst
    running-single-point-configurations.rst
+   running-pts_mode-configurations.rst
 

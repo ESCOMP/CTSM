@@ -25,17 +25,15 @@ def lon_range_0_to_360(lon_in):
     Restrict longitude to 0 to 360 when given as -180 to 180.
     """
     if -180 <= lon_in < 0:
-        lon_out = lon_in % 360
-        logger.info(
-            "Resetting longitude from %s to %s to keep in the range " " 0 to 360",
-            str(lon_in),
-            str(lon_out),
+        raise NotImplementedError(
+            "A negative longitude suggests you input longitudes in the range [-180, 0)---"
+            "i.e., centered around the Prime Meridian. This code requires longitudes in the "
+            "range [0, 360)---i.e., starting at the International Date Line."
         )
-    elif 0 <= lon_in <= 360 or lon_in is None:
-        lon_out = lon_in
-    else:
+    if not (0 <= lon_in <= 360 or lon_in is None):
         errmsg = "lon_in needs to be in the range 0 to 360"
         abort(errmsg)
+    lon_out = lon_in
 
     return lon_out
 
