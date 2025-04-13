@@ -4380,7 +4380,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdDryDepSatPhen">
+  <test name="SMS_D" grid="ne16pg3_ne16pg3_mtn14" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdDryDepSatPhen">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -4428,7 +4428,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERI_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStreamNoCompFixedBioGeo">
+  <test name="ERI_D_Ld20" grid="ne16pg3_ne16pg3_mtn14" compset="I2000Clm60FatesRs" testmods="clm/FatesColdNormanNoCompFixedBioGeo">
     <machines>
       <machine name="betzy"   compiler="gnu" category="aux_clm_noresm"/>
     </machines>
