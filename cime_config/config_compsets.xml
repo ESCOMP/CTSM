@@ -332,13 +332,17 @@
   </compset>
 
   <compset>
-    <alias>I1850Clm60FatesSpinup</alias>
+    <alias>I1850Clm60FatesNoCompSpinup</alias>
     <lname>1850_DATM%CPLHIST_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1850Clm60Fates</alias>
+    <alias>I1850Clm60FatesNoComp</alias>
     <lname>1850_DATM%GSWP3v1_CLM60%FATES-NOCOMP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I1850Clm60FatesSp</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
 

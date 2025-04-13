@@ -4371,6 +4371,15 @@
       <option name="comment">""</option>
     </options>
   </test>
+  <test name="ERP_D_Ld5" grid="f45_f45_mg37" compset="I1850Clm60FatesSp" testmods="clm/FatesColdClm60Cam7LndTuningMode">
+    <machines>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
   <test name="SMS_D" grid="ne30pg3_ne30pg3_mtn14" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdDryDepSatPhen">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
@@ -4384,6 +4393,15 @@
   <!-- FATES-NOCOMP -->
 
   <test name="ERS_Ld366" grid="ne30pg3_ne30pg3_mtn14" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:50:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ln11" grid="ne30pg3_ne30pg3_mtn14" compset="I1850Clm60FatesNocompSpinup" testmods="clm/FatesColdSpinup">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
