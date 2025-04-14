@@ -143,10 +143,11 @@ module test_FATESFireFactory
     !-----------------------------------------------------------------------
 
     @Test
-    subroutine all_fates_spitfire_options_with_fire_emis_works(this)
+    subroutine all_fates_spitfire_options_with_fire_emis_fails(this)
       class(TestFATESFireFactory), intent(inout) :: this
       integer, parameter :: noptions = anthro_suppression
       integer :: i
+      character(100) :: expected_msg
 
       do i = scalar_lightning, noptions
           call this%setUp()
@@ -154,10 +155,12 @@ module test_FATESFireFactory
           fates_spitfire_mode = i
           use_fates_sp = .false.
           call this%FireFactInit( )
+          expected_msg = "ABORTED: Fire emission with FATES can NOT currently be turned on (see issue #1045)"
+          @assertExceptionRaised(expected_msg)
           call this%tearDown()
       end do
 
-    end subroutine all_fates_spitfire_options_with_fire_emis_works
+    end subroutine all_fates_spitfire_options_with_fire_emis_fails
 
     !-----------------------------------------------------------------------
 
