@@ -7,6 +7,7 @@ import logging
 import configparser
 
 from ctsm.utils import abort
+from ctsm.longitude import Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -18,39 +19,6 @@ _CONFIG_PLACEHOLDER = "FILL_THIS_IN"
 _CONFIG_UNSET = "UNSET"
 
 
-def convert_lon_0to360(lon_in):
-    """
-    Description
-    -----------
-    Convert a longitude from [-180, 180] format (i.e., centered around Prime Meridian) to [0, 360]
-    format (i.e., centered around International Date Line).
-    """
-    if not -180 <= lon_in <= 180:
-        raise ValueError(f"lon_in needs to be in the range [-180, 180]: {lon_in}")
-    lon_out = lon_in % 360
-    logger.info(
-        "Converting longitude from [-180, 180] to [0, 360]: %s to %s",
-        str(lon_in),
-        str(lon_out),
-    )
-
-    return lon_out
-
-
-def convert_lons_if_needed(lon_1, lon_2, lon_type):
-    """
-    Description
-    -----------
-    Given two longitudes, if their type is 180 (i.e., between -180 and 180), convert them to 0-360
-    """
-    if lon_type == 180:
-        lon_1 = convert_lon_0to360(lon_1)
-        lon_2 = convert_lon_0to360(lon_2)
-    elif lon_type != 360:
-        raise ValueError(f"lon_type must be either 180 or 360, not {lon_type}")
-    return lon_1, lon_2
-
-
 def check_lon1_lt_lon2(lon1, lon2, lon_type):
     """
     Description
@@ -59,6 +27,16 @@ def check_lon1_lt_lon2(lon1, lon2, lon_type):
     that to use this function properly for that purpose, you need to have already converted
     longitudes from lon_type 180 to 360.
     """
+    # Convert to Longitude class, if needed
+    if not isinstance(lon1, Longitude):
+        lon1 = Longitude(lon1, lon_type)
+    if not isinstance(lon2, Longitude):
+        lon2 = Longitude(lon2, lon_type)
+
+    # Convert to type 360, if needed
+    lon1 = lon1.get(360)
+    lon2 = lon2.get(360)
+
     if lon1 < lon2:
         return
 

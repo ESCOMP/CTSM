@@ -68,7 +68,8 @@ from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
-from ctsm.config_utils import convert_lon_0to360, check_lon1_lt_lon2
+from ctsm.config_utils import check_lon1_lt_lon2
+from ctsm.longitude import Longitude
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -859,16 +860,7 @@ def process_args(args):
             val = getattr(args, var)
             if val is None:
                 continue
-            if args.lon_type == 180:
-                # Value range is checked by convert_lon_0to360()
-                setattr(args, var, convert_lon_0to360(val))
-            elif args.lon_type == 360:
-                if val < 0 or val > 360:
-                    raise ValueError(f"lon_in needs to be in the range [0, 360]: {val}")
-            else:
-                raise argparse.ArgumentTypeError(
-                    f"--lon-type can only be 180 or 360, not {args.lon_type}"
-                )
+            setattr(args, var, Longitude(val, args.lon_type))
     return args
 
 

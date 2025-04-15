@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 from ctsm.utils import abort
-from ctsm.config_utils import convert_lon_0to360
+from ctsm.longitude import Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +139,12 @@ class ModifyMeshMask:
                         + f"{len(self.latvar.sizes)}"
                     )
                     abort(errmsg)
+
                 # lon and lat from the mesh file
                 lat_mesh = float(self.file["centerCoords"][ncount, 1])
                 lon_mesh = float(self.file["centerCoords"][ncount, 0])
                 # ensure lon range of 0-360 rather than -180 to 180
-                if self.lon_type == 180:
-                    lonvar_scalar = convert_lon_0to360(lonvar_scalar)
-                    lon_mesh = convert_lon_0to360(lon_mesh)
+                lonvar_scalar = Longitude(lonvar_scalar, self.lon_type).get(360)
 
                 errmsg = (
                     "Must be equal: "
