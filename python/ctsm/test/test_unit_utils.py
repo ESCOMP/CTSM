@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for utils and config_utils
-"""
+"""Unit tests for utils and config_utils"""
 
 import tempfile
 import shutil

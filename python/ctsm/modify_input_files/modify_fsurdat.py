@@ -26,7 +26,7 @@ class ModifyFsurdat:
     """
 
     def __init__(
-        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        self, my_data, *, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
 
         self.numurbl = 3  # Number of urban density types
@@ -72,15 +72,24 @@ class ModifyFsurdat:
 
     @classmethod
     def init_from_file(
-        cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        cls, *, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
     ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
         my_file = xr.open_dataset(fsurdat_in)
-        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname)
+        return cls(
+            my_file,
+            lon_1=lon_1,
+            lon_2=lon_2,
+            lat_1=lat_1,
+            lat_2=lat_2,
+            landmask_file=landmask_file,
+            lat_dimname=lat_dimname,
+            lon_dimname=lon_dimname,
+        )
 
     @staticmethod
-    def _get_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    def _get_rectangle(*, lon_1, lon_2, lat_1, lat_2, longxy, latixy):
         """
         Description
         -----------
@@ -105,6 +114,7 @@ class ModifyFsurdat:
             # rectangles don't overlap: stradling the 0-degree meridian
             union_1 = np.logical_or(rectangle_1, rectangle_2)
 
+        union_2 = None
         if lat_1 < -90 or lat_1 > 90 or lat_2 < -90 or lat_2 > 90:
             errmsg = "lat_1 and lat_2 need to be in the range -90 to 90"
             abort(errmsg)
@@ -177,7 +187,7 @@ class ModifyFsurdat:
             data=pct_cft, attrs=self.file["PCT_CFT"].attrs, dims=self.file["PCT_CFT"].dims
         )
 
-    def set_dom_pft(self, dom_pft, lai, sai, hgt_top, hgt_bot):
+    def set_dom_pft(self, *, dom_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
