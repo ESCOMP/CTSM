@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: ctsm5.3.039
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Mon 14 Apr 2025 07:22:22 PM MDT
+One-line Summary: Create driver data structure for SP mode
+
+Purpose and description of changes
+----------------------------------
+
+Creates a new data structure for htop, tlai, and tsai that is just driver data
+
+Previously, fates used htop_patch (etc.) as a driver data, but we also needed to update it and set set htop_hist_patch. This htop_hist_patch was inconsistently used throughout the CLM code, resulting in mis-matches between the PFT structures that we actually were trying to run.
+
+Now we have the SP driver data as a separate data structure, and methods to set it. FATES sets it and passes it back to CLM through the bc_out struct, CLM just sets it in a 1:1 call.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #2945: htop_patch is being incorrectly used in FATES compsets](https://github.com/ESCOMP/CTSM/issues/2945)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: 
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any FATE SP mode
+    - what platforms/compilers: all compilers, all platforms
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): greater than round-off DIFF in TLAI, TSAI, and HTOP, as well as a number of variables related to dust and those that used TLAI, TSAI, and HTOP for physics calculations in CTSM when FATES-SP on. Notably, no vegetation-related variables (i.e. FATES_GPP, EFLX_LH_TOT etc. changed)
+
+
+Pull Requests that document the changes (include PR ids):
+
+- [Pull Request #2952: Create driver data structure for SP mode  by adrifoster](https://github.com/ESCOMP/CTSM/pull/2952)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.038
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Apr 10 12:07:20 MDT 2025
