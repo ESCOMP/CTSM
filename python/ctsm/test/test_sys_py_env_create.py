@@ -181,6 +181,18 @@ class TestSysPyEnvCreate(unittest.TestCase):
         self._check_dry_run(out.stdout)
         self.assertTrue("Renaming existing" in out.stdout)
 
+    def test_py_env_create_help_r(self):
+        """
+        Ensure that name of new env is in the help text for -r/--rename
+        """
+
+        # Run py_env_create in help mode with rename existing
+        _, out = self._create_empty_env(extra_args=["-h"], check=False)
+
+        # Check stdout
+        expected_str = f"the environment you're installing ({self.env_names[-1]})"
+        self.assertTrue(expected_str in out.stdout)
+
     def test_py_env_create_old(self):
         """
         Ensure py_env_create works with --old
