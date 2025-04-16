@@ -1,4 +1,144 @@
 ===============================================================
+Tag name: ctsm5.3.040
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Tue 15 Apr 2025 10:15:39 AM MDT
+One-line Summary: Update ctsm_pylib to 3.13.2
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the ctsm_pylib conda environment, installed with py_env_create, to use Python 3.13.2 instead of 3.7.9. There are also some improvements to how py_env_create works.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves ESCOMP/CTSM#2625 (Move ctsm_pylib to something beyond 3.7)
+- Resolves ESCOMP/CTSM#2771 (Add User's Guide section about ctsm_pylib)
+
+Notes of particular relevance for users
+---------------------------------------
+
+The new ctsm_pylib conda environment will be incompatible with the CTSM Python tools from before this tag (ctsm5.3.040) and vice versa. If you already have a copy of the ctsm_pylib conda environment installed, we thus suggest keeping that around under a different name. Here is the suggested command for doing this:
+    ./py_env_create -r ctsm_pylib_old
+This will (1) rename your existing ctsm_pylib to ctsm_pylib_old and (2) install the Python 3.13.2 version as ctsm_pylib.
+
+Information about additional py_env_create options---including how to install a fresh copy of the old conda environment---can be found like so:
+  ./py_env_create --help
+
+Changes to documentation:
+- User's Guide: Adds "Installing the CTSM Python environment" page
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New Python system test module: test_sys_py_env_create.py
+- That module will install a bunch of empty conda envs with the prefix pec_test. It should clean those up on exit, but if not, you can safely delete them afterward.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing:
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [CTSM PR #2982: Update ctsm_pylib to 3.13.2](https://github.com/ESCOMP/CTSM/pull/2982)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.039
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Mon 14 Apr 2025 07:22:22 PM MDT
+One-line Summary: Create driver data structure for SP mode
+
+Purpose and description of changes
+----------------------------------
+
+Creates a new data structure for htop, tlai, and tsai that is just driver data
+
+Previously, fates used htop_patch (etc.) as a driver data, but we also needed to update it and set set htop_hist_patch. This htop_hist_patch was inconsistently used throughout the CLM code, resulting in mis-matches between the PFT structures that we actually were trying to run.
+
+Now we have the SP driver data as a separate data structure, and methods to set it. FATES sets it and passes it back to CLM through the bc_out struct, CLM just sets it in a 1:1 call.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #2945: htop_patch is being incorrectly used in FATES compsets](https://github.com/ESCOMP/CTSM/issues/2945)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: 
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any FATE SP mode
+    - what platforms/compilers: all compilers, all platforms
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): greater than round-off DIFF in TLAI, TSAI, and HTOP, as well as a number of variables related to dust and those that used TLAI, TSAI, and HTOP for physics calculations in CTSM when FATES-SP on. Notably, no vegetation-related variables (i.e. FATES_GPP, EFLX_LH_TOT etc. changed)
+
+
+Pull Requests that document the changes (include PR ids):
+
+- [Pull Request #2952: Create driver data structure for SP mode  by adrifoster](https://github.com/ESCOMP/CTSM/pull/2952)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.038
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Apr 10 12:07:20 MDT 2025
