@@ -259,10 +259,10 @@ contains
        if (ivt /= noveg) then
           ! vegetated pft
           ig = g_to_ig(patch%gridcell(p))
-          canopystate_inst%tlai_patch(p) = dataptr2d(ig,ivt)
+          canopystate_inst%tlai_input_patch(p) = dataptr2d(ig,ivt)
        else
           ! non-vegetated pft
-          canopystate_inst%tlai_patch(p) = 0._r8
+          canopystate_inst%tlai_input_patch(p) = 0._r8
        endif
     end do
     deallocate(dataptr2d)

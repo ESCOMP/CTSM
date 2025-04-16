@@ -70,7 +70,13 @@ def mesh_mask_modifier(cfg_path):
 
     # Create ModifyMeshMask object
     modify_mesh_mask = ModifyMeshMask.init_from_file(
-        mesh_mask_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname, lon_type
+        file_in=mesh_mask_in,
+        landmask_file=landmask_file,
+        lat_dimname=lat_dimname,
+        lon_dimname=lon_dimname,
+        lat_varname=lat_varname,
+        lon_varname=lon_varname,
+        lon_type=lon_type,
     )
 
     # If output file exists, abort before starting work

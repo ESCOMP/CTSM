@@ -52,6 +52,7 @@ def get_config_value(
     section,
     item,
     file_path,
+    *,
     allowed_values=None,
     default=None,
     is_list=False,
@@ -128,7 +129,7 @@ def get_config_value_or_array(
 
 
 def _handle_config_value(
-    var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
+    *, var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
 ):
     """
     Description

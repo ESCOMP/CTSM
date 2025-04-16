@@ -2,6 +2,7 @@
 utility functions
 copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py
 """
+
 import numpy as np
 import xarray as xr
 
@@ -149,10 +150,13 @@ def is_this_vegtype(this_vegtype, this_filter, this_method):
     notok_exact:    True if this_vegtype does not match any member of
                     this_filter exactly.
     """
+
     # Make sure data type of this_vegtype is acceptable
+    def data_type_ok(x):
+        return isinstance(x, (int, np.int64, str))
+
     if isinstance(this_vegtype, float) and int(this_vegtype) == this_vegtype:
         this_vegtype = int(this_vegtype)
-    data_type_ok = lambda x: isinstance(x, (int, np.int64, str))
     ok_input = True
     if not data_type_ok(this_vegtype):
         if isinstance(this_vegtype, xr.core.dataarray.DataArray):

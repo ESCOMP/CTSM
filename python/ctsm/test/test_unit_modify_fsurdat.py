@@ -57,19 +57,19 @@ class TestModifyFsurdat(unittest.TestCase):
         var_lev2 = var_1d * np.ones((self.rows, self.cols, self.rows, self.cols))
         var_lev3 = var_1d * np.ones((self.cols, self.rows, self.cols, self.rows, self.cols))
         my_data = xr.Dataset(
-            data_vars=dict(
-                LONGXY=(["x", "y"], longxy),  # use LONGXY as var_lev0
-                LATIXY=(["x", "y"], latixy),  # __init__ expects LONGXY, LATIXY
-                urbdens=(["numurbl"], var_1d),  # numurbl needs to be dimension
-                var_lev0=(["x", "y"], var_lev0),
-                var_lev1=(["w", "x", "y"], var_lev1),
-                var_lev2=(["v", "w", "x", "y"], var_lev2),
-                var_lev3=(["z", "v", "w", "x", "y"], var_lev3),
-                VAR_LEV0_UPPERCASE=(["x", "y"], var_lev0),
-                VAR_LEV1_UPPERCASE=(["w", "x", "y"], var_lev1),
-                VAR_LEV2_UPPERCASE=(["v", "w", "x", "y"], var_lev2),
-                VAR_LEV3_UPPERCASE=(["z", "v", "w", "x", "y"], var_lev3),
-            )
+            data_vars={
+                "LONGXY": (["x", "y"], longxy),  # use LONGXY as var_lev0
+                "LATIXY": (["x", "y"], latixy),  # __init__ expects LONGXY, LATIXY
+                "urbdens": (["numurbl"], var_1d),  # numurbl needs to be dimension
+                "var_lev0": (["x", "y"], var_lev0),
+                "var_lev1": (["w", "x", "y"], var_lev1),
+                "var_lev2": (["v", "w", "x", "y"], var_lev2),
+                "var_lev3": (["z", "v", "w", "x", "y"], var_lev3),
+                "VAR_LEV0_UPPERCASE": (["x", "y"], var_lev0),
+                "VAR_LEV1_UPPERCASE": (["w", "x", "y"], var_lev1),
+                "VAR_LEV2_UPPERCASE": (["v", "w", "x", "y"], var_lev2),
+                "VAR_LEV3_UPPERCASE": (["z", "v", "w", "x", "y"], var_lev3),
+            }
         )
 
         # create ModifyFsurdat object
