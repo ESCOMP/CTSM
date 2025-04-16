@@ -5,8 +5,6 @@
 
 import unittest
 
-from configparser import ConfigParser
-
 from ctsm import unit_testing
 from ctsm.longitude import Longitude
 from ctsm.longitude import _convert_lon_type_180_to_360, _convert_lon_type_360_to_180
@@ -107,46 +105,53 @@ class TestLongitude(unittest.TestCase):
             Longitude(lon_obj, lon_type)
 
     def test_lon_obj_type180_neg(self):
-        """Test that creating an in-bounds negative Longitude of type 180 doesn't error"""
+        """Test that creating an in-bounds negative Longitude of type 180 works"""
         lon_type = 180
         this_lon = -55
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type180_pos(self):
-        """Test that creating an in-bounds positive Longitude of type 180 doesn't error"""
+        """Test that creating an in-bounds positive Longitude of type 180 works"""
         lon_type = 180
         this_lon = 87
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type180_min(self):
-        """Test that creating a lower-bound Longitude of type 180 doesn't error"""
+        """Test that creating a lower-bound Longitude of type 180 works"""
         lon_type = 180
         this_lon = -180
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type180_max(self):
-        """Test that creating an upper-bound Longitude of type 180 doesn't error"""
+        """Test that creating an upper-bound Longitude of type 180 works"""
         lon_type = 180
         this_lon = 180
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type360_pos(self):
-        """Test that creating an in-bounds Longitude of type 360 doesn't error"""
+        """Test that creating an in-bounds Longitude of type 360 works"""
         lon_type = 360
         this_lon = 87
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type360_min(self):
-        """Test that creating a lower-bound Longitude of type 360 doesn't error"""
+        """Test that creating a lower-bound Longitude of type 360 works"""
         lon_type = 360
         this_lon = 0
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
     def test_lon_obj_type360_max(self):
-        """Test that creating an upper-bound Longitude of type 360 doesn't error"""
+        """Test that creating an upper-bound Longitude of type 360 works"""
         lon_type = 360
         this_lon = 360
-        Longitude(this_lon, lon_type)
+        lon_obj = Longitude(this_lon, lon_type)
+        self.assertEqual(lon_obj.get(lon_type), this_lon)
 
 
 if __name__ == "__main__":
