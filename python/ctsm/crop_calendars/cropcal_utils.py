@@ -353,7 +353,7 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     return ds_in
 
 
-def lon_idl2pm(lons_in, fail_silently=False):
+def lon_axis_type180_to_type360(lons_in, fail_silently=False):
     """
     Convert a longitude axis that's -180 to 180 to one that's 0 to 360
 
@@ -392,12 +392,12 @@ def lon_idl2pm(lons_in, fail_silently=False):
         lons_out = do_it(lons_in)
         if not is_strictly_increasing(lons_out):
             print(
-                "WARNING: You passed in numeric longitudes to lon_idl2pm() and these have been"
+                "WARNING: You passed in numeric longitudes to lon_axis_type180_to_type360() and these have been"
                 " converted, but they're not strictly increasing."
             )
         print(
             "To assign the new longitude coordinates to an Xarray object, use"
-            " xarrayobject.assign_coordinates()! (Pass the object directly in to lon_idl2pm() in"
+            " xarrayobject.assign_coordinates()! (Pass the object directly in to lon_axis_type180_to_type360() in"
             " order to suppress this message.)"
         )
 

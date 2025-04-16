@@ -85,8 +85,8 @@ logger = logging.getLogger(__name__)
 
 def _add_lon_type_arg(this_parser):
     lon_type_help_str = (
-        "Whether longitudes are in the [-180, 180] format (centered around the Prime"
-        " Meridian) or the [0, 360] format (centered around the International Date Line)."
+        "Whether longitudes are in the [-180, 180] format (centered around the Prime/0th"
+        " Meridian) or the [0, 360] format (centered around the 180th Meridian)."
         " Choose by specifying the upper limit."
     )
     this_parser.add_argument(
