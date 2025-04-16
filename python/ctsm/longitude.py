@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def _check_lon_type_180(lon_in):
     """
     Checks value range of longitude with type 180
@@ -13,12 +14,14 @@ def _check_lon_type_180(lon_in):
     if not -180 <= lon_in <= 180:
         raise ValueError(f"lon_in needs to be in the range [-180, 180]: {lon_in}")
 
+
 def _check_lon_type_360(lon_in):
     """
     Checks value range of longitude with type 360
     """
     if not 0 <= lon_in <= 360:
         raise ValueError(f"lon_in needs to be in the range [0, 360]: {lon_in}")
+
 
 def _check_lon_value_given_type(lon_in, lon_type_in):
     """
@@ -30,6 +33,7 @@ def _check_lon_value_given_type(lon_in, lon_type_in):
         _check_lon_type_360(lon_in)
     else:
         raise RuntimeError(f"You must specify lon_type_in as 180 or 360, not {lon_type_in}")
+
 
 def _convert_lon_type_180_to_360(lon_in):
     """
@@ -44,6 +48,7 @@ def _convert_lon_type_180_to_360(lon_in):
     )
 
     return lon_out
+
 
 def _convert_lon_type_360_to_180(lon_in):
     """
@@ -64,10 +69,12 @@ def _convert_lon_type_360_to_180(lon_in):
 
     return lon_out
 
+
 class Longitude:
     """
     A class to keep track of a longitude and its type
     """
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, lon, lon_type):

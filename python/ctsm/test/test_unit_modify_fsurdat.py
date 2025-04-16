@@ -98,17 +98,26 @@ class TestModifyFsurdat(unittest.TestCase):
         val_for_rectangle = 1.5
         comp_lev0[
             self.lat_1 - self.min_lat : self.lat_2 - self.min_lat + 1,
-            self.lon_1.get(self.lon_type) - self.min_lon : self.lon_2.get(self.lon_type) - self.min_lon + 1,
+            self.lon_1.get(self.lon_type)
+            - self.min_lon : self.lon_2.get(self.lon_type)
+            - self.min_lon
+            + 1,
         ] = val_for_rectangle
         comp_lev1[
             ...,
             self.lat_1 - self.min_lat : self.lat_2 - self.min_lat + 1,
-            self.lon_1.get(self.lon_type) - self.min_lon : self.lon_2.get(self.lon_type) - self.min_lon + 1,
+            self.lon_1.get(self.lon_type)
+            - self.min_lon : self.lon_2.get(self.lon_type)
+            - self.min_lon
+            + 1,
         ] = val_for_rectangle
         comp_lev2[
             ...,
             self.lat_1 - self.min_lat : self.lat_2 - self.min_lat + 1,
-            self.lon_1.get(self.lon_type) - self.min_lon : self.lon_2.get(self.lon_type) - self.min_lon + 1,
+            self.lon_1.get(self.lon_type)
+            - self.min_lon : self.lon_2.get(self.lon_type)
+            - self.min_lon
+            + 1,
         ] = val_for_rectangle
 
         # test setvar
@@ -159,7 +168,10 @@ class TestModifyFsurdat(unittest.TestCase):
         # Hardwire where I expect not_rectangle to be False (0)
         # I have chosen the lon/lat ranges to match their corresponding index
         # values to keep this simple
-        compare[lat_1 - min_lat : lat_2 - min_lat + 1, lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1] = 0
+        compare[
+            lat_1 - min_lat : lat_2 - min_lat + 1,
+            lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1,
+        ] = 0
         np.testing.assert_array_equal(not_rectangle, compare)
 
     def test_getNotRectangle_lon1leLon2Lat1gtLat2(self):
@@ -204,8 +216,14 @@ class TestModifyFsurdat(unittest.TestCase):
         # Hardwire where I expect not_rectangle to be False (0)
         # I have chosen the lon/lat ranges to match their corresponding index
         # values to keep this simple
-        compare[: lat_2 - min_lat + 1, lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1] = 0
-        compare[lat_1 - min_lat :, lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1] = 0
+        compare[
+            : lat_2 - min_lat + 1,
+            lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1,
+        ] = 0
+        compare[
+            lat_1 - min_lat :,
+            lon_1.get(self.lon_type) - min_lon : lon_2.get(self.lon_type) - min_lon + 1,
+        ] = 0
         np.testing.assert_array_equal(not_rectangle, compare)
 
     def test_getNotRectangle_lon1gtLon2Lat1leLat2(self):

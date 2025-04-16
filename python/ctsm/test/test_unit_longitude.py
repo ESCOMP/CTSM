@@ -97,7 +97,6 @@ class TestLongitude(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r"lon_in needs to be in the range \[0, 360\]"):
             _convert_lon_type_360_to_180(lon)
 
-
     # Initializing new Longitude objects
 
     def test_lon_obj_lon_errors(self):
@@ -105,7 +104,7 @@ class TestLongitude(unittest.TestCase):
         lon_type = 360
         lon_obj = Longitude(0, lon_type)
         with self.assertRaises(TypeError):
-             Longitude(lon_obj, lon_type)
+            Longitude(lon_obj, lon_type)
 
     def test_lon_obj_type180_neg(self):
         """Test that creating an in-bounds negative Longitude of type 180 doesn't error"""

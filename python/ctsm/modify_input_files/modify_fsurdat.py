@@ -26,7 +26,16 @@ class ModifyFsurdat:
     """
 
     def __init__(
-        self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname, lon_type=None
+        self,
+        my_data,
+        lon_1,
+        lon_2,
+        lat_1,
+        lat_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type=None,
     ):
 
         if lon_type is not None:
