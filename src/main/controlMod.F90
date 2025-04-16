@@ -620,7 +620,7 @@ contains
        call hillslope_hydrology_ReadNML(   NLFilename )
     endif
     if ( use_cn ) then
-       call CNFireReadNML( bounds,     NLFilename )
+       call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )

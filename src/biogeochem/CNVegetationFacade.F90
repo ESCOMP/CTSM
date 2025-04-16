@@ -303,7 +303,8 @@ contains
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
     
-       call create_cnfire_method(NLFilename, this%cnfire_method)
+       call create_cnfire_method( this%cnfire_method )
+       call this%cnfire_method%FireInit( bounds )
        call this%cnfire_method%FireReadNML( bounds, NLFilename )
        call this%cnfire_method%CNFireReadParams( params_ncid )
     end if
@@ -585,7 +586,7 @@ contains
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
-    call CNDriverInit(bounds, NLFilename, this%cnfire_method)
+    call CNDriverInit(bounds, NLFilename)
 
     if (use_cndv) then
        call dynCNDV_init(bounds, this%dgvs_inst)
