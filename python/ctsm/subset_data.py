@@ -136,7 +136,7 @@ def get_parser():
         dest="plon",
         required=False,
         type=plon_type,
-        default=287.8,
+        default=287.8,  # Must be unambiguous: Either < 0 or > 180
     )
     pt_parser = _add_lon_type_arg(pt_parser)
     pt_parser.add_argument(
