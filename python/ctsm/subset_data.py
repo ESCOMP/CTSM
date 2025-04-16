@@ -824,11 +824,13 @@ def subset_region(args, file_dict: dict):
 
 
 def _detect_lon_type(lon_in):
-    lon_type = None
     if lon_in < 0:
         lon_type = 180
     elif lon_in > 180:
         lon_type = 360
+    else:
+        msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
+        raise argparse.ArgumentTypeError(msg)
     return lon_type
 
 
@@ -844,17 +846,15 @@ def process_args(args):
     lon_arg_values = [getattr(args, var) is not None for var in lon_args]
     if any(lon_arg_values):
         if args.lon_type is None:
-            msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
             if hasattr(args, "plon"):
-                lon_type = _detect_lon_type(args.plon)
-                if lon_type is None:
-                    raise argparse.ArgumentTypeError(msg)
-                args.lon_type = lon_type
+                args.lon_type = _detect_lon_type(args.plon)
             else:
                 lon1_type = _detect_lon_type(args.lon1)
                 lon2_type = _detect_lon_type(args.lon2)
-                if lon1_type != lon2_type or lon1_type is None:
-                    raise argparse.ArgumentTypeError(msg)
+                if lon1_type != lon2_type:
+                    raise argparse.ArgumentTypeError(
+                        "--lon1 and --lon2 seem to be of different types"
+                    )
                 args.lon_type = lon1_type
         for var in lon_args:
             val = getattr(args, var)
