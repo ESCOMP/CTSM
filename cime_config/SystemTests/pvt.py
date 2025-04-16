@@ -9,6 +9,7 @@ This is a FATES specific test:
 2) run a transient landuse case with use_fates_lupft
     - start from the restart file generated in (1)
 """
+
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files

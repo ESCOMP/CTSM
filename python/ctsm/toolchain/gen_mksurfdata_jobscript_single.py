@@ -3,6 +3,7 @@ gen_mksurfdata_jobscript_single.py generates a jobscript for running the
 mksurfdata executable to generate a single fsurdat file. For detailed
 instructions, see README.
 """
+
 import os
 import argparse
 import logging
@@ -142,6 +143,7 @@ def check_parser_args(args):
 
 
 def write_runscript_part1(
+    *,
     number_of_nodes,
     tasks_per_node,
     machine,
@@ -162,6 +164,7 @@ def write_runscript_part1(
     runfile.write("#PBS -k eod\n")
 
     runfile.write("#PBS -S /bin/bash\n")
+    attribs = None
     if machine == "derecho":
         attribs = {"mpilib": "default"}
         runfile.write(f"#PBS -l walltime={walltime}\n")
@@ -292,7 +295,12 @@ def main():
         # Write batch header (part 1)
         # --------------------------
         attribs = write_runscript_part1(
-            number_of_nodes, tasks_per_node, machine, account, walltime, runfile
+            number_of_nodes=number_of_nodes,
+            tasks_per_node=tasks_per_node,
+            machine=machine,
+            account=account,
+            walltime=walltime,
+            runfile=runfile,
         )
         # --------------------------
         # Obtain mpirun command from env_mach_specific.xml
