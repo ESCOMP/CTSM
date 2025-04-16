@@ -742,24 +742,32 @@ contains
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
-               select case (snow_thermal_cond_method)
-               case ('Jordan1991')
+               l = col%landunit(c)
+
+               ! hard code to Jordan over glacier land unit
+               if (lun%itype(l) == istice) then
                   thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
-               case ('Sturm1997')
-                  ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
-                  ! Leanne Wake (LMW)
-                  ! https://tc.copernicus.org/articles/16/4201/2022/
-                  ! Code provided by Adrien Dams to Will Wieder
-                  if (bw(c,j) <= 156) then !LMW or 0.156 ?
-                     thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
-                  else !LMW
-                     thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
-                  end if
-               case default
-                  write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end select
-            end if
+               else
+                  select case (snow_thermal_cond_method)
+                  case ('Jordan1991')
+                     thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+                  case ('Sturm1997')
+                     ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
+                     ! Leanne Wake (LMW)
+                     ! https://tc.copernicus.org/articles/16/4201/2022/
+                     ! See also https://tc.copernicus.org/articles/19/1539/2025/
+                     ! Code provided by Adrien Dams to Will Wieder
+                     if (bw(c,j) <= 156) then !LMW or 0.156 ?
+                        thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
+                     else !LMW
+                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
+                     end if
+                  case default
+                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end select
+               end if ! close land unit if statement 
+          end if
 
          end do
       end do
