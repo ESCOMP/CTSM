@@ -2,7 +2,7 @@
 # which used Python 3.7.9. Doing so is only useful for running CTSM python tools in repos from
 # before the new ctsm_pylib version (with Python 3.13.2) was introduced.
 #
-name: ctsm_pylib_3_7_94
+name: ctsm_pylib_3_7_9
 channels:
   - conda-forge
   - defaults
