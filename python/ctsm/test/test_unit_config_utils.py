@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for config_utils
-"""
+"""Unit tests for config_utils"""
 
 import unittest
 
@@ -9,6 +8,7 @@ from configparser import ConfigParser
 
 from ctsm import unit_testing
 from ctsm.config_utils import lon_range_0_to_360, get_config_value_or_array
+from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -32,14 +32,26 @@ class TestConfigUtils(unittest.TestCase):
     def test_negative_lon(self):
         """Test lon_range_0_to_360 for a negative longitude"""
         lon = -180.0
-        lon_new = lon_range_0_to_360(lon)
-        self.assertEqual(lon_new, 180.0, "lon not as expected")
+
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            lon_range_0_to_360(lon)
+
+        # lon_new = lon_range_0_to_360(lon)
+        # self.assertEqual(lon_new, 180.0, "lon not as expected")
 
     def test_negative2_lon(self):
         """Test lon_range_0_to_360 for a negative longitude"""
         lon = -5.0
-        lon_new = lon_range_0_to_360(lon)
-        self.assertEqual(lon_new, 355.0, "lon not as expected")
+
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            lon_range_0_to_360(lon)
+
+        # lon_new = lon_range_0_to_360(lon)
+        # self.assertEqual(lon_new, 355.0, "lon not as expected")
 
     def test_regular_lon(self):
         """Test lon_range_0_to_360 for a regular longitude"""
