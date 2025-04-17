@@ -31,6 +31,4 @@ jobs:
             channels: conda-forge
             auto-activate-base: false
         - run: |
-            conda activate ctsm_pylib
-            cd python
-            make black
+            conda run -n ctsm_pylib make black
