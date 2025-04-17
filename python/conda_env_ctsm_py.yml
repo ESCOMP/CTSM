@@ -1,3 +1,8 @@
+# This file is used by py_env_create to install the latest version of the ctsm_pylib conda environment.
+name: ctsm_pylib
+channels:
+  - conda-forge
+  - defaults
 dependencies:
   - python=3.13.2
   - xarray=2025.1.2
