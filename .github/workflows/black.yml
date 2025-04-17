@@ -28,7 +28,7 @@ jobs:
           with:
             activate-environment: ctsm_pylib
             environment-file: python/conda_env_ctsm_py.yml
-            # python-version: 3.5
+            channels: conda-forge
             auto-activate-base: false
         - run: |
             conda activate ctsm_pylib
