@@ -96,6 +96,7 @@ module CNVegetationFacade
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use SoilHydrologyType               , only : soilhydrology_type
   !
   implicit none
   private
@@ -1061,7 +1062,7 @@ contains
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
@@ -1100,6 +1101,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -1122,7 +1124,7 @@ contains
          this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
          c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
-         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
+         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst, soilhydrology_inst)
 
     ! Set controls on very low values in critical state variables 
 
