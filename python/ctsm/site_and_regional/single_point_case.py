@@ -105,6 +105,7 @@ class SinglePointCase(BaseCase):
         self,
         plat,
         plon,
+        *,
         site_name,
         create_domain,
         create_surfdata,
@@ -124,12 +125,12 @@ class SinglePointCase(BaseCase):
         overwrite,
     ):
         super().__init__(
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-            create_user_mods,
-            overwrite,
+            create_domain=create_domain,
+            create_surfdata=create_surfdata,
+            create_landuse=create_landuse,
+            create_datm=create_datm,
+            create_user_mods=create_user_mods,
+            overwrite=overwrite,
         )
         self.plat = plat
         self.plon = plon
@@ -315,7 +316,7 @@ class SinglePointCase(BaseCase):
         Create domain file for this SinglePointCase class.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__())
+        logger.info("Creating domain file at %s, %s.", str(self.plon), str(self.plat))
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -349,8 +350,8 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating land use file at %s, %s.",
-            self.plon.__str__(),
-            self.plat.__str__(),
+            str(self.plon),
+            str(self.plat),
         )
 
         # specify files
@@ -481,8 +482,8 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s",
-            self.plon.__str__(),
-            self.plat.__str__(),
+            str(self.plon),
+            str(self.plat),
         )
 
         # specify file
@@ -553,8 +554,8 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating DATM domain file at %s, %s",
-            self.plon.__str__(),
-            self.plat.__str__(),
+            str(self.plon),
+            str(self.plat),
         )
 
         # specify files
@@ -608,7 +609,7 @@ class SinglePointCase(BaseCase):
         f_in.close()
         f_out.close()
 
-    def write_shell_commands(self, file):
+    def write_shell_commands(self, file, datm_syr, datm_eyr):
         """
         writes out xml commands commands to a file (i.e. shell_commands) for single-point runs
         """
@@ -619,6 +620,10 @@ class SinglePointCase(BaseCase):
             self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
+            if self.create_datm:
+                self.write_to_file(f"./xmlchange DATM_YR_ALIGN={datm_syr}", nl_file)
+                self.write_to_file(f"./xmlchange DATM_YR_START={datm_syr}", nl_file)
+                self.write_to_file(f"./xmlchange DATM_YR_END={datm_eyr}", nl_file)
 
     def write_datm_streams_lines(self, streamname, datmfiles, file):
         """
@@ -638,7 +643,7 @@ class SinglePointCase(BaseCase):
         Create all of a DATM dataset at a point.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__())
+        logger.info("Creating DATM files at %s, %s", str(self.plon), str(self.plat))
 
         # --  create data files
         infile = []

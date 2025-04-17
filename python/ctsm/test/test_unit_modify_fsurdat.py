@@ -12,6 +12,7 @@ import xarray as xr
 from ctsm import unit_testing
 from ctsm.config_utils import lon_range_0_to_360
 from ctsm.modify_input_files.modify_fsurdat import ModifyFsurdat
+from ctsm.test.test_unit_utils import wrong_lon_type_error_regex
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -52,19 +53,19 @@ class TestModifyFsurdat(unittest.TestCase):
         var_lev2 = var_1d * np.ones((self.rows, self.cols, self.rows, self.cols))
         var_lev3 = var_1d * np.ones((self.cols, self.rows, self.cols, self.rows, self.cols))
         my_data = xr.Dataset(
-            data_vars=dict(
-                LONGXY=(["x", "y"], longxy),  # use LONGXY as var_lev0
-                LATIXY=(["x", "y"], latixy),  # __init__ expects LONGXY, LATIXY
-                urbdens=(["numurbl"], var_1d),  # numurbl needs to be dimension
-                var_lev0=(["x", "y"], var_lev0),
-                var_lev1=(["w", "x", "y"], var_lev1),
-                var_lev2=(["v", "w", "x", "y"], var_lev2),
-                var_lev3=(["z", "v", "w", "x", "y"], var_lev3),
-                VAR_LEV0_UPPERCASE=(["x", "y"], var_lev0),
-                VAR_LEV1_UPPERCASE=(["w", "x", "y"], var_lev1),
-                VAR_LEV2_UPPERCASE=(["v", "w", "x", "y"], var_lev2),
-                VAR_LEV3_UPPERCASE=(["z", "v", "w", "x", "y"], var_lev3),
-            )
+            data_vars={
+                "LONGXY": (["x", "y"], longxy),  # use LONGXY as var_lev0
+                "LATIXY": (["x", "y"], latixy),  # __init__ expects LONGXY, LATIXY
+                "urbdens": (["numurbl"], var_1d),  # numurbl needs to be dimension
+                "var_lev0": (["x", "y"], var_lev0),
+                "var_lev1": (["w", "x", "y"], var_lev1),
+                "var_lev2": (["v", "w", "x", "y"], var_lev2),
+                "var_lev3": (["z", "v", "w", "x", "y"], var_lev3),
+                "VAR_LEV0_UPPERCASE": (["x", "y"], var_lev0),
+                "VAR_LEV1_UPPERCASE": (["w", "x", "y"], var_lev1),
+                "VAR_LEV2_UPPERCASE": (["v", "w", "x", "y"], var_lev2),
+                "VAR_LEV3_UPPERCASE": (["z", "v", "w", "x", "y"], var_lev3),
+            }
         )
 
         # create ModifyFsurdat object
@@ -171,36 +172,42 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         min_lon = -3  # expects min_lon < max_lon
         min_lat = -2  # expects min_lat < max_lat
-        longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=6, _min_lat=min_lat, _max_lat=5
-        )
 
-        # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
-        # I have chosen the lon/lat ranges to match their corresponding index
-        # values to keep this simple (see usage below)
-        lon_1 = 0
-        lon_2 = 4  # lon_1 < lon_2
-        lat_1 = 4
-        lat_2 = 0  # lat_1 > lat_2
-        rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1,
-            lon_2=lon_2,
-            lat_1=lat_1,
-            lat_2=lat_2,
-            longxy=longxy,
-            latixy=latixy,
-        )
-        not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows, cols))
-        # assert this to confirm intuitive understanding of these matrices
-        self.assertEqual(np.size(not_rectangle), np.size(compare))
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            self._get_longxy_latixy(_min_lon=min_lon, _max_lon=6, _min_lat=min_lat, _max_lat=5)
 
-        # Hardwire where I expect not_rectangle to be False (0)
-        # I have chosen the lon/lat ranges to match their corresponding index
-        # values to keep this simple
-        compare[: lat_2 - min_lat + 1, lon_1 - min_lon : lon_2 - min_lon + 1] = 0
-        compare[lat_1 - min_lat :, lon_1 - min_lon : lon_2 - min_lon + 1] = 0
-        np.testing.assert_array_equal(not_rectangle, compare)
+        # longxy, latixy, cols, rows = self._get_longxy_latixy(
+        #     _min_lon=min_lon, _max_lon=6, _min_lat=min_lat, _max_lat=5
+        # )
+
+        # # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
+        # # I have chosen the lon/lat ranges to match their corresponding index
+        # # values to keep this simple (see usage below)
+        # lon_1 = 0
+        # lon_2 = 4  # lon_1 < lon_2
+        # lat_1 = 4
+        # lat_2 = 0  # lat_1 > lat_2
+        # rectangle = ModifyFsurdat._get_rectangle(
+        #     lon_1=lon_1,
+        #     lon_2=lon_2,
+        #     lat_1=lat_1,
+        #     lat_2=lat_2,
+        #     longxy=longxy,
+        #     latixy=latixy,
+        # )
+        # not_rectangle = np.logical_not(rectangle)
+        # compare = np.ones((rows, cols))
+        # # assert this to confirm intuitive understanding of these matrices
+        # self.assertEqual(np.size(not_rectangle), np.size(compare))
+
+        # # Hardwire where I expect not_rectangle to be False (0)
+        # # I have chosen the lon/lat ranges to match their corresponding index
+        # # values to keep this simple
+        # compare[: lat_2 - min_lat + 1, lon_1 - min_lon : lon_2 - min_lon + 1] = 0
+        # compare[lat_1 - min_lat :, lon_1 - min_lon : lon_2 - min_lon + 1] = 0
+        # np.testing.assert_array_equal(not_rectangle, compare)
 
     def test_getNotRectangle_lon1gtLon2Lat1leLat2(self):
         """
@@ -261,38 +268,43 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         min_lon = -8  # expects min_lon < max_lon
         min_lat = -9  # expects min_lat < max_lat
-        longxy, latixy, cols, rows = self._get_longxy_latixy(
-            _min_lon=min_lon, _max_lon=5, _min_lat=min_lat, _max_lat=6
-        )
 
-        # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
-        # I have chosen the lon/lat ranges to match their corresponding index
-        # values to keep this simple (see usage below)
-        lon_1 = -1
-        lon_2 = -6  # lon_1 > lon_2
-        lat_1 = 0
-        lat_2 = -3  # lat_1 > lat_2
-        rectangle = ModifyFsurdat._get_rectangle(
-            lon_1=lon_1,
-            lon_2=lon_2,
-            lat_1=lat_1,
-            lat_2=lat_2,
-            longxy=longxy,
-            latixy=latixy,
-        )
-        not_rectangle = np.logical_not(rectangle)
-        compare = np.ones((rows, cols))
-        # assert this to confirm intuitive understanding of these matrices
-        self.assertEqual(np.size(not_rectangle), np.size(compare))
+        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
+        # rest of this test uncommented
+        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
+            self._get_longxy_latixy(_min_lon=min_lon, _max_lon=5, _min_lat=min_lat, _max_lat=6)
 
-        # Hardwire where I expect not_rectangle to be False (0)
-        # I have chosen the lon/lat ranges to match their corresponding index
-        # values to keep this simple
-        compare[: lat_2 - min_lat + 1, : lon_2 - min_lon + 1] = 0
-        compare[: lat_2 - min_lat + 1, lon_1 - min_lon :] = 0
-        compare[lat_1 - min_lat :, : lon_2 - min_lon + 1] = 0
-        compare[lat_1 - min_lat :, lon_1 - min_lon :] = 0
-        np.testing.assert_array_equal(not_rectangle, compare)
+        # longxy, latixy, cols, rows = self._get_longxy_latixy(
+        #     _min_lon=min_lon, _max_lon=5, _min_lat=min_lat, _max_lat=6
+        # )
+        # # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
+        # # I have chosen the lon/lat ranges to match their corresponding index
+        # # values to keep this simple (see usage below)
+        # lon_1 = -1
+        # lon_2 = -6  # lon_1 > lon_2
+        # lat_1 = 0
+        # lat_2 = -3  # lat_1 > lat_2
+        # rectangle = ModifyFsurdat._get_rectangle(
+        #     lon_1=lon_1,
+        #     lon_2=lon_2,
+        #     lat_1=lat_1,
+        #     lat_2=lat_2,
+        #     longxy=longxy,
+        #     latixy=latixy,
+        # )
+        # not_rectangle = np.logical_not(rectangle)
+        # compare = np.ones((rows, cols))
+        # # assert this to confirm intuitive understanding of these matrices
+        # self.assertEqual(np.size(not_rectangle), np.size(compare))
+
+        # # Hardwire where I expect not_rectangle to be False (0)
+        # # I have chosen the lon/lat ranges to match their corresponding index
+        # # values to keep this simple
+        # compare[: lat_2 - min_lat + 1, : lon_2 - min_lon + 1] = 0
+        # compare[: lat_2 - min_lat + 1, lon_1 - min_lon :] = 0
+        # compare[lat_1 - min_lat :, : lon_2 - min_lon + 1] = 0
+        # compare[lat_1 - min_lat :, lon_1 - min_lon :] = 0
+        # np.testing.assert_array_equal(not_rectangle, compare)
 
     def test_getNotRectangle_lonsStraddle0deg(self):
         """
