@@ -33,13 +33,14 @@ jobs:
 
       # Run pylint check
       - name: Run pylint
-        continue-on-error: true
         run: |
           cd python
           conda run -n ctsm_pylib make lint
 
       # Run black check
       - name: Run black
+        # Run this step even if previous step(s) failed
+        if: success() || failure()
         run: |
           cd python
           conda run -n ctsm_pylib make black
