@@ -18,7 +18,7 @@ module ZenderSoilErodStreamType
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
 
@@ -42,8 +42,8 @@ module ZenderSoilErodStreamType
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
-     character(len=CL)  :: stream_fldFileName_zendersoilerod   ! data Filename
-     character(len=CL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
+     character(len=FL)  :: stream_fldFileName_zendersoilerod   ! data Filename
+     character(len=FL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
      character(len=CL)  :: zendersoilerod_mapalgo              ! map algo
      logical            :: namelist_set = .false.              ! if namelist was set yet
   contains
@@ -300,10 +300,10 @@ contains
    integer            :: i         ! Indices
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
-   character(len=CL)  :: stream_fldFileName_zendersoilerod = ' '
-   character(len=CL)  :: stream_meshfile_zendersoilerod = ' '
+   character(len=FL)  :: stream_fldFileName_zendersoilerod = ' '
+   character(len=FL)  :: stream_meshfile_zendersoilerod = ' '
    character(len=CL)  :: zendersoilerod_mapalgo = ' '
-   character(len=CL)  :: tmp_file_array(3)
+   character(len=FL)  :: tmp_file_array(3)
    character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('zendersoilerod::ReadNML')"
    !-----------------------------------------------------------------------

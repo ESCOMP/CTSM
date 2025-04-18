@@ -1,7 +1,7 @@
 SRCDIR=`./xmlquery SRCROOT --value`
 CASEDIR=`./xmlquery CASEROOT --value`
 FATESDIR=$SRCDIR/src/fates/
-FATESPARAMFILE=$SRCDIR/fates_params_seeddisp_4x5.nc
+FATESPARAMFILE=$CASEDIR/fates_params_seeddisp_4x5.nc
 
 ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
 

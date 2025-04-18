@@ -114,7 +114,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="SHAREDLIB_BUILD">
+    <phase name="RUN">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>
@@ -175,24 +175,6 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2310</issue>
-    </phase>
-  </test>
-
-  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2453</issue>
-    </phase>
-  </test>
-
-  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2325</issue>
     </phase>
   </test>
 
@@ -277,28 +259,14 @@
     </phase>
   </test>
 
-  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-  
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3038</issue>
     </phase>
   </test>
 
