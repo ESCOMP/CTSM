@@ -31,7 +31,7 @@ url = https://github.com/NGEET/fates
 fxtag = sci.1.82.3_api.39.0.0
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/NCAR/fates-release
+fxDONOTUSEurl = https://github.com/NGEET/fates
 
 [submodule "cism"]
 path = components/cism
@@ -123,8 +123,8 @@ fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 
 [submodule "doc-builder"]
 path = doc/doc-builder
-url = https://github.com/ESMCI/doc-builder
-fxtag = v1.0.8
+url = https://github.com/samsrabin/doc-builder
+fxtag = 1881ee24b5eac6862b56183d69533ca74c2eaeb8
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
