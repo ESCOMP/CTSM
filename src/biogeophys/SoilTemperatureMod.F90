@@ -624,7 +624,7 @@ contains
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog, snow_thermal_cond_method
+    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glacier_method
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -744,9 +744,23 @@ contains
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
                l = col%landunit(c)
 
-               ! hard code to Jordan over glacier land unit
+               ! Select method over glacier land unit 
                if (lun%itype(l) == istice) then
-                  thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+                  select case (snow_thermal_cond_glacier_method)
+                  ! TODO, this code duplication isn't ideal and should likely be in it's own subroutine
+                  case('Jordan1991')
+                     thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+                  case ('Sturm1997')
+                     if (bw(c,j) <= 156) then !LMW or 0.156 ?
+                        thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
+                     else 
+                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
+                     end if
+                  case default
+                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_glacier_method value: ', snow_thermal_cond_glacier_method
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end select
+
                else
                   select case (snow_thermal_cond_method)
                   case ('Jordan1991')
