@@ -1,0 +1,43 @@
+name: Jobs shared by docs workflows
+
+on:
+  workflow_call:
+    secrets: {}
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Checkout doc-builder external
+        run: |
+          bin/git-fleximod update doc-builder
+
+      # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Install python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.13.2'  # needs to be coordinated with version in python/conda_env_ctsm_py.txt
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install Python requirements
+        run: |
+          pip install -r doc/requirements.txt
+
+      - name: Build Sphinx docs with makefile
+        run: |
+          make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+
+      - name: Build Sphinx docs with doc-builder
+        if: success() || failure()
+        run: |
+          cd doc && ./build_docs -b ${PWD}/_build -c

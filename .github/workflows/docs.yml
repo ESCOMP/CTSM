@@ -1,0 +1,22 @@
+name: Test building docs when they're updated
+# Does not include a test of building docs with ctsm_pylib; that will be in a different Workflow because we only want it to run when ctsm_pylib is updated.
+
+on:
+  push:
+    paths:
+      - 'doc/**'
+
+  pull_request:
+    paths:
+      - 'doc/**'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+
+  test-build-docs:
+    if: ${{ always() }}
+    name: Without ctsm_pylib or container
+    uses: ./.github/workflows/docs-common.yml
