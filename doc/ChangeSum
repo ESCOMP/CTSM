@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.040 samrabin 04/15/2025 Update ctsm_pylib to 3.13.2
+       ctsm5.3.039  afoster 04/14/2025 Create driver data structure for SP mode
        ctsm5.3.038 samrabin 04/10/2025 Merge b4b-dev
        ctsm5.3.037     erik 04/02/2025 Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
        ctsm5.3.036 glemieux 04/01/2025 Add history output to FATES LUH testmods
