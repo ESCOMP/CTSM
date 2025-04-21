@@ -232,9 +232,9 @@ fi
 #
 echo "Installing $new_env_name; this can take a few minutes."
 if [[ "${quiet}" == "--quiet" ]]; then
-   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name ${quiet} 1>/dev/null)
+   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name ${quiet} $option 1>/dev/null)
 else
-   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name ${verbose})
+   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name $option ${verbose})
 fi
 
 #
