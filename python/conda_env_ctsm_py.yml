@@ -20,7 +20,7 @@ dependencies:
 
   # For building docs
   - pip:
-    - -r ../doc/requirements.txt
+    - -r ../doc/ctsm-docs_container/requirements.txt
 
   # Used in ctsm_postprocessing repo
   - pytest=8.3.5

@@ -22,3 +22,21 @@ jobs:
     uses: ./.github/workflows/docs-common.yml
     with:
       use_conda: false
+
+  test-build-docs-container:
+    if: ${{ always() }}
+    name: With container from registry
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout doc-builder external
+        run: |
+          bin/git-fleximod update doc-builder
+
+      - name: Build docs using container
+        id: build-docs
+        run: |
+          cd doc && ./build_docs -b ${PWD}/_build -c -d
