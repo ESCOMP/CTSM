@@ -18,10 +18,7 @@
 #
 import os
 import sys
-# Note that we need a specific version of sphinx_rtd_theme. This can be obtained with:
-# pip install git+https://github.com/esmci/sphinx_rtd_theme.git@version-dropdown-with-fixes
 import sphinx_rtd_theme
-# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- General configuration ------------------------------------------------
@@ -37,7 +34,9 @@ extensions = ['sphinx.ext.intersphinx',
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinx_mdinclude',
+    ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -80,7 +79,7 @@ rst_epilog = """
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -103,15 +102,6 @@ html_theme = 'sphinx_rtd_theme'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#
-# The 'versions' option needs to have at least two versions to work, but it doesn't need
-# to have all versions: others will be added dynamically. Note that this maps from version
-# names to html links. The current version can link to the current location (i.e., do
-# nothing). For the other version, we just add a place-holder; its name and value are
-# unimportant because these versions will get replaced dynamically.
-html_theme_options = {}
-html_theme_options['versions'] = {version: ''}
-html_theme_options['versions']['[placeholder]'] = ''
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -178,7 +168,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/', None)}
 
 numfig = True
 numfig_format = {'figure': 'Figure %s',
@@ -190,3 +180,17 @@ numfig_secnum_depth = 2
 
 def setup(app):
     app.add_css_file('css/custom.css')
+
+try:
+    html_context
+except NameError:
+    html_context = dict()
+
+html_context["display_lower_left"] = True
+
+html_context["current_language"] = language
+
+current_version = "master"
+
+html_context["current_version"] = current_version
+html_context["version"] = current_version
