@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm5.3.041
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Apr 25 08:02:37 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master. Includes PRs:
+- [#3042: Allow file paths with length 512 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3042)
+- [#3024: Python scripts: Require user to specify lon format when ambiguous by samsrabin](https://github.com/ESCOMP/CTSM/pull/3024)
+- [#3017: Avoid repeated ESMF initialization in unittestTimeManagerMod.F90 by billsacks](https://github.com/ESCOMP/CTSM/pull/3017)
+- [#2964: Add GitHub workflows to check black, pylint, git-fleximod by samsrabin](https://github.com/ESCOMP/CTSM/pull/2964)
+- [#3067: fix some st_archive issues with rpointer files by jedwards4b](https://github.com/ESCOMP/CTSM/pull/3067)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- [Issue #2322: long parameter file path string in fates seed dispersal test](https://github.com/ESCOMP/CTSM/issues/2322)
+- [Issue #2453: FUNIT test not working on izumi](https://github.com/ESCOMP/CTSM/issues/2453)
+- [Issue #2651: Change all filepath variables to SHR_KIND_CX (512)](https://github.com/ESCOMP/CTSM/issues/2651)
+- [Issue #3001: Make Python scripts smarter about lons (-180, 180) vs. (0, 360)](https://github.com/ESCOMP/CTSM/issues/3001)
+- [Issue #3015: CNPhenology (and other?) unit tests not being run](https://github.com/ESCOMP/CTSM/issues/3015)
+- [Issue #3041: Race condition with multiple FatesColdSeedDisp tests](https://github.com/ESCOMP/CTSM/issues/3041)
+- [Issue #3076: rpointer files not moved to st_archiver](https://github.com/ESCOMP/CTSM/issues/3076)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+- See updated `subset_data` docs
+
+Changes to documentation:
+- Adds pFUnit testing design page
+- Updates `subset_data` docs
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+List any git submodules updated:
+- FATES reference repo changed from NCAR/fates-release to NGEET/FATES. No version change.
+
+Pull Requests that document the changes (include PR ids):
+- [#3042: Allow file paths with length 512 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3042)
+- [#3024: Python scripts: Require user to specify lon format when ambiguous by samsrabin](https://github.com/ESCOMP/CTSM/pull/3024)
+- [#3017: Avoid repeated ESMF initialization in unittestTimeManagerMod.F90 by billsacks](https://github.com/ESCOMP/CTSM/pull/3017)
+- [#2964: Add GitHub workflows to check black, pylint, git-fleximod by samsrabin](https://github.com/ESCOMP/CTSM/pull/2964)
+- [#3067: fix some st_archive issues with rpointer files by jedwards4b](https://github.com/ESCOMP/CTSM/pull/3067)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.040
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Tue 15 Apr 2025 10:15:39 AM MDT

@@ -3,7 +3,10 @@ name: git-fleximod test
 # Test git-fleximod update and cleanliness
 # Based closely on workflow from CESM repo
 #
-on: [push, pull_request]
+on:
+  push:
+    branches: ['*']
+  pull_request:
 
 jobs:
   fleximod-test:

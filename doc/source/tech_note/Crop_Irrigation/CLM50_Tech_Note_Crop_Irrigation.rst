@@ -66,9 +66,9 @@ To allow crops to coexist with natural vegetation in a grid cell, the vegetated 
 
 CLM5 includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by :ref:`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by :ref:`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by :ref:`Cheng et al. (2019)<Chengetal2019>`. The representations of sugarcane, rice, cotton, tropical corn, and tropical soy were new in CLM5; miscanthus and switchgrass were added after the CLM5 release. Sugarcane and tropical corn are both C4 plants and are therefore represented using the temperate corn functional form. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were developed for the Amazon Basin, and planting date window is shifted by six months relative to the Northern Hemisphere. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States (:ref:`Cheng et al., 2019<Chengetal2019>`).
 
-In addition, CLM's default list of plant functional types (PFTs) includes an irrigated and unirrigated unmanaged C3 crop (:numref:`Table Crop plant functional types`) treated as a second C3 grass. The unmanaged C3 crop is only used when the crop model is not active and has grid cell coverage assigned from satellite data, and the unmanaged C3 irrigated crop type is currently not used since irrigation requires the crop model to be active. The default list of PFTs also includes twenty-one inactive crop PFTs that do not yet have associated parameters required for active management. Each of the inactive crop types is simulated using the parameters of the spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), which is required to maintain similar phenological parameters based on temperature thresholds. Information detailing which parameters are used for each crop type is included in :numref:`Table Crop plant functional types`. It should be noted that PFT-level history output merges all crop types into the actively managed crop type, so analysis of crop-specific output will require use of the land surface dataset to remap the yields of each actively and inactively managed crop type. Otherwise, the actively managed crop type will include yields for that crop type and all inactively managed crop types that are using the same parameter set.
+In addition, CLM's default list of plant functional types (PFTs) includes an irrigated and unirrigated unmanaged C3 crop (:numref:`crop-plant-functional-types`) treated as a second C3 grass. The unmanaged C3 crop is only used when the crop model is not active and has grid cell coverage assigned from satellite data, and the unmanaged C3 irrigated crop type is currently not used since irrigation requires the crop model to be active. The default list of PFTs also includes twenty-one inactive crop PFTs that do not yet have associated parameters required for active management. Each of the inactive crop types is simulated using the parameters of the spatially closest associated crop type that is most similar to the functional type (e.g., C3 or C4), which is required to maintain similar phenological parameters based on temperature thresholds. Information detailing which parameters are used for each crop type is included in :numref:`crop-plant-functional-types`. It should be noted that PFT-level history output merges all crop types into the actively managed crop type, so analysis of crop-specific output will require use of the land surface dataset to remap the yields of each actively and inactively managed crop type. Otherwise, the actively managed crop type will include yields for that crop type and all inactively managed crop types that are using the same parameter set.
 
-.. _Table Crop plant functional types:
+.. _crop-plant-functional-types:
 
 .. table:: Crop plant functional types (PFTs) included in CLM5BGCCROP.
 
@@ -155,7 +155,7 @@ Phase 1 starts at planting and ends with leaf emergence, phase 2 continues from 
 Planting
 ''''''''
 
-All crops must meet the following requirements between the minimum planting date and the maximum planting date (for the northern hemisphere) in :numref:`Table Crop phenology parameters`:
+All crops must meet the following requirements between the minimum planting date and the maximum planting date (for the northern hemisphere) in :numref:`crop-phenology-params`:
 
 .. math::
    :label: 25.1
@@ -166,7 +166,7 @@ All crops must meet the following requirements between the minimum planting date
    {GDD_{8} \ge GDD_{\min } }
    \end{array}
 
-where :math:`{T}_{10d}` is the 10-day running mean of :math:`{T}_{2m}`, (the simulated 2-m air temperature during each model time step) and :math:`T_{10d}^{\min}` is the 10-day running mean of :math:`T_{2m}^{\min }` (the daily minimum of :math:`{T}_{2m}`). :math:`{T}_{p}` and :math:`T_{p}^{\min }` are crop-specific coldest planting temperatures (:numref:`Table Crop phenology parameters`), :math:`{GDD}_{8}` is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation :eq:`25.3`), and :math:`{GDD}_{min }`\ is the minimum growing degree day requirement (:numref:`Table Crop phenology parameters`). :math:`{GDD}_{8}` does not change as quickly as :math:`{T}_{10d}` and :math:`T_{10d}^{\min }`, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the :math:`{GDD}_{8}` threshold is met. If the requirements in equation :eq:`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as :math:`{GDD}_{8} > 0`. In the southern hemisphere (SH) the NH requirements apply 6 months later.
+where :math:`{T}_{10d}` is the 10-day running mean of :math:`{T}_{2m}`, (the simulated 2-m air temperature during each model time step) and :math:`T_{10d}^{\min}` is the 10-day running mean of :math:`T_{2m}^{\min }` (the daily minimum of :math:`{T}_{2m}`). :math:`{T}_{p}` and :math:`T_{p}^{\min }` are crop-specific coldest planting temperatures (:numref:`crop-phenology-params`), :math:`{GDD}_{8}` is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation :eq:`25.3`), and :math:`{GDD}_{min }`\ is the minimum growing degree day requirement (:numref:`crop-phenology-params`). :math:`{GDD}_{8}` does not change as quickly as :math:`{T}_{10d}` and :math:`T_{10d}^{\min }`, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the :math:`{GDD}_{8}` threshold is met. If the requirements in equation :eq:`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as :math:`{GDD}_{8} > 0`. In the southern hemisphere (SH) the NH requirements apply 6 months later.
 
 At planting, each crop seed pool is assigned 3 gC m\ :sup:`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (:math:`{CN}_{leaf}` in :numref:`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary for the crop to reach vegetative and physiological maturity, :math:`{GDD}_{mat}`, according to the following AgroIBIS rules:
 
@@ -199,25 +199,25 @@ where, if :math:`{T}_{2m}` - :math:`{T}_{f}` takes on values outside the above r
 Leaf emergence
 ''''''''''''''
 
-According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth (:math:`GDD_{T_{soi} }` ), which is tracked since planting, reaches 1 to 5% of :math:`{GDD}_{mat}` (see Phase 2 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). The base temperature threshold values for :math:`GDD_{T_{soi} }` are listed in :numref:`Table Crop phenology parameters` (the same base temperature threshold values are also used for :math:`GDD_{T_{{\rm 2m}} }` in section :numref:`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section :numref:`Leaf emergence to grain fill`.
+According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth (:math:`GDD_{T_{soi} }` ), which is tracked since planting, reaches 1 to 5% of :math:`{GDD}_{mat}` (see Phase 2 % :math:`{GDD}_{mat}` in :numref:`crop-phenology-params`). The base temperature threshold values for :math:`GDD_{T_{soi} }` are listed in :numref:`crop-phenology-params` (the same base temperature threshold values are also used for :math:`GDD_{T_{{\rm 2m}} }` in section :numref:`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section :numref:`Leaf emergence to grain fill`.
 
 .. _Grain fill:
 
 Grain fill
 ''''''''''
 
-The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to :math:`GDD_{T_{soi} }` but for 2-m air temperature, :math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*, of of 40 to 65% of :math:`{GDD}_{mat}` (see Phase 3 % :math:`{GDD}_{mat}` in :numref:`Table Crop phenology parameters`). For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane), the :math:`{GDD}_{mat}` is based on an empirical function and ranges between 950 and 1850. The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 (:numref:`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to :math:`GDD_{T_{soi} }` but for 2-m air temperature, :math:`GDD_{T_{{\rm 2m}} }`, must reach a heat unit threshold, *h*, of of 40 to 65% of :math:`{GDD}_{mat}` (see Phase 3 % :math:`{GDD}_{mat}` in :numref:`crop-phenology-params`). For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane), the :math:`{GDD}_{mat}` is based on an empirical function and ranges between 950 and 1850. The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 (:numref:`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
 
 .. _Harvest:
 
 Harvest
 '''''''
 
-Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or the number of days past planting reaches a crop-specific maximum (:numref:`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
+Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or the number of days past planting reaches a crop-specific maximum (:numref:`crop-phenology-params`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
 
-.. _Table Crop phenology parameters:
+.. _crop-phenology-params:
 
-.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`crop-plant-functional-types`.
    :header-rows: 1
 
    * - \
@@ -569,7 +569,7 @@ Annual food crop yields (g dry matter m\ :sup:`-2`) can be calculated by saving 
 
 .. _Table Crop allocation parameters:
 
-.. table:: Crop allocation parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+.. table:: Crop allocation parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`crop-plant-functional-types`.
 
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
  \                                            temperate corn  spring wheat  temperate soybean   cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass
@@ -604,7 +604,7 @@ Other Features
 
 Physical Crop Characteristics
 '''''''''''''''''''''''''''''
-Leaf area index (*L*) is calculated as a function of specific leaf area (SLA, :numref:`Table Crop phenology parameters`) and leaf C. Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2\ *L* for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
+Leaf area index (*L*) is calculated as a function of specific leaf area (SLA, :numref:`crop-phenology-params`) and leaf C. Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2\ *L* for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the *S* is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
 
 Crop heights at the top and bottom of the canopy, :math:`{z}_{top}` and :math:`{z}_{bot}` (m), come from the AgroIBIS formulation:
 
@@ -616,7 +616,7 @@ Crop heights at the top and bottom of the canopy, :math:`{z}_{top}` and :math:`{
    {z_{bot} =0.02{\rm m}}
    \end{array}
 
-where :math:`z_{top}^{\max }` is the maximum top-of-canopy height of the crop (:numref:`Table Crop phenology parameters`) and :math:`L_{\max }` is the maximum leaf area index (:numref:`Table Crop allocation parameters`).
+where :math:`z_{top}^{\max }` is the maximum top-of-canopy height of the crop (:numref:`crop-phenology-params`) and :math:`L_{\max }` is the maximum leaf area index (:numref:`Table Crop allocation parameters`).
 
 .. _Interactive fertilization:
 
@@ -652,7 +652,7 @@ For most crops, :math:`GDD_{T_{{\rm 2m}} }` (growing degree days since planting)
    baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0
    \end{array} \right\}
 
-where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :numref:`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow :math:`GDD_{T_{{\rm 2m}} }` accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
+where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :numref:`crop-phenology-params`. Such latitudinal variation in base temperature could slow :math:`GDD_{T_{{\rm 2m}} }` accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
 
 .. _Separate reproductive pool:
 
@@ -720,7 +720,7 @@ Note that :math:`w_{target}` is truly supposed to give the target soil moisture 
 
 :math:`N_{irr}` is the index of the soil layer corresponding to a specified depth :math:`z_{irrig}` (:numref:`Table Irrigation parameters`) and :math:`\Delta z_{j}` is the thickness of the soil layer in layer :math:`j` (section :numref:`Vertical Discretization`). :math:`\theta_{j}` is the volumetric soil moisture in layer :math:`j` (section :numref:`Soil Water`). :math:`\theta_{target}` and :math:`\theta_{wilt}` are the target and wilting point volumetric soil moisture values, respectively, and are determined by inverting :eq:`7.94` using soil matric potential parameters :math:`\Psi_{target}` and :math:`\Psi_{wilt}` (:numref:`Table Irrigation parameters`). After the soil moisture deficit :math:`D_{irrig}` is calculated, irrigation in an amount equal to :math:`\frac{D_{irrig}}{T_{irrig}}` (mm/s) is applied uniformly over the irrigation period :math:`T_{irrig}` (s). Irrigation water is applied directly to the ground surface, bypassing canopy interception (i.e., added to :math:`{q}_{grnd,liq}`: section :numref:`Canopy Water`).
 
-To conserve mass, irrigation is removed from river water storage (Chapter :numref:`rst_River Transport Model (RTM)`). When river water storage is inadequate to meet irrigation demand, there are two options: 1) the additional water can be removed from the ocean model, or 2) the irrigation demand can be reduced such that river water storage is maintained above a specified threshold.
+To conserve mass, irrigation is removed from river water storage (Chapter :numref:`rst_MOSART`). When river water storage is inadequate to meet irrigation demand, there are two options: 1) the additional water can be removed from the ocean model, or 2) the irrigation demand can be reduced such that river water storage is maintained above a specified threshold.
 
 .. _Table Irrigation parameters:
 

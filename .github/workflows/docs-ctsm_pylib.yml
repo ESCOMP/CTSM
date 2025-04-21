@@ -1,0 +1,50 @@
+name: Test building docs with ctsm_pylib
+
+on:
+  push:
+    branches: ['*']
+    paths:
+      - 'python/conda_env_ctsm_py.txt'
+
+  pull_request:
+    paths:
+      - 'python/conda_env_ctsm_py.txt'
+
+  schedule:
+    # 8 am every Monday UTC
+    - cron: '0 8 * * 1'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  test-build-docs-ctsm_pylib:
+    if: ${{ always() }}
+    name: With ctsm_pylib
+    uses: ./.github/workflows/docs-common.yml
+    with:
+      use_conda: true
+      conda_env_file: python/conda_env_ctsm_py.yml
+      conda_env_name: ctsm_pylib
+
+  # File an issue if the docs build failed during a scheduled run
+  file-issue-on-failure:
+    if: |
+      failure() &&
+      github.event_name == 'schedule'
+    needs: test-build-docs-ctsm_pylib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create issue
+        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/workflows/docs-ctsm_pylib.issue_template.md
+          update_existing: true
+          search_existing: open
+
+

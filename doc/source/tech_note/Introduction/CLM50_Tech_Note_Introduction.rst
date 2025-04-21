@@ -25,7 +25,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM5.0).
 
-- :numref:`Figure CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
+- :numref:`CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
 
 - :numref:`Figure Radiation Schematic` Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
 
@@ -131,9 +131,9 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Temperature dependence of aqueous and gaseous diffusion` Temperature dependence of aqueous and gaseous diffusion coefficients for CH4 and O2.
 
-- :numref:`Table Crop plant functional types` Crop plant functional types (PFTs).
+- :numref:`crop-plant-functional-types` Crop plant functional types (PFTs).
 
-- :numref:`Table Crop phenology parameters`  Crop phenology and morphology parameters.
+- :numref:`crop-phenology-params`  Crop phenology and morphology parameters.
 
 - :numref:`Table Crop allocation parameters` Crop allocation parameters.
 
@@ -263,7 +263,7 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. Glacier processes (Chapter :numref:`rst_Glaciers`)
 
-#. River routing and river flow (Chapter :numref:`rst_River Transport Model (RTM)`)
+#. River routing and river flow (Chapter :numref:`rst_MOSART`)
 
 #. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 
