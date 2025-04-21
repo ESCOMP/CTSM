@@ -7,14 +7,12 @@ on:
       - 'cime_config/SystemTests/**'
       - 'cime_config/buildlib/**'
       - 'cime_config/buildnml/**'
-      - '.github/workflows/lint_and_format.yml'
   pull_request:
     paths:
       - 'python/**'
       - 'cime_config/SystemTests/**'
       - 'cime_config/buildlib/**'
       - 'cime_config/buildnml/**'
-      - '.github/workflows/lint_and_format.yml'
 
 jobs:
   lint-and-format-check:
