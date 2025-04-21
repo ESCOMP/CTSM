@@ -759,8 +759,8 @@ contains
                      ! Code provided by Adrien Dams to Will Wieder
                      if (bw(c,j) <= 156) then !LMW or 0.156 ?
                         thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
-                     else !LMW
-                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
+                     else 
+                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
                      end if
                   case default
                      write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
