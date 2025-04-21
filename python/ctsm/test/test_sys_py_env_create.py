@@ -268,6 +268,47 @@ class TestSysPyEnvCreate(unittest.TestCase):
         # Check error
         self.assertTrue(f"{self.env_names[0]} also already exists" in out.stderr)
 
+    def test_py_env_create_error_update_and_rename(self):
+        """
+        Ensure py_env_create errors if -u and -r are both given
+        """
+
+        # Try calling with both -r and -u
+        _, out = self._create_empty_env(expect_error=True, extra_args=["-r", "dummy", "-u"])
+
+        # Check error
+        self.assertTrue("-u/--update and -r/--rename-existing are not compatible" in out.stderr)
+
+    def test_py_env_create_error_update_and_overwrite(self):
+        """
+        Ensure py_env_create errors if --update and --overwrite are both given
+        """
+
+        # Try calling with both -r and -u
+        _, out = self._create_empty_env(expect_error=True, extra_args=["--overwrite", "--update"])
+
+        # Check error
+        self.assertTrue("-u/--update and -o/--overwrite are not compatible" in out.stderr)
+
+    def test_py_env_create_update_install_fresh_copy(self):
+        """
+        Ensure py_env_create --update installs a fresh copy if env doesn't yet exist
+        """
+
+        # Call with -u and a nonexistent env
+        _, out = self._create_empty_env(extra_args=["-u"])
+
+        # Check that env was installed
+        env_list = get_conda_envs()
+        assert does_env_exist(self.env_names[-1], env_list)
+
+        # Check that message was printed
+        msg = (
+            f"You asked to update {self.env_names[-1]}, but that environment doesn't exist. Will"
+            + " install a fresh version instead."
+        )
+        assert msg in out.stdout
+
     def test_py_env_create_error_renaming_current(self):
         """
         Ensure py_env_create errors if trying to rename current env
@@ -329,6 +370,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         for env_name in self.env_names:
             assert does_env_exist(env_name, env_list)
 
+        # Run py_env_create again, updating most recent
+        _, out = self._create_empty_env(new_env_name=False, extra_args=["-u"])
+
     def test_complete_py_env_create_mamba(self):
         """
         A few calls of py_env_create to ensure it's working right with mamba instead of conda
@@ -359,6 +403,9 @@ class TestSysPyEnvCreate(unittest.TestCase):
         env_list = get_conda_envs()
         for env_name in self.env_names:
             assert does_env_exist(env_name, env_list)
+
+        # Run py_env_create again, updating most recent
+        _, out = self._create_empty_env(new_env_name=False, extra_args=["--update", "--mamba"])
 
 
 if __name__ == "__main__":
