@@ -238,7 +238,7 @@ module clm_varctl
   character(len=64), public :: snow_cover_fraction_method
   ! which snow thermal conductivity parameterization to use
   character(len=25), public :: snow_thermal_cond_method
-  character(len=25), public :: snow_thermal_cond_glacier_method
+  character(len=25), public :: snow_thermal_cond_glc_method
   character(len=25), public :: snow_thermal_cond_lake_method
 
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)

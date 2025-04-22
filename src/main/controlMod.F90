@@ -207,7 +207,7 @@ contains
          create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, &
-         snow_thermal_cond_method, snow_thermal_cond_glacier_method, &
+         snow_thermal_cond_method, snow_thermal_cond_glc_method, &
          snow_thermal_cond_lake_method, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
@@ -927,7 +927,7 @@ contains
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snow_thermal_cond_method, len(snow_thermal_cond_method), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (snow_thermal_cond_glacier_method, len(snow_thermal_cond_glacier_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snow_thermal_cond_glc_method, len(snow_thermal_cond_glc_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snow_thermal_cond_lake_method, len(snow_thermal_cond_lake_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (z0param_method , len(z0param_method), MPI_CHARACTER, 0, mpicom, ier)

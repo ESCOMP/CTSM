@@ -624,7 +624,7 @@ contains
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glacier_method
+    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -746,7 +746,7 @@ contains
 
                ! Select method over glacier land unit 
                if (lun%itype(l) == istice) then
-                  select case (snow_thermal_cond_glacier_method)
+                  select case (snow_thermal_cond_glc_method)
                   ! TODO, this code duplication isn't ideal and should likely be in it's own subroutine
                   case('Jordan1991')
                      thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
@@ -757,7 +757,7 @@ contains
                         thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
                      end if
                   case default
-                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_glacier_method value: ', snow_thermal_cond_glacier_method
+                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_glc_method value: ', snow_thermal_cond_glc_method
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end select
 
