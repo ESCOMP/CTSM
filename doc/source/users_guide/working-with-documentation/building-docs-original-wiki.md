@@ -1,6 +1,12 @@
 .. _building-docs-original-wiki:
 
-# Original docs documentation from the GitHub Wiki
+# ⚠️ Original docs documentation from the GitHub Wiki
+
+.. todo::
+
+   ⚠️⚠️⚠️WARNING⚠️⚠️⚠️
+   This page contains documentation that (a) is more complicated than you probably require and (b) has not been fully checked for accuracy with the latest documentation setup. Unless you have a very good reason, you should probably go to :ref:`docs-intro-and-recommended`.
+
 
 ## Table of contents
 
@@ -294,7 +300,7 @@ However, if there have been significant changes to the documentation since the l
 
 (where the `-c` flag instructs `build_docs` to first run `make clean` in the specified directory).
 
-You can preview the documentation as noted [above](#Previewing-the-built-documentation), but now the `index.html` file will be in `~/ctsm-repos/ctsm-docs/versions/master/html/index.html`. **Note that the version dropdown menu will not appear when you preview the documentation locally.**
+You can preview the documentation as noted [above](#Previewing-the-built-documentation), but now the `index.html` file will be in `~/ctsm-repos/ctsm-docs/versions/master/html/index.html`. **Note that the version dropdown menu appear when you preview the documentation locally, but if you haven't built all the versions, some version links will lead to nonexistent files.**
 
 Then commit and push the rebuilt documentation as follows:
 
