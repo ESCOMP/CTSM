@@ -2,9 +2,9 @@
   <comp_archive_spec compname="clm" compclass="lnd">
     <rest_file_extension>r</rest_file_extension>
     <rest_file_extension>rh\d?</rest_file_extension>
-    <hist_file_extension>h\d*.*\.nc$</hist_file_extension>
-    <hist_file_extension>lilac_hi.*\.nc$</hist_file_extension>
-    <hist_file_extension>lilac_atm_driver_h\d*.*\.nc$</hist_file_extension>
+    <hist_file_extension>h\d*.*\.nc(\.gz)?$</hist_file_extension>
+    <hist_file_extension>lilac_hi.*\.nc(\.gz)?$</hist_file_extension>
+    <hist_file_extension>lilac_atm_driver_h\d*.*\.nc(\.gz)?$</hist_file_extension>
     <hist_file_extension>e</hist_file_extension>
     <rest_history_varname>locfnh</rest_history_varname>
     <rpointer>
@@ -28,7 +28,7 @@
   <comp_archive_spec compname="ctsm" compclass="lnd">
     <rest_file_extension>r</rest_file_extension>
     <rest_file_extension>rh\d?</rest_file_extension>
-    <hist_file_extension>h\d*.*\.nc$</hist_file_extension>
+    <hist_file_extension>h\d*.*\.nc(\.gz)?$</hist_file_extension>
     <hist_file_extension>e</hist_file_extension>
     <rest_history_varname>locfnh</rest_history_varname>
     <rpointer>
