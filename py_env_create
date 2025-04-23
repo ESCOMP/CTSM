@@ -3,34 +3,87 @@
 # py_env_create -- setup the python environment in order to use CTSM python tools
 #
 # Simple bash script to setup the python environment for the user so they can run the CTSM
-# python tools using "conda".
+# python tools using "conda" or "mamba".
 #
-dir=${0%/*}
-if [ "$dir" = "$0" ];then
-  dir="."
-fi
 
-# Check if conda is in your path
-conda --help >& condahelp.txt
-error=$?
-if [ $error != 0 ]; then
-   echo "conda is NOT in your path for the bash shell add it with modules or whatever is required on your system to get it in your path"
-   echo "on Derecho/capser/etc use -- module load conda"
-   echo "on izumi/CGD systems use -- module unload lang/python; module load lang/anaconda/23.11.0/base"
-   echo "For notes on installing on a user system see: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html"
-   echo "Error code was $error"
-   cat condahelp.txt
-   rm condahelp.txt
-   exit -1
-fi
-rm condahelp.txt
-ctsm_python=ctsm_pylib
+# Exit on Ctrl-C
+trap 'echo "Exiting on Ctrl+C"; exit 130' INT
+# Exit on errors
+set -e
 
+# Get the directory where py_env_create is located
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}"
 
-condadir="$dir/python"
+condadir="${SCRIPT_DIR}/python"
+default_new_env_name=ctsm_pylib
+default_old_env_name=ctsm_pylib_3_7_9
+default_condafile="${condadir}/conda_env_ctsm_py.txt"
+default_condafile_old="${condadir}/conda_env_ctsm_py_old_3.7.9.txt"
 
-domain=`domainname`
-condafile="conda_env_ctsm_py.txt"
+condafile="${default_condafile}"
+quiet=""
+verbose=""
+option=""
+yes=""
+new_env_name=${default_new_env_name}
+new_name_for_existing=""
+overwrite=0
+dry_run=0
+condamamba="conda"
+help=0
+while [ $# -gt 0 ]; do
+   case $1 in
+       -h|--help )
+           help=1
+           ;;
+       -d|--dry-run )
+           dry_run=1
+           ;;
+       -f|--file )
+           condafile=$2
+           shift
+           ;;
+       -m|--mamba )
+           condamamba="mamba"
+           ;;
+       -n|--name )
+           new_env_name=$2
+           shift
+           ;;
+       -o|--overwrite )
+           overwrite=1
+           ;;
+       --old )
+           condafile="${default_condafile_old}"
+           new_env_name=${default_old_env_name}
+           ;;
+       -q|--quiet )
+           quiet="--quiet"
+           ;;
+       --option )
+           option=$2
+           shift
+           ;;
+       -r|--rename-existing )
+           new_name_for_existing=$2
+           shift
+           ;;
+       -v|--verbose )
+           verbose="--verbose"
+           ;;
+       -y|--yes )
+           yes="--yes"
+           ;;
+       * )
+           echo "ERROR:: invalid argument: '$2'"
+           usage
+           exit 1
+           ;;
+   esac
+   shift
+done
+
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -42,99 +95,163 @@ usage() {
   echo "valid arguments: "
   echo "[-h|--help]  "
   echo "     Displays this help message"
-  echo "[-v|--verbose]  "
-  echo "     Run with verbose mode for the install so you see the progress bar"
+  echo "[-d|--dry-run]  "
+  echo "     Dry run: Print what would happen but don't actually do it."
   echo "[-f|--file <file>]  "
   echo "     Conda environment requirements text file to use (text format) in addition to the others"
   echo "     Assumed to be under the directory: $condadir"
-  echo "     Default is: $condafile"
+  echo "     Default is '$default_condafile' (unless --old is given)"
+  echo "[-m|--mamba]  "
+  echo "     Use mamba instead of conda. This shouldn't be necessary on most systems because modern"
+  echo "     conda installations use mamba as their backend."
+  echo "[-n|--name <environment name>]  "
+  echo "     Name of the environment you wish to create. Default: ${default_new_env_name} (unless --old is given)"
+  echo "[-o|--overwrite]  "
+  echo "     Overwrite existing env with same name, if any. Incompatible with -r/--rename-existing."
+  echo "[--old]  "
+  echo "     Install the previous version of ctsm_pylib (Python 3.7.9). Changes these to old-version defaults:"
+  echo "        env name: ${default_old_env_name}"
+  echo "        file: ${default_condafile_old}"
+  echo "[-q|--quiet]  "
+  echo "     Run with quiet mode to minimize Conda messages. Incompatible with -v/--verbose. May fail to quiet things if you don't also specify -y/--yes."
+  echo "[-r|--rename-existing] <name>  "
+  echo "     If an existing environment has the same name as the environment you're installing (${new_env_name}), rename the existing env to <name>. Incompatible with -o/--overwrite."
+  echo "[-v|--verbose]  "
+  echo "     Run with verbose mode so you see the progress bar. Incompatible with -q/--quiet."
+  echo "[-y|--yes]  "
+  echo "     Do not ask for confirmation"
   echo "[--option <option>]  "
   echo "     Option(s) to pass to 'conda install' step"
   echo "***********************************************************************"
 }
-
-verbose="No"
-option=""
-while [ $# -gt 0 ]; do
-   case $1 in
-       -h|--help )
-           usage
-           exit 0
-           ;;
-       -v|--verbose )
-           verbose="Yes"
-           ;;
-       -f|--file )
-           condafile=$2
-           shift
-           ;;
-       --option )
-           option=$2
-           shift
-           ;;
-       * )
-           echo "ERROR:: invalid argument sent in: $2"
-           usage
-           exit 1
-           ;;
-   esac
-   shift
-done
+#----------------------------------------------------------------------
+if [[ ${help} -eq 1 ]]; then
+   usage
+   exit 0
+   fi
 
 #
 # Error checking options and setup
 #
-if [ ! -f $condadir/$condafile ]; then
-   echo "$condadir/$condafile does NOT exist"
+if [[ "${verbose}" == "--verbose" && "${quiet}" == "--quiet" ]]; then
+   echo "-v/--verbose and -q/--quiet are not compatible" >&2
+   exit 1
+fi
+if [ ! -f $condafile ]; then
+   echo "$condafile does NOT exist"
    echo "Use the --file option with a valid filename"
    exit -1
 fi
 
-echo "Use conda to install the python environment needed to run the CTSM python tools in the conda environment: $ctsm_python"
-echo "Using the file: $condadir/$condafile"
+#
+# Handle an environment that already exists
+#
+function conda_env_exists {
+   ${condamamba} env list | grep -oE "/$1$" | wc -l
+}
+function rename_existing_env {
+   if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
+      echo "Not going to let you rename the currently active env" >&2
+      exit 1
+   elif [[ $(conda_env_exists $2) -eq 0 ]]; then
+      echo "Renaming $1 to $2 (this will take a few minutes)..."
+      yes_tmp=${yes/yes/force}
+      # Use conda instead of $condamamba because, at least as of mamba 1.5.9 / conda 24.7.1,
+      # rename is not supported through mamba.
+      if [[ "${quiet}" == "--quiet" ]]; then
+         # -q/--quiet option not available on Derecho
+         (set -x; conda rename ${yes_tmp} -n $1 $2 1>/dev/null)
+      else
+         (set -x; conda rename ${yes_tmp} ${verbose} -n $1 $2)
+      fi
+   else
+      echo "$2 also already exists" >&2
+      exit 1
+   fi
+}
+function overwrite_existing_env {
+   if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
+      echo "Not going to let you overwrite the currently active env" >&2
+      exit 1
+   elif [[ "${quiet}" == "--quiet" ]]; then
+      # -q/--quiet option not available on Derecho
+      (set -x; ${condamamba} remove ${yes} -n $1 --all ${quiet} 1>/dev/null)
+   else
+      (set -x; ${condamamba} remove ${yes} -n $1 --all ${verbose})
+   fi
+}
+
+if [[ "${new_name_for_existing}" != "" && ${overwrite} -eq 1 ]]; then
+   echo "Only specify one of -o/--overwrite or -r/--rename-existing." >&2
+   exit 1
+fi
+
+# Print plan (and check for unhandled existing env)
+echo "Using ${condamamba} to install the python environment needed to run the CTSM python tools in the ${condamamba} environment: $new_env_name"
+echo "Using the file: $condafile"
+conda_env_does_exist=$(conda_env_exists ${new_env_name})
+if [[ ${conda_env_does_exist} -gt 0 ]]; then
+
+   if [[ "${new_name_for_existing}" != "" ]]; then
+      echo "Renaming existing ${new_env_name} to ${new_name_for_existing}"
+   elif [[ ${overwrite} -eq 1 ]]; then
+      echo "Overwriting existing ${new_env_name}"
+   else
+      echo "Environment ${new_env_name} already exists." >&2
+      echo "Try again using one of:" >&2
+      echo "   -n/--name <name>             to choose a different name for the new env" >&2
+      echo "   -r/--rename-existing <name>  to choose a different name for the existing env" >&2
+      echo "   -o/--overwrite <name>        to overwrite the existing env" >&2
+      if [[ ${dry_run} -eq 0 ]]; then
+         exit 1
+      fi
+   fi
+
+fi
+
+# Exit if doing dry run
+if [[ ${dry_run} -ne 0 ]]; then
+   echo "Exiting before any actions taken, due to -d/--dry-run option."
+   exit 0
+fi
+
+# Rename or overwrite existing
+if [[ ${conda_env_does_exist} -gt 0 ]]; then
+   if [[ "${new_name_for_existing}" != "" ]]; then
+      rename_existing_env ${new_env_name} ${new_name_for_existing}
+   elif [[ ${overwrite} -eq 1 ]]; then
+      overwrite_existing_env ${new_env_name}
+   else
+      echo "How did you get here?" >&2
+      exit 1
+   fi
+fi
 
 #
-# Check if the environment already exists, if it does continue, if not create it
+# Create the environment
 #
-conda list -n $ctsm_python >& /dev/null
-if [ $? != 0 ]; then
-   echo "Create $ctsm_python"
-   cmd="conda create --force --name $ctsm_python --quiet"
-   echo "$cmd"
-   $cmd
-   if [ $? != 0 ]; then
-      echo "Error creating conda environment $ctsm_python"
-      exit -1
-   fi
+echo "Create $new_env_name"
+if [[ "${quiet}" == "--quiet" ]]; then
+   (set -x; ${condamamba} create ${yes} --name $new_env_name ${quiet} 1>/dev/null)
 else
-   echo "$ctsm_python environment already exists"
+   (set -x; ${condamamba} create ${yes} --name $new_env_name ${verbose})
 fi
+
 #
-# Install the environemnt
+# Install the environment
 #
-echo "Install $ctsm_python this can take a long time (12 to 20 minutes is expected), be patient...."
-echo "    ...."
-echo "    ...."
-echo "    ...."
-verbosity="--quiet"
-loglevel="ERROR"
-if [ "$verbose" == "Yes" ]; then
-  verbosity="--verbose"
-  loglevel="INFO"
-fi
-cmd="conda install --yes $verbosity --channel conda-forge --name $ctsm_python --file $condadir/$condafile $option"
-echo "$cmd"
-$cmd
-if [ $? != 0 ]; then
-   echo "Trouble installing the $ctsm_python python environment"
-   echo "There must be a problem in the $condadir/$condafile conda specification environment file"
-   echo "Change the file and try again"
-   exit -2
+echo "Installing $new_env_name; this can take a few minutes."
+cmd=""
+if [[ "${quiet}" == "--quiet" ]]; then
+   # -q/--quiet option not available on Derecho
+   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${quiet} 1>/dev/null)
+else
+   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${verbose})
 fi
 #
 # Report on success
 #
-echo "Successfully installed the $ctsm_python python environment"
+echo "Successfully installed the $new_env_name python environment"
 echo
 echo "activate the environment by doing the following..."
-echo "conda activate $ctsm_python"
+echo "${condamamba} activate $new_env_name"
