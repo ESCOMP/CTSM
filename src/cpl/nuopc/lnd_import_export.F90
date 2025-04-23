@@ -10,7 +10,7 @@ module lnd_import_export
   use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod             , only : shr_sys_abort
   use shr_string_mod          , only : shr_string_listGetNum, shr_string_listGetName
-  use clm_varctl              , only : iulog, use_hillslope_routing
+  use clm_varctl              , only : iulog, use_hillslope_routing, use_nitrif_denitrif
   use clm_time_manager        , only : get_nstep
   use decompmod               , only : bounds_type, get_proc_bounds
   use lnd2atmType             , only : lnd2atm_type
@@ -24,6 +24,8 @@ module lnd_import_export
   use shr_lnd2rof_tracers_mod , only : shr_lnd2rof_tracers_readnl
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
+  use subgridAveMod           , only : c2g
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
 
   implicit none
   private ! except
@@ -147,7 +149,6 @@ module lnd_import_export
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
   character(*), parameter :: Flrl_rofi      = 'Flrl_rofi'
   character(*), parameter :: Flrl_irrig     = 'Flrl_irrig'
-  character(*), parameter :: Flrl_rofno3    = 'Flrl_rofno3'
   character(*), parameter :: Sl_tsrf_elev   = 'Sl_tsrf_elev'
   character(*), parameter :: Sl_topo_elev   = 'Sl_topo_elev'
   character(*), parameter :: Flgl_qice_elev = 'Flgl_qice_elev'
@@ -749,7 +750,7 @@ contains
 
   !===============================================================================
   subroutine export_fields( gcomp, bounds, glc_present, rof_prognostic, &
-       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, soilbiogeochem_nitrogenflux_inst, rc)
 
     !-------------------------------
     ! Pack the export state
@@ -768,12 +769,14 @@ contains
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst ! land to atmosphere exchange data type
     type(lnd2glc_type)          , intent(inout) :: lnd2glc_inst ! land to atmosphere exchange data type
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     integer                     , intent(out)   :: rc
 
     ! local variables
     type(ESMF_State)  :: exportState
     real(r8), pointer :: rofl2d(:,:)
     real(r8), pointer :: rofl1d(:)
+    real(r8), pointer :: garr(:)
     integer           :: begg, endg
     integer           :: i, g, n, nt
     real(r8)          :: data1d(bounds%begg:bounds%endg)
@@ -914,36 +917,35 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_rofsur_nonh2o)) then
-       if (nflds_lnd2rof_tracers > 1) then
-          allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers))
-          rofl2d(:,:) = 0._r8
-          do nt = 1,nflds_lnd2rof_tracers
-             call shr_string_listGetName(lnd2rof_tracers, nt, fldname)
-             ! Temporary test fields
-             if (nt == 1) then
-                do g = begg,endg
-                   rofl2d(g,nt) = .1
-                end do
-             else if (nt == 2) then
-                do g = begg,endg
-                   rofl2d(g,nt) = .2
-                end do
+       allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers))
+       allocate(garr(begg:endg))
+       rofl2d(:,:) = 0._r8
+       garr(:) = 0._r8
+       do nt = 1,nflds_lnd2rof_tracers
+          call shr_string_listGetName(lnd2rof_tracers, nt, fldname)
+          if (trim(fldname) == 'smin_no3_runoff') then
+             ! (gN/m2/s) soil mineral NO3 pool loss to runoff
+             if (.not. use_nitrif_denitrif) then
+                call shr_sys_abort('ERROR: must have  use_nitrif_denitrif set to true if ask for smin_no3_roff')
              end if
-          end do
+             call c2g( bounds = bounds, &
+                  carr = soilbiogeochem_nitrogenflux_inst%smin_no3_runoff_col(bounds%begc:bounds%endc), &
+                  garr = garr(begg:endg), &
+                  c2l_scale_type = 'unity', l2g_scale_type = 'unity')
+             do g = begg,endg
+                rofl2d(g,nt) = garr(g)
+             end do
+          end if
+       end do
+       if (nflds_lnd2rof_tracers > 1) then
           call state_setexport_2d(exportState, Flrl_rofsur_nonh2o, rofl2d, init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          deallocate(rofl2d)
-       else if (nflds_lnd2rof_tracers == 1) then
-          allocate(rofl1d(begg:endg))
-          rofl1d(:) = 0._r8
-          ! Temporary test field
-          do g = begg,endg
-             rofl1d(g) = cos(grc%latdeg(g))
-          end do
-          call state_setexport_1d(exportState, Flrl_rofsur_nonh2o, rofl1d, init_spval=.true., rc=rc)
+       else
+          call state_setexport_1d(exportState, Flrl_rofsur_nonh2o, garr(begg:), init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          deallocate(rofl1d)
        end if
+       deallocate(rofl2d)
+       deallocate(garr)
     end if
     if (fldchk(exportState, Flrl_rofgwl)) then ! qgwl sent individually to mediator
        call state_setexport_1d(exportState, Flrl_rofgwl, waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(begg:), &
@@ -975,12 +977,6 @@ contains
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    ! if (fldchk(exportState, Flrl_rofno3)) then
-    !    ! TODO: Change units from g/m2/s to m3/s
-    !    call state_setexport_1d(exportState, Flrl_rofno3, lnd2atm_inst%smin_no3_runoff_grc(begg:), &
-    !         init_spval=.true., rc=rc)
-    !    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! end if
 
     ! -----------------------
     ! output to glc

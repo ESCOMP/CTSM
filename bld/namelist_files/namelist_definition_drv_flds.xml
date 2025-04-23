@@ -136,8 +136,7 @@
 	 category="lnd2rof_tracers  "
 	 group="lnd2rof_tracers_inparm"
 	 valid_values="" >
-    Liquid lnd2rof tracers (other than water)
-    Default: ""
+    Colon deliminted liquid lnd2rof tracers (other than water)
   </entry>
 
   <!-- ========================================================================================  -->
