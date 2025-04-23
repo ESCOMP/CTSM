@@ -470,7 +470,7 @@ def check_args(args):
         )
         raise argparse.ArgumentError(None, err_msg)
 
-    if args.surf_year != 1850 and args.surf_year != 2000:
+    if args.surf_year not in [1850, 2000]:
         err_msg = textwrap.dedent(
             """\
                 \n ------------------------------------
@@ -539,9 +539,7 @@ def setup_user_mods(user_mods_dir, cesmroot):
         for line in basefile:
             user_file.write(line)
 
-    nl_datm_base = os.path.join(
-        cesmroot, "components/cdeps/datm/cime_config" "/user_nl_datm_streams"
-    )
+    nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
     with open(nl_datm_base, "r") as base_file, open(nl_datm, "w") as user_file:
         for line in base_file:
@@ -564,7 +562,7 @@ def determine_num_pft(crop):
         num_pft = "78"
     else:
         num_pft = "16"
-    logger.debug("crop_flag = %s => num_pft = %s", crop.__str__(), num_pft)
+    logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
 
