@@ -251,7 +251,6 @@ version of the raw dataset will probably go away.
     <!-- Historical period from 1700 to 2023 -->
     <!-- Lake and urban data from 1700 to 1849 is copied from 1850 -->
     <!-- Lake data from 2018 to 2023 is copied from 2017 -->
-    <!-- Urban data from 2016 to 2023 is copied from 2015 -->
     <entry pft_years="1700-2023" >
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_%y.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
