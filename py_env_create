@@ -32,7 +32,6 @@ overwrite=0
 dry_run=0
 condamamba="conda"
 help=0
-update=0
 while [ $# -gt 0 ]; do
    case $1 in
        -h|--help )
@@ -69,9 +68,6 @@ while [ $# -gt 0 ]; do
        -r|--rename-existing )
            new_name_for_existing=$2
            shift
-           ;;
-       -u|--update )
-           update=1
            ;;
        -v|--verbose )
            verbose="--verbose"
@@ -120,8 +116,6 @@ usage() {
   echo "     Run with quiet mode to minimize Conda messages. Incompatible with -v/--verbose. May fail to quiet things if you don't also specify -y/--yes."
   echo "[-r|--rename-existing] <name>  "
   echo "     If an existing environment has the same name as the environment you're installing (${new_env_name}), rename the existing env to <name>. Incompatible with -o/--overwrite."
-  echo "[-u|--update]  "
-  echo "     Update the conda environment, if needed, to match what's in the environment file (see -f/--file). Incompatible with -r/--rename and -o/--overwrite."
   echo "[-v|--verbose]  "
   echo "     Run with verbose mode so you see the progress bar. Incompatible with -q/--quiet."
   echo "[-y|--yes]  "
@@ -136,31 +130,12 @@ if [[ ${help} -eq 1 ]]; then
    exit 0
    fi
 
-function conda_env_exists {
-   ${condamamba} env list | grep -oE "/$1$" | wc -l
-}
-
 #
 # Error checking options and setup
 #
 if [[ "${verbose}" == "--verbose" && "${quiet}" == "--quiet" ]]; then
    echo "-v/--verbose and -q/--quiet are not compatible" >&2
    exit 1
-fi
-conda_env_does_exist=$(conda_env_exists ${new_env_name})
-echo update: $update
-echo new_name_for_existing: $new_name_for_existing
-if [[ "${update}" -eq 1 ]]; then
-   if [[ "${new_name_for_existing}" != "" ]]; then
-      echo "-u/--update and -r/--rename-existing are not compatible" >&2
-      exit 1
-   elif [[ "${overwrite}" -ne 0 ]]; then
-      echo "-u/--update and -o/--overwrite are not compatible" >&2
-      exit 1
-   elif [[ ${conda_env_does_exist} -eq 0 ]]; then
-      echo "You asked to update ${new_env_name}, but that environment doesn't exist. Will install a fresh version instead."
-      update=0
-   fi
 fi
 if [ ! -f $condafile ]; then
    echo "$condafile does NOT exist"
@@ -171,6 +146,9 @@ fi
 #
 # Handle an environment that already exists
 #
+function conda_env_exists {
+   ${condamamba} env list | grep -oE "/$1$" | wc -l
+}
 function rename_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
       echo "Not going to let you rename the currently active env" >&2
@@ -209,13 +187,10 @@ if [[ "${new_name_for_existing}" != "" && ${overwrite} -eq 1 ]]; then
 fi
 
 # Print plan (and check for unhandled existing env)
-if [[ "${update}" -eq 1 ]]; then
-   echo "Using ${condamamba} to update the ${condamamba} environment:"
-else
-   echo "Using ${condamamba} to install the python environment needed to run the CTSM python tools in the ${condamamba} environment: $new_env_name"
-fi
+echo "Using ${condamamba} to install the python environment needed to run the CTSM python tools in the ${condamamba} environment: $new_env_name"
 echo "Using the file: $condafile"
-if [[ ${conda_env_does_exist} -gt 0 && "${update}" -ne 1 ]]; then
+conda_env_does_exist=$(conda_env_exists ${new_env_name})
+if [[ ${conda_env_does_exist} -gt 0 ]]; then
 
    if [[ "${new_name_for_existing}" != "" ]]; then
       echo "Renaming existing ${new_env_name} to ${new_name_for_existing}"
@@ -240,16 +215,12 @@ if [[ ${dry_run} -ne 0 ]]; then
    exit 0
 fi
 
-# Rename, overwrite, or update existing
+# Rename or overwrite existing
 if [[ ${conda_env_does_exist} -gt 0 ]]; then
    if [[ "${new_name_for_existing}" != "" ]]; then
       rename_existing_env ${new_env_name} ${new_name_for_existing}
    elif [[ ${overwrite} -eq 1 ]]; then
       overwrite_existing_env ${new_env_name}
-   elif [[ "${update}" -eq 1 ]]; then
-      # No --yes or --force option
-      (set -x; ${condamamba} env update -n ${new_env_name} -f ${condafile} ${quiet} ${verbose})
-      exit 0
    else
       echo "How did you get here?" >&2
       exit 1
