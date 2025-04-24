@@ -66,6 +66,7 @@ def mesh_mask_modifier(cfg_path):
     lon_varname = get_config_value(
         config=config, section=section, item="lon_varname", file_path=cfg_path
     )
+    lon_type = get_config_value(config=config, section=section, item="lon_type", file_path=cfg_path)
 
     # Create ModifyMeshMask object
     modify_mesh_mask = ModifyMeshMask.init_from_file(
@@ -75,6 +76,7 @@ def mesh_mask_modifier(cfg_path):
         lon_dimname=lon_dimname,
         lat_varname=lat_varname,
         lon_varname=lon_varname,
+        lon_type=lon_type,
     )
 
     # If output file exists, abort before starting work
