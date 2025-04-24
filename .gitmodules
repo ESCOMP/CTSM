@@ -83,8 +83,11 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 
 [submodule "cmeps"]
 path = components/cmeps
-url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.0.33
+#url = https://github.com/ESCOMP/CMEPS.git
+url = https://github.com/fvitt/CMEPS.git
+#fxtag = cmeps1.0.33
+#fxtag = megan_coefs_fix
+fxtag = 17810f3dfd8522afb8fe530de5ef7971a9179969
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
