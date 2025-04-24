@@ -78,7 +78,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();
@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3997;
+my $ntests = 3264;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2437;
+   $ntests += 1980;
 }
 plan( tests=>$ntests );
 
@@ -368,7 +368,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $neondir      = "../../cime_config/usermods_dirs/NEON";
+my $neondir      = "../../cime_config/usermods_dirs/clm/NEON";
 foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO",
                    "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA",
                    "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP",
@@ -421,7 +421,7 @@ print "=========================================================================
 my $phys = "clm6_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my $plumdir      = "../../cime_config/usermods_dirs/PLUMBER2";
+my $plumdir      = "../../cime_config/usermods_dirs/clm/PLUMBER2";
 foreach my $site ( 
     "AR-SLu",  "AU-Emr",  "AU-TTE",  "CA-NS1",  "CA-SF3",  "CN-HaM",  "DE-Obe",  "ES-ES1",  "FR-Gri",  "IE-Dri",  "IT-LMa",  "IT-SRo",  "RU-Fyo",  "US-Aud",  "US-Ho1",  "US-Ne2",  "US-Syv",  "ZM-Mon",
     "AT-Neu",  "AU-Gin",  "AU-Tum",  "CA-NS2",  "CH-Cha",  "CN-Qia",  "DE-Seh",  "ES-ES2",  "FR-Hes",  "IT-Amp",  "IT-Mal",  "JP-SMF",  "RU-Zot",  "US-Bar",  "US-KS2",  "US-Ne3",  "US-Ton",
@@ -473,7 +473,7 @@ foreach my $site (
 print "\n===============================================================================\n";
 print "Test some CAM specific setups for special grids \n";
 print "=================================================================================\n";
-foreach my $phys ( "clm4_5", "clm5_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys";
    &make_config_cache($phys);
    foreach my $options (
@@ -485,12 +485,37 @@ foreach my $phys ( "clm4_5", "clm5_0" ) {
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 2000_control  -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
-                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_CRUv7",
+                      "-res 1x1_brazil -no-megan -use_case 2000_control -lnd_tuning_mode ${phys}_GSWP3v1",
                       "-res C96 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode ${phys}_cam7.0",
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 2000_control -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0",
                      ) {
       &make_env_run();
       eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $options" );
+      $cfiles->checkfilesexist( "$options", $mode );
+      $cfiles->shownmldiff( "default", $mode );
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+         $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+         $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$options", $mode );
+      }
+      &cleanup();
+   }
+}
+print "\n===============================================================================\n";
+print "Test setting drv_flds_in fields in CAM, clm60 only";
+print "=================================================================================\n";
+foreach my $phys ( "clm6_0" ) {
+   $mode = "-phys $phys CAM_SETS_DRV_FLDS";
+   &make_config_cache($phys);
+   foreach my $options (
+                      "--res ne0np4.POLARCAP.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                     ) {
+      &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
+      eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
       is( $@, '', "options: $options" );
       $cfiles->checkfilesexist( "$options", $mode );
       $cfiles->shownmldiff( "default", $mode );
@@ -514,6 +539,10 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
    foreach my $options (
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
                       "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --mask gx1v7 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.ARCTIC.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4.ARCTICGRIS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res ne0np4CONUS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                      ) {
       &make_env_run( 'LND_SETS_DUST_EMIS_DRV_FLDS'=>"FALSE" );
       eval{ system( "$bldnml --envxml_dir . $options > $tempfile 2>&1 " ); };
@@ -541,6 +570,7 @@ foreach my $options (
                       "--res 0.9x1.25 --bgc sp  --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=18501223/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan",
+                      "-bgc fates  -use_case 20thC_transient -no-megan -no-crop --res 4x5",
                       "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
@@ -601,8 +631,8 @@ my %failtest = (
                                      phys=>"clm4_5",
                                    },
      "LeungDust_WO_Prigent"      =>{ options=>" -envxml_dir . -bgc sp",
-                                     namelst=>"use_prigent_roughness=.true.",
-                                     phys=>"clm5_1",
+                                     namelst=>"use_prigent_roughness=.false.,dust_emis_method='Leung_2023'",
+                                     phys=>"clm6_0",
                                    },
      "soilm_stream off w file"      =>{ options=>"-res 0.9x1.25 -envxml_dir .",
                                      namelst=>"use_soil_moisture_streams = .false.,stream_fldfilename_soilm='file_provided_when_off'",
@@ -876,7 +906,7 @@ my %failtest = (
                                      namelst=>"h2osfcflag=0",
                                      phys=>"clm5_0",
                                    },
-     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3  -envxml_dir .",
+     "45bad lnd_tuning_mode value" =>{ options=>"-lnd_tuning_mode clm5_0_GSWP3v1  -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm4_5",
                                    },
@@ -913,6 +943,10 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "driver is invalid"         =>{ options=>"-driver invalid_name -envxml_dir .",
                                      namelst=>"",
                                      phys=>"clm6_0",
                                    },
@@ -969,12 +1003,12 @@ my %failtest = (
      "sasuspinupWOsoilmatx"      =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
                                      namelst=>"use_soil_matrixcn=.false.,use_matrixcn=.false.",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "sasuspinupWOCN"            =>{ options=>"-envxml_dir . -bgc sp  -clm_accelerated_spinup sasu",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"TRUE",
-                                     phys=>"clm5_1",
+                                     phys=>"clm6_0",
                                    },
      "nyrforceWOspinup"          =>{ options=>"-envxml_dir . -bgc bgc -clm_accelerated_spinup sasu",
                                      namelst=>"use_matrixcn=.false.,spinup_matrixcn=F,nyr_forcing=20",
@@ -1149,6 +1183,10 @@ my %failtest = (
                                    },
      "useHYDSTwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_hydrstress=.true.",
+                                     phys=>"clm5_0",
+                                   },
+     "useMeierwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"z0param_method=Meier2022",
                                      phys=>"clm5_0",
                                    },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
@@ -1447,7 +1485,7 @@ foreach my $key ( keys(%coldwfinidat) ) {
 #
 # Loop over all physics versions
 #
-foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
 $mode = "-phys $phys";
 &make_config_cache($phys);
 
@@ -1538,7 +1576,7 @@ if ( $#usecases != 15 ) {
 }
 my @expect_fails = ( "1850-2100_SSP5-3.4_transient", "1850-2100_SSP4-3.4_transient", "2018-PD_transient", "1850-2100_SSP1-1.9_transient",
                       "1850-2100_SSP4-6.0_transient", "2018_control" );
-foreach my $phys ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    print "physics = $phys\n";
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
@@ -1835,10 +1873,10 @@ foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
 #
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0/clm5_1/clm6_0 resolutions \n";
+print "Test clm4.5/clm5.0/clm6_0 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', "clm6_0" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1938,18 +1976,16 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', "clm6_0" ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v7";
 my $simyr = "1850";
-foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1', 'clm6_0' ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  @forclist = ( "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
+  @forclist = ( "CRUJRA2024", "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
-        if ( $lndtuningmode eq "clm5_1_CRUv7" ) {
-           next;
-        }
-        if ( $lndtuningmode eq "clm6_0_CRUv7" ) {
+        if ( $lndtuningmode eq "clm6_0_CRUv7" or
+             $lndtuningmode eq "clm4_5_CRUJRA2024") {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

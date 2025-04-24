@@ -105,6 +105,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
             abort(err_msg)
     today = date.today()
     today_string = today.strftime("%y%m%d")
+    fname_out = None
     if not replace_res:
         fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
     else:
@@ -120,7 +121,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     return fname_out
 
 
-def update_metadata(file, title, summary, contact, data_script, description):
+def update_metadata(file, *, title, summary, contact, data_script, description):
     """
     Description
     -----------
@@ -237,3 +238,15 @@ def parse_isoduration(iso_string):
     # Convert all to timedelta
     delta_t = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
     return int(delta_t.total_seconds() / 86400)
+
+
+def is_instantaneous(time_var):
+    """
+    Check whether a time variable came from an instantaneous file
+    """
+    long_name = time_var.attrs["long_name"]
+    if "time at end of" in long_name:
+        return True
+    if "time at exact middle" in long_name:
+        return False
+    raise RuntimeError(f"Does this long_name mean instantaneous or not? {long_name}")

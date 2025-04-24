@@ -60,7 +60,7 @@ TIMEOUT = 60
 
 # -- valid neon sites
 valid = glob.glob(
-    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "NEON", "[!d]*")
+    os.path.join(path_to_ctsm_root(), "cime_config", "usermods_dirs", "clm", "NEON", "[!d]*")
 )
 valid_neon_sites = [x[-4:] for x in valid]  # last 4 letters in each string
 
@@ -502,7 +502,7 @@ def print_neon_data_soil_structure(obs_bot, soil_bot, bin_index):
 
 
 def print_soil_quality(
-    inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
+    *, inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
 ):
     """
     Prints information about soil quality
@@ -596,7 +596,14 @@ def update_fields_with_neon(f_1, d_f, bin_index):
         f_2["ORGANIC"][soil_lev] = actual_oc * bulk_den / 0.58
 
         print_soil_quality(
-            inorganic, bin_index, soil_lev, layer_depth, carbon_tot, estimated_oc, bulk_den, f_2
+            inorganic=inorganic,
+            bin_index=bin_index,
+            soil_lev=soil_lev,
+            layer_depth=layer_depth,
+            carbon_tot=carbon_tot,
+            estimated_oc=estimated_oc,
+            bulk_den=bulk_den,
+            f_2=f_2,
         )
     return f_2
 
