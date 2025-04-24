@@ -66,6 +66,9 @@ release = u'CTSM master'
 # CTSM-specific: version label used at the top of some pages.
 version_label = 'the latest development code'
 
+# List of versions to populate version picker dropdown menu
+version_list = ["latest", "another"]
+
 # version_label is not a standard sphinx variable, so we need some custom rst to allow
 # pages to use it. We need a separate replacement for the bolded version because it
 # doesn't work to have variable replacements within formatting.
@@ -190,7 +193,8 @@ html_context["display_lower_left"] = True
 
 html_context["current_language"] = language
 
-current_version = "master"
+html_context["current_version"] = os.environ.get("current_version")
 
-html_context["current_version"] = current_version
-html_context["version"] = current_version
+html_context["versions"] = []
+for this_version in version_list:
+    html_context["versions"].append([this_version, f"../../../versions/{this_version}/html"])
