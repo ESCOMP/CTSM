@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_cop_mic, i_oli_mic, i_cwd
+  use clm_varpar                         , only : i_phys_som, i_chem_som, i_str_lit, i_met_lit, i_cop_mic, i_oli_mic, i_cwd
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_fates
   use clm_varcon                         , only : zsoi
@@ -48,10 +48,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   real(r8), private, allocatable :: fphys_m1(:,:)
   real(r8), private, allocatable :: fphys_m2(:,:)
   real(r8), private, allocatable :: p_scalar(:,:)
-  integer, private :: i_phys_som  ! index of physically protected Soil Organic Matter (SOM)
-  integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
-  integer, private :: i_str_lit  ! index of structural litter pool
   integer, private :: i_l1m1  ! indices of transitions, eg l1m1: litter 1 -> first microbial pool
   integer, private :: i_l1m2
   integer, private :: i_l2m1
@@ -1293,14 +1290,14 @@ contains
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
             ! Currently, mimics_densdep = 1 so as to have no effect
-            decomp_k(c,j,i_cop_mic) = tau_m1 * &
-                   m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_cop_mic) = tau_m1 * m1_conc**(mimics_densdep) 
+ 
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
             pathfrac_decomp_cascade(c,j,i_m1s1) = favl
             pathfrac_decomp_cascade(c,j,i_m1s2) = fchem_m1
 
-            decomp_k(c,j,i_oli_mic) = tau_m2 * &
-                   m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_oli_mic) = tau_m2 * m2_conc**(mimics_densdep)
+
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m2(c,j) - fchem_m2))
             pathfrac_decomp_cascade(c,j,i_m2s1) = favl
             pathfrac_decomp_cascade(c,j,i_m2s2) = fchem_m2

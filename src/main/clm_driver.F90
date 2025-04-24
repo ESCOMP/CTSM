@@ -52,6 +52,7 @@ module clm_driver
   use AerosolMod             , only : AerosolMasses
   use SnowSnicarMod          , only : SnowAge_grain
   use SurfaceAlbedoMod       , only : SurfaceAlbedo
+  use SurfaceAlbedoMod       , only : UpdateZenithAngles
   use UrbanAlbedoMod         , only : UrbanAlbedo
   !
   use SurfaceRadiationMod    , only : SurfaceRadiation, CanopySunShadeFracs
@@ -1065,7 +1066,10 @@ contains
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
-
+       !  TODO PUT FAteS DRYDEP wrapper here
+       if(use_fates.and. n_drydep >0)then
+          call clm_fates%wrap_drydep(nc, drydepvel_inst)
+       end if 
        call t_startf('depvel')
        call depvel_compute(bounds_clump, &
             atm2lnd_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
@@ -1127,7 +1131,6 @@ contains
           ! for leaf photosynthetic acclimation temperature. These
           ! moving averages are updated here
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
-
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
@@ -1223,7 +1226,7 @@ contains
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
-
+       
        if (doalb) then
 
           ! Albedos for non-urban columns
