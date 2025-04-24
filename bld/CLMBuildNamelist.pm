@@ -2196,6 +2196,16 @@ sub setup_logic_snow {
     $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_method; expected Jordan1991 or Sturm1997");
   }
 
+  my $var = $nl->get_value('snow_thermal_cond_glc_method');
+  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_glc_method; expected Jordan1991 or Sturm1997");
+  }
+
+  my $var = $nl->get_value('snow_thermal_cond_lake_method');
+  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
+    $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_lake_method; expected Jordan1991 or Sturm1997");
+  }
+
   my $numrad_snw = $nl->get_value('snicar_numrad_snw');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics',
                 'snicar_numrad_snw' => $numrad_snw);
