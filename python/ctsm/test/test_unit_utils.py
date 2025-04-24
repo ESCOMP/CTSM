@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for utils and config_utils
-"""
+"""Unit tests for utils and config_utils"""
 
 import tempfile
 import shutil
@@ -10,7 +9,7 @@ import os
 
 from ctsm import unit_testing
 from ctsm.utils import fill_template_file, ensure_iterable
-from ctsm.config_utils import lon_range_0_to_360, _handle_config_value
+from ctsm.config_utils import _handle_config_value
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -54,49 +53,6 @@ zyzzyva
             final_contents = f.read()
 
         self.assertEqual(final_contents, expected_final_text)
-
-
-class TestUtilsLonRange0to360(unittest.TestCase):
-    """Test of utils: lon_range_0_to_360"""
-
-    def test_lonRange0To360_lonIsNeg180(self):
-        """
-        Tests that negative inputs to lon_range_0_to_360 get 360 added to them
-        """
-        inval = -180
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval + 360)
-
-    def test_lonRange0To360_lonIsNegGreaterThan1(self):
-        """
-        Tests that negative inputs to lon_range_0_to_360 get 360 added to them
-        """
-        inval = -0.001
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval + 360)
-
-    def test_lonRange0To360_lonIs0(self):
-        """
-        Tests that input to lon_range_0_to_360 of 0 remains unchanged
-        """
-        inval = 0
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval)
-
-    def test_lonRange0To360_lonIs360(self):
-        """
-        Tests that input to lon_range_0_to_360 of 360 remains unchanged
-        """
-        inval = 360
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval)
-
-    def test_lonRange0To360_outOfBounds(self):
-        """
-        Tests that lon_range_0_to_360 aborts gracefully when lon = 361
-        """
-        with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-            _ = lon_range_0_to_360(361)
 
 
 class TestUtilsHandleConfigValue(unittest.TestCase):

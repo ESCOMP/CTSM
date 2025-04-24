@@ -38,10 +38,10 @@ class TestArgsPlon(unittest.TestCase):
     # --between -180-0
     def test_plonType_negative(self):
         """
-        Test of negative plon between -180 and 0
+        Test that negative plon between -180 and 0 does not error and is not changed
         """
         result = plon_type(-30)
-        self.assertEqual(result, 330.0)
+        self.assertEqual(result, -30.0)
 
     # -- > 360
     def test_plonType_outOfBounds_positive(self):
@@ -62,10 +62,10 @@ class TestArgsPlon(unittest.TestCase):
     # -- = -180
     def test_plonType_negative_180(self):
         """
-        Test for when plon values are  -180
+        Test that plon value of -180 does not error and is not changed
         """
         result = plon_type(-180)
-        self.assertEqual(result, 180.0)
+        self.assertEqual(result, -180.0)
 
     # -- = 0
     def test_plonType_zero(self):

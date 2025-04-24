@@ -15,7 +15,7 @@ conda activate ctsm_pylib
 Brief description of scripts:
 
 create_scrip_file.ncl
-        Create a SCRIP grid file needed for runnign with WRF
+        Create a SCRIP grid file needed for running with WRF
 run_clm_historical
 	does all the setup and submission required to do a 1850-2010 CLM 
 	historical simulation in three separate submissions
@@ -33,6 +33,11 @@ SpinupStability_BGC_v10.ncl
         This script assesses the equilibrium state of a Biogeochemistry (BGC) 
         spinup run, works on either monthly or annual mean history files - Keith
         Oleson 12/2021
+
+SpinupStability_BGC_v11_SE.ncl
+        This script assesses the equilibrium state of a ne30pg3 (spectral element)
+        Biogeochemistry (BGC) spinup run, works on either monthly or annual mean 
+        history files - Keith Oleson 03/2025
 
 run_clmtowers
         This script will run any number of flux tower sites.
