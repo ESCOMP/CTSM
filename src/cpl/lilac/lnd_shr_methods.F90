@@ -4,7 +4,7 @@ module lnd_shr_methods
   use ESMF         , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_FAILURE
   use ESMF         , only : ESMF_LOGERR_PASSTHRU, ESMF_LogFoundError
   use ESMF         , only : ESMF_SUCCESS, ESMF_Field, ESMF_LOGMSG_INFO
-  use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl, cs=>shr_kind_cs
+  use shr_kind_mod , only : r8 => shr_kind_r8, cs=>shr_kind_cs
   use shr_sys_mod  , only : shr_sys_abort
 
   implicit none
