@@ -4174,6 +4174,14 @@ sub setup_logic_megan {
       $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
                     "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
+    # Check for and remove line returns in the string, so that it will validate later
+    my $var = "megan_specifier";
+    my $value =  $nl->get_value($var);
+    if ( $value =~ /\n/) {
+       $value =~ s/\n//g;
+       my $group = $definition->get_group_name($var);
+       $nl->set_variable_value($group, $var, $value);
+    }
   }
 }
 
