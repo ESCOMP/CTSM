@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3263;
+my $ntests = 3264;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1979;
+   $ntests += 1980;
 }
 plan( tests=>$ntests );
 
@@ -1185,6 +1185,10 @@ my %failtest = (
                                      namelst=>"use_hydrstress=.true.",
                                      phys=>"clm5_0",
                                    },
+     "useMeierwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"z0param_method=Meier2022",
+                                     phys=>"clm5_0",
+                                   },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1976,11 +1980,12 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  @forclist = ( "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
+  @forclist = ( "CRUJRA2024", "CRUv7", "GSWP3v1", "cam7.0", "cam6.0", "cam5.0", "cam4.0" );
   foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
-        if ( $lndtuningmode eq "clm6_0_CRUv7" ) {
+        if ( $lndtuningmode eq "clm6_0_CRUv7" or
+             $lndtuningmode eq "clm4_5_CRUJRA2024") {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";
