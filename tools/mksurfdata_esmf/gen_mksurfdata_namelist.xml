@@ -216,28 +216,28 @@ version of the raw dataset will probably go away.
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_1700.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_1700_c250417.nc</urban_filename>
+      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_1700_c250423.nc</urban_filename>
     </entry>
 
     <entry pft_years="1850">
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_1850.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_1850_c250417.nc</urban_filename>
+      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_1850_c250423.nc</urban_filename>
     </entry>
 
     <entry pft_years="2000">
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_2000.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2000.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_2000_c250417.nc</urban_filename>
+      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_2000_c250423.nc</urban_filename>
     </entry>
 
     <entry pft_years="2005">
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_2005.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2005.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_2005_c250417.nc</urban_filename>
+      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_2005_c250423.nc</urban_filename>
     </entry>
 
     <!-- Last millenium Historical period from 0850 to 1849 -->
@@ -255,7 +255,7 @@ version of the raw dataset will probably go away.
       <data_filename>/glade/campaign/cesm/development/lmwg/landuse_source_data/CTSM53CMIP7RawData/globalctsm53histCMIP7Deg025_250417/mksrf_landuse_ctsm53_histCMIP7_%y.c250417.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
-      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_%y_c250417.nc</urban_filename>
+      <urban_filename>/glade/campaign/cgd/tss/people/oleson/Dynamic_Urban_Data/CMIP7/urban_properties_CMIP7_ThreeClass_%y_c250423.nc</urban_filename>
     </entry>
 
   </mksrf_fvegtyp>
