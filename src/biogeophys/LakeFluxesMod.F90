@@ -491,8 +491,7 @@ contains
                      tksur(c) = 0.138 - 1.01*(bw/1000) +(3.233*((bw/1000)*(bw/1000)))
                   end if
                case default
-                  write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               
                end select
 
                tsur(c) = t_soisno(c,jtop(c))
