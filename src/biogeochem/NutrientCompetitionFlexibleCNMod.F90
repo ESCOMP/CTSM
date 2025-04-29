@@ -275,7 +275,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving            => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch          , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          fcur2                        => pftcon%fcur                                               , & ! Input:  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
@@ -635,6 +635,7 @@ contains
                  f3 = f3, &
                  f4 = f4, &
                  f5 = f5, &
+                 leafcn_t_evolving = leafcn_t_evolving(p), &
 
                  ! Outputs
                  npool_to_leafn = npool_to_leafn(p), &
@@ -728,7 +729,7 @@ contains
                end if
             end if
 
-            leafcn_max = leafcn(ivt(p)) + 15.0_r8
+            leafcn_max = leafcn_t_evolving(p) + 15.0_r8
             frootcn_max = frootcn(ivt(p)) + 15.0_r8
 
             ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N
@@ -930,7 +931,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_npool_to_components_flexiblecn( &
-       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, &
+       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, leafcn_t_evolving, &
        npool_to_leafn, npool_to_leafn_storage, &
        npool_to_frootn, npool_to_frootn_storage, &
        npool_to_livestemn, npool_to_livestemn_storage, &
@@ -952,6 +953,7 @@ contains
     real(r8), intent(in) :: f3 ! C allocation parameter - stem:leaf ratio
     real(r8), intent(in) :: f4 ! C allocation parameter - fraction of new wood that is live
     real(r8), intent(in) :: f5(:) ! C allocation parameter - repr:leaf ratio for each crop reproductive pool
+    real(r8), intent(in) :: leafcn_t_evolving  ! leaf C:N (gC/gN)
 
     ! Each of the following output variables is in units of gN/m2/s; they are
     ! intent(inout) because some may remain unchanged in some circumstances.
@@ -1018,7 +1020,6 @@ contains
 
     associate( &
          woody    => pftcon%woody    , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
-         leafcn   => pftcon%leafcn   , & ! Input:  leaf C:N (gC/gN)
          frootcn  => pftcon%frootcn  , & ! Input:  fine root C:N (gC/gN)
          livewdcn => pftcon%livewdcn , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn => pftcon%deadwdcn , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -1027,7 +1028,7 @@ contains
 
     dt = get_step_size_real()
 
-    cnl  = leafcn(ivt)
+    cnl  = leafcn_t_evolving
     cnfr = frootcn(ivt)
     cnlw = livewdcn(ivt)
     cndw = deadwdcn(ivt)
@@ -1455,7 +1456,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch  , & ! Input:  leaf C:N (gC/gN)
          fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill
          ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill
          fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill
@@ -1520,8 +1521,8 @@ contains
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
 
-         leafcn_min = leafcn(ivt(p)) - 10.0_r8
-         leafcn_max = leafcn(ivt(p)) + 10.0_r8
+         leafcn_min = leafcn_t_evolving(p) - 10.0_r8
+         leafcn_max = leafcn_t_evolving(p) + 10.0_r8
 
          this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
          this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
@@ -1563,7 +1564,6 @@ contains
 
          ! retranslocated N deployment depends on seasonal cycle of potential GPP
          ! (requires one year run to accumulate demand)
-
          tempsum_potential_gpp(p) = tempsum_potential_gpp(p) + gpp(p)
 
          ! Adding the following line to carry max retransn info to CN Annual Update
