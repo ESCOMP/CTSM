@@ -8,6 +8,8 @@ module LakeFluxesMod
   ! !USES
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
+  use abortutils           , only : endrun
+  use clm_varctl           , only : iulog
   use decompMod            , only : bounds_type
   use atm2lndType          , only : atm2lnd_type
   use EnergyFluxType       , only : energyflux_type
@@ -41,6 +43,10 @@ module LakeFluxesMod
       real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
+
+
+  character(len=*), parameter, private :: sourcefile = &
+  __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -491,7 +497,7 @@ contains
                      tksur(c) = 0.138 - 1.01*(bw/1000) +(3.233*((bw/1000)*(bw/1000)))
                   end if
                case default
-                  write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
+                  write(iulog,*) ' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
                   call endrun(msg=errMsg(sourcefile, __LINE__))
                end select
 

@@ -11,6 +11,7 @@ module SoilTemperatureMod
   use shr_infnan_mod          , only : nan => shr_infnan_nan, assignment(=)
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
+  use shr_log_mod             , only : errMsg => shr_log_errMsg
   use perf_mod                , only : t_startf, t_stopf
   use clm_varctl              , only : iulog
   use UrbanParamsType         , only : urbanparams_type
@@ -619,7 +620,6 @@ contains
     ! flux from the interface to the node j+1.
     !
     ! !USES:
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
@@ -649,8 +649,6 @@ contains
     real(r8) :: fl                        ! volume fraction of liquid or unfrozen water to total water
     real(r8) :: satw                      ! relative total water content of soil.
     real(r8) :: zh2osfc
-
-    character(len=*),parameter :: subname = 'SoilThermProp'
     !-----------------------------------------------------------------------
 
     call t_startf( 'SoilThermProp' )
@@ -757,7 +755,7 @@ contains
                         thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
                      end if
                   case default
-                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_glc_method value: ', snow_thermal_cond_glc_method
+                     write(iulog,*) ' ERROR: unknown snow_thermal_cond_glc_method value: ', snow_thermal_cond_glc_method
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end select
 
@@ -777,7 +775,7 @@ contains
                         thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
                      end if
                   case default
-                     write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
+                     write(iulog,*) ' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end select
                end if ! close land unit if statement 
