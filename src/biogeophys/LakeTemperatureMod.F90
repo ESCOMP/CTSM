@@ -9,6 +9,8 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
+  use abortutils        , only : endrun
+  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use ch4Mod            , only : ch4_type
   use EnergyFluxType    , only : energyflux_type
@@ -19,6 +21,7 @@ module LakeTemperatureMod
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use clm_varctl        , only : iulog
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   !    
@@ -117,7 +120,7 @@ contains
     use clm_time_manager   , only : get_step_size_real
     use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
     use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
-    use clm_varctl         , only : iulog, use_lch4
+    use clm_varctl         , only : use_lch4
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds	  
@@ -1192,7 +1195,7 @@ contains
                       thk(c,j) = 0.138 - 1.01*(bw/1000) +(3.233*((bw/1000)*(bw/1000))) 
                    end if
                 case default
-                   write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
+                   write(iulog,*) ' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
                    call endrun(msg=errMsg(sourcefile, __LINE__))
                 end select
 
