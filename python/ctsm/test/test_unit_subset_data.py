@@ -20,6 +20,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.longitude import Longitude
 
 # pylint: disable=invalid-name,too-many-public-methods
 
@@ -672,6 +673,66 @@ class TestSubsetData(unittest.TestCase):
         self.assertEqual(args.lon1.get(lon_type), lon1)
         self.assertEqual(args.lon2.get(lon_type), lon2)
         _set_up_regional_case(args)
+
+    def test_check_region_bounds_none_error(self):
+        """
+        In region mode, test that error is thrown if any region bound is None
+        """
+        # Define a good region to pass initial setup
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "194",
+            "--lon2",
+            "287",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Mess up the region
+        region.lon1 = None
+        err_msg = "Latitude and longitude bounds must be provided and not None"
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, err_msg):
+            region.check_region_bounds()
+
+    def test_check_region_bounds_lat_eq_error(self):
+        """
+        In region mode, test that error is thrown if lat1 == lat2
+        """
+        # Define a good region to pass initial setup
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "194",
+            "--lon2",
+            "287",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Mess up the region
+        region.lat2 = region.lat1
+        err_msg = "ERROR: lat1 is bigger than lat2"
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, err_msg):
+            region.check_region_bounds()
 
 
 if __name__ == "__main__":
