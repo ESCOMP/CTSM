@@ -69,7 +69,7 @@ from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude
+from ctsm.longitude import Longitude, _detect_lon_type
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -819,17 +819,6 @@ def subset_region(args, file_dict: dict):
         )
 
     logger.info("Successfully ran script for a regional case.")
-
-
-def _detect_lon_type(lon_in):
-    if lon_in < 0:
-        lon_type = 180
-    elif lon_in > 180:
-        lon_type = 360
-    else:
-        msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
-        raise argparse.ArgumentTypeError(msg)
-    return lon_type
 
 
 def process_args(args):

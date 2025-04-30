@@ -3,10 +3,12 @@
 """Unit tests for config_utils"""
 
 import unittest
+from argparse import ArgumentTypeError
 
 from ctsm import unit_testing
 from ctsm.longitude import Longitude
 from ctsm.longitude import _convert_lon_type_180_to_360, _convert_lon_type_360_to_180
+from ctsm.longitude import _detect_lon_type, convert_number_to_lon
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -151,6 +153,161 @@ class TestLongitude(unittest.TestCase):
         this_lon = 360
         lon_obj = Longitude(this_lon, lon_type)
         self.assertEqual(lon_obj.get(lon_type), this_lon)
+
+    def test_lon_eq_both360(self):
+        """Test that == works for two equal Longitudes both of type 360"""
+        lon1 = Longitude(275, 360)
+        lon2 = Longitude(275, 360)
+        self.assertTrue(lon1 == lon2)
+
+    def test_lon_eq_360num_error(self):
+        """Test that == fails if RHS isn't Longitude"""
+        lon1 = Longitude(275, 360)
+        lon2 = 275
+        with self.assertRaisesRegex(
+            TypeError, "Comparison not supported between instances of 'Longitude' and "
+        ):
+            _ = lon1 == lon2
+
+    def test_lon_eq_num360_error(self):
+        """Test that == fails if LHS isn't Longitude"""
+        lon1 = 275
+        lon2 = Longitude(275, 360)
+        with self.assertRaisesRegex(
+            TypeError, "Comparison not supported between instances of 'Longitude' and "
+        ):
+            _ = lon1 == lon2
+
+    def test_lon_eq_both180(self):
+        """Test that == works for two equal Longitudes both of type 180"""
+        lon1 = Longitude(-5, 180)
+        lon2 = Longitude(-5, 180)
+        self.assertTrue(lon1 == lon2)
+
+    def test_lon_eq_180360(self):
+        """Test that == works for two equal Longitudes of different types"""
+        lon1 = Longitude(-5, 180)
+        lon2 = Longitude(355, 360)
+        self.assertTrue(lon1 == lon2)
+        self.assertTrue(lon2 == lon1)
+
+    def test_lon_eqfalse_180360(self):
+        """Test that == works for two unequal Longitudes of different types"""
+        lon1 = Longitude(-1, 180)
+        lon2 = Longitude(355, 360)
+        self.assertFalse(lon1 == lon2)
+        self.assertFalse(lon2 == lon1)
+
+    def test_lon_noteqtrue_180360(self):
+        """Test that != works for two unequal Longitudes of different types"""
+        lon1 = Longitude(-1, 180)
+        lon2 = Longitude(355, 360)
+        self.assertTrue(lon1 != lon2)
+        self.assertTrue(lon2 != lon1)
+
+    def test_lon_compare_both360(self):
+        """
+        Ensure that comparison operators work if both are type 360
+        """
+        lon1 = Longitude(155, 360)
+        lon2 = Longitude(150, 360)
+        self.assertTrue(lon1 > lon2)
+        self.assertTrue(lon1 >= lon2)
+        self.assertFalse(lon1 <= lon2)
+        self.assertFalse(lon1 < lon2)
+
+    def test_lon_compare_both180(self):
+        """
+        Ensure that comparison operators work if both are type 180
+        """
+        lon1 = Longitude(155, 180)
+        lon2 = Longitude(150, 180)
+        self.assertTrue(lon1 > lon2)
+        self.assertTrue(lon1 >= lon2)
+        self.assertFalse(lon1 <= lon2)
+        self.assertFalse(lon1 < lon2)
+
+    def test_lon_compare_difftypes_error(self):
+        """
+        Ensure that comparison operators fail if Longitudes are different types
+        """
+        lon1 = Longitude(155, 360)
+        lon2 = Longitude(150, 180)
+        msg = "Comparison not supported between Longitudes of different types"
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 < lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 > lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 <= lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 >= lon2
+
+    def test_lon_compare_notlon_error(self):
+        """
+        Ensure that comparison operators fail if one isn't a Longitude
+        """
+        lon1 = Longitude(155, 360)
+        lon2 = 255
+        msg = "Comparison not supported between instances of 'Longitude' and"
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 < lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 > lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 <= lon2
+        with self.assertRaisesRegex(TypeError, msg):
+            _ = lon1 >= lon2
+
+    def test_detect_lon_type_mid_180(self):
+        """test that detect_lon_type works for an unambiguously 180 value"""
+        _detect_lon_type(-150)
+
+    def test_detect_lon_type_min_180(self):
+        """test that detect_lon_type works at -180"""
+        _detect_lon_type(-180)
+
+    def test_detect_lon_type_mid_360(self):
+        """test that detect_lon_type works for an unambiguously 360 value"""
+        _detect_lon_type(355)
+
+    def test_detect_lon_type_max_360(self):
+        """test that detect_lon_type works at 360"""
+        _detect_lon_type(360)
+
+    def test_detect_lon_type_ambig(self):
+        """test that detect_lon_type fails if ambiguous"""
+        with self.assertRaisesRegex(ArgumentTypeError, "When providing an ambiguous longitude"):
+            _detect_lon_type(150)
+
+    def test_detect_lon_type_ambig0(self):
+        """test that detect_lon_type fails at 0"""
+        with self.assertRaisesRegex(ArgumentTypeError, "When providing an ambiguous longitude"):
+            _detect_lon_type(0)
+
+    def test_detect_lon_type_oob_low(self):
+        """test that detect_lon_type fails if out of bounds below min"""
+        with self.assertRaisesRegex(ValueError, "Longitude outside range"):
+            _detect_lon_type(-300)
+
+    def test_detect_lon_type_oob_high(self):
+        """test that detect_lon_type fails if out of bounds above max"""
+        with self.assertRaisesRegex(ValueError, "Longitude outside range"):
+            _detect_lon_type(500)
+
+    def test_convert_number_to_lon_360(self):
+        """Test that convert_number_to_lon works for unambiguously 360"""
+        val = 255
+        result = convert_number_to_lon(val)
+        expected = Longitude(val, 360)
+        self.assertEqual(result, expected)
+
+    def test_convert_number_to_lon_180(self):
+        """Test that convert_number_to_lon works for unambiguously 180"""
+        val = -155
+        result = convert_number_to_lon(val)
+        expected = Longitude(val, 180)
+        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":
