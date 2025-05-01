@@ -4389,6 +4389,15 @@
       <option name="comment">""</option>
     </options>
   </test>
+  <test name="SMS_Ld1" grid="f45_f45_mg37" compset="I1850Clm60FatesSp" testmods="clm/FatesColdReducedOutput">
+    <machines>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Simple test to make sure the basic Fates-SP compset works</option>
+    </options>
+  </test>
 
   <!-- FATES-NOCOMP -->
 
@@ -4437,6 +4446,16 @@
       <option name="comment">Ensure functionality of two-stream radiation option with nocomp-fixedbiogeo in FATES</option>
     </options>
   </test>
+  <test name="SMS_Ld1" grid="f45_f45_mg37" compset="I1850Clm60FatesNoComp" testmods="clm/FatesColdReducedOutput">
+    <machines>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Simple test to make sure the basic Fates-SP compset works</option>
+    </options>
+  </test>
+
 
   <!-- FATES-FULL -->
 
