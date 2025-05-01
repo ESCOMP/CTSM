@@ -80,3 +80,74 @@ class TestSubsetDataSys(unittest.TestCase):
             "--overwrite",
         ]
         subset_data.main()
+
+    def test_subset_data_reg_infile_detect360(self):
+        """
+        Test subset_data for region with ambiguous longitudes. We specify the longitude type for
+        lon1 and lon2 but not for the input data files. This should still work as long as the input
+        data file longitude type is detectable and matches --lon-type.
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--lat1",
+            "-12",
+            "--lat2",
+            "-7",
+            "--lon1",
+            "15",
+            "--lon2",
+            "23",
+            "--lon-type",
+            "360",
+            "--reg",
+            "TMP",
+            "--create-mesh",
+            "--create-domain",
+            "--create-surface",
+            "--surf-year",
+            "2000",
+            "--create-user-mods",
+            "--outdir",
+            self.temp_dir_out.name,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+    def test_subset_data_reg_infile_detect180_error(self):
+        """
+        Specifying --lon-type 180 but an input file of type 360 should error
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--lat1",
+            "-12",
+            "--lat2",
+            "-7",
+            "--lon1",
+            "15",
+            "--lon2",
+            "23",
+            "--lon-type",
+            "180",
+            "--reg",
+            "TMP",
+            "--create-mesh",
+            "--create-domain",
+            "--create-surface",
+            "--surf-year",
+            "2000",
+            "--create-user-mods",
+            "--outdir",
+            self.temp_dir_out.name,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--overwrite",
+        ]
+        with self.assertRaisesRegex(
+            RuntimeError, r"File lon type \(360\) doesn't match boundary lon type \(180\)"
+        ):
+            subset_data.main()
