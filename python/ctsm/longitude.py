@@ -192,3 +192,9 @@ class Longitude:
         if lon_type_out == 360:
             return _convert_lon_type_180_to_360(self._lon)
         raise RuntimeError(f"Add handling for lon_type_out {lon_type_out}")
+
+    def lon_type(self):
+        """
+        Getter method for self._lon_type
+        """
+        return self._lon_type

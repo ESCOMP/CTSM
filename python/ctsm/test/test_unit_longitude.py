@@ -455,6 +455,11 @@ class TestLongitude(unittest.TestCase):
         self.assertTrue(np.array_equal(expected_lon, result._lon))
         self.assertEqual(expected_type, result.lon_type())
 
+    def test_lon_type_getter(self):
+        """Test lon_type() getter method"""
+        lon = Longitude(55, 180)
+        self.assertEqual(lon.lon_type(), 180)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
