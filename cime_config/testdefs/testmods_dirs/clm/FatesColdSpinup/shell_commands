@@ -1,5 +1,5 @@
 ./xmlchange DATM_CPLHIST_CASE=n1850fates-nocomp-cplhist
-./xmlchange DATM_CPLHIST_DIR=' /cluster/projects/nn1004k/mdeb/cplhist/n1850fates-nocomp-cplhist/cpl/hist'
+./xmlchange DATM_CPLHIST_DIR='/cluster/shared/noresm/inputdata/cplhist/noresm3_0/n1850fates-nocomp-cplhist/cpl/hist'
 ./xmlchange DATM_YR_START=1
 ./xmlchange DATM_YR_END=1
 ./xmlchange DATM_YR_ALIGN=1
