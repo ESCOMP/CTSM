@@ -145,9 +145,7 @@ class RegionalCase(BaseCase):
         lon1_type = self.lon1.lon_type()
         lon2_type = self.lon2.lon_type()
         if lon1_type != lon2_type:
-            raise RuntimeError(
-                f"lon1 type ({lon1_type}) doesn't match lon2 type ({lon2_type})"
-            )
+            raise RuntimeError(f"lon1 type ({lon1_type}) doesn't match lon2 type ({lon2_type})")
         if f_lon_type != lon1_type:
             # This may be overly strict; we might want to allow conversion to lon1 type.
             raise RuntimeError(

@@ -112,6 +112,7 @@ def convert_number_to_lon(other):
     other = Longitude(other, other_type)
     return other
 
+
 def check_other_is_lontype(other):
     """
     We could try to coerce non-Longitude `other` to Longitude, but that might result in
@@ -122,6 +123,7 @@ def check_other_is_lontype(other):
         raise TypeError(
             f"Comparison not supported between instances of 'Longitude' and '{type(other)}'"
         )
+
 
 class Longitude:
     """

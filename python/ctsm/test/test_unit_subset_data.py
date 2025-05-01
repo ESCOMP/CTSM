@@ -762,7 +762,7 @@ class TestSubsetData(unittest.TestCase):
         # Set up fake input file
         x_dimname = "lon_dim"
         x_varname = "lon_var"
-        lon_values = -1 * np.arange(18, 21+1)
+        lon_values = -1 * np.arange(18, 21 + 1)
         lon_da = xr.DataArray(
             data=lon_values,
             name=x_varname,
@@ -771,20 +771,22 @@ class TestSubsetData(unittest.TestCase):
         )
         y_dimname = "lat_dim"
         y_varname = "lat_var"
-        lat_values = np.arange(3, 7+1)
+        lat_values = np.arange(3, 7 + 1)
         lat_da = xr.DataArray(
             data=lat_values,
             name=y_varname,
             dims=y_dimname,
             coords={y_dimname: lat_values},
         )
-        fake_values = np.array([
-            [0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [8, 9, 10, 11],
-            [12, 13, 14, 15],
-            [16, 17, 18, 19],
-        ])
+        fake_values = np.array(
+            [
+                [0, 1, 2, 3],
+                [4, 5, 6, 7],
+                [8, 9, 10, 11],
+                [12, 13, 14, 15],
+                [16, 17, 18, 19],
+            ]
+        )
         fake_da = xr.DataArray(
             data=fake_values,
             dims=[y_dimname, x_dimname],
@@ -799,11 +801,13 @@ class TestSubsetData(unittest.TestCase):
 
         # Test subsetting
         result = region._subset_lon_lat(x_dimname, y_dimname, fake_ds)
-        expected_fake_values = np.array([
-            [5, 6, 7],
-            [9, 10, 11],
-            [13, 14, 15],
-        ])
+        expected_fake_values = np.array(
+            [
+                [5, 6, 7],
+                [9, 10, 11],
+                [13, 14, 15],
+            ]
+        )
         self.assertTrue(np.array_equal(result["fake"].values, expected_fake_values))
 
 

@@ -30,9 +30,7 @@ class TestSubsetDataSys(unittest.TestCase):
     def setUp(self):
         self.temp_dir_out = tempfile.TemporaryDirectory()
         self.temp_dir_umd = tempfile.TemporaryDirectory()
-        self.inputdata_dir = os.path.join(
-            os.path.dirname(__file__), os.pardir, os.pardir
-        )
+        self.inputdata_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
     def tearDown(self):
         self.temp_dir_out.cleanup()
