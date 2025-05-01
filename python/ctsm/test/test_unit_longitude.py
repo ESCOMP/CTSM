@@ -369,19 +369,19 @@ class TestLongitude(unittest.TestCase):
 
     def test_detect_lon_type_mid_180(self):
         """test that detect_lon_type works for an unambiguously 180 value"""
-        _detect_lon_type(-150)
+        self.assertEqual(_detect_lon_type(-150), 180)
 
     def test_detect_lon_type_min_180(self):
         """test that detect_lon_type works at -180"""
-        _detect_lon_type(-180)
+        self.assertEqual(_detect_lon_type(-180), 180)
 
     def test_detect_lon_type_mid_360(self):
         """test that detect_lon_type works for an unambiguously 360 value"""
-        _detect_lon_type(355)
+        self.assertEqual(_detect_lon_type(355), 360)
 
     def test_detect_lon_type_max_360(self):
         """test that detect_lon_type works at 360"""
-        _detect_lon_type(360)
+        self.assertEqual(_detect_lon_type(360), 360)
 
     def test_detect_lon_type_list_180(self):
         """test that detect_lon_type works for a list with just one unambiguously 180 value"""
