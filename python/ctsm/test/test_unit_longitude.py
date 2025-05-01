@@ -8,6 +8,7 @@ from argparse import ArgumentTypeError
 from ctsm import unit_testing
 from ctsm.longitude import Longitude
 from ctsm.longitude import _convert_lon_type_180_to_360, _convert_lon_type_360_to_180
+from ctsm.longitude import _check_lon_type_180, _check_lon_type_360
 from ctsm.longitude import _detect_lon_type, convert_number_to_lon
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -19,6 +20,47 @@ from ctsm.longitude import _detect_lon_type, convert_number_to_lon
 
 class TestLongitude(unittest.TestCase):
     """Tests of Longitude class and helper functions"""
+
+    # Checking longitude type
+
+    def test_check_lon_type_180(self):
+        """
+        Check that a single value in [-180, 180] passes _check_lon_type_180()
+        """
+        _check_lon_type_180(-180)
+        _check_lon_type_180(-55)
+        _check_lon_type_180(55)
+        _check_lon_type_180(155)
+        _check_lon_type_180(180)
+
+    def test_check_lon_type_180_errors(self):
+        """
+        Check that a single value outside [-180, 180] fails _check_lon_type_180()
+        """
+        msg = r"lon_in needs to be in the range \[-180, 180\]"
+        with self.assertRaisesRegex(ValueError, msg):
+            _check_lon_type_180(-181)
+        with self.assertRaisesRegex(ValueError, msg):
+            _check_lon_type_180(181)
+
+    def test_check_lon_type_360(self):
+        """
+        Check that a single value in [0, 360] passes _check_lon_type_360()
+        """
+        _check_lon_type_360(0)
+        _check_lon_type_360(55)
+        _check_lon_type_360(180)
+        _check_lon_type_360(360)
+
+    def test_check_lon_type_360_errors(self):
+        """
+        Check that a single value outside [-180, 180] fails _check_lon_type_360()
+        """
+        msg = r"lon_in needs to be in the range \[0, 360\]"
+        with self.assertRaisesRegex(ValueError, msg):
+            _check_lon_type_360(-1)
+        with self.assertRaisesRegex(ValueError, msg):
+            _check_lon_type_360(361)
 
     # Converting between types 180 and 360
 
