@@ -19,6 +19,7 @@ from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
+from ctsm.longitude import Longitude, _detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,21 @@ class RegionalCase(BaseCase):
         """
         lat = f_in["lat"]
         lon = f_in["lon"]
+
+        # Handle type of input longitude
+        f_lon_type = _detect_lon_type(lon)
+        lon1_type = self.lon1.lon_type()
+        lon2_type = self.lon2.lon_type()
+        if lon1_type != lon2_type:
+            raise RuntimeError(
+                f"lon1 type ({lon1_type}) doesn't match lon2 type ({lon2_type})"
+            )
+        if f_lon_type != lon1_type:
+            # This may be overly strict; we might want to allow conversion to lon1 type.
+            raise RuntimeError(
+                f"File lon type ({f_lon_type}) doesn't match boundary lon type ({lon1_type})"
+            )
+        lon = Longitude(lon, lon1_type)
 
         xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
