@@ -100,19 +100,6 @@ def _convert_lon_type_360_to_180(lon_in):
     return lon_out
 
 
-def convert_number_to_lon(other):
-    """
-    Try to convert a given number to Longitude type
-    """
-    try:
-        other_type = _detect_lon_type(other)
-    except ArgumentTypeError as err:
-        msg = "Trying to compare Longitude class with an ambiguous or invalid value"
-        raise TypeError(msg) from err
-    other = Longitude(other, other_type)
-    return other
-
-
 def check_other_is_lontype(other):
     """
     We could try to coerce non-Longitude `other` to Longitude, but that might result in

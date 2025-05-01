@@ -10,7 +10,7 @@ from ctsm import unit_testing
 from ctsm.longitude import Longitude
 from ctsm.longitude import _convert_lon_type_180_to_360, _convert_lon_type_360_to_180
 from ctsm.longitude import _check_lon_type_180, _check_lon_type_360
-from ctsm.longitude import _detect_lon_type, convert_number_to_lon
+from ctsm.longitude import _detect_lon_type
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -420,20 +420,6 @@ class TestLongitude(unittest.TestCase):
         """test that detect_lon_type fails if out of bounds above max"""
         with self.assertRaisesRegex(ValueError, r"\(Maximum\) longitude > 360"):
             _detect_lon_type(500)
-
-    def test_convert_number_to_lon_360(self):
-        """Test that convert_number_to_lon works for unambiguously 360"""
-        val = 255
-        result = convert_number_to_lon(val)
-        expected = Longitude(val, 360)
-        self.assertEqual(result, expected)
-
-    def test_convert_number_to_lon_180(self):
-        """Test that convert_number_to_lon works for unambiguously 180"""
-        val = -155
-        result = convert_number_to_lon(val)
-        expected = Longitude(val, 180)
-        self.assertEqual(result, expected)
 
     def test_list_as_lon(self):
         """
