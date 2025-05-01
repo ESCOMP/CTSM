@@ -11,6 +11,8 @@ import configparser
 import argparse
 import os
 import sys
+import numpy as np
+import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -22,7 +24,7 @@ from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_region
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.longitude import Longitude
 
-# pylint: disable=invalid-name,too-many-public-methods
+# pylint: disable=invalid-name,too-many-public-methods,protected-access
 
 
 class TestSubsetData(unittest.TestCase):
@@ -733,6 +735,76 @@ class TestSubsetData(unittest.TestCase):
         err_msg = "ERROR: lat1 is bigger than lat2"
         with self.assertRaisesRegex(argparse.ArgumentTypeError, err_msg):
             region.check_region_bounds()
+
+    def test_subset_lon_lat(self):
+        """
+        Test that RegionalCase._subset_lon_lat() works as expected
+        """
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "4",
+            "--lat2",
+            "6",
+            "--lon1",
+            "-21",
+            "--lon2",
+            "-19",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Set up fake input file
+        x_dimname = "lon_dim"
+        x_varname = "lon_var"
+        lon_values = -1 * np.arange(18, 21+1)
+        lon_da = xr.DataArray(
+            data=lon_values,
+            name=x_varname,
+            dims=x_dimname,
+            coords={x_dimname: lon_values},
+        )
+        y_dimname = "lat_dim"
+        y_varname = "lat_var"
+        lat_values = np.arange(3, 7+1)
+        lat_da = xr.DataArray(
+            data=lat_values,
+            name=y_varname,
+            dims=y_dimname,
+            coords={y_dimname: lat_values},
+        )
+        fake_values = np.array([
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [16, 17, 18, 19],
+        ])
+        fake_da = xr.DataArray(
+            data=fake_values,
+            dims=[y_dimname, x_dimname],
+        )
+        fake_ds = xr.Dataset(
+            data_vars={
+                "lon": lon_da,
+                "lat": lat_da,
+                "fake": fake_da,
+            }
+        )
+
+        # Test subsetting
+        result = region._subset_lon_lat(x_dimname, y_dimname, fake_ds)
+        expected_fake_values = np.array([
+            [5, 6, 7],
+            [9, 10, 11],
+            [13, 14, 15],
+        ])
+        self.assertTrue(np.array_equal(result["fake"].values, expected_fake_values))
 
 
 if __name__ == "__main__":
