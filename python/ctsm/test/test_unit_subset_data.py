@@ -329,7 +329,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             ValueError,
-            r"lon_in needs to be in the range \[0, 360\]",
+            r"\(All values of\) lon_in must be in the range \[0, 360\]",
         ):
             check_args(args)
 
@@ -500,7 +500,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
@@ -565,7 +565,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
@@ -592,7 +592,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
