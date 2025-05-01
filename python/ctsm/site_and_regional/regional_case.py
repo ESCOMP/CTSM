@@ -132,6 +132,18 @@ class RegionalCase(BaseCase):
         self.ni = None
         self.nj = None
 
+    def _subset_lon_lat(self, x_dim, y_dim, f_in):
+        """
+        subset longitude and latitude arrays
+        """
+        lat = f_in["lat"]
+        lon = f_in["lon"]
+
+        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f_out = f_in.isel({y_dim: yind, x_dim: xind})
+        return f_out
+
     def create_tag(self):
         """
         Create a tag for a region which is either the region name
@@ -192,14 +204,12 @@ class RegionalCase(BaseCase):
         logger.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "ni"
+        y_dim = "nj"
+        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(nj=yind, ni=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -240,14 +250,12 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -304,14 +312,12 @@ class RegionalCase(BaseCase):
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
