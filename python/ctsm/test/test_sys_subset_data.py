@@ -7,8 +7,6 @@ You can run this by:
 """
 
 import unittest
-import configparser
-import argparse
 import os
 import sys
 import tempfile
@@ -18,7 +16,6 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pard
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
-from ctsm import unit_testing
 from ctsm import subset_data
 
 

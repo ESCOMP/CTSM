@@ -16,7 +16,7 @@ from ctsm.longitude import _detect_lon_type, convert_number_to_lon
 # readable
 # pylint: disable=invalid-name
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 
 
 class TestLongitude(unittest.TestCase):

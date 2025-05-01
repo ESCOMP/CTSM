@@ -22,7 +22,6 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.longitude import Longitude
 
 # pylint: disable=invalid-name,too-many-public-methods,protected-access
 
