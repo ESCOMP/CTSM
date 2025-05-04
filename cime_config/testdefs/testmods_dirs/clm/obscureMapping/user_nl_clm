@@ -1,0 +1,8 @@
+ndepmapalgo = 'nn'
+zender_soil_erod_source = 'lnd'
+zendersoilerod_mapalgo = 'nn'
+lightngmapalgo = 'mapconsf'
+popdensmapalgo = 'mapconsd'
+urbantvmapalgo = 'redist'
+exice_streams = .true.
+stream_mapalgo_exice = 'nn'
