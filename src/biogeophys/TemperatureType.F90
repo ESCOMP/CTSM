@@ -26,8 +26,10 @@ module TemperatureType
      real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
-     real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
-     real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_day_acc_patch      (:)   ! patch daytime accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_night_acc_patch    (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime mean vegetation temperature (Kelvin), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time mean vegetation temperature (Kelvin), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg10_day_patch        (:)   ! 10 day running mean of patch daytime time vegetation temperature (Kelvin), LUNA specific, but can be reused
      real(r8), pointer :: t_veg10_night_patch      (:)   ! 10 day running mean of patch night time vegetation temperature (Kelvin), LUNA specific, but can be reused
      integer,  pointer :: ndaysteps_patch          (:)   ! number of daytime steps accumulated from mid-night, LUNA specific
@@ -216,6 +218,8 @@ contains
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
+     allocate(this%t_veg_day_acc_patch     (begp:endp))                      ; this%t_veg_day_acc_patch      (:)   = spval
+     allocate(this%t_veg_night_acc_patch   (begp:endp))                      ; this%t_veg_night_acc_patch    (:)   = spval
      allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
      allocate(this%t_veg_night_patch       (begp:endp))                      ; this%t_veg_night_patch        (:)   = spval
      allocate(this%t_veg10_day_patch       (begp:endp))                      ; this%t_veg10_day_patch        (:)   = spval
@@ -421,6 +425,26 @@ contains
     call hist_addfld1d (fname='TV', units='K',  &
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
+
+    call hist_addfld1d (fname='TVMAX', units='K',  &
+         avgflag='X', long_name='vegetation maximum temperature', &
+         ptr_patch=this%t_veg_patch, default='inactive')
+
+    call hist_addfld1d (fname='TVMIN', units='K',  &
+         avgflag='M', long_name='vegetation minimum temperature', &
+         ptr_patch=this%t_veg_patch, default='inactive')
+
+    if (use_luna) then
+       this%t_veg_day_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVDAY', units='K',  &
+            avgflag='A', long_name='average daytime vegetation temperature', &
+            ptr_patch=this%t_veg_day_patch, default='inactive')
+
+       this%t_veg_night_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVNIGHT', units='K',  &
+            avgflag='A', long_name='average nighttime vegetation temperature', &
+            ptr_patch=this%t_veg_night_patch, default='inactive')
+    end if
 
     this%t_skin_patch(begp:endp) = spval
     call hist_addfld1d(fname='TSKIN', units='K',  &
@@ -1095,12 +1119,18 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%t_veg10_day_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegd', xtype=ncd_double,  &
             dim1name='pft', long_name='accumulative daytime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_day_acc_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegdm', xtype=ncd_double,  &
+            dim1name='pft', long_name='mean daytime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg_day_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegn10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean nighttime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg10_night_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegn', xtype=ncd_double,  &
             dim1name='pft', long_name='accumulative nighttime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_night_acc_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegnm', xtype=ncd_double,  &
+            dim1name='pft', long_name='mean nighttime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg_night_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tair10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean air temperature', units='Kelvin', &
