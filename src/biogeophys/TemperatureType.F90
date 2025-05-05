@@ -15,6 +15,7 @@ module TemperatureType
   use LandunitType    , only : lun
   use ColumnType      , only : col
   use PatchType       , only : patch
+  use CropType        , only : cphase_grainfill
   !
   implicit none
   save
@@ -26,8 +27,10 @@ module TemperatureType
      real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
-     real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
-     real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_day_acc_patch      (:)   ! patch daytime accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_night_acc_patch    (:)   ! patch night-time accumulative vegetation temperature (Kelvin*nsteps), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime mean vegetation temperature (Kelvin), LUNA specific, from midnight to current step
+     real(r8), pointer :: t_veg_night_patch        (:)   ! patch night-time mean vegetation temperature (Kelvin), LUNA specific, from midnight to current step
      real(r8), pointer :: t_veg10_day_patch        (:)   ! 10 day running mean of patch daytime time vegetation temperature (Kelvin), LUNA specific, but can be reused
      real(r8), pointer :: t_veg10_night_patch      (:)   ! 10 day running mean of patch night time vegetation temperature (Kelvin), LUNA specific, but can be reused
      integer,  pointer :: ndaysteps_patch          (:)   ! number of daytime steps accumulated from mid-night, LUNA specific
@@ -135,6 +138,7 @@ module TemperatureType
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
      procedure, private :: UpdateAccVars_CropGDDs
+     procedure, private :: UpdateAccCropphase3_TVDAY
 
      procedure, private :: ReadNL
 
@@ -216,6 +220,8 @@ contains
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
+     allocate(this%t_veg_day_acc_patch     (begp:endp))                      ; this%t_veg_day_acc_patch      (:)   = spval
+     allocate(this%t_veg_night_acc_patch   (begp:endp))                      ; this%t_veg_night_acc_patch    (:)   = spval
      allocate(this%t_veg_day_patch         (begp:endp))                      ; this%t_veg_day_patch          (:)   = spval
      allocate(this%t_veg_night_patch       (begp:endp))                      ; this%t_veg_night_patch        (:)   = spval
      allocate(this%t_veg10_day_patch       (begp:endp))                      ; this%t_veg10_day_patch        (:)   = spval
@@ -279,6 +285,8 @@ contains
     allocate(this%gdd10_patch              (begp:endp))                      ; this%gdd10_patch              (:)   = spval
     allocate(this%gdd020_patch             (begp:endp))                      ; this%gdd020_patch             (:)   = spval
     allocate(this%gdd820_patch             (begp:endp))                      ; this%gdd820_patch             (:)   = spval
+    allocate(this%TVDAY_grainfill20_patch  (begp:endp))                      ; this%TVDAY_grainfill20_patch  (:)   = spval !added by SdR
+    allocate(this%nstep_cphase3_patch      (begp:endp))                      ; this%nstep_cphase3_patch      (:)   = nan   !added by SdR; needs to be an integer..
     allocate(this%gdd1020_patch            (begp:endp))                      ; this%gdd1020_patch            (:)   = spval
 
     ! Heat content
@@ -421,6 +429,26 @@ contains
     call hist_addfld1d (fname='TV', units='K',  &
          avgflag='A', long_name='vegetation temperature', &
          ptr_patch=this%t_veg_patch)
+
+    call hist_addfld1d (fname='TVMAX', units='K',  &
+         avgflag='X', long_name='vegetation maximum temperature', &
+         ptr_patch=this%t_veg_patch, default='inactive')
+
+    call hist_addfld1d (fname='TVMIN', units='K',  &
+         avgflag='M', long_name='vegetation minimum temperature', &
+         ptr_patch=this%t_veg_patch, default='inactive')
+
+    if (use_luna) then
+       this%t_veg_day_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVDAY', units='K',  &
+            avgflag='A', long_name='average daytime vegetation temperature', &
+            ptr_patch=this%t_veg_day_patch, default='inactive')
+
+       this%t_veg_night_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVNIGHT', units='K',  &
+            avgflag='A', long_name='average nighttime vegetation temperature', &
+            ptr_patch=this%t_veg_night_patch, default='inactive')
+    end if
 
     this%t_skin_patch(begp:endp) = spval
     call hist_addfld1d(fname='TSKIN', units='K',  &
@@ -650,10 +678,23 @@ contains
             avgflag='A', long_name='Twenty year average of growing degree days base  8C from planting', &
             ptr_patch=this%gdd820_patch, default='inactive')
 
+       ! added by SdR to calculate leaf temperature climatology grainfill
+       this%TVDAY_grainfill20_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TVDAY_grainfill20', units='K', &
+            avgflag='A', long_name='Twenty year average of crop leaf temperature during grainfill stage', &
+            ptr_patch=this%TVDAY_grainfill20_patch, default='inactive')
+
+       this%nstep_cphase3_patch(begp:endp) = spval
+       call hist_addfld1d (fname='days_cphase3', units='ndays', &
+            avgflag='A', long_name='number of timesteps in grainfill cropphase', &
+            ptr_patch=this%nstep_cphase3_patch, default='inactive')
+
+
        this%gdd1020_patch(begp:endp) = spval
        call hist_addfld1d (fname='GDD1020', units='ddays', &
             avgflag='A', long_name='Twenty year average of growing degree days base 10C from planting', &
             ptr_patch=this%gdd1020_patch, default='inactive')
+
 
     end if
     if(use_luna)then
@@ -1087,6 +1128,15 @@ contains
        call restartvar(ncid=ncid, flag=flag,  varname='gdd020', xtype=ncd_double,  &
             dim1name='pft', long_name='20 year average of growing degree-days base 0C from planting', units='ddays', &
             interpinic_flag='interp', readvar=readvar, data=this%gdd020_patch)
+
+       ! added by SdR for climatology of vegetation temperature crop grainfill phase
+       call restartvar(ncid=ncid, flag=flag,  varname='TVDAY_grainfill20', xtype=ncd_double,  &
+            dim1name='pft', long_name='Twenty year average of crop leaf temperature during grainfill stage', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%TVDAY_grainfill20_patch)
+       call restartvar(ncid=ncid, flag=flag,  varname='nstep_phase3', xtype=ncd_double,  &
+            dim1name='pft', long_name='number of daily timesteps in grainfill cropphase', units='nday', &
+            interpinic_flag='interp', readvar=readvar, data=this%nstep_cphase3_patch)
+
     end if
 
     if(use_luna)then
@@ -1095,12 +1145,18 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%t_veg10_day_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegd', xtype=ncd_double,  &
             dim1name='pft', long_name='accumulative daytime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_day_acc_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegdm', xtype=ncd_double,  &
+            dim1name='pft', long_name='mean daytime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg_day_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegn10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean nighttime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg10_night_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tvegn', xtype=ncd_double,  &
             dim1name='pft', long_name='accumulative nighttime vegetation temperature', units='Kelvin*steps', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_veg_night_acc_patch )
+       call restartvar(ncid=ncid, flag=flag, varname='tvegnm', xtype=ncd_double,  &
+            dim1name='pft', long_name='mean nighttime vegetation temperature', units='Kelvin', &
             interpinic_flag='interp', readvar=readvar, data=this%t_veg_night_patch )
        call restartvar(ncid=ncid, flag=flag, varname='tair10', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean air temperature', units='Kelvin', &
@@ -1277,6 +1333,10 @@ contains
        call init_accum_field (name='GDD1020', units='K', &
             desc='20-year running mean of growing degree days base 10C from planting', accum_type='runmean', accum_period=-20*365, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
+            ! added by SdR
+       call init_accum_field (name='TVDAY_grainfill20', units='K', &
+            desc='20-year running mean crop leaf temperature during grainfill phase', accum_type='runmean', accum_period=-20*365, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
 
     end if
 
@@ -1398,6 +1458,10 @@ contains
        call extract_accum_field ('GDD820', rbufslp, nstep)
        this%gdd820_patch(begp:endp) = rbufslp(begp:endp)
 
+       ! added by SdR for leaf temperature climatology during grainfill phase
+       call extract_accum_field ('TVDAY_grainfill20', rbufslp, nstep) ! Sam Rabin: I think this is wrong, or are rbufslp and nstep just placeholders here?
+       this%TVDAY_grainfill20_patch(begp:endp) = rbufslp(begp:endp)
+
        call extract_accum_field ('GDD1020', rbufslp, nstep)
        this%gdd1020_patch(begp:endp) = rbufslp(begp:endp)
 
@@ -1407,6 +1471,48 @@ contains
     deallocate(rbufslc)
 
   end subroutine InitAccVars
+
+  ! added by SdR: new function to update accumulated TVDAY during grainfill stage
+  subroutine UpdateAccCropphase3_TVDAY(this, rbufslp, begp, endp, month, day, secs, dtime, steps_cphase3, tvdayx_patch)
+      ! USES
+      use accumulMod, only : update_accum_field, extract_accum_field, markreset_accum_field
+      use CropType,   only : crop_type
+      !
+      ! !ARGUMENTS
+      class(temperature_type) :: this        ! do I need this one?
+      integer, intent(in)  :: begp, endp
+	 integer, intent(in)  :: month, day, secs, dtime, steps_cphase3
+      character(8)         :: field_name   ! Sam Rabin, I don't understand what this field_name represents?
+      real(r8), intent(in) :: t_veg_day
+      real(r8), intent(inout), pointer, dimension(:) :: rbufslp  ! temporary single level - pft level --> is this correct?
+      real(r8), intent(inout), pointer, dimension(:) :: tvdayx_patch  ! Do I need to import it like this, or as a normal variable?
+
+
+      do p = begp,endp
+
+		 ! Avoid unnecessary calculations over inactive points
+		 if (.not. patch%active(p)) then
+			cycle
+		 end if
+
+		 if (month==1 .and. day==1 .and. secs==dtime) then
+		    call markreset_accum_field(field_name, p)
+		 end if
+           ! update accumulated TVDAY and update cphase 3
+		 if (cphase(p)==cphase_grainfill) then
+		    rbufslp(p) = tvdayx_patch(p) + t_veg_day(p)
+              steps_cphase3(p) = steps_cphase3(p) + 1.0_r8
+		 else
+		    rbufslp(p) = 0
+              steps_cphase3(p) = 0.0_r8
+	      end if
+	 end do
+
+	 ! Save (pretty sure is not correct)
+	 call update_accum_field  (trim(field_name), rbufslp, steps_cphase3)
+	 call extract_accum_field (trim(field_name), tvdayx_patch, steps_cphase3)
+  end subroutine UpdateAccCropphase3_TVDAY
+
 
   subroutine UpdateAccVars_CropGDDs(this, rbufslp, begp, endp, month, day, secs, dtime, nstep, basetemp_int, gddx_patch, crop_inst)
     !
@@ -1707,6 +1813,9 @@ contains
        ! Accumulate and extract GDD10
        call this%UpdateAccVars_CropGDDs(rbufslp, begp, endp, month, day, secs, dtime, nstep, 10, this%gdd10_patch, crop_inst)
 
+       ! Added by SdR to accumulate TVDAY in cropphase 3 / grainfill
+       call this%UpdateAccCropphase3_TVDAY(rbufslp, begp, endp, month, day, secs, dtime, this%nstep_cphase3_patch, this%TVDAY_grainfill20_patch)
+
        ! Accumulate and extract running 20-year means
        if (is_end_curr_year()) then
           ! Flush, if needed
@@ -1715,6 +1824,7 @@ contains
               call markreset_accum_field('GDD020')
               call markreset_accum_field('GDD820')
               call markreset_accum_field('GDD1020')
+              call markreset_accum_field('TVDAY_grainfill20') ! added by SdR for calculating climatology of grainfill phase (cropphase 3)
               flush_gdd20 = .false.
           end if
           call update_accum_field  ('GDD020', this%gdd0_patch, nstep)
@@ -1723,6 +1833,10 @@ contains
           call extract_accum_field ('GDD820', this%gdd820_patch, nstep)
           call update_accum_field  ('GDD1020', this%gdd10_patch, nstep)
           call extract_accum_field ('GDD1020', this%gdd1020_patch, nstep)
+
+          ! added by SdR for calculating climatology of leaf temperature during the grainfill cropphase
+          call update_accum_field  ('TVDAY_grainfill20', this%TVDAY_grainfill20_patch/this%nstep_cphase3_patch, this%nstep_cphase3_patch) !Sam Rabin, I am not sure what to do here do I use: this%TVDAY_grainfill20_patch or assign a new, seperate variable?
+          call extract_accum_field ('TVDAY_grainfill20', this%TVDAY_grainfill20_patch/this%nstep_cphase3_patch, this%nstep_cphase3_patch)
        end if
 
     end if
@@ -1750,6 +1864,8 @@ contains
      deallocate(this%gdd020_patch)
      deallocate(this%gdd820_patch)
      deallocate(this%gdd1020_patch)
+     ! added by SdR
+     deallocate(this%TVDAY_grainfill20_patch)
   
    end subroutine Clean
 

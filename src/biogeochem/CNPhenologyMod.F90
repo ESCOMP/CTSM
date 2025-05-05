@@ -2004,8 +2004,9 @@ contains
     use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
-    use clm_time_manager , only : is_doy_in_interval, is_end_curr_day
+    use clm_time_manager , only : is_doy_in_interval, is_end_curr_day, is_beg_curr_day
     use clm_time_manager , only : get_doy_tomorrow
+    use CropHeatStress   , only : crop_heatstress_reset, crop_heatstress_ndays, calc_HS_factor     !added by SdR
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -2090,7 +2091,8 @@ contains
          a5tmin            =>    temperature_inst%t_a5min_patch                , & ! Input:  [real(r8) (:) ]  5-day running mean of min 2-m temperature         
          a10tmin           =>    temperature_inst%t_a10min_patch               , & ! Input:  [real(r8) (:) ]  10-day running mean of min 2-m temperature        
          gdd020            =>    temperature_inst%gdd020_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd0                                
-         gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8                                
+         gdd820            =>    temperature_inst%gdd820_patch                 , & ! Input:  [real(r8) (:) ]  20 yr mean of gdd8
+         t_veg_day         =>    temperature_inst%t_veg_day_patch             , & ! Input:  [real(r8)  (:) ] daily vegetation temperature; added by SdR
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
@@ -2100,6 +2102,9 @@ contains
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
+         HS_ndays          =>    crop_inst%HS_ndays_patch                      , & ! Input:  [real(r8) (:) ]  number of crop heat stressed days; added by SdR
+         HS_factor         =>    crop_inst%HS_factor_patch                     , & ! Input:  [real(r8) (:) ]  heat stress factor ; added by SdR
+         heatwave_crop     =>    crop_inst%heatwave_crop_patch                 , & ! Input:  [real(r8) (:) ]  check if heatwave condition is true; added by SdR
          peaklai           =>    cnveg_state_inst%peaklai_patch                , & ! Output: [integer  (:) ]  1: max allowed lai; 0: not at max
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -2146,6 +2151,12 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
          h = inhemi(p)
+
+         ! added by SdR
+         if (is_beg_curr_day()) then
+            call crop_heatstress_ndays(HS_ndays(p), heatwave_crop(p), t_veg_day(p), croplive(p))
+            call calc_HS_factor(HS_factor(p), HS_ndays(p), t_veg_day(p),  croplive(p))
+         end if
 
          ! background litterfall and transfer rates; long growing season factor
 
@@ -2550,6 +2561,9 @@ contains
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
                endif
 
+               ! Reset heat-stress variables
+               call crop_heatstress_reset(HS_ndays(p), heatwave_crop(p))
+
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2583,7 +2597,7 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
-               bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
+               bglfr(p) = (1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)) * HS_factor(p)
             end if
 
             ! continue fertilizer application while in phase 2;
@@ -2665,6 +2679,8 @@ contains
 
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
+
+
 
        if (croplive(p)) then
           ! Start with cphase_planted, but this might get changed in the later
