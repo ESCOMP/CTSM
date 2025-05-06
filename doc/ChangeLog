@@ -1,4 +1,354 @@
 ===============================================================
+Tag name: ctsm5.3.041
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Apr 25 08:02:37 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master. Includes PRs:
+- [#3042: Allow file paths with length 512 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3042)
+- [#3024: Python scripts: Require user to specify lon format when ambiguous by samsrabin](https://github.com/ESCOMP/CTSM/pull/3024)
+- [#3017: Avoid repeated ESMF initialization in unittestTimeManagerMod.F90 by billsacks](https://github.com/ESCOMP/CTSM/pull/3017)
+- [#2964: Add GitHub workflows to check black, pylint, git-fleximod by samsrabin](https://github.com/ESCOMP/CTSM/pull/2964)
+- [#3067: fix some st_archive issues with rpointer files by jedwards4b](https://github.com/ESCOMP/CTSM/pull/3067)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- [Issue #2322: long parameter file path string in fates seed dispersal test](https://github.com/ESCOMP/CTSM/issues/2322)
+- [Issue #2453: FUNIT test not working on izumi](https://github.com/ESCOMP/CTSM/issues/2453)
+- [Issue #2651: Change all filepath variables to SHR_KIND_CX (512)](https://github.com/ESCOMP/CTSM/issues/2651)
+- [Issue #3001: Make Python scripts smarter about lons (-180, 180) vs. (0, 360)](https://github.com/ESCOMP/CTSM/issues/3001)
+- [Issue #3015: CNPhenology (and other?) unit tests not being run](https://github.com/ESCOMP/CTSM/issues/3015)
+- [Issue #3041: Race condition with multiple FatesColdSeedDisp tests](https://github.com/ESCOMP/CTSM/issues/3041)
+- [Issue #3076: rpointer files not moved to st_archiver](https://github.com/ESCOMP/CTSM/issues/3076)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users:
+- See updated `subset_data` docs
+
+Changes to documentation:
+- Adds pFUnit testing design page
+- Updates `subset_data` docs
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+List any git submodules updated:
+- FATES reference repo changed from NCAR/fates-release to NGEET/FATES. No version change.
+
+Pull Requests that document the changes (include PR ids):
+- [#3042: Allow file paths with length 512 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3042)
+- [#3024: Python scripts: Require user to specify lon format when ambiguous by samsrabin](https://github.com/ESCOMP/CTSM/pull/3024)
+- [#3017: Avoid repeated ESMF initialization in unittestTimeManagerMod.F90 by billsacks](https://github.com/ESCOMP/CTSM/pull/3017)
+- [#2964: Add GitHub workflows to check black, pylint, git-fleximod by samsrabin](https://github.com/ESCOMP/CTSM/pull/2964)
+- [#3067: fix some st_archive issues with rpointer files by jedwards4b](https://github.com/ESCOMP/CTSM/pull/3067)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.040
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Tue 15 Apr 2025 10:15:39 AM MDT
+One-line Summary: Update ctsm_pylib to 3.13.2
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the ctsm_pylib conda environment, installed with py_env_create, to use Python 3.13.2 instead of 3.7.9. There are also some improvements to how py_env_create works.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves ESCOMP/CTSM#2625 (Move ctsm_pylib to something beyond 3.7)
+- Resolves ESCOMP/CTSM#2771 (Add User's Guide section about ctsm_pylib)
+
+Notes of particular relevance for users
+---------------------------------------
+
+The new ctsm_pylib conda environment will be incompatible with the CTSM Python tools from before this tag (ctsm5.3.040) and vice versa. If you already have a copy of the ctsm_pylib conda environment installed, we thus suggest keeping that around under a different name. Here is the suggested command for doing this:
+    ./py_env_create -r ctsm_pylib_old
+This will (1) rename your existing ctsm_pylib to ctsm_pylib_old and (2) install the Python 3.13.2 version as ctsm_pylib.
+
+Information about additional py_env_create options---including how to install a fresh copy of the old conda environment---can be found like so:
+  ./py_env_create --help
+
+Changes to documentation:
+- User's Guide: Adds "Installing the CTSM Python environment" page
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New Python system test module: test_sys_py_env_create.py
+- That module will install a bunch of empty conda envs with the prefix pec_test. It should clean those up on exit, but if not, you can safely delete them afterward.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing:
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [CTSM PR #2982: Update ctsm_pylib to 3.13.2](https://github.com/ESCOMP/CTSM/pull/2982)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.039
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Mon 14 Apr 2025 07:22:22 PM MDT
+One-line Summary: Create driver data structure for SP mode
+
+Purpose and description of changes
+----------------------------------
+
+Creates a new data structure for htop, tlai, and tsai that is just driver data
+
+Previously, fates used htop_patch (etc.) as a driver data, but we also needed to update it and set set htop_hist_patch. This htop_hist_patch was inconsistently used throughout the CLM code, resulting in mis-matches between the PFT structures that we actually were trying to run.
+
+Now we have the SP driver data as a separate data structure, and methods to set it. FATES sets it and passes it back to CLM through the bc_out struct, CLM just sets it in a 1:1 call.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #2945: htop_patch is being incorrectly used in FATES compsets](https://github.com/ESCOMP/CTSM/issues/2945)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: 
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any FATE SP mode
+    - what platforms/compilers: all compilers, all platforms
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): greater than round-off DIFF in TLAI, TSAI, and HTOP, as well as a number of variables related to dust and those that used TLAI, TSAI, and HTOP for physics calculations in CTSM when FATES-SP on. Notably, no vegetation-related variables (i.e. FATES_GPP, EFLX_LH_TOT etc. changed)
+
+
+Pull Requests that document the changes (include PR ids):
+
+- [Pull Request #2952: Create driver data structure for SP mode  by adrifoster](https://github.com/ESCOMP/CTSM/pull/2952)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.038
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Apr 10 12:07:20 MDT 2025
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Merging b4b-dev into ctsm5.3.037.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3059: ctsm5.3.038: Merge b4b-dev into master by samsrabin](https://github.com/ESCOMP/CTSM/pull/3059)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.037
+Originator(s): olyson/heroldn/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 02 Apr 2025 11:28:26 PM MDT
+One-line Summary: Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
+
+Purpose and description of changes
+----------------------------------
+
+GSSUN (gs_mol_sun) and GSSHA (gs_mol_sha) were not being calculated at nighttime in both subroutine Photosynthesis (use_hydrstress = .false.) and PhotosynthesisHydraulicStress (use_hydrstress = .true.), resulting in "striping" in these fields in history file averages. This fixes that.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes: #3021 -- gs_mol_sun (GSSUN) and gs_mol_sha (GSSHA) aren't calculated at nighttime, resulting in "striping" in history outpu
+
+Notes of particular relevance for users
+---------------------------------------
+
+None
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+None
+
+Testing summary:  regular
+----------------
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: non-FATES
+    - what platforms/compilers: all
+    - nature of change: two diagnostic variables are different: GSSUN and GSSHA
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #3021 --  Add calculations for GSSUN and GSSHA at night
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.036
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Tue Apr  1 11:36:27 MDT 2025

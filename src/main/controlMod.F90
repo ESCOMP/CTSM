@@ -10,7 +10,7 @@ module controlMod
   !       Display the file in a browser to see it neatly formatted in html.
   !
   ! !USES:
-  use shr_kind_mod                     , only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod                     , only: r8 => shr_kind_r8
   use shr_nl_mod                       , only: shr_nl_find_group_name
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
@@ -67,7 +67,7 @@ module controlMod
   !
   ! !PRIVATE TYPES:
   character(len=  7) :: runtyp(4)                        ! run type
-  character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
+  character(len=fname_len) :: NLFilename = 'lnd.stdin' ! Namelist filename
 
 #if (defined _OPENMP)
   integer, external :: omp_get_max_threads  ! max number of threads that can execute concurrently in a single parallel region
@@ -1273,7 +1273,7 @@ contains
    ! !LOCAL VARIABLES:
    logical                    :: lexists
    integer                    :: klen
-   character(len=SHR_KIND_CL) :: status_file
+   character(len=fname_len)   :: status_file
    character(len=*), parameter :: subname = 'check_missing_initdata_status'
    !-----------------------------------------------------------------------
 
@@ -1314,7 +1314,7 @@ contains
     ! !LOCAL VARIABLES:
     logical                    :: lexists
     integer                    :: ncid
-    character(len=SHR_KIND_CL) :: initial_source_file
+    character(len=fname_len)   :: initial_source_file
     integer                    :: status
     character(len=*), parameter :: subname = 'apply_use_init_interp'
     !-----------------------------------------------------------------------
