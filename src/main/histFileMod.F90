@@ -995,6 +995,7 @@ contains
              exit
           end if
        end do
+       if (ntapes > 0) exit
     end do
 
     ! 9) TODO DONE Change nflds to nflds(f) throughout
@@ -3436,7 +3437,7 @@ contains
        long_name = 'current date (YYYYMMDD) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mcdate', ncd_int, 1, dim1id , varid, &
           long_name = long_name)
-       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
+       call ncd_putatt(nfid(t,f), varid, 'calendar', caldesc)
        !
        ! add global attribute time_period_freq
        !
@@ -3466,15 +3467,15 @@ contains
        long_name = 'current seconds of current date at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mcsec' , ncd_int, 1, dim1id , varid, &
           long_name = long_name, units='s')
-       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
+       call ncd_putatt(nfid(t,f), varid, 'calendar', caldesc)
        long_name = 'current day (from base day) at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mdcur' , ncd_int, 1, dim1id , varid, &
           long_name = long_name)
-       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
+       call ncd_putatt(nfid(t,f), varid, 'calendar', caldesc)
        long_name = 'current seconds of current day at end of ' // step_or_bounds
        call ncd_defvar(nfid(t,f) , 'mscur' , ncd_int, 1, dim1id , varid, &
           long_name = long_name)
-       call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
+       call ncd_putatt(nfid(t,f), varid, 'calendar', caldesc)
        call ncd_defvar(nfid(t,f) , 'nstep' , ncd_int, 1, dim1id , varid, &
           long_name = 'time step')
 
@@ -3483,7 +3484,7 @@ contains
           call ncd_defvar(nfid(t,f), 'time_bounds', ncd_double, 2, dim2id, varid, &
              long_name = 'time interval endpoints', &
              units = str)
-          call ncd_putatt(nfid(t), varid, 'calendar', caldesc)
+          call ncd_putatt(nfid(t,f), varid, 'calendar', caldesc)
        end if
 
        dim2id(1) = strlen_dimid;  dim2id(2) = time_dimid
@@ -4217,7 +4218,7 @@ contains
     tape_loop1: do t = 1, ntapes
        file_loop1: do f = 1, maxsplitfiles
 
-          if (.not. history_tape_in_use(t,f)) then
+          if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
 
