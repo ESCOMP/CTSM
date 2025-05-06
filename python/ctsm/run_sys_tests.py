@@ -98,6 +98,7 @@ def main(cime_path):
 def run_sys_tests(
     machine,
     cime_path,
+    *,
     skip_testroot_creation=False,
     skip_git_status=False,
     dry_run=False,
@@ -239,6 +240,7 @@ def run_sys_tests(
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
         running_ctsm_py_tests = testfile == "/path/to/testfile"
+        testname_list = None
         if testfile:
             test_args = ["--testfile", os.path.abspath(testfile)]
             if not running_ctsm_py_tests:
@@ -249,7 +251,7 @@ def run_sys_tests(
             testname_list = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
-        if not running_ctsm_py_tests:
+        if testname_list:
             _check_py_env(testname_list)
         _run_create_test(
             cime_path=cime_path,
@@ -604,6 +606,7 @@ def _record_git_status(testroot, retry, dry_run):
 
 
 def _get_create_test_args(
+    *,
     compare_name,
     generate_name,
     baseline_root,
@@ -676,6 +679,7 @@ def _cs_status_xfail_arg():
 
 
 def _run_test_suite(
+    *,
     cime_path,
     suite_name,
     suite_compilers,
@@ -794,7 +798,7 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
     return compilers
 
 
-def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
+def _run_create_test(*, cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
     create_test_cmd = _build_create_test_cmd(
         cime_path=cime_path,
         test_args=test_args,

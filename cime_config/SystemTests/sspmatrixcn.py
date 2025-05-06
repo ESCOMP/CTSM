@@ -12,6 +12,7 @@ Step 0: Run a AD cold-start with matrix and matrix spinup off
 Step 3: Run a slow-mode spinup
 Step 4: matrix Spinup off
 """
+
 import shutil, glob, os, sys
 from datetime import datetime
 

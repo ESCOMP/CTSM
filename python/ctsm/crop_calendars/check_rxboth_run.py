@@ -1,6 +1,7 @@
 """
 Check the results of a run with prescribed sowing dates and maturity requirements
 """
+
 import sys
 import argparse
 import glob
