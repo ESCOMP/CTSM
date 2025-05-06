@@ -35,6 +35,8 @@ module SurfaceAlbedoMod
   public :: SurfaceAlbedo_readnl
   public :: SurfaceAlbedoInitTimeConst
   public :: SurfaceAlbedo  ! Surface albedo and two-stream fluxes
+  public :: UpdateZenithAngles
+
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilAlbedo    ! Determine ground surface albedo
@@ -224,7 +226,57 @@ contains
 
   end subroutine SurfaceAlbedoInitTimeConst
 
+  ! -----------------------------------------------------------------------
+  
+  subroutine UpdateZenithAngles(bounds, surfalb_inst, nextsw_cday, declinp1)
+
+    ! Incorporate surface slopes to generate column level zenith angles
+    
+    use clm_varctl          , only : downscale_hillslope_meteorology
+    use shr_orb_mod
+    
+    type(bounds_type)      , intent(in)            :: bounds             ! bounds
+    type(surfalb_type)     , intent(inout)         :: surfalb_inst
+    real(r8)               , intent(in)            :: nextsw_cday        ! calendar day at Greenwich (1.00, ..., days/year)
+    real(r8)               , intent(in)            :: declinp1           ! declination angle (radians) for next time step
+
+    integer :: c,g        ! indices
+    
+    associate( &
+         azsun_grc     =>    surfalb_inst%azsun_grc              , & ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle            
+         coszen_grc    =>    surfalb_inst%coszen_grc             , & ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle            
+         coszen_col    =>    surfalb_inst%coszen_col)                ! Output:  [real(r8) (:)   ]  cosine of solar zenith angle
+
+
+      ! Cosine solar zenith angle for next time step
+      ! First calculate grid-scale zenith based on time and location, no topographic effects
+      do g = bounds%begg,bounds%endg
+         coszen_grc(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
+         azsun_grc(g) = shr_orb_azimuth(nextsw_cday, grc%lat(g), grc%lon(g), declinp1, acos(coszen_grc(g)))
+      end do
+
+      ! calculate local incidence angle based on column slope and aspect
+      do c = bounds%begc,bounds%endc
+         g = col%gridcell(c)
+         if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
+            
+            ! hill_slope is [m/m], convert to radians with atan function
+            coszen_col(c) = shr_orb_cosinc(acos(coszen_grc(g)),azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
+            
+            if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
+         else
+            coszen_col(c) = coszen_grc(g)
+         endif
+         
+      end do
+
+    end associate
+    
+    return
+  end subroutine UpdateZenithAngles
+  
   !-----------------------------------------------------------------------
+
   subroutine SurfaceAlbedo(bounds,nc,  &
         num_nourbanc, filter_nourbanc, &
         num_nourbanp, filter_nourbanp, &
@@ -256,13 +308,13 @@ contains
     ! only computed over active points.
     !
     ! !USES:
-    use shr_orb_mod
+    !use shr_orb_mod
     use clm_time_manager   , only : get_nstep
     use abortutils         , only : endrun
     use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use landunit_varcon     , only : istsoil
-    use clm_varctl          , only : downscale_hillslope_meteorology
+    
 
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
@@ -427,32 +479,18 @@ contains
           fabi_sha_z    =>    surfalb_inst%fabi_sha_z_patch         & ! Output:  [real(r8) (:,:) ]  absorbed shaded leaf diffuse PAR (per unit lai+sai) for each canopy layer
           )
 
-    ! Cosine solar zenith angle for next time step
 
-    do g = bounds%begg,bounds%endg
-       coszen_grc(g) = shr_orb_cosz (nextsw_cday, grc%lat(g), grc%lon(g), declinp1)
-    end do
-    
-    do c = bounds%begc,bounds%endc
-       g = col%gridcell(c)
-       if (col%is_hillslope_column(c) .and. downscale_hillslope_meteorology) then
-          ! calculate local incidence angle based on column slope and aspect
-          zenith_angle = acos(coszen_grc(g))
-          
-          azsun_grc(g) = shr_orb_azimuth(nextsw_cday, grc%lat(g), grc%lon(g), declinp1, zenith_angle)
-          ! hill_slope is [m/m], convert to radians
-          coszen_col(c) = shr_orb_cosinc(zenith_angle,azsun_grc(g),atan(col%hill_slope(c)),col%hill_aspect(c))
-
-          if(coszen_grc(g) > 0._r8 .and. coszen_col(c) < 0._r8) coszen_col(c) = 0._r8
-
-       else
-          coszen_col(c) = coszen_grc(g)
-       endif
-    end do
+    call UpdateZenithAngles(bounds,surfalb_inst, nextsw_cday, declinp1)
+     
+    ! Apply column level zenith angles to the patch level
     do fp = 1,num_nourbanp
        p = filter_nourbanp(fp)
        c = patch%column(p)
-       coszen_patch(p) = coszen_col(c)
+       if(patch%is_fates(p))then
+          coszen_patch(p) = spval
+       else
+          coszen_patch(p) = coszen_col(c)
+       end if
     end do
 
     ! Initialize output because solar radiation only done if coszen > 0
@@ -1045,10 +1083,7 @@ contains
 
     if (use_fates) then
           
-       call clm_fates%wrap_canopy_radiation(bounds, nc, &
-            num_vegsol, filter_vegsol, &
-            coszen_patch(bounds%begp:bounds%endp), &
-            fcansno(bounds%begp:bounds%endp), surfalb_inst)
+       call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst)
 
     else
 

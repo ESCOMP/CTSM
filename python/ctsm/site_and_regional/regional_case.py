@@ -1,6 +1,7 @@
 """
 This module includes the definition for a RegionalCase classs.
 """
+
 # -- Import libraries
 # -- Import Python Standard Libraries
 import logging
@@ -91,6 +92,7 @@ class RegionalCase(BaseCase):
 
     def __init__(
         self,
+        *,
         lat1,
         lat2,
         lon1,
@@ -109,12 +111,12 @@ class RegionalCase(BaseCase):
         Initializes RegionalCase with the given arguments.
         """
         super().__init__(
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-            create_user_mods,
-            overwrite,
+            create_domain=create_domain,
+            create_surfdata=create_surfdata,
+            create_landuse=create_landuse,
+            create_datm=create_datm,
+            create_user_mods=create_user_mods,
+            overwrite=overwrite,
         )
         self.lat1 = lat1
         self.lat2 = lat2
@@ -357,10 +359,10 @@ class RegionalCase(BaseCase):
 
         self.mesh = mesh_out
 
-        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+        _, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
         f_in = xr.open_dataset(mesh_in)
-        self.write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
+        self.write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out)
 
     def subset_mesh_at_reg(self, mesh_in):
         """
@@ -378,9 +380,7 @@ class RegionalCase(BaseCase):
 
         for n in range(elem_count):
             endx = elem_conn[n, : num_elem_conn[n].values].values
-            endx[
-                :,
-            ] -= 1  # convert to zero based index
+            endx[:,] -= 1  # convert to zero based index
             endx = [int(xi) for xi in endx]
 
             nlon = node_coords[endx, 0].values
@@ -425,14 +425,11 @@ class RegionalCase(BaseCase):
         return node_coords, subset_element, subset_node, conn_dict
 
     @staticmethod
-    def write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
-        # pylint: disable=unused-argument
+    def write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out):
         """
         This function writes out the subsetted mesh file.
         """
-        corner_pairs = f_in.variables["nodeCoords"][
-            subset_node,
-        ]
+        corner_pairs = f_in.variables["nodeCoords"][subset_node,]
         variables = f_in.variables
         global_attributes = f_in.attrs
 
@@ -440,9 +437,7 @@ class RegionalCase(BaseCase):
 
         elem_count = len(subset_element)
         elem_conn_out = np.empty(shape=[elem_count, max_node_dim])
-        elem_conn_index = f_in.variables["elementConn"][
-            subset_element,
-        ]
+        elem_conn_index = f_in.variables["elementConn"][subset_element,]
 
         for n in range(elem_count):
             for m in range(max_node_dim):
@@ -454,9 +449,7 @@ class RegionalCase(BaseCase):
                 elem_count,
             ]
         )
-        num_elem_conn_out[:] = f_in.variables["numElementConn"][
-            subset_element,
-        ]
+        num_elem_conn_out[:] = f_in.variables["numElementConn"][subset_element,]
 
         center_coords_out = np.empty(shape=[elem_count, 2])
         center_coords_out[:, :] = f_in.variables["centerCoords"][subset_element, :]
@@ -467,9 +460,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_mask_out[:] = f_in.variables["elementMask"][
-                subset_element,
-            ]
+            elem_mask_out[:] = f_in.variables["elementMask"][subset_element,]
 
         if "elementArea" in variables:
             elem_area_out = np.empty(
@@ -477,9 +468,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_area_out[:] = f_in.variables["elementArea"][
-                subset_element,
-            ]
+            elem_area_out[:] = f_in.variables["elementArea"][subset_element,]
 
         # -- create output dataset
         f_out = xr.Dataset()

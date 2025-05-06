@@ -260,7 +260,7 @@ li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric for
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
 li2021gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
 li2024gswpfrc: No reference paper yet, tuned with GSWP3 atmospheric forcing
-li2024crujra:  No reference paper yet, tuned with CRU-JRA forcing
+li2024crujra:  No reference paper yet, tuned with CRU-JRA forcing (CRUJRA2024)
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -389,8 +389,8 @@ Intercept of free living Nitrogen fixation with zero annual ET
 </entry>
 
 <entry id="nfix_method" type="char*25" category="cnfun_inparm"
-       group="cnfun_inparm" valid_values="Houlton,Bytnerowicz" value="Houlton" >
-Choice of nfix parameterization
+       group="cnfun_inparm" valid_values="Houlton,Bytnerowicz" value="Bytnerowicz" >
+Choice of Nitrogen Fixation parameterization
 </entry>
 
 <entry id="use_undercanopy_stability" type="logical" category="clm_physics"
@@ -2278,10 +2278,10 @@ hist means do NOT use a future scenario, just use historical data.
 Land mask description
 </entry> 
 
-<!-- lnd_tuning_mode, there needs to be a setting for: CRUv7, GSWP3v1, cam6.0, and cam7.0 for each valid physics option -->
+<!-- lnd_tuning_mode, there needs to be a setting for: CRUJRA2024, CRUv7, GSWP3v1, cam6.0, and cam7.0 for each valid physics option; exceptions include clm4_5_CRUJRA2024 and clm6_0_CRUv7 -->
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm6_0_GSWP3v1,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam7.0,clm4_5_cam6.0,clm4_5_cam5.0,clm4_5_cam4.0,clm5_0_cam7.0,clm5_0_cam6.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_0_CRUJRA2024,clm6_0_GSWP3v1,clm6_0_CRUJRA2024,clm6_0_cam7.0,clm6_0_cam6.0,clm6_0_cam5.0,clm6_0_cam4.0">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed

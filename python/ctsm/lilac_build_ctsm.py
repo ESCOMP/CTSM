@@ -91,6 +91,7 @@ def build_ctsm(
     cime_path,
     build_dir,
     compiler,
+    *,
     no_build=False,
     machine=None,
     os_type=None,
@@ -603,6 +604,7 @@ def _create_build_dir(build_dir, existing_inputdata):
 
 
 def _fill_out_machine_files(
+    *,
     build_dir,
     os_type,
     compiler,
@@ -686,6 +688,7 @@ def _create_case(
     cime_path,
     build_dir,
     compiler,
+    *,
     machine=None,
     build_debug=False,
     build_with_openmp=False,
