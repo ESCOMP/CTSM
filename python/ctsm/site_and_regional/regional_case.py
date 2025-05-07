@@ -140,7 +140,8 @@ class RegionalCase(BaseCase):
         lat = f_in["lat"]
         lon = f_in["lon"]
 
-        # Handle type of input longitude
+        # Detect longitude type (180 or 360) of input file, throwing a helpful error if it can't be
+        # determined.
         f_lon_type = _detect_lon_type(lon)
         lon1_type = self.lon1.lon_type()
         lon2_type = self.lon2.lon_type()
@@ -151,8 +152,9 @@ class RegionalCase(BaseCase):
             raise RuntimeError(
                 f"File lon type ({f_lon_type}) doesn't match boundary lon type ({lon1_type})"
             )
-        lon = Longitude(lon, lon1_type)
 
+        # Convert input file longitudes to Longitude class, then trim where it's in region bounds
+        lon = Longitude(lon, lon1_type)
         xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
         f_out = f_in.isel({y_dim: yind, x_dim: xind})

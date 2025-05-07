@@ -74,7 +74,7 @@ class TestLongitude(unittest.TestCase):
 
     def test_check_lon_type_360_errors(self):
         """
-        Check that a single value outside [-180, 180] fails _check_lon_type_360()
+        Check that a single value outside [0, 360] fails _check_lon_type_360()
         """
         msg = r"lon_in must be in the range \[0, 360\]"
         with self.assertRaisesRegex(ValueError, msg):

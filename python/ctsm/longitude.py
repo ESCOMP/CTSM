@@ -143,8 +143,8 @@ class Longitude:
     def _check_lons_same_type(self, other):
         """
         If you're comparing two Longitudes of different types in different hemispheres, then
-        `lon1 > lon2` and `lon2 < lon1` will give different answers! We could make it so that
-        this doesn't fail as long as symmetricality isn't violated, but that might lead to
+        `lon1 > lon2` and `lon2 < lon1` will incorrectly give different answers! We could make it so
+        that this doesn't fail as long as symmetricality isn't violated, but that might lead to
         unexpected failures in practice.
         """
         if self.lon_type() != other.lon_type():
