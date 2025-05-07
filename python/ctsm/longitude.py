@@ -76,7 +76,10 @@ def _detect_lon_type(lon_in):
         raise RuntimeError("Longitude array contains values of both types 180 and 360")
     if not min_type_180 and not max_type_360:
         raise ArgumentTypeError("Longitude(s) ambiguous; could be type 180 or 360")
-    lon_type = 180 if min_type_180 else 360
+    if min_type_180:
+        lon_type = 180
+    else:
+        lon_type = 360
     return lon_type
 
 
