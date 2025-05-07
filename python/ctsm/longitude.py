@@ -139,11 +139,6 @@ class Longitude:
         self._lon = lon
         self._lon_type = lon_type
 
-    # __eq__ makes it so that == and != both work.
-    def __eq__(self, other):
-        check_other_is_lontype(other)
-        return self._lon == other.get(self._lon_type)
-
     def _check_lons_same_type(self, other):
         """
         If you're comparing two Longitudes of different types in different hemispheres, then
@@ -153,6 +148,11 @@ class Longitude:
         """
         if self.lon_type() != other.lon_type():
             raise TypeError("Comparison not supported between Longitudes of different types")
+
+    # __eq__ makes it so that == and != both work.
+    def __eq__(self, other):
+        check_other_is_lontype(other)
+        return self._lon == other.get(self._lon_type)
 
     def __lt__(self, other):
         check_other_is_lontype(other)
