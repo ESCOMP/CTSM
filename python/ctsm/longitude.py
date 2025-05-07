@@ -102,6 +102,10 @@ def _convert_lon_type_360_to_180(lon_in):
 
 def check_other_is_lontype(other):
     """
+    Used in comparison operators to throw an error if the "other" object being compared isn't also
+    a Longitude object. This makes it so that comparing longitudes requires that both sides of the
+    comparison must be Longitude objects and thus must have a specified longitude type (180 or 360).
+
     We could try to coerce non-Longitude `other` to Longitude, but that might result in
     situations where tests think everything works but code will fail if `other` is
     ambiguous.
