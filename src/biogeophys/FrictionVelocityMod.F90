@@ -73,7 +73,7 @@ module FrictionVelocityMod
      real(r8), pointer, public :: uaf_patch        (:)   ! patch canopy air speed [m/s]
      real(r8), pointer, public :: taf_patch        (:)   ! patch canopy air temperature [K]
      real(r8), pointer, public :: qaf_patch        (:)   ! patch canopy humidity [kg/kg]
-     real(r8), pointer, public :: obu_patch        (:)   ! patch Monin-Obukhov length [m]
+     real(r8), pointer, public :: obu_patch        (:)   ! patch Obukhov length [m]
      real(r8), pointer, public :: zeta_patch       (:)   ! patch dimensionless stability parameter
      real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [Pa]
      real(r8), pointer, public :: num_iter_patch   (:)   ! patch number of iterations
@@ -87,7 +87,7 @@ module FrictionVelocityMod
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
-     procedure, public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
+     procedure, public :: MoninObukIni           ! Initialization of the Obukhov length
 
      procedure, public  :: InitForTesting        ! version of Init meant for unit testing
 
@@ -283,8 +283,8 @@ contains
             avgflag='A', long_name='aerodynamical resistance ', &
             ptr_patch=this%raw2_patch, default='inactive')
        this%ustar_patch(begp:endp) = spval
-       call hist_addfld1d (fname='USTAR', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
+       call hist_addfld1d (fname='USTAR', units='m/s', &
+            avgflag='A', long_name='friction velocity ', &
             ptr_patch=this%ustar_patch, default='inactive')
        this%um_patch(begp:endp) = spval
        call hist_addfld1d (fname='UM', units='m/s', &
@@ -304,7 +304,7 @@ contains
             ptr_patch=this%qaf_patch, default='inactive')
        this%obu_patch(begp:endp) = spval
        call hist_addfld1d (fname='OBU', units='m', &
-            avgflag='A', long_name='Monin-Obukhov length', &
+            avgflag='A', long_name='Obukhov length', &
             ptr_patch=this%obu_patch, default='inactive')
        this%zeta_patch(begp:endp) = spval
        call hist_addfld1d (fname='ZETA', units='unitless', &
@@ -455,7 +455,7 @@ contains
 
     call restartvar(ncid=ncid, flag=flag, varname='OBU', xtype=ncd_double,  &
          dim1name='pft', &
-         long_name='Monin-Obukhov length', units='m', &
+         long_name='Obukhov length', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%obu_patch)
 
     if(use_luna)then
@@ -766,7 +766,7 @@ contains
     real(r8) , intent(in)    :: z0m     ( lbn: )         ! roughness length over vegetation, momentum [m] [lbn:ubn]
     real(r8) , intent(in)    :: z0h     ( lbn: )         ! roughness length over vegetation, sensible heat [m] [lbn:ubn]
     real(r8) , intent(in)    :: z0q     ( lbn: )         ! roughness length over vegetation, latent heat [m] [lbn:ubn]
-    real(r8) , intent(in)    :: obu     ( lbn: )         ! monin-obukhov length (m) [lbn:ubn]
+    real(r8) , intent(in)    :: obu     ( lbn: )         ! Obukhov length (m) [lbn:ubn]
     integer  , intent(in)    :: iter                     ! iteration number
     real(r8) , intent(in)    :: ur      ( lbn: )         ! wind speed at reference height [m/s] [lbn:ubn]
     real(r8) , intent(in)    :: um      ( lbn: )         ! wind speed including the stablity effect [m/s] [lbn:ubn]
@@ -1147,7 +1147,7 @@ contains
   subroutine MoninObukIni (this, ur, thv, dthv, zldis, z0m, um, obu)
     !
     ! !DESCRIPTION:
-    ! Initialization of the Monin-Obukhov length.
+    ! Initialization of the Obukhov length.
     ! The scheme is based on the work of Zeng et al. (1998):
     ! Intercomparison of bulk aerodynamic algorithms for the computation
     ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
@@ -1164,7 +1164,7 @@ contains
     real(r8), intent(in)  :: zldis ! reference height "minus" zero displacement heght [m]
     real(r8), intent(in)  :: z0m   ! roughness length, momentum [m]
     real(r8), intent(out) :: um    ! wind speed including the stability effect [m/s]
-    real(r8), intent(out) :: obu   ! monin-obukhov length (m)
+    real(r8), intent(out) :: obu   ! Obukhov length (m)
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wc    ! convective velocity [m/s]

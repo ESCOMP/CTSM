@@ -1108,7 +1108,7 @@ bioms:   do f = 1, fn
             raw1(p)  = raw(p,above_canopy)
             rah2(p)  = rah(p,below_canopy)
             raw2(p)  = raw(p,below_canopy)
-            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
+            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) ! Pa
 
          end do
 
