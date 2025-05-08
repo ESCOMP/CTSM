@@ -296,7 +296,8 @@ module histFileMod
      logical  :: dov2xy                        ! true => do xy average for all fields
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
-     type (history_entry) :: hlist(max_flds)   ! array of active history tape entries.
+     ! 13) DONE slevis: change hlist to (max_flds,maxsplitfiles)
+     type (history_entry) :: hlist(max_flds, maxsplitfiles)  ! array of active history tape entries.
                                                ! The ordering matches the allhistfldlist's.
   end type history_tape
 
@@ -970,15 +971,15 @@ contains
 
           ! Specification of tape contents now complete.
           ! Sort each list of active entries
-          call sort_hist_list(t, tape(t)%nflds(f), tape(t)%hlist)
+          call sort_hist_list(t, tape(t)%nflds(f), tape(t)%hlist(:,f))
 
           if (masterproc) then
              if (tape(t)%nflds(f) > 0) then
                 write(iulog,*) trim(subname),' : Included fields tape ', t, '=',tape(t)%nflds(f)
              end if
              do fld = 1, tape(t)%nflds(f)
-                write(iulog,*) fld, ' ', tape(t)%hlist(fld)%field%name, &
-                     tape(t)%hlist(fld)%field%num2d, ' ', tape(t)%hlist(fld)%avgflag
+                write(iulog,*) fld, ' ', tape(t)%hlist(fld,f)%field%name, &
+                     tape(t)%hlist(fld,f)%field%num2d, ' ', tape(t)%hlist(fld,f)%avgflag
              end do
              call shr_sys_flush(iulog)
           end if
@@ -1220,7 +1221,8 @@ contains
 
     ! Copy field information
 
-    tape(t)%hlist(n)%field = allhistfldlist(fld)%field
+    tape(t)%hlist(n,f)%field = allhistfldlist(fld)%field
+    write(iulog,*) 'field, t, f, n, fld', tape(t)%hlist(n,f)%field, t, f, n
 
     ! Determine bounds
 
@@ -1235,16 +1237,16 @@ contains
        ! ***NOTE- the following logic is what permits non lat/lon grids to
        ! be written to clm history file
 
-       type1d = tape(t)%hlist(n)%field%type1d
+       type1d = tape(t)%hlist(n,f)%field%type1d
 
        if (type1d == nameg .or. &
            type1d == namel .or. &
            type1d == namec .or. &
            type1d == namep) then
-          tape(t)%hlist(n)%field%type1d_out = grlnd
+          tape(t)%hlist(n,f)%field%type1d_out = grlnd
        end if
        if (type1d == grlnd) then
-          tape(t)%hlist(n)%field%type1d_out = grlnd
+          tape(t)%hlist(n,f)%field%type1d_out = grlnd
        end if
 
     else if (hist_type1d_pertape(t) /= ' ') then
@@ -1252,17 +1254,17 @@ contains
        ! Set output 1d type  based on namelist setting of  hist_type1d_pertape
        ! Only applies to tapes when xy output is not required
 
-       type1d = tape(t)%hlist(n)%field%type1d
+       type1d = tape(t)%hlist(n,f)%field%type1d
 
        select case (trim(hist_type1d_pertape(t)))
        case('GRID')
-          tape(t)%hlist(n)%field%type1d_out = nameg
+          tape(t)%hlist(n,f)%field%type1d_out = nameg
        case('LAND')
-          tape(t)%hlist(n)%field%type1d_out = namel
+          tape(t)%hlist(n,f)%field%type1d_out = namel
        case('COLS')
-          tape(t)%hlist(n)%field%type1d_out = namec
+          tape(t)%hlist(n,f)%field%type1d_out = namec
        case ('PFTS')
-          tape(t)%hlist(n)%field%type1d_out = namep
+          tape(t)%hlist(n,f)%field%type1d_out = namep
        case default
           write(iulog,*) trim(subname),' ERROR: unknown input hist_type1d_pertape= ', hist_type1d_pertape(t)
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1272,7 +1274,7 @@ contains
 
     ! Determine output 1d dimensions
 
-    type1d_out = tape(t)%hlist(n)%field%type1d_out
+    type1d_out = tape(t)%hlist(n,f)%field%type1d_out
     if (type1d_out == grlnd) then
        beg1d_out = bounds%begg
        end1d_out = bounds%endg
@@ -1299,9 +1301,9 @@ contains
     end if
 
     ! Output bounds for the field
-    tape(t)%hlist(n)%field%beg1d_out = beg1d_out
-    tape(t)%hlist(n)%field%end1d_out = end1d_out
-    tape(t)%hlist(n)%field%num1d_out = num1d_out
+    tape(t)%hlist(n,f)%field%beg1d_out = beg1d_out
+    tape(t)%hlist(n,f)%field%end1d_out = end1d_out
+    tape(t)%hlist(n,f)%field%num1d_out = num1d_out
 
     ! Fields native bounds
     beg1d = allhistfldlist(fld)%field%beg1d
@@ -1309,16 +1311,16 @@ contains
 
     ! Allocate and initialize history buffer and related info
 
-    num2d = tape(t)%hlist(n)%field%num2d
+    num2d = tape(t)%hlist(n,f)%field%num2d
     if ( is_mapping_upto_subgrid( type1d, type1d_out ) ) then
-       allocate (tape(t)%hlist(n)%hbuf(beg1d_out:end1d_out,num2d))
-       allocate (tape(t)%hlist(n)%nacs(beg1d_out:end1d_out,num2d))
+       allocate (tape(t)%hlist(n,f)%hbuf(beg1d_out:end1d_out,num2d))
+       allocate (tape(t)%hlist(n,f)%nacs(beg1d_out:end1d_out,num2d))
     else
-       allocate (tape(t)%hlist(n)%hbuf(beg1d:end1d,num2d))
-       allocate (tape(t)%hlist(n)%nacs(beg1d:end1d,num2d))
+       allocate (tape(t)%hlist(n,f)%hbuf(beg1d:end1d,num2d))
+       allocate (tape(t)%hlist(n,f)%nacs(beg1d:end1d,num2d))
     end if
-    tape(t)%hlist(n)%hbuf(:,:) = 0._r8
-    tape(t)%hlist(n)%nacs(:,:) = 0
+    tape(t)%hlist(n,f)%hbuf(:,:) = 0._r8
+    tape(t)%hlist(n,f)%nacs(:,:) = 0
 
     ! Set time averaging flag based on allhistfldlist setting or
     ! override the default averaging flag with namelist setting
@@ -1329,9 +1331,9 @@ contains
     end if
 
     if (avgflag == ' ') then
-       tape(t)%hlist(n)%avgflag = allhistfldlist(fld)%avgflag(t)
+       tape(t)%hlist(n,f)%avgflag = allhistfldlist(fld)%avgflag(t)
     else
-       tape(t)%hlist(n)%avgflag = avgflag
+       tape(t)%hlist(n,f)%avgflag = avgflag
     end if
 
     ! Override this tape's avgflag if nhtfrq == 1
@@ -1344,7 +1346,7 @@ contains
     ! - local time (L)
     avgflag_temp = hist_avgflag_pertape(t)
     if (avgflag_temp == 'I' .or. avgflag_temp(1:1) == 'L') then
-       tape(t)%hlist(n)%avgflag = avgflag_temp
+       tape(t)%hlist(n,f)%avgflag = avgflag_temp
     end if
 
   end subroutine htape_addfld
@@ -1374,13 +1376,13 @@ contains
 !$OMP PARALLEL DO PRIVATE (fld, num2d, numdims)
           do fld = 1, tape(t)%nflds(f)
 
-             numdims = tape(t)%hlist(fld)%field%numdims
+             numdims = tape(t)%hlist(fld,f)%field%numdims
 
              if ( numdims == 1) then
-                call hist_update_hbuf_field_1d (t, fld, bounds)
+                call hist_update_hbuf_field_1d (t, f, fld, bounds)
              else
-                num2d = tape(t)%hlist(fld)%field%num2d
-                call hist_update_hbuf_field_2d (t, fld, bounds, num2d)
+                num2d = tape(t)%hlist(fld,f)%field%num2d
+                call hist_update_hbuf_field_2d (t, f, fld, bounds, num2d)
              end if
           end do
 !$OMP END PARALLEL DO
@@ -1390,7 +1392,7 @@ contains
   end subroutine hist_update_hbuf
 
   !-----------------------------------------------------------------------
-  subroutine hist_update_hbuf_field_1d (t, fld, bounds)
+  subroutine hist_update_hbuf_field_1d (t, f, fld, bounds)
     !
     ! !DESCRIPTION:
     ! Accumulate (or take min, max, etc. as appropriate) input field
@@ -1407,6 +1409,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
+    integer, intent(in) :: f            ! file index
     integer, intent(in) :: fld          ! field index
     type(bounds_type), intent(in) :: bounds
     !
@@ -1447,19 +1450,19 @@ contains
 
     SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
-    avgflag        =  tape(t)%hlist(fld)%avgflag
-    nacs           => tape(t)%hlist(fld)%nacs
-    hbuf           => tape(t)%hlist(fld)%hbuf
-    beg1d          =  tape(t)%hlist(fld)%field%beg1d
-    end1d          =  tape(t)%hlist(fld)%field%end1d
-    beg1d_out      =  tape(t)%hlist(fld)%field%beg1d_out
-    end1d_out      =  tape(t)%hlist(fld)%field%end1d_out
-    type1d         =  tape(t)%hlist(fld)%field%type1d
-    type1d_out     =  tape(t)%hlist(fld)%field%type1d_out
-    p2c_scale_type =  tape(t)%hlist(fld)%field%p2c_scale_type
-    c2l_scale_type =  tape(t)%hlist(fld)%field%c2l_scale_type
-    l2g_scale_type =  tape(t)%hlist(fld)%field%l2g_scale_type
-    hpindex        =  tape(t)%hlist(fld)%field%hpindex
+    avgflag        =  tape(t)%hlist(fld,f)%avgflag
+    nacs           => tape(t)%hlist(fld,f)%nacs
+    hbuf           => tape(t)%hlist(fld,f)%hbuf
+    beg1d          =  tape(t)%hlist(fld,f)%field%beg1d
+    end1d          =  tape(t)%hlist(fld,f)%field%end1d
+    beg1d_out      =  tape(t)%hlist(fld,f)%field%beg1d_out
+    end1d_out      =  tape(t)%hlist(fld,f)%field%end1d_out
+    type1d         =  tape(t)%hlist(fld,f)%field%type1d
+    type1d_out     =  tape(t)%hlist(fld,f)%field%type1d_out
+    p2c_scale_type =  tape(t)%hlist(fld,f)%field%p2c_scale_type
+    c2l_scale_type =  tape(t)%hlist(fld,f)%field%c2l_scale_type
+    l2g_scale_type =  tape(t)%hlist(fld,f)%field%l2g_scale_type
+    hpindex        =  tape(t)%hlist(fld,f)%field%hpindex
     field          => clmptr_rs(hpindex)%ptr
 
     call get_curr_date (year, month, day, secs)
@@ -1753,7 +1756,7 @@ contains
   end subroutine hist_update_hbuf_field_1d
 
   !-----------------------------------------------------------------------
-  subroutine hist_update_hbuf_field_2d (t, fld, bounds, num2d)
+  subroutine hist_update_hbuf_field_2d (t, f, fld, bounds, num2d)
     !
     ! !DESCRIPTION:
     ! Accumulate (or take min, max, etc. as appropriate) input field
@@ -1771,6 +1774,7 @@ contains
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
+    integer, intent(in) :: f            ! file index
     integer, intent(in) :: fld          ! field index
     type(bounds_type), intent(in) :: bounds
     integer, intent(in) :: num2d        ! size of second dimension
@@ -1814,20 +1818,20 @@ contains
 
     SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
-    avgflag             =  tape(t)%hlist(fld)%avgflag
-    nacs                => tape(t)%hlist(fld)%nacs
-    hbuf                => tape(t)%hlist(fld)%hbuf
-    beg1d               =  tape(t)%hlist(fld)%field%beg1d
-    end1d               =  tape(t)%hlist(fld)%field%end1d
-    beg1d_out           =  tape(t)%hlist(fld)%field%beg1d_out
-    end1d_out           =  tape(t)%hlist(fld)%field%end1d_out
-    type1d              =  tape(t)%hlist(fld)%field%type1d
-    type1d_out          =  tape(t)%hlist(fld)%field%type1d_out
-    p2c_scale_type      =  tape(t)%hlist(fld)%field%p2c_scale_type
-    c2l_scale_type      =  tape(t)%hlist(fld)%field%c2l_scale_type
-    l2g_scale_type      =  tape(t)%hlist(fld)%field%l2g_scale_type
-    no_snow_behavior    =  tape(t)%hlist(fld)%field%no_snow_behavior
-    hpindex             =  tape(t)%hlist(fld)%field%hpindex
+    avgflag             =  tape(t)%hlist(fld,f)%avgflag
+    nacs                => tape(t)%hlist(fld,f)%nacs
+    hbuf                => tape(t)%hlist(fld,f)%hbuf
+    beg1d               =  tape(t)%hlist(fld,f)%field%beg1d
+    end1d               =  tape(t)%hlist(fld,f)%field%end1d
+    beg1d_out           =  tape(t)%hlist(fld,f)%field%beg1d_out
+    end1d_out           =  tape(t)%hlist(fld,f)%field%end1d_out
+    type1d              =  tape(t)%hlist(fld,f)%field%type1d
+    type1d_out          =  tape(t)%hlist(fld,f)%field%type1d_out
+    p2c_scale_type      =  tape(t)%hlist(fld,f)%field%p2c_scale_type
+    c2l_scale_type      =  tape(t)%hlist(fld,f)%field%c2l_scale_type
+    l2g_scale_type      =  tape(t)%hlist(fld,f)%field%l2g_scale_type
+    no_snow_behavior    =  tape(t)%hlist(fld,f)%field%no_snow_behavior
+    hpindex             =  tape(t)%hlist(fld,f)%field%hpindex
 
     call get_curr_date (year, month, day, secs)
 
@@ -2315,17 +2319,17 @@ contains
     ! Normalize by number of accumulations for time averaged case
 
     do fld = 1, tape(t)%nflds(f)
-       avgflag = tape(t)%hlist(fld)%avgflag
-       if ( is_mapping_upto_subgrid(tape(t)%hlist(fld)%field%type1d, tape(t)%hlist(fld)%field%type1d_out) )then
-          beg1d = tape(t)%hlist(fld)%field%beg1d_out
-          end1d = tape(t)%hlist(fld)%field%end1d_out
+       avgflag = tape(t)%hlist(fld,f)%avgflag
+       if ( is_mapping_upto_subgrid(tape(t)%hlist(fld,f)%field%type1d, tape(t)%hlist(fld,f)%field%type1d_out) )then
+          beg1d = tape(t)%hlist(fld,f)%field%beg1d_out
+          end1d = tape(t)%hlist(fld,f)%field%end1d_out
        else
-          beg1d = tape(t)%hlist(fld)%field%beg1d
-          end1d = tape(t)%hlist(fld)%field%end1d
+          beg1d = tape(t)%hlist(fld,f)%field%beg1d
+          end1d = tape(t)%hlist(fld,f)%field%end1d
        end if
-       num2d =  tape(t)%hlist(fld)%field%num2d
-       nacs  => tape(t)%hlist(fld)%nacs
-       hbuf  => tape(t)%hlist(fld)%hbuf
+       num2d =  tape(t)%hlist(fld,f)%field%num2d
+       nacs  => tape(t)%hlist(fld,f)%nacs
+       hbuf  => tape(t)%hlist(fld,f)%hbuf
 
        if (avgflag == 'A' .or. avgflag(1:1) == 'L') then
           aflag = .true.
@@ -2363,8 +2367,8 @@ contains
     !-----------------------------------------------------------------------
 
     do fld = 1,tape(t)%nflds(f)
-       tape(t)%hlist(fld)%hbuf(:,:) = 0._r8
-       tape(t)%hlist(fld)%nacs(:,:) = 0
+       tape(t)%hlist(fld,f)%hbuf(:,:) = 0._r8
+       tape(t)%hlist(fld,f)%nacs(:,:) = 0
     end do
 
   end subroutine hfields_zero
@@ -3683,21 +3687,21 @@ contains
 
        ! Set history field variables
 
-       varname        = tape(t)%hlist(fld)%field%name
-       long_name      = tape(t)%hlist(fld)%field%long_name
-       units          = tape(t)%hlist(fld)%field%units
-       avgflag        = tape(t)%hlist(fld)%avgflag
-       type1d         = tape(t)%hlist(fld)%field%type1d
-       type1d_out     = tape(t)%hlist(fld)%field%type1d_out
-       beg1d          = tape(t)%hlist(fld)%field%beg1d
-       end1d          = tape(t)%hlist(fld)%field%end1d
-       beg1d_out      = tape(t)%hlist(fld)%field%beg1d_out
-       end1d_out      = tape(t)%hlist(fld)%field%end1d_out
-       num1d_out      = tape(t)%hlist(fld)%field%num1d_out
-       type2d         = tape(t)%hlist(fld)%field%type2d
-       numdims        = tape(t)%hlist(fld)%field%numdims
-       num2d          = tape(t)%hlist(fld)%field%num2d
-       l2g_scale_type = tape(t)%hlist(fld)%field%l2g_scale_type
+       varname        = tape(t)%hlist(fld,f)%field%name
+       long_name      = tape(t)%hlist(fld,f)%field%long_name
+       units          = tape(t)%hlist(fld,f)%field%units
+       avgflag        = tape(t)%hlist(fld,f)%avgflag
+       type1d         = tape(t)%hlist(fld,f)%field%type1d
+       type1d_out     = tape(t)%hlist(fld,f)%field%type1d_out
+       beg1d          = tape(t)%hlist(fld,f)%field%beg1d
+       end1d          = tape(t)%hlist(fld,f)%field%end1d
+       beg1d_out      = tape(t)%hlist(fld,f)%field%beg1d_out
+       end1d_out      = tape(t)%hlist(fld,f)%field%end1d_out
+       num1d_out      = tape(t)%hlist(fld,f)%field%num1d_out
+       type2d         = tape(t)%hlist(fld,f)%field%type2d
+       numdims        = tape(t)%hlist(fld,f)%field%numdims
+       num2d          = tape(t)%hlist(fld,f)%field%num2d
+       l2g_scale_type = tape(t)%hlist(fld,f)%field%l2g_scale_type
        nt             = tape(t)%ntimes(f)
 
        if (mode == 'define') then
@@ -3768,7 +3772,7 @@ contains
 
           ! Determine output buffer
 
-          histo => tape(t)%hlist(fld)%hbuf
+          histo => tape(t)%hlist(fld,f)%hbuf
 
           ! Allocate dynamic memory
 
@@ -4222,7 +4226,7 @@ contains
              cycle
           end if
 
-          ! 13) TODO NEXT is_endhist may need file dimension
+          ! 14) TODO NEXT is_endhist may need file dimension
           ! Determine if end of history interval
           tape(t)%is_endhist = .false.
           if (tape(t)%nhtfrq==0) then   !monthly average
@@ -4548,17 +4552,17 @@ contains
              ! Add read/write accumultators and counters if needed
              not_endhist: if (.not. tape(t)%is_endhist) then
                 fld_loop1: do fld = 1, tape(t)%nflds(f)
-                   name           =  tape(t)%hlist(fld)%field%name
-                   long_name      =  tape(t)%hlist(fld)%field%long_name
-                   units          =  tape(t)%hlist(fld)%field%units
+                   name           =  tape(t)%hlist(fld,f)%field%name
+                   long_name      =  tape(t)%hlist(fld,f)%field%long_name
+                   units          =  tape(t)%hlist(fld,f)%field%units
                    name_acc       =  trim(name) // "_acc"
                    units_acc      =  "unitless positive integer"
                    long_name_acc  =  trim(long_name) // " accumulator number of samples"
-                   type1d_out     =  tape(t)%hlist(fld)%field%type1d_out
-                   type2d         =  tape(t)%hlist(fld)%field%type2d
-                   num2d          =  tape(t)%hlist(fld)%field%num2d
-                   nacs           => tape(t)%hlist(fld)%nacs
-                   hbuf           => tape(t)%hlist(fld)%hbuf
+                   type1d_out     =  tape(t)%hlist(fld,f)%field%type1d_out
+                   type2d         =  tape(t)%hlist(fld,f)%field%type2d
+                   num2d          =  tape(t)%hlist(fld,f)%field%num2d
+                   nacs           => tape(t)%hlist(fld,f)%nacs
+                   hbuf           => tape(t)%hlist(fld,f)%hbuf
 
                    if (type1d_out == grlnd) then
                       if (ldomain%isgrid2d) then
@@ -4776,13 +4780,13 @@ contains
 
              itemp(:) = 0
              do fld = 1, tape(t)%nflds(f)
-                itemp(fld) = tape(t)%hlist(fld)%field%num2d
+                itemp(fld) = tape(t)%hlist(fld,f)%field%num2d
              end do
              call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t,f), flag='write')
 
              itemp(:) = 0
              do fld = 1, tape(t)%nflds(f)
-                itemp(fld) = tape(t)%hlist(fld)%field%hpindex
+                itemp(fld) = tape(t)%hlist(fld,f)%field%hpindex
              end do
              call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t,f), flag='write')
 
@@ -4797,16 +4801,16 @@ contains
                   p2c_scale_type(tape(t)%nflds(f)), c2l_scale_type(tape(t)%nflds(f)), &
                   l2g_scale_type(tape(t)%nflds(f)))
              do fld = 1, tape(t)%nflds(f)
-                tname(fld)  = tape(t)%hlist(fld)%field%name
-                tunits(fld) = tape(t)%hlist(fld)%field%units
-                tlongname(fld) = tape(t)%hlist(fld)%field%long_name
-                tmpstr(fld,1) = tape(t)%hlist(fld)%field%type1d
-                tmpstr(fld,2) = tape(t)%hlist(fld)%field%type1d_out
-                tmpstr(fld,3) = tape(t)%hlist(fld)%field%type2d
-                tavgflag(fld) = tape(t)%hlist(fld)%avgflag
-                p2c_scale_type(fld) = tape(t)%hlist(fld)%field%p2c_scale_type
-                c2l_scale_type(fld) = tape(t)%hlist(fld)%field%c2l_scale_type
-                l2g_scale_type(fld) = tape(t)%hlist(fld)%field%l2g_scale_type
+                tname(fld)  = tape(t)%hlist(fld,f)%field%name
+                tunits(fld) = tape(t)%hlist(fld,f)%field%units
+                tlongname(fld) = tape(t)%hlist(fld,f)%field%long_name
+                tmpstr(fld,1) = tape(t)%hlist(fld,f)%field%type1d
+                tmpstr(fld,2) = tape(t)%hlist(fld,f)%field%type1d_out
+                tmpstr(fld,3) = tape(t)%hlist(fld,f)%field%type2d
+                tavgflag(fld) = tape(t)%hlist(fld,f)%avgflag
+                p2c_scale_type(fld) = tape(t)%hlist(fld,f)%field%p2c_scale_type
+                c2l_scale_type(fld) = tape(t)%hlist(fld,f)%field%c2l_scale_type
+                l2g_scale_type(fld) = tape(t)%hlist(fld,f)%field%l2g_scale_type
              end do
              call ncd_io( 'name', tname, 'write',ncid_hist(t,f))
              call ncd_io('long_name', tlongname, 'write', ncid_hist(t,f))
@@ -4934,48 +4938,48 @@ contains
                 call ncd_io(varname='dov2xy', data=tape(t)%dov2xy, ncid=ncid_hist(t,f), flag='read')
                 call ncd_io(varname='num2d', data=itemp(:), ncid=ncid_hist(t,f), flag='read')
                 do fld = 1, tape(t)%nflds(f)
-                   tape(t)%hlist(fld)%field%num2d = itemp(fld)
+                   tape(t)%hlist(fld,f)%field%num2d = itemp(fld)
                 end do
 
                 call ncd_io(varname='hpindex', data=itemp(:), ncid=ncid_hist(t,f), flag='read')
                 do fld = 1, tape(t)%nflds(f)
-                   tape(t)%hlist(fld)%field%hpindex = itemp(fld)
+                   tape(t)%hlist(fld,f)%field%hpindex = itemp(fld)
                 end do
 
                 fld_loop2: do fld = 1, tape(t)%nflds(f)
                    start(2) = fld
-                   call ncd_io( name_desc,           tape(t)%hlist(fld)%field%name,       &
+                   call ncd_io( name_desc,           tape(t)%hlist(fld,f)%field%name,       &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( longname_desc,       tape(t)%hlist(fld)%field%long_name,  &
+                   call ncd_io( longname_desc,       tape(t)%hlist(fld,f)%field%long_name,  &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( units_desc,          tape(t)%hlist(fld)%field%units,      &
+                   call ncd_io( units_desc,          tape(t)%hlist(fld,f)%field%units,      &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( type1d_desc,         tape(t)%hlist(fld)%field%type1d,     &
+                   call ncd_io( type1d_desc,         tape(t)%hlist(fld,f)%field%type1d,     &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( type1d_out_desc,     tape(t)%hlist(fld)%field%type1d_out, &
+                   call ncd_io( type1d_out_desc,     tape(t)%hlist(fld,f)%field%type1d_out, &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( type2d_desc,         tape(t)%hlist(fld)%field%type2d,     &
+                   call ncd_io( type2d_desc,         tape(t)%hlist(fld,f)%field%type2d,     &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( avgflag_desc,        tape(t)%hlist(fld)%avgflag,          &
+                   call ncd_io( avgflag_desc,        tape(t)%hlist(fld,f)%avgflag,          &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( p2c_scale_type_desc, tape(t)%hlist(fld)%field%p2c_scale_type,   &
+                   call ncd_io( p2c_scale_type_desc, tape(t)%hlist(fld,f)%field%p2c_scale_type,   &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( c2l_scale_type_desc, tape(t)%hlist(fld)%field%c2l_scale_type,   &
+                   call ncd_io( c2l_scale_type_desc, tape(t)%hlist(fld,f)%field%c2l_scale_type,   &
                                 'read', ncid_hist(t,f), start )
-                   call ncd_io( l2g_scale_type_desc, tape(t)%hlist(fld)%field%l2g_scale_type,   &
+                   call ncd_io( l2g_scale_type_desc, tape(t)%hlist(fld,f)%field%l2g_scale_type,   &
                                 'read', ncid_hist(t,f), start )
-                   call strip_null(tape(t)%hlist(fld)%field%name)
-                   call strip_null(tape(t)%hlist(fld)%field%long_name)
-                   call strip_null(tape(t)%hlist(fld)%field%units)
-                   call strip_null(tape(t)%hlist(fld)%field%type1d)
-                   call strip_null(tape(t)%hlist(fld)%field%type1d_out)
-                   call strip_null(tape(t)%hlist(fld)%field%type2d)
-                   call strip_null(tape(t)%hlist(fld)%field%p2c_scale_type)
-                   call strip_null(tape(t)%hlist(fld)%field%c2l_scale_type)
-                   call strip_null(tape(t)%hlist(fld)%field%l2g_scale_type)
-                   call strip_null(tape(t)%hlist(fld)%avgflag)
+                   call strip_null(tape(t)%hlist(fld,f)%field%name)
+                   call strip_null(tape(t)%hlist(fld,f)%field%long_name)
+                   call strip_null(tape(t)%hlist(fld,f)%field%units)
+                   call strip_null(tape(t)%hlist(fld,f)%field%type1d)
+                   call strip_null(tape(t)%hlist(fld,f)%field%type1d_out)
+                   call strip_null(tape(t)%hlist(fld,f)%field%type2d)
+                   call strip_null(tape(t)%hlist(fld,f)%field%p2c_scale_type)
+                   call strip_null(tape(t)%hlist(fld,f)%field%c2l_scale_type)
+                   call strip_null(tape(t)%hlist(fld,f)%field%l2g_scale_type)
+                   call strip_null(tape(t)%hlist(fld,f)%avgflag)
 
-                   type1d_out = trim(tape(t)%hlist(fld)%field%type1d_out)
+                   type1d_out = trim(tape(t)%hlist(fld,f)%field%type1d_out)
                    select case (trim(type1d_out))
                    case (grlnd)
                       num1d_out = numg
@@ -5002,22 +5006,22 @@ contains
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    end select
 
-                   tape(t)%hlist(fld)%field%num1d_out = num1d_out
-                   tape(t)%hlist(fld)%field%beg1d_out = beg1d_out
-                   tape(t)%hlist(fld)%field%end1d_out = end1d_out
+                   tape(t)%hlist(fld,f)%field%num1d_out = num1d_out
+                   tape(t)%hlist(fld,f)%field%beg1d_out = beg1d_out
+                   tape(t)%hlist(fld,f)%field%end1d_out = end1d_out
 
-                   num2d  = tape(t)%hlist(fld)%field%num2d
-                   allocate (tape(t)%hlist(fld)%hbuf(beg1d_out:end1d_out,num2d), &
-                             tape(t)%hlist(fld)%nacs(beg1d_out:end1d_out,num2d), &
+                   num2d  = tape(t)%hlist(fld,f)%field%num2d
+                   allocate (tape(t)%hlist(fld,f)%hbuf(beg1d_out:end1d_out,num2d), &
+                             tape(t)%hlist(fld,f)%nacs(beg1d_out:end1d_out,num2d), &
                              stat=status)
                    if (status /= 0) then
                       write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    endif
-                   tape(t)%hlist(fld)%hbuf(:,:) = 0._r8
-                   tape(t)%hlist(fld)%nacs(:,:) = 0
+                   tape(t)%hlist(fld,f)%hbuf(:,:) = 0._r8
+                   tape(t)%hlist(fld,f)%nacs(:,:) = 0
 
-                   type1d = tape(t)%hlist(fld)%field%type1d
+                   type1d = tape(t)%hlist(fld,f)%field%type1d
                    select case (type1d)
                    case (grlnd)
                       num1d = numg
@@ -5044,9 +5048,9 @@ contains
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    end select
 
-                   tape(t)%hlist(fld)%field%num1d = num1d
-                   tape(t)%hlist(fld)%field%beg1d = beg1d
-                   tape(t)%hlist(fld)%field%end1d = end1d
+                   tape(t)%hlist(fld,f)%field%num1d = num1d
+                   tape(t)%hlist(fld,f)%field%beg1d = beg1d
+                   tape(t)%hlist(fld,f)%field%end1d = end1d
 
                 end do fld_loop2
 
@@ -5106,15 +5110,15 @@ contains
              if (.not. tape(t)%is_endhist) then
 
                 fld_loop3: do fld = 1, tape(t)%nflds(f)
-                   name       =  tape(t)%hlist(fld)%field%name
+                   name       =  tape(t)%hlist(fld,f)%field%name
                    name_acc   =  trim(name) // "_acc"
-                   type1d_out =  tape(t)%hlist(fld)%field%type1d_out
-                   type2d     =  tape(t)%hlist(fld)%field%type2d
-                   num2d      =  tape(t)%hlist(fld)%field%num2d
-                   beg1d_out  =  tape(t)%hlist(fld)%field%beg1d_out
-                   end1d_out  =  tape(t)%hlist(fld)%field%end1d_out
-                   nacs       => tape(t)%hlist(fld)%nacs
-                   hbuf       => tape(t)%hlist(fld)%hbuf
+                   type1d_out =  tape(t)%hlist(fld,f)%field%type1d_out
+                   type2d     =  tape(t)%hlist(fld,f)%field%type2d
+                   num2d      =  tape(t)%hlist(fld,f)%field%num2d
+                   beg1d_out  =  tape(t)%hlist(fld,f)%field%beg1d_out
+                   end1d_out  =  tape(t)%hlist(fld,f)%field%end1d_out
+                   nacs       => tape(t)%hlist(fld,f)%nacs
+                   hbuf       => tape(t)%hlist(fld,f)%hbuf
 
                    if (num2d == 1) then
                       allocate(hbuf1d(beg1d_out:end1d_out), &
@@ -5163,15 +5167,15 @@ contains
              if (.not. tape(t)%is_endhist) then
 
                 fld_loop4: do fld = 1, tape(t)%nflds(f)
-                   name       =  tape(t)%hlist(fld)%field%name
+                   name       =  tape(t)%hlist(fld,f)%field%name
                    name_acc   =  trim(name) // "_acc"
-                   type1d_out =  tape(t)%hlist(fld)%field%type1d_out
-                   type2d     =  tape(t)%hlist(fld)%field%type2d
-                   num2d      =  tape(t)%hlist(fld)%field%num2d
-                   beg1d_out  =  tape(t)%hlist(fld)%field%beg1d_out
-                   end1d_out  =  tape(t)%hlist(fld)%field%end1d_out
-                   nacs       => tape(t)%hlist(fld)%nacs
-                   hbuf       => tape(t)%hlist(fld)%hbuf
+                   type1d_out =  tape(t)%hlist(fld,f)%field%type1d_out
+                   type2d     =  tape(t)%hlist(fld,f)%field%type2d
+                   num2d      =  tape(t)%hlist(fld,f)%field%num2d
+                   beg1d_out  =  tape(t)%hlist(fld,f)%field%beg1d_out
+                   end1d_out  =  tape(t)%hlist(fld,f)%field%end1d_out
+                   nacs       => tape(t)%hlist(fld,f)%nacs
+                   hbuf       => tape(t)%hlist(fld,f)%hbuf
 
                    if (num2d == 1) then
                       allocate(hbuf1d(beg1d_out:end1d_out), &
