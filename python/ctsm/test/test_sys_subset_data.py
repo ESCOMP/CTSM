@@ -16,6 +16,7 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pard
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
+from ctsm import unit_testing
 from ctsm import subset_data
 
 
@@ -146,3 +147,8 @@ class TestSubsetDataSys(unittest.TestCase):
             RuntimeError, r"File lon type \(360\) doesn't match boundary lon type \(180\)"
         ):
             subset_data.main()
+
+
+if __name__ == "__main__":
+    unit_testing.setup_for_tests()
+    unittest.main()
