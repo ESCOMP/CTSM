@@ -7,7 +7,7 @@ module FATESFireNoDataMod
   ! module for FATES when not obtaining fire inputs from data
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_log_mod, only: errmsg => shr_log_errMsg
   use abortutils, only: endrun
   use clm_varctl, only: iulog

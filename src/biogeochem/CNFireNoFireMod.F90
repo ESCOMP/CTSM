@@ -7,7 +7,7 @@ module CNFireNoFireMod
   ! module for fire dynamics with fire explicitly turned off
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
   use abortutils                         , only : endrun
   use clm_varctl                         , only : iulog
   use decompMod                          , only : bounds_type

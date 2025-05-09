@@ -18,7 +18,7 @@ module lnd_set_decomp_and_domain
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc, mpicom
-  use clm_varctl   , only : iulog, inst_suffix
+  use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
 
   implicit none
@@ -452,7 +452,7 @@ contains
     real(r8)               :: fmaxval = 1._r8
     logical                :: lexist
     logical                :: checkflag = .false.
-    character(len=CL)      :: flandfrac
+    character(len=FL)      :: flandfrac
     character(len=CL)      :: flandfrac_status
     !-------------------------------------------------------------------------------
 

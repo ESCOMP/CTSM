@@ -612,9 +612,9 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('radiation_model',ival=pass_radiation_model)
 
         if (trim(fates_electron_transport_model) == 'FvCB1980') then
-           pass_radiation_model = 1
+           pass_electron_transport_model = 1
         else if (trim(fates_electron_transport_model) == 'JohnsonBerry2021') then
-           pass_radiation_model = 2
+           pass_electron_transport_model = 2
         end if
         call set_fates_ctrlparms('electron_transport_model',ival=pass_electron_transport_model)
 
