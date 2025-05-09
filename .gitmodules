@@ -70,7 +70,7 @@ path = ccs_config
 #url = https://github.com/ESMCI/ccs_config_cesm.git
 url = https://github.com/ekluzek/ccs_config_cesm.git
 #fxtag = ccs_config_cesm1.0.32
-fxtag = 825e7cff825757402bc0cd55a81469b90b42d58f
+fxtag = 7d3ec3485a6a59107851dafdb203669128cb73b1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
