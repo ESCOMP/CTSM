@@ -1227,21 +1227,7 @@ contains
        ! Determine albedos for next time step
        ! ============================================================================
        
-       if (.not.doalb) then
-
-
-          if(use_fates) then
-             ! During branch runs and non continue_run restarts, the doalb flag
-             ! does not trigger correctly for fates runs (and non-fates?), and thus
-             ! the zenith angles are not calculated and ready when radiation scattering
-             ! needs to occur.
-             call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
-             call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
-                  water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
-                  surfalb_inst)
-          end if
-          
-       else
+       if (doalb) then
 
           ! Albedos for non-urban columns
           call t_startf('surfalb')
