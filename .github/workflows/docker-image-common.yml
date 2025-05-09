@@ -1,0 +1,83 @@
+name: Workflow used by docker-image workflows
+
+on:
+  workflow_call:
+    outputs:
+      REGISTRY:
+        description: "Container registry"
+        value: ${{ jobs.build-image-and-test-docs.outputs.REGISTRY }}
+      IMAGE_NAME:
+        description: "Docker image name"
+        value: ${{ jobs.build-image-and-test-docs.outputs.IMAGE_NAME }}
+      image_tag:
+        description: "First image tag"
+        value: ${{ jobs.build-image-and-test-docs.outputs.image_tag }}
+
+# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}/ctsm-docs
+
+# There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
+jobs:
+  build-image-and-test-docs:
+    runs-on: ubuntu-latest
+    # Variables that might be needed by the calling workflow
+    outputs:
+      REGISTRY: ${{ env.REGISTRY }}
+      IMAGE_NAME: ${{ env.IMAGE_NAME }}
+      image_tag: ${{ steps.set-image-tag.outputs.IMAGE_TAG }}
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Uses the `docker/login-action` action to log in to the Container registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      # This step uses the `docker/build-push-action` action to build the image, based on the ctsm-docs `Dockerfile`.
+      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see [Usage](https://github.com/docker/build-push-action#usage) in the README of the `docker/build-push-action` repository.
+      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
+      # v6.15.0
+      - name: Build Docker image
+        id: build-image
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4
+        with:
+          context: doc/ctsm-docs_container
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # Try building our docs using the new container
+      - name: Checkout doc-builder external
+        run: |
+          bin/git-fleximod update doc-builder
+      - name: Set image tag for docs build
+        id: set-image-tag
+        run: |
+          echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_OUTPUT
+      - name: Build docs using container
+        id: build-docs
+        run: |
+          cd doc && ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG

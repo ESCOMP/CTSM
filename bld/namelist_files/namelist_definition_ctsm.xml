@@ -2959,6 +2959,16 @@ SwensonLawrence2012: Swenson and Lawrence 2012
 Parameterization to use for snow thermal conductivity
 </entry>
 
+<entry id="snow_thermal_cond_glc_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over glacier land units
+</entry>
+
+<entry id="snow_thermal_cond_lake_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over lake land units
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to water tracers                                                 -->
 <!-- ========================================================================================  -->
