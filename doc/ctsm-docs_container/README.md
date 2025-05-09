@@ -1,6 +1,10 @@
 # The ctsm-docs container
 This directory and its Dockerfile are used to build a Docker container for building the CTSM documentation. Unless you're a developer working on the container, you probably don't need to care about anything in here.
 
+## Introduction
+
+This Readme tells you how to update the ctsm-docs Docker container if a need to do so arises—for example, adding a Python module that brings new functionality in the build. After you've followed all these instructions, you will probably want to push an update to [doc-builder](https://github.com/ESMCI/doc-builder) that updates `DEFAULT_DOCKER_IMAGE` in [build_commands.py](https://github.com/ESMCI/doc-builder/blob/master/doc_builder/build_commands.py) to point to the new tag.
+
 ## Building
 
 If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`continerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
@@ -15,7 +19,7 @@ ghcr.io/escomp/ctsm/ctsm-docs   latest       ab51446519a4   3 seconds ago   233M
 ...
 ```
 
-Then change the value of `default_docker_image` in `doc_builder/build_commands.py` to the listed `IMAGE ID`.
+To test, you can tell `build_docs` to use your new version by adding `--docker-image IMAGE_ID` to your call, where in the example above `IMAGE_ID` is `ab51446519a4`.
 
 ## Publishing
 
@@ -45,7 +49,7 @@ docker push ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
 Then browse to the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs) to make sure this all worked and the image is public.
 
 ### Updating doc-builder
-Since you've updated the container, you will need to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `default_docker_image` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
+Since you've updated the container, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_DOCKER_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
 
 ## See also
 
