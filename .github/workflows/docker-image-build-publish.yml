@@ -1,4 +1,4 @@
-# Based on https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#publishing-a-package-using-an-action
+# Based on https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#publishing-a-package-using-an-action (last accessed 2025-05-09)
 name: Build and publish ctsm-docs Docker image
 
 on:
