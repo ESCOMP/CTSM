@@ -1,4 +1,87 @@
 ===============================================================
+Tag name: ctsm5.3.042
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu May  8 16:15:48 MDT 2025
+One-line Summary: Update FATES tag, tests and address namelist option bug
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the FatesColdAllVars test list due to changes in the FATES
+history output associated with ngeet/fates#1252, which is coordinated with this update.
+A bug in which the incorrect control variable was being sent to FATES for a recently
+added namelist options has been addressed.  The NEON-FATES-NIWO tests have also been
+addressed through the update of the FATES tag which includes fixes brought in with
+ngeet/fates#1376.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #3052: Update FatesColdAllVars history output with recent additions](https://github.com/ESCOMP/CTSM/issues/3052)
+- [Issue #3038: NEON-FATES-NIWO test in aux_clm fails RUN](https://github.com/ESCOMP/CTSM/issues/3038)
+- [Issue #3062: Incorrect value being set for FATES electron transport namelist option](https://github.com/ESCOMP/CTSM/issues/3062)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  The PEM seed dispersal test is now failing RUN, where it was previously failing COMPARE_base_modpes.
+  This has been added to the expected failures and has been documented in a new issue, [#3097](https://github.com/ESCOMP/CTSM/issues/3097).
+  This issue is associated with updates that came in previously with ctsm5.3.041.
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Notes:
+- All tests resulted in expected st_archive exception due to known issue [#3098](https://github.com/ESCOMP/CTSM/issues/3098)
+- Due to permission issues, the izumi aux_clm tests were run against ctsm5.3.040 baselines.  This was deemed acceptable since ctsm5.3.041 is a b4b tag
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for FATES tests
+  This is due to updating the fates tag which includes a number of bug fixes and science updates
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.82.3_api.39.0.0 -> sci.1.83.1_api.39.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/3058
+https://github.com/ESCOMP/CTSM/pull/3063
+https://github.com/NGEET/fates/pull/1252
+https://github.com/NGEET/fates/pull/1376
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.041
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Apr 25 08:02:37 MDT 2025
