@@ -36,7 +36,7 @@ fxDONOTUSEurl = https://github.com/NGEET/fates
 [submodule "cism"]
 path = components/cism
 url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_005
+fxtag = cismwrap_2_2_006
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
@@ -69,8 +69,8 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 path = ccs_config
 #url = https://github.com/ESMCI/ccs_config_cesm.git
 url = https://github.com/ekluzek/ccs_config_cesm.git
-#fxtag = ccs_config_cesm1.0.32
-fxtag = 7d3ec3485a6a59107851dafdb203669128cb73b1
+#fxtag = ccs_config_cesm1.0.40
+fxtag = b7a48e6de2681b30ef031346211550b6bbed224f
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -78,7 +78,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 path = cime
 url = https://github.com/ESMCI/cime
-fxtag = cime6.1.72
+fxtag = cime6.1.93
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -86,7 +86,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.0.39
+fxtag = cmeps1.0.47
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -94,7 +94,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.70
+fxtag = cdeps1.0.73
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
@@ -110,7 +110,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
 [submodule "parallelio"]
 path = libraries/parallelio
 url = https://github.com/NCAR/ParallelIO
-fxtag = pio2_6_3
+fxtag = pio2_6_4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
@@ -118,7 +118,7 @@ fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
 [submodule "mpi-serial"]
 path = libraries/mpi-serial
 url = https://github.com/ESMCI/mpi-serial
-fxtag = MPIserial_2.5.1
+fxtag = MPIserial_2.5.4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
