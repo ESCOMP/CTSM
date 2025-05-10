@@ -148,7 +148,7 @@ module histFileMod
        fexcl(max_flds,max_tapes)         ! copy of hist_fexcl* fields in 2-D format. Note Fortran
                                          ! used to have a bug in 2-D namelists, thus this workaround.
 
-  logical, private :: if_disphist(max_tapes)   ! restart, true => save history file
+  logical, private :: if_disphist(max_tapes, maxsplitfiles)  ! restart, true => save history file
   !
   ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
   public :: hist_addfld1d        ! Add a 1d single-level field to the list of all history fields
@@ -1222,7 +1222,6 @@ contains
     ! Copy field information
 
     tape(t)%hlist(n,f)%field = allhistfldlist(fld)%field
-    write(iulog,*) 'field, t, f, n, fld', tape(t)%hlist(n,f)%field, t, f, n
 
     ! Determine bounds
 
@@ -4252,7 +4251,6 @@ contains
              ! If first time sample, generate unique history file name, open file,
              ! define dims, vars, etc.
 
-
              if (tape(t)%ntimes(f) == 1) then
                 call t_startf('hist_htapes_wrapup_define')
                 ! 2) TODO DONE Changed locfnh(t) to locfnh(t,f) throughout
@@ -4325,7 +4323,7 @@ contains
     ! Determine if file needs to be closed
 
     file_loop1b: do f = 1, maxsplitfiles
-       call hist_do_disp (ntapes, tape(:)%ntimes(f), tape(:)%mfilt, if_stop, if_disphist, rstwr, nlend)
+       call hist_do_disp (ntapes, tape(:)%ntimes(f), tape(:)%mfilt, if_stop, if_disphist(:,f), rstwr, nlend)
     end do file_loop1b
 
     ! Close open history file
@@ -4338,7 +4336,7 @@ contains
              cycle
           end if
 
-          if (if_disphist(t)) then
+          if (if_disphist(t,f)) then
              if (tape(t)%ntimes(f) /= 0) then
                 if (masterproc) then
                    write(iulog,*)
@@ -4369,7 +4367,7 @@ contains
              cycle
           end if
 
-          if (if_disphist(t) .and. tape(t)%ntimes(f)==tape(t)%mfilt) then
+          if (if_disphist(t,f) .and. tape(t)%ntimes(f)==tape(t)%mfilt) then
              tape(t)%ntimes(f) = 0
           end if
        end do
@@ -4476,7 +4474,7 @@ contains
     if (flag == 'read') then
        if (nsrest == nsrBranch) then
           do t = 1,ntapes
-             tape(t)%ntimes(f) = 0
+             tape(t)%ntimes(:) = 0
           end do
           return
        end if
