@@ -2190,11 +2190,8 @@ sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_method' );
-
-  my $var = $nl->get_value('snow_thermal_cond_method');
-  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
-    $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_method; expected Jordan1991 or Sturm1997");
-  }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_glc_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_lake_method' );
 
   my $numrad_snw = $nl->get_value('snicar_numrad_snw');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics',
@@ -4073,7 +4070,16 @@ sub setup_logic_fire_emis {
         if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
           $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
                       "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
-       }
+        } elsif ( ! &value_is_true( $nl_flags->{'use_cn'} ) ) {
+          $log->fatal_error("Fire emission option $var can NOT be on when BGC SP (i.e. Satellite Phenology) is also on.\n" .
+                           "  DON'T use the '--fire_emis' option when '--bgc sp' is activated");
+        } elsif ( &value_is_true( $nl_flags->{'use_cn'}) ) {
+          my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+          if ( $fire_method eq "nofire" ) {
+             $log->fatal_error("Fire emission option $var can NOT be on with BGC and fire_method=='nofire'.\n" .
+                              "  DON'T use the '--fire_emis' option when fire_method is nofire");
+          }
+        }
      }
    }
 }
@@ -4236,7 +4242,7 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
+  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl_flags->{'use_fates_sp'}) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -4746,29 +4752,26 @@ sub setup_logic_fates {
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
-        my $var = "use_fates_sp";
-        if ( defined($nl->get_value($var))  ) {
-           if ( &value_is_true($nl->get_value($var)) ) {
-              my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
-              foreach my $var ( @list ) {
-                 if ( ! &value_is_true($nl->get_value($var)) ) {
-                    $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
-                 }
-              }
-              # spit-fire can't be on with FATES SP mode is active
-              if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
-                    $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
-              }
+        if ( &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+           my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
+           foreach my $var ( @list ) {
+                if ( ! &value_is_true($nl->get_value($var)) ) {
+                   $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
+                }
+           }
+           # spit-fire can't be on with FATES SP mode is active
+           if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
+                 $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
+           }
 
-              # fates landuse can't be on with FATES SP mode is active
-              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
-                   $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
-              }
+           # fates landuse can't be on with FATES SP mode is active
+           if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+           }
 
-              # hydro isn't currently supported to work when FATES SP mode is active
-              if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
-                    $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
-              }
+           # hydro isn't currently supported to work when FATES SP mode is active
+           if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
+                 $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
            }
         }
         my $var = "use_fates_inventory_init";
@@ -4792,6 +4795,13 @@ sub setup_logic_fates {
               }
             }
           }
+        }
+        # Check that both FaTES-SP and FATES ST3 aren't both on
+        my $var = "use_fates_ed_st3";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) && &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+              $log->fatal_error("$var can NOT also be true with use_fates_sp true" );
+           }
         }
         # check that fates landuse change mode has the necessary luh2 landuse timeseries data
         # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.

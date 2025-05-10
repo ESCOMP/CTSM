@@ -7,7 +7,9 @@ module CNFireNoFireMod
   ! module for fire dynamics with fire explicitly turned off
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
+  use abortutils                         , only : endrun
+  use clm_varctl                         , only : iulog
   use decompMod                          , only : bounds_type
   use atm2lndType                        , only : atm2lnd_type
   use CNVegStateType                     , only : cnveg_state_type
@@ -36,9 +38,14 @@ module CNFireNoFireMod
   contains
     !
     ! !PUBLIC MEMBER FUNCTIONS:
-    procedure, public :: need_lightning_and_popdens
-    procedure, public :: CNFireArea    ! Calculate fire area
+    procedure, public :: need_lightning_and_popdens  ! If need lightning and/or population density (always .false. here)
+    procedure, public :: NoFireInit                  ! Initiialization
+    procedure, public :: FireInit => NoFireInit      ! Initiialization
+    procedure, public :: CNFireArea                  ! Calculate fire area
   end type cnfire_nofire_type
+
+  character(len=*), parameter, private :: sourcefile = &
+  __FILE__
 
 contains
 
@@ -55,6 +62,28 @@ contains
 
     need_lightning_and_popdens = .false.
   end function need_lightning_and_popdens
+
+  !-----------------------------------------------------------------------
+  subroutine NoFireInit( this, bounds )
+    !
+    ! !DESCRIPTION:
+    ! Initialize No Fire module
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
+    use shr_log_mod      , only : errMsg => shr_log_errMsg
+    ! !ARGUMENTS:
+    class(cnfire_nofire_type) :: this
+    type(bounds_type), intent(in) :: bounds
+
+    if ( shr_fire_emis_mechcomps_n > 0) then
+      write(iulog,*) "Fire emissions can NOT be active for fire_method=nofire" // &
+                  errMsg(sourcefile, __LINE__)
+      call endrun(msg="Having fire emissions on requires fire_method to be something besides nofire" )
+      return
+    end if
+    call this%CNFireInit( bounds )
+
+  end subroutine NoFireInit
+  !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &

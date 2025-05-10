@@ -9,7 +9,7 @@
 <!-- ========================================================================================  -->
 
 <entry id="finidat" 
-       type="char*256" 
+       type="char*512"
        category="datasets"
        input_pathname="abs" 
        group="clm_inparm" 
@@ -30,7 +30,7 @@ This requires that finidat be non-blank.
 </entry>
 
 <entry id="nrevsn" 
-       type="char*256" 
+       type="char*512"
        category="clm_restart"
        input_pathname="abs" 
        group="clm_inparm" 
@@ -49,7 +49,7 @@ Component name to use in history and restart files
 </entry>
 
 <entry id="fatmlndfrc" 
-       type="char*256" 
+       type="char*512"
        category="datasets"
        input_pathname="abs" 
        group="clm_inparm" 
@@ -781,10 +781,9 @@ This option is older than the luhdata options and may be depricated at some poin
 </entry>
 
 <entry id="fates_electron_transport_model" type="char*256" category="physics"
-        group="elm_inparm" valid_values="FvCB1980,JohnsonBerry2021" value="FvCB1980">
+        group="clm_inparm" valid_values="FvCB1980,JohnsonBerry2021" value="FvCB1980">
 Set the FATES electron transport model to either Johnson-Berry 2021 or
   Farquhar von Caemmerer and Berry 1980 (FvCB1980).
-
 </entry>
 
 <entry id="fates_radiation_model" type="char*256" category="physics"
@@ -868,7 +867,7 @@ Toggle to turn on inventory initialization to startup FATES
 (Only relevant if FATES is on).
 </entry>
 
-<entry id="fates_inventory_ctrl_filename" type="char*256" category="datasets"
+<entry id="fates_inventory_ctrl_filename" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname to the inventory initialization control file.
 (Required, if use_fates_inventory_init=T)
@@ -914,7 +913,7 @@ should be set to true for the spin-up case and false for the transient case.
 </entry>
 
 <!-- This could eventually be included in the "dynamic_subgrid" -->
-<entry id="fluh_timeseries" type="char*256" category="datasets"
+<entry id="fluh_timeseries" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of unified land use harmonization (LUH) data file. This causes the land-use
 types to vary over time.
@@ -922,7 +921,7 @@ types to vary over time.
 (Only relevant if FATES is on).
 </entry>
 
-<entry id="flandusepftdat" type="char*256" category="datasets"
+<entry id="flandusepftdat" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of fates landuse x pft association static data map.  
 The file associates land use types with pfts across a static global map.
@@ -993,34 +992,34 @@ How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
    lnc_opt = false get based on LAI and fixed CN ratio from parameter file
 </entry>
 
-<entry id="paramfile" type="char*256" category="datasets"
+<entry id="paramfile" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with plant function type (PFT) constants combined with
 constants for biogeochem modules
 </entry>
 
-<entry id="fates_paramfile" type="char*256" category="datasets"
+<entry id="fates_paramfile" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with fates parameters
 (Only relevant if FATES is on).
 </entry>
 
-<entry id="fsurdat" type="char*256"     category="datasets"
+<entry id="fsurdat" type="char*512"     category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of surface data file.
 </entry>
 
-<entry id="hillslope_file" type="char*256"     category="datasets"
+<entry id="hillslope_file" type="char*512"     category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname of hillslope data file.
 </entry>
 
-<entry id="fsnowoptics" type="char*256" category="datasets" 
+<entry id="fsnowoptics" type="char*512" category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 </entry>
 
-<entry id="fsnowaging" type="char*256"  category="datasets" 
+<entry id="fsnowaging" type="char*512"  category="datasets" 
        input_pathname="abs" group="clm_inparm" valid_values="" >
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
@@ -1559,32 +1558,32 @@ Toggle to turn on on diagnostic Snow Radiative Effect
 <!--                                                   -->
 <!-- mkgriddata namelist                               -->
 <!--                                                   -->
-<entry id="mksrf_fnavyoro" type="char*256" category="mkgriddata"
+<entry id="mksrf_fnavyoro" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Orography file with surface heights and land area fraction
 </entry>
 
-<entry id="mksrf_fclmgrid" type="char*256" category="mkgriddata"
+<entry id="mksrf_fclmgrid" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 CLM grid file
 </entry>
 
-<entry id="mksrf_fccsmdom" type="char*256" category="mkgriddata"
+<entry id="mksrf_fccsmdom" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 CESM domain file
 </entry>
 
-<entry id="mksrf_fcamfile" type="char*256" category="mkgriddata"
+<entry id="mksrf_fcamfile" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 CAM file
 </entry>
 
-<entry id="mksrf_frawtopo" type="char*256" category="mkgriddata"
+<entry id="mksrf_frawtopo" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Raw topography file
 </entry>
 
-<entry id="mksrf_fcamtopo" type="char*256" category="mkgriddata"
+<entry id="mksrf_fcamtopo" type="char*512" category="mkgriddata"
        input_pathname="abs" group="clmexp" valid_values="" >
 CAM topography file
 </entry>
@@ -1623,7 +1622,7 @@ Western edge of the regional grid
 <!--             -->
 <!-- mkghg       -->
 <!--             -->
-<entry id="mkghg_bndtvghg" type="char*256" category="tools"
+<entry id="mkghg_bndtvghg" type="char*512" category="tools"
        input_pathname="abs" group="clmexp" valid_values="" >
 Historical greenhouse gas concentrations from CAM, only used
 by getco2_historical.ncl
@@ -1632,22 +1631,22 @@ by getco2_historical.ncl
 <!--                                                   -->
 <!-- files needed for tools/ncl_scripts                -->
 <!--                                                   -->
-<entry id="faerdep" type="char*256"  category="tools" 
+<entry id="faerdep" type="char*512"  category="tools" 
        input_pathname="abs" group="clmexp" valid_values="" >
 Aerosol deposition file name (only used for aerdepregrid.ncl)
 </entry>
 
-<entry id="f_fracdata" type="char*256" category="tools"
+<entry id="f_fracdata" type="char*512" category="tools"
        input_pathname="abs" group="domain_nl" valid_values="" >
 Full pathname of CLM fraction dataset (only used for mkdatadomain).
 </entry>
 
-<entry id="f_griddata" type="char*256" category="tools"
+<entry id="f_griddata" type="char*512" category="tools"
        input_pathname="abs" group="domain_nl" valid_values="" >
 Full pathname of CLM grid dataset (only used for mkdatadomain).
 </entry>
 
-<entry id="f_domain" type="char*256" category="tools"
+<entry id="f_domain" type="char*512" category="tools"
        input_pathname="abs" group="domain_nl" valid_values="" >
 Full pathname of output domain dataset (only used for mkdatadomain).
 </entry>
@@ -1750,12 +1749,12 @@ Last year to loop over for Nitrogen Deposition data
 Simulation year that aligns with stream_year_first_ndep value
 </entry>
 
-<entry id="stream_fldfilename_ndep" type="char*256" category="datasets"
+<entry id="stream_fldfilename_ndep" type="char*512" category="datasets"
        input_pathname="abs" group="ndepdyn_nml" valid_values="" >
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
-<entry id="stream_meshfile_ndep" type="char*256" category="datasets"
+<entry id="stream_meshfile_ndep" type="char*512" category="datasets"
        input_pathname="abs" group="ndepdyn_nml" valid_values="" >
 Stream meshfile for Nitrogen Deposition data
 </entry>
@@ -1799,12 +1798,12 @@ Mapping method from Nitrogen deposition input file to the model resolution
 If TRUE use the Prigent roughness dataset
 </entry>
 
-<entry id="stream_fldfilename_prigentroughness" type="char*256" category="datasets"
+<entry id="stream_fldfilename_prigentroughness" type="char*512" category="datasets"
        input_pathname="abs" group="prigentroughness" valid_values="" >
 Filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
 
-<entry id="stream_meshfile_prigentroughness" type="char*256" category="datasets"
+<entry id="stream_meshfile_prigentroughness" type="char*512" category="datasets"
        input_pathname="abs" group="prigentroughness" valid_values="" >
 mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
@@ -1826,13 +1825,13 @@ here in CTSM, or in the ATM model.
     copy     = copy using the same indices
 </entry>
 
-<entry id="stream_fldfilename_zendersoilerod" type="char*256" category="datasets"
+<entry id="stream_fldfilename_zendersoilerod" type="char*512" category="datasets"
        input_pathname="abs" group="zendersoilerod" valid_values="" >
 Filename of input stream data for Zender's soil erodibility source function
 (only used when dust_emis_method is Zender_2003, and zender_soil_erod_source is lnd)
 </entry>
 
-<entry id="stream_meshfile_zendersoilerod" type="char*256" category="datasets"
+<entry id="stream_meshfile_zendersoilerod" type="char*512" category="datasets"
        input_pathname="abs" group="zendersoilerod" valid_values="" >
 mesh filename of input stream data for Zender's soil erodibility source function
 (only used when dust_emis_method is Zender_2003, and zender_soil_erod_source is lnd)
@@ -1842,13 +1841,13 @@ mesh filename of input stream data for Zender's soil erodibility source function
 <!-- finundated stream -->
 <!-- ========================================================================================  -->
 
-<entry id="stream_fldfilename_ch4finundated" type="char*256" category="datasets"
+<entry id="stream_fldfilename_ch4finundated" type="char*512" category="datasets"
        input_pathname="abs" group="ch4finundated" valid_values="" >
 Filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
 </entry>
 
-<entry id="stream_meshfile_ch4finundated" type="char*256" category="datasets"
+<entry id="stream_meshfile_ch4finundated" type="char*512" category="datasets"
        input_pathname="abs" group="ch4finundated" valid_values="" >
 mesh filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
@@ -1875,7 +1874,7 @@ Last year to loop over for prescribed soil moisture streams data
 Simulation year that aligns with stream_year_first_soilm value
 </entry>
 
-<entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
+<entry id="stream_fldfilename_soilm" type="char*512(30)" category="datasets"
        input_pathname="abs" group="soil_moisture_streams" valid_values="" >
 Filename of input stream data for prescribed soil moisture streams data
 </entry>
@@ -1924,12 +1923,12 @@ Last year to loop over for LAI data
 Simulation year that aligns with stream_year_first_lai value
 </entry>
 
-<entry id="stream_fldfilename_lai" type="char*256(30)" category="datasets"
+<entry id="stream_fldfilename_lai" type="char*512(30)" category="datasets"
        input_pathname="abs" group="lai_streams" valid_values="" >
 Filename of input stream data for LAI
 </entry>
 
-<entry id="stream_meshfile_lai" type="char*256" category="datasets"
+<entry id="stream_meshfile_lai" type="char*512" category="datasets"
        input_pathname="abs" group="lai_streams" valid_values="" >
 Filename of input stream data for LAI
 </entry>
@@ -2006,22 +2005,22 @@ Simulation year that aligns with stream_year_first_cropcal_cultivar_gdds value
 By default, a value in stream_fldFileName_swindow_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead fall back on the paramfile sowing windows.
 </entry>
 
-<entry id="stream_fldFileName_swindow_start" type="char*256(30)" category="datasets"
+<entry id="stream_fldFileName_swindow_start" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for date (day of year) of start of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
-<entry id="stream_fldFileName_swindow_end" type="char*256(30)" category="datasets"
+<entry id="stream_fldFileName_swindow_end" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for date (day of year) of end of sowing window. Cells with the same sowing window start and end date are always planted on that date, regardless of climatic conditions/history.
 </entry>
 
-<entry id="stream_fldfilename_cultivar_gdds" type="char*256(30)" category="datasets"
+<entry id="stream_fldfilename_cultivar_gdds" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for cultivar growing degree-day targets
 </entry>
 
-<entry id="stream_fldFileName_gdd20_baseline" type="char*256(30)" category="datasets"
+<entry id="stream_fldFileName_gdd20_baseline" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for baseline GDD20 values
 </entry>
@@ -2041,17 +2040,17 @@ Set this to true to flush the accumulated GDD20 variables as soon as possible.
 By default, a value in stream_fldFileName_gdd20_season_start or _end outside the range [1, 365] (or 366 in leap years) will cause the run to fail. Set this to .true. to instead have such cells fall back to the hard-coded hemisphere-specific "warm seasons."
 </entry>
 
-<entry id="stream_fldFileName_gdd20_season_start" type="char*256(30)" category="datasets"
+<entry id="stream_fldFileName_gdd20_season_start" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for date (day of year) of start of gdd20 accumulation season.
 </entry>
 
-<entry id="stream_fldFileName_gdd20_season_end" type="char*256(30)" category="datasets"
+<entry id="stream_fldFileName_gdd20_season_end" type="char*512(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for date (day of year) of end of gdd20 accumulation season.
 </entry>
 
-<entry id="stream_meshfile_cropcal" type="char*256" category="datasets"
+<entry id="stream_meshfile_cropcal" type="char*512" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for crop calendar inputs
 </entry>
@@ -2076,12 +2075,12 @@ Last year to loop over for Lightning data
 Simulation year that aligns with stream_year_first_lightng value
 </entry>
 
-<entry id="stream_fldfilename_lightng" type="char*256" category="datasets"
+<entry id="stream_fldfilename_lightng" type="char*512" category="datasets"
        input_pathname="abs" group="light_streams" valid_values="" >
 Filename of input stream data for Lightning
 </entry>
 
-<entry id="stream_meshfile_lightng" type="char*256" category="datasets"
+<entry id="stream_meshfile_lightng" type="char*512" category="datasets"
        input_pathname="abs" group="light_streams" valid_values="" >
 Stream meshfile for Nitrogen Deposition data
 </entry>
@@ -2123,12 +2122,12 @@ Last year to loop over for human population density data
 Simulation year that aligns with stream_year_first_popdens value
 </entry>
 
-<entry id="stream_fldfilename_popdens" type="char*256" category="datasets"
+<entry id="stream_fldfilename_popdens" type="char*512" category="datasets"
        input_pathname="abs" group="popd_streams" valid_values="" >
 Filename of input stream data for human population density
 </entry>
 
-<entry id="stream_meshfile_popdens" type="char*256" category="datasets"
+<entry id="stream_meshfile_popdens" type="char*512" category="datasets"
        input_pathname="abs" group="popd_streams" valid_values="" >
 mesh file for input stream data for human population density
 </entry>
@@ -2170,12 +2169,12 @@ Last year to loop over for urban time varying data
 Simulation year that aligns with stream_year_first_urbantv value
 </entry>
 
-<entry id="stream_fldfilename_urbantv" type="char*256" category="datasets"
+<entry id="stream_fldfilename_urbantv" type="char*512" category="datasets"
        input_pathname="abs" group="urbantv_streams" valid_values="" >
 Filename of input stream data for urban time varying
 </entry>
 
-<entry id="stream_meshfile_urbantv" type="char*256" category="datasets"
+<entry id="stream_meshfile_urbantv" type="char*512" category="datasets"
        input_pathname="abs" group="urbantv_streams" valid_values="" >
 mesh filename of input stream data for urban time varying
 </entry>
@@ -2196,15 +2195,15 @@ Mapping method from urban time varying input file to the model resolution
     copy     = copy using the same indices
 </entry>
 
-<entry id="diri" type="char*256" category="datm"
+<entry id="diri" type="char*512" category="datm"
        group="modelio" valid_values="">
 datm input directory
 </entry>
-<entry id="diro" type="char*256" category="datm"
+<entry id="diro" type="char*512" category="datm"
        group="modelio" valid_values="">
 datm output directory
 </entry>
-<entry id="logfile" type="char*256" category="datm"
+<entry id="logfile" type="char*512" category="datm"
        group="modelio" valid_values="">
 Datm logfile name
 </entry>
@@ -2213,7 +2212,7 @@ Datm logfile name
 <!-- Mapping files                                                                             -->
 <!-- ========================================================================================  -->
 
-<entry id="map" type="char*256" category="mksurfdata"
+<entry id="map" type="char*512" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 Mapping file to go from one resolution/land-mask to another resolution/land-mask
 </entry>
@@ -2465,7 +2464,7 @@ Enable C14 model
 Flag to use the atmospheric time series of C14 concentrations from bomb fallout and Seuss effect, rather than natural abundance C14 (nominally set as 10^-12 mol C14 / mol C)
 </entry>
 
-<entry id="atm_c14_filename" type="char*256" category="clm_isotope"
+<entry id="atm_c14_filename" type="char*512" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C14 data.  variables in file are "time" and "Delta14co2_in_air". time variable is in format: years since 1850-01-01 0:0:0.0  units are permil.
 </entry>
@@ -2475,7 +2474,7 @@ Filename with time series of atmospheric Delta C14 data.  variables in file are 
 Flag to use the atmospheric time series of C13 concentrations from natural abundance and the Seuss Effect, rather than static values.
 </entry>
 
-<entry id="atm_c13_filename" type="char*256" category="clm_isotope"
+<entry id="atm_c13_filename" type="char*512" category="clm_isotope"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Filename with time series of atmospheric Delta C13 data, which use CMIP6 format.  variables in file are "time" and "delta13co2_in_air".  time variable is in format: years since 1850-01-01 0:0:0.0. units are permil.
 </entry>
@@ -2671,7 +2670,7 @@ net methane production. NOTE: Currently this must be TRUE.
 <!-- Namelist options controlling prescribed subgrid dynamics                                  -->
 <!-- ========================================================================================  -->
 
-<entry id="flanduse_timeseries" type="char*256" category="datasets"
+<entry id="flanduse_timeseries" type="char*512" category="datasets"
        input_pathname="abs" group="dynamic_subgrid" valid_values="" >
 Full pathname of time varying landuse data file. This causes the land-use types of
 the initial surface dataset to vary over time.
@@ -2960,6 +2959,16 @@ SwensonLawrence2012: Swenson and Lawrence 2012
 Parameterization to use for snow thermal conductivity
 </entry>
 
+<entry id="snow_thermal_cond_glc_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over glacier land units
+</entry>
+
+<entry id="snow_thermal_cond_lake_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over lake land units
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to water tracers                                                 -->
 <!-- ========================================================================================  -->
@@ -3076,12 +3085,12 @@ if FALSE and use_excess_ice is TRUE, expect excess ice to come from the initial 
 Expect to be FALSE is use_excess_ice is FALSE
 </entry>
 
-<entry id="stream_fldfilename_exice" type="char*256(30)" category="datasets"
+<entry id="stream_fldfilename_exice" type="char*512(30)" category="datasets"
        input_pathname="abs" group="exice_streams" valid_values="" >
 Filename of input stream data for excess ice data
 </entry>
 
-<entry id="stream_meshfile_exice" type="char*256" category="datasets"
+<entry id="stream_meshfile_exice" type="char*512" category="datasets"
        input_pathname="abs" group="exice_streams" valid_values="" >
 mesh filename of input stream data for excess ice
 </entry>
