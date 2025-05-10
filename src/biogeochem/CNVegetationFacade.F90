@@ -204,10 +204,12 @@ contains
     !
     ! !USES:
     use CNFireFactoryMod , only : create_cnfire_method
+    use CNFireNoFireMod  , only : cnfire_nofire_type
     use clm_varcon       , only : c13ratio, c14ratio
     use ncdio_pio        , only : file_desc_t
     use filterMod        , only : filter
     use decompMod        , only : get_proc_clumps
+
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -307,6 +309,15 @@ contains
        call this%cnfire_method%FireInit( bounds )
        call this%cnfire_method%FireReadNML( bounds, NLFilename )
        call this%cnfire_method%CNFireReadParams( params_ncid )
+    end if
+
+    !
+    ! For FATES we HAVE to allocate a cnfire_method even through it won't be used
+    ! cnfire_method is passed down to CN routines that are used for FATES
+    ! so there has to be something allocated that is passed down
+    !
+    if ( use_fates_bgc )then
+      allocate(cnfire_nofire_type :: this%cnfire_method)
     end if
 
   end subroutine Init
