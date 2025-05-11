@@ -71,9 +71,9 @@ path = ccs_config
 url = https://github.com/ekluzek/ccs_config_cesm.git
 #fxtag = ccs_config_cesm1.0.40
 # 1.0.40
-#fxtag = b7a48e6de2681b30ef031346211550b6bbed224f
+fxtag = b7a48e6de2681b30ef031346211550b6bbed224f
 # 1.0.32
-fxtag = 7d3ec3485a6a59107851dafdb203669128cb73b1
+#fxtag = 7d3ec3485a6a59107851dafdb203669128cb73b1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -81,7 +81,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 path = cime
 url = https://github.com/ESMCI/cime
-fxtag = cime6.1.72
+fxtag = cime6.1.93
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -89,7 +89,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.0.42
+fxtag = cmeps1.0.47
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -97,7 +97,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.65
+fxtag = cdeps1.0.73
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
@@ -121,7 +121,7 @@ fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
 [submodule "mpi-serial"]
 path = libraries/mpi-serial
 url = https://github.com/ESMCI/mpi-serial
-fxtag = MPIserial_2.5.1
+fxtag = MPIserial_2.5.4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
