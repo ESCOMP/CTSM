@@ -67,7 +67,7 @@ release = u'CTSM master'
 version_label = 'the latest development code'
 
 # List of versions to populate version picker dropdown menu
-version_list = ["latest", "release-clm5.0"]
+version_list = ["master", "release-clm5.0"]
 
 # version_label is not a standard sphinx variable, so we need some custom rst to allow
 # pages to use it. We need a separate replacement for the bolded version because it
@@ -197,4 +197,5 @@ html_context["current_version"] = os.environ.get("current_version")
 
 html_context["versions"] = []
 for this_version in version_list:
-    html_context["versions"].append([this_version, f"../../../versions/{this_version}/html"])
+    # Note: with 4 pardir operators, link in version selector will be broken locally but work on the Web 🤷
+    html_context["versions"].append([this_version, f"../../../../versions/{this_version}/html"])
