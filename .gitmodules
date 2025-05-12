@@ -80,8 +80,11 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 
 [submodule "cime"]
 path = cime
-url = https://github.com/ESMCI/cime
-fxtag = cime6.1.87
+#url = https://github.com/ESMCI/cime
+url = https://github.com/ekluzek/cime
+#fxtag = cime6.1.93
+#fxtag = change_min_mem_for_batch
+fxtag = 9da1b5f2c2bf97c3e39bb9bea131ae5e8102f69b
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -89,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.0.42
+fxtag = cmeps1.0.47
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -97,7 +100,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.65
+fxtag = cdeps1.0.73
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
