@@ -316,6 +316,7 @@ class TestUtilsEnsureIterable(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Input is iterable but wrong length"):
             ensure_iterable([11, 12], 3)
 
+
 class TestUtilsFindOneFileMatchingPattern(unittest.TestCase):
     """Tests of utils: find_one_file_matching_pattern"""
 
