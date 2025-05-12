@@ -25,6 +25,7 @@ from ctsm.path_utils import path_to_ctsm_root
 
 # pylint: disable=invalid-name,too-many-public-methods,protected-access
 
+
 def setup_fake_dataset(fake_values, lon_values, lat_values):
     """
     Set up a Dataset with some fake data for use in testing subset_data
@@ -837,6 +838,7 @@ class TestSubsetData(unittest.TestCase):
             ]
         )
         self.assertTrue(np.array_equal(result["fake"].values, expected_fake_values))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
