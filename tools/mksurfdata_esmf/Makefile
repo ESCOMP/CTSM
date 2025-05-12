@@ -30,11 +30,8 @@
 # Set up special characters
 null  :=
 
-# Check that code has been built
-BUILT = $(shell ls -d tool_bld | wc -l)
-ifeq ($(BUILT),0)
-   $(error Build the mksurfdata_esmf code before using this Makefile)
-endif
+# Path to the executable
+MKSURFDATA_EXE = tool_bld/mksurfdata_esmf
 
 # Set a few things needed for batch handling
 PROJECT := ${PROJECT}
@@ -114,6 +111,10 @@ CROP = \
 	crop-global-1850-ne16 \
 	crop-global-1850-ne30 \
 	crop-global-1850-mpasa480 \
+
+# Build the executable if it doesn't exist and any target depends on it
+$(MKSURFDATA_EXE):
+	./gen_mksurfdata_build
 
 # Start all with all-subset because user is bound to forget to first run
 # module load nco
