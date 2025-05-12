@@ -20,6 +20,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm import subset_data
+from ctsm.utils import find_one_file_matching_pattern
 
 
 class TestSubsetDataSys(unittest.TestCase):
@@ -43,7 +44,7 @@ class TestSubsetDataSys(unittest.TestCase):
         all_files_present_and_match = True
         for basename in expected_output_files:
             result_file = os.path.join(self.temp_dir_out.name, basename)
-            result_file = _find_one_file_matching_pattern(result_file)
+            result_file = find_one_file_matching_pattern(result_file)
             expected_file = os.path.join(
                 os.path.dirname(__file__),
                 "testinputs",
@@ -51,7 +52,7 @@ class TestSubsetDataSys(unittest.TestCase):
                 inspect.stack()[1][3],  # Name of calling function (i.e., test name)
                 basename,
             )
-            expected_file = _find_one_file_matching_pattern(expected_file)
+            expected_file = find_one_file_matching_pattern(expected_file)
             ds_result = xr.open_dataset(result_file)
             ds_expected = xr.open_dataset(expected_file)
             if not ds_result.equals(ds_expected):
