@@ -30,7 +30,6 @@ jobs:
     outputs:
       REGISTRY: ${{ env.REGISTRY }}
       IMAGE_NAME: ${{ steps.set-image-name.outputs.IMAGE_NAME }}
-      image_tag: ${{ steps.set-image-tag.outputs.IMAGE_TAG }}
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -88,7 +87,6 @@ jobs:
         id: set-image-tag
         run: |
           echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_OUTPUT
       - name: Build docs using container
         id: build-docs
         run: |

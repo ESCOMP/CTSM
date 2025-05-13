@@ -31,7 +31,6 @@ jobs:
     env:
       REGISTRY: ${{ needs.build-image-and-test-docs.outputs.REGISTRY }}
       IMAGE_NAME: ${{ needs.build-image-and-test-docs.outputs.IMAGE_NAME }}
-      IMAGE_TAG: ${{ needs.build-image-and-test-docs.outputs.image_tag }}
       VERSION_TAG: ${{ needs.build-image-and-test-docs.outputs.version_tag }}
 
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
@@ -73,7 +72,6 @@ jobs:
           push: true
           load: false
           tags: |
-            ${{ env.IMAGE_TAG }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.VERSION_TAG }}
           labels: ""
