@@ -53,13 +53,14 @@ module clm_driver
   use AerosolMod             , only : AerosolMasses
   use SnowSnicarMod          , only : SnowAge_grain
   use SurfaceAlbedoMod       , only : SurfaceAlbedo
+  use SurfaceAlbedoMod       , only : UpdateZenithAngles
   use UrbanAlbedoMod         , only : UrbanAlbedo
   !
   use SurfaceRadiationMod    , only : SurfaceRadiation, CanopySunShadeFracs
   use UrbanRadiationMod      , only : UrbanRadiation
   !
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
+  use SatellitePhenologyMod  , only : CalcSatellitePhenologyTimeInterp, interpMonthlyVeg, UpdateSatellitePhenologyCanopy
   use ndepStreamMod          , only : ndep_interp
   use cropcalStreamMod       , only : cropcal_advance, cropcal_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
@@ -1059,7 +1060,9 @@ contains
 
        if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
           call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+          call CalcSatellitePhenologyTimeInterp(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+               canopystate_inst)
+          call UpdateSatellitePhenologyCanopy(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
@@ -1072,9 +1075,9 @@ contains
           ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
           ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
           ! use the first three points, which would incorrectly represent the interpolated values.
-          call SatellitePhenology(bounds_clump, &
+          call CalcSatellitePhenologyTimeInterp(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
-               water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+               canopystate_inst)
           call t_stopf('SatellitePhenology')
 
        end if
@@ -1238,8 +1241,22 @@ contains
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
+       
+       if (.not.doalb) then
 
-       if (doalb) then
+
+          if(use_fates) then
+             ! During branch runs and non continue_run restarts, the doalb flag
+             ! does not trigger correctly for fates runs (and non-fates?), and thus
+             ! the zenith angles are not calculated and ready when radiation scattering
+             ! needs to occur.
+             call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
+             call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
+                  water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
+                  surfalb_inst)
+          end if
+          
+       else
 
           ! Albedos for non-urban columns
           call t_startf('surfalb')
@@ -1383,40 +1400,38 @@ contains
     ! FIX(SPM, 082814) - in the fates branch RF and I commented out the if(.not.
     ! use_fates) then statement ... double check if this is required and why
 
-    if (nstep > 0) then
-       call t_startf('accum')
+    call t_startf('accum')
 
-       call atm2lnd_inst%UpdateAccVars(bounds_proc)
+    call atm2lnd_inst%UpdateAccVars(bounds_proc)
 
-       call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
+    call temperature_inst%UpdateAccVars(bounds_proc, crop_inst)
 
-       call canopystate_inst%UpdateAccVars(bounds_proc)
+    call canopystate_inst%UpdateAccVars(bounds_proc)
 
-       call water_inst%UpdateAccVars(bounds_proc)
+    call water_inst%UpdateAccVars(bounds_proc)
 
-       call energyflux_inst%UpdateAccVars(bounds_proc)
+    call energyflux_inst%UpdateAccVars(bounds_proc)
 
-       ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
-       ! compiling this threaded, I needed to change the dummy arguments to be
-       ! pointers, and get rid of the explicit bounds in the subroutine call.
-       ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-       !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
-       !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
-       call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
-            t_a10_patch=temperature_inst%t_a10_patch, &
-            t_ref2m_patch=temperature_inst%t_ref2m_patch)
+    ! COMPILER_BUG(wjs, 2014-11-30, pgi 14.7) For pgi 14.7 to be happy when
+    ! compiling this threaded, I needed to change the dummy arguments to be
+    ! pointers, and get rid of the explicit bounds in the subroutine call.
+    ! call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+    !      t_a10_patch=temperature_inst%t_a10_patch(bounds_proc%begp:bounds_proc%endp), &
+    !      t_ref2m_patch=temperature_inst%t_ref2m_patch(bounds_proc%begp:bounds_proc%endp))
+    call bgc_vegetation_inst%UpdateAccVars(bounds_proc, &
+         t_a10_patch=temperature_inst%t_a10_patch, &
+         t_ref2m_patch=temperature_inst%t_ref2m_patch)
 
-       if (use_crop) then
-          call crop_inst%CropUpdateAccVars(bounds_proc, &
-               temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
-       end if
-
-       if(use_fates) then
-          call clm_fates%UpdateAccVars(bounds_proc)
-       end if
-
-       call t_stopf('accum')
+    if (use_crop) then
+       call crop_inst%CropUpdateAccVars(bounds_proc, &
+            temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
     end if
+
+    if(use_fates) then
+       call clm_fates%UpdateAccVars(bounds_proc)
+    end if
+
+    call t_stopf('accum')
 
     ! ============================================================================
     ! Update history buffer

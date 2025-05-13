@@ -808,7 +808,11 @@ sub setup_cmdl_fates_mode {
                       "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
                       "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
-                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel" );
+                      "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel",
+                      "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
+                      "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
+                      "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
+                   );
 
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -2118,16 +2122,20 @@ sub setup_logic_roughness_methods {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method',
-              'phys'=>$nl_flags->{'phys'} );
+              'phys'=>$nl_flags->{'phys'} , 'use_fates'=>$nl_flags->{'use_fates'});
 
   my $var = remove_leading_and_trailing_quotes( $nl->get_value("z0param_method") );
   if ( $var ne "Meier2022" && $var ne "ZengWang2007" ) {
     $log->fatal_error("$var is incorrect entry for the namelist variable z0param_method; expected Meier2022 or ZengWang2007");
   }
   my $phys = $physv->as_string();
-  if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
-    if ( $var eq "Meier2022" ) {
+  if ( $var eq "Meier2022" ) {
+    if ( $phys eq "clm4_5" || $phys eq "clm5_0" ) {
       $log->fatal_error("z0param_method = $var and phys = $phys, but this method has been tested only with clm6_0 and later versions; to use with earlier versions, disable this error, and add Meier2022 parameters to the corresponding params file");
+    }
+    # Make sure that fates and meier2022 are not both active due to issue #2932
+    if ( &value_is_true($nl_flags->{'use_fates'}) ) {
+      $log->fatal_error("z0param_method = $var and use_fates currently are not compatible.  Please update the z0param_method to ZengWang2007.  See issue #2932 for more information.")
     }
   }
 }
@@ -2182,11 +2190,8 @@ sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_method' );
-
-  my $var = $nl->get_value('snow_thermal_cond_method');
-  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
-    $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_method; expected Jordan1991 or Sturm1997");
-  }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_glc_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_lake_method' );
 
   my $numrad_snw = $nl->get_value('snicar_numrad_snw');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics',
@@ -4703,7 +4708,11 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
-                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage" );
+                       "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
+                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
+                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
+                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
+                    );
 
         foreach my $var ( @list ) {
            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
