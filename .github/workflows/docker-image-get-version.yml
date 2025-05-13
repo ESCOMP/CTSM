@@ -52,19 +52,21 @@ jobs:
           set -u
           VERSION="$(doc/ctsm-docs_container/get_version.sh)"
           VERSION_TAG="${{ inputs.registry }}/${{ inputs.image_name }}:${VERSION}"
-          
+
           # Store the manifest inspect result and output
           set +e
           INSPECT_RESULT="$(docker manifest inspect "$VERSION_TAG" 2>&1)"
           INSPECT_STATUS=$?
           set -e
-          
+
           if [[ "${INSPECT_RESULT}" == *"schemaVersion"* ]]; then
             echo "Tag $VERSION_TAG already exists!" >&2
             exit 123
           elif [[ "${INSPECT_RESULT}" != "manifest unknown" ]]; then
             # "manifest unknown" means the tag doesn't exist, which is what we want
             echo -e "Error checking manifest for $VERSION_TAG:\n${INSPECT_RESULT}" >&2
-            exit 2
+            exit $INSPECT_STATUS
           fi
+
+          echo "Setting version_tag to $VERSION_TAG"
           echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
