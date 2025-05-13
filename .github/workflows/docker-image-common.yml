@@ -12,6 +12,9 @@ on:
       image_tag:
         description: "First image tag"
         value: ${{ jobs.build-image-and-test-docs.outputs.image_tag }}
+      version_tag:
+        description: "Version tag from Dockerfile"
+        value: ${{ jobs.check-version.outputs.VERSION_TAG }}
 
 # Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
@@ -81,3 +84,11 @@ jobs:
         id: build-docs
         run: |
           cd doc && ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG
+
+
+  check-version:
+    needs: build-image-and-test-docs
+    uses: ./.github/workflows/docker-image-get-version.yml
+    with:
+      registry: ${{ needs.build-image-and-test-docs.outputs.REGISTRY }}
+      image_name: ${{ needs.build-image-and-test-docs.outputs.IMAGE_NAME }}
