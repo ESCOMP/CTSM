@@ -15,6 +15,18 @@ on:
       VERSION_TAG:
         description: "Tag to be pushed to container registry"
         value: ${{ jobs.get-check-version.outputs.VERSION_TAG }}
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Container registry'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      image_name:
+        description: 'Image name'
+        required: false
+        type: string
+        default: 'escomp/ctsm/ctsm-docs'
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
