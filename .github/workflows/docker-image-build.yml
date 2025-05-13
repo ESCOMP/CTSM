@@ -6,12 +6,14 @@ on:
   push:
     paths:
       - 'doc/ctsm-docs_container/**'
+      - '!doc/ctsm-docs_container/README.md'
       - '.github/workflows/docker-image-ctsm-docs-build.yml'
       - '.github/workflows/docker-image-build-common.yml'
 
   pull_request:
     paths:
       - 'doc/ctsm-docs_container/**'
+      - '!doc/ctsm-docs_container/README.md'
       - '.github/workflows/docker-image-ctsm-docs-build.yml'
       - '.github/workflows/docker-image-build-common.yml'
 
