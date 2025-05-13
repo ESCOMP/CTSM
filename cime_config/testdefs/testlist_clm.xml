@@ -3343,7 +3343,7 @@
       <option name="comment">No comment at this time</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdCamLndTuningMode">
+  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" cateogory="fates"/>
