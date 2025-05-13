@@ -7,7 +7,7 @@ This Readme tells you how to update the ctsm-docs Docker container if a need to 
 
 ## Building
 
-If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`continerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
+If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`containerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
 ```shell
 docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/escomp/ctsm/ctsm-docs .
 ```
@@ -50,7 +50,7 @@ Once you have a PAT(C), you can authenticate in your shell session like so:
 ```shell
    echo YOUR_PERSONAL_ACCESS_TOKEN_CLASSIC | docker login ghcr.io -u YOUR_USERNAME --password-stdin
 ```
-The leading spaces are intended to prevent this command, which contains your secret PAT(C), from being written to your shell's history file. That at least works in bash... sometimes. To be extra safe, in bash you can do `history -c` and it will clear the session's history entirely.
+The leading spaces are intended to prevent this command, which contains your secret PAT(C), from being written to your shell's history file. That at least works in bash... sometimes. To be extra safe, in bash you can do `history -c` and it will clear your entire bash history. That can be pretty disruptive, but fortunately you should only need to authenticate once.
 
 ### Tagging
 You'll next need to tag the image. Lots of Docker instructions tell you to use the `latest` tag, and Docker may actually do that for you. However, `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
