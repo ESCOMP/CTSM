@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
-        ctsm_pymods: System tests for the python codes that also run CTSM cases (subset of aux_clm tests)
+        clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm tests)
         clm_short: The short CLM test for basic testing of a few configurations
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         fates: The FATES testlist, run when FATES is updated
@@ -3284,6 +3284,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Ensure functionality of the tree damage option in FATES</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdElecTransJB">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Ensure functionality of the JohnsonBerry2021 option in FATES</option>
     </options>
   </test>
   <test name="ERI_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">

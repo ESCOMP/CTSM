@@ -1,0 +1,44 @@
+name: Check Python formatting
+
+on:
+  push:
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+  pull_request:
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+
+jobs:
+  lint-and-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+
+      # Set up the conda environment
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      # Run pylint check
+      - name: Run pylint
+        run: |
+          cd python
+          conda run -n ctsm_pylib make lint
+
+      # Run black check
+      - name: Run black
+        # Run this step even if previous step(s) failed
+        if: success() || failure()
+        run: |
+          cd python
+          conda run -n ctsm_pylib make black

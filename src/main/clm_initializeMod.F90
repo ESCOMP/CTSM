@@ -173,7 +173,8 @@ contains
     use ndepStreamMod                 , only : ndep_init, ndep_interp
     use cropcalStreamMod              , only : cropcal_init, cropcal_interp, cropcal_advance
     use LakeCon                       , only : LakeConInit
-    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
+    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use SatellitePhenologyMod         , only : CalcSatellitePhenologyTimeInterp
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename, check_missing_initdata_status
@@ -750,9 +751,9 @@ contains
              ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
              ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
              ! use the first three points, which would incorrectly represent the interpolated values.
-             call SatellitePhenology(bounds_clump, &
+             call CalcSatellitePhenologyTimeInterp(bounds_clump, &
                   filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
-                  water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+                  canopystate_inst)
 
           end do
           !$OMP END PARALLEL DO
