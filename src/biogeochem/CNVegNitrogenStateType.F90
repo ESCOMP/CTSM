@@ -2355,7 +2355,7 @@ contains
        c = patch%column(p)
        g = patch%gridcell(p)
        co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
-                            atm2lnd_inst%forc_pbot_downscaled_col(c)
+                            atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
        this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p)) + &
           max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
     end do
