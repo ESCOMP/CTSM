@@ -52,13 +52,14 @@ module clm_driver
   use AerosolMod             , only : AerosolMasses
   use SnowSnicarMod          , only : SnowAge_grain
   use SurfaceAlbedoMod       , only : SurfaceAlbedo
+  use SurfaceAlbedoMod       , only : UpdateZenithAngles
   use UrbanAlbedoMod         , only : UrbanAlbedo
   !
   use SurfaceRadiationMod    , only : SurfaceRadiation, CanopySunShadeFracs
   use UrbanRadiationMod      , only : UrbanRadiation
   !
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
+  use SatellitePhenologyMod  , only : CalcSatellitePhenologyTimeInterp, interpMonthlyVeg, UpdateSatellitePhenologyCanopy
   use ndepStreamMod          , only : ndep_interp
   use cropcalStreamMod       , only : cropcal_advance, cropcal_interp
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
@@ -1067,7 +1068,9 @@ contains
 
        if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
           call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+          call CalcSatellitePhenologyTimeInterp(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+               canopystate_inst)
+          call UpdateSatellitePhenologyCanopy(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
@@ -1080,9 +1083,9 @@ contains
           ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
           ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
           ! use the first three points, which would incorrectly represent the interpolated values.
-          call SatellitePhenology(bounds_clump, &
+          call CalcSatellitePhenologyTimeInterp(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
-               water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+               canopystate_inst)
           call t_stopf('SatellitePhenology')
 
        end if
@@ -1246,8 +1249,22 @@ contains
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
+       
+       if (.not.doalb) then
 
-       if (doalb) then
+
+          if(use_fates) then
+             ! During branch runs and non continue_run restarts, the doalb flag
+             ! does not trigger correctly for fates runs (and non-fates?), and thus
+             ! the zenith angles are not calculated and ready when radiation scattering
+             ! needs to occur.
+             call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
+             call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
+                  water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
+                  surfalb_inst)
+          end if
+          
+       else
 
           ! Albedos for non-urban columns
           call t_startf('surfalb')
