@@ -4430,6 +4430,7 @@ contains
     character(len=avgflag_strlen), allocatable :: tavgflag(:)
     integer :: start(2)
 
+    character(len=1)   :: file_index  ! instantaneous or accumulated_file_index
     character(len=1)   :: hnum                   ! history file index
     character(len=hist_dim_name_length)   :: type1d                 ! clm pointer 1d type
     character(len=hist_dim_name_length)   :: type1d_out             ! history buffer 1d type
@@ -4542,8 +4543,13 @@ contains
 
              ! Create the restart history filename and open it
              write(hnum,'(i1.1)') t-1
+             if (f == instantaneous_file_index) then
+                file_index = 'i'  ! instantaneous file_index
+             else if (f == accumulated_file_index) then
+                file_index = 'a'  ! accumulated file_index
+             end if
              locfnhr(t,f) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
-                          // ".rh" // hnum //"."// trim(rdate) //".nc"
+                          // ".rh" // hnum // file_index //"."// trim(rdate) //".nc"
 
              call htape_create( t, f, histrest=.true. )
 
