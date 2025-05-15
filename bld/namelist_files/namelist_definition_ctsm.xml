@@ -781,10 +781,9 @@ This option is older than the luhdata options and may be depricated at some poin
 </entry>
 
 <entry id="fates_electron_transport_model" type="char*256" category="physics"
-        group="elm_inparm" valid_values="FvCB1980,JohnsonBerry2021" value="FvCB1980">
+        group="clm_inparm" valid_values="FvCB1980,JohnsonBerry2021" value="FvCB1980">
 Set the FATES electron transport model to either Johnson-Berry 2021 or
   Farquhar von Caemmerer and Berry 1980 (FvCB1980).
-
 </entry>
 
 <entry id="fates_radiation_model" type="char*256" category="physics"
@@ -2958,6 +2957,16 @@ SwensonLawrence2012: Swenson and Lawrence 2012
 <entry id="snow_thermal_cond_method" type="char*25" category="clm_physics"
        group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
 Parameterization to use for snow thermal conductivity
+</entry>
+
+<entry id="snow_thermal_cond_glc_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over glacier land units
+</entry>
+
+<entry id="snow_thermal_cond_lake_method" type="char*25" category="clm_physics"
+       group="clm_inparm" valid_values="Jordan1991,Sturm1997" >
+Parameterization to use for snow thermal conductivity over lake land units
 </entry>
 
 <!-- ========================================================================================  -->

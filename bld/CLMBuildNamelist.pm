@@ -2190,11 +2190,8 @@ sub setup_logic_snow {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_method' );
-
-  my $var = $nl->get_value('snow_thermal_cond_method');
-  if ( $var ne "'Jordan1991'" && $var ne "'Sturm1997'" ) {
-    $log->fatal_error("$var is incorrect entry for the namelist variable snow_thermal_cond_method; expected Jordan1991 or Sturm1997");
-  }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_glc_method' );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'snow_thermal_cond_lake_method' );
 
   my $numrad_snw = $nl->get_value('snicar_numrad_snw');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsnowoptics',
