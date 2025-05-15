@@ -845,6 +845,7 @@ contains
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
+    class(entry_base), pointer :: tmp_hlist(:)  ! temporary subset of hlist to pass as call argument
     integer :: t, f, fld                    ! tape, file, field indices
     integer :: ff                           ! index into include, exclude and fprec list
     character(len=max_namlen) :: name       ! field name portion of fincl (i.e. no avgflag separator)
@@ -971,7 +972,9 @@ contains
 
           ! Specification of tape contents now complete.
           ! Sort each list of active entries
-          call sort_hist_list(t, tape(t)%nflds(f), tape(t)%hlist(:,f))
+          associate(tmp_hlist => tape(t)%hlist(:,f))
+          call sort_hist_list(t, tape(t)%nflds(f), tmp_hlist(:))
+          end associate
 
           if (masterproc) then
              if (tape(t)%nflds(f) > 0) then
