@@ -3021,14 +3021,6 @@ always fill with the closest natural veg patch / column, regardless of the value
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
 </entry>
 
-<entry id="init_interp_fill_missing_urban_with_HD" type="logical" category="datasets"
-       group="clm_initinterp_inparm" valid_values="" >
-If FALSE (which is the default): If an output type cannot be found in the input for initInterp,
-code aborts
-If TRUE: If an output type cannot be found in the input, fill with closest urban high density
-(HD) landunit
-</entry>
-
 <entry id="init_interp_method" type="char*64" category="datasets"
        group="clm_initinterp_inparm"
        valid_values="general,use_finidat_areas" >
