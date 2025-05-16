@@ -412,7 +412,7 @@ contains
     ! the CTSM's web-based documentation.
 
     ! First sort the list to be in alphabetical order
-    call sort_hist_list(1, nallhistflds, allhistfldlist)
+    call sort_hist_list(nallhistflds, allhistfldlist)
 
     if (masterproc .and. hist_fields_list_file) then
        ! Hardwired table column widths to fit the table on a computer
@@ -973,7 +973,7 @@ contains
           ! Specification of tape contents now complete.
           ! Sort each list of active entries
           associate(tmp_hlist => tape(t)%hlist(:,f))
-          call sort_hist_list(t, tape(t)%nflds(f), tmp_hlist(:))
+          call sort_hist_list(tape(t)%nflds(f), tmp_hlist(:))
           end associate
 
           if (masterproc) then
@@ -1100,14 +1100,13 @@ contains
   end subroutine copy_history_entry
 
   !-----------------------------------------------------------------------
-  subroutine sort_hist_list(t, n_fields, hist_list)
+  subroutine sort_hist_list(n_fields, hist_list)
 
     ! !DESCRIPTION:
     ! Sort list of history variable names hist_list in alphabetical
     ! order.
 
     ! !ARGUMENTS:
-    integer, intent(in) :: t  ! tape index
     integer, intent(in) :: n_fields  ! number of fields
     class(entry_base), intent(inout) :: hist_list(:)
 
@@ -4421,8 +4420,6 @@ contains
     character(len=max_chars)  :: fname           ! full name of history file
     ! 11c) TODO DONE History restart files seem to mirror history files => need the second dimension I think
     character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
-    character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
-    character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
     character(len=max_namlen),allocatable :: tname(:)
     character(len=max_chars), allocatable :: tunits(:),tlongname(:)
@@ -4723,19 +4720,16 @@ contains
 
        ! Add history filenames to master restart file
        tape_loop2: do t = 1, ntapes
+          call ncd_io('history_tape_in_use', history_tape_in_use(t,:), 'write', ncid, nt=t)
           ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
           file_loop2: do f = 1, maxsplitfiles
-             call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=t)
              if (history_tape_in_use(t,f) == 0) then
-                my_locfnh  = locfnh(t,f)
-                my_locfnhr = locfnhr(t,f)
-             else
-                my_locfnh  = 'non_existent_file'
-                my_locfnhr = 'non_existent_file'
+                locfnh(t,f) = 'non_existent_file'
+                locfnhr(t,f) = 'non_existent_file'
              end if
-             call ncd_io('locfnh',  my_locfnh,  'write', ncid, nt=t)
-             call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=t)
           end do file_loop2
+          call ncd_io('locfnh', locfnh(t,:), 'write', ncid, nt=t)
+          call ncd_io('locfnhr', locfnhr(t,:), 'write', ncid, nt=t)
        end do tape_loop2
 
        ! 12a) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
@@ -4905,7 +4899,7 @@ contains
                 call getfil( locrest(t,f), locfnhr(t,f), 0 )
                 call ncd_pio_openfile (ncid_hist(t,f), trim(locfnhr(t,f)), ncd_nowrite)
 
-                if ( t == 1 )then
+                if ( t == 1 .and. f == 1 )then
 
                    call ncd_inqdlen(ncid_hist(1,f),dimid,max_nflds,name='max_nflds')
 
