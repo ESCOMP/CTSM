@@ -12,11 +12,15 @@ on:
       image_tag:
         description: "First image tag"
         value: ${{ jobs.build-image-and-test-docs.outputs.image_tag }}
+      version_tag:
+        description: "Version tag from Dockerfile"
+        value: ${{ jobs.check-version.outputs.VERSION_TAG }}
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
+# Defines custom environment variables for the workflow.
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}/ctsm-docs
+    IMAGE_BASENAME: ctsm-docs
+    REPO: ${{ github.repository }}
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
@@ -25,8 +29,7 @@ jobs:
     # Variables that might be needed by the calling workflow
     outputs:
       REGISTRY: ${{ env.REGISTRY }}
-      IMAGE_NAME: ${{ env.IMAGE_NAME }}
-      image_tag: ${{ steps.set-image-tag.outputs.IMAGE_TAG }}
+      IMAGE_NAME: ${{ steps.set-image-name.outputs.IMAGE_NAME }}
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
@@ -38,6 +41,14 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Ensure that the repository part of IMAGE_NAME is lowercase. This is needed because Docker requires image names to be entirely lowercase. Note that the *image name* part, set as IMAGE_BASENAME in the env block above, is *not* converted. This will cause the check-version job to fail if the IMAGE_BASENAME contains capitals. We don't want to silently fix that here; rather, we require the user to specify a lowercase IMAGE_BASENAME.
+      - name: Get image name with lowercase repo
+        id: set-image-name
+        run: |
+          lowercase_repo=$(echo $REPO | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${lowercase_repo}/${IMAGE_BASENAME}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${lowercase_repo}/${IMAGE_BASENAME}" >> $GITHUB_OUTPUT
 
       # Uses the `docker/login-action` action to log in to the Container registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
       - name: Log in to the Container registry
@@ -52,7 +63,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.set-image-name.outputs.IMAGE_NAME }}
 
       # This step uses the `docker/build-push-action` action to build the image, based on the ctsm-docs `Dockerfile`.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see [Usage](https://github.com/docker/build-push-action#usage) in the README of the `docker/build-push-action` repository.
@@ -76,8 +87,15 @@ jobs:
         id: set-image-tag
         run: |
           echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)" >> $GITHUB_OUTPUT
       - name: Build docs using container
         id: build-docs
         run: |
           cd doc && ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG
+
+
+  check-version:
+    needs: build-image-and-test-docs
+    uses: ./.github/workflows/docker-image-get-version.yml
+    with:
+      registry: ${{ needs.build-image-and-test-docs.outputs.REGISTRY }}
+      image_name: ${{ needs.build-image-and-test-docs.outputs.IMAGE_NAME }}
