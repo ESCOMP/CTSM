@@ -4420,6 +4420,8 @@ contains
     character(len=max_chars)  :: fname           ! full name of history file
     ! 11c) TODO DONE History restart files seem to mirror history files => need the second dimension I think
     character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
+    character(len=max_chars)  :: locrest_onfile(maxsplitfiles, max_tapes)  ! local history restart file names, dims flipped
+    character(len=max_chars)  :: locfnh_onfile(maxsplitfiles, max_tapes)  ! local history file names, dims flipped
 
     character(len=max_namlen),allocatable :: tname(:)
     character(len=max_chars), allocatable :: tunits(:),tlongname(:)
@@ -4872,14 +4874,16 @@ contains
                    end if
                 end do file_loop4
              end do tape_loop4
-             ! TODO Is this correct or should next few lines (and call ncd_io
-             !      above) be in a do f loop?
-             call ncd_io('locfnh',  locfnh(1:ntapes,1:maxsplitfiles),  'read', ncid )
-             call ncd_io('locfnhr', locrest(1:ntapes,1:maxsplitfiles), 'read', ncid )
+             call ncd_io('locfnh',  locfnh_onfile, 'read', ncid )
+             call ncd_io('locfnhr', locrest_onfile, 'read', ncid )
              tape_loop5: do t = 1, ntapes
                 file_loop5: do f = 1, maxsplitfiles
-                   call strip_null(locrest(t,f))
-                   call strip_null(locfnh(t,f))
+                   call strip_null(locrest_onfile(f,t))
+                   call strip_null(locfnh_onfile(f,t))
+                   ! These character variables get read with their dimensions backwards
+                   ! so flip them before using them
+                   locrest(t,f) = locrest_onfile(f,t)
+                   locfnh(t,f) = locfnh_onfile(f,t)
                 end do file_loop5
              end do tape_loop5
           end if ntapes_gt_0
