@@ -171,6 +171,28 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
+    ! -------------------------------------------------
+    ! Obtain updated values of time-evolving parameters
+    !
+    ! As of ctsm5.4
+    ! - We have this capability for leafcn by calculating leafcn_t_evolving_patch in subr. time_evolv_leafcn
+    ! - leafcn_t_evolving_patch's calculation defaults to leafcn's paramfile values
+    ! - This needs to be called before calling dynSubgrid_driver
+    ! -------------------------------------------------
+    if (use_cn) then
+       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+       do nc = 1, nclumps
+          call get_clump_bounds(nc, bounds_clump)
+
+          call bgc_vegetation_inst%cnveg_nitrogenstate_inst%time_evolv_leafcn(  &
+             bounds_clump,  &
+             filter_inactive_and_active(nc)%num_bgc_vegp,  &
+             filter_inactive_and_active(nc)%bgc_vegp,  &
+             atm2lnd_inst)
+       end do
+       !$OMP END PARALLEL DO
+    end if
+
     ! ========================================================================
     ! In the first time step of a startup or hybrid run, we want to update CLM's glacier
     ! areas to match those given by GLC. This is because, in initialization, we do not yet
@@ -738,6 +760,7 @@ contains
             temperature_inst, water_inst%waterfluxbulk_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst,          &
             ch4_inst, ozone_inst, photosyns_inst, &
+            bgc_vegetation_inst%cnveg_nitrogenstate_inst, &
             humanindex_inst, soil_water_retention_curve, &
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
