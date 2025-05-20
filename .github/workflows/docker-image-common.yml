@@ -9,9 +9,6 @@ on:
       IMAGE_NAME:
         description: "Docker image name"
         value: ${{ jobs.build-image-and-test-docs.outputs.IMAGE_NAME }}
-      image_tag:
-        description: "First image tag"
-        value: ${{ jobs.build-image-and-test-docs.outputs.image_tag }}
       version_tag:
         description: "Version tag from Dockerfile"
         value: ${{ jobs.check-version.outputs.VERSION_TAG }}
