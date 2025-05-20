@@ -4882,7 +4882,7 @@ contains
 
           ntapes_gt_0: if (ntapes > 0) then
              ! 4) TODO DONE Changed history_tape_in_use_onfile(t) to (t,f) throughout
-             allocate(history_tape_in_use_onfile(ntapes, maxsplitfiles))
+             allocate(history_tape_in_use_onfile(maxsplitfiles, ntapes))
              call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
                   readvar=readvar)
              if (.not. readvar) then
@@ -4893,10 +4893,10 @@ contains
              end if
              tape_loop4: do t = 1, ntapes
                 file_loop4: do f = 1, maxsplitfiles
-                   if (history_tape_in_use_onfile(t,f) /= history_tape_in_use(t,f)) then
+                   if (history_tape_in_use_onfile(f,t) /= history_tape_in_use(t,f)) then
                       write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
                       write(iulog,*) 'disagrees with current run: For tape and file ', t, f
-                      write(iulog,*) 'On restart file: ', history_tape_in_use_onfile(t,f)
+                      write(iulog,*) 'On restart file: ', history_tape_in_use_onfile(f,t)
                       write(iulog,*) 'In current run : ', history_tape_in_use(t,f)
                       write(iulog,*) 'This suggests that this tape was empty in one case,'
                       write(iulog,*) 'but non-empty in the other. (history_tape_in_use 0 or .false.'
