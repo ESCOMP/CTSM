@@ -13,8 +13,8 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_cropcal_streams
+  use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -606,6 +606,7 @@ contains
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
        if(use_fates) then
+          if (masterproc)  write(iulog,*),"MVD wrapsun ", get_nstep(), nextsw_cday, declinp1, doalb
           call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
@@ -1226,9 +1227,22 @@ contains
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
-       
-       if (doalb) then
 
+       ! This is only relevant to  fates two stream to not break sun fraction calculations
+       ! on the second timestep after start from finidat or for hybrid run.
+       if (use_fates .and. .not. use_fates_sp .and. fates_radiation_model == 'twostream') then
+          if (.not. doalb .and. get_nstep() == 1) then
+             if (.not. is_cold_start .and. nsrest == nsrStartup) then
+                call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
+                call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
+                  water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
+                  surfalb_inst)
+             endif
+          endif
+       endif
+
+       if (doalb) then
+          if (masterproc) write(iulog,*) "Step alb: ", get_nstep()
           ! Albedos for non-urban columns
           call t_startf('surfalb')
           call SurfaceAlbedo(bounds_clump,                      &
