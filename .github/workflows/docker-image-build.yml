@@ -4,6 +4,7 @@ name: Test building ctsm-docs Docker image and using it to build the docs
 # Configures this workflow to run every time a change in the Docker container setup is pushed or included in a PR
 on:
   push:
+    branches: ['*']
     paths:
       - 'doc/ctsm-docs_container/**'
       - '!doc/ctsm-docs_container/README.md'
