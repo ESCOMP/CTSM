@@ -5,10 +5,16 @@ on:
   push:
     paths:
       - 'doc/**'
+      - '!doc/*ChangeLog*'
+      - '!doc/*ChangeSum*'
+      - '!doc/UpdateChangelog.pl'
 
   pull_request:
     paths:
       - 'doc/**'
+      - '!doc/*ChangeLog*'
+      - '!doc/*ChangeSum*'
+      - '!doc/UpdateChangelog.pl'
 
   workflow_dispatch:
 
