@@ -4422,6 +4422,8 @@ contains
     character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
     character(len=max_chars)  :: locrest_onfile(maxsplitfiles, max_tapes)  ! local history restart file names, dims flipped
     character(len=max_chars)  :: locfnh_onfile(maxsplitfiles, max_tapes)  ! local history file names, dims flipped
+    character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
+    character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
     character(len=max_namlen),allocatable :: tname(:)
     character(len=max_chars), allocatable :: tunits(:),tlongname(:)
@@ -4509,25 +4511,47 @@ contains
        call ncd_defdim( ncid, 'maxsplitfiles', maxsplitfiles, dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
-       call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_int, &
-            long_name="Whether this history tape is/isn't (1 or 0) in use", &
-            dim1name="ntapes", dim2name="maxsplitfiles")
-       ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
-       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+       if (ntapes == 1) then
+          call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_int, &
+               long_name="Whether this history tape is/isn't (1 or 0) in use", &
+               dim1name="maxsplitfiles")
+          ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
-       call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
-            long_name="History filename",     &
-            comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes", dim3name="maxsplitfiles" )
-       ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
-       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+          call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
+               long_name="History filename",     &
+               comment="This variable NOT needed for startup or branch simulations", &
+               dim1name='max_chars', dim2name="maxsplitfiles" )
+          ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
-       call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
-            long_name="Restart history filename",     &
-            comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes", dim3name="maxsplitfiles" )
-       ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
-       ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+          call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
+               long_name="Restart history filename",     &
+               comment="This variable NOT needed for startup or branch simulations", &
+               dim1name='max_chars', dim2name="maxsplitfiles" )
+          ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+       else
+          call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_int, &
+               long_name="Whether this history tape is/isn't (1 or 0) in use", &
+               dim1name="ntapes", dim2name="maxsplitfiles")
+          ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+
+          call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
+               long_name="History filename",     &
+               comment="This variable NOT needed for startup or branch simulations", &
+               dim1name='max_chars', dim2name="ntapes", dim3name="maxsplitfiles" )
+          ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+
+          call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
+               long_name="Restart history filename",     &
+               comment="This variable NOT needed for startup or branch simulations", &
+               dim1name='max_chars', dim2name="ntapes", dim3name="maxsplitfiles" )
+          ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
+          ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
+       end if
 
        ! max_nflds is the maximum number of fields on any tape
        ! max_flds is the maximum number possible number of fields
@@ -4722,16 +4746,25 @@ contains
 
        ! Add history filenames to master restart file
        tape_loop2: do t = 1, ntapes
-          call ncd_io('history_tape_in_use', history_tape_in_use(t,:), 'write', ncid, nt=t)
           ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
           file_loop2: do f = 1, maxsplitfiles
              if (history_tape_in_use(t,f) == 0) then
                 locfnh(t,f) = 'non_existent_file'
                 locfnhr(t,f) = 'non_existent_file'
              end if
+             my_locfnh = locfnh(t,f)
+             my_locfnhr = locfnhr(t,f)
+             if (ntapes == 1) then
+                call ncd_io('locfnh', my_locfnh, 'write', ncid, nt=f)
+                call ncd_io('locfnhr', my_locfnhr, 'write', ncid, nt=f)
+                call ncd_io('history_tape_in_use', history_tape_in_use(t,f), 'write', ncid, nt=f)
+             end if
           end do file_loop2
-          call ncd_io('locfnh', locfnh(t,:), 'write', ncid, nt=t)
-          call ncd_io('locfnhr', locfnhr(t,:), 'write', ncid, nt=t)
+          if (ntapes > 1) then
+             call ncd_io('locfnh', locfnh(t,:), 'write', ncid, nt=t)
+             call ncd_io('locfnhr', locfnhr(t,:), 'write', ncid, nt=t)
+             call ncd_io('history_tape_in_use', history_tape_in_use(t,:), 'write', ncid, nt=t)
+          end if
        end do tape_loop2
 
        ! 12a) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
