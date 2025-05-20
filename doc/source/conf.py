@@ -197,5 +197,4 @@ html_context["current_version"] = os.environ.get("current_version")
 
 html_context["versions"] = []
 for this_version in version_list:
-    # Note: with 4 pardir operators, link in version selector will be broken locally but work on the Web 🤷
-    html_context["versions"].append([this_version, f"../../../../versions/{this_version}/html"])
+    html_context["versions"].append([this_version, f"../../../versions/{this_version}/html"])
