@@ -8,14 +8,14 @@ on:
       - 'doc/ctsm-docs_container/**'
       - '!doc/ctsm-docs_container/README.md'
       - '.github/workflows/docker-image-ctsm-docs-build.yml'
-      - '.github/workflows/docker-image-build-common.yml'
+      - '.github/workflows/docker-image-common.yml'
 
   pull_request:
     paths:
       - 'doc/ctsm-docs_container/**'
       - '!doc/ctsm-docs_container/README.md'
       - '.github/workflows/docker-image-ctsm-docs-build.yml'
-      - '.github/workflows/docker-image-build-common.yml'
+      - '.github/workflows/docker-image-common.yml'
 
   workflow_dispatch:
 
