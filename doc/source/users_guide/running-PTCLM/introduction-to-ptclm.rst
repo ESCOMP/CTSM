@@ -134,6 +134,3 @@ Example 6-1. Example of running PTCLMmkdata for US-UMB on cheyenne
 
 
 PTCLMmkdata includes a README file that gives some extra details and a simple example.
-
-.. include:: ../../../../tools/PTCLM/README
-   :literal:

@@ -97,11 +97,6 @@ More details on each environment variable.
 
 .. note:: There are several files that are copies of the original files. By having copies the tools can all be made stand-alone, but any changes to the originals will have to be put into the tool directories as well.
 
-The *README.filecopies* (which can be found in ``$CTSMROOT/tools``) is repeated here.
-
-.. include:: ../../../../tools/README.filecopies
-   :literal:
-
 ================================================================
  Building the CLM tools that use the CIME configure/build system
 ================================================================
