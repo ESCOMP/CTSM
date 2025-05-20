@@ -16,7 +16,7 @@ When just creating a replacement file for an existing one, the relevant tool sho
 
 Starting from a SCRIP grid file that describes the grid you will run the model on, you first run **mkmapdata.sh** to create a list of mapping files. See :numref:`Figure mkmapdata.sh` for a more detailed view of how **mkmapdata.sh** works. The mapping files tell **mksurfdata_map** how to map between the output grid and the raw datasets that it uses as input. The output of **mksurfdata_map** is a surface dataset that you then use for running the model.
 
-:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global_Domain` and :numref:`Figure mknoocnmap.pl`).
+:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global-Domain` and :numref:`Figure mknoocnmap.pl`).
 
 .. _Figure Data_Flow_Legend:
 
