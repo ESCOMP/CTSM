@@ -150,7 +150,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
@@ -567,7 +567,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Include an excess ice test starting up from streams</option>
     </options>
   </test>
@@ -1330,7 +1330,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/ciso--clm/matrixcnOn">
@@ -1406,7 +1406,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/o3lombardozzi2015">
@@ -1602,7 +1602,7 @@
       <machine name="izumi" compiler="nag" category="matrixcn"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Repeat ERP_D_P48x1...decStart test with matrixcnOn</option>
     </options>
   </test>
@@ -2999,7 +2999,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart">
@@ -3261,7 +3261,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Ensure functionality of two-stream radiation option in FATES</option>
     </options>
   </test>
