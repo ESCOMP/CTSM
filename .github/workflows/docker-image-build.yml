@@ -4,6 +4,8 @@ name: Test building ctsm-docs Docker image and using it to build the docs
 # Configures this workflow to run every time a change in the Docker container setup is pushed or included in a PR
 on:
   push:
+    # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
     paths:
       - 'doc/ctsm-docs_container/**'
       - '!doc/ctsm-docs_container/README.md'
@@ -11,6 +13,7 @@ on:
       - '.github/workflows/docker-image-common.yml'
 
   pull_request:
+    # Run on pull requests that change the listed files
     paths:
       - 'doc/ctsm-docs_container/**'
       - '!doc/ctsm-docs_container/README.md'
