@@ -20,6 +20,13 @@ import os
 import sys
 import sphinx_rtd_theme
 
+# Assumes you have substitutions.py on your path
+dir2add = os.path.join(os.path.dirname(__file__), os.pardir)
+dir2add = os.path.join(os.path.dirname(__file__))
+print(dir2add)
+sys.path.insert(0, dir2add)
+from substitutions import *  # pylint: disable=wildcard-import,import-error,wrong-import-position
+
 
 # -- General configuration ------------------------------------------------
 
@@ -54,17 +61,6 @@ master_doc = 'index'
 project = u'ctsm'
 copyright = u'2020, UCAR'
 author = u''
-
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-#
-# The short X.Y version.
-version = u'CLM5.0'
-# The full version, including alpha/beta/rc tags.
-release = u'release-clm5.0'
-# CTSM-specific: version label used at the top of some pages.
-version_label = 'CLM5.0 (CESM2.1)'
 
 # List of versions to populate version picker dropdown menu
 version_list = ["master", "release-clm5.0"]
