@@ -46,12 +46,12 @@ module histFileMod
   integer , public, parameter :: max_tapes = 10         ! max number of history tapes
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
-  integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
+  integer , private, parameter :: scale_type_strlen = 32  ! maximum number of characters for scale types
   integer , private, parameter :: avgflag_strlen = 10   ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
   integer , private, parameter :: maxsplitfiles = 2  ! max number of files per tape
-  integer , private, parameter :: accumulated_file_index = 1
-  integer , private, parameter :: instantaneous_file_index = 2
+  integer , private, parameter :: accumulated_file_index = 1  ! non-instantaneous file identifier
+  integer , private, parameter :: instantaneous_file_index = 2  ! instantaneous file identifier
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
   ! given layer. Note that the public parameters are the only ones that can be used by
@@ -297,8 +297,7 @@ module histFileMod
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
      ! 13) DONE slevis: change hlist to (max_flds,maxsplitfiles)
-     type (history_entry) :: hlist(max_flds, maxsplitfiles)  ! array of active history tape entries.
-                                               ! The ordering matches the allhistfldlist's.
+     type (history_entry) :: hlist(max_flds, maxsplitfiles)  ! array of active history tape entries listed in the same order as in allhistfldlist, but hlist contains the active subset of all the fields
   end type history_tape
 
   type clmpoint_rs                             ! Pointer to real scalar data (1D)
@@ -934,11 +933,11 @@ contains
 
        ! 8) TODO DONE do f = 1, maxsplitfiles where needed; search "do t"
        file_loop1: do f = 1, maxsplitfiles
-          do fld = 1, nallhistflds
+          fld_loop: do fld = 1, nallhistflds
              allhistfldname = allhistfldlist(fld)%field%name
              call list_index (fincl(1,t), allhistfldname, ff)
 
-             if (ff > 0) then
+             ff_gt_0: if (ff > 0) then
 
                 ! if field is in include list, ff > 0 and htape_addfld
                 ! will be called for field
@@ -967,8 +966,8 @@ contains
                    call htape_addfld (t, f, fld, ' ')
                 end if
 
-             end if
-          end do
+             end if ff_gt_0
+          end do fld_loop
 
           ! Specification of tape contents now complete.
           ! Sort each list of active entries
