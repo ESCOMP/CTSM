@@ -1,6 +1,6 @@
 ---
 name: Other
-about: Other issues (enhancement, cleanup, documentation, etc.)
+about: Other issues (enhancement, cleanup, etc.)
 
 ---
 
