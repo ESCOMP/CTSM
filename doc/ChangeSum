@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.045 glemieux 05/20/2025 FATES default parameter update for API 40
+       ctsm5.3.044   slevis 05/14/2025 Introduce time-evolving LEAFCN_TARGET as function of leafcn param
        ctsm5.3.043   slevis 05/09/2025 Merge b4b-dev
        ctsm5.3.042 glemieux 05/08/2025 Update FATES tag, tests and address namelist option bug
        ctsm5.3.041 samrabin 04/25/2025 Merge b4b-dev to master
