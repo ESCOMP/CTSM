@@ -935,6 +935,8 @@ contains
              do g = begg,endg
                 rofl2d(g,nt) = garr(g)
              end do
+          else
+             call endrun(msg='ERROR only smin_no3_runoff is supported for lnd2rof_tracer name'//errMsg(u_FILE_u, __LINE__))
           end if
        end do
        if (nflds_lnd2rof_tracers > 1) then
