@@ -3065,15 +3065,6 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
-    </options>
-  </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm">
