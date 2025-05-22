@@ -84,6 +84,9 @@ contains
     ! Calculate total GPP, various maintenance respiration terms, and total available C
     ! for allocation
     !
+    ! !USES:
+    use CNSharedParamsMod           , only : use_matrixcn
+    !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
@@ -196,6 +199,8 @@ contains
              mr = mr + livestem_mr(p) + reproductive_mr_tot
           end if
        end if
+       ! For Matrix solution if mr is very small set it to zero
+       if(mr < -1.e-15_r8 .and. use_matrixcn) mr = 0.0_r8
 
        ! carbon flux available for allocation
        availc(p) = gpp(p) - mr
@@ -394,7 +399,9 @@ contains
              ! allocation coefficients should be irrelevant because crops have no
              ! live carbon pools
              aleaf(p) = 1._r8
+             aleafi(p) = 1._r8
              astem(p) = 0._r8
+             astemi(p) = 0._r8
              aroot(p) = 0._r8
              do k = 1, nrepr
                 arepr(p,k) = 0._r8
@@ -409,7 +416,9 @@ contains
           ! allocation coefficients should be irrelevant because crops have no
           ! live carbon pools
           aleaf(p) = 1._r8
+          aleafi(p) = 1._r8
           astem(p) = 0._r8
+          astemi(p) = 0._r8
           aroot(p) = 0._r8
           do k = 1, nrepr
              arepr(p,k) = 0._r8

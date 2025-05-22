@@ -7,6 +7,7 @@ import logging
 import configparser
 
 from ctsm.utils import abort
+from ctsm.longitude import Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -18,26 +19,32 @@ _CONFIG_PLACEHOLDER = "FILL_THIS_IN"
 _CONFIG_UNSET = "UNSET"
 
 
-def lon_range_0_to_360(lon_in):
+def check_lon1_lt_lon2(lon1, lon2, lon_type):
     """
     Description
     -----------
-    Restrict longitude to 0 to 360 when given as -180 to 180.
+    Given two longitudes, check that lon1 is < lon2. Useful for avoiding CTSM Issue #2017, but note
+    that to use this function properly for that purpose, you need to have already converted
+    longitudes from lon_type 180 to 360.
     """
-    if -180 <= lon_in < 0:
-        lon_out = lon_in % 360
-        logger.info(
-            "Resetting longitude from %s to %s to keep in the range " " 0 to 360",
-            str(lon_in),
-            str(lon_out),
-        )
-    elif 0 <= lon_in <= 360 or lon_in is None:
-        lon_out = lon_in
-    else:
-        errmsg = "lon_in needs to be in the range 0 to 360"
-        abort(errmsg)
+    # Convert to Longitude class, if needed
+    if not isinstance(lon1, Longitude):
+        lon1 = Longitude(lon1, lon_type)
+    if not isinstance(lon2, Longitude):
+        lon2 = Longitude(lon2, lon_type)
 
-    return lon_out
+    # Convert to type 360, if needed
+    lon1 = lon1.get(360)
+    lon2 = lon2.get(360)
+
+    if lon1 < lon2:
+        return
+
+    msg = f"--lon1 ({lon1}) must be < --lon2 ({lon2})\n"
+    msg += "See CTSM issue #2017: https://github.com/ESCOMP/CTSM/issues/2017"
+    if lon_type == 180:
+        msg = "After converting to --lon-type 360, " + msg
+    raise ValueError(msg)
 
 
 def get_config_value(
@@ -45,6 +52,7 @@ def get_config_value(
     section,
     item,
     file_path,
+    *,
     allowed_values=None,
     default=None,
     is_list=False,
@@ -63,9 +71,7 @@ def get_config_value(
     try:
         val = config.get(section, item)
     except configparser.NoSectionError:
-        abort(
-            "ERROR: Config file {} must contain section '{}'".format(file_path, section)
-        )
+        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
     except configparser.NoOptionError:
         abort(
             "ERROR: Config file {} must contain item '{}' in section '{}'".format(
@@ -74,9 +80,7 @@ def get_config_value(
         )
 
     if val == _CONFIG_PLACEHOLDER:
-        abort(
-            "Error: {} needs to be specified in config file {}".format(item, file_path)
-        )
+        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
     val = _handle_config_value(
         var=val,
@@ -90,8 +94,42 @@ def get_config_value(
     return val
 
 
+def get_config_value_or_array(
+    config,
+    section,
+    item,
+    convert_to_type=None,
+):
+    """Get a config value as a single value or as an array if it's expressed as an array
+    for cases when you don't know how it's going to be expressed"""
+    val = config.get(section, item)
+    vallist = val.split()
+    if convert_to_type is not None:
+        if (
+            convert_to_type is not float
+            and convert_to_type is not int
+            and convert_to_type is not str
+        ):
+            abort(
+                "get_config_value_or_array can only have convert_to_type as float, int or str not "
+                + str(convert_to_type)
+            )
+    is_list = bool(len(vallist) > 1)
+
+    val = _handle_config_value(
+        var=val,
+        default=None,
+        item=item,
+        is_list=is_list,
+        convert_to_type=convert_to_type,
+        can_be_unset=False,
+        allowed_values=None,
+    )
+    return val
+
+
 def _handle_config_value(
-    var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
+    *, var, default, item, is_list, convert_to_type, can_be_unset, allowed_values
 ):
     """
     Description

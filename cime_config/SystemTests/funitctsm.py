@@ -14,8 +14,8 @@ from CIME.XML.standard_module_setup import *
 
 logger = logging.getLogger(__name__)
 
-class FUNITCTSM(FUNIT):
 
+class FUNITCTSM(FUNIT):
     def __init__(self, case):
         FUNIT.__init__(self, case)
 

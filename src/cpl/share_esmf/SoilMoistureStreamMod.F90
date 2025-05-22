@@ -7,7 +7,7 @@ module SoilMoistureStreamMod
   ! Read in soil moisture from data stream
   !
   ! !USES:
-  use ESMF
+  use ESMF               , only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU, ESMF_Finalize, ESMF_END_ABORT, ESMF_SUCCESS
   use dshr_strdata_mod   , only : shr_strdata_type, shr_strdata_print
   use dshr_strdata_mod   , only : shr_strdata_init_from_inline, shr_strdata_advance
   use dshr_methods_mod   , only : dshr_fldbun_getfldptr
@@ -17,7 +17,7 @@ module SoilMoistureStreamMod
   use shr_mpi_mod        , only : shr_mpi_bcast
   use decompMod          , only : bounds_type, subgrid_level_column
   use abortutils         , only : endrun
-  use clm_varctl         , only : iulog, use_soil_moisture_streams
+  use clm_varctl         , only : iulog, use_soil_moisture_streams, FL => fname_len
   use controlMod         , only : NLFilename
   use LandunitType       , only : lun
   use ColumnType         , only : col                
@@ -78,7 +78,7 @@ contains
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
     integer            :: soilm_offset               ! Offset in time for dataset (sec)
-    character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
+    character(len=FL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
     character(len=CL)  :: stream_mapalgo = 'bilinear'
     real(r8)           :: stream_dtlimit = 15._r8

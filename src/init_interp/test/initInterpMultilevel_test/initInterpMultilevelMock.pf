@@ -6,7 +6,7 @@ module initInterpMultilevelMock
   ! interp_multilevel routine is called correctly.
   !
   ! !USES:
-  use pfunit_mod
+  use funit
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use initInterpMultilevelBase , only : interp_multilevel_type
 

@@ -122,6 +122,12 @@ module pftconMod
      real(r8), allocatable :: taul          (:,:) ! leaf transmittance: 1=vis, 2=nir
      real(r8), allocatable :: taus          (:,:) ! stem transmittance: 1=vis, 2=nir
      real(r8), allocatable :: z0mr          (:)   ! ratio of momentum roughness length to canopy top height (-)
+     real(r8), allocatable :: z0v_Cr        (:)   ! roughness-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_Cs        (:)   ! substrate-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_c         (:)   ! c parameter for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_cw        (:)   ! roughness sublayer depth coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAIoff    (:)   ! leaf area index offset for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAImax    (:)   ! onset of over-sheltering for Raupach92 parameterization (-)
      real(r8), allocatable :: displar       (:)   ! ratio of displacement height to canopy top height (-)
      real(r8), allocatable :: roota_par     (:)   ! CLM rooting distribution parameter [1/m]
      real(r8), allocatable :: rootb_par     (:)   ! CLM rooting distribution parameter [1/m]
@@ -156,6 +162,11 @@ module pftconMod
      real(r8), allocatable :: taper  (:)          ! tapering ratio of height:radius_breast_height
      real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
+     real(r8), allocatable :: crit_onset_gdd_sf(:)! scale factor for crit_onset_gdd
+     real(r8), allocatable :: ndays_on(:)         ! number of days to complete leaf onset
+
+     ! MIMICS
+     real(r8), allocatable :: mimics_fi(:)
 
      !  crop
 
@@ -274,9 +285,6 @@ module pftconMod
      real(r8), allocatable :: FUN_fracfixers(:)   ! Fraction of C that can be used for fixation.    
 
 
-     ! pft parameters for dynamic root code
-     real(r8), allocatable :: root_dmx(:)     !maximum root depth
-
    contains
 
      procedure, public  :: Init
@@ -361,11 +369,17 @@ contains
     allocate( this%rhos          (0:mxpft,numrad) ) 
     allocate( this%taul          (0:mxpft,numrad) ) 
     allocate( this%taus          (0:mxpft,numrad) ) 
-    allocate( this%z0mr          (0:mxpft) )        
-    allocate( this%displar       (0:mxpft) )     
-    allocate( this%roota_par     (0:mxpft) )   
-    allocate( this%rootb_par     (0:mxpft) )   
-    allocate( this%crop          (0:mxpft) )        
+    allocate( this%z0mr          (0:mxpft) )
+    allocate( this%z0v_Cr        (0:mxpft) )
+    allocate( this%z0v_Cs        (0:mxpft) )
+    allocate( this%z0v_c         (0:mxpft) )
+    allocate( this%z0v_cw        (0:mxpft) )
+    allocate( this%z0v_LAIoff    (0:mxpft) )
+    allocate( this%z0v_LAImax    (0:mxpft) )
+    allocate( this%displar       (0:mxpft) )
+    allocate( this%roota_par     (0:mxpft) )
+    allocate( this%rootb_par     (0:mxpft) )
+    allocate( this%crop          (0:mxpft) )
     allocate( this%mergetoclmpft (0:mxpft) )
     allocate( this%is_pft_known_to_model  (0:mxpft) )
     allocate( this%irrigated     (0:mxpft) )   
@@ -482,7 +496,6 @@ contains
     allocate( this%kn_nonmyc     (0:mxpft) )
     allocate( this%kr_resorb     (0:mxpft) )
     allocate( this%perecm        (0:mxpft) )
-    allocate( this%root_dmx      (0:mxpft) )
     allocate( this%fun_cn_flex_a (0:mxpft) )
     allocate( this%fun_cn_flex_b (0:mxpft) )
     allocate( this%fun_cn_flex_c (0:mxpft) )
@@ -494,6 +507,9 @@ contains
     allocate( this%taper         (0:mxpft) )
     allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
+    allocate( this%mimics_fi(2) )
+    allocate( this%crit_onset_gdd_sf (0:mxpft) )
+    allocate( this%ndays_on      (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -508,7 +524,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_biomass_heat_storage, z0param_method
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
@@ -639,8 +655,47 @@ contains
     call ncd_io('pftname',pftname, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+
+    select case (z0param_method)
+    case ('ZengWang2007')
+       call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       this%z0v_Cr = 0._r8
+       this%z0v_Cs = 0._r8
+       this%z0v_c = 0._r8
+       this%z0v_cw = 0._r8
+       this%z0v_LAImax = 0._r8
+       this%z0v_LAIoff = 0._r8
+
+    case ('Meier2022')
+       call ncd_io('z0v_Cr', this%z0v_Cr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_Cs', this%z0v_Cs, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_c', this%z0v_c, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_cw', this%z0v_cw, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAImax', this%z0v_LAImax, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAIoff', this%z0v_LAIoff, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       this%z0mr = 0._r8
+
+    case default
+       write(iulog,*) subname//' ERROR: unknown z0param_method: ', &
+            z0param_method
+       call endrun(msg = 'unknown z0param_method', &
+            additional_msg = errMsg(sourcefile, __LINE__))
+    end select
+
 
     call ncd_io('displar', this%displar, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -795,6 +850,11 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('season_decid_temperate', this%season_decid_temperate, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('crit_onset_gdd_sf', this%crit_onset_gdd_sf, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('ndays_on', this%ndays_on, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('pftpar20', this%pftpar20, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -1039,6 +1099,9 @@ contains
     !
     ! clm 5 nitrogen variables
     !
+    call ncd_io('mimics_fi',this%mimics_fi, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     if (use_flexibleCN) then
        call ncd_io('i_vcad', this%i_vcad, 'read', ncid, readvar=readv) 
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__)) 
@@ -1054,13 +1117,8 @@ contains
     end if
 
     !
-    ! Dynamic Root variables for crops
     !
-    if ( use_crop .and. use_dynroot )then
-       call ncd_io('root_dmx', this%root_dmx, 'read', ncid, readvar=readv)
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-    end if
-   
+    !
     call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     call ncd_io('taper',this%taper, 'read', ncid, readvar=readv)
@@ -1081,6 +1139,7 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
     else
        this%dbh = 0.0_r8
        this%fbw = 0.0_r8
@@ -1408,6 +1467,12 @@ contains
     deallocate( this%taul)
     deallocate( this%taus)
     deallocate( this%z0mr)
+    deallocate( this%z0v_Cr)
+    deallocate( this%z0v_Cs)
+    deallocate( this%z0v_c)
+    deallocate( this%z0v_cw)
+    deallocate( this%z0v_LAImax)
+    deallocate( this%z0v_LAIoff)
     deallocate( this%displar)
     deallocate( this%roota_par)
     deallocate( this%rootb_par)
@@ -1526,7 +1591,6 @@ contains
     deallocate( this%kn_nonmyc)
     deallocate( this%kr_resorb)
     deallocate( this%perecm)
-    deallocate( this%root_dmx)
     deallocate( this%fun_cn_flex_a)
     deallocate( this%fun_cn_flex_b)
     deallocate( this%fun_cn_flex_c)
@@ -1538,6 +1602,9 @@ contains
     deallocate( this%rstem_per_dbh)
     deallocate( this%wood_density)
     deallocate( this%taper)
+    deallocate( this%mimics_fi)
+    deallocate( this%crit_onset_gdd_sf)
+    deallocate( this%ndays_on)
   end subroutine Clean
 
 end module pftconMod

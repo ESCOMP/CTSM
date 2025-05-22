@@ -2,7 +2,7 @@ module test_init_columns
   
   ! Tests of the dynInitColumns module
 
-  use pfunit_mod
+  use funit
   use unittestSubgridMod
   use dynInitColumnsMod
   use ColumnType      , only : col

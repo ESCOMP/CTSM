@@ -1,0 +1,15 @@
+hist_dov2xy = .true.,.false.
+hist_nhtfrq = 0,-175200
+hist_mfilt = 1,1
+hist_fincl2 = 'FPI_vr', 'K_SOM_PAS', 'K_SOM_SLO', 'K_SOM_ACT',
+              'K_CWD', 'K_LIT_CEL', 'K_LIT_LIG', 'K_LIT_MET',
+              'CWD_PATHFRAC_L2_vr', 'CWD_RESP_FRAC_L2_vr',
+              'CWD_PATHFRAC_L3_vr', 'CWD_RESP_FRAC_L3_vr',
+              'L1_PATHFRAC_S1_vr', 'L1_RESP_FRAC_S1_vr',
+              'L2_PATHFRAC_S1_vr', 'L2_RESP_FRAC_S1_vr',
+              'L3_PATHFRAC_S2_vr', 'L3_RESP_FRAC_S2_vr',
+              'S1_PATHFRAC_S2_vr', 'S1_RESP_FRAC_S2_vr'
+              'S1_PATHFRAC_S3_vr', 'S1_RESP_FRAC_S3_vr'
+              'S2_PATHFRAC_S1_vr', 'S2_RESP_FRAC_S1_vr'
+              'S2_PATHFRAC_S3_vr', 'S2_RESP_FRAC_S3_vr'
+              'S3_PATHFRAC_S1_vr', 'S3_RESP_FRAC_S1_vr'

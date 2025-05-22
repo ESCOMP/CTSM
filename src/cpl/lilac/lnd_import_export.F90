@@ -1,6 +1,7 @@
 module lnd_import_export
 
-  use ESMF
+  use ESMF                  , only : ESMF_State, ESMF_SUCCESS, ESMF_StatePrint, ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_LOGMSG_INFO
+  use ESMF                  , only : ESMF_FAILURE
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod           , only : shr_sys_abort
   use shr_const_mod         , only : fillvalue=>SHR_CONST_SPVAL
@@ -153,11 +154,11 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swvdr', bounds, &
-         output=atm2lnd_inst%forc_solad_grc(:,1), rc=rc)
+         output=atm2lnd_inst%forc_solad_not_downscaled_grc(:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swndr', bounds, &
-         output=atm2lnd_inst%forc_solad_grc(:,2), rc=rc)
+         output=atm2lnd_inst%forc_solad_not_downscaled_grc(:,2), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_swvdf', bounds, &
@@ -570,7 +571,7 @@ contains
     end if
 
     ! Check for nans
-    call check_for_nans(output, trim(fldname), bounds%begg)
+    call check_for_nans(output, trim(fldname), bounds%begg, "output")
 
   end subroutine state_getimport
 
@@ -656,7 +657,7 @@ contains
     end if
 
     ! check for nans
-    call check_for_nans(input, trim(fldname), bounds%begg)
+    call check_for_nans(input, trim(fldname), bounds%begg, "input")
 
   end subroutine state_setexport
 
@@ -667,6 +668,10 @@ contains
     ! ----------------------------------------------
     ! Get pointer to a state field
     ! ----------------------------------------------
+    use ESMF       , only : ESMF_FieldStatus_Flag, ESMF_Field, ESMF_FieldBundle
+    use ESMF       , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_StateGet
+    use ESMF       , only : ESMF_FieldBundleGet, ESMF_FieldGet
+    use ESMF       , only : operator(/=)
 
     ! input/output variables
     type(ESMF_State),             intent(in)    :: State

@@ -17,9 +17,7 @@ import numpy as np
 import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
-)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
@@ -28,6 +26,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-lines
+
 
 class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     """
@@ -45,8 +44,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [8]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
+    cth = 0.9
+    cbh = 0.1
     include_nonveg = False
     uni_snow = True
     cap_saturation = True
@@ -56,6 +58,8 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     # -- dimensions of xarray dataset
     lsmlat = [plat]
     lsmlon = [plon]
+    months = np.arange(1, 13, 1, dtype=int)
+    lsmpft = np.arange(0, 79, 1, dtype=int)
     natpft = np.arange(0, 15, 1, dtype=int)
     cft = np.arange(15, 17, 1, dtype=int)
     numurbl = np.arange(0, 3, 1, dtype=int)
@@ -107,6 +111,12 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
                 coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
                 attrs={"long_name": "percent wetland", "units": "unitless"},
             ),
+            "PCT_OCEAN": xr.DataArray(
+                data=np.random.rand(1, 1),
+                dims=["lsmlat", "lsmlon"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
+                attrs={"long_name": "percent ocean", "units": "unitless"},
+            ),
             "PCT_URBAN": xr.DataArray(
                 data=np.random.rand(1, 1, 3),
                 dims=["lsmlat", "lsmlon", "numurbl"],
@@ -137,6 +147,24 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
                     "units": "unitless",
                 },
             ),
+            "MONTHLY_HEIGHT_TOP": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height top by pft and month",
+                    "units": "m",
+                },
+            ),
+            "MONTHLY_HEIGHT_BOT": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height bottom by pft and month",
+                    "units": "m",
+                },
+            ),
         },
         attrs={"Conventions": "test data only"},
     )
@@ -156,8 +184,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -188,8 +219,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -216,8 +250,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -228,9 +265,6 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_CROP"].data[:, :], 0)
-
-
-
 
     def test_modify_surfdata_atpoint_nocrop_1pft_glacier(self):
         """
@@ -247,8 +281,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -276,8 +313,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -305,8 +345,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -334,8 +377,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -364,8 +410,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -394,8 +443,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -430,8 +482,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -464,8 +519,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -501,8 +559,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -515,7 +576,6 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertNotEqual(ds_out["PCT_WETLAND"].data[:, :], 0)
-
 
     def test_modify_surfdata_atpoint_nocrop_nopft_zero_nonveg(self):
         """
@@ -532,8 +592,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -542,10 +605,10 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         )
         single_point.dom_pft = None
         single_point.include_nonveg = False
-        self.ds_test['PCT_CROP'].values = [[40]]
-        self.ds_test['PCT_LAKE'].values = [[10]]
-        self.ds_test['PCT_WETLAND'].values = [[10]]
-        self.ds_test['PCT_NATVEG'].values = [[40]]
+        self.ds_test["PCT_CROP"].values = [[40]]
+        self.ds_test["PCT_LAKE"].values = [[10]]
+        self.ds_test["PCT_WETLAND"].values = [[10]]
+        self.ds_test["PCT_NATVEG"].values = [[40]]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_CROP"].data[:, :], 50)
@@ -565,8 +628,11 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -575,13 +641,14 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
         )
         single_point.dom_pft = None
         single_point.include_nonveg = True
-        self.ds_test['PCT_CROP'].values = [[40]]
-        self.ds_test['PCT_LAKE'].values = [[10]]
-        self.ds_test['PCT_WETLAND'].values = [[10]]
-        self.ds_test['PCT_NATVEG'].values = [[40]]
+        self.ds_test["PCT_CROP"].values = [[40]]
+        self.ds_test["PCT_LAKE"].values = [[10]]
+        self.ds_test["PCT_WETLAND"].values = [[10]]
+        self.ds_test["PCT_NATVEG"].values = [[40]]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_CROP"].data[:, :], 40)
+
 
 class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     """
@@ -598,8 +665,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [17]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 78
+    cth = 0.9
+    cbh = 0.1
     include_nonveg = False
     uni_snow = False
     cap_saturation = False
@@ -609,6 +679,8 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     # -- dimensions of xarray dataset
     lsmlat = [plat]
     lsmlon = [plon]
+    months = np.arange(1, 12, 1, dtype=int)
+    lsmpft = np.arange(0, 79, 1, dtype=int)
     natpft = np.arange(0, 15, 1, dtype=int)
     cft = np.arange(15, 79, 1, dtype=int)
     numurbl = np.arange(0, 3, 1, dtype=int)
@@ -660,6 +732,12 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
                 coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
                 attrs={"long_name": "percent wetland", "units": "unitless"},
             ),
+            "PCT_OCEAN": xr.DataArray(
+                data=np.random.rand(1, 1),
+                dims=["lsmlat", "lsmlon"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon},
+                attrs={"long_name": "percent ocean", "units": "unitless"},
+            ),
             "PCT_URBAN": xr.DataArray(
                 data=np.random.rand(1, 1, 3),
                 dims=["lsmlat", "lsmlon", "numurbl"],
@@ -690,6 +768,24 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
                     "units": "unitless",
                 },
             ),
+            "MONTHLY_HEIGHT_TOP": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height top by pft and month",
+                    "units": "m",
+                },
+            ),
+            "MONTHLY_HEIGHT_BOT": xr.DataArray(
+                data=np.random.rand(1, 1, months[-1], lsmpft[-1] + 1),
+                dims=["lsmlat", "lsmlon", "time", "lsmpft"],
+                coords={"lsmlat": lsmlat, "lsmlon": lsmlon, "time": months, "lsmpft": lsmpft},
+                attrs={
+                    "long_name": "monthly height bottom by pft and month",
+                    "units": "m",
+                },
+            ),
         },
         attrs={"Conventions": "test data only"},
     )
@@ -709,8 +805,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -741,8 +840,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -769,8 +871,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -797,8 +902,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -826,8 +934,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -855,8 +966,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -884,8 +998,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -913,8 +1030,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -943,8 +1063,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -977,8 +1100,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -1011,8 +1137,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -1048,8 +1177,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -1078,8 +1210,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -1088,10 +1223,10 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         )
         single_point.dom_pft = None
         single_point.include_nonveg = False
-        self.ds_test['PCT_CROP'].values = [[40]]
-        self.ds_test['PCT_LAKE'].values = [[10]]
-        self.ds_test['PCT_WETLAND'].values = [[10]]
-        self.ds_test['PCT_NATVEG'].values = [[40]]
+        self.ds_test["PCT_CROP"].values = [[40]]
+        self.ds_test["PCT_LAKE"].values = [[10]]
+        self.ds_test["PCT_WETLAND"].values = [[10]]
+        self.ds_test["PCT_NATVEG"].values = [[40]]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 50)
@@ -1111,8 +1246,11 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -1121,13 +1259,14 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
         )
         single_point.dom_pft = None
         single_point.include_nonveg = True
-        self.ds_test['PCT_CROP'].values = [[40]]
-        self.ds_test['PCT_LAKE'].values = [[10]]
-        self.ds_test['PCT_WETLAND'].values = [[10]]
-        self.ds_test['PCT_NATVEG'].values = [[40]]
+        self.ds_test["PCT_CROP"].values = [[40]]
+        self.ds_test["PCT_LAKE"].values = [[10]]
+        self.ds_test["PCT_WETLAND"].values = [[10]]
+        self.ds_test["PCT_NATVEG"].values = [[40]]
         ds_out = single_point.modify_surfdata_atpoint(self.ds_test)
 
         self.assertEqual(ds_out["PCT_NATVEG"].data[:, :], 40)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

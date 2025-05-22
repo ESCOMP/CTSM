@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=SCBI
+./xmlchange PTS_LON=281.86235999999997
+./xmlchange PTS_LAT=38.89209

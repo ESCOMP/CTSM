@@ -2,7 +2,7 @@ module test_Photosynthesis
   
   ! Tests of PhotosynthesisMod.F90
   
-  use pfunit_mod
+  use funit
   use PhotosynthesisMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod, only : unittest_subgrid_teardown, bounds
@@ -38,7 +38,7 @@ contains
     soil_layerstruct_predefined = '20SL_8.5m'
     
     call setup_ncells_single_veg_patch(ncells=1, pft_type=1)
-    call clm_varpar_init( actual_maxsoil_patches=17, actual_numcft=2 )
+    call clm_varpar_init( actual_maxsoil_patches=17, surf_numpft=15, surf_numcft=2, actual_nlevurb=5 )
     call this%photo%Init( bounds )
     call this%photo%setParamsForTesting( )
 

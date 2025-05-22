@@ -1,12 +1,8 @@
 set (pfunit_sources
   test_irrigation.pf)
 
-# extra sources used for this test, which are not .pf files
-# (currently none)
-set (extra_sources
-  )
-
-create_pFUnit_test(irrigation test_irrigation_exe
-  "${pfunit_sources}" "${extra_sources}")
-
-target_link_libraries(test_irrigation_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(irrigation
+  TEST_SOURCES "${pfunit_sources}"
+  LINK_LIBRARIES clm csm_share esmf
+  EXTRA_FINALIZE unittest_finalize_esmf
+  EXTRA_USE unittestInitializeAndFinalize)

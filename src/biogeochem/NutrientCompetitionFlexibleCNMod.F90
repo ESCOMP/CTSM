@@ -29,8 +29,8 @@ module NutrientCompetitionFlexibleCNMod
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
   use CropType            , only : cphase_leafemerge, cphase_grainfill
-  use clm_varctl          , only : iulog, use_crop_agsys
-  use abortutils          , only : endrun
+  use clm_varctl          , only : use_crop_agsys
+  use CNSharedParamsMod   , only : use_matrixcn
   !
   implicit none
   private
@@ -60,10 +60,13 @@ module NutrientCompetitionFlexibleCNMod
      module procedure constructor
   end interface nutrient_competition_FlexibleCN_type
   !
-
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: calc_npool_to_components_flexiblecn  ! Calculate npool_to_* terms for a single patch using the FlexibleCN approach
   private :: calc_npool_to_components_agsys       ! Calculate npool_to_* terms for a single crop patch when using AgSys
+
+  ! !PRIVATE DATA:
+  logical,parameter :: matrixcheck_ph = .True.
+  logical,parameter :: acc_ph = .False.
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -206,7 +209,14 @@ contains
     use CNSharedParamsMod     , only : use_fun
     use CNPrecisionControlMod , only : n_min
     use clm_varcon            , only : spval
-
+    !index for matrixcn
+    use clm_varpar            , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                       igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn,nvegnpool
+    use CNVegMatrixMod        , only : matrix_update_phn
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
@@ -233,6 +243,7 @@ contains
     real(r8) :: gresp_storage      ! temporary variable for growth resp to storage
     real(r8) :: nlc                ! temporary variable for total new leaf carbon allocation
     real(r8) :: f5(nrepr)          ! reproductive allocation parameters
+    real(r8) :: dt                 ! model time step
 
     real(r8):: frootcn_storage_actual
     real(r8):: frootcn_actual
@@ -244,6 +255,9 @@ contains
     real(r8):: frootcn_max
     real(r8):: livewdcn_max
     real(r8):: frac_resp
+    real(r8):: npool_to_veg
+    real(r8):: cpool_to_veg
+    real(r8) :: tmp
 
     ! -----------------------------------------------------------------------
 
@@ -254,7 +268,7 @@ contains
     associate(                                                                                       &
          fpg                          => fpg_col                                                   , & ! Input:  [real(r8) (:)   ]  fraction of potential gpp (no units)
 
-         ivt                          => patch%itype                                                 , & ! Input:  [integer  (:) ]  patch vegetation type
+         ivt                          => patch%itype                                               , & ! Input:  [integer  (:) ]  patch vegetation type
 
          woody                        => pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          froot_leaf                   => pftcon%froot_leaf                                         , & ! Input:  allocation parameter: new fine root C per new leaf C (gC/gC)
@@ -284,15 +298,15 @@ contains
          annsum_npp                   => cnveg_carbonflux_inst%annsum_npp_patch                    , & ! Input:  [real(r8) (:)   ]  annual sum of NPP, for wood allocation
          availc                       => cnveg_carbonflux_inst%availc_patch                        , & ! Output: [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
          plant_calloc                 => cnveg_carbonflux_inst%plant_calloc_patch                  , & ! Output: [real(r8) (:)   ]  total allocated C flux (gC/m2/s)
-         npp_growth                  => cnveg_carbonflux_inst%npp_growth_patch              , & ! Output:  [real(r8) (:) ] C for growth in FUN. g/m2/s
-         cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! Output: [real(r8) (:)   ]
-         cpool_to_leafc_resp          => cnveg_carbonflux_inst%cpool_to_leafc_resp_patch              , & ! Output: [real(r8) (:)   ]
-         cpool_to_leafc_storage_resp  => cnveg_carbonflux_inst%cpool_to_leafc_storage_resp_patch      , & ! Output: [real(r8) (:)   ]
-         cpool_to_frootc_resp         => cnveg_carbonflux_inst%cpool_to_frootc_resp_patch             , & ! Output: [real(r8) (:)   ]
-         cpool_to_frootc_storage_resp => cnveg_carbonflux_inst%cpool_to_frootc_storage_resp_patch     , & ! Output: [real(r8) (:)   ]
-         cpool_to_livecrootc_resp     => cnveg_carbonflux_inst%cpool_to_livecrootc_resp_patch         , & ! Output: [real(r8) (:)   ]
+         npp_growth                   => cnveg_carbonflux_inst%npp_growth_patch                    , & ! output:  [real(r8) (:) ] c for growth in fun. g/m2/s
+         cpool_to_resp                => cnveg_carbonflux_inst%cpool_to_resp_patch                 , & ! output: [real(r8) (:)   ]
+         cpool_to_leafc_resp          => cnveg_carbonflux_inst%cpool_to_leafc_resp_patch           , & ! Output: [real(r8) (:)   ]
+         cpool_to_leafc_storage_resp  => cnveg_carbonflux_inst%cpool_to_leafc_storage_resp_patch   , & ! Output: [real(r8) (:)   ]
+         cpool_to_frootc_resp         => cnveg_carbonflux_inst%cpool_to_frootc_resp_patch          , & ! Output: [real(r8) (:)   ]
+         cpool_to_frootc_storage_resp => cnveg_carbonflux_inst%cpool_to_frootc_storage_resp_patch  , & ! Output: [real(r8) (:)   ]
+         cpool_to_livecrootc_resp     => cnveg_carbonflux_inst%cpool_to_livecrootc_resp_patch      , & ! Output: [real(r8) (:)   ]
          cpool_to_livecrootc_storage_resp  => cnveg_carbonflux_inst%cpool_to_livecrootc_storage_resp_patch , & ! Output: [real(r8) (:)   ]
-         cpool_to_livestemc_resp      => cnveg_carbonflux_inst%cpool_to_livestemc_resp_patch          , & ! Output: [real(r8) (:)   ]
+         cpool_to_livestemc_resp      => cnveg_carbonflux_inst%cpool_to_livestemc_resp_patch       , & ! Output: [real(r8) (:)   ]
          cpool_to_livestemc_storage_resp => cnveg_carbonflux_inst%cpool_to_livestemc_storage_resp_patch  , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc               => cnveg_carbonflux_inst%cpool_to_leafc_patch                , & ! Output: [real(r8) (:)   ]
          cpool_to_leafc_storage       => cnveg_carbonflux_inst%cpool_to_leafc_storage_patch        , & ! Output: [real(r8) (:)   ]
@@ -321,6 +335,7 @@ contains
          npool_to_reproductiven              => cnveg_nitrogenflux_inst%npool_to_reproductiven_patch             , & ! Output: [real(r8) (:,:)   ]  allocation to grain N (gN/m2/s)
          npool_to_reproductiven_storage      => cnveg_nitrogenflux_inst%npool_to_reproductiven_storage_patch     , & ! Output: [real(r8) (:,:)   ]  allocation to grain N storage (gN/m2/s)
          retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
+         retransn                     => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
          sminn_to_npool               => cnveg_nitrogenflux_inst%sminn_to_npool_patch              , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
          npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)
          npool_to_leafn_storage       => cnveg_nitrogenflux_inst%npool_to_leafn_storage_patch      , & ! Output: [real(r8) (:)   ]  allocation to leaf N storage (gN/m2/s)
@@ -340,9 +355,30 @@ contains
          Nnonmyc                      => cnveg_nitrogenflux_inst%Nnonmyc_patch                     , & ! Output:  [real(r8) (:) ] Non-mycorrhizal N uptake (gN/m2/s)
          Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
-         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch            & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
+         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total soil N uptake of FUN (gN/m2/s)
 
+         iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , & ! Transfer index (from retranslocation pool to leaf pool)
+         iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , & ! Transfer index (from retranslocation pool to leaf storage pool)
+         iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , & ! Transfer index (from retranslocation pool to fine root pool)
+         iretransn_to_ifrootst        => cnveg_nitrogenflux_inst%iretransn_to_ifrootst_ph          , & ! Transfer index (from retranslocation pool to fine root storage pool)
+         iretransn_to_ilivestem       => cnveg_nitrogenflux_inst%iretransn_to_ilivestem_ph         , & ! Transfer index (from retranslocation pool to live stem pool)
+         iretransn_to_ilivestemst     => cnveg_nitrogenflux_inst%iretransn_to_ilivestemst_ph       , & ! Transfer index (from retranslocation pool to live stem storage pool)
+         iretransn_to_ideadstem       => cnveg_nitrogenflux_inst%iretransn_to_ideadstem_ph         , & ! Transfer index (from retranslocation pool to dead stem pool)
+         iretransn_to_ideadstemst     => cnveg_nitrogenflux_inst%iretransn_to_ideadstemst_ph       , & ! Transfer index (from retranslocation pool to dead stem storage pool)
+         iretransn_to_ilivecroot      => cnveg_nitrogenflux_inst%iretransn_to_ilivecroot_ph        , & ! Transfer index (from retranslocation pool to live coarse root pool)
+         iretransn_to_ilivecrootst    => cnveg_nitrogenflux_inst%iretransn_to_ilivecrootst_ph      , & ! Transfer index (from retranslocation pool to live coarse root storage pool)
+         iretransn_to_ideadcroot      => cnveg_nitrogenflux_inst%iretransn_to_ideadcroot_ph        , & ! Transfer index (from retranslocation pool to dead coarse root pool)
+         iretransn_to_ideadcrootst    => cnveg_nitrogenflux_inst%iretransn_to_ideadcrootst_ph      , & ! Transfer index (from retranslocation pool to dead coarse root storage pool)
+         iretransn_to_igrain          => cnveg_nitrogenflux_inst%iretransn_to_igrain_ph            , & ! Transfer index (from retranslocation pool to grain pool)
+         iretransn_to_igrainst        => cnveg_nitrogenflux_inst%iretransn_to_igrainst_ph          , & ! Transfer index (from retranslocation pool to grain storage pool)
+         iretransn_to_iout            => cnveg_nitrogenflux_inst%iretransn_to_iout_ph              , & ! Transfer index (from retranslocation pool to external)
+         ileaf_to_iretransn           => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph             , & ! Transfer index (from leaf pool to retranslocation pools)
+         ifroot_to_iretransn          => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph            , & ! Transfer index (from fine root pool to retranslocation pools)
+         ilivestem_to_iretransn       => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           & ! Transfer index (from live stem pool to retranslocation pools)
          )
+
+      ! set time steps
+      dt = get_step_size_real()
 
       ! patch loop to distribute the available N between the competing patches
       ! on the basis of relative demand, and allocate C and N to new growth and storage
@@ -400,7 +436,6 @@ contains
          ! turning off this correction (PET, 12/11/03), instead using bgtr in
          ! phenology algorithm.
 
-
          if(use_fun)then ! if we are using FUN, we get the N available from there.
            sminn_to_npool(p) = sminn_to_plant_fun(p)
          else ! no FUN. :( we get N available from the FPG calculation in soilbiogeochemistry competition.
@@ -408,11 +443,24 @@ contains
          endif
 
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
+         if(use_matrixcn)then
+            associate( &
+              matrix_Ninput => cnveg_nitrogenflux_inst%matrix_Ninput_patch & ! N input of matrix
+            )
+            matrix_Ninput(p) =  sminn_to_npool(p)
+            end associate
+         end if
 
          if(use_fun)then
-            plant_calloc(p) = npp_growth(p)
+            plant_calloc(p)  = npp_growth(p)
+            if(use_matrixcn)then
+               cnveg_carbonflux_inst%matrix_Cinput_patch(p) = npp_growth(p)
+            end if
          else
-            plant_calloc(p) = availc(p)
+            plant_calloc(p)  = availc(p)
+            if(use_matrixcn)then
+               cnveg_carbonflux_inst%matrix_Cinput_patch(p) = availc(p)
+            end if
          end if
 
          ! calculate the amount of new leaf C dictated by these allocation
@@ -424,11 +472,14 @@ contains
          ! transfer pools
 
          nlc = plant_calloc(p) / c_allometry(p)
-
          cpool_to_leafc(p)          = nlc * fcur
          cpool_to_leafc_storage(p)  = nlc * (1._r8 - fcur)
          cpool_to_frootc(p)         = nlc * f1 * fcur
          cpool_to_frootc_storage(p) = nlc * f1 * (1._r8 - fcur)
+         if(use_matrixcn)then
+            cpool_to_veg = cpool_to_leafc(p) + cpool_to_leafc_storage(p) &
+                         + cpool_to_frootc(p) + cpool_to_frootc_storage(p)
+         end if
          if (woody(ivt(p)) == 1._r8) then
             cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
             cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
@@ -438,6 +489,13 @@ contains
             cpool_to_livecrootc_storage(p) = nlc * f2 * f3 * f4 * (1._r8 - fcur)
             cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
+            if(use_matrixcn)then
+               cpool_to_veg = cpool_to_veg &
+                            + cpool_to_livestemc(p)  + cpool_to_livestemc_storage(p) &
+                            + cpool_to_deadstemc(p)  + cpool_to_deadstemc_storage(p) &
+                            + cpool_to_livecrootc(p) + cpool_to_livecrootc_storage(p) &
+                            + cpool_to_deadcrootc(p) + cpool_to_deadcrootc_storage(p)
+            end if
          end if
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
@@ -452,7 +510,64 @@ contains
                cpool_to_reproductivec(p,k)         = nlc * f5(k) * fcur
                cpool_to_reproductivec_storage(p,k) = nlc * f5(k) * (1._r8 -fcur)
             end do
+            if(use_matrixcn)then
+               cpool_to_veg = cpool_to_veg &
+                            + cpool_to_livestemc(p)  + cpool_to_livestemc_storage(p) &
+                            + cpool_to_deadstemc(p)  + cpool_to_deadstemc_storage(p) &
+                            + cpool_to_livecrootc(p) + cpool_to_livecrootc_storage(p) &
+                            + cpool_to_deadcrootc(p) + cpool_to_deadcrootc_storage(p)
+               do k = 1, nrepr
+                  cpool_to_veg = cpool_to_veg &
+                               + cpool_to_reproductivec(p,k) + cpool_to_reproductivec_storage(p,k)
+               end do
+            end if
          end if
+
+         if (use_matrixcn) then
+            associate( &
+               matrix_Cinput => cnveg_carbonflux_inst%matrix_Cinput_patch, & ! C input of matrix 
+               matrix_alloc  => cnveg_carbonflux_inst%matrix_alloc_patch   & ! B-matrix for carbon allocation
+            )
+            matrix_Cinput(p) = cpool_to_veg
+            if(cpool_to_veg .ne. 0)then
+               matrix_alloc(p,ileaf)     = cpool_to_leafc(p)  / cpool_to_veg
+               matrix_alloc(p,ileaf_st)  = cpool_to_leafc_storage(p)  / cpool_to_veg
+               matrix_alloc(p,ifroot)    = cpool_to_frootc(p) / cpool_to_veg
+               matrix_alloc(p,ifroot_st) = cpool_to_frootc_storage(p) / cpool_to_veg
+            end if
+
+            if (woody(ivt(p)) == 1._r8) then
+               if(cpool_to_veg .ne. 0)then
+                  matrix_alloc(p,ilivestem)     = cpool_to_livestemc(p)  / cpool_to_veg
+                  matrix_alloc(p,ilivestem_st)  = cpool_to_livestemc_storage(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadstem)     = cpool_to_deadstemc(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadstem_st)  = cpool_to_deadstemc_storage(p)  / cpool_to_veg
+                  matrix_alloc(p,ilivecroot)    = cpool_to_livecrootc(p)  / cpool_to_veg
+                  matrix_alloc(p,ilivecroot_st) = cpool_to_livecrootc_storage(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadcroot)    = cpool_to_deadcrootc(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadcroot_st) = cpool_to_deadcrootc_storage(p)  / cpool_to_veg
+               end if
+            end if
+            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+               if(cpool_to_veg .ne. 0)then
+                  matrix_alloc(p,ilivestem)     = cpool_to_livestemc(p)  / cpool_to_veg
+                  matrix_alloc(p,ilivestem_st)  = cpool_to_livestemc_storage(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadstem)     = cpool_to_deadstemc(p)  / cpool_to_veg
+                  matrix_alloc(p,ideadstem_st)  = cpool_to_deadstemc_storage(p)  / cpool_to_veg
+                  matrix_alloc(p,ilivecroot)    = cpool_to_livecrootc(p) / cpool_to_veg
+                  matrix_alloc(p,ilivecroot_st) = cpool_to_livecrootc_storage(p) / cpool_to_veg
+                  matrix_alloc(p,ideadcroot)    = cpool_to_deadcrootc(p) / cpool_to_veg
+                  matrix_alloc(p,ideadcroot_st) = cpool_to_deadcrootc_storage(p) / cpool_to_veg
+                  matrix_alloc(p,igrain)        = 0.0_r8
+                  matrix_alloc(p,igrain_st)     = 0.0_r8
+                  do k = 1, nrepr
+                     matrix_alloc(p,igrain)        = matrix_alloc(p,igrain) + cpool_to_reproductivec(p,k) / cpool_to_veg
+                     matrix_alloc(p,igrain_st)     = matrix_alloc(p,igrain_st) + cpool_to_reproductivec_storage(p,k) / cpool_to_veg
+                  end do
+              end if
+           end if
+           end associate
+         end if !use_matrixcn
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -717,6 +832,10 @@ contains
                  cpool_to_frootc_storage_resp(p) + cpool_to_livecrootc_resp(p) + cpool_to_livecrootc_storage_resp(p) + &
                  cpool_to_livestemc_resp(p) + cpool_to_livestemc_storage_resp(p)
 
+            if(use_matrixcn)then
+               cnveg_carbonflux_inst%matrix_Cinput_patch(p) = cnveg_carbonflux_inst%matrix_Cinput_patch(p) - cpool_to_resp(p)
+            end if
+
          end if   ! end of if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then
 
          !if (cnveg_nitrogenstate_inst%leafn_storage_patch(p) < n_min .or. laisun(p)+laisha(p) <= 0.0_r8) then
@@ -725,6 +844,84 @@ contains
          !end if
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+         if(use_matrixcn)then
+           associate( &
+              matrix_Ninput     => cnveg_nitrogenflux_inst%matrix_Ninput_patch,  & ! N input of matrix
+              matrix_nalloc     => cnveg_nitrogenflux_inst%matrix_nalloc_patch,  & ! B-matrix for nitrogen allocation
+              psnsun_to_cpool   => cnveg_carbonflux_inst%psnsun_to_cpool_patch,  & ! 
+              psnshade_to_cpool => cnveg_carbonflux_inst%psnshade_to_cpool_patch & ! 
+           )
+           if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0._r8)then
+               associate( &
+                   matrix_C13input => cnveg_carbonflux_inst%matrix_C13input_patch & ! C13 input of matrix
+               )
+               matrix_C13input(p) = plant_calloc(p) * &
+                                ((c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
+                                (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+               end associate
+           end if
+           if(use_c14 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0._r8)then
+               associate( &
+                  matrix_C14input => cnveg_carbonflux_inst%matrix_C14input_patch & ! C14 input of matrix
+               )
+               matrix_C14input(p) = plant_calloc(p) * &
+                                ((c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
+                                (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+               end associate
+           end if
+           npool_to_veg = npool_to_leafn(p) + npool_to_leafn_storage(p) &
+                         + npool_to_frootn(p) + npool_to_frootn_storage(p) &
+                         + npool_to_livestemn(p) + npool_to_livestemn_storage(p) &
+                         + npool_to_deadstemn(p) + npool_to_deadstemn_storage(p) &
+                         + npool_to_livecrootn(p) + npool_to_livecrootn_storage(p)  &
+                         + npool_to_deadcrootn(p) + npool_to_deadcrootn_storage(p)   
+           if (ivt(p) >= npcropmin)then
+               npool_to_veg = npool_to_veg + npool_to_reproductiven(p,1) + npool_to_reproductiven_storage(p,1)
+           end if
+           if(npool_to_veg .ne. 0._r8)then
+               matrix_nalloc(p,ileaf         ) = npool_to_leafn(p)              / npool_to_veg
+               matrix_nalloc(p,ileaf_st      ) = npool_to_leafn_storage(p)      / npool_to_veg
+               matrix_nalloc(p,ifroot        ) = npool_to_frootn(p)             / npool_to_veg
+               matrix_nalloc(p,ifroot_st     ) = npool_to_frootn_storage(p)     / npool_to_veg
+               matrix_nalloc(p,ilivestem     ) = npool_to_livestemn(p)          / npool_to_veg
+               matrix_nalloc(p,ilivestem_st  ) = npool_to_livestemn_storage(p)  / npool_to_veg
+               matrix_nalloc(p,ideadstem     ) = npool_to_deadstemn(p)          / npool_to_veg
+               matrix_nalloc(p,ideadstem_st  ) = npool_to_deadstemn_storage(p)  / npool_to_veg
+               matrix_nalloc(p,ilivecroot    ) = npool_to_livecrootn(p)         / npool_to_veg
+               matrix_nalloc(p,ilivecroot_st ) = npool_to_livecrootn_storage(p) / npool_to_veg
+               matrix_nalloc(p,ideadcroot    ) = npool_to_deadcrootn(p)         / npool_to_veg
+               matrix_nalloc(p,ideadcroot_st ) = npool_to_deadcrootn_storage(p) / npool_to_veg
+               if (ivt(p) >= npcropmin)then
+                  matrix_nalloc(p,igrain     ) = npool_to_reproductiven(p,1)             / npool_to_veg 
+                  matrix_nalloc(p,igrain_st  ) = npool_to_reproductiven_storage(p,1)     / npool_to_veg 
+               end if
+               matrix_Ninput(p) = npool_to_veg - retransn_to_npool(p)
+           else
+               if(retransn(p) .ne. 0._r8)then
+                  retransn_to_npool(p) = retransn(p) * matrix_update_phn(p,iretransn_to_iout,retransn_to_npool(p)/retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               end if
+           end if
+
+           if(retransn(p) .ne. 0._r8)then
+               tmp = matrix_update_phn(p,iretransn_to_ileaf             ,matrix_nalloc(p,ileaf )         * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ileafst           ,matrix_nalloc(p,ileaf_st )      * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ifroot            ,matrix_nalloc(p,ifroot )        * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ifrootst          ,matrix_nalloc(p,ifroot_st )     * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ilivestem         ,matrix_nalloc(p,ilivestem )     * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ilivestemst       ,matrix_nalloc(p,ilivestem_st )  * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ideadstem         ,matrix_nalloc(p,ideadstem )     * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ideadstemst       ,matrix_nalloc(p,ideadstem_st )  * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ilivecroot        ,matrix_nalloc(p,ilivecroot )    * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ilivecrootst      ,matrix_nalloc(p,ilivecroot_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ideadcroot        ,matrix_nalloc(p,ideadcroot )    * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               tmp = matrix_update_phn(p,iretransn_to_ideadcrootst      ,matrix_nalloc(p,ideadcroot_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               if(ivt(p) >= npcropmin)then
+                 tmp = matrix_update_phn(p,iretransn_to_igrain   ,matrix_nalloc(p,igrain    ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+                 tmp = matrix_update_phn(p,iretransn_to_igrainst ,matrix_nalloc(p,igrain_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
+               end if
+           end if
+           end associate
+         end if !end use_matrixcn  
       end do ! end patch loop
 
     end associate
@@ -1179,12 +1376,10 @@ contains
     ! - livestemn_to_retransn
     !
     ! !USES:
-    use pftconMod              , only : npcropmin, pftcon
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_varcon             , only : dzsoi_decomp
     use clm_varpar             , only : nlevdecomp
-    use clm_time_manager       , only : get_step_size_real
     use CanopyStateType        , only : canopystate_type
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
@@ -1198,6 +1393,13 @@ contains
     use CNSharedParamsMod      , only : use_fun
     use CNPrecisionControlMod  , only : n_min
     use clm_varcon             , only : spval
+    use clm_varpar             , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                       ilivestem,ilivestem_st,ilivestem_xf,&
+                                       ideadstem,ideadstem_st,ideadstem_xf,&
+                                       ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                       ideadcroot,ideadcroot_st,ideadcroot_xf,&
+                                       igrain,igrain_st,igrain_xf,iretransn,ioutc,ioutn
+    use CNVegMatrixMod         , only : matrix_update_phn
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
@@ -1242,6 +1444,7 @@ contains
     real(r8) :: allocation_leaf  (bounds%begp:bounds%endp)
     real(r8) :: allocation_stem  (bounds%begp:bounds%endp)
     real(r8) :: allocation_froot (bounds%begp:bounds%endp)
+    real(r8) :: tmp
 
     character(len=*), parameter :: subname = "calc_plant_nitrogen_demand"
     ! -----------------------------------------------------------------------
@@ -1293,9 +1496,10 @@ contains
          livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
          frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
          sminn_vr              => soilbiogeochem_nitrogenstate_inst%sminn_vr_col    , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
-         btran                 => energyflux_inst%btran_patch                       , & ! Input: [real(r8) (:)    ]  transpiration wetness factor (0 to 1)
-         t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col        & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
-
+         t_scalar              => soilbiogeochem_carbonflux_inst%t_scalar_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature scalar for decomp
+         ileaf_to_iretransn_phn     => cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph, &
+         ifroot_to_iretransn_phn    => cnveg_nitrogenflux_inst%ifroot_to_iretransn_ph, &
+         ilivestem_to_iretransn_phn => cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph &
          )
 
       ! set time steps
@@ -1315,7 +1519,6 @@ contains
             ! leaf CN ratio
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
-
 
          leafcn_min = leafcn(ivt(p)) - 10.0_r8
          leafcn_max = leafcn(ivt(p)) + 10.0_r8
@@ -1408,6 +1611,18 @@ contains
                            frootn_to_retransn(p) = t1 * max(frootn(p) - (frootc(p) / ffrootcn(ivt(p))),0._r8)
                         end if
                         grain_flag(p) = 1._r8
+                        if(use_matrixcn)then
+                           if(leafn(p) .ne. 0._r8)then
+                               leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                           end if
+                           if(frootn(p) .ne. 0._r8)then
+                               frootn_to_retransn(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iretransn_phn,frootn_to_retransn(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                           end if
+                           if(livestemn(p) .ne. 0._r8)then
+                               livestemn_to_retransn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iretransn_phn,livestemn_to_retransn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                           end if
+                        end if
+
                      end if
                   end if
                end if

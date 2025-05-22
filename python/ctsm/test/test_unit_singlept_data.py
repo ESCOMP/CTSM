@@ -12,9 +12,7 @@ import os
 import sys
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir
-)
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
@@ -38,8 +36,11 @@ class TestSinglePointCase(unittest.TestCase):
     create_datm = True
     create_user_mods = True
     dom_pft = [8]
+    evenly_split_cropland = False
     pct_pft = None
     num_pft = 16
+    cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
+    cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     include_nonveg = False
     uni_snow = True
     cap_saturation = True
@@ -60,8 +61,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -86,8 +90,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -113,8 +120,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -122,9 +132,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, 79]
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "values for --dompft should*"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
     def test_check_dom_pft_too_small(self):
@@ -142,8 +150,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -151,9 +162,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [16, 36, -1]
-        with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "values for --dompft should*"
-        ):
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
     def test_check_dom_pft_numpft(self):
@@ -171,8 +180,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -199,8 +211,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -210,7 +225,7 @@ class TestSinglePointCase(unittest.TestCase):
         single_point.dom_pft = [1, 5, 15]
         single_point.num_pft = 78
         with self.assertRaisesRegex(
-            argparse.ArgumentTypeError, "mixed land units is not possible*"
+            argparse.ArgumentTypeError, "You are subsetting using mixed land*"
         ):
             single_point.check_dom_pft()
 
@@ -229,8 +244,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -260,8 +278,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -290,8 +311,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,
@@ -320,8 +344,11 @@ class TestSinglePointCase(unittest.TestCase):
             create_datm=self.create_datm,
             create_user_mods=self.create_user_mods,
             dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
             pct_pft=self.pct_pft,
             num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
             include_nonveg=self.include_nonveg,
             uni_snow=self.uni_snow,
             cap_saturation=self.cap_saturation,

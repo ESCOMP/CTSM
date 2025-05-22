@@ -35,22 +35,24 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LII(SystemTestsCompareTwo):
 
+class LII(SystemTestsCompareTwo):
     def __init__(self, case):
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'no_interp',
-                                       run_one_description = 'use_init_interp set to true',
-                                       run_two_description = 'use_init_interp set to false')
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="no_interp",
+            run_one_description="use_init_interp set to true",
+            run_two_description="use_init_interp set to false",
+        )
 
     def _case_one_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "use_init_interp = .true.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(), component="clm", contents="use_init_interp = .true."
+        )
 
     def _case_two_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "use_init_interp = .false.")
-
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(), component="clm", contents="use_init_interp = .false."
+        )

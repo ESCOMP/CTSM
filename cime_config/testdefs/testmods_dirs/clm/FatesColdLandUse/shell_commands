@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Make sure the use-case is a transient one, so that that the landuse.timeeries file is used
+# TODO: Have cases that turn FATES landuse on, use transient compsets and require that they do
+#       See: https://github.com/ESCOMP/CTSM/issues/2304
+#            https://github.com/ESCOMP/CTSM/issues/1617
+#./xmlchange --force CLM_NML_USE_CASE=20thC_transient

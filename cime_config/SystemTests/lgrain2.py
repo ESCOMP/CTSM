@@ -19,22 +19,29 @@ from CIME.SystemTests.test_utils.user_nl_utils import append_to_user_nl_files
 
 logger = logging.getLogger(__name__)
 
-class LGRAIN2(SystemTestsCompareTwo):
 
+class LGRAIN2(SystemTestsCompareTwo):
     def __init__(self, case):
-        SystemTestsCompareTwo.__init__(self, case,
-                                       separate_builds = False,
-                                       run_two_suffix = 'grain1',
-                                       run_one_description = 'use a second grain pool',
-                                       run_two_description = 'use a single grain pool',
-                                       ignore_fieldlist_diffs = True)
+        SystemTestsCompareTwo.__init__(
+            self,
+            case,
+            separate_builds=False,
+            run_two_suffix="grain1",
+            run_one_description="use a second grain pool",
+            run_two_description="use a single grain pool",
+            ignore_fieldlist_diffs=True,
+        )
 
     def _case_one_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "for_testing_use_second_grain_pool=.true.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="for_testing_use_second_grain_pool=.true.",
+        )
 
     def _case_two_setup(self):
-        append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
-                                contents = "for_testing_use_second_grain_pool=.false.")
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="for_testing_use_second_grain_pool=.false.",
+        )

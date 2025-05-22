@@ -1685,11 +1685,13 @@ contains
 
     ChkErr = .false.
     lrc = rc
-    if (present(mpierr) .and. mpierr) then
-       if (rc == MPI_SUCCESS) return
-       call MPI_ERROR_STRING(rc, lstring, len, ierr)
-       call ESMF_LogWrite("ERROR: "//trim(lstring), ESMF_LOGMSG_INFO, line=line, file=file, rc=dbrc)
-       lrc = ESMF_FAILURE
+    if (present(mpierr)) then
+       if (mpierr) then
+          if (rc == MPI_SUCCESS) return
+          call MPI_ERROR_STRING(rc, lstring, len, ierr)
+          call ESMF_LogWrite("ERROR: "//trim(lstring), ESMF_LOGMSG_INFO, line=line, file=file, rc=dbrc)
+          lrc = ESMF_FAILURE
+       endif
     endif
 
     if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=line, file=file)) then

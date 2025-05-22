@@ -30,9 +30,12 @@ module Wateratm2lndBulkType
 
      real(r8), pointer :: volrmch_grc                   (:)   ! rof volr main channel (m3)
      real(r8), pointer :: volr_grc                      (:)   ! rof volr total volume (m3)
+     real(r8), pointer :: tdepth_grc                    (:)   ! rof tributary water depth (m)
+     real(r8), pointer :: tdepthmax_grc                 (:)   ! rof tributary bankfull water depth (m)
      real(r8), pointer :: forc_rh_grc                   (:)   ! atmospheric relative humidity (%)
      real(r8) , pointer :: prec365_col                  (:)   ! col 365-day running mean of tot. precipitation (see comment in UpdateAccVars regarding why this is col-level despite other prec accumulators being patch-level)
      real(r8) , pointer :: prec60_patch                 (:)   ! patch 60-day running mean of tot. precipitation (mm/s)
+     real(r8) , pointer :: prec30_patch                 (:)
      real(r8) , pointer :: prec10_patch                 (:)   ! patch 10-day running mean of tot. precipitation (mm/s)
      real(r8) , pointer :: rh30_patch                   (:)   ! patch 30-day running mean of relative humidity
      real(r8) , pointer :: prec24_patch                 (:)   ! patch 24-hour running mean of tot. precipitation (mm/s)
@@ -117,11 +120,14 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
+    allocate(this%tdepth_grc                    (begg:endg))        ; this%tdepth_grc    (:)   = ival
+    allocate(this%tdepthmax_grc                 (begg:endg))        ; this%tdepthmax_grc (:)   = ival
     allocate(this%volr_grc                      (begg:endg))        ; this%volr_grc    (:)   = ival
     allocate(this%volrmch_grc                   (begg:endg))        ; this%volrmch_grc (:)   = ival
     allocate(this%forc_rh_grc                   (begg:endg))        ; this%forc_rh_grc (:)   = ival
     allocate(this%prec365_col                   (begc:endc))        ; this%prec365_col (:)   = nan
     allocate(this%prec60_patch                  (begp:endp))        ; this%prec60_patch(:)   = nan
+    allocate(this%prec30_patch                  (begp:endp))        ; this%prec30_patch(:)   = nan
     allocate(this%prec10_patch                  (begp:endp))        ; this%prec10_patch(:)   = nan
     allocate(this%rh30_patch                    (begp:endp))        ; this%rh30_patch  (:)   = nan
     if (use_fates) then
@@ -154,6 +160,15 @@ contains
     begp = bounds%begp; endp= bounds%endp
     begg = bounds%begg; endg= bounds%endg
 
+    this%tdepth_grc(begg:endg) = spval
+    call hist_addfld1d (fname='TDEPTH',  units='m',  &
+         avgflag='A', long_name='tributary water depth', &
+         ptr_lnd=this%tdepth_grc, default = 'inactive')
+
+    this%tdepthmax_grc(begg:endg) = spval
+    call hist_addfld1d (fname='TDEPTHMAX',  units='m',  &
+         avgflag='A', long_name='tributary bankfull water depth', &
+         ptr_lnd=this%tdepthmax_grc, default = 'inactive')
 
     this%volr_grc(begg:endg) = spval
     call hist_addfld1d (fname=this%info%fname('VOLR'),  units='m3',  &
@@ -185,6 +200,12 @@ contains
        call hist_addfld1d (fname=this%info%fname('PREC60'), units='MM H2O/S',  &
             avgflag='A', long_name=this%info%lname('60-day running mean of PREC'), &
             ptr_patch=this%prec60_patch, default='inactive')
+
+       this%prec30_patch(begp:endp) = spval
+       call hist_addfld1d (fname=this%info%fname('PREC30'), units='MM H2O/S',  &
+            avgflag='A', long_name=this%info%lname('30-day running mean of PREC'), &
+            ptr_patch=this%prec30_patch, default='inactive')
+
     end if
 
   end subroutine InitBulkHistory
@@ -231,6 +252,11 @@ contains
        call init_accum_field (name='PREC60', units='MM H2O/S', &
             desc='60-day running mean of total precipitation', accum_type='runmean', accum_period=-60, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
+
+      call init_accum_field (name='PREC30', units='MM H2O/S', &
+            desc='30-day running mean of total precipitation', accum_type='runmean', accum_period=-30, &
+            subgrid_type='pft', numlev=1, init_value=0._r8)
+
 
        call init_accum_field (name='RH30', units='%', &
             desc='30-day running mean of relative humidity', accum_type='runmean', accum_period=-30, &
@@ -310,6 +336,9 @@ contains
 
        call extract_accum_field ('PREC60', rbufslp, nstep)
        this%prec60_patch(begp:endp) = rbufslp(begp:endp)
+
+       call extract_accum_field ('PREC30', rbufslp, nstep)
+       this%prec30_patch(begp:endp) = rbufslp(begp:endp)
 
        call extract_accum_field ('RH30', rbufslp, nstep)
        this%rh30_patch(begp:endp) = rbufslp(begp:endp)
@@ -391,6 +420,9 @@ contains
        call update_accum_field  ('PREC60', rbufslp, nstep)
        call extract_accum_field ('PREC60', this%prec60_patch, nstep)
 
+       call update_accum_field  ('PREC30', rbufslp, nstep)
+       call extract_accum_field ('PREC30', this%prec30_patch, nstep)
+
        ! Accumulate and extract PREC10 (accumulates total precipitation as 10-day running mean)
        call update_accum_field  ('PREC10', rbufslp, nstep)
        call extract_accum_field ('PREC10', this%prec10_patch, nstep)
@@ -462,12 +494,15 @@ contains
 
     ! rof->lnd
     deallocate(this%forc_flood_grc)
+    deallocate(this%tdepth_grc)
+    deallocate(this%tdepthmax_grc)
     deallocate(this%volr_grc)
     deallocate(this%volrmch_grc)
 
     ! anomaly forcing
     deallocate(this%prec365_col)
     deallocate(this%prec60_patch)
+    deallocate(this%prec30_patch)
     deallocate(this%prec10_patch)
     if (use_fates) then
        deallocate(this%prec24_patch)

@@ -1,4 +1,5 @@
-create_pFUnit_test(dynTimeInfo test_dynTimeInfo_exe
-  "test_dynTimeInfo.pf" "")
-
-target_link_libraries(test_dynTimeInfo_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(dynTimeInfo
+  TEST_SOURCES "test_dynTimeInfo.pf"
+  LINK_LIBRARIES clm csm_share esmf
+  EXTRA_FINALIZE unittest_finalize_esmf
+  EXTRA_USE unittestInitializeAndFinalize)

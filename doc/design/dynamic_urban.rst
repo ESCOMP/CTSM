@@ -6,18 +6,18 @@
  Overview of this design document
 ==================================
 
-This documents some of the high-level design decisions made during implementation of 
+This documents some of the high-level design decisions made during implementation of
 dynamic urban landunits.
 
 ============================================================================
  The use of dzsoi_decomp for urban landunits to calculate totcolch4 in ch4Mod.F90
 ============================================================================
-During the first test simulation for dynamic urban, we encountered a methane conservation 
-error the first time PCT_URBAN changed. The dynamic adjustments for conc_ch4_sat_col and 
+During the first test simulation for dynamic urban, we encountered a methane conservation
+error the first time PCT_URBAN changed. The dynamic adjustments for conc_ch4_sat_col and
 conc_ch4_unsat_col (the column_state_updater in subroutine DynamicColumnAdjustments within
 ch4Mod.F90) were distributing non-zero values for roof and walls for layers 1,nlevsoi.
-When the total column ch4 is summed over the soil layers (or in this case, urban layers), the 
-summation is done over nlevsoi, not nlevurb, using dz. dz is 1.e36 for roof/wall layers 
+When the total column ch4 is summed over the soil layers (or in this case, urban layers), the
+summation is done over nlevsoi, not nlevurb, using dz. dz is 1.e36 for roof/wall layers
 that are greater than nlevurb, thus creating an imbalance.
 
 Rather than trying to keep the BGC variables physically meaningful in urban landunits,

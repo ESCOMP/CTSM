@@ -76,8 +76,11 @@ contains
 
        atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
 
-       atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
+       atm2lnd_inst%forc_solar_not_downscaled_grc(g) = &
+              atm2lnd_inst%forc_solad_not_downscaled_grc(g,1) &
+            + atm2lnd_inst%forc_solai_grc(g,1) &
+            + atm2lnd_inst%forc_solad_not_downscaled_grc(g,2) &
+            + atm2lnd_inst%forc_solai_grc(g,2)
 
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
@@ -118,8 +121,8 @@ contains
           call shr_sys_abort( subname//&
                ' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
        end if
-       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) .or. &
+       if ( (atm2lnd_inst%forc_solad_not_downscaled_grc(g,1) < 0.0_r8) .or. &
+            (atm2lnd_inst%forc_solad_not_downscaled_grc(g,2) < 0.0_r8) .or. &
             (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or. &
             (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
           call shr_sys_abort( subname//&
@@ -140,12 +143,14 @@ contains
 
   !=============================================================================
 
-  subroutine check_for_nans(array, fname, begg)
+  subroutine check_for_nans(array, fname, begg, direction)
+    use GridcellType    , only : grc                
 
     ! input/output variables
     real(r8)         , intent(in) :: array(:)
     character(len=*) , intent(in) :: fname
     integer          , intent(in) :: begg
+    character(len=*) , intent(in) :: direction
 
     ! local variables
     integer :: i
@@ -158,10 +163,10 @@ contains
        write(iulog,*) 'Which are NaNs = ', isnan(array)
        do i = 1, size(array)
           if (isnan(array(i))) then
-             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index ',begg+i-1
+             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index/lon/lat: ',begg+i-1,grc%londeg(begg+i-1),grc%latdeg(begg+i-1)
           end if
        end do
-       call shr_sys_abort(' ERROR: One or more of the output from CLM to the coupler are NaN ' )
+       call shr_sys_abort(' ERROR: One or more of the CTSM cap '//direction//' fields are NaN ' )
     end if
   end subroutine check_for_nans
 

@@ -29,10 +29,11 @@ module CanopyStateType
      real(r8) , pointer :: elai_patch               (:)   ! patch canopy one-sided leaf area index with burying by snow
      real(r8) , pointer :: esai_patch               (:)   ! patch canopy one-sided stem area index with burying by snow
 
-     real(r8) , pointer :: tlai_hist_patch               (:)   ! patch canopy one-sided leaf area index, for SP mode
-     real(r8) , pointer :: tsai_hist_patch               (:)   ! patch canopy one-sided stem area index, for SP mode
-     real(r8) , pointer :: htop_hist_patch               (:)   ! patch canopy height, for SP mode
-
+     real(r8) , pointer :: tlai_input_patch          (:)   ! patch canopy one-sided leaf area index driver data for SP mode (no burying by snow)
+     real(r8) , pointer :: tsai_input_patch          (:)   ! patch canopy one-sided stem area index driver data for SP mode (no burying by snow)
+     real(r8) , pointer :: htop_input_patch          (:)   ! patch canopy height driver data for SP mode
+     real(r8) , pointer :: hbot_input_patch          (:)   ! patch canopy bottom driver data for SP mode
+     
      real(r8) , pointer :: elai240_patch            (:)   ! patch canopy one-sided leaf area index with burying by snow average over 10days
      real(r8) , pointer :: laisun_patch             (:)   ! patch patch sunlit projected leaf area index
      real(r8) , pointer :: laisha_patch             (:)   ! patch patch shaded projected leaf area index
@@ -71,6 +72,8 @@ module CanopyStateType
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
      procedure, public  :: Restart
+
+     procedure, public  :: SetNMLForTesting ! Set namelist for unit-testing
 
   end type CanopyState_type
 
@@ -117,9 +120,10 @@ contains
 
     allocate(this%frac_veg_nosno_patch     (begp:endp))           ; this%frac_veg_nosno_patch     (:)   = huge(1)
     allocate(this%frac_veg_nosno_alb_patch (begp:endp))           ; this%frac_veg_nosno_alb_patch (:)   = 0
-    allocate(this%tlai_hist_patch          (begp:endp))           ; this%tlai_hist_patch          (:)   = nan
-    allocate(this%tsai_hist_patch          (begp:endp))           ; this%tsai_hist_patch          (:)   = nan
-    allocate(this%htop_hist_patch          (begp:endp))           ; this%htop_hist_patch          (:)   = nan
+    allocate(this%tlai_input_patch         (begp:endp))           ; this%tlai_input_patch         (:)   = nan
+    allocate(this%tsai_input_patch         (begp:endp))           ; this%tsai_input_patch         (:)   = nan
+    allocate(this%htop_input_patch         (begp:endp))           ; this%htop_input_patch         (:)   = nan
+    allocate(this%hbot_input_patch         (begp:endp))           ; this%hbot_input_patch         (:)   = nan
     allocate(this%tlai_patch               (begp:endp))           ; this%tlai_patch               (:)   = nan
     allocate(this%tsai_patch               (begp:endp))           ; this%tsai_patch               (:)   = nan
     allocate(this%elai_patch               (begp:endp))           ; this%elai_patch               (:)   = nan
@@ -211,34 +215,32 @@ contains
 
        this%displa_patch(begp:endp) = spval
        call hist_addfld1d (fname='DISPLA', units='m', &
-            avgflag='A', long_name='displacement height', &
-            ptr_patch=this%displa_patch, default='inactive')
+            avgflag='A', long_name='displacement height (vegetated landunits only)', &
+            ptr_patch=this%displa_patch, default='inactive', l2g_scale_type='veg')
 
        if(use_fates_sp)then
-          this%htop_hist_patch(begp:endp) = spval
+          this%htop_input_patch(begp:endp) = spval
           call hist_addfld1d (fname='HTOP', units='m', &
               avgflag='A', long_name='HTOP weights for SP mode', &
-              ptr_patch=this%htop_hist_patch)
+              ptr_patch=this%htop_input_patch)
        else
           this%htop_patch(begp:endp) = spval
           call hist_addfld1d (fname='HTOP', units='m', &
               avgflag='A', long_name='canopy top', &
               ptr_patch=this%htop_patch)
        endif
-
-
-    endif !fates or CN
+    endif
 
     if(use_fates_sp)then
-      this%tlai_hist_patch(begp:endp) = spval
+      this%tlai_input_patch(begp:endp) = spval
       call hist_addfld1d (fname='TLAI', units='m', &
           avgflag='A', long_name='TLAI weights for SP mode', &
-          ptr_patch=this%tlai_hist_patch)
+          ptr_patch=this%tlai_input_patch)
 
-      this%tsai_hist_patch(begp:endp) = spval
+      this%tsai_input_patch(begp:endp) = spval
       call hist_addfld1d (fname='TSAI', units='m', &
           avgflag='A', long_name='TSAI weights for SP mode', &
-          ptr_patch=this%tsai_hist_patch)
+          ptr_patch=this%tsai_input_patch)
 
     else
        this%tlai_patch(begp:endp) = spval
@@ -254,9 +256,9 @@ contains
     endif !FATES_SP
 
     this%z0m_patch(begp:endp) = spval
-    call hist_addfld1d (fname='Z0M', units='m', &
-         avgflag='A', long_name='momentum roughness length', &
-          ptr_patch=this%z0m_patch, default='inactive')
+    call hist_addfld1d (fname='Z0MV_DENSE', units='m', &
+         avgflag='A', long_name='roughness length over vegetation, momentum, for dense canopy', &
+          ptr_patch=this%z0m_patch, default='inactive', l2g_scale_type='veg')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval
@@ -444,6 +446,21 @@ contains
 
   end subroutine ReadNML
 
+ !-----------------------------------------------------------------------
+
+  subroutine SetNMLForTesting( this )
+     !
+     ! Set canopy parameter namelist control settings for unit-testing
+     !
+     class(canopystate_type)      :: this
+     ! LOCAL VARIABLES:
+     !-----------------------------------------------------------------------
+ 
+     
+     this%leaf_mr_vcm = 0.015_r8
+   
+   end subroutine SetNMLForTesting
+
   !-----------------------------------------------------------------------
   subroutine UpdateAccVars (this, bounds)
     !
@@ -526,10 +543,11 @@ contains
           this%laisha_patch(p) = 0._r8
        end if
 
-       this%tlai_hist_patch(p)       = 0._r8
-       this%tsai_hist_patch(p)       = 0._r8
-       this%htop_hist_patch(p)       = 0._r8
-
+       this%tlai_input_patch(p)       = 0._r8
+       this%tsai_input_patch(p)       = 0._r8
+       this%htop_input_patch(p)       = 0._r8
+       this%hbot_input_patch(p)       = 0._r8
+       
        ! needs to be initialized to spval to avoid problems when averaging for the accum
        ! field
        this%fsun_patch(p) = spval
@@ -569,6 +587,14 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='tsai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided stem area index, no burying by snow', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%tsai_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='tlai_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp mode driver data for one-sided leaf area index, no burying by snow', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%tlai_input_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='tsai_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp mode driver data for one-sided stem area index, no burying by snow', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%tsai_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='elai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided leaf area index, with burying by snow', units='', &
@@ -589,10 +615,18 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='htop', xtype=ncd_double,  &
          dim1name='pft', long_name='canopy top', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%htop_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='htop_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp-mode driver data for canopy top', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%htop_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='hbot', xtype=ncd_double,  &
-         dim1name='pft', long_name='canopy botton', units='m', &
+         dim1name='pft', long_name='canopy bottom', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%hbot_patch)
+         
+     call restartvar(ncid=ncid, flag=flag, varname='hbot_input', xtype=ncd_double,  &
+         dim1name='pft', long_name='sp-mode driver data for canopy bottom', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%hbot_input_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='mlaidiff', xtype=ncd_double,  &
          dim1name='pft', long_name='difference between lai month one and month two', units='', &

@@ -3,23 +3,26 @@ module SoilBiogeochemCarbonFluxType
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, i_cwdl2
+  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, ndecomp_cascade_outtransitions
+  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, ndecomp_pools_vr, i_cwdl2
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
+  use clm_varctl                         , only : use_fates,use_cn
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, century_decomp, mimics_decomp, decomp_method, use_soil_matrixcn
   use PatchType                          , only : patch
   use ColumnType                         , only : col                
   use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates
+  use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   
   ! 
   ! !PUBLIC TYPES:
   implicit none
   private
   !
+ 
+
   type, public :: soilbiogeochem_carbonflux_type
 
      ! fire fluxes
@@ -37,13 +40,14 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: rf_decomp_cascade_col                     (:,:,:) ! (frac) respired fraction in decomposition step
      real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
-     real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
-     real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
-     real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
-     real(r8), pointer :: t_scalar_col                              (:,:)   ! fraction by which decomposition is limited by temperature
-     real(r8), pointer :: som_c_leached_col                         (:)     ! (gC/m^2/s) total SOM C loss from vertical transport 
-     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   ! (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
-     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) ! (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
+     ! foi soil-matrix
+     real(r8), pointer :: hr_vr_col                                 (:,:)   !  (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
+     real(r8), pointer :: o_scalar_col                              (:,:)   !  fraction by which decomposition is limited by anoxia
+     real(r8), pointer :: w_scalar_col                              (:,:)   !  fraction by which decomposition is limited by moisture availability
+     real(r8), pointer :: t_scalar_col                              (:,:)   !  fraction by which decomposition is limited by temperature
+     real(r8), pointer :: som_c_leached_col                         (:)     !  (gC/m^2/s) total SOM C loss from vertical transport 
+     real(r8), pointer :: decomp_cpools_leached_col                 (:,:)   !  (gC/m^2/s) C loss from vertical transport from each decomposing C pool 
+     real(r8), pointer :: decomp_cpools_transport_tendency_col      (:,:,:) !  (gC/m^3/s) C tendency due to vertical transport in decomposing C pools 
 
      ! nitrif_denitrif
      real(r8), pointer :: phr_vr_col                                (:,:)   ! (gC/m3/s) potential hr (not N-limited) 
@@ -55,12 +59,27 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration: donor-pool based definition
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res: donor-pool based definition
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
+     real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) A summary of the total litter
+                                                                            ! flux passed in from FATES.
+                                                                            ! This is a diagnostic for balance checks only
+     ! track tradiagonal matrix  
+     real(r8), pointer :: matrix_decomp_fire_k_col                  (:,:)   ! decomposition rate due to fire (gC*m3)/(gC*m3*step))
+     real(r8), pointer :: tri_ma_vr                                 (:,:)   ! vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
 
-     ! fluxes to receive carbon inputs from FATES
-     real(r8), pointer :: FATES_c_to_litr_c_col                     (:,:,:) ! total litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_lab_c_col                 (:,:)   ! total labile    litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
-     real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
+     type(sparse_matrix_type)         :: AKsoilc                            ! A*K for C transfers between pools
+     type(sparse_matrix_type)         :: AVsoil                             ! V for C and N transfers between soil layers
+     type(sparse_matrix_type)         :: AKfiresoil                         ! Kfire for CN transfers from soil to atm due to fire
+     type(sparse_matrix_type)         :: AKallsoilc                         ! (A*K+V-Kfire) for soil C cycle
+     integer                          :: NE_AKallsoilc                      ! Number of entries in AKallsoilc, Automatically generated by functions SPMP_*
+     integer,pointer,dimension(:)     :: RI_AKallsoilc                      ! Row numbers of entries in AKallsoilc, Automatically generated by functions SPMP_*
+     integer,pointer,dimension(:)     :: CI_AKallsoilc                      ! Column numbers of entries in AKallsoilc, Automatically generated by functions SPMP_*
+     integer,pointer,dimension(:)     :: RI_a                               ! Row numbers of all entries from AKsoilc, Automatically generated by SetValueA
+     integer,pointer,dimension(:)     :: CI_a                               ! Column numbers of all entries from AKsoilc, Automatically generated by SetValueA
+
+     type(diag_matrix_type)           :: Ksoil                              ! CN turnover rate in different soil pools and layers
+     type(diag_matrix_type)           :: Xdiagsoil                          ! Temporary C and N state variable to calculate accumulation transfers
+
+     type(vector_type)                :: matrix_Cinput                      ! C input to different soil compartments (pools and layers) (gC/m3/step)
 
    contains
 
@@ -91,6 +110,8 @@ contains
    end subroutine Init
 
    !------------------------------------------------------------------------
+   
+   !------------------------------------------------------------------------
    subroutine InitAllocate(this, bounds)
      !
      ! !ARGUMENTS:
@@ -98,8 +119,9 @@ contains
      type(bounds_type), intent(in)    :: bounds 
      !
      ! !LOCAL VARIABLES:
-     integer           :: begp,endp
-     integer           :: begc,endc
+     integer           :: begp,endp            ! Begin and end patch
+     integer           :: begc,endc            ! Begin and end column
+     integer           :: Ntrans,Ntrans_diag   ! N trans size for matrix solution
      !------------------------------------------------------------------------
 
      begp = bounds%begp; endp = bounds%endp
@@ -157,22 +179,34 @@ contains
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
 
-     if ( use_fates ) then
-        ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
+     if(use_fates)then
+        allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
+     else
+        allocate(this%fates_litter_flux(0:0)); this%fates_litter_flux(:) = nan
+     end if
+     
+     if(use_soil_matrixcn)then
+        allocate(this%matrix_decomp_fire_k_col(begc:endc,1:nlevdecomp*ndecomp_pools));  this%matrix_decomp_fire_k_col(:,:)= nan
+        Ntrans = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
+        call this%AKsoilc%InitSM                (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+ndecomp_pools*nlevdecomp)
+        call this%AVsoil%InitSM                 (ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%Ntri_setup)
+        call this%AKfiresoil%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,ndecomp_pools*nlevdecomp)
+        call this%AKallsoilc%InitSM             (ndecomp_pools*nlevdecomp,begc,endc,Ntrans+decomp_cascade_con%Ntri_setup+nlevdecomp)
+        this%NE_AKallsoilc = Ntrans+ndecomp_pools*nlevdecomp+decomp_cascade_con%Ntri_setup+ndecomp_pools*nlevdecomp
+        allocate(this%RI_AKallsoilc(1:this%NE_AKallsoilc)); this%RI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
+        allocate(this%CI_AKallsoilc(1:this%NE_AKallsoilc)); this%CI_AKallsoilc(1:this%NE_AKallsoilc)=-9999
+        Ntrans_diag = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp+ndecomp_pools_vr
+        allocate(this%RI_a(1:Ntrans_diag)); this%RI_a(1:Ntrans_diag) = -9999
+        allocate(this%CI_a(1:Ntrans_diag)); this%CI_a(1:Ntrans_diag) = -9999
+        call this%Ksoil%InitDM                  (ndecomp_pools*nlevdecomp,begc,endc)
+        call this%Xdiagsoil%InitDM              (ndecomp_pools*nlevdecomp,begc,endc)
+        call this%matrix_Cinput%InitV(ndecomp_pools*nlevdecomp,begc,endc)
 
-        allocate(this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
-        this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools) = 0._r8
+        allocate(this%tri_ma_vr(begc:endc,1:decomp_cascade_con%Ntri_setup))
+     else
+        allocate(this%tri_ma_vr(1,1)); this%tri_ma_vr(:,:) = nan
+     end if
 
-        allocate(this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-        
-        allocate(this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_cel_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-        
-        allocate(this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full))
-        this%FATES_c_to_litr_lig_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
-
-     endif
      allocate(this%litr_lig_c_to_n_col(begc:endc))
      this%litr_lig_c_to_n_col(:)= 0._r8
      
@@ -229,10 +263,12 @@ contains
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='microbial C heterotrophic respiration: donor-pool based, so expect zero with MIMICS', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
@@ -305,8 +341,8 @@ contains
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
               data1dptr => this%decomp_cascade_ctransfer_col(:,l)
               fieldname = &
-                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
-                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'C'
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_C_TO_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'_C'
               longname =  'decomp. of '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                    ' C to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' C'
               call hist_addfld1d (fname=fieldname, units='gC/m^2/s', &
@@ -343,9 +379,9 @@ contains
               if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
                  data2dptr => this%decomp_cascade_ctransfer_vr_col(:,:,l)
                  fieldname = &
-                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'C_TO_'//&
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_C_TO_'//&
                       trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                      //'C'//trim(vr_suffix)
+                      //'_C'//trim(vr_suffix)
                  longname =  'decomp. of '//&
                       trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                       ' C to '//&
@@ -385,10 +421,12 @@ contains
         end do
 
         if ( nlevdecomp_full > 1 ) then  
-           data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
-           call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
+           if (decomp_method == century_decomp) then
+              data2dptr => this%t_scalar_col(begc:endc,1:nlevsoi)
+              call hist_addfld_decomp (fname='T_SCALAR', units='unitless',  type2d='levsoi', &
                 avgflag='A', long_name='temperature inhibition of decomposition', &
                 ptr_col=data2dptr)
+           end if
 
            data2dptr => this%w_scalar_col(begc:endc,1:nlevsoi)
            call hist_addfld_decomp (fname='W_SCALAR', units='unitless',  type2d='levsoi', &
@@ -411,14 +449,14 @@ contains
         do k = 1, ndecomp_pools  ! none from CWD
            if ( .not. decomp_cascade_con%is_cwd(k) ) then
               data1dptr => this%decomp_cpools_leached_col(:,k)
-              fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_LEACHING'
+              fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C_TO_LEACHING'
               longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C leaching loss'
               call hist_addfld1d (fname=fieldname, units='gC/m^2/s', &
                    avgflag='A', long_name=longname, &
                    ptr_col=data1dptr, default='inactive')
 
               data2dptr => this%decomp_cpools_transport_tendency_col(:,:,k)
-              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TNDNCY_VERT_TRANSPORT'
+              fieldname = trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C_TNDNCY_VERT_TRANSPORT'
               longname =  trim(decomp_cascade_con%decomp_pool_name_long(k))//' C tendency due to vertical transport'
               call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                    avgflag='A', long_name=longname, &
@@ -446,10 +484,12 @@ contains
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
@@ -499,9 +539,9 @@ contains
               data2dptr => this%decomp_cascade_ctransfer_vr_col(:,:,l)
               fieldname = 'C13_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                   //'C_TO_'//&
+                   //'_C_TO_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                   //'C'//trim(vr_suffix)
+                   //'_C'//trim(vr_suffix)
               longname =  'C13 decomp. of '&
                    //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))&
                    //' C to '//&
@@ -525,10 +565,12 @@ contains
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
-        this%michr_col(begc:endc) = spval
-        call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
+        if (decomp_method == mimics_decomp) then
+           this%michr_col(begc:endc) = spval
+           call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
              avgflag='A', long_name='C14 microbial heterotrophic respiration', &
              ptr_col=this%michr_col, default='inactive')
+        end if
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &
@@ -581,9 +623,9 @@ contains
 
               fieldname = 'C14_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                   //'C_TO_'//&
+                   //'_C_TO_'//&
                    trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))&
-                   //'C'//trim(vr_suffix)
+                   //'_C'//trim(vr_suffix)
               longname =  'C14 decomp. of '&
                    //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                    ' C to '//trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_receiver_pool(l)))//' C'
@@ -608,23 +650,6 @@ contains
        end if
 
     end do
-
-    if ( use_fates ) then
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_lab_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter labile carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_lab_c_col)
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_cel_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter celluluse carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_cel_c_col)
-
-       call hist_addfld_decomp(fname='FATES_c_to_litr_lig_c', units='gC/m^3/s',  type2d='levdcmp', &
-                   avgflag='A', long_name='litter lignin carbon flux from FATES to BGC', &
-                   ptr_col=this%FATES_c_to_litr_lig_c_col)
-
-     endif
-
 
   end subroutine InitHistory
 
@@ -678,40 +703,6 @@ contains
     logical  :: readvar
     !-----------------------------------------------------------------------
 
-    !
-    ! if  FATES is enabled, need to restart the variables used to transfer from FATES to CLM as they
-    ! are persistent between daily FATES dynamics calls and half-hourly CLM timesteps
-    !
-    if ( use_fates ) then
-       
-       ptr2d => this%FATES_c_to_litr_lab_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-          
-       ptr2d => this%FATES_c_to_litr_cel_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-          
-       ptr2d => this%FATES_c_to_litr_lig_c_col
-       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-            dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-
-       ! Copy last 3 variables to an array of litter pools for use in do loops.
-       ! Repeat copy in src/utils/clmfates_interfaceMod.F90.
-       ! Keep the three originals to avoid backwards compatibility issues with
-       ! restart files.
-       this%FATES_c_to_litr_c_col(:,:,1) = this%FATES_c_to_litr_lab_c_col(:,:)
-       this%FATES_c_to_litr_c_col(:,:,2) = this%FATES_c_to_litr_cel_c_col(:,:)
-       this%FATES_c_to_litr_c_col(:,:,3) = this%FATES_c_to_litr_lig_c_col(:,:)
-       
-    end if
-
     call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
          dim1name='column', &
          long_name='', units='', &
@@ -751,6 +742,7 @@ contains
        end do
     end do
 
+
     do k = 1, ndecomp_pools
        do fi = 1,num_column
           i = filter_column(fi)
@@ -767,6 +759,25 @@ contains
        end do
     end do
 
+    ! for matrix 
+    if(use_soil_matrixcn)then
+       do k = 1, ndecomp_pools
+          do j = 1, nlevdecomp
+             do fi = 1,num_column
+                i = filter_column(fi)
+                this%matrix_decomp_fire_k_col(i,j+nlevdecomp*(k-1)) = value_column
+             end do
+          end do
+       end do
+       call this%matrix_Cinput%SetValueV_scaler(num_column,filter_column(1:num_column),value_column)
+       !
+       do k = 1,decomp_cascade_con%Ntri_setup
+          do fi = 1,num_column
+             i = filter_column(fi)
+             this%tri_ma_vr(i,k) = value_column
+          end do
+       end do
+    end if
     do j = 1, nlevdecomp_full
        do fi = 1,num_column
           i = filter_column(fi)
@@ -786,13 +797,11 @@ contains
        this%soilc_change_col(i)  = value_column
     end do
 
-    ! NOTE: do not zero the fates to BGC C flux variables since they need to persist from the daily fates timestep s to the half-hourly BGC timesteps.  I.e. FATES_c_to_litr_lab_c_col, FATES_c_to_litr_cel_c_col, FATES_c_to_litr_lig_c_col
-    
   end subroutine SetValues
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
-                     num_soilc, filter_soilc, num_soilp, filter_soilp, &
+                     num_bgc_soilc, filter_bgc_soilc, num_soilp, filter_soilp, &
                      soilbiogeochem_decomp_cascade_ctransfer_col, &
                      soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
                      leafc_to_litter_patch, frootc_to_litter_patch)
@@ -807,15 +816,16 @@ contains
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type)           :: this
     type(bounds_type)               , intent(in)    :: bounds          
-    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                         , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                         , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                         , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     integer, intent(in), optional :: num_soilp  ! number of patches in filter
     integer, intent(in), optional :: filter_soilp(:)  ! filter for patches
     real(r8), intent(in), optional :: soilbiogeochem_cwdc_col(bounds%begc:)
     real(r8), intent(in), optional :: soilbiogeochem_cwdn_col(bounds%begc:)
     real(r8), intent(in), optional :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
-    real(r8), intent(in), optional :: leafc_to_litter_patch(bounds%begp:)
-    real(r8), intent(in), optional :: frootc_to_litter_patch(bounds%begp:)
+
+    real(r8), intent(in), optional :: leafc_to_litter_patch(:)
+    real(r8), intent(in), optional :: frootc_to_litter_patch(:)
     !
     ! !LOCAL VARIABLES:
     integer  :: c,j,k,l,p
@@ -830,16 +840,16 @@ contains
 
     !-----------------------------------------------------------------------
 
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        this%som_c_leached_col(c) = 0._r8
     end do
 
     ! vertically integrate HR and decomposition cascade fluxes
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%decomp_cascade_hr_col(c,k) = &
                   this%decomp_cascade_hr_col(c,k) + &
                   this%decomp_cascade_hr_vr_col(c,j,k) * dzsoi_decomp(j) 
@@ -853,15 +863,15 @@ contains
 
     ! total heterotrophic respiration, vertically resolved (HR)
     do j = 1,nlevdecomp
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%hr_vr_col(c,j) = 0._r8
        end do
     end do
     do k = 1, ndecomp_cascade_transitions
        do j = 1,nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%hr_vr_col(c,j) = &
                   this%hr_vr_col(c,j) + &
                   this%decomp_cascade_hr_vr_col(c,j,k)
@@ -871,53 +881,53 @@ contains
 
     ! add up all vertical transport tendency terms and calculate total som leaching loss as the sum of these
     do l = 1, ndecomp_pools
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%decomp_cpools_leached_col(c,l) = 0._r8
        end do
        do j = 1, nlevdecomp
-          do fc = 1,num_soilc
-             c = filter_soilc(fc)
+          do fc = 1,num_bgc_soilc
+             c = filter_bgc_soilc(fc)
              this%decomp_cpools_leached_col(c,l) = this%decomp_cpools_leached_col(c,l) + &
                   this%decomp_cpools_transport_tendency_col(c,j,l) * dzsoi_decomp(j)
           end do
        end do
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
           this%som_c_leached_col(c) = this%som_c_leached_col(c) + this%decomp_cpools_leached_col(c,l)
        end do
     end do
 
     ! soil organic matter heterotrophic respiration 
-    associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               this%somhr_col(c) = this%somhr_col(c) + this%decomp_cascade_hr_col(c,k)
-            end do
-         end if
-      end do
-    end associate
+       associate(is_soil => decomp_cascade_con%is_soil) ! TRUE => pool is a soil pool  
+         do k = 1, ndecomp_cascade_transitions
+            if ( is_soil(decomp_cascade_con%cascade_donor_pool(k)) ) then
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
+                  this%somhr_col(c) = this%somhr_col(c) + this%decomp_cascade_hr_col(c,k)
+               end do
+            end if
+         end do
+       end associate
 
     ! litter heterotrophic respiration (LITHR)
-    associate(is_litter => decomp_cascade_con%is_litter) ! TRUE => pool is a litter pool
-      do k = 1, ndecomp_cascade_transitions
-         if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               this%lithr_col(c) = this%lithr_col(c) + this%decomp_cascade_hr_col(c,k)
-            end do
-         end if
-      end do
-    end associate
+       associate(is_litter => decomp_cascade_con%is_litter) ! TRUE => pool is a litter pool
+         do k = 1, ndecomp_cascade_transitions
+            if ( is_litter(decomp_cascade_con%cascade_donor_pool(k)) ) then
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
+                  this%lithr_col(c) = this%lithr_col(c) + this%decomp_cascade_hr_col(c,k)
+               end do
+            end if
+         end do
+       end associate
 
     ! coarse woody debris heterotrophic respiration (CWDHR)
     associate(is_cwd => decomp_cascade_con%is_cwd)  ! TRUE => pool is a cwd pool
       do k = 1, ndecomp_cascade_transitions
          if ( is_cwd(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%cwdhr_col(c) = this%cwdhr_col(c) + this%decomp_cascade_hr_col(c,k)
             end do
          end if
@@ -928,8 +938,8 @@ contains
     associate(is_microbe => decomp_cascade_con%is_microbe)  ! TRUE => pool is a microbial pool
       do k = 1, ndecomp_cascade_transitions
          if ( is_microbe(decomp_cascade_con%cascade_donor_pool(k)) ) then
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                this%michr_col(c) = this%michr_col(c) + this%decomp_cascade_hr_col(c,k)
             end do
          end if
@@ -937,64 +947,73 @@ contains
     end associate
 
     ! total heterotrophic respiration (HR)
-    do fc = 1,num_soilc
-       c = filter_soilc(fc)
+    do fc = 1,num_bgc_soilc
+       c = filter_bgc_soilc(fc)
        
-          this%hr_col(c) = &
-               this%michr_col(c) + &
-               this%cwdhr_col(c) + &
-               this%lithr_col(c) + &
-               this%somhr_col(c)
+       this%hr_col(c) = &
+            this%michr_col(c) + &
+            this%cwdhr_col(c) + &
+            this%lithr_col(c) + &
+            this%somhr_col(c)
        
     end do
 
     ! Calculate ligninNratio
     ! FATES does its own calculation
-    if (.not. use_fates .and. decomp_method == mimics_decomp) then
-       do fp = 1,num_soilp
-          p = filter_soilp(fp)
+    if_mimics: if (decomp_method == mimics_decomp ) then
 
-          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
-            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
-                                         pftcon%lflitcn(ivt(p)) * &
-                                         leafc_to_litter_patch(p)
-            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
-                                          pftcon%frootcn(ivt(p)) * &
-                                          frootc_to_litter_patch(p)
-          end associate
-       end do
-
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
-            ligninNratio_leaf_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
-            ligninNratio_froot_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            leafc_to_litter_patch(bounds%begp:bounds%endp), &
-            leafc_to_litter_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            frootc_to_litter_patch(bounds%begp:bounds%endp), &
-            frootc_to_litter_col(bounds%begc:bounds%endc))
+       if(num_soilp>0)then
+          do fp = 1,num_soilp
+             p = filter_soilp(fp)
+             associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+               ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                    pftcon%lflitcn(ivt(p)) * &
+                    leafc_to_litter_patch(p)
+               ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                    pftcon%frootcn(ivt(p)) * &
+                    frootc_to_litter_patch(p)
+             end associate
+          end do
+          
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+               ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+               ligninNratio_leaf_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+               ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+               ligninNratio_froot_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+               leafc_to_litter_patch(bounds%begp:bounds%endp), &
+               leafc_to_litter_col(bounds%begc:bounds%endc))
+          call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+               frootc_to_litter_patch(bounds%begp:bounds%endp), &
+               frootc_to_litter_col(bounds%begc:bounds%endc))
+          
+       end if
 
        ! Calculate ligninNratioAve
-       do fc = 1,num_soilc
-          c = filter_soilc(fc)
-          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
-             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
-                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
-                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
-          else
-             ligninNratio_cwd = 0._r8
+       do fc = 1,num_bgc_soilc
+          c = filter_bgc_soilc(fc)
+          if(.not.col%is_fates(c)) then
+             if (soilbiogeochem_cwdn_col(c) > 0._r8) then
+                ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
+                     (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                     soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+             else
+                ligninNratio_cwd = 0._r8
+             end if
+             this%litr_lig_c_to_n_col(c) = &
+                  (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
+                  ligninNratio_cwd) / &
+                  max(1.0e-3_r8, leafc_to_litter_col(c) + &
+                  frootc_to_litter_col(c) + &
+                  soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
+          !else
+             ! For FATES:
+             ! this array is currently updated here:
+             ! clmfates_interfaceMod.F90:wrap_update_hlmfates_dyn()
           end if
-          this%litr_lig_c_to_n_col(c) = &
-             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
-              ligninNratio_cwd) / &
-              max(1.0e-3_r8, leafc_to_litter_col(c) + &
-                             frootc_to_litter_col(c) + &
-                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
        end do
-    end if
+    end if if_mimics
 
   end subroutine Summary
 

@@ -1,4 +1,3 @@
-create_pFUnit_test(humanstress test_humanstress_exe
-  "test_humanstress.pf" "")
-
-target_link_libraries(test_humanstress_exe clm csm_share)
+add_pfunit_ctest(humanstress
+  TEST_SOURCES "test_humanstress.pf"
+  LINK_LIBRARIES clm csm_share)

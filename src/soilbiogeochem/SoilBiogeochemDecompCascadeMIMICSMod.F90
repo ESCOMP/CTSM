@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_cop_mic, i_oli_mic, i_cwd
+  use clm_varpar                         , only : i_phys_som, i_chem_som, i_str_lit, i_met_lit, i_cop_mic, i_oli_mic, i_cwd
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_fates
   use clm_varcon                         , only : zsoi
@@ -18,7 +18,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use spmdMod                            , only : masterproc
   use abortutils                         , only : endrun
   use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, InitSoilTransfer, use_soil_matrixcn
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -48,10 +48,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   real(r8), private, allocatable :: fphys_m1(:,:)
   real(r8), private, allocatable :: fphys_m2(:,:)
   real(r8), private, allocatable :: p_scalar(:,:)
-  integer, private :: i_phys_som  ! index of physically protected Soil Organic Matter (SOM)
-  integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
-  integer, private :: i_str_lit  ! index of structural litter pool
   integer, private :: i_l1m1  ! indices of transitions, eg l1m1: litter 1 -> first microbial pool
   integer, private :: i_l1m2
   integer, private :: i_l2m1
@@ -251,12 +248,12 @@ contains
     call ncd_io(trim(tString), params_inst%mimics_fmet(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_r(4))
+    allocate(params_inst%mimics_fchem_r(2))
     tString='mimics_fchem_r'
     call ncd_io(trim(tString), params_inst%mimics_fchem_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_k(4))
+    allocate(params_inst%mimics_fchem_k(2))
     tString='mimics_fchem_k'
     call ncd_io(trim(tString), params_inst%mimics_fchem_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -481,7 +478,7 @@ contains
       i_met_lit = i_litr_min
       floating_cn_ratio_decomp_pools(i_met_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'MET_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LIT_MET'
       decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'metabolic litter'
       decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
       is_microbe(i_met_lit) = .false.
@@ -497,7 +494,7 @@ contains
       i_str_lit = i_met_lit + 1
       floating_cn_ratio_decomp_pools(i_str_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_str_lit) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'STR_LIT'
+      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'LIT_STR'
       decomp_cascade_con%decomp_pool_name_long(i_str_lit) = 'structural litter'
       decomp_cascade_con%decomp_pool_name_short(i_str_lit) = 'L2'
       is_microbe(i_str_lit) = .false.
@@ -523,7 +520,7 @@ contains
       i_avl_som = i_str_lit + 1
       floating_cn_ratio_decomp_pools(i_avl_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_avl_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'AVL_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'SOM_AVL'
       decomp_cascade_con%decomp_pool_name_long(i_avl_som) = 'available soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_avl_som) = 'S1'
       is_microbe(i_avl_som) = .false.
@@ -539,7 +536,7 @@ contains
       i_chem_som = i_avl_som + 1
       floating_cn_ratio_decomp_pools(i_chem_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_chem_som) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'CHEM_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_chem_som) = 'SOM_CHEM'
       decomp_cascade_con%decomp_pool_name_long(i_chem_som) = 'chemically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_chem_som) = 'S2'
       is_microbe(i_chem_som) = .false.
@@ -555,7 +552,7 @@ contains
       i_phys_som = i_chem_som + 1
       floating_cn_ratio_decomp_pools(i_phys_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_phys_som) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'PHYS_SOM'
+      decomp_cascade_con%decomp_pool_name_history(i_phys_som) = 'SOM_PHYS'
       decomp_cascade_con%decomp_pool_name_long(i_phys_som) = 'physically protected soil organic matter'
       decomp_cascade_con%decomp_pool_name_short(i_phys_som) = 'S3'
       is_microbe(i_phys_som) = .false.
@@ -571,7 +568,7 @@ contains
       i_cop_mic = i_phys_som + 1
       floating_cn_ratio_decomp_pools(i_cop_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_cop_mic) = 'micr1'
-      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'COP_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'MIC_COP'
       decomp_cascade_con%decomp_pool_name_long(i_cop_mic) = 'copiotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_cop_mic) = 'M1'
       is_microbe(i_cop_mic) = .true.
@@ -587,7 +584,7 @@ contains
       i_oli_mic = i_cop_mic + 1
       floating_cn_ratio_decomp_pools(i_oli_mic) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_oli_mic) = 'micr2'
-      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'OLI_MIC'
+      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'MIC_OLI'
       decomp_cascade_con%decomp_pool_name_long(i_oli_mic) = 'oligotrophic microbes'
       decomp_cascade_con%decomp_pool_name_short(i_oli_mic) = 'M2'
       is_microbe(i_oli_mic) = .true.
@@ -734,6 +731,8 @@ contains
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
       end if
 
+      if (use_soil_matrixcn) call InitSoilTransfer()
+
       deallocate(params_inst%mimics_mge)
       deallocate(params_inst%mimics_vmod)
       deallocate(params_inst%mimics_vint)
@@ -752,29 +751,32 @@ contains
   end subroutine init_decompcascade_mimics
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+  subroutine decomp_rates_mimics(bounds, num_bgc_soilc, filter_bgc_soilc, &
        num_soilp, filter_soilp, clm_fates, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
-       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
+       idop)
     !
     ! !DESCRIPTION:
     ! Calculate rates and decomposition pathways for the MIMICS
     ! decomposition cascade model
     !
     ! !USES:
-    use clm_time_manager , only : get_average_days_per_year
+    use clm_time_manager , only : get_average_days_per_year, get_step_size
     use clm_varcon       , only : secspday, secsphr, tfrz
     use clm_varcon       , only : g_to_mg, cm3_to_m3
     use subgridAveMod    , only : p2c
     use PatchType        , only : patch
     use pftconMod        , only : pftname
+    use TillageMod       , only : get_do_tillage
+    use TillageMod       , only : get_apply_tillage_multipliers
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
     integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+    integer                              , intent(in)    :: num_bgc_soilc       ! number of soil columns in filter
+    integer                              , intent(in)    :: filter_bgc_soilc(:) ! filter for soil columns
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(temperature_type)               , intent(in)    :: temperature_inst
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
@@ -782,6 +784,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     type(hlm_fates_interface_type)       , intent(inout) :: clm_fates
+    integer, optional                    , intent(in)    :: idop(:) ! patch day of planting
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: eps = 1.e-6_r8
@@ -818,6 +821,7 @@ contains
     integer :: p, fp, c, fc, j, k, l, s  ! indices
     integer :: pf  ! fates patch index
     integer :: nc  ! clump index
+    real(r8):: dt                           ! decomposition time step
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: w_d_o_scalars  ! product of w_scalar * depth_scalar * o_scalar
@@ -828,10 +832,8 @@ contains
     real(r8):: mimics_fmet_p4
     real(r8):: mimics_fchem_r_p1
     real(r8):: mimics_fchem_r_p2
-    real(r8):: mimics_fchem_r_p3
     real(r8):: mimics_fchem_k_p1
     real(r8):: mimics_fchem_k_p2
-    real(r8):: mimics_fchem_k_p3
     real(r8):: mimics_tau_mod_min
     real(r8):: mimics_tau_mod_max
     real(r8):: mimics_tau_mod_factor
@@ -880,12 +882,18 @@ contains
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
          ligninNratioAvg => soilbiogeochem_carbonflux_inst%litr_lig_c_to_n_col, &  ! Input: [real(r8) (:) ] C:N ratio of litter lignin
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
+         Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil        , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
+
+      if (get_do_tillage() .and. .not. present(idop)) then
+         call endrun("Do not enable tillage without providing idop to decomp_rate_constants_mimics().")
+      end if
 
       mino2lim = CNParamsShareInst%mino2lim
 
       days_per_year = get_average_days_per_year()
+      dt = real( get_step_size(), r8 )
 
 !     ! Set "decomp_depth_efolding" parameter
 !     decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
@@ -895,8 +903,8 @@ contains
 
      ! calc ref rate
       if ( spinup_state >= 1 ) then
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             !
             if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -950,8 +958,8 @@ contains
             !
          end do
       else
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
+         do fc = 1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             spinup_geogterm_l1(c) = 1._r8
             spinup_geogterm_l2(c) = 1._r8
             spinup_geogterm_cwd(c) = 1._r8
@@ -975,14 +983,14 @@ contains
          frw(bounds%begc:bounds%endc) = 0._r8
          allocate(fr(bounds%begc:bounds%endc,nlev_soildecomp_standard))
          do j=1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                frw(c) = frw(c) + col%dz(c,j)
             end do
          end do
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (frw(c) /= 0._r8) then
                   fr(c,j) = col%dz(c,j) / frw(c)
                else
@@ -1000,8 +1008,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlev_soildecomp_standard
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                if (j==1) w_scalar(c,:) = 0._r8
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
@@ -1017,8 +1025,8 @@ contains
          if (anoxia) then
 
             do j = 1,nlev_soildecomp_standard
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
 
                   if (j==1) o_scalar(c,:) = 0._r8
 
@@ -1042,8 +1050,8 @@ contains
          ! and soil moisture. Soil Biol. Biochem., 15(4):447-453.
 
          do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
+            do fc = 1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
                psi = min(soilpsi(c,j),maxpsi)
                ! decomp only if soilpsi is higher than minpsi
                if (psi > minpsi) then
@@ -1059,8 +1067,8 @@ contains
 
          if (anoxia) then
             do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
+               do fc = 1,num_bgc_soilc
+                  c = filter_bgc_soilc(fc)
 
                   o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                end do
@@ -1074,8 +1082,8 @@ contains
       ! Term that reduces decomposition rate at depth
       ! Placeholder. For now depth_scalar = 1.
       do j = 1, nlevdecomp
-         do fc = 1, num_soilc
-            c = filter_soilc(fc)
+         do fc = 1, num_bgc_soilc
+            c = filter_bgc_soilc(fc)
             ! Using fixed e-folding depth as in
             ! SoilBiogeochemDecompCascadeBGCMod.F90
 !           depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
@@ -1092,10 +1100,8 @@ contains
       mimics_fmet_p4 = params_inst%mimics_fmet(4)
       mimics_fchem_r_p1 = params_inst%mimics_fchem_r(1)
       mimics_fchem_r_p2 = params_inst%mimics_fchem_r(2)
-      mimics_fchem_r_p3 = params_inst%mimics_fchem_r(3)
       mimics_fchem_k_p1 = params_inst%mimics_fchem_k(1)
       mimics_fchem_k_p2 = params_inst%mimics_fchem_k(2)
-      mimics_fchem_k_p3 = params_inst%mimics_fchem_k(3)
       mimics_tau_mod_min = params_inst%mimics_tau_mod_min
       mimics_tau_mod_max = params_inst%mimics_tau_mod_max
       mimics_tau_mod_factor = params_inst%mimics_tau_mod_factor
@@ -1135,7 +1141,7 @@ contains
             end do  ! p loop
 
             ! Calculate the column-level average
-            call p2c(bounds, num_soilc, filter_soilc, &
+            call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
                  annsum_npp(bounds%begp:bounds%endp), &
                  annsum_npp_col_local(bounds%begc:bounds%endc))
          else
@@ -1146,8 +1152,8 @@ contains
       end if fates_if
 
       ! calculate rates for all litter and som pools
-      do fc = 1,num_soilc
-         c = filter_soilc(fc)
+      do fc = 1,num_bgc_soilc
+         c = filter_bgc_soilc(fc)
 
          if (use_fates) then
             annsum_npp_col_scalar = max(0._r8, annsum_npp_col_local(c))
@@ -1186,9 +1192,9 @@ contains
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
          fchem_m1 = min(1._r8, max(0._r8, mimics_fchem_r_p1 * &
-                    exp(mimics_fchem_r_p2 * fmet) * mimics_fchem_r_p3))
+                    exp(mimics_fchem_r_p2 * fmet)))
          fchem_m2 = min(1._r8, max(0._r8, mimics_fchem_k_p1 * &
-                    exp(mimics_fchem_k_p2 * fmet) * mimics_fchem_k_p3))
+                    exp(mimics_fchem_k_p2 * fmet)))
 
          do j = 1,nlevdecomp
             ! vmax ends up in units of per hour but is expected
@@ -1283,14 +1289,15 @@ contains
             ! The right hand side is OXIDAT in the testbed (line 1145)
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
-            decomp_k(c,j,i_cop_mic) = tau_m1 * &
-                   m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            ! Currently, mimics_densdep = 1 so as to have no effect
+            decomp_k(c,j,i_cop_mic) = tau_m1 * m1_conc**(mimics_densdep) 
+ 
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
             pathfrac_decomp_cascade(c,j,i_m1s1) = favl
             pathfrac_decomp_cascade(c,j,i_m1s2) = fchem_m1
 
-            decomp_k(c,j,i_oli_mic) = tau_m2 * &
-                   m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
+            decomp_k(c,j,i_oli_mic) = tau_m2 * m2_conc**(mimics_densdep)
+
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m2(c,j) - fchem_m2))
             pathfrac_decomp_cascade(c,j,i_m2s1) = favl
             pathfrac_decomp_cascade(c,j,i_m2s2) = fchem_m2
@@ -1301,6 +1308,28 @@ contains
             if (.not. use_fates) then
                decomp_k(c,j,i_cwd) = k_frag * w_d_o_scalars  ! * spinup_geogterm_cwd(c)
             end if
+
+            ! Tillage
+            if (get_do_tillage()) then
+               call get_apply_tillage_multipliers(idop, c, j, decomp_k(c,j,:))
+            end if
+
+! Above into soil matrix
+            if(use_soil_matrixcn)then
+               Ksoil%DM(c,j+nlevdecomp*(i_met_lit-1)) = decomp_k(c,j,i_met_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_str_lit-1)) = decomp_k(c,j,i_str_lit) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_avl_som-1)) = decomp_k(c,j,i_avl_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_phys_som-1)) = decomp_k(c,j,i_phys_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_chem_som-1)) = decomp_k(c,j,i_chem_som) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_cop_mic-1)) = decomp_k(c,j,i_cop_mic) * dt
+               Ksoil%DM(c,j+nlevdecomp*(i_oli_mic-1)) = decomp_k(c,j,i_oli_mic) * dt
+               ! same for cwd but only if fates is not enabled; fates handles
+               ! CWD
+               ! on its own structure
+               if (.not. use_fates) then
+                  Ksoil%DM(c,j+nlevdecomp*(i_cwd-1))   = decomp_k(c,j,i_cwd) * dt
+               end if
+            end if !use_soil_matrixcn
          end do
       end do
 

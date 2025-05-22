@@ -2,7 +2,7 @@ module test_ncdio_utils
   
   ! Tests of ncdio_utils
   
-  use pfunit_mod
+  use funit
   use ncdio_utils
   use ncdio_pio   ! use the fake version of this module
   use shr_kind_mod, only : r8 => shr_kind_r8

@@ -17,7 +17,7 @@ module ch4Mod
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
   use clm_time_manager               , only : get_step_size_real, get_nstep
-  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn, use_fates
+  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_fates_bgc
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType                    , only : atm2lnd_type
@@ -1684,7 +1684,7 @@ contains
     use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
     use clm_varcon    , only : secspday
     use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
-    use clm_time_manager, only : is_beg_curr_year
+    use clm_time_manager, only : is_beg_curr_year, is_first_step
     use dynSubgridControlMod, only : get_do_transient_lakes
     !
     ! !ARGUMENTS:
@@ -2324,10 +2324,13 @@ contains
       ! Gricell level balance
       !
 
-      ! Skip the check if it's the beginning of a new year and dynamic lakes are on
-      ! See (https://github.com/ESCOMP/CTSM/issues/1356#issuecomment-905963583)
+      ! Skip the check if dynamic lakes are on and it's
+      ! - the beginning of a new year (ok for restart runs) OR
+      ! - the beginning of a simulation (needed for hybrid/startup runs)
+      ! See (https://github.com/ESCOMP/CTSM/issues/43#issuecomment-1282609233)
       ! 
-      if ( is_beg_curr_year() .and. get_do_transient_lakes() )then
+      if ( is_beg_curr_year() .and. get_do_transient_lakes() .or. &
+           is_first_step() .and. get_do_transient_lakes() )then
          ch4_first_time_grc(begg:endg) = .true.
       end if
 
@@ -2521,7 +2524,7 @@ contains
             end if
          end do
          
-         if(use_fates) then
+         if(use_fates_bgc) then
             nc = bounds%clump_index
             do s = 1,clm_fates%fates(nc)%nsites 
                c = clm_fates%f2hmap(nc)%fcolumn(s)
@@ -2544,7 +2547,7 @@ contains
 
             if (.not. lake) then
 
-               if (use_cn .or. use_fates) then
+               if (use_cn .or. use_fates_bgc) then
                   ! Use soil heterotrophic respiration (based on Wania)
                   base_decomp = (somhr(c)+lithr(c)) / catomw
                   ! Convert from gC to molC
@@ -2567,7 +2570,7 @@ contains
                else
                   call endrun(msg=' ERROR: No source for decomp rate in CH4Prod.'//&
                        ' CH4 model currently requires CN or FATES.'//errMsg(sourcefile, __LINE__))
-               end if ! use_cn
+               end if ! use_cn or use_fates_bgc
 
                ! For sensitivity studies
                base_decomp = base_decomp * cnscalefactor
@@ -3680,7 +3683,7 @@ contains
                  ch4_aere_depth(c,j) - ch4_ebul_depth(c,j) ! [mol/m3-total/s]
             ! aerenchyma added to surface flux below
             ! ebul added to soil depth just above WT
-            if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8) then
+            if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8)then 
                write(iulog,*) 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
@@ -3688,7 +3691,7 @@ contains
                call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                     msg=' ERROR: Methane demands exceed methane available.'&
                     //errMsg(sourcefile, __LINE__))
-            else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
+            else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then  
                write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
@@ -4173,7 +4176,7 @@ contains
 
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
-         if (abs(errch4(c)) < 1.e-8_r8) then
+         if (abs(errch4(c)) < 1.e-8_r8) then 
             ch4_surf_diff(c) = ch4_surf_diff(c) - errch4(c)/dtime
          else ! errch4 > 1e-8 mol / m^2 / timestep
             write(iulog,*)'CH4 Conservation Error in CH4Mod during diffusion, nstep, c, errch4 (mol /m^2.timestep)', &

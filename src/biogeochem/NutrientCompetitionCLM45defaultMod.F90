@@ -17,7 +17,7 @@ module NutrientCompetitionCLM45defaultMod
   use ColumnType          , only : col
   use PatchType           , only : patch
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
-  use CropReprPoolsMod        , only : nrepr
+  use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
   use CropType            , only : cphase_leafemerge, cphase_grainfill
   use clm_varctl          , only : iulog
@@ -92,7 +92,6 @@ contains
     use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -114,7 +113,7 @@ contains
     call this%calc_plant_cn_alloc (bounds, num_soilp, filter_soilp,        &
          cnveg_state_inst, crop_inst, canopystate_inst, &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-         c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,                 &
+         c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
          fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
@@ -245,7 +244,7 @@ contains
          Nnonmyc                      => cnveg_nitrogenflux_inst%Nnonmyc_patch                     , & ! Output:  [real(r8) (:) ]  Non-mycorrhizal N uptake (gN/m2/s)
          Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
-         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch           & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
+         sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch            & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
          )
 
       ! patch loop to distribute the available N between the competing patches
@@ -308,9 +307,8 @@ contains
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
 
-
          if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code.
-	    excess_cflux(p) = availc(p) - plant_calloc(p)
+            excess_cflux(p) = availc(p) - plant_calloc(p)
 	    ! reduce gpp fluxes due to N limitation
 	    if (gpp(p) > 0.0_r8) then
 	       downreg(p) = excess_cflux(p)/gpp(p)
@@ -455,7 +453,6 @@ contains
     use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     use EnergyFluxType         , only : energyflux_type
-    use CNSharedParamsMod      , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -662,6 +659,7 @@ contains
                            livestemn_to_retransn(p)=0.0_r8
                         end if !fun
                         grain_flag(p) = 1._r8
+
                      end if
                   end if
                end if

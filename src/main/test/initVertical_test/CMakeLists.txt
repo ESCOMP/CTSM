@@ -1,4 +1,5 @@
-create_pFUnit_test(initVertical test_initVertical_exe
-  "test_initVertical.pf" "")
-
-target_link_libraries(test_initVertical_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(initVertical
+  TEST_SOURCES "test_initVertical.pf"
+  LINK_LIBRARIES clm csm_share esmf
+  EXTRA_FINALIZE unittest_finalize_esmf
+  EXTRA_USE unittestInitializeAndFinalize)

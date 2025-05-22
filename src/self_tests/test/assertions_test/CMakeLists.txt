@@ -1,10 +1,8 @@
 set (pfunit_sources
   test_assertions.pf)
 
-set (extra_sources
-  )
-
-create_pFUnit_test(assertions test_assertions_exe
-  "${pfunit_sources}" "${extra_sources}")
-
-target_link_libraries(test_assertions_exe clm csm_share esmf_wrf_timemgr)
+add_pfunit_ctest(assertions
+  TEST_SOURCES "${pfunit_sources}"
+  LINK_LIBRARIES clm csm_share esmf
+  EXTRA_FINALIZE unittest_finalize_esmf
+  EXTRA_USE unittestInitializeAndFinalize)

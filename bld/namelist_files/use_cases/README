@@ -2,9 +2,7 @@ $CTSMROOT/namelist_files/use_cases/README                   Jun/08/2018
 
 Naming Convention for CLM use-cases
 
-It's important that this naming convention be followed so that the PTCLMmkdata.py
-utility can parse the use-cases appropriately. The build-namelist script also
-checks for conformance with these conventions and won't work for names that
+The build-namelist script checks for conformance with these conventions and won't work for names that
 don't follow the convention.
 
 Ending suffix requires one of these endings: _transient, _control or _pd
@@ -16,6 +14,10 @@ Transient cases:
    or
 
    20thC$desc_transient  (means nominal 1850-2000 although some datasets are 1850-2005)
+
+   or
+
+   yyyy-PD_$desc_transient (means nominal year yyyy through present day (PD) (with the year for PD advancing)
 
 Control cases:
 
@@ -30,6 +32,7 @@ Where
 
 yyyy      = Simulation year (such as 1850 or 2000).
 yyyy-yyyy = Range of simulation years to run over (i.e.. 1850-2000).
+yyyy-PD   = Range of simulation years to run over until present day (i.e.. 2018-2024).
 $ssp_rcp  = Shared Socieconomic Pathway (SSP) Representative concentration pathway (RCP) description string
             for future scenarios:
             SSP#-#.# (for example: SSP5-8.5, SSP1-2.6, SSP4-6.0

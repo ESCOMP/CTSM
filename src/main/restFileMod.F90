@@ -6,13 +6,13 @@ module restFileMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod     , only : r8 => shr_kind_r8
+  use shr_kind_mod     , only : r8 => shr_kind_r8, CL=>shr_kind_CL
   use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
   use decompMod        , only : bounds_level_proc
   use spmdMod          , only : masterproc, mpicom
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use clm_time_manager , only : timemgr_restart_io, get_nstep
+  use clm_time_manager , only : timemgr_restart_io, get_nstep, get_curr_date
   use subgridRestMod   , only : subgridRestWrite, subgridRestRead, subgridRest_read_cleanup
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
@@ -27,6 +27,7 @@ module restFileMod
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
   use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+  use restUtilMod      , only : excess_ice_issue
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -145,7 +146,7 @@ contains
     ! Write out diagnostic info
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote out restart data at nstep = ',get_nstep()
+       write(iulog,'(a,i0)') 'Successfully wrote out restart data at nstep = ',get_nstep()
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
     
@@ -339,6 +340,7 @@ contains
     ! !USES:
     use fileutils , only : opnfil, getavu, relavu
     use clm_varctl, only : rpntfil, rpntdir, inst_suffix
+    use mpi, only : MPI_CHARACTER
     !
     ! !ARGUMENTS:
     character(len=*), intent(out) :: pnamer ! full path of restart file
@@ -346,8 +348,11 @@ contains
     ! !LOCAL VARIABLES:
     !EOP
     integer :: i                  ! indices
+    integer :: yr, mon, day, tod
+    character(len=17) :: timestamp
     integer :: nio                ! restart unit
     integer :: status             ! substring check status
+    logical :: found
     character(len=256) :: locfn   ! Restart pointer file name
     !-----------------------------------------------------------------------
 
@@ -358,17 +363,24 @@ contains
     ! New history files are always created for branch runs.
 
     if (masterproc) then
-       write(iulog,*) 'Reading restart pointer file....'
-    endif
+       nio = getavu()
+       call get_curr_date(yr, mon, day, tod)
+       write(timestamp,'(".",i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,tod
+       locfn = trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)//timestamp
+       inquire(file=trim(locfn), exist=found)
+       if(.not. found) then
+          locfn = trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)
+       endif
+       write(iulog,*) 'Reading restart pointer file: ',trim(locfn)
 
-    nio = getavu()
-    locfn = trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)
-    call opnfil (locfn, nio, 'f')
-    read (nio,'(a256)') pnamer
-    call relavu (nio)
+       call opnfil (locfn, nio, 'f')
+       read (nio,'(a256)') pnamer
+       call relavu (nio)
+    endif
+    call mpi_bcast (pnamer, CL, MPI_CHARACTER, 0, mpicom, status)
 
     if (masterproc) then
-       write(iulog,*) 'Reading restart data.....'
+       write(iulog,*) 'Reading restart data: ',trim(pnamer)
        write(iulog,'(72a1)') ("-",i=1,60)
     end if
 
@@ -397,7 +409,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*) 'Successfully wrote local restart file ',trim(file)
+       write(iulog,'(a)') 'Successfully wrote local restart file ',trim(file)
        write(iulog,'(72a1)') ("-",i=1,60)
        write(iulog,*)
     end if
@@ -421,17 +433,21 @@ contains
     ! !LOCAL VARIABLES:
     integer :: m                    ! index
     integer :: nio                  ! restart pointer file
+    integer :: yr, mon, day, tod
+    character(len=17) :: timestamp
     character(len=256) :: filename  ! local file name
     !-----------------------------------------------------------------------
 
     if (masterproc) then
+       call get_curr_date(yr, mon, day, tod)
+       write(timestamp,'(".",i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr, mon, day, tod
        nio = getavu()
-       filename= trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)
+       filename= trim(rpntdir) //'/'// trim(rpntfil)//trim(inst_suffix)//timestamp
        call opnfil( filename, nio, 'f' )
 
        write(nio,'(a)') fnamer
        call relavu( nio )
-       write(iulog,*)'Successfully wrote local restart pointer file'
+       write(iulog,'(a)')'Successfully wrote local restart pointer file'
     end if
 
   end subroutine restFile_write_pfile
@@ -455,8 +471,7 @@ contains
 
        if (masterproc) then	
           write(iulog,*)
-          write(iulog,*)'restFile_open: writing restart dataset at ',&
-               trim(file), ' at nstep = ',get_nstep()
+          write(iulog,'(a,i0)')'restFile_open: writing restart dataset '//trim(file)//' at nstep = ',get_nstep()
           write(iulog,*)
        end if
        call ncd_pio_createfile(ncid, trim(file))
@@ -466,7 +481,7 @@ contains
        ! Open netcdf restart file
 
        if (masterproc) then
-          write(iulog,*) 'Reading restart dataset'
+          write(iulog,*) 'Reading restart dataset: ', trim(file)
        end if
        call ncd_pio_openfile (ncid, trim(file), 0)
 
@@ -503,6 +518,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_nstep
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
+    use clm_varctl           , only : hillslope_file
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
@@ -569,6 +585,7 @@ contains
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
     call ncd_putatt(ncid, NCD_GLOBAL, 'surface_dataset', trim(fsurdat))
+    call ncd_putatt(ncid, NCD_GLOBAL, 'hillslope_dataset', trim(hillslope_file))
     call ncd_putatt(ncid, NCD_GLOBAL, 'flanduse_timeseries', trim(get_flanduse_timeseries()))
     call ncd_putatt(ncid, NCD_GLOBAL, 'title', 'CLM Restart information')
 
@@ -593,6 +610,8 @@ contains
     ! !DESCRIPTION:
     ! Write metadata for issues fixed
     !
+    ! !USES:
+    use clm_varctl, only : use_excess_ice
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
     logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
@@ -607,6 +626,15 @@ contains
          ncid = ncid, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          issue_num = lake_dynbal_baseline_issue)
+    ! If running with execess ice then mark the restart file as having excess ice fixed
+    ! This is a permanent feature, i.e. not expected to be removed from here.
+    ! It would only be removed if we decided to make use_excess_ice = .true. the default.
+    if ( use_excess_ice ) then
+       call write_issue_fixed_metadata( &
+            ncid = ncid, &
+            writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+            issue_num = excess_ice_issue)
+    end if
 
   end subroutine restFile_write_issues_fixed
 
@@ -796,7 +824,8 @@ contains
        if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
-         'use_init_interp = .true. in user_nl_clm'
+         'use_init_interp = .true. in user_nl_clm and '// &
+         'remove the init_generated_files/ directory in your run directory'
     call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim_size(ncid, 'levlak'  , nlevlak)

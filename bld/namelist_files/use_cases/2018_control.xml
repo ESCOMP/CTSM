@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+
+<!-- This use-case is mainly in use for NEON sites -->
+
+<namelist_defaults>
+
+<use_case_desc>Conditions to simulate 2018 land-use</use_case_desc>
+
+<sim_year>2018</sim_year>
+
+<sim_year_range>constant</sim_year_range>
+
+<!-- Use future data as needed from the SSP3-7.0 scenario-->
+<ssp_rcp>SSP3-7.0</ssp_rcp>
+
+</namelist_defaults>

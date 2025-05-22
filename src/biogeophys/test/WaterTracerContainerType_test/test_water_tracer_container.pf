@@ -2,7 +2,7 @@ module test_water_tracer_container
 
   ! Tests of WaterTracerContainerType
 
-  use pfunit_mod
+  use funit
   use WaterTracerContainerType
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod, only : subgrid_level_gridcell

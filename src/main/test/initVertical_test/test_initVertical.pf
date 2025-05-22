@@ -2,7 +2,7 @@ module test_initVertical
 
   ! Tests of initVerticalMod
 
-  use pfunit_mod
+  use funit
   use initVerticalMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use clm_varpar, only : nlevlak, nlevgrnd, nlevdecomp_full, nlayer

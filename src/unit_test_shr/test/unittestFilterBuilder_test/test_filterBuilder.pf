@@ -2,7 +2,7 @@ module test_filterBuilder
   
   ! Tests of unittestFilterBuilder
 
-  use pfunit_mod
+  use funit
   use unittestFilterBuilderMod
 
   implicit none
