@@ -75,6 +75,9 @@ module initInterpMod
   ! patch-level variables)
   logical :: init_interp_fill_missing_with_natveg
 
+  ! If true, fill missing urban landunit type with closest urban high density (HD) landunit
+  logical :: init_interp_fill_missing_urban_with_HD
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -106,11 +109,13 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /clm_initinterp_inparm/ &
-         init_interp_method, init_interp_fill_missing_with_natveg
+         init_interp_method, init_interp_fill_missing_with_natveg, &
+         init_interp_fill_missing_urban_with_HD
 
     ! Initialize options to default values, in case they are not specified in the namelist
     init_interp_method = ' '
     init_interp_fill_missing_with_natveg = .false.
+    init_interp_fill_missing_urban_with_HD = .false.
 
     if (masterproc) then
        unitn = getavu()
@@ -130,6 +135,7 @@ contains
 
     call shr_mpi_bcast (init_interp_method, mpicom)
     call shr_mpi_bcast (init_interp_fill_missing_with_natveg, mpicom)
+    call shr_mpi_bcast (init_interp_fill_missing_urban_with_HD, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -293,6 +299,15 @@ contains
     status = pio_get_att(ncidi, pio_global, &
          'ilun_crop', &
          subgrid_special_indices%ilun_crop)
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_urban_tbd', &
+         subgrid_special_indices%ilun_urban_TBD)
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_urban_hd', &
+         subgrid_special_indices%ilun_urban_HD)
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_urban_md', &
+         subgrid_special_indices%ilun_urban_MD)
 
     ! BACKWARDS_COMPATIBILITY(wjs, 2021-04-16) ilun_landice_multiple_elevation_classes has
     ! been renamed to ilun_landice. For now we need to handle both possibilities for the
@@ -325,6 +340,12 @@ contains
             subgrid_special_indices%ilun_vegetated_or_bare_soil
        write(iulog,*)'ilun_crop                               = ' , &
             subgrid_special_indices%ilun_crop
+       write(iulog,*)'ilun_urban_tbd = ' , &
+            subgrid_special_indices%ilun_urban_TBD
+       write(iulog,*)'ilun_urban_hd = ' , &
+            subgrid_special_indices%ilun_urban_HD
+       write(iulog,*)'ilun_urban_md = ' , &
+            subgrid_special_indices%ilun_urban_MD
        write(iulog,*)'ilun_landice = ' , &
             subgrid_special_indices%ilun_landice
        write(iulog,*)'create_glacier_mec_landunits            = ', &
@@ -839,6 +860,7 @@ contains
             glc_behavior=glc_behavior, &
             glc_elevclasses_same=glc_elevclasses_same, &
             fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
+            fill_missing_urban_with_HD=init_interp_fill_missing_urban_with_HD, &
             mindist_index=minindx)
     case (interp_method_finidat_areas)
        if (masterproc) then

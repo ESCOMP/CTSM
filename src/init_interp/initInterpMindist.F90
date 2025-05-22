@@ -35,8 +35,12 @@ module initInterpMindist
      integer :: ilun_vegetated_or_bare_soil
      integer :: ilun_crop
      integer :: ilun_landice
+     integer :: ilun_urban_TBD
+     integer :: ilun_urban_HD
+     integer :: ilun_urban_MD
    contains
      procedure :: is_vegetated_landunit  ! returns true if the given landunit type is natural veg or crop
+     procedure :: is_urban_landunit      ! returns true if the given landunit type is urban
   end type subgrid_special_indices_type
 
   type, public :: subgrid_type
@@ -58,8 +62,10 @@ module initInterpMindist
   private :: set_glc_must_be_same_type
   private :: set_ice_adjustable_type
   private :: do_fill_missing_with_natveg
+  private :: do_fill_missing_urban_with_HD
   private :: is_sametype
   private :: is_baresoil
+  private :: is_urban_HD
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -147,7 +153,7 @@ contains
 
   subroutine set_mindist(begi, endi, bego, endo, activei, activeo, subgridi, subgrido, &
        subgrid_special_indices, glc_behavior, glc_elevclasses_same, &
-       fill_missing_with_natveg, mindist_index)
+       fill_missing_with_natveg, fill_missing_urban_with_HD, mindist_index)
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -165,13 +171,18 @@ contains
     logical            , intent(in)  :: glc_elevclasses_same
 
     ! If false: if an output type cannot be found in the input, code aborts
-    ! If true: if an output type cannot be found in the input, fill with closest natural
+    ! If true: if a non-urban output type cannot be found in the input, fill with closest natural
     ! veg column (using bare soil for patch-level variables)
     !
     ! NOTE: always treated as true for natural veg and crop landunits/columns/patches in
     ! the output - e.g., if we can't find the right column type to fill crop, we always
     ! use the closest natural veg column, regardless of the value of this flag.
     logical            , intent(in)  :: fill_missing_with_natveg
+
+
+    ! If false: if an urban output type cannot be found in the input, code aborts
+    ! If true: if an urban output type cannot be found in the input, fill with closest urban HD
+    logical            , intent(in)  :: fill_missing_urban_with_HD
 
     integer            , intent(out) :: mindist_index(bego:endo)
     !
@@ -187,6 +198,8 @@ contains
     ! considered the same type. This is only valid for glc points, and is only valid
     ! for subgrid name = 'pft' or 'column'.
     logical  :: glc_must_be_same_type_o(bego:endo)
+
+    character(len=*), parameter :: subname = 'set_mindist'
     ! --------------------------------------------------------------------
 
     if (associated(subgridi%topoglc) .and. associated(subgrido%topoglc)) then
@@ -260,7 +273,11 @@ contains
              end if
           end do
           
-          ! If output type is not contained in input dataset, then use closest bare soil,
+          ! Note that do_fill_missing_with_natveg below will return .false. for pfts and columnns associated
+          ! with urban landunits so that the fill missing with bare soil will be implemented only for
+          ! non-urban types (pfts, columns, landunits, gridcells).
+
+          ! If non-urban output type is not contained in input dataset, then use closest bare soil,
           ! if this point is one for which we fill missing with natveg.
           if ( distmin == spval .and. &
                do_fill_missing_with_natveg( &
@@ -268,6 +285,26 @@ contains
              do ni = begi, endi
                 if (activei(ni)) then
                    if ( is_baresoil(ni, subgridi, subgrid_special_indices)) then
+                      dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
+                      dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
+                           0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
+                      dist = dx*dx + dy*dy
+                      if ( dist < distmin )then
+                         distmin = dist
+                         nmin = ni
+                      end if
+                   end if
+                end if
+             end do
+
+          ! If urban output type is not contained in input dataset, then use closest urban HD,
+          ! if this point is one for which we fill missing urban with urban HD.
+          else if (distmin == spval &
+               .and. do_fill_missing_urban_with_HD( &
+               fill_missing_urban_with_HD, no, subgrido, subgrid_special_indices)) then
+             do ni = begi, endi
+                if (activei(ni)) then
+                   if ( is_urban_HD(ni, subgridi, subgrid_special_indices)) then
                       dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
                       dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
                            0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
@@ -287,13 +324,22 @@ contains
                   &Cannot find any input points matching output point:'
              call subgrido%print_point(no, iulog)
              write(iulog,*) ' '
-             write(iulog,*) 'Consider rerunning with the following in user_nl_clm:'
+             write(iulog,*) 'If this is an urban type (ltype = 7,8, or 9) then '
+             write(iulog,*) 'consider rerunning with the following in user_nl_clm:'
+             write(iulog,*) 'init_interp_fill_missing_urban_with_HD = .true.'
+             write(iulog,*) 'However, note that this will fill all urban missing types in the output'
+             write(iulog,*) 'with the closest urban high density (HD) type in the input'
+             write(iulog,*) 'So, you should consider whether that is what you want.'
+             write(iulog,*) ' '
+             write(iulog,*) 'If this is a non-urban type (ltype \= 7,8, or 9) then '
+             write(iulog,*) 'consider rerunning with the following in user_nl_clm:'
              write(iulog,*) 'init_interp_fill_missing_with_natveg = .true.'
-             write(iulog,*) 'However, note that this will fill all missing types in the output'
+             write(iulog,*) 'However, note that this will fill all non-urban missing types in the output'
              write(iulog,*) 'with the closest natural veg column in the input'
              write(iulog,*) '(using bare soil for patch-level variables).'
              write(iulog,*) 'So, you should consider whether that is what you want.'
-             call endrun(msg=errMsg(sourcefile, __LINE__))
+             call endrun(msg=subname// &
+                  ' ERROR: Cannot find any input points matching output point')
           end if
 
           mindist_index(no) = nmin
@@ -555,7 +601,7 @@ contains
        no, subgrido, subgrid_special_indices)
     !
     ! !DESCRIPTION:
-    ! Returns true if the given output point, if missing, should be filled with the
+    ! Returns true if the given non-urban output point, if missing, should be filled with the
     ! closest natural veg point.
     !
     ! !ARGUMENTS:
@@ -576,8 +622,8 @@ contains
     if (subgrido%name == 'gridcell') then
        ! It makes no sense to try to fill missing with natveg for gridcell-level values
        do_fill_missing_with_natveg = .false.
-    else if (fill_missing_with_natveg) then
-       ! User has asked for all missing points to be filled with natveg
+    else if (fill_missing_with_natveg .and. .not. subgrid_special_indices%is_urban_landunit(subgrido%ltype(no))) then
+       ! User has asked for all non-urban missing points to be filled with natveg
        do_fill_missing_with_natveg = .true.
     else if (subgrid_special_indices%is_vegetated_landunit(subgrido%ltype(no))) then
        ! Even if user hasn't asked for it, we fill missing vegetated points (natural veg
@@ -591,6 +637,40 @@ contains
 
   end function do_fill_missing_with_natveg
 
+  !-----------------------------------------------------------------------
+  function do_fill_missing_urban_with_HD(fill_missing_urban_with_HD, &
+       no, subgrido, subgrid_special_indices)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if the given urban output point, if missing, should be filled with the
+    ! closest urban HD point.
+    !
+    ! !ARGUMENTS:
+    logical :: do_fill_missing_urban_with_HD  ! function result
+
+    ! whether we should fill ALL missing points with urban HD
+    logical, intent(in) :: fill_missing_urban_with_HD
+
+    integer           , intent(in)  :: no
+    type(subgrid_type), intent(in)  :: subgrido
+    type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'do_fill_missing_urban_with_HD'
+    !-----------------------------------------------------------------------
+
+    if (subgrido%name == 'gridcell') then
+       ! It makes no sense to try to fill missing with urban HD for gridcell-level values
+       do_fill_missing_urban_with_HD = .false.
+    else if (fill_missing_urban_with_HD) then
+       ! User has asked for all missing urban points to be filled with urban HD
+       do_fill_missing_urban_with_HD = .true.
+    else
+       do_fill_missing_urban_with_HD = .false.
+    end if
+
+  end function do_fill_missing_urban_with_HD
 
   !=======================================================================
 
@@ -713,6 +793,31 @@ contains
   end function is_baresoil
 
   !-----------------------------------------------------------------------
+  logical function is_urban_HD (n, subgrid, subgrid_special_indices)
+
+    ! --------------------------------------------------------------------
+    ! arguments
+    integer           , intent(in)  :: n
+    type(subgrid_type), intent(in)  :: subgrid
+    type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
+    ! --------------------------------------------------------------------
+
+    is_urban_HD = .false.
+
+    if (subgrid%name == 'pft' .or. subgrid%name == 'column' .or. subgrid%name == 'landunit') then
+       if (subgrid%ltype(n) == subgrid_special_indices%ilun_urban_HD) then
+          is_urban_HD = .true.
+       end if
+    else
+       if (masterproc) then
+          write(iulog,*)'ERROR interpinic: is_urban_HD subgrid type ',subgrid%name,' not supported'
+       end if
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+
+  end function is_urban_HD
+
+  !-----------------------------------------------------------------------
   function is_vegetated_landunit(this, ltype)
     !
     ! !DESCRIPTION:
@@ -739,5 +844,30 @@ contains
 
   end function is_vegetated_landunit
 
+  function is_urban_landunit(this, ltype)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if the given landunit type is urban
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    logical :: is_urban_landunit  ! function result
+    class(subgrid_special_indices_type), intent(in) :: this
+    integer, intent(in) :: ltype   ! landunit type of interest
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'is_urban_landunit'
+    !-----------------------------------------------------------------------
+
+    if (ltype == this%ilun_urban_TBD .or. ltype == this%ilun_urban_HD &
+            .or. ltype == this%ilun_urban_MD) then
+       is_urban_landunit = .true.
+    else
+       is_urban_landunit = .false.
+    end if
+
+  end function is_urban_landunit
 
 end module initInterpMindist
