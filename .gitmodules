@@ -128,3 +128,13 @@ fxtag = v2.0.0
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
+
+# FTorch is an optional library useful for AI and Machine Learning
+# In order to use it -- it must be checked out with git-fleximod
+[submodule "FTorch"]
+path = libraries/FTorch
+url = https://github.com/ESCOMP/FTorch_interface
+fxtag = v0.0.5
+fxrequired = ToplevelOptional
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/FTorch_interface
