@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
+set -e
 
-if [ -f doc-builder/build_docs ]; then
-    echo "Running: doc-builder/build_docs --fetch-images $@"
-    doc-builder/build_docs --fetch-images "$@"
-else
-    echo "Obtain doc-builder by running ./manage_externals/checkout_externals -o from the top-level"
+if [ ! -f doc-builder/build_docs ]; then
+    script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    pushd "${script_dir}/.." 1>/dev/null
+    manage_externals/checkout_externals doc-builder
+    popd 1>/dev/null
 fi
+
+echo "Running: make fetch-images"
+make fetch-images
+
+echo "Running: ./doc-builder/build_docs $@"
+./doc-builder/build_docs "$@"
+
+exit 0

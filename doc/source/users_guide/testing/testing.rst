@@ -26,12 +26,6 @@ tests as well as lists of tests. The standard testname for CLM is "aux_clm" for 
 well as the CGD machine hobart for intel, nag, and pgi compilers.  There's also a shorter test list called "clm_short". Also
 see the `CTSM Wiki on Testing <https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide>`_.
 
-CTSM Tools Testing
-==================
-
-.. include:: ../../../../test/tools/README
-   :literal:
-
 CTSM Fortran Unit Tests
 =======================
 
@@ -46,16 +40,3 @@ Run the following perl tester that
 ::
    > cd bld/unit_testers
    > ./build-namelist_test.pl
-
-
-Testing PTCLM
-=============
-
-.. include:: ../../../../tools/PTCLM/README
-   :literal:
-
-To run on cheyenne, you do the following:
-
-
-.. include:: ../../../../tools/PTCLM/test/README.run_cheyenne
-   :literal:

@@ -116,3 +116,7 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# Docs output
+_build*/
+_publish*/

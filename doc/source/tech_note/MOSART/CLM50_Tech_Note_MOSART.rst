@@ -47,9 +47,9 @@ and discharges the water to its downstream spatial unit or the ocean.
 
 .. _Figure MOSART conceptual diagram:
 
-.. figure:: mosart_diagram.png
-    :width: 800px
-    :height: 400px
+.. Figure:: mosart_diagram.png
+
+ MOSART conceptual diagram
 
 MOSART only routes positive runoff, although negative runoff can be generated
 occasionally by the land model (e.g., :math:`q_{gwl}`). Negative runoff in any
