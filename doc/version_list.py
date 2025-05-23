@@ -9,9 +9,10 @@ if not os.path.exists(dir2add):
 sys.path.insert(0, dir2add)
 # pylint: disable=wrong-import-position
 from doc_builder.docs_version import DocsVersion  # pylint: disable=import-error,no-name-in-module
+from doc_builder.sys_utils import get_git_head_or_branch  # pylint: disable=import-error,no-name-in-module
 
 # Branch name, tag, or commit SHA whose version of certain files we want to preserve
-LATEST_REF = "main"
+LATEST_REF = get_git_head_or_branch()
 
 # List of version definitions
 VERSION_LIST = [
