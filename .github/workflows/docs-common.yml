@@ -76,3 +76,13 @@ jobs:
           else
             cd doc && ./build_docs -b ${PWD}/_build -c
           fi
+
+      # TODO: Split testing.sh tests into their own steps in this job
+      - name: Text Sphinx builds with omnibus script
+        if: success() || failure()
+        run: |
+          if ${{ inputs.use_conda }}; then
+            cd doc && conda run -n ${{ inputs.conda_env_name }} ./testing.sh
+          else
+            cd doc && ./testing.sh
+          fi

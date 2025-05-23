@@ -10,6 +10,7 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
+      - '.github/workflows/docs-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -18,6 +19,7 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
+      - '.github/workflows/docs-common.yml'
 
   workflow_dispatch:
 
