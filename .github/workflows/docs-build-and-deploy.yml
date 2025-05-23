@@ -50,7 +50,6 @@ jobs:
         id: build-docs
         run: |
           bin/git-fleximod update -o
-          build_dir_top="${PWD}/_build"
           cd doc
           ./build_docs_to_publish -d --site-root https://escomp.github.io/ctsm
 

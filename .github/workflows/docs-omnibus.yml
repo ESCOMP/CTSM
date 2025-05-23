@@ -50,6 +50,5 @@ jobs:
 
       # TODO: Split testing.sh tests into their own steps in this job
       - name: Text Sphinx builds with omnibus script
-        if: success() || failure()
         run: |
           cd doc && conda run -n ctsm_pylib ./testing.sh
