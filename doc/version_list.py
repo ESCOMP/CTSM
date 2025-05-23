@@ -24,6 +24,6 @@ VERSION_LIST = [
     DocsVersion(
         short_name="release-clm5.0",
         display_name="CLM5.0",
-        ref="release-clm5.0",
+        ref="release-clm5.0-update-20250523",
     ),
 ]
