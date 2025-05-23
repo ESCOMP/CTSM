@@ -21,7 +21,7 @@ If you're confident in your changes, or you're _not_ confident in your ability t
 We strongly suggest building the documentation on your personal computer before submitting a pull request, so that you can preview what your changes will look like. The recommended way to do this is using the `doc-builder` tool in conjunction with a "containerized" version of some required software.
 
 ### Directories
-You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. Alternatively, you can clone the [ctsm-docs](https://github.com/ESCOMP/ctsm-docs) repository and build there. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your user home directory**, which we represent as `$HOME`. The instructions here assume you want to do your build in `$HOME/path/to/build-dir/`.
+You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your user home directory**, which we represent as `$HOME`. The instructions here assume you want to do your build in `$HOME/path/to/build-dir/`.
 
 Your CTSM clone, from which you're building the documentation, also needs to be somewhere in your user home directory.
 
