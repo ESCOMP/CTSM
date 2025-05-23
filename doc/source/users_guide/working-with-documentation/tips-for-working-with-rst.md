@@ -46,13 +46,13 @@ You could then refer to that section with ``:XYZ:`this-is-my-label``` (leaving o
 Here are some examples. Note that the displayed link text will update automatically as needed (e.g., a section number or figure caption gets changed).
 - Section headings, text: ``:ref:`rst-cross-references``` → :ref:`rst-cross-references`
 - Section headings, number: ``:numref:`rst-cross-references``` → :numref:`rst-cross-references`. Note that, unlike `numref` for other things mentioned here, "Section" is not automatically prepended to the section number in the link text.
-- Table, text: ``:ref:`crop-plant-functional-types``` → :ref:`crop-plant-functional-types`
-- Table, number: ``:numref:`crop-plant-functional-types``` → :numref:`crop-plant-functional-types`
-- Figure, text (uses entire caption): ``:ref:`CLM subgrid hierarchy``` → :ref:`CLM subgrid hierarchy`
-- Figure, number: ``:numref:`CLM subgrid hierarchy``` → :numref:`CLM subgrid hierarchy`
+- Table, text: ``:ref:`Table Crop plant functional types``` → :ref:`Table Crop plant functional types`
+- Table, number: ``:numref:`Table Crop plant functional types``` → :numref:`Table Crop plant functional types`
+- Figure, text (uses entire caption): ``:ref:`Figure CLM subgrid hierarchy``` → :ref:`Figure CLM subgrid hierarchy`
+- Figure, number: ``:numref:`Figure CLM subgrid hierarchy``` → :numref:`Figure CLM subgrid hierarchy`
 - Equation, number: ``:eq:`equation for a line``` → :eq:`equation for a line`. The parentheses in the link text seem unavoidable, and there seems to be no way to refer to have the link show the label text or anything else aside from the number.
 
-You can have any link (except for equations) show custom text by putting the referenced label at the end in `<angled brackets>`. E.g., ``:ref:`Diagram of CLM subgrid hierarchy<CLM subgrid hierarchy>``` → :ref:`Diagram of CLM subgrid hierarchy<CLM subgrid hierarchy>`. 
+You can have any link (except for equations) show custom text by putting the referenced label at the end in `<angled brackets>`. E.g., ``:ref:`Diagram of CLM subgrid hierarchy<Figure CLM subgrid hierarchy>``` → :ref:`Diagram of CLM subgrid hierarchy<Figure CLM subgrid hierarchy>`. 
 
 Note that this is necessary for labels that aren't immediately followed by a section heading, a table with a caption, or a figure with a caption. For instance, to refer to labels in our bibliography, you could do ``:ref:`(Bonan, 1996)<Bonan1996>``` → :ref:`(Bonan, 1996)<Bonan1996>`.
 

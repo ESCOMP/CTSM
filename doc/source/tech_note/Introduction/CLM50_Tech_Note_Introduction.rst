@@ -25,7 +25,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Land processes` Land biogeophysical, biogeochemical, and landscape processes simulated by CLM (adapted from :ref:`Lawrence et al. (2011)<Lawrenceetal2011>` for CLM5.0).
 
-- :numref:`CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
+- :numref:`Figure CLM subgrid hierarchy` Configuration of the CLM subgrid hierarchy.
 
 - :numref:`Figure Radiation Schematic` Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
 
@@ -131,9 +131,9 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Temperature dependence of aqueous and gaseous diffusion` Temperature dependence of aqueous and gaseous diffusion coefficients for CH4 and O2.
 
-- :numref:`crop-plant-functional-types` Crop plant functional types (PFTs).
+- :numref:`Table Crop plant functional types` Crop plant functional types (PFTs).
 
-- :numref:`crop-phenology-params`  Crop phenology and morphology parameters.
+- :numref:`Table Crop phenology parameters`  Crop phenology and morphology parameters.
 
 - :numref:`Table Crop allocation parameters` Crop allocation parameters.
 
