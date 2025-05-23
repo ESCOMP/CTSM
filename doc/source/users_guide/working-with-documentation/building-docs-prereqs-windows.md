@@ -1,4 +1,4 @@
-.. _building-docs-prereqs-docker-windows:
+.. _building-docs-prereqs-windows:
 
 # Initial setup: Windows
 

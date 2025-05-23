@@ -10,8 +10,8 @@ Working with CTSM Documentation
    :maxdepth: 1
 
    docs-intro-and-recommended.md
-   building-docs-prereqs-docker-mac.md
-   building-docs-prereqs-docker-windows.md
+   building-docs-prereqs-mac.md
+   building-docs-prereqs-windows.md
    building-docs-multiple-versions.rst
    tips-for-working-with-markdown.md
    tips-for-working-with-rst.md

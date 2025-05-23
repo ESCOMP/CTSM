@@ -1,4 +1,4 @@
-.. _building-docs-prereqs-docker-mac:
+.. _building-docs-prereqs-mac:
 
 # Initial setup: Mac
 
