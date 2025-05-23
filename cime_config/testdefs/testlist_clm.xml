@@ -3788,16 +3788,16 @@
        <option name="wallclock">00:20:00</option>
        <option name="comment">Run a test with dry deposition on and FATES-SP</option>
        </options>
+       </test>
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
+       <machines>
+       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       </machines>
+       <options>
+       <option name="wallclock">00:20:00</option>
+       <option name="comment">Run a test with MEGAN on and FATES-SP</option>
+       </options>
        </test> -->
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with MEGAN on and FATES-SP</option>
-    </options>
-  </test>
 
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
