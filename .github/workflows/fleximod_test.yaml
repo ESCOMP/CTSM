@@ -5,6 +5,7 @@ name: git-fleximod test
 #
 on:
   push:
+    # Run when a change to any is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if no files are changed.
     branches: ['*']
   pull_request:
 
