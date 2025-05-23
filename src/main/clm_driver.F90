@@ -606,7 +606,6 @@ contains
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
        if(use_fates) then
-          if (masterproc)  write(iulog,*),"MVD wrapsun ", get_nstep(), nextsw_cday, declinp1, doalb
           call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
