@@ -7,12 +7,14 @@ This Readme tells you how to update the ctsm-docs Docker container if a need to 
 
 ## Building
 
-If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`containerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
+If you actually want to build the container, you will need to have Podman installed. We previously used Docker for this, but had to move away from it due to licensing issues. Note that these issues have to do specifically with Docker Desktop, which is required to get the Docker Engine on some platforms. The Docker Engine itself is open-source, so our ctsm-docs container testing and publishing workflows are fine to continue using it. We are also fine to use the Docker Engine via Podman for local builds, which is what's described here.
+
+One you have Podman installed, you can do:
 ```shell
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/escomp/ctsm/ctsm-docs .
+podman buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/escomp/ctsm/ctsm-docs .
 ```
 
-To use your new version for local testing, you'll need to tell doc-builder to use that image. Call `docker images`, which should return something like this:
+To use your new version for local testing, you'll need to tell doc-builder to use that image. Call `podman images`, which should return something like this:
 ```shell
 REPOSITORY                      TAG          IMAGE ID       CREATED         SIZE
 ghcr.io/escomp/ctsm/ctsm-docs   latest       ab51446519a4   3 seconds ago   233MB
@@ -47,22 +49,25 @@ If you want to publish the container, you first need a [GitHub Personal Access T
 
 Once you have a PAT(C), you can authenticate in your shell session like so:
 
-```shell
-   echo YOUR_PERSONAL_ACCESS_TOKEN_CLASSIC | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+```bash
+# bash: Make it so that, in this session, commands with a leading space are not saved to terminal history
+export HISTCONTROL=ignoreboth
+
+# Include leading spaces so that your secret PAT(C) isn't included in terminal history
+   echo YOUR_PERSONAL_ACCESS_TOKEN_CLASSIC | podman login ghcr.io -u YOUR_USERNAME --password-stdin
 ```
-The leading spaces are intended to prevent this command, which contains your secret PAT(C), from being written to your shell's history file. That at least works in bash... sometimes. To be extra safe, in bash you can do `history -c` and it will clear your entire bash history. That can be pretty disruptive, but fortunately you should only need to authenticate once.
 
 ### Tagging
 You'll next need to tag the image. Lots of Docker instructions tell you to use the `latest` tag, and Docker may actually do that for you. However, `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
 
-Copy the relevant image ID (see `docker images` instructions above) and tag it with your version number like so:
+Copy the relevant image ID (see `podman images` instructions above) and tag it with your version number like so:
 ```shell
-docker tag ab51446519a4 ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
+podman tag ab51446519a4 ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
 ```
 
 Push to the repo:
 ```shell
-docker push ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
+podman push ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
 ```
 
 Then browse to the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs) to make sure this all worked and the image is public.
