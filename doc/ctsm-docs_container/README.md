@@ -3,7 +3,7 @@ This directory and its Dockerfile are used to build a Docker container for build
 
 ## Introduction
 
-This Readme tells you how to update the ctsm-docs Docker container if a need to do so arises—for example, adding a Python module that brings new functionality in the build. After you've followed all these instructions, you will probably want to push an update to [doc-builder](https://github.com/ESMCI/doc-builder) that updates `DEFAULT_DOCKER_IMAGE` in [build_commands.py](https://github.com/ESMCI/doc-builder/blob/master/doc_builder/build_commands.py) to point to the new tag.
+This Readme tells you how to update the ctsm-docs Docker container if a need to do so arises—for example, adding a Python module that brings new functionality in the build. After you've followed all these instructions, you will probably want to push an update to [doc-builder](https://github.com/ESMCI/doc-builder) that updates `DEFAULT_IMAGE` in [build_commands.py](https://github.com/ESMCI/doc-builder/blob/master/doc_builder/build_commands.py) to point to the new tag.
 
 ## Building
 
@@ -19,7 +19,7 @@ ghcr.io/escomp/ctsm/ctsm-docs   latest       ab51446519a4   3 seconds ago   233M
 ...
 ```
 
-To test, you can tell `build_docs` to use your new version by adding `--docker-image IMAGE_ID` to your call, where in the example above `IMAGE_ID` is `ab51446519a4`.
+To test, you can tell `build_docs` to use your new version by adding `--container-image IMAGE_ID` to your call, where in the example above `IMAGE_ID` is `ab51446519a4`.
 
 ## Publishing automatically
 
@@ -36,7 +36,7 @@ The string there can technically be anything as long as (a) it starts with a low
 You can check the results of the automatic publication on the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs).
 
 ### Updating doc-builder
-After the new version of the container is published, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_DOCKER_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
+After the new version of the container is published, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
 
 ## Publishing manually (NOT recommended)
 
