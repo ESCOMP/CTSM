@@ -1,4 +1,150 @@
 ===============================================================
+Tag name: ctsm5.3.045
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue May 20 11:56:15 MDT 2025
+One-line Summary: FATES default parameter update for API 40
+
+Purpose and description of changes
+----------------------------------
+
+Update the FATES default parameter and associated tag to API 40.  This update
+includes changes to the default competitive exclusion parameter, sets the logging
+default to clear cut, and refactors the pft-specific phenology habit selection.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to the datasets (e.g., parameter, surface or initial files):
+  The FATES default parameter file update unifies the pft-level phenology habit from three
+  separate on/off switches, into one per-pft integer selection switch, fates_phen_leaf_habit
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  Wall clock time increased by ten minutes for a select set of izumi tests.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  fates tested against fates-sci.1.84.0_api.40.0.0-ctsm5.3.042-pr1358-1359
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, fates tests only
+
+  FIELDLIST differences due to competetive exclusion parameter update triggering inclusion
+  of a previously inactive history output.  Numerical preciscion differences in a subset of
+  carbon flux outputs.  Long term tests demonstrate roundoff differences propagated due
+  to competetive exclusion parameter update.
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.83.1_api.39.0.0 -> sci.1.84.0_api.40.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3087
+https://github.com/NGEET/fates/pull/1406
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.044
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed 14 May 2025 11:42:41 AM MDT
+One-line Summary: Introduce time-evolving LEAFCN_TARGET as function of leafcn param
+
+Purpose and description of changes
+----------------------------------
+
+ Motivated by a phd student's project (Emma Hauser, now Professor at UW-Madison) we have introduced time-evolving leafcn as a possible template for other time-evolving parameters.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1646 Time evolving parameterization for leaf properties
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New test in aux_clm that points to an alternate params file with leafcn_co2_slope = 30 (default = 0) to confirm that the leafcn_t_evolving calculation doesn't fail
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ but field lists differ due to new history field LEAFCN_TARGET
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1654
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.043
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Fri 09 May 2025 12:28:17 PM MDT

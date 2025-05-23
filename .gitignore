@@ -114,4 +114,4 @@ Depends
 
 # Docs build output
 _build*/
-
+_publish*/

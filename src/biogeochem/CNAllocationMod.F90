@@ -23,6 +23,7 @@ module CNAllocationMod
   use CNVegCarbonStateType , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType  , only : cnveg_carbonflux_type
   use CNVegStateType       , only : cnveg_state_type
+  use CNVegNitrogenStateType, only: cnveg_nitrogenstate_type
   use CropReprPoolsMod     , only : nrepr
   use CNPhenologyMod       , only : CropPhase
   use CNSharedParamsMod    , only : use_fun
@@ -433,7 +434,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_allometry(num_soilp, filter_soilp, &
-       cnveg_carbonflux_inst, cnveg_state_inst)
+       cnveg_carbonflux_inst, cnveg_state_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate c_allometry and n_allometry terms based on allocation fractions
@@ -442,6 +443,7 @@ contains
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
     !
     ! !LOCAL VARIABLES:
@@ -464,7 +466,7 @@ contains
          croot_stem  => pftcon%croot_stem                      ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf   => pftcon%stem_leaf                       ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd     => pftcon%flivewd                         ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn      => pftcon%leafcn                          ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch,  & ! Input:  leaf C:N (gC/gN)
          frootcn     => pftcon%frootcn                         ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn    => pftcon%livewdcn                        ,  & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn    => pftcon%deadwdcn                        ,  & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -503,7 +505,7 @@ contains
        else
           g1 = grperc(ivt(p))
        end if
-       cnl  = leafcn(ivt(p))
+       cnl  = leafcn_t_evolving(p)
        cnfr = frootcn(ivt(p))
        cnlw = livewdcn(ivt(p))
        cndw = deadwdcn(ivt(p))

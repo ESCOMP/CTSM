@@ -6,11 +6,13 @@ on:
     branches: ['*']
     paths:
       - 'python/conda_env_ctsm_py.txt'
+      - '.github/workflows/docs-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'python/conda_env_ctsm_py.txt'
+      - '.github/workflows/docs-common.yml'
 
   schedule:
     # 8 am every Monday UTC
