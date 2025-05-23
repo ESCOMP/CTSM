@@ -3,7 +3,7 @@ name: Deploy static content to Pages
 on:
   push:
     # Run when a change to these files is pushed to master.
-    branches: ['master']
+    branches: ['master', 'release-clm5.0']
     paths:
       - 'doc/**'
       - '!doc/*ChangeLog*'
