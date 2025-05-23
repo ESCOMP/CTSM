@@ -71,10 +71,10 @@ You should now have `conda` and an up-to-date version of `python3` available, al
 ## Additional requirements
 The remaining software you need to install depends on which documentation-building method(s) you plan to use.
 
-### Docker (recommended)
-Install Docker Desktop through the [download page on Docker's website](https://docs.docker.com/desktop/setup/install/mac-install/). (:ref:`what-kind-of-mac-chip`)
+### Container (recommended)
+Install Podman Desktop through the [download page on Podman's website](https://podman-desktop.io/downloads/macos). Follow the installation instructions [here](https://podman-desktop.io/docs/installation/macos-install#installing-podman-desktop-on-macos-using-dmg-file). (:ref:`what-kind-of-mac-chip`)
 
-### Non-Docker method
+### Non-container method
 
 Install Conda, if needed (see :ref:`installing-conda-for-docs`). Then follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
 

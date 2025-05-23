@@ -26,7 +26,7 @@ You will need a place to build the documentation. It's fine if that doesn't exis
 Your CTSM clone, from which you're building the documentation, also needs to be somewhere in your user home directory.
 
 ### Building a preview
-Ensure that Docker Desktop is running. (You do not actually need to do anything in Docker Desktop; it just needs to be running. It's fine for it to be minimized or hidden.) Then all you need to do is
+All you need to do is
 ```shell
 cd doc
 ./build_docs -b $HOME/path/to/build-dir -c -d
