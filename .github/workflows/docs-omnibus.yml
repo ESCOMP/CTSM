@@ -9,6 +9,9 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
+      # Include all include::ed files outside doc/ directory!
+      - 'src/README.unit_testing'
+      - 'tools/README'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -17,6 +20,9 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
+      # Include all include::ed files outside doc/ directory!
+      - 'src/README.unit_testing'
+      - 'tools/README'
 
   workflow_dispatch:
 
