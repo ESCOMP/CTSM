@@ -12,7 +12,7 @@ Working with CTSM Documentation
    docs-intro-and-recommended.md
    building-docs-prereqs-docker-mac.md
    building-docs-prereqs-docker-windows.md
-   building-docs-multiple-versions.md
+   building-docs-multiple-versions.rst
    tips-for-working-with-markdown.md
    tips-for-working-with-rst.md
    building-docs-original-wiki.md
