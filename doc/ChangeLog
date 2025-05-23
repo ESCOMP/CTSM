@@ -1,4 +1,308 @@
 ===============================================================
+Tag name: ctsm5.3.045
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue May 20 11:56:15 MDT 2025
+One-line Summary: FATES default parameter update for API 40
+
+Purpose and description of changes
+----------------------------------
+
+Update the FATES default parameter and associated tag to API 40.  This update
+includes changes to the default competitive exclusion parameter, sets the logging
+default to clear cut, and refactors the pft-specific phenology habit selection.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to the datasets (e.g., parameter, surface or initial files):
+  The FATES default parameter file update unifies the pft-level phenology habit from three
+  separate on/off switches, into one per-pft integer selection switch, fates_phen_leaf_habit
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  Wall clock time increased by ten minutes for a select set of izumi tests.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  fates tested against fates-sci.1.84.0_api.40.0.0-ctsm5.3.042-pr1358-1359
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, fates tests only
+
+  FIELDLIST differences due to competetive exclusion parameter update triggering inclusion
+  of a previously inactive history output.  Numerical preciscion differences in a subset of
+  carbon flux outputs.  Long term tests demonstrate roundoff differences propagated due
+  to competetive exclusion parameter update.
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.83.1_api.39.0.0 -> sci.1.84.0_api.40.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3087
+https://github.com/NGEET/fates/pull/1406
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.044
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed 14 May 2025 11:42:41 AM MDT
+One-line Summary: Introduce time-evolving LEAFCN_TARGET as function of leafcn param
+
+Purpose and description of changes
+----------------------------------
+
+ Motivated by a phd student's project (Emma Hauser, now Professor at UW-Madison) we have introduced time-evolving leafcn as a possible template for other time-evolving parameters.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1646 Time evolving parameterization for leaf properties
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New test in aux_clm that points to an alternate params file with leafcn_co2_slope = 30 (default = 0) to confirm that the leafcn_t_evolving calculation doesn't fail
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ but field lists differ due to new history field LEAFCN_TARGET
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1654
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.043
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 09 May 2025 12:28:17 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+ Updates to the b4b-dev branch since its last merge to master (PRs #3091 #3092), as shown by git log:
+
+ - Merge pull request Update docs infrastructure #2809 from samsrabin/update-docs-builder-2
+   Update docs infrastructure
+ - Merge pull request Update externals to cesm3_0_alpha06c #3106 from ekluzek/update_to_alpha06c
+   Update externals to cesm3_0_alpha06c
+ - Merge pull request User control over snow thermal conductivity scheme over glaciers #3072 from wwieder/JordanGlacier
+   User control over snow thermal conductivity scheme over glaciers
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #2818 Update doc-builder
+Resolves #3098 st-archive issues in ctsm5.3.041
+Resolves #3071 Opt to use Jordan1991 over glacier land
+Resolves #3080 Lake snow thermal conductivity hard coded to Jordan
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Introduce user control over snow thermal conductivity scheme over glaciers
+
+Changes to documentation:
+ #2809 updates docs infrastructure
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ #3106 updates submodules to cesm3_0_alpha06c
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3123
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.042
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu May  8 16:15:48 MDT 2025
+One-line Summary: Update FATES tag, tests and address namelist option bug
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the FatesColdAllVars test list due to changes in the FATES
+history output associated with ngeet/fates#1252, which is coordinated with this update.
+A bug in which the incorrect control variable was being sent to FATES for a recently
+added namelist options has been addressed.  The NEON-FATES-NIWO tests have also been
+addressed through the update of the FATES tag which includes fixes brought in with
+ngeet/fates#1376.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #3052: Update FatesColdAllVars history output with recent additions](https://github.com/ESCOMP/CTSM/issues/3052)
+- [Issue #3038: NEON-FATES-NIWO test in aux_clm fails RUN](https://github.com/ESCOMP/CTSM/issues/3038)
+- [Issue #3062: Incorrect value being set for FATES electron transport namelist option](https://github.com/ESCOMP/CTSM/issues/3062)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  The PEM seed dispersal test is now failing RUN, where it was previously failing COMPARE_base_modpes.
+  This has been added to the expected failures and has been documented in a new issue, [#3097](https://github.com/ESCOMP/CTSM/issues/3097).
+  This issue is associated with updates that came in previously with ctsm5.3.041.
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Notes:
+- All tests resulted in expected st_archive exception due to known issue [#3098](https://github.com/ESCOMP/CTSM/issues/3098)
+- Due to permission issues, the izumi aux_clm tests were run against ctsm5.3.040 baselines.  This was deemed acceptable since ctsm5.3.041 is a b4b tag
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for FATES tests
+  This is due to updating the fates tag which includes a number of bug fixes and science updates
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.82.3_api.39.0.0 -> sci.1.83.1_api.39.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/3058
+https://github.com/ESCOMP/CTSM/pull/3063
+https://github.com/NGEET/fates/pull/1252
+https://github.com/NGEET/fates/pull/1376
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.041
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Apr 25 08:02:37 MDT 2025

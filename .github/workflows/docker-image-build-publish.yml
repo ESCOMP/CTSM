@@ -1,10 +1,10 @@
-# Based on https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#publishing-a-package-using-an-action
+# Based on https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#publishing-a-package-using-an-action (last accessed 2025-05-09)
 name: Build and publish ctsm-docs Docker image
 
 on:
   # Run this whenever something gets pushed to master
   push:
-    branches: ['*']
+    branches: ['master']
     paths:
       - 'doc/ctsm-docs_container/Dockerfile'
       - 'doc/ctsm-docs_container/requirements.txt'
