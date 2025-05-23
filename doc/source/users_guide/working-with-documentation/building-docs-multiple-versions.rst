@@ -3,17 +3,25 @@
 Building multiple versions of the documentation
 ===============================================
 
-There is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. Populating this menu involves a few steps.
+There is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. To build a website with this menu properly set up—so that all our versions appear and all the links work—you need to use ``docs/build_docs_to_publish`` instead of ``docs/build_docs``.
 
-First, look at the ``version_list`` line in ``docs/conf.py``. Edit that list as needed so it contains the name of each version you want.
+If you'd like to try, this will generate a local site for you in ``_publish/`` and then open it:
 
-Next, you will need to build the documentation once for each version. To build a version called ``latest``, you would first check out the corresponding version of the docs, then do:
+.. literalinclude:: ../../../testing.sh
+   :start-at: ./build_docs_to_publish
+   :end-before: VERSION LINKS WILL NOT RESOLVE
+   :append: open _publish/index.html
 
-.. code:: shell
 
-   cd doc
-   ./build_docs -r $HOME/path/to/build-dir -d -v latest
+How this works
+--------------
 
-This will build the documentation in ``$HOME/path/to/build-dir/versions/latest``. Open ``$HOME/path/to/build-dir/versions/latest/html/index.html`` to see the result.
+``build_docs_to_publish`` loops through the ``VERSION_LIST`` variable in ``doc/version_list.py``:
 
-You can also leave off the ``-v latest``, in which case the current Git branch name will be used as the version name. Note, though, that in this case you will need to manually create the ``$HOME/path/to/build-dir/versions/branch-name/`` directory if it doesn’t already exist.
+.. literalinclude:: ../../../version_list.py
+   :start-at: version of certain files we want to preserve
+   :end-before: End version definitions
+
+For each member of `VERSION_LIST`, ``build_docs_to_publish`` checks out its `ref`, then builds the documentation in a build directory. (`LATEST_REF` is set because some files, folders, and submodules are important for how the build works and need to stay the same for each build.) Once the build is complete, ``build_docs_to_publish`` should reset your local repo copy (CTSM clone) to how it was before you called ``build_docs_to_publish``.
+
+Next, ``build_docs_to_publish`` moves the HTML files from the build directory to the publish directory. The publish directory has a structure that matches the paths in the version dropdown menu's links. If a member of ``VERSION_LIST`` has ``landing_version=True``, its HTML will be at the top level. That makes it simple for people to find the default version of the docs at https://escomp.github.io/ctsm, rather than having to drill down further into something like ``https://escomp.github.io/ctsm/versions/latest``.

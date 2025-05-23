@@ -28,3 +28,4 @@ VERSION_LIST = [
         ref="release-clm5.0-update-20250523",
     ),
 ]
+# End version definitions (keep this comment; Sphinx is looking for it)
