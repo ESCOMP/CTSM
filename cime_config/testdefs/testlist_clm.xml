@@ -3779,24 +3779,25 @@
       <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with dry deposition on and FATES-SP</option>
-    </options>
-  </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with MEGAN on and FATES-SP</option>
-    </options>
-  </test>
+  <!-- DISABLING UNTIL COMPATIBLE (RGK 051925) https://github.com/ESCOMP/CTSM/issues/1784
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
+       <machines>
+       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       </machines>
+       <options>
+       <option name="wallclock">00:20:00</option>
+       <option name="comment">Run a test with dry deposition on and FATES-SP</option>
+       </options>
+       </test>
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
+       <machines>
+       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       </machines>
+       <options>
+       <option name="wallclock">00:20:00</option>
+       <option name="comment">Run a test with MEGAN on and FATES-SP</option>
+       </options>
+       </test> -->
 
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
