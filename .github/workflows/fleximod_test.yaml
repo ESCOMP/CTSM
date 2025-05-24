@@ -3,7 +3,11 @@ name: git-fleximod test
 # Test git-fleximod update and cleanliness
 # Based closely on workflow from CESM repo
 #
-on: [push, pull_request]
+on:
+  push:
+    # Run when a change to any is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if no files are changed.
+    branches: ['*']
+  pull_request:
 
 jobs:
   fleximod-test:
