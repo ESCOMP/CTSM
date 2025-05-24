@@ -760,6 +760,8 @@ contains
 
     use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
     use GridcellType         , only: grc
+    use abortutils           , only : endrun
+    use shr_log_mod          , only : errMsg => shr_log_errMsg
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
