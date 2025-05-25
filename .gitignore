@@ -112,6 +112,7 @@ core.*
 *.pyc
 Depends
 
-# Docs build output
+# Docs build and testing output
 _build*/
 _publish*/
+doc/.coverage
