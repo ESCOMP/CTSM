@@ -52,7 +52,7 @@ Testing summary:
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    clm_pymods test suite on derecho - 
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
