@@ -69,7 +69,7 @@ from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude
+from ctsm.longitude import Longitude, _detect_lon_type
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -626,46 +626,23 @@ def setup_files(args, defaults, cesmroot):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
         abort("inputdata directory does not exist")
 
+    file_dict = {"main_dir": clmforcingindir}
+
     # DATM data
     # TODO Issue #2960: Make datm_type a user option at the command
     # line. For reference, this option affects three .cfg files:
     #      tools/site_and_regional/default_data_1850.cfg
     #      tools/site_and_regional/default_data_2000.cfg
     #      python/ctsm/test/testinputs/default_data.cfg
-    datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
-    dir_output_datm = "datmdata"
-    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
     if args.create_datm:
+        datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
+        dir_output_datm = "datmdata"
+        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
         logger.info("dir_input_datm : %s", dir_input_datm)
         logger.info("dir_output_datm: %s", os.path.join(args.out_dir, dir_output_datm))
-
-    # if the crop flag is on - we need to use a different land use and surface data file
-    num_pft = determine_num_pft(args.crop_flag)
-
-    fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
-    fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
-    if args.out_surface:
-        fsurf_out = args.out_surface
-    else:
-        fsurf_out = None
-
-    file_dict = {
-        "main_dir": clmforcingindir,
-        "fdomain_in": defaults.get("domain", "file"),
-        "fsurf_dir": os.path.join(
-            clmforcingindir,
-            os.path.join(defaults.get("surfdat", "dir")),
-        ),
-        "fluse_dir": os.path.join(
-            clmforcingindir,
-            os.path.join(defaults.get("landuse", "dir")),
-        ),
-        "fsurf_in": fsurf_in,
-        "fsurf_out": fsurf_out,
-        "fluse_in": fluse_in,
-        "datm_tuple": DatmFiles(
+        file_dict["datm_tuple"] = DatmFiles(
             dir_input_datm,
             dir_output_datm,
             defaults.get(datm_type, "domain"),
@@ -678,8 +655,30 @@ def setup_files(args, defaults, cesmroot):
             defaults.get(datm_type, "solarname"),
             defaults.get(datm_type, "precname"),
             defaults.get(datm_type, "tpqwname"),
-        ),
-    }
+        )
+
+    # if the crop flag is on - we need to use a different land use and surface data file
+    num_pft = determine_num_pft(args.crop_flag)
+
+    if args.create_domain:
+        file_dict["fdomain_in"] = defaults.get("domain", "file")
+    if args.create_surfdata:
+        file_dict["fsurf_dir"] = os.path.join(
+            clmforcingindir,
+            os.path.join(defaults.get("surfdat", "dir")),
+        )
+        file_dict["fsurf_in"] = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
+        if args.out_surface:
+            fsurf_out = args.out_surface
+        else:
+            fsurf_out = None
+        file_dict["fsurf_out"] = fsurf_out
+    if args.create_landuse:
+        file_dict["fluse_in"] = defaults.get("landuse", "landuse_" + num_pft + "pft")
+        file_dict["fluse_dir"] = os.path.join(
+            clmforcingindir,
+            os.path.join(defaults.get("landuse", "dir")),
+        )
 
     return file_dict
 
@@ -819,17 +818,6 @@ def subset_region(args, file_dict: dict):
         )
 
     logger.info("Successfully ran script for a regional case.")
-
-
-def _detect_lon_type(lon_in):
-    if lon_in < 0:
-        lon_type = 180
-    elif lon_in > 180:
-        lon_type = 360
-    else:
-        msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
-        raise argparse.ArgumentTypeError(msg)
-    return lon_type
 
 
 def process_args(args):
