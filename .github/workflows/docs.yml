@@ -56,4 +56,4 @@ jobs:
       - name: Build docs using container
         id: build-docs
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c -d
+          cd doc && ./build_docs -b ${PWD}/_build -c -d --container-cli-tool docker
