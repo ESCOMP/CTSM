@@ -1,4 +1,4 @@
-.. _building-docs-prereqs-docker-windows:
+.. _building-docs-prereqs-windows:
 
 # Initial setup: Windows
 
@@ -15,8 +15,11 @@ The first step is to install Windows Subsystem for Linux (WSL), if you haven't a
 
 Next, download and install Ubuntu (a version of Linux) via the Microsoft Store.
 
-Finally, try opening Ubuntu. If you run into an error, you may need to manually enable WSL. To do so: Open Control Panel, go to "Programs and Features," and then "Turn Windows features on or off." Check the box next to "Windows Subsystem for Linux" and click OK.
+Finally, try opening Ubuntu. If you run into an error, you may need to manually enable WSL. To do so: Open Control Panel, go to "Programs" > "Programs and Features" > "Turn Windows features on or off". Check the box next to "Windows Subsystem for Linux" and click OK.
 
-## Docker Desktop
-1. Install Docker Desktop through the Microsoft Store or the [download page on Docker's website](https://docs.docker.com/desktop/setup/install/windows-install/).
-1. Open Docker Desktop. In Settings > Resources > WSL, Enable Docker to work under Ubuntu.
+## Podman
+Follow the [installation instructions in the Ubuntu section on Podman's website](https://podman.io/docs/installation#ubuntu), entering the commands into your Ubuntu terminal:
+```shell
+sudo apt-get update
+sudo apt-get -y install podman
+```
