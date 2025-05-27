@@ -84,7 +84,7 @@ jobs:
         id: set-image-tag
         run: |
           echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1 | cut -d',' -f1)" >> $GITHUB_ENV
-      - name: Build docs using container
+      - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs
         run: |
           cd doc && ./build_docs -b ${PWD}/_build -c -d --container-cli-tool docker -i $IMAGE_TAG
