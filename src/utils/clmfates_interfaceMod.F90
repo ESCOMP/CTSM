@@ -1021,15 +1021,17 @@ module CLMFatesInterfaceMod
          end if
 
 
-         ! Set patch itypes on natural veg columns to nonsense
-         ! This will force a crash if the model outside of FATES tries to think
-         ! of the patch as a PFT.
+         ! Set patch itypes on natural veg columns to a nonsense value. itype
+         ! associates a patch with a specific pft, which is fundamentally
+         ! inconsistent with fates and should never be used on a fates patch.
+         ! This will force a crash if the model outside tries to associate
+         ! a fates designated patch as a PFT.
 
          do s = 1, this%fates(nc)%nsites
             c = this%f2hmap(nc)%fcolumn(s)
             pi = col%patchi(c)+1
             pf = col%patchf(c)
-!            patch%itype(pi:pf) = ispval
+            patch%itype(pi:pf) = ispval
             patch%is_fates(pi:pf) = .true.
          end do
 
