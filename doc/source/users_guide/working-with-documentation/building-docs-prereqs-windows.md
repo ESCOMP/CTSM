@@ -8,14 +8,11 @@ Note that you may need administrator privileges on your PC (or approval from you
 
 We don't support building our documentation in the native Windows command-line environment. Thus, you will need to install a little version of Linux to use instead.
 
-The first step is to install Windows Subsystem for Linux (WSL), if you haven't already:
-
-1. Download and install it from the Microsoft Store.
+1. Download and install Ubuntu from the Microsoft Store.
 1. Restart your computer.
+1. Try opening Ubuntu.
 
-Next, download and install Ubuntu (a version of Linux) via the Microsoft Store.
-
-Finally, try opening Ubuntu. If you run into an error, you may need to manually enable WSL. To do so: Open Control Panel, go to "Programs" > "Programs and Features" > "Turn Windows features on or off". Check the box next to "Windows Subsystem for Linux" and click OK.
+If Ubuntu opens in that last step but you see an error, you may need to manually enable Windows Subsystem for Linux (WSL). To do so: Open Control Panel, go to "Programs" > "Programs and Features" > "Turn Windows features on or off". Check the box next to "Windows Subsystem for Linux" and click OK.
 
 ## Podman
 Follow the [installation instructions in the Ubuntu section on Podman's website](https://podman.io/docs/installation#ubuntu), entering the commands into your Ubuntu terminal:
