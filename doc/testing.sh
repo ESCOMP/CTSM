@@ -4,12 +4,17 @@ set -x
 
 rm -rf _publish*
 
+# For some reason, Podman has trouble on GH Actions runners, so force use of Docker
+if [[ "${GITHUB_ACTIONS}" != "" ]]; then
+    containercli="--container-cli-tool docker"
+fi
+
 # Build all docs using container
 echo "~~~~~ Build all docs using container"
 # Also do a custom --conf-py-path
 rm -rf _build _publish
 d1="$PWD/_publish_container"
-./build_docs_to_publish -r _build -d --site-root "$PWD/_publish"
+./build_docs_to_publish -r _build -d --site-root "$PWD/_publish" ${containercli}
 # VERSION LINKS WILL NOT RESOLVE IN _publish_container
 cp -a _publish "${d1}"
 
@@ -28,8 +33,8 @@ diff -qr "${d1}" "${d2}"
 # Check that -r -v works
 echo "~~~~~ Check that -r -v works"
 # Also do a custom --conf-py-path
-rm -rf _build_docker
-./build_docs -r _build_docker -v latest -d -c --conf-py-path doc-builder/test/conf.py --static-path ../_static --templates-path ../_templates
+rm -rf _build_container
+./build_docs -r _build_container -v latest -d ${containercli} -c --conf-py-path doc-builder/test/conf.py --static-path ../_static --templates-path ../_templates
 
 # Check that Makefile method works
 echo "~~~~~ Check that Makefile method works"
@@ -38,12 +43,12 @@ make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build html
 
 # Check that -b works
 echo "~~~~~ Check that -b works"
-rm -rf _build_docker
-./build_docs -b _build_docker -d -c
+rm -rf _build_container
+./build_docs -b _build_container -d ${containercli} -c
 
 # Check that doc-builder tests pass
 # Don't run if on a GitHub runner; failing 🤷. Trust that doc-builder does this test.
-if [[ "${GITHUB_ACTION}" == "" ]]; then
+if [[ "${GITHUB_ACTIONS}" == "" ]]; then
     echo "~~~~~ Check that doc-builder tests pass"
     cd doc-builder/test
     conda run -n ctsm_pylib make test

@@ -1,4 +1,4 @@
-.. _building-docs-prereqs-docker-mac:
+.. _building-docs-prereqs-mac:
 
 # Initial setup: Mac
 
@@ -63,7 +63,7 @@ If you don't have Conda yet, go on to the next section. Otherwise, continue to :
 ### Installing Conda
 We suggest installing Conda, if needed, via Miniforge:
 
-1. [Download Miniforge](https://conda-forge.org/download/) and install it. (:ref:`what-kind-of-mac-chip`) You can also [install Miniforge via Homebrew](https://formulae.brew.sh/cask/miniforge#default), if you already have that installed.
+1. [Download Miniforge](https://conda-forge.org/download/) and install it. (:ref:`what-kind-of-mac-chip`) You can also [install Miniforge via Homebrew](https://formulae.brew.sh/cask/miniforge#default), if you already have that installed. (:ref:`install-homebrew-mac`)
 2. Activate Conda permanently in your shell by opening a new Terminal window and doing `conda init "$(basename $SHELL)"`.
 
 You should now have `conda` and an up-to-date version of `python3` available, although will need to open another new Terminal window for it to work.
@@ -71,10 +71,14 @@ You should now have `conda` and an up-to-date version of `python3` available, al
 ## Additional requirements
 The remaining software you need to install depends on which documentation-building method(s) you plan to use.
 
-### Docker (recommended)
-Install Docker Desktop through the [download page on Docker's website](https://docs.docker.com/desktop/setup/install/mac-install/). (:ref:`what-kind-of-mac-chip`)
+### Container (recommended)
+We use Podman to build and run our containers. The recommended way to install Podman is with Homebrew. (:ref:`install-homebrew-mac`)
 
-### Non-Docker method
+1. Install Podman with `brew install podman`.
+1. Set up and start a Podman "virtual machine" with `podman machine init --now`.
+1. Test your installation by doing `podman run --rm hello-world`. If it worked, you should see ASCII art of the Podman logo.
+
+### Non-container method
 
 Install Conda, if needed (see :ref:`installing-conda-for-docs`). Then follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
 
@@ -89,9 +93,8 @@ git --version
 git-lfs --version
 ```
 
-If either of those fail with "command not found," you'll need to install them. The recommended way is with [Homebrew](https://brew.sh/).
+If either of those fail with "command not found," you'll need to install them. The recommended way is with Homebrew. (:ref:`install-homebrew-mac`)
 
-1. [Install Homebrew](https://brew.sh/), if needed. (Check using `brew --version`.) Make sure to follow the instructions for adding Homebrew to your path. (:ref:`what-kind-of-mac-chip`)
 2. Use Homebrew to [install Git](https://formulae.brew.sh/formula/git#default), if needed.
 3. Use Homebrew to [install Git LFS](https://formulae.brew.sh/formula/git-lfs#default), if needed.
 
@@ -101,3 +104,9 @@ If either of those fail with "command not found," you'll need to install them. T
 
 ### What kind of chip does my Mac have?
 For certain steps in this installation process, you may need to know whether your Mac has an Intel (`x86_64`) or an Apple Silicon (`arm64`) chip. If you don't know, visit Apple's [Mac computers with Apple silicon](https://support.apple.com/en-us/116943) page for instructions.
+
+.. _install-homebrew-mac:
+
+### How do I install Homebrew?
+1. Install Homebrew using the instructions at https://brew.sh/. Make sure to follow the instructions during this process for adding Homebrew to your path.
+1. Check your installation by making sure that `brew --version` doesn't error.

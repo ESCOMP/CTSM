@@ -5,8 +5,8 @@
 
 ## One-time setup
 In addition to a CTSM checkout in which to work, you will need to have some software installed in order to build the documentation:
-- :ref:`building-docs-prereqs-docker-mac`
-- :ref:`building-docs-prereqs-docker-windows`
+- :ref:`building-docs-prereqs-mac`
+- :ref:`building-docs-prereqs-windows`
 
 ## Editing the documentation
 The CTSM documentation is built from files in the `doc/source/tech_note/` and `doc/source/users_guide/` directories. These files are written in a mixture of what are called "markup languages." You may already be familiar—for better or for worse—with the LaTeX markup language. Fortunately, our documentation is simpler than that. It was originally written entirely in [reStructuredText](http://www.sphinx-doc.org/en/stable/rest.html), and it still mostly is, as you can tell by the predominance of .rst files. However, it's also possible to write Markdown documents (.md), which is nice because it's a much simpler and more widespread format (although see :ref:`tips-for-working-with-markdown`). If you've formatted text on GitHub, for instance, you've used Markdown.
@@ -26,7 +26,7 @@ You will need a place to build the documentation. It's fine if that doesn't exis
 Your CTSM clone, from which you're building the documentation, also needs to be somewhere in your user home directory.
 
 ### Building a preview
-Ensure that Docker Desktop is running. (You do not actually need to do anything in Docker Desktop; it just needs to be running. It's fine for it to be minimized or hidden.) Then all you need to do is
+All you need to do is
 ```shell
 cd doc
 ./build_docs -b $HOME/path/to/build-dir -c -d
