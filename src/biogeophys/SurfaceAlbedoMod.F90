@@ -902,23 +902,6 @@ contains
           end if
     end do
 
-    ! Weight reflectance/transmittance by lai and sai
-       ! Only perform on vegetated patches where coszen > 0
-
-    do fp = 1,num_vegsol
-       p = filter_vegsol(fp)
-       wl(p) = elai(p) / max( elai(p)+esai(p), mpe )
-       ws(p) = esai(p) / max( elai(p)+esai(p), mpe )
-    end do
-
-    do ib = 1, numrad
-       do fp = 1,num_vegsol
-          p = filter_vegsol(fp)
-          rho(p,ib) = max( rhol(patch%itype(p),ib)*wl(p) + rhos(patch%itype(p),ib)*ws(p), mpe )
-          tau(p,ib) = max( taul(patch%itype(p),ib)*wl(p) + taus(patch%itype(p),ib)*ws(p), mpe )
-       end do
-    end do
-
     ! Diagnose number of canopy layers for radiative transfer, in increments of dincmax.
     ! Add to number of layers so long as cumulative leaf+stem area does not exceed total
     ! leaf+stem area. Then add any remaining leaf+stem area to next layer and exit the loop.
@@ -1086,7 +1069,24 @@ contains
        call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst)
 
     else
-
+       
+       ! Weight reflectance/transmittance by lai and sai
+       ! Only perform on vegetated patches where coszen > 0
+       
+       do fp = 1,num_vegsol
+          p = filter_vegsol(fp)
+          wl(p) = elai(p) / max( elai(p)+esai(p), mpe )
+          ws(p) = esai(p) / max( elai(p)+esai(p), mpe )
+       end do
+       
+       do ib = 1, numrad
+          do fp = 1,num_vegsol
+             p = filter_vegsol(fp)
+             rho(p,ib) = max( rhol(patch%itype(p),ib)*wl(p) + rhos(patch%itype(p),ib)*ws(p), mpe )
+             tau(p,ib) = max( taul(patch%itype(p),ib)*wl(p) + taus(patch%itype(p),ib)*ws(p), mpe )
+          end do
+       end do
+       
        call TwoStream (bounds, filter_vegsol, num_vegsol, &
             coszen_patch(bounds%begp:bounds%endp), &
             rho(bounds%begp:bounds%endp, :), &

@@ -7,7 +7,7 @@ This Readme tells you how to update the ctsm-docs Docker container if a need to 
 
 ## Building
 
-If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`continerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
+If you actually want to build the container, make sure Docker is running. In the Docker Desktop settings, make sure you've enabled the [`containerd` image store](https://docs.docker.com/desktop/features/containerd/), which allows multi-platform builds. Then do:
 ```shell
 docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/escomp/ctsm/ctsm-docs .
 ```
@@ -21,7 +21,26 @@ ghcr.io/escomp/ctsm/ctsm-docs   latest       ab51446519a4   3 seconds ago   233M
 
 To test, you can tell `build_docs` to use your new version by adding `--docker-image IMAGE_ID` to your call, where in the example above `IMAGE_ID` is `ab51446519a4`.
 
-## Publishing
+## Publishing automatically
+
+The `docker-image-build-publish.yml` workflow makes it so that new versions of the workflow will be published to the GitHub Container Registry whenever changes to the container setup are merged to CTSM's `master` branch. This will fail (as will a similar, no-publish workflow that happens on PRs) unless you specify exactly one new version number in the Dockerfile. This version number will be used as a tag that can be referenced by, e.g., doc-builder.
+
+Lots of Docker instructions tell you to use the `latest` tag, and indeed the workflow will add that tag automatically. However, actually _using_ `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
+
+Here's where you need to specify the version number in the Dockerfile:
+```docker
+LABEL org.opencontainers.image.version="vX.Y.Z"
+```
+The string there can technically be anything as long as (a) it starts with a lowercase `v` and (b) it hasn't yet been used on a published version of the container.
+
+You can check the results of the automatic publication on the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs).
+
+### Updating doc-builder
+After the new version of the container is published, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_DOCKER_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
+
+## Publishing manually (NOT recommended)
+
+It's vastly preferable to let GitHub build and publish the new repo using the `docker-image-build-publish.yml` workflow as described above. However, if you need to publish manually for some reason, here's how.
 
 ### Pushing to GitHub Container Registry
 If you want to publish the container, you first need a [GitHub Personal Access Token (Classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#personal-access-tokens-classic) with the `write:packages` permissions. You can see your existing PAT(C)s [here](https://github.com/settings/tokens). If you don't have one with the right permissions, [this link](https://github.com/settings/tokens/new?scopes=write:packages) should start the setup process for you.
@@ -31,7 +50,7 @@ Once you have a PAT(C), you can authenticate in your shell session like so:
 ```shell
    echo YOUR_PERSONAL_ACCESS_TOKEN_CLASSIC | docker login ghcr.io -u YOUR_USERNAME --password-stdin
 ```
-The leading spaces are intended to prevent this command, which contains your secret PAT(C), from being written to your shell's history file. That at least works in bash... sometimes. To be extra safe, in bash you can do `history -c` and it will clear the session's history entirely.
+The leading spaces are intended to prevent this command, which contains your secret PAT(C), from being written to your shell's history file. That at least works in bash... sometimes. To be extra safe, in bash you can do `history -c` and it will clear your entire bash history. That can be pretty disruptive, but fortunately you should only need to authenticate once.
 
 ### Tagging
 You'll next need to tag the image. Lots of Docker instructions tell you to use the `latest` tag, and Docker may actually do that for you. However, `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
@@ -49,7 +68,7 @@ docker push ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
 Then browse to the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs) to make sure this all worked and the image is public.
 
 ### Updating doc-builder
-Since you've updated the container, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_DOCKER_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
+See "Updating doc-builder" in the "Publishing automatically" section above.
 
 ## See also
 

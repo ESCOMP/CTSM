@@ -4045,11 +4045,11 @@ sub setup_logic_dry_deposition {
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
     &remove_newlines( $nl, $definition, "drydep_list" );
   }
-  if ( &value_is_true( $nl_flags->{'use_fates'}) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+  if ( &value_is_true( $nl_flags->{'use_fates'}) ) {
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
-           $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-SP mode is on.\n" .
-                         "   Use the '--no-drydep' option when '-bgc fates' is activated");
+           $log->fatal_error("DryDeposition $var is being set and can NOT be on when FATES is also on.\n" .
+                             "   Use the '--no-drydep' option when '-bgc fates' is activated");
         }
      }
   }
@@ -4172,8 +4172,8 @@ sub setup_logic_megan {
          defined($nl->get_value('megan_factors_file')) ) {
     check_megan_spec( $opts, $nl, $definition );
     if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
-      $log->warning("MEGAN can NOT be on when FATES is also on.\n" .
-                    "   Use the '-no-megan' option when '-bgc fates' is activated");
+	$log->fatal_error("MEGAN can NOT be on when FATES is also on.\n" .
+			  "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
     &remove_newlines( $nl, $definition, "megan_specifier" );
   }
