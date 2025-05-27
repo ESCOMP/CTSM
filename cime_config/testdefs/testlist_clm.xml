@@ -3356,6 +3356,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
