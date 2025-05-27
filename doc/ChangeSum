@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.048 samrabin 05/26/2025 Automatically publish docs to this repo
        ctsm5.3.047 samrabin 05/26/2025 Merge b4b-dev to master
        ctsm5.3.046   rgknox 05/26/2025 For FATES set itype to ispval and a few unused variables to nan to help prevent future problems
        ctsm5.3.045 glemieux 05/20/2025 FATES default parameter update for API 40
