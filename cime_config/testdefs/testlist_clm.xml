@@ -3133,9 +3133,10 @@
       <option name="comment">Single point 3-year test with DV"</option>
     </options>
   </test>
-  <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
+  <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
@@ -3177,7 +3178,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_rtmColdSSP">
+  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm60BgcCrop" testmods="clm/ciso_rtmColdSSP">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -4000,6 +4001,7 @@
   <test name="LILACSMOKE_D_Ld2" grid="f10_f10_mg37" compset="I2000Ctsm50NwpSpAsRs" testmods="clm-lilac">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
     </machines>
     <options>
