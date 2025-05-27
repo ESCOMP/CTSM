@@ -1,4 +1,68 @@
 ===============================================================
+Tag name: ctsm5.3.048
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon May 26 18:30:59 MDT 2025
+One-line Summary: Automatically publish docs to this repo
+
+Purpose and description of changes
+----------------------------------
+
+Enables automatic publication of documentation to this repo's GitHub Pages, making ctsm-docs repo obsolete. Also updates documentation documentation.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #2541: Some links in User's Guide sidebar are broken](https://github.com/ESCOMP/CTSM/issues/2541)
+- [Issue #2839: Automatically publish updated docs](https://github.com/ESCOMP/CTSM/issues/2839)
+- [Issue #3121: Fix capital letter in doc filenames](https://github.com/ESCOMP/CTSM/issues/3121)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Canonical URL for User's Guide and Tech Note will be changing from https://escomp.github.io/ctsm-docs to https://escomp.github.io/ctsm.
+- Updates to "Working with the CTSM documentation" section
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+We're going to get rid of the ctsm-docs repo!
+
+
+Testing summary:
+----------------
+
+None, as no code is changing aside from the documentation infrastructure, which is tested in GitHub Workflows.
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3146: ctsm5.3.048: Automatically publish docs to this repo by samsrabin](https://github.com/ESCOMP/CTSM/pull/3146/files)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.047
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Mon May 26 16:30:10 MDT 2025
