@@ -87,7 +87,7 @@ jobs:
       - name: Build docs using container
         id: build-docs
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG
+          cd doc && ./build_docs -b ${PWD}/_build -c -d --container-cli-tool docker -i $IMAGE_TAG
 
 
   check-version:
