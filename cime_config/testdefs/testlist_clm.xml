@@ -3926,6 +3926,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
