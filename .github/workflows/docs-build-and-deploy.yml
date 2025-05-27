@@ -51,7 +51,7 @@ jobs:
         run: |
           bin/git-fleximod update -o
           cd doc
-          ./build_docs_to_publish -d --container-cli-tool docker --site-root https://escomp.github.io/ctsm
+          ./build_docs_to_publish -d --container-cli-tool docker --site-root https://escomp.github.io/CTSM
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
