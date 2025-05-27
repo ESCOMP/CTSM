@@ -5,7 +5,7 @@ set -x
 rm -rf _publish*
 
 # For some reason, Podman has trouble on GH Actions runners, so force use of Docker
-if [[ "${GITHUB_ACTION}" != "" ]]; then
+if [[ "${GITHUB_ACTIONS}" != "" ]]; then
     containercli="--container-cli-tool docker"
 fi
 
@@ -48,7 +48,7 @@ rm -rf _build_container
 
 # Check that doc-builder tests pass
 # Don't run if on a GitHub runner; failing 🤷. Trust that doc-builder does this test.
-if [[ "${GITHUB_ACTION}" == "" ]]; then
+if [[ "${GITHUB_ACTIONS}" == "" ]]; then
     echo "~~~~~ Check that doc-builder tests pass"
     cd doc-builder/test
     conda run -n ctsm_pylib make test
