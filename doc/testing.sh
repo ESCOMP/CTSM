@@ -5,7 +5,7 @@ set -x
 rm -rf _publish*
 
 # For some reason, Podman has trouble on GH Actions runners, so force use of Docker
-if [[ "${GITHUB_ACTION}" == "" ]]; then
+if [[ "${GITHUB_ACTION}" != "" ]]; then
     containercli="--container-cli-tool docker"
 fi
 
