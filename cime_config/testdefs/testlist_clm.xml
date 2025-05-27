@@ -2330,7 +2330,7 @@
   <test name="PEM_D_Ld5" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -2855,6 +2855,7 @@
     <machines>
       <!-- no izumi tests since this has a pe layout specific for derecho -->
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -3764,6 +3765,7 @@
   <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
@@ -3823,6 +3825,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3974,12 +3977,6 @@
         <options>
           <option name="wallclock">00:40:00</option>
           <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
-        </options>
-      </machine>
-      <machine name="derecho" compiler="intel" category="prealpha">
-        <options>
-          <option name="wallclock">00:40:00</option>
-          <option name="comment">Run prealpha for this test as mksurfdata_esmf is tightly coupled to submodule updates and we want to catch issues with submodules for it ASAP.</option>
         </options>
       </machine>
     </machines>
