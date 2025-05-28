@@ -306,7 +306,7 @@ contains
              do ni = begi, endi
                 if (activei(ni)) then
                    ! We need to call is_sametype for pfts and columns here to make sure that each
-                   ! urban input pft and column matches the output pft and column type. We don't
+                   ! urban input pft and column type matches the output pft and column type. We don't
                    ! want to call it for landunits because they intentionally won't be the same type
                    ! (since we are filling missing urban landunits with HD)
                    if (subgrido%name .eq. 'landunit') then
