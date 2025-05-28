@@ -12,9 +12,9 @@ To test whether you already have the required Python version, open a Terminal wi
 python3 --version
 ```
 
-If python3 is already set up, you'll see a version number. If that version is 3.7 or later, you should be ready as far as Python goes; continue to :ref:`docs-git-tools`.
+If python3 is already set up, you'll see a version number. If that version is 3.7 or later, you should be ready as far as Python goes; continue to :ref:`additional-reqs`.
 
-If not, recent versions of macOS should print a messsage saying, "xcode-select: No developer tools were found, requesting install." A dialog box will then pop up that says, "The 'python3' command requires the command line developer tools. Would you like to install the tools now?" Press Install and go through the installation process. This will take a while; once it's done, test by doing ``python3 --version`` again. (You may need to open a new Terminal window.) If the printed version number looks good, continue to :ref:`docs-git-tools`.
+If not, recent versions of macOS should print a messsage saying, "xcode-select: No developer tools were found, requesting install." A dialog box will then pop up that says, "The 'python3' command requires the command line developer tools. Would you like to install the tools now?" Press Install and go through the installation process. This will take a while; once it's done, test by doing ``python3 --version`` again. (You may need to open a new Terminal window.) If the printed version number looks good, continue to :ref:`additional-reqs`.
 
 ..
   The paragraph above was tested 2025-04-25 on a fresh-ish installation of macOS 15.3.2.
@@ -32,7 +32,7 @@ echo alias python3="$(which python)" >> ~/.zshrc
 
 This will make it so that bash scripts, like what we use to build our docs, know what to do for `python3`. `python3` will also be available in new Terminal sessions if your shell is `zsh` (the default since macOS 10.15) or `bash`.
 
-If you were able to do this, you can continue to :ref:`docs-git-tools`.
+If you were able to do this, you can continue to :ref:`additional-reqs`.
 
 ### Conda
 If your `python` doesn't exist or is too old, we suggest using Python via Conda. First, check whether you already have Conda installed:
@@ -56,7 +56,7 @@ conda run -n base python3 --version
 
 Repeat with all your Conda environments as needed until you find one that's Python 3.7 or later. Let's say your `ENVNAME` environment works. In that case, just make sure to do `conda activate ENVNAME` before running the commands in the documentation-building instructions.
 
-If you don't have Conda yet, go on to the next section. Otherwise, continue to :ref:`docs-git-tools`.
+If you don't have Conda yet, go on to the next section. Otherwise, continue to :ref:`additional-reqs`.
 
 .. _installing-conda-for-docs:
 
@@ -68,8 +68,9 @@ We suggest installing Conda, if needed, via Miniforge:
 
 You should now have `conda` and an up-to-date version of `python3` available, although will need to open another new Terminal window for it to work.
 
+.. _additional-reqs:
+
 ## Additional requirements
-The remaining software you need to install depends on which documentation-building method(s) you plan to use.
 
 ### Container (recommended)
 We use Podman to build and run our containers. The recommended way to install Podman is with Homebrew. (:ref:`install-homebrew-mac`)
