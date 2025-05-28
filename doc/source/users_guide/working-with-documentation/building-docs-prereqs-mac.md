@@ -19,7 +19,7 @@ If not, recent versions of macOS should print a messsage saying, "xcode-select: 
 ..
   The paragraph above was tested 2025-04-25 on a fresh-ish installation of macOS 15.3.2.
 
-If instead `python3` gives "command not found," or the version is less than 3.7, you might need to install Python; continue to :ref:`aliasing-python3-to-python`.
+If instead `python3` gives "command not found," or the version is less than 3.7, you might need to install Python; continue to :ref:`aliasing-python3-to-python`. Otherwise, continue to :ref:`additional-reqs`.
 
 .. _aliasing-python3-to-python:
 
@@ -32,41 +32,17 @@ echo alias python3="$(which python)" >> ~/.zshrc
 
 This will make it so that bash scripts, like what we use to build our docs, know what to do for `python3`. `python3` will also be available in new Terminal sessions if your shell is `zsh` (the default since macOS 10.15) or `bash`.
 
-If you were able to do this, you can continue to :ref:`additional-reqs`.
+If you were able to do this, you can continue to :ref:`additional-reqs`. If not, continue to the next section.
 
 ### Conda
-If your `python` doesn't exist or is too old, we suggest using Python via Conda. First, check whether you already have Conda installed:
-```shell
-conda env list
-```
+If your `python` doesn't exist or is too old, we suggest using Python via Conda. First, check whether you already have Conda installed: :ref:`do-i-already-have-conda` If not, install Conda (:ref:`installing-conda-for-docs`), then come back here.
 
-If that shows you something like
-```
-# conda environments:
-#
-base           /Users/you/...
-another_env    /Users/you/.../...
-...
-```
-
-instead of the "command not found" error, then you do have conda installed! (Note that the second column doesn't really matter.) Try this to check the Python version in the `base` Conda environment:
+Try this to check the Python version in the `base` Conda environment:
 ```shell
 conda run -n base python3 --version
 ```
 
 Repeat with all your Conda environments as needed until you find one that's Python 3.7 or later. Let's say your `ENVNAME` environment works. In that case, just make sure to do `conda activate ENVNAME` before running the commands in the documentation-building instructions.
-
-If you don't have Conda yet, go on to the next section. Otherwise, continue to :ref:`additional-reqs`.
-
-.. _installing-conda-for-docs:
-
-### Installing Conda
-We suggest installing Conda, if needed, via Miniforge:
-
-1. [Download Miniforge](https://conda-forge.org/download/) and install it. (:ref:`what-kind-of-mac-chip`) You can also [install Miniforge via Homebrew](https://formulae.brew.sh/cask/miniforge#default), if you already have that installed. (:ref:`install-homebrew-mac`)
-2. Activate Conda permanently in your shell by opening a new Terminal window and doing `conda init "$(basename $SHELL)"`.
-
-You should now have `conda` and an up-to-date version of `python3` available, although will need to open another new Terminal window for it to work.
 
 .. _additional-reqs:
 
@@ -111,3 +87,32 @@ For certain steps in this installation process, you may need to know whether you
 ### How do I install Homebrew?
 1. Install Homebrew using the instructions at https://brew.sh/. Make sure to follow the instructions during this process for adding Homebrew to your path.
 1. Check your installation by making sure that `brew --version` doesn't error.
+
+.. _do-i-already-have-conda:
+
+### Do I already have Conda installed?
+You can check whether you have Conda installed like so:
+```shell
+conda env list
+```
+
+If that shows you something like
+```
+# conda environments:
+#
+base           /Users/you/...
+another_env    /Users/you/.../...
+...
+```
+
+instead of the "command not found" error, then you do have conda installed! (Note that the second column doesn't really matter.) 
+
+.. _installing-conda-for-docs:
+
+### How do I install Conda?
+We suggest installing Conda, if needed, via Miniforge:
+
+1. [Download Miniforge](https://conda-forge.org/download/) and install it. (:ref:`what-kind-of-mac-chip`) You can also [install Miniforge via Homebrew](https://formulae.brew.sh/cask/miniforge#default), if you already have that installed. (:ref:`install-homebrew-mac`)
+2. Activate Conda permanently in your shell by opening a new Terminal window and doing `conda init "$(basename $SHELL)"`.
+
+You should now have `conda` and an up-to-date version of `python3` available, although will need to open another new Terminal window for it to work.
