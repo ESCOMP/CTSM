@@ -4,11 +4,6 @@ set -x
 
 rm -rf _publish*
 
-# For some reason, Podman has trouble on GH Actions runners, so force use of Docker
-if [[ "${GITHUB_ACTIONS}" != "" ]]; then
-    containercli="--container-cli-tool docker"
-fi
-
 # Build all docs using container
 echo "~~~~~ Build all docs using container"
 # Also do a custom --conf-py-path
