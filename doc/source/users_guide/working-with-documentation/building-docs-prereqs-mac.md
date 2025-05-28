@@ -79,13 +79,13 @@ We use Podman to build and run our containers. The recommended way to install Po
 1. Set up and start a Podman "virtual machine" with `podman machine init --now`.
 1. Test your installation by doing `podman run --rm hello-world`. If it worked, you should see ASCII art of the Podman logo.
 
-### Non-container method
+### Non-container method (not recommended)
 
 Install Conda, if needed (see :ref:`installing-conda-for-docs`). Then follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
 
 .. _docs-git-tools:
 
-## Git tools
+### Git tools
 Note: Do this section after handling Python, because the Python installation process might bring the Git tools with it.
 
 To test whether you have the required Git tools already, open a Terminal window and try the following:
