@@ -595,13 +595,13 @@ contains
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
 
     ! Cathy [dev.17]: add condensate from AC to output
-    this%qflx_condensate_from_ac(begc:endc) = spval
+    this%qflx_condensate_from_ac_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QCOND_FROM_AC'), &
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('Condensed water flux from AC dehumidification'), &
-         ptr_col=this%qflx_condensate_from_ac, set_nourb=spval, c2l_scale_type='urbanf', default='inactive')
+         ptr_col=this%qflx_condensate_from_ac_col, set_nourb=spval, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_snomelt_col(begc:endc) = spval
     call hist_addfld1d ( &
