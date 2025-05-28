@@ -21,19 +21,17 @@ If you're confident in your changes, or you're _not_ confident in your ability t
 We strongly suggest building the documentation on your personal computer before submitting a pull request, so that you can preview what your changes will look like. The recommended way to do this is using the `doc-builder` tool in conjunction with a "containerized" version of some required software.
 
 ### Directories
-You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your user home directory**, which we represent as `$HOME`. The instructions here assume you want to do your build in `$HOME/path/to/build-dir/`.
-
-Your CTSM clone, from which you're building the documentation, also needs to be somewhere in your user home directory.
+You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your CTSM clone**. (We recommend starting the name of your build directory with `_build` because CTSM knows to ignore such directories when it comes to `git`.) The instructions here assume you want to do your build in `/path/to/ctsm_clone/_build/`.
 
 ### Building a preview
 All you need to do is
 ```shell
 cd doc
-./build_docs -b $HOME/path/to/build-dir -c -d
+./build_docs -b /path/to/ctsm_clone/_build -c -d
 ```
 
 (Do `./build_docs --help` for more information and options.)
 
-You can then open the documentation in a web browser by browsing to `$HOME/path/to/build-dir/html/` and opening `index.html`.
+You can then open the documentation in a web browser by browsing to `/path/to/ctsm_clone/_build/` and opening `index.html`.
 
 Note that there is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. The links to versions in this menu will not work when using the build command given above. If you wish to preview this version switching functionality, or you're building the docs in the process of actually updating the website, see :ref:`building-docs-multiple-versions`.
