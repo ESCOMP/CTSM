@@ -22,6 +22,6 @@ How this works
    :start-at: version of certain files we want to preserve
    :end-before: End version definitions
 
-For each member of `VERSION_LIST`, ``build_docs_to_publish`` checks out its `ref`, then builds the documentation in a build directory. (`LATEST_REF` is set because some files, folders, and submodules are important for how the build works and need to stay the same for each build.) Once the build is complete, ``build_docs_to_publish`` should reset your local repo copy (CTSM clone) to how it was before you called ``build_docs_to_publish``.
+For each member of ``VERSION_LIST``, ``build_docs_to_publish`` checks out its ``ref``, then builds the documentation in a build directory. (``LATEST_REF`` is set because some files, folders, and submodules are important for how the build works and need to stay the same for each build.) Once the build is complete, ``build_docs_to_publish`` should reset your local repo copy (CTSM clone) to how it was before you called ``build_docs_to_publish``.
 
 Next, ``build_docs_to_publish`` moves the HTML files from the build directory to the publish directory. The publish directory has a structure that matches the paths in the version dropdown menu's links. If a member of ``VERSION_LIST`` has ``landing_version=True``, its HTML will be at the top level. That makes it simple for people to find the default version of the docs at https://escomp.github.io/CTSM, rather than having to drill down further into something like ``https://escomp.github.io/CTSM/versions/latest``.
