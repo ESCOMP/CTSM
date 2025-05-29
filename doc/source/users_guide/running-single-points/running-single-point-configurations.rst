@@ -3,7 +3,7 @@
 .. _running-single-point-datasets:
 
 ******************************************
- Running Single Point Configurations
+Using subset_data to define single-point and regional resolutions
 ******************************************
 
 In addition to running with the outputs of ``subset_data`` (Sect. :numref:`single_point_subset_data`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.

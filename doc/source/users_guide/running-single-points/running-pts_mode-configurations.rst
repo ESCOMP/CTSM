@@ -3,7 +3,7 @@
 .. _pts_mode:
 
 ****************************************************
-Running a single point using global data - PTS_MODE
+Pre-defined single-point and regional resolutions
 ****************************************************
 
 .. warning::

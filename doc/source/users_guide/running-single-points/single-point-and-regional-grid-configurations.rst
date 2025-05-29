@@ -3,7 +3,7 @@
 .. _single-point-configurations:
 
 *****************************************
-Single and Regional Grid Configurations
+Introduction to Single-Point and Regional Grid Setups
 *****************************************
 
 CLM allows you to set up and run cases with a single-point or a local region as well as global resolutions. This is often useful for running quick cases for testing, evaluating specific vegetation types, or land-units, or running with observed data for a specific site.

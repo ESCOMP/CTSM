@@ -3,7 +3,7 @@
 .. _single_point_subset_data:
 
 ****************************************
-Running a single point using global data
+Pre-defined tower sites for single-point runs
 ****************************************
 
 ``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
