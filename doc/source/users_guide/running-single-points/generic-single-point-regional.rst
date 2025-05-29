@@ -1,215 +1,62 @@
 .. include:: ../substitutions.rst
 
-.. _running-single-point-datasets:
+.. _single_point_subset_data:
 
-******************************************
-Generic single point and regional cases
-******************************************
+****************************************
+Supported tower sites for single-point runs
+****************************************
 
-In addition to running with the outputs of ``subset_data`` (Sect. :numref:`single_point_subset_data`), CLM supports running using single-point or regional datasets that are customized to a particular region. CLM supports a a small number of out-of-the-box single-point and regional datasets. However, users can create their own dataset.
+``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
 
-To get the list of supported dataset resolutions do this:
-::
+Subset the data
+------------------
 
-   > cd $CTSMROOT/doc
-   > ../bld/build-namelist -res list
+For single-point cases, you need to subset a surface dataset and (optionally) DATM data. The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
 
-Which results in the following:
-::
+Note that you will need to have a python environment set up that includes the packages ``scipy``, ``xarray``, and ``numpy``. If you have conda or miniconda installed, you can create a conda environment for this and other CTSM python tools using the script ``py_env_create`` at the top level of your CTSM checkout. See :ref:`using-ctsm-pylib` for more information.
 
-   CLM build-namelist - valid values for res (Horizontal resolutions
-   Note: 0.5x0.5, 5x5min, 10x10min, 3x3min and 0.33x0.33 are only used for CLM tools):
-         Values: default 512x1024 360x720cru 128x256 64x128 48x96 32x64 8x16 94x192  \
-                 0.23x0.31 0.47x0.63 0.9x1.25 1.9x2.5 2.5x3.33 4x5 10x15 5x5_amazon 1x1_tropicAtl \
-                 1x1_vancouverCAN 1x1_mexicocityMEX 1x1_asphaltjungleNJ 1x1_brazil 1x1_urbanc_alpha 1x1_numaIA  \
-                 1x1_smallvilleIA 0.5x0.5 3x3min 5x5min 10x10min 0.33x0.33 ne4np4 ne16np4 ne30np4 ne60np4  \
-                 ne120np4 ne240np4 wus12 us20
-         Default = 1.9x2.5
-        (NOTE: resolution and mask and other settings may influence what the default is)
+To subset surface data and climate forcings (DATM) for a single point, use the command:
 
-The resolution names that have an underscore in them ("_") are all single-point or regional resolutions.
+.. code:: shell
 
-.. note:: When running a single point, the number of processors is automatically set to one, which is the only value allowed.
+   tools/site_and_regional/subset_data point \
+      --lat $my_lat --lon $my_lon --lon-type $my_lon_type --site $my_site_name \
+      --create-surface --create-datm \
+      --datm-syr $my_start_year --datm-eyr $my_end_year \
+      --create-user-mods --outdir $my_output_dir
 
-.. warning::
-   Just like running with the outputs from ``subset_data`` (Sect. :numref:`single_point_subset_data`), by default these setups sometimes run with ``MPILIB=mpi-serial`` (in the ``env_build.xml`` file) turned on, which allows you to run the model interactively. On some machines this mode is NOT supported and you may need to change it to FALSE before you are able to build.
+-  ``$my_lat``: latitude of point, *must be between -90 and 90 degrees*. E.g., Boulder, CO, USA: 40.
+-  ``$my_lon``: longitude of point. *Must be between -180 and 360 degrees.* E.g., Boulder, CO, USA: 255 or -105.
+-  ``$my_lon_type``: 180 if your longitude is in the [-180, 180] format (i.e., centered at the Prime/0th Meridian); 360 if it's in the [0, 360] format (i.e., centered at the 180th Meridian). Note that ``--lon-type $my_lon_type`` is not necessary if your longitude is unambiguous---i.e., it's only needed if your longitude is in the range [0, 180].
+-  ``$my_site_name``: name of site, *used for file naming*
+-  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
+-  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2015; see note below about switching the default DATM data*
+-  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
-.. _single-point-global-climate:
+You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
 
-Single-point runs with global climate forcings
-==============================================
+.. note::
+   This script defaults to subsetting specific surface, domain, and land-use files and the CRUJRA2024 DATM data, and can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
 
-Example: Use global forcings at a site without its own special forcings
------------------------------------------------------------------------
+The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` settings. You can then use this user mods directory to set up your CTSM case, as described below.
 
-This example uses the single-point site in Brazil.
-::
+Create the case
+------------------
 
-   > cd cime/scripts
-   > set SITE=1x1_brazil
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I2000Clm50SpGs
-   > cd testSPDATASET
+You can use the user mods directory set up in the previous subset data step to tell CIME/CTSM where your subset files are located.
 
-Then setup, build and run normally.
+.. code:: shell
 
-Example: Use global forcings at a site WITH its own special forcings
---------------------------------------------------------------------
+   cime/scripts/create_newcase --case $my_case_name --res CLM_USRDAT \
+      --compset $compset --run-unsupported \
+      --user-mods-dirs $my_output_dir/user_mods
 
-The urban Mexico City test site has its own atmosphere forcing data (see Sect. :numref:`single-point-with-own-forcing`). To ignore that and run it with the default global forcing data, but over the period for which its own forcing data is provided, do the following:
+-  ``$my_case_name``: the path of the case directory you want to create
+-  ``$compset``: the compset you would like to use (for example, ``I2000Clm60Bgc``)
+-  Note the use of ``$my_output_dir/user_mods`` which is the ``user_mods/`` directory that the subset data script set up within your specified ``$my_output_dir``.
 
-::
+Note that ``./case.setup`` on Derecho will automatically set queue to ``develop`` and walltime to one hour. You might need a longer walltime, but the maximum walltime for ``develop`` is one hour. To change it to two hours on Derecho:
 
-   > cd cime/scripts
-   # Set a variable to the site you want to use (as it's used several times below)
-   > set SITE=1x1_mexicocityMEX
-   > ./create_newcase -case testSPDATASET -res $SITE -compset I1PtClm50SpGs
-   > cd testSPDATASET
+.. code:: shell
 
-(Note the use of ``I1Pt`` instead of ``I2000`` as in the example above.) Then setup, build and run normally.
-
-.. _single-point-with-own-forcing:
-
-Supported single-point runs for sites with their own atmospheric forcing
-========================================================================
-
-Of the supported single-point datasets we have three that also have atmospheric forcing data that go with them: Mexico City (Mexico), Vancouver, (Canada, British Columbia), and ``urbanc_alpha`` (test data for an Urban inter-comparison project). Mexico city and Vancouver also have namelist options in the source code for them to work with modified urban data parameters that are particular to these locations. To turn on the atmospheric forcing for these datasets, you set the ``env_run.xml DATM_MODE`` variable to ``CLM1PT``, and then the atmospheric forcing datasets will be used for the point picked. If you use one of the compsets that has "I1Pt" in the name that will be set automatically.
-
-.. todo::
-    Update the below, as ``queryDefaultNamelist.pl`` no longer exists.
-
-When running with datasets that have their own atmospheric forcing you need to be careful to run over the period that data is available. If you have at least one year of forcing it will cycle over the available data over and over again no matter how long of a simulation you run. However, if you have less than a years worth of data (or if the start date doesn't start at the beginning of the year, or the end date doesn't end at the end of the year) then you won't be able to run over anything but the data extent. In this case you will need to carefully set the ``RUN_STARTDATE``, ``START_TOD`` and ``STOP_N/STOP_OPTION`` variables for your case to run over the entire time extent of your data. For the supported data points, these values are in the XML database and you can use the ``queryDefaultNamelist.pl`` script to query the values and set them for your case (they are set for the three urban test cases: Mexicocity, Vancouver, and urbanc_alpha).
-
-Example: Use site-specific atmospheric forcings
------------------------------------------------
-In this example, we show how to use the atmospheric forcings specific to the Vancouver, Canada point.
-::
-
-   > cd cime/scripts
-
-   # Set a variable to the site you want to use (as it's used several times below)
-   > set SITE=1x1_vancouverCAN
-
-   # Create a case at the single-point resolutions with their forcing
-   > ./create_newcase -case testSPDATASETnAtmForcing -res $SITE -compset I1PtClm50SpGs
-   > cd testSPDATASETnAtmForcing
-
-   # Figure out the start and end date for this dataset
-   # You can do this by examining the datafile.
-   > set STOP_N=330
-   > set START_YEAR=1992
-   > set STARTDATE=${START_YEAR}-08-12
-   > @ NDAYS = $STOP_N / 24
-   > ./xmlchange RUN_STARTDATE=$STARTDATE,STOP_N=$STOP_N,STOP_OPTION=nsteps
-
-   # Set the User namelist to set the output frequencies of the history files
-   # Setting the stdurbpt use-case option create three history file streams
-   # The frequencies and number of time-samples needs to be set
-   > cat << EOF > user_nl_clm
-   hist_mfilt = $NDAYS,$STOP_N,$STOP_N
-   hist_nhtfrq = -1,1,1
-   EOF
-
-   > ./case.setup
-
-.. warning:: If you don't set the start-year and run-length carefully as shown above the model will abort with a "dtlimit error" in the atmosphere model. Since, the forcing data for this site (and the MexicoCity site) is less than a year, the model won't be able to run for a full year. The ``1x1_urbanc_alpha`` site has data for more than a full year, but neither year is complete hence, it has the same problem (see the problem for this site above).
-
-.. _creating-your-own-singlepoint-dataset:
-
-Creating your own single-point dataset
-===================================================
-
-The following provides an example of setting up a case using ``CLM_USRDAT_NAME`` where you rename the files according to the ``CLM_USRDAT_NAME`` convention. We have an example of such datafiles in the repository for a specific region over Alaska (actually just a sub-set of the global f19 grid).
-
-Example: Using CLM_USRDAT_NAME to run a simulation using user datasets for a specific region over Alaska
------------------------------------------------------------------------------------------------------------------------
-::
-
-   > cd cime/scripts
-   > ./create_newcase -case my_userdataset_test -res CLM_USRDAT -compset I2000Clm50BgcCruGs
-   > cd my_userdataset_test/
-   > set GRIDNAME=13x12pt_f19_alaskaUSA
-   > set LMASK=gx1v6
-   > ./xmlchange CLM_USRDAT_NAME=$GRIDNAME,CLM_BLDNML_OPTS="-mask $LMASK"
-   > ./xmlchange ATM_DOMAIN_FILE=domain.lnd.${GRIDNAME}_$LMASK.nc
-   > ./xmlchange LND_DOMAIN_FILE=domain.lnd.${GRIDNAME}_$LMASK.nc
-
-   # Make sure the file exists in your $CSMDATA or else use svn to download it there
-   > ls $CSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc
-
-   # If it doesn't exist, comment out the following...
-   #> setenv SVN_INP_URL https://svn-ccsm-inputdata.cgd.ucar.edu/trunk/inputdata/
-   #> svn export $SVN_INP_URL/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc $CSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr2000.nc
-   > ./case.setup
-
-The first step is to create the domain and surface datasets using the process outlined in :ref:`using-clm-tools-section`. Below we show an example of the process.
-
-Example: Creating a surface dataset for a single point
----------------------------------------------------------------------
-.. todo::
-    Update the below, as ``mksurfdata.pl`` no longer exists and domain files aren't needed with nuopc.
-
-::
-
-   # set the GRIDNAME and creation date that will be used later
-   > setenv GRIDNAME 1x1_boulderCO
-   > setenv CDATE    `date +%y%m%d`
-   # Create the SCRIP grid file for the location and create a unity mapping file for it.
-   > cd $CTSMROOT/tools/mkmapdata
-   > ./mknoocnmap.pl -p 40,255 -n $GRIDNAME
-   # Set pointer to MAPFILE just created that will be used later
-   > setenv MAPFILE `pwd`/map_${GRIDNAME}_noocean_to_${GRIDNAME}_nomask_aave_da_${CDATE}.nc
-   # create the mapping files needed by mksurfdata_esmf.
-   > cd ../.././mkmapdata
-   > setenv GRIDFILE ../mkmapgrids/SCRIPgrid_${GRIDNAME}_nomask_${CDATE}.nc
-   > ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
-   # create the domain file
-   > cd ../../../../tools/mapping/gen_domain_files/src
-   > ../../../scripts/ccsm_utils/Machines/configure -mach cheyenne -compiler intel
-   > gmake
-   > cd ..
-   > setenv OCNDOM domain.ocn_noocean.nc
-   > setenv ATMDOM domain.lnd.{$GRIDNAME}_noocean.nc
-   > ./gen_domain -m $MAPFILE -o $OCNDOM -l $ATMDOM
-   # Save the location where the domain file was created
-   > setenv GENDOM_PATH `pwd`
-   # Finally create the surface dataset
-   > cd ../../../../lnd/clm/tools/|version|/mksurfdata_esmf/src
-   > gmake
-   > cd ..
-   > ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
-
-The next step is to create a case that points to the files you created above. We will still use the ``CLM_USRDAT_NAME`` option as a way to get a case setup without having to add the grid to scripts.
-
-Example: Setting up a case from the single-point surface dataset just created
---------------------------------------------------------------------------------------------
-
-.. todo::
-    Change this to provide instructions for a CTSM checkout instead of a CESM one.
-
-.. todo::
-    Update the below, as domain files aren't needed with nuopc.
-
-::
-
-   # First setup an environment variable that points to the top of the CESM directory.
-   > setenv CESMROOT <directory-of-path-to-main-cesm-directory>
-   # Next make sure you have a inputdata location that you can write to
-   # You only need to do this step once, so you won't need to do this in the future
-   > setenv MYCSMDATA $HOME/inputdata     # Set env var for the directory for input data
-   > ./link_dirtree $CSMDATA $MYCSMDATA
-   # Copy the file you created above to your new $MYCSMDATA location following the CLMUSRDAT
-   # naming convention (leave off the creation date)
-   > cp $CESMROOT/$CTSMROOT/tools/mksurfdata_esmf/surfdata_${GRIDNAME}_simyr1850_$CDATE.nc \
-   $MYCSMDATA/lnd/clm2/surfdata_map/surfdata_${GRIDNAME}_simyr1850.nc
-   > cd $CESMROOT/cime/scripts
-   > ./create_newcase -case my_usernldatasets_test -res CLM_USRDAT -compset I1850Clm50BgcCropCru \
-   -mach cheyenne_intel
-   > cd my_usernldatasets_test
-   > ./xmlchange DIN_LOC_ROOT=$MYCSMDATA
-   # Set the path to the location of gen_domain set in the creation step above
-   > ./xmlchange ATM_DOMAIN_PATH=$GENDOM_PATH,LND_DOMAIN_PATH=$GENDOM_PATH
-   > ./xmlchange ATM_DOMAIN_FILE=$ATMDOM,LND_DOMAIN_FILE=$ATMDOM
-   > ./xmlchange CLM_USRDAT_NAME=$GRIDNAME
-   > ./case.setup
-
-.. note:: With this and previous versions of the model we recommended using ``CLM_USRDAT_NAME`` as a way to identify your own datasets without having to enter them into the XML database. This has the down-side that you can't include creation dates in your filenames, which means you can't keep track of different versions by date. It also means you HAVE to rename the files after you created them with ``mksurfdata.pl``. Now, since ``user_nl`` files are supported for ALL model components, and the same domain files are read by both CLM and DATM and set using the envxml variables: ``ATM_DOMAIN_PATH``, ``ATM_DOMAIN_FILE``, ``LND_DOMAIN_PATH``, and ``LND_DOMAIN_FILE`` -- you can use this mechanism (``user_nl_clm`` and ``user_nl_datm`` and those envxml variables) to point to your datasets in any location. In the future we will deprecate ``CLM_USRDAT_NAME`` and recommend ``user_nl_clm`` and ``user_nl_datm`` and the ``DOMAIN`` envxml variables.
+   ./xmlchange --subgroup case.run JOB_QUEUE=main,JOB_WALLCLOCK_TIME=2:00:00
