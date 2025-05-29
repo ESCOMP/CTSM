@@ -48,16 +48,21 @@ Repeat with all your Conda environments as needed until you find one that's Pyth
 
 ## Additional requirements
 
-### Container (recommended)
-We use Podman to build and run our containers. The recommended way to install Podman is with Homebrew. (:ref:`install-homebrew-mac`)
+.. _container-or-conda-mac:
+
+### Container software or Conda environment
+We recommend building the software in what's called a container—basically a tiny little operating system with just some apps and utilities needed by the doc-building process. This is nice because, if we change the doc-building process in ways that require new versions of those apps and utilities, that will be completely invisible to you. You won't need to manually do anything to update your setup to work with the new process; it'll just happen automatically.
+
+We recommend using the container software Podman, which you can install with Homebrew. (:ref:`install-homebrew-mac`)
 
 1. Install Podman with `brew install podman`.
 1. Set up and start a Podman "virtual machine" with `podman machine init --now`.
 1. Test your installation by doing `podman run --rm hello-world`. If it worked, you should see ASCII art of the Podman logo.
 
-### Non-container method (not recommended)
+You may not be able to install Podman or any other containerization software, so there is an alternative method: a Conda environment.
 
-Install Conda, if needed (see :ref:`installing-conda-for-docs`). Then follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
+1. Install Conda, if needed (see :ref:`installing-conda-for-docs`).
+1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
 
 .. _docs-git-tools:
 

@@ -16,13 +16,13 @@ We don't support building our documentation in the native Windows command-line e
 
 If Ubuntu opens in that last step but you see an error, you may need to manually enable Windows Subsystem for Linux (WSL). To do so: Open Control Panel, go to "Programs" > "Programs and Features" > "Turn Windows features on or off". Check the box next to "Windows Subsystem for Linux" and click OK.
 
+.. _windows-docs-ubuntu-utilities:
+
 ## Install utilities
 Enter the following commands **into your Ubuntu terminal** to install any missing utilities we need (the `which ... ||` should make it so that no installation happens if you already have it):
 ```shell
+# Refresh the list of available software
 sudo apt-get update
-
-# Podman: The software that will run the container in which the docs are built
-which podman || sudo apt-get -y install podman
 
 # make: Part of the docs-building process
 which make || sudo apt-get -y install make
@@ -30,7 +30,29 @@ which make || sudo apt-get -y install make
 # git and git-lfs, needed for getting and contributing to the CTSM code and docs
 which git || sudo apt-get -y install git
 which git-lfs || sudo apt-get -y install git-lfs
+
+# Chromium: A web browser engine that's the basis for popular browsers like Google
+# Chrome and Microsoft Edge
+which chromium || sudo apt-get -y install chromium
 ```
+
+.. _container-or-conda-windows:
+
+## Install container software or Conda environment
+
+We recommend building the software in what's called a container—basically a tiny little operating system with just some apps and utilities needed by the doc-building process. This is nice because, if we change the doc-building process in ways that require new versions of those apps and utilities, that will be completely invisible to you. You won't need to manually do anything to update your setup to work with the new process; it'll just happen automatically.
+
+We recommend using the container software Podman.
+
+1. Install Podman with `sudo apt-get -y install podman`.
+1. Set up and start a Podman "virtual machine" with `podman machine init --now`.
+1. Test your installation by doing `podman run --rm hello-world`. If it worked, you should see ASCII art of the Podman logo.
+
+You may not be able to install Podman or any other containerization software, so there is an alternative method: a Conda environment.
+
+1. Check whether you already have Conda installed by doing `which conda`. If that doesn't print anything, [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install#linux).
+1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
+
 
 ## Set up your permissions
 This will make sure that you "own" your home directory in the Ubuntu VM. **In your Ubuntu terminal**, do:
