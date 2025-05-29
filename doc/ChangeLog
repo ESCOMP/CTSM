@@ -1,4 +1,123 @@
 ===============================================================
+Tag name: ctsm5.3.050
+Originator(s): samrabin (Sam Rabin)
+Date: Thu May 29 11:26:21 MDT 2025
+One-line Summary: Fix Linux Podman; prefer Linux Docker; update docs docs.
+
+Purpose and description of changes
+----------------------------------
+
+- Fixes Podman builds on Ubuntu (mostly; see ESMCI/doc-builder#27)
+- Docker now preferred on non-Mac systems
+- Improves docs docs
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3163: Docs docs: Extraneous variable in a command](https://github.com/ESCOMP/CTSM/issues/3163)
+
+Notes of particular relevance for users
+---------------------------------------
+
+User's Guide section on docs updated with new instructions.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- If you're running doc/testing.sh locally, you'll need both Docker and Podman installed.
+
+
+Testing summary:
+----------------
+
+All required testing happened in GitHub workflows on the PR.
+
+
+Other details
+-------------
+
+List any git submodules updated: doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3184: ctsm5.3.050: Doc infrastructure and docs: fixes and improvements by samsrabin](https://github.com/ESCOMP/CTSM/pull/3184)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.049
+Originator(s): samrabin (Sam Rabin)
+Date: Tue May 27 12:49:00 MDT 2025
+One-line Summary: Switch docs to use Podman
+
+Purpose and description of changes
+----------------------------------
+
+Updates doc-builder to a version that prefers to use podman instead of docker. Also updates documentation to instruct docs-writers to use Podman instead of Docker, along with some other improvements.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Notes of particular relevance for users
+---------------------------------------
+
+User's Guide section on docs updated with new instructions.
+
+
+Testing summary:
+----------------
+
+All required testing happened in GitHub workflows on the PR.
+
+
+Other details
+-------------
+
+List any git submodules updated: doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3153: ctsm5.3.049: Preferentially use Podman for ctsm-docs container by samsrabin](https://github.com/ESCOMP/CTSM/pull/3153)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.048
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Mon May 26 18:30:59 MDT 2025
