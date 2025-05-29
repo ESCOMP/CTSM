@@ -6,57 +6,79 @@
 Supported tower sites for single-point runs
 ****************************************
 
-``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
+# 1.6.2.1 General Information on Supported Tower Sites
 
-Subset the data
-------------------
+The `run_tower` capability allows users to run Community Land Model (CLM) simulations at NEON tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
+    1) Create a generic base case for cloning.
+    2) Make the case for the specific neon or plumber site(s).
+    3) Make changes to the case, for:
+        a. AD spinup
+        b. post-AD spinup
+        c. transient
+        d. SASU or Matrix spinup
+    4) Build and submit the case.
 
-For single-point cases, you need to subset a surface dataset and (optionally) DATM data. The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
+The available options can be shown by running `run_tower --help`
 
-Note that you will need to have a python environment set up that includes the packages ``scipy``, ``xarray``, and ``numpy``. If you have conda or miniconda installed, you can create a conda environment for this and other CTSM python tools using the script ``py_env_create`` at the top level of your CTSM checkout. See :ref:`using-ctsm-pylib` for more information.
+These options include the following:
+  -h, --help            show this help message and exit
+  --neon-sites          4-letter neon site code.
+  --plumber-sites       six character PLUMBER2 site code (eg, AR-SLu)
+  --base-case BASE_CASE_ROOT
+                        Root Directory of base case build [default: None]
+  --output-root OUTPUT_ROOT
+                        Root output directory of cases [default:
+                        CIME_OUTPUT_ROOT as defined in cime]
+  --overwrite           overwrite existing case directories [default: False]
+  --setup-only          Only setup the requested cases, do not build or run
+                        [default: False]
+  --no-input-data-check, --no-check-input-data
+                        Don't check for input data. Implies --setup-only.
+                        [default: False]
+  --rerun               If the case exists but does not appear to be complete,
+                        restart it. [default: False]
+  --no-batch            Run locally, do not use batch queueing system (if
+                        defined for Machine) [default: False]
+  --run-type {ad,postad,transient}
+                        Type of run to do [default: None]
+  --prism               Uses the PRISM reanaylsis precipitation data for the
+                        site instead of the NEON data (only available over
+                        Continental US)
+  --experiment EXPERIMENT
+                        Appends the case name with string for model experiment
+  --run-from-postad     For transient runs only - should we start from the
+                        postad spinup or finidat? By default start from
+                        finidat, if this flag is used the postad run must be
+                        available.
+  --neon-version {v1,v2,v3}
+                        Neon data version to use for this simulation.
+                        [default: use the latest data available]
+  --xmlchange XMLCHANGE
+                        Any xmlchanges (e.g.,
+                        CLM_CO2_TYPE=constant,CCSM_CO2_PPMV=500) [default:
+                        None]
 
-To subset surface data and climate forcings (DATM) for a single point, use the command:
+Logging options:
+  -d, --debug           Print debug information (very verbose) to file /glade/
+                        work/tking/ctsm_project/sam_ctsm/CTSM/tools/site_and_r
+                        egional/run_tower.log
+  -v, --verbose         Add additional context (time and file) to log messages
+  -s, --silent          Print only warnings and error messages
 
-.. code:: shell
 
-   tools/site_and_regional/subset_data point \
-      --lat $my_lat --lon $my_lon --lon-type $my_lon_type --site $my_site_name \
-      --create-surface --create-datm \
-      --datm-syr $my_start_year --datm-eyr $my_end_year \
-      --create-user-mods --outdir $my_output_dir
 
--  ``$my_lat``: latitude of point, *must be between -90 and 90 degrees*. E.g., Boulder, CO, USA: 40.
--  ``$my_lon``: longitude of point. *Must be between -180 and 360 degrees.* E.g., Boulder, CO, USA: 255 or -105.
--  ``$my_lon_type``: 180 if your longitude is in the [-180, 180] format (i.e., centered at the Prime/0th Meridian); 360 if it's in the [0, 360] format (i.e., centered at the 180th Meridian). Note that ``--lon-type $my_lon_type`` is not necessary if your longitude is unambiguous---i.e., it's only needed if your longitude is in the range [0, 180].
--  ``$my_site_name``: name of site, *used for file naming*
--  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
--  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2015; see note below about switching the default DATM data*
--  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
-You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
+1.6.2.2 NEON Tower Single Point Simulations
 
-.. note::
-   This script defaults to subsetting specific surface, domain, and land-use files and the CRUJRA2024 DATM data, and can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
+With this tool, CLM uses gap-filled meteorology from NEON tower sites, the dominant plant species is mapped to the appropriate model plant functional type (PFT), and soil characteristics used in the simulations are updated to match observations from NEON’s soil megapits. Gap-filled NEON tower flux data are also available for model evaluation. Additionally, all the commands to run the model are combined into a script that you can easily call from a single line of code.
 
-The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` settings. You can then use this user mods directory to set up your CTSM case, as described below.
+Currently supported NEON sites include the following: ABBY,BARR,BART,BLAN,BONA,CLBJ,CPER,DCFS,DEJU,DELA,DSNY,GRSM,GUAN,HARV,HEAL,JERC,JORN,KONA,KONZ,LAJA,LENO,MLBS,MOAB,NIWO,NOGP,OAES,ONAQ,ORNL,OSBS,PUUM,RMNP,SCBI,SERC,SJER,SOAP,SRER,STEI,STER,TALL,TEAK,TOOL,TREE,UKFS,UNDE,WOOD,WREF,YELL,all
 
-Create the case
-------------------
+A few important notes regarding the NEON tower site simulations are that the default run type is `transient`.
 
-You can use the user mods directory set up in the previous subset data step to tell CIME/CTSM where your subset files are located.
 
-.. code:: shell
+# 1.6.2.3 PLUMBER Tower Single Point Simulations
 
-   cime/scripts/create_newcase --case $my_case_name --res CLM_USRDAT \
-      --compset $compset --run-unsupported \
-      --user-mods-dirs $my_output_dir/user_mods
+A few important notes regarding the PLUMBER tower site simulations are that the default run type is `ad`. Note that the PLUMBER cases all start in different years.
 
--  ``$my_case_name``: the path of the case directory you want to create
--  ``$compset``: the compset you would like to use (for example, ``I2000Clm60Bgc``)
--  Note the use of ``$my_output_dir/user_mods`` which is the ``user_mods/`` directory that the subset data script set up within your specified ``$my_output_dir``.
-
-Note that ``./case.setup`` on Derecho will automatically set queue to ``develop`` and walltime to one hour. You might need a longer walltime, but the maximum walltime for ``develop`` is one hour. To change it to two hours on Derecho:
-
-.. code:: shell
-
-   ./xmlchange --subgroup case.run JOB_QUEUE=main,JOB_WALLCLOCK_TIME=2:00:00
+Currently supported PLUMBER Sites include the following: AR-SLu,AT-Neu,AU-ASM,AU-Cow,AU-Cpr,AU-Ctr,AU-Cum,AU-DaP,AU-DaS,AU-Dry,AU-Emr,AU-GWW,AU-Gin,AU-How,AU-Lit,AU-Otw,AU-Rig,AU-Rob,AU-Sam,AU-Stp,AU-TTE,AU-Tum,AU-Whr,AU-Wrr,AU-Ync,BE-Bra,BE-Lon,BE-Vie,BR-Sa3,BW-Ma1,CA-NS1,CA-NS2,CA-NS4,CA-NS5,CA-NS6,CA-NS7,CA-Qcu,CA-Qfo,CA-SF1,CA-SF2,CA-SF3,CH-Cha,CH-Dav,CH-Fru,CH-Oe1,CN-Cha,CN-Cng,CN-Dan,CN-Din,CN-Du2,CN-HaM,CN-Qia,CZ-wet,DE-Bay,DE-Geb,DE-Gri,DE-Hai,DE-Kli,DE-Meh,DE-Obe,DE-Seh,DE-SfN,DE-Tha,DE-Wet,DK-Fou,DK-Lva,DK-Ris,DK-Sor,DK-ZaH,ES-ES1,ES-ES2,ES-LMa,ES-LgS,ES-VDA,FI-Hyy,FI-Kaa,FI-Lom,FI-Sod,FR-Fon,FR-Gri,FR-Hes,FR-LBr,FR-Lq1,FR-Lq2,FR-Pue,GF-Guy,HU-Bug,ID-Pag,IE-Ca1,IE-Dri,IT-Amp,IT-BCi,IT-CA1,IT-CA2,IT-CA3,IT-Col,IT-Cpz,IT-Isp,IT-LMa,IT-Lav,IT-MBo,IT-Mal,IT-Noe,IT-Non,IT-PT1,IT-Ren,IT-Ro1,IT-Ro2,IT-SR2,IT-SRo,JP-SMF,NL-Ca1,NL-Hor,NL-Loo,PL-wet,PT-Esp,PT-Mi1,PT-Mi2,RU-Che,RU-Fyo,RU-Zot,SD-Dem,SE-Deg,UK-Gri,UK-Ham,UK-PL3,US-AR1,US-AR2,US-ARM,US-Aud,US-Bar,US-Bkg,US-Blo,US-Bo1,US-Cop,US-FPe,US-GLE,US-Goo,US-Ha1,US-Ho1,US-KS2,US-Los,US-MMS,US-MOz,US-Me2,US-Me4,US-Me6,US-Myb,US-NR1,US-Ne1,US-Ne2,US-Ne3,US-PFa,US-Prr,US-SP1,US-SP2,US-SP3,US-SRG,US-SRM,US-Syv,US-Ton,US-Tw4,US-Twt,US-UMB,US-Var,US-WCr,US-Whs,US-Wkg,ZA-Kru,ZM-Mon,all
