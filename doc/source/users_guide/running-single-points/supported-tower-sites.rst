@@ -6,9 +6,11 @@
 Supported tower sites for single-point runs
 ****************************************
 
-# 1.6.2.1 General Information on Supported Tower Sites
+CTSM has functionality for running single-point cases at particular supported tower sites using forcing data from those sites.
 
-The `run_tower` capability allows users to run Community Land Model (CLM) simulations at NEON tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
+# 1.6.2.1 General Information on Running Supported Tower Sites
+
+The `run_tower` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
     1) Create a generic base case for cloning.
     2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for:
