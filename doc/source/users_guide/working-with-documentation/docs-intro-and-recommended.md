@@ -40,6 +40,23 @@ The `-d` means "run using the container." If you're not using the container and 
 
 (Do `./build_docs --help` for more information and options.)
 
-You can then open the documentation in a web browser by browsing to `/path/to/ctsm_clone/_build/` and opening `index.html`.
+## Viewing your built docs
 
-Note that there is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. The links to versions in this menu will not work when using the build command given above. If you wish to preview this version switching functionality, or you're building the docs in the process of actually updating the website, see :ref:`building-docs-multiple-versions`.
+Note that there is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. The links to versions in this menu will not work when using the build command given above. If you wish to preview this version switching functionality, see :ref:`building-docs-multiple-versions`.
+
+The process for viewing your build in a web browser differs depending on what kind of computer you have.
+
+### Mac
+
+You can open your build of the documentation in your default browser with
+```shell
+open _build/index.html
+```
+
+### Windows (Ubuntu VM)
+
+Assuming you installed Chromium in the :ref:`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
+```shell
+chromium _build/index.html &
+```
+This will generate a lot of warnings in the terminal that seem to be inconsequential to our purpose here. You may need to press Ctrl-C and/or Enter a few times to clear them and return your cursor to the prompt.
