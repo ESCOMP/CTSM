@@ -1,4 +1,670 @@
 ===============================================================
+Tag name: ctsm5.3.050
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 28 May 2025 05:42:57 PM MDT
+One-line Summary: Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
+
+Purpose and description of changes
+----------------------------------
+
+Update submodules to versions from cesm3_0_beta06 including some needed updates in cime and ccs_config.
+Also update the MEGAN and drydep test namelists so they are testing what's used in coupled simualtions.
+
+Add FTorch as an optional library that can be checked out with git-fleximod.
+
+This also brings in updates on derecho_intel so that intel-oneapi is used, which changes answers.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Fixes #2710 MEGAN/drydep test namelists
+  Fixes #2476 Update to intel-oneapi
+  Fixes #3135 FTorch
+  Fixes #3108 derecho_gnu mpi-serial tests
+  Address some things in #3156 General testing changes to make
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   Single point cases may fail due to lack of memory -- especially FATES cases
+   See: https://github.com/ESCOMP/CTSM/issues/3181
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+   Change some of the tests for CESM: prealpha, prebeta, and aux_cime_baseliens
+   Increase memory per task for FATES tests so will work for single point cases
+
+Testing summary: regular, fates, ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: fates-sci.1.84.0_api.40.0.0-ctsm5.3.050
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, MEGAN/drydep namelist different, derecho_intel/dercho_nvhpc change answers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: When MEGAN/drydep test namelist turned on, also future scenario SSP cases
+    - what platforms/compilers: derecho_intel or derecho_nvhpc
+    - nature of change:
+      compiler changes should be roundoff
+      MEGAN/drydep and SSP cases will be greater than that
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+cism to cismwrap_2_2_006
+
+fxtag = ccs_config_cesm1.0.23
+ccs_config to ccs_config_cesm1.0.43
+
+CIME to cime6.1.102
+
+CMEPS to cmeps1.0.47
+
+CDEPS to cdeps1.0.73
+
+PIO to pio2_6_4
+
+MPISerial to MPIserial_2.5.4
+
+   FTorch to v0.0.5
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   https://github.com/ESCOMP/CTSM/pull/3111 -- bring in the answer changing part for derecho_intel
+   https://github.com/ESCOMP/CTSM/pull/3159 -- update to cesm3_0_alpha06f externals
+   https://github.com/ESCOMP/CTSM/pull/3125 -- update to cesm3_0_alpha06g externals and needed fixes
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.048
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon May 26 18:30:59 MDT 2025
+One-line Summary: Automatically publish docs to this repo
+
+Purpose and description of changes
+----------------------------------
+
+Enables automatic publication of documentation to this repo's GitHub Pages, making ctsm-docs repo obsolete. Also updates documentation documentation.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #2541: Some links in User's Guide sidebar are broken](https://github.com/ESCOMP/CTSM/issues/2541)
+- [Issue #2839: Automatically publish updated docs](https://github.com/ESCOMP/CTSM/issues/2839)
+- [Issue #3121: Fix capital letter in doc filenames](https://github.com/ESCOMP/CTSM/issues/3121)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Canonical URL for User's Guide and Tech Note will be changing from https://escomp.github.io/ctsm-docs to https://escomp.github.io/ctsm.
+- Updates to "Working with the CTSM documentation" section
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+We're going to get rid of the ctsm-docs repo!
+
+
+Testing summary:
+----------------
+
+None, as no code is changing aside from the documentation infrastructure, which is tested in GitHub Workflows.
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3146: ctsm5.3.048: Automatically publish docs to this repo by samsrabin](https://github.com/ESCOMP/CTSM/pull/3146/files)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.047
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon May 26 16:30:10 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master. Includes PRs:
+- [Pull Request #3056: QOL improvements in mksurfdata_esmf makefile by samsrabin](https://github.com/ESCOMP/CTSM/pull/3056)
+- [Pull Request #3100: Fix Longitude comparison error for regional subset_data by samsrabin](https://github.com/ESCOMP/CTSM/pull/3100)
+- [Pull Request #3122: Fix a couple of things in documentation conf.py by samsrabin](https://github.com/ESCOMP/CTSM/pull/3122)
+- [Pull Request #3128: Fix ctsm-docs container version tagging by samsrabin](https://github.com/ESCOMP/CTSM/pull/3128)
+- [Pull Request #3138: Don't build docs for ChangeLog/Sum by samsrabin](https://github.com/ESCOMP/CTSM/pull/3138)
+- [Pull Request #3143: Don't run workflows on plain tag creation by samsrabin](https://github.com/ESCOMP/CTSM/pull/3143)
+- [Pull Request #3144: Add docs issue template by samsrabin](https://github.com/ESCOMP/CTSM/pull/3144)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3093: subset_data: Longitude comparison error](https://github.com/ESCOMP/CTSM/issues/3093)
+- [Issue #3126: Increment docs container version](https://github.com/ESCOMP/CTSM/issues/3126)
+- [Issue #3142: Workflows run on new tags even w/o file changes](https://github.com/ESCOMP/CTSM/issues/3142)
+
+
+Testing summary:
+----------------
+
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3154: Merge b4b-dev 2025-05-24 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3154)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.046
+Originator(s): rgknox (Ryan Knox)
+Date: Mon 26 May 2025 02:45:52 AM MDT
+One-line Summary: For FATES set itype to ispval and a few unused variables to nan to help prevent future problems
+
+Purpose and description of changes
+----------------------------------
+
+
+On FATES patches, there should be no notion of pft associated with the patch, and therefore patch%itype should always be invalid.
+Even for FATES-SP, the patch should be associated with the FATES pft, which is not associated with itype. In this set of changes,
+itype is set to spval on fates patches. This will help prevent bugs in the future, because its use in a fates context should trigger
+errors, particularly in debug mode.
+
+When FATES with itype tset o ispval which when used in DEBUG mode will show up as a bounds overflow.
+For example in issue 2932, where the use of Meier 2022 was turned on in FATES and shouldn't have been.
+
+For FATES also set the fields downreg, leafn, froot, and croot t NaN, so when used in DEBUG mode their use will result in a floting
+point exception.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixed #2933 -- setting patch%itype to invalid for FATES patches
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Dissallow drydep or MEGAN for all FATES types including FatesSp and die with
+   a fatal_error, rather than a warning
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Unfrtunately setting itype doesn't fix all possible problems with 
+   See discussin #2149
+
+Changes to tests or testing:
+   Disable FatesSp drydep and MEGAN tests
+
+Testing summary: regular fates
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-fr-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   https://github.com/ESCOMP/CTSM/pull/2935
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.045
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Tue May 20 11:56:15 MDT 2025
+One-line Summary: FATES default parameter update for API 40
+
+Purpose and description of changes
+----------------------------------
+
+Update the FATES default parameter and associated tag to API 40.  This update
+includes changes to the default competitive exclusion parameter, sets the logging
+default to clear cut, and refactors the pft-specific phenology habit selection.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to the datasets (e.g., parameter, surface or initial files):
+  The FATES default parameter file update unifies the pft-level phenology habit from three
+  separate on/off switches, into one per-pft integer selection switch, fates_phen_leaf_habit
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  Wall clock time increased by ten minutes for a select set of izumi tests.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+  fates tested against fates-sci.1.84.0_api.40.0.0-ctsm5.3.042-pr1358-1359
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, fates tests only
+
+  FIELDLIST differences due to competetive exclusion parameter update triggering inclusion
+  of a previously inactive history output.  Numerical preciscion differences in a subset of
+  carbon flux outputs.  Long term tests demonstrate roundoff differences propagated due
+  to competetive exclusion parameter update.
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.83.1_api.39.0.0 -> sci.1.84.0_api.40.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3087
+https://github.com/NGEET/fates/pull/1406
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.044
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed 14 May 2025 11:42:41 AM MDT
+One-line Summary: Introduce time-evolving LEAFCN_TARGET as function of leafcn param
+
+Purpose and description of changes
+----------------------------------
+
+ Motivated by a phd student's project (Emma Hauser, now Professor at UW-Madison) we have introduced time-evolving leafcn as a possible template for other time-evolving parameters.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1646 Time evolving parameterization for leaf properties
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New test in aux_clm that points to an alternate params file with leafcn_co2_slope = 30 (default = 0) to confirm that the leafcn_t_evolving calculation doesn't fail
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+ but field lists differ due to new history field LEAFCN_TARGET
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1654
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.043
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 09 May 2025 12:28:17 PM MDT
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+ Updates to the b4b-dev branch since its last merge to master (PRs #3091 #3092), as shown by git log:
+
+ - Merge pull request Update docs infrastructure #2809 from samsrabin/update-docs-builder-2
+   Update docs infrastructure
+ - Merge pull request Update externals to cesm3_0_alpha06c #3106 from ekluzek/update_to_alpha06c
+   Update externals to cesm3_0_alpha06c
+ - Merge pull request User control over snow thermal conductivity scheme over glaciers #3072 from wwieder/JordanGlacier
+   User control over snow thermal conductivity scheme over glaciers
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #2818 Update doc-builder
+Resolves #3098 st-archive issues in ctsm5.3.041
+Resolves #3071 Opt to use Jordan1991 over glacier land
+Resolves #3080 Lake snow thermal conductivity hard coded to Jordan
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Introduce user control over snow thermal conductivity scheme over glaciers
+
+Changes to documentation:
+ #2809 updates docs infrastructure
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ #3106 updates submodules to cesm3_0_alpha06c
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3123
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.042
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Thu May  8 16:15:48 MDT 2025
+One-line Summary: Update FATES tag, tests and address namelist option bug
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the FatesColdAllVars test list due to changes in the FATES
+history output associated with ngeet/fates#1252, which is coordinated with this update.
+A bug in which the incorrect control variable was being sent to FATES for a recently
+added namelist options has been addressed.  The NEON-FATES-NIWO tests have also been
+addressed through the update of the FATES tag which includes fixes brought in with
+ngeet/fates#1376.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- [Issue #3052: Update FatesColdAllVars history output with recent additions](https://github.com/ESCOMP/CTSM/issues/3052)
+- [Issue #3038: NEON-FATES-NIWO test in aux_clm fails RUN](https://github.com/ESCOMP/CTSM/issues/3038)
+- [Issue #3062: Incorrect value being set for FATES electron transport namelist option](https://github.com/ESCOMP/CTSM/issues/3062)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  The PEM seed dispersal test is now failing RUN, where it was previously failing COMPARE_base_modpes.
+  This has been added to the expected failures and has been documented in a new issue, [#3097](https://github.com/ESCOMP/CTSM/issues/3097).
+  This issue is associated with updates that came in previously with ctsm5.3.041.
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Notes:
+- All tests resulted in expected st_archive exception due to known issue [#3098](https://github.com/ESCOMP/CTSM/issues/3098)
+- Due to permission issues, the izumi aux_clm tests were run against ctsm5.3.040 baselines.  This was deemed acceptable since ctsm5.3.041 is a b4b tag
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but only for FATES tests
+  This is due to updating the fates tag which includes a number of bug fixes and science updates
+
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.82.3_api.39.0.0 -> sci.1.83.1_api.39.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/3058
+https://github.com/ESCOMP/CTSM/pull/3063
+https://github.com/NGEET/fates/pull/1252
+https://github.com/NGEET/fates/pull/1376
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.041
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Apr 25 08:02:37 MDT 2025
