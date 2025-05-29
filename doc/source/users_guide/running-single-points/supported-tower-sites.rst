@@ -66,7 +66,9 @@ Logging options:
   -s, --silent          Print only warnings and error messages
 
 
+A tutorial on running Run_Tower can be found here: https://ncar.github.io/CTSM-Tutorial/README.html 
 
+Note that the run_tower base case must be of same run type as a requested clone: https://github.com/ESCOMP/CTSM/issues/1926
 
 1.6.2.2 NEON Tower Single Point Simulations
 
