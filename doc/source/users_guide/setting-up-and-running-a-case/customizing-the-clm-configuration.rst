@@ -358,7 +358,7 @@ When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets 
       > cd $CTSMROOT/bld
       > queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 
-   An example of using ``CLM_USRDAT_NAME`` for a simulation is given in Example :numref:`creating-your-own-singlepoint-dataset`.
+   An example of using ``CLM_USRDAT_NAME`` for a simulation is given in Example :numref:`single_point_subset_data`.
 
 ``CLM_CO2_TYPE``
    sets the type of input CO2 for either "constant", "diagnostic" or prognostic". If "constant" the value from ``CCSM_CO2_PPMV`` will be used. If "diagnostic" or "prognostic" the values MUST be sent from the atmosphere model.
