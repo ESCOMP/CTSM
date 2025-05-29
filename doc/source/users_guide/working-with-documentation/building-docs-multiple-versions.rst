@@ -12,6 +12,8 @@ If you'd like to try, this will generate a local site for you in ``_publish/`` a
    :end-before: VERSION LINKS WILL NOT RESOLVE
    :append: open _publish/index.html
 
+**Note:** This is not yet supported with Podman on Linux (including Ubuntu VM on Windows). See `doc-builder Issue #27: build_docs_to_publish fails on Linux (maybe just Ubuntu?) with Podman <https://github.com/ESMCI/doc-builder/issues/27>`_.
+
 
 How this works
 --------------
