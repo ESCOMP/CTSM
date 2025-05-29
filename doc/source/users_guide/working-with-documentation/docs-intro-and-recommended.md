@@ -4,14 +4,16 @@
 .. _editing-the-documentation:
 
 ## One-time setup
-In addition to a CTSM checkout in which to work, you will need to have some software installed in order to build the documentation:
+You will need to have some software installed on your computer in order to build and the documentation and view the results:
 - :ref:`building-docs-prereqs-mac`
 - :ref:`building-docs-prereqs-windows`
 
 ## Editing the documentation
+First, you will need a clone of CTSM to get all the documentation files and infrastructure. (If you're on Windows, you will make this clone in your :ref:`Ubuntu VM <install-wsl>`.) Note that you will clone this to your own computer, not Derecho or any cluster or anything.
+
 The CTSM documentation is built from files in the `doc/source/tech_note/` and `doc/source/users_guide/` directories. These files are written in a mixture of what are called "markup languages." You may already be familiar—for better or for worse—with the LaTeX markup language. Fortunately, our documentation is simpler than that. It was originally written entirely in [reStructuredText](http://www.sphinx-doc.org/en/stable/rest.html), and it still mostly is, as you can tell by the predominance of .rst files. However, it's also possible to write Markdown documents (.md), which is nice because it's a much simpler and more widespread format (although see :ref:`tips-for-working-with-markdown`). If you've formatted text on GitHub, for instance, you've used Markdown.
 
-Editing the documentation is as simple as opening the source file for the page you want to edit, then changing text. Make sure to use either reStructuredText or Markdown syntax, depending on the file's extension (.rst or .md, respectively).
+Editing the documentation is as simple as opening the source file for the page you want to edit, then changing text. Make sure to use either reStructuredText or Markdown syntax, depending on the file's extension (.rst or .md, respectively). Note that "opening the source file" isn't completely straightforward on Windows; see :ref:`editing-text-files-wsl`.
 
 If you're confident in your changes, or you're _not_ confident in your ability to preview and test the documentation (see [Building the documentation (recommended method)](#building-the-documentation-recommended-method) below), all you need to do is commit your changes and submit a pull request to the [CTSM GitHub repo](https://github.com/ESCOMP/CTSM). Automated testing will check the updated documentation for any errors, and a CTSM software engineer will review your PR. If everything looks good, they will merge it into the codebase and update the website.
 
