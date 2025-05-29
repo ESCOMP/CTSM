@@ -595,7 +595,7 @@ contains
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
 
     ! Cathy [dev.17]: add condensate from AC to output
-    this%qflx_condensate_from_ac_col(begc:endc) = spval
+    this%qflx_condensate_from_ac_col(begc:endc) = 0.0_r8
     call hist_addfld1d ( &
          fname=this%info%fname('QCOND_FROM_AC'), &
          units='mm/s',  &
