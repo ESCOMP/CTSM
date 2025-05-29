@@ -15,22 +15,28 @@ The CTSM documentation is built from files in the `doc/source/tech_note/` and `d
 
 Editing the documentation is as simple as opening the source file for the page you want to edit, then changing text. Make sure to use either reStructuredText or Markdown syntax, depending on the file's extension (.rst or .md, respectively). Note that "opening the source file" isn't completely straightforward on Windows; see :ref:`editing-text-files-wsl`.
 
-If you're confident in your changes, or you're _not_ confident in your ability to preview and test the documentation (see [Building the documentation (recommended method)](#building-the-documentation-recommended-method) below), all you need to do is commit your changes and submit a pull request to the [CTSM GitHub repo](https://github.com/ESCOMP/CTSM). Automated testing will check the updated documentation for any errors, and a CTSM software engineer will review your PR. If everything looks good, they will merge it into the codebase and update the website.
+If you're confident in your changes, or you're _not_ confident in your ability to preview and test the documentation (see [Building the documentation (recommended method)](#building-the-documentation) below), all you need to do is commit your changes and submit a pull request to the [CTSM GitHub repo](https://github.com/ESCOMP/CTSM). Automated testing will check the updated documentation for any errors, and a CTSM software engineer will review your PR. If everything looks good, they will merge it into the codebase and update the website.
 
-.. _building-the-documentation-recommended-method:
+.. _building-the-documentation:
 
-## Building the documentation (recommended method)
+## Building the documentation
 We strongly suggest building the documentation on your personal computer before submitting a pull request, so that you can preview what your changes will look like. The recommended way to do this is using the `doc-builder` tool in conjunction with a "containerized" version of some required software.
 
 ### Directories
-You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your CTSM clone**. (We recommend starting the name of your build directory with `_build` because CTSM knows to ignore such directories when it comes to `git`.) The instructions here assume you want to do your build in `/path/to/ctsm_clone/_build/`.
+You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your CTSM clone**. (We recommend starting the name of your build directory with `_build` because CTSM knows to ignore such directories when it comes to `git`.) The instructions here assume you want to do your build in `doc/_build/`.
 
-### Building a preview
-All you need to do is
+### Building the docs
+All you need to do to build the docs with our recommended method is
 ```shell
 cd doc
-./build_docs -b /path/to/ctsm_clone/_build -c -d
+./build_docs -b _build -c -d
 ```
+
+This runs a complicated series of scripts and software that culminate in something called Sphinx converting the .rst and .md files into HTML webpages.
+
+The `-c` means "do a clean build." If you leave it off, Sphinx will only rebuild files it thinks have changed since the last time you built the docs. It's not always right, which can lead to problems. If you get unexpected errors without `-c`, rerunning with `-c` is the first troubleshooting step.
+
+The `-d` means "run using the container." If you're not using the container and are instead using the `ctsm_pylib` Conda environment **(not recommended)**, leave off `-d`, and make sure you've activated `ctsm_pylib` before running the above command. See the "Container software or Conda environment" sections for :ref:`Mac <container-or-conda-mac>` or :ref:`Windows <container-or-conda-windows>` for more information on these two methods.
 
 (Do `./build_docs --help` for more information and options.)
 
