@@ -1,6 +1,6 @@
 .. include:: ../substitutions.rst
 
-.. _single-point-configurations:
+.. _single-point-regional-configurations:
 
 *****************************************************
 Introduction to Single-Point and Regional Grid Setups

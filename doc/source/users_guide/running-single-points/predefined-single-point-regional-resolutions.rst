@@ -1,6 +1,6 @@
 .. include:: ../substitutions.rst
 
-.. _pts_mode:
+.. _pre-defined-single-pt-regional-resolutions:
 
 ****************************************************
 Pre-defined single-point and regional resolutions

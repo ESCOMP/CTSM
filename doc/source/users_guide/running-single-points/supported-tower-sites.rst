@@ -1,10 +1,10 @@
 .. include:: ../substitutions.rst
 
-.. _single_point_subset_data:
+.. _supported-tower-sites:
 
-****************************************
+********************************************
 Supported tower sites for single-point runs
-****************************************
+********************************************
 
 CTSM has functionality for running single-point cases at particular supported tower sites using forcing data from those sites.
 
@@ -41,7 +41,7 @@ These options include the following:
                         restart it. [default: False]
   --no-batch            Run locally, do not use batch queueing system (if
                         defined for Machine) [default: False]
-  --run-type {ad,postad,transient}
+  --run-type            ad, postad, transient
                         Type of run to do [default: None]
   --prism               Uses the PRISM reanaylsis precipitation data for the
                         site instead of the NEON data (only available over
@@ -52,7 +52,7 @@ These options include the following:
                         postad spinup or finidat? By default start from
                         finidat, if this flag is used the postad run must be
                         available.
-  --neon-version {v1,v2,v3}
+  --neon-version        v1,v2,v3
                         Neon data version to use for this simulation.
                         [default: use the latest data available]
   --xmlchange XMLCHANGE
