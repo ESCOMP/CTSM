@@ -6,55 +6,217 @@
  Creating Surface Datasets
 ===========================
 
-When just creating a replacement file for an existing one, the relevant tool should be used directly to create the file. When you are creating a set of files for a new resolution there are some dependencies between the tools that you need to keep in mind when creating them. The main dependency is that you MUST create a SCRIP grid file first as the SCRIP grid dataset is then input into the other tools. Also look at Table :numref:`reqd-files-table` which gives information on the files required and when. :numref:`Figure Data_Flow` shows an overview of the general data-flow for creation of the fsurdat datasets.
+<!-- ======= -->
+## mksurfdata_esmf Purpose
+<!-- ======= -->
+This tool is intended to generate fsurdat files (surface datasets) and landuse files for the
+CTSM. It can generate global, regional, and single-point fsurdat files, as long
+as a mesh file is available for the grid.
 
-.. _Figure Data_Flow:
+The subset_data tool allows users to make fsurdat files from existing fsurdat
+files when a mesh file is unavailable. Generally, users are encouraged to use the
+subset_data tool for generating regional and single-point fsurdat files (see note about regional grids at the end).
 
-.. figure:: mkmapdata_mksurfdata.jpeg
+<!-- ======= -->
+## Building
+<!-- ======= -->
 
-  Data Flow for Creation of Surface Datasets from Raw SCRIP Grid Files
+<!-- ============= -->
+### Build Requirements
+<!-- ============= -->
 
-Starting from a SCRIP grid file that describes the grid you will run the model on, you first run ```mkmapdata.sh`` to create a list of mapping files. See :numref:`Figure mkmapdata.sh` for a more detailed view of how ``mkmapdata.sh`` works. The mapping files tell ``mksurfdata_esmf`` how to map between the output grid and the raw datasets that it uses as input. The output of ``mksurfdata_esmf`` is a surface dataset that you then use for running the model. See :numref:`Figure Workflow of CLM5 Land Use Data Tool and mksurfdata_esmf Tool` for a more detailed view of how ``mksurfdata_esmf`` works.
+mksurfdata_esmf is a distributed memory parallel program (using Message Passing
+Interface -- MPI) that utilizes both ESMF (Earth System Modelling Framework)
+for regridding as well as PIO (Parallel I/O) and NetCDF output. As
+such, libraries must be built for the following:
 
-:numref:`Figure Data_Flow_Legend` is the legend for this figure (:numref:`Figure Data_Flow`) and other figures in this chapter (:numref:`Figure Global-Domain` and :numref:`Figure mknoocnmap.pl`).
+1. MPI
+2. NetCDF
+3. PIO
+4. ESMF
 
-.. _Figure Data_Flow_Legend:
+In addition for the build: python, bash-shell, CMake and GNU-Make are required
 
-.. figure:: LegendCLMToolDataFlow.jpeg
+These libraries need to be built such that they can all work together in the
+same executable. Hence, the above order may be required in building them.
 
-  Legend for Data Flow Figures
+CTSM submodules that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
+those. A python environment that includes particular packages is also required
+we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
 
-Green arrows define the input to a program, while red arrows define the output. Cylinders define files that are either created by a program or used as input for a program. Boxes are programs.
+Note, PNETCDF is an optional library that can be used, but is NOT required.
 
-You start with a description of a SCRIP grid file for your output grid file and then create mapping files from the raw datasets to it. Once, the mapping files are created ``mksurfdata_esmf`` is run to create the surface dataset to run the model.
+#### Use cime to manage the build requirements
 
-Creating a Complete Set of Files for Input to CLM
--------------------------------------------------
+See [IMPORTANT NOTE](important note-only-working-on-derecho-currently)
 
-1. Create SCRIP grid datasets (if NOT already done)
+For users working on cime machines you can use the build script to build the
+tool. On other machines you'll need to do a port to cime and tell how to build
+for that machine. That's talked about in the cime documentation.
+And you'll have to make some modifications to the build script.
 
-   First you need to create a descriptor file for your grid, that includes the locations of cell centers and cell corners. There is also a "mask" field, but in this case the mask is set to one everywhere (i.e. all of the masks for the output model grid are "nomask"). An example SCRIP grid file is: ``$CSMDATA/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc``. The ``mkmapgrids`` and ``mkscripgrid.ncl`` NCL script in the ``$CTSMROOT/tools/mkmapgrids`` directory can help you with this. SCRIP grid files for all the standard CLM grids are already created for you. See the Section called Creating an output SCRIP grid file at a resolution to run the model on for more information on this.
+https://github.com/ESMCI/cime/wiki/Porting-Overview
 
-.. todo::
-    Update the below, as domain files aren't needed with nuopc.
+Machines that already run CTSM or CESM have been ported to cime. So if you can
+run the model on your machine, you will be able to build the tool there.
 
-2. Create domain dataset (if NOT already done)
+To get a list of the machines that have been ported to cime:
 
-   Next use ``gen_domain`` to create a domain file for use by DATM and CLM. This is required, unless a domain file was already created. See the Section called Creating a domain file for CLM and DATM for more information on this.
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+cd ../../cime/scripts  # or ../../../../cime/scripts for a CESM checkout
+./query_config --machines
+```
 
-3. Create mapping files for ``mksurfdata_esmf`` (if NOT already done)
+#### NOTE:
+In addition to having a port to cime, the machine also needs to have PIO built
+and able to be referenced with the env variable PIO which will need to be in
+the porting instructions for the machine. An independent PIO library
+is available on supported CESM machines.
 
-   Create mapping files for ``mksurfdata_esmf`` with ``mkmapdata.sh`` in ``$CTSMROOT/tools/mkmapdata``. See the Section called Creating mapping files that ``mksurfdata_esmf`` will use for more information on this.
+<!-- ============================================== -->
+#### IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
+<!-- ============================================== -->
 
-4. Create surface datasets
 
-   Next use ``mksurfdata_esmf`` to create a surface dataset, using the mapping datasets created on the previous step as input. There is a version for either clm4_0 or |version| for this program. See the Section called Using ``mksurfdata_esmf`` to create surface datasets from grid datasets for more information on this.
+> [!IMPORTANT]
+> Currently we have run and tested mksurfdata_esmf on Derecho. Please see this github issue about mksurfdata_esmf on other CESM machines:
 
-5. Enter the new datasets into the ``build-namelist`` XML database
-   The last optional thing to do is to enter the new datasets into the ``build-namelist`` XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
+https://github.com/ESCOMP/CTSM/issues/2341
 
-The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
+<!-- ================== -->
+### Building the executable
+<!-- ================== -->
 
-.. include:: ../../../../tools/README
+ Before starting, be sure that you have run
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./bin/git-fleximod update  # Assuming at the top level of the CTSM/CESM checkout
+```
+
+This will bring in CIME and ccs_config which are required for building.
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./gen_mksurfdata_build         # For machines with a cime build
+```
+
+ Note: The pio_iotype value gets set and written to a simple .txt file
+ by this build script. The value depends on your machine. If not running
+ on derecho, casper, or izumi, you may need to update this, though
+ a default value does get set for other machines.
+
+<!-- ========================= -->
+## Running for a single submission
+<!-- ========================= -->
+
+### Setup ctsm_pylib
+ Work in the ctsm_pylib environment, which requires the following steps when
+ running on Derecho. On other machines it will be similar but might be different
+ in order to get conda in your path and activate the ctsm_pylib environment.
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ module load conda
+ cd ../..  # or ../../../.. for a CESM checkout)
+ ./py_env_create    # Assuming at the top level of the CTSM/CESM checkout
+ conda activate ctsm_pylib
+```
+
+to generate your target namelist:
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./gen_mksurfdata_namelist --help
+```
+
+for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./gen_mksurfdata_namelist --res <resolution> --start-year <year1> --end-year <year2>
+```
+
+> [!TIP]
+> **IF FILES ARE MISSING FROM** /inputdata, a target namelist will be generated
+> but with a generic name and with warning to run `./download_input_data` next.
+> **IF A SMALLER SET OF FILES IS STILL MISSING AFTER RUNNING** `./download_input_data`
+> and rerunning `./gen_mksurfdata_namelist`, then rerun
+> `./gen_mksurfdata_namelist with your options needed.
+> and rerun `./download_input_data` until
+> `./gen_mksurfdata_namelist` finds all files.
+
+ Example, to generate your target jobscript (again use --help for instructions):
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
+ qsub mksurfdata_jobscript_single.sh
+```
+
+ Read note about regional grids at the end.
+
+<!-- ========================================= -->
+## Running for the generation of multiple datasets
+<!-- ========================================= -->
+ Work in the ctsm_pylib environment, as explained in earlier section.
+ gen_mksurfdata_jobscript_multi runs `./gen_mksurfdata_namelist` for you
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ ./gen_mksurfdata_jobscript_multi --number-of-nodes 2 --scenario global-present
+ qsub mksurfdata_jobscript_multi.sh
+```
+
+ If you are looking to generate all (or a large number of) the datasets or the
+ single-point (1x1) datasets, you are best off using the Makefile. For example
+
+``` shell
+# Assuming pwd is the tools/mksurfdata_esmf directory
+ make all  # ...or
+ make all-subset
+```
+
+ As of 2024/9/12 one needs to generate NEON and PLUMBER2 fsurdat files by
+ running ./neon_surf_wrapper and ./plumber2_surf_wrapper manually in the
+ /tools/site_and_regional directory.
+
+<!-- = -->
+## NOTES
+<!-- = -->
+
+# Guidelines for input datasets to mksurfdata_esmf
+
+> [!TIP]
+> ALL raw datasets \*.nc **FILES MUST NOT BE NetCDF4**.
+
+Example to convert to CDF5
+
+``` shell
+nccopy -k cdf5 oldfile newfile
+```
+
+> [!TIP]
+> The LAI raw dataset \*.nc **FILE MUST HAVE** an "unlimited" time dimension
+
+Example to change time to unlimted dimension using the NCO operator ncks.
+
+``` shell
+ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
+```
+
+### IMPORTANT KNOWN PROBLEMS
+
+- See github issue https://github.com/ESCOMP/CTSM/issues/3141
+- In general we recommend using subset_data and/or fsurdat_modifier for regional grids
+
+<!-- = -->
+## FINAL COMMENT
+<!-- = -->
+
+The ``$CTSMROOT/tools/mksurfdata_esmf/README.md`` documents the same instructions for creating fsurdat/landuse files needed to run CLM. We repeat that file here:
+
+.. include:: ../../../../tools/mksurfdata_esmf/README.md
    :literal:
 
