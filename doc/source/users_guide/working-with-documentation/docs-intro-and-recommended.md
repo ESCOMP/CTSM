@@ -50,13 +50,13 @@ The process for viewing your build in a web browser differs depending on what ki
 
 You can open your build of the documentation in your default browser with
 ```shell
-open _build/index.html
+open _build/html/index.html
 ```
 
 ### Windows (Ubuntu VM)
 
 Assuming you installed Chromium in the :ref:`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
 ```shell
-chromium _build/index.html &
+chromium _build/html/index.html &
 ```
 This will generate a lot of warnings in the terminal that seem to be inconsequential to our purpose here. You may need to press Ctrl-C and/or Enter a few times to clear them and return your cursor to the prompt.
