@@ -15,7 +15,7 @@ Running Single Point and Regional Cases
    :maxdepth: 2
 
    intro-to-single-pt-regional.rst
-   predefined-tower-sites-for-single-point-runs.rst
-   using-subset-data.rst
+   supported-tower-sites.rst
+   generic-single-point-regional.rst
    predefined-single-point-regional-resolutions.rst
 
