@@ -1,4 +1,87 @@
 ===============================================================
+Tag name: ctsm5.3.051
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 28 May 2025 11:39:23 PM MDT
+One-line Summary: Changes to MEGAN needed for coupled cases
+
+Purpose and description of changes
+----------------------------------
+
+Corrections on how MEGAN coefficients are applied.
+
+Depends on the cmeps tag cmeps1.1.1
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3016 -- low MEGAN emissions
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Just for MEGAN
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: when MEGAN turned on
+    - what platforms/compilers: all
+    - nature of change:
+      change to climate in MEGAN results so that low emissions are improved
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+    cmeps to cmeps1.0.48
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+     #3065 -- MEGAN coefs fix, answer changes for MEGAN
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.050
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 28 May 2025 05:42:57 PM MDT
