@@ -69,10 +69,9 @@ Logging options:
   -s, --silent          Print only warnings and error messages
 
 
-A `tutorial <https://ncar.github.io/CTSM-Tutorial/README.html>`_ on running ``run_tower`` is also available.
+A `tutorial <https://ncar.github.io/ncar-neon-books/notebooks/NEON_Simulation_Tutorial.html>`_ on running and evaluating data from ``run_tower`` is also available.
 
-.. warning::
-Note that the run_tower base case must be of same run type as a requested clone, as described by this `issue ticket <https://github.com/ESCOMP/CTSM/issues/1926>`_.
+.. warning:: Note that the run_tower base case must be of same run type as a requested clone, as described by this `issue ticket <https://github.com/ESCOMP/CTSM/issues/1926>`_.
 
 =========================================
 NEON Tower Single Point Simulations
@@ -85,6 +84,13 @@ Information on the specific sites can be found on the `NEON webpage <https://www
 
 .. note:: An important note regarding the NEON tower site simulations is that the default run type is `transient`.
 
+Running CTSM at a NEON site will look something like this: ``run_neon --neon-sites ABBY``
+
+When a simulation completes, the data are stored in the archive directory. In this directory you will find files that include data for every day of the simulation, as well as files that average model variables monthly.
+The output file names are automatically generated and are composed of the simulation name, which includes the site name, type of simulation (eg, transient), and the date of simulated data.
+The tower simulations generate two types of files
+1) ``h0`` Variables that are averaged monthly. One file is available for every month of the simulation. These files include hundreds of variables.
+2) ``h1`` Variables that are recorded every 30 minutes. Values are aggregated into one file for each day of the simulation. Each file includes 48 data points for selected variables.
 
 =========================================
 PLUMBER Tower Single Point Simulations
@@ -94,3 +100,6 @@ PLUMBER Tower Single Point Simulations
 
 Currently supported PLUMBER Sites include the following: AR-SLu, AT-Neu, AU-ASM, AU-Cow, AU-Cpr, AU-Ctr, AU-Cum, AU-DaP, AU-DaS, AU-Dry, AU-Emr, AU-GWW, AU-Gin, AU-How, AU-Lit, AU-Otw, AU-Rig, AU-Rob, AU-Sam, AU-Stp, AU-TTE, AU-Tum, AU-Whr, AU-Wrr, AU-Ync, BE-Bra, BE-Lon, BE-Vie, BR-Sa3, BW-Ma1, CA-NS1, CA-NS2, CA-NS4, CA-NS5, CA-NS6, CA-NS7, CA-Qcu, CA-Qfo, CA-SF1, CA-SF2, CA-SF3, CH-Cha, CH-Dav, CH-Fru, CH-Oe1, CN-Cha, CN-Cng, CN-Dan, CN-Din, CN-Du2, CN-HaM, CN-Qia, CZ-wet, DE-Bay, DE-Geb, DE-Gri, DE-Hai, DE-Kli, DE-Meh, DE-Obe, DE-Seh, DE-SfN, DE-Tha, DE-Wet, DK-Fou, DK-Lva, DK-Ris, DK-Sor, DK-ZaH, ES-ES1, ES-ES2, ES-LMa, ES-LgS, ES-VDA, FI-Hyy, FI-Kaa, FI-Lom, FI-Sod, FR-Fon, FR-Gri, FR-Hes, FR-LBr, FR-Lq1, FR-Lq2, FR-Pue, GF-Guy, HU-Bug, ID-Pag, IE-Ca1, IE-Dri, IT-Amp, IT-BCi, IT-CA1, IT-CA2, IT-CA3, IT-Col, IT-Cpz, IT-Isp, IT-LMa, IT-Lav, IT-MBo, IT-Mal, IT-Noe, IT-Non, IT-PT1, IT-Ren, IT-Ro1, IT-Ro2, IT-SR2, IT-SRo, JP-SMF, NL-Ca1, NL-Hor, NL-Loo, PL-wet, PT-Esp, PT-Mi1, PT-Mi2, RU-Che, RU-Fyo, RU-Zot, SD-Dem, SE-Deg, UK-Gri, UK-Ham, UK-PL3, US-AR1, US-AR2, US-ARM, US-Aud, US-Bar, US-Bkg, US-Blo, US-Bo1, US-Cop, US-FPe, US-GLE, US-Goo, US-Ha1, US-Ho1, US-KS2, US-Los, US-MMS, US-MOz, US-Me2, US-Me4, US-Me6, US-Myb, US-NR1, US-Ne1, US-Ne2, US-Ne3, US-PFa, US-Prr, US-SP1, US-SP2, US-SP3, US-SRG, US-SRM, US-Syv, US-Ton, US-Tw4, US-Twt, US-UMB, US-Var, US-WCr, US-Whs, US-Wkg, ZA-Kru, ZM-Mon, all
 Information on the se=pecific sites can be found `here <https://researchdata.edu.au/plumber2-forcing-evaluation-surface-models/1656048>`_.
+
+Running CTSM at a PLUMBER site will look something like this: ``run_neon --plumber-sites AR-SLu``.
+The output for a PLUMBER case will be set up similarly to the output for a NEON case, as described above.
