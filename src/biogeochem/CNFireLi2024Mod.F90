@@ -7,11 +7,8 @@ module CNFireLi2024Mod
   ! module for fire dynamics
   ! created in Nov, 2012  and revised in Apr, 2013 by F. Li and S. Levis
   ! based on Li et al. (2012a,b; 2013)
-  ! revised in Apr, 2014 according to Li et al.(2014)
-  ! revised in May, 2015, according to Li et al. (2015, in prep.)
-  ! Fire-related parameters were calibrated or tuned in May, 2015 based on the
-  ! 20th Century transient simulations at f19_g16 with a CLM4.5 version
-  ! (clm50fire), CRUNCEPv5, and climatological lightning data.
+  ! revised in Apr, 2014 according to Li and Lawrance (2017)
+  ! revised in Jun, 2024 and modified in May, 2025, according to Li et al. (2025, in prep.)
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
@@ -147,6 +144,10 @@ contains
     real(r8) :: fs       ! hd-dependent fires suppression (0-1)
     real(r8) :: ig       ! total ignitions (count/km2/hr)
     real(r8) :: hdmlf    ! human density
+    real(r8) :: topoi    ! influence of topography on fires (0-1), where 1 indicates no impact.
+                         ! can be removed if CLM consider Arctic C3 grass in plateau-> 
+                         ! intense light-> much more C allocated to fine roots than leaf, 
+                         ! and roots decreasing infiltration 
     real(r8) :: arh, arh30 !combustability of fuel related to RH and RH30
     real(r8) :: afuel    !weight for arh and arh30
     real(r8) :: btran_col(bounds%begc:bounds%endc)
@@ -180,7 +181,7 @@ contains
          defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
          borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
          nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
-
+         forc_topo_g  => atm2lnd_inst%forc_topo_grc                            , & ! Input:  [real(r8) (:)      ]  atmospheric surface height (m)
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
          rswf_min           => pftcon%rswf_min                                 , & ! Input:
@@ -197,8 +198,8 @@ contains
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
-         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
-         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. relative humidity
+         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  30-day running mean of tot. precipitation
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  30-day running mean of tot. relative humidity
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
          gdp_lf             => this%gdp_lf_col                                 , & ! Input:  [real(r8) (:)     ]  gdp data
@@ -303,7 +304,7 @@ contains
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
         ! For natural vegetation
-        if (patch%itype(p) <= nc4_grass ) then
+        if (patch%itype(p) <= nc4_grass .and. patch%itype(p) >= ndllf_evr_tmp_tree) then
            lfwt(c) = lfwt(c) + patch%wtgcell(p)
         end if
      end do
@@ -516,8 +517,12 @@ contains
         g = col%gridcell(c)
 
         ! For crop
+        ! cropf_col(c) * col%wtgcell(c) > 0.1_r8 is added because fires are rare in
+        ! gridcells with limited cropland coverage based on GFED5. Also, this helps to 
+        ! avoid abm (crop fire peak month) regridding error from 0.05 degree to lower resolution
+        ! The condition could be removed if CLM supports the use of mode in abm inputs regridding
         if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. patch%itype(p)  >  nc4_grass .and.  &
-             kmo == abm_lf(c) .and. &
+             kmo == abm_lf(c) .and. cropf_col(c) * col%wtgcell(c) > 0.1_r8 .and. &
              burndate(p) >= 999 .and. patch%wtcol(p)  >  0._r8 )then ! catch  crop burn time
 
            hdmlf = this%forc_hdm(g)
@@ -616,7 +621,12 @@ contains
                    cnfire_params%ignition_efficiency*(1._r8-fs)*  &
                    (lfwt(c)**0.5)
            end if
-           nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
+           if(forc_topo_g(g) <= 2500._r8)then  !influence of topography on fires
+              topoi = 1._r8
+           else
+              topoi = 0.004_r8
+           end if
+           nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) * topoi  !fire counts/km2/sec
            Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
            spread_m = fire_m**0.5_r8
            fd_col(c) = (lfwt(c)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
@@ -639,7 +649,7 @@ contains
                          / (trotr1_col(c) + trotr2_col(c))
 
                     cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
-                         (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
+                         (0.67_r8*min(0.01_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.001_r8) * &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
 
                     farea_burned(c) = farea_burned(c)+fb*cli*(cli_scale/secspday)
