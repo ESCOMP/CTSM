@@ -33,7 +33,7 @@ Developers that are making changes to CLM either for their own development or fo
  What is New with |version|
 ============================
 
-`What's new with |version| science <https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#|version|/>`_ gives a synopsis of the changes to CLM since the CLM4.5 release. More details are given in the CLM ChangeLog files:
+The :ref:`model history section <model-history>` section gives a synopsis of the changes to CLM in each release. More details are given in the CLM ChangeLog files:
 
 - `CLM 3.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm3_0_ChangeLog>`_
 - `CLM 4.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm4_0_ChangeLog>`_
