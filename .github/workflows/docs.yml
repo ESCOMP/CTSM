@@ -56,4 +56,4 @@ jobs:
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c -d --container-cli-tool docker
+          cd doc && ./build_docs -b ${PWD}/_build -c -d

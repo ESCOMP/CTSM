@@ -1,5 +1,5 @@
 ===============================================================
-Tag name: ctsm5.3.051
+Tag name: ctsm5.3.052
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 28 May 2025 11:39:23 PM MDT
 One-line Summary: Changes to MEGAN needed for coupled cases
@@ -44,18 +44,10 @@ Testing summary: regular
 ----------------
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho -
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -69,6 +61,7 @@ Changes answers relative to baseline: Just for MEGAN
     - what platforms/compilers: all
     - nature of change:
       change to climate in MEGAN results so that low emissions are improved
+         Just for VOC field 015 in the coupler
 
 Other details
 -------------
@@ -82,9 +75,9 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
-Tag name: ctsm5.3.050
+Tag name: ctsm5.3.051
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed 28 May 2025 05:42:57 PM MDT
+Date: Fri 30 May 2025 12:19:19 AM MDT
 One-line Summary: Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
 
 Purpose and description of changes
@@ -133,8 +126,6 @@ Caveats for users (e.g., need to interpolate initial conditions):
    Single point cases may fail due to lack of memory -- especially FATES cases
    See: https://github.com/ESCOMP/CTSM/issues/3181
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
 Notes of particular relevance for developers:
 ---------------------------------------------
 
@@ -154,7 +145,7 @@ Testing summary: regular, fates, ctsm_sci
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - PASS
+    derecho - PASS (but just before tagging I saw problems with this and previous tags)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
@@ -213,6 +204,125 @@ Pull Requests that document the changes (include PR ids):
    https://github.com/ESCOMP/CTSM/pull/3111 -- bring in the answer changing part for derecho_intel
    https://github.com/ESCOMP/CTSM/pull/3159 -- update to cesm3_0_alpha06f externals
    https://github.com/ESCOMP/CTSM/pull/3125 -- update to cesm3_0_alpha06g externals and needed fixes
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.050
+Originator(s): samrabin (Sam Rabin)
+Date: Thu May 29 11:26:21 MDT 2025
+One-line Summary: Fix Linux Podman; prefer Linux Docker; update docs docs.
+
+Purpose and description of changes
+----------------------------------
+
+- Fixes Podman builds on Ubuntu (mostly; see ESMCI/doc-builder#27)
+- Docker now preferred on non-Mac systems
+- Improves docs docs
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3163: Docs docs: Extraneous variable in a command](https://github.com/ESCOMP/CTSM/issues/3163)
+
+Notes of particular relevance for users
+---------------------------------------
+
+User's Guide section on docs updated with new instructions.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- If you're running doc/testing.sh locally, you'll need both Docker and Podman installed.
+
+
+Testing summary:
+----------------
+
+All required testing happened in GitHub workflows on the PR.
+
+
+Other details
+-------------
+
+List any git submodules updated: doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3184: ctsm5.3.050: Doc infrastructure and docs: fixes and improvements by samsrabin](https://github.com/ESCOMP/CTSM/pull/3184)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.049
+Originator(s): samrabin (Sam Rabin)
+Date: Tue May 27 12:49:00 MDT 2025
+One-line Summary: Switch docs to use Podman
+
+Purpose and description of changes
+----------------------------------
+
+Updates doc-builder to a version that prefers to use podman instead of docker. Also updates documentation to instruct docs-writers to use Podman instead of Docker, along with some other improvements.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Notes of particular relevance for users
+---------------------------------------
+
+User's Guide section on docs updated with new instructions.
+
+
+Testing summary:
+----------------
+
+All required testing happened in GitHub workflows on the PR.
+
+
+Other details
+-------------
+
+List any git submodules updated: doc-builder
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3153: ctsm5.3.049: Preferentially use Podman for ctsm-docs container by samsrabin](https://github.com/ESCOMP/CTSM/pull/3153)
 
 ===============================================================
 ===============================================================
