@@ -23,10 +23,10 @@ There are several different ways to set up single-point and regional cases.
 For supported tower sites: 
 You can run at a supported tower site if one of the supported single-point/regional datasets is your site of interest (see :ref:`intro-to-single-pt-regional`). All the datasets are created for you, and you can easily select one and run it out of the box using a supported resolution from the top level of the CESM scripts. You can also use this method for your own datasets, but you have to create the datasets, and add them to the XML database in scripts, CLM and to the DATM. This is worthwhile if you want to repeat many multiple cases for a given point or region.
 
-Next, using ``subset_data`` is the best way to setup cases quickly where you can use a simple tool to create your own datasets (see :ref:`single_point_subset_data`). With this method you don't have to change DATM or add files to the XML database. ``subset_data`` will create a usermod directory where you can store your files and the files needed to directly run a case.
+Next, using ``subset_data`` is the best way to setup cases quickly where you can use a simple tool to create your own datasets (see :ref:`generic_single_point_runs`). With this method you don't have to change DATM or add files to the XML database. ``subset_data`` will create a usermod directory where you can store your files and the files needed to directly run a case.
 
 For unsupported tower sites:
-If you have meteorology data that you want to force your CLM simulations with, you'll need to setup cases as described in :ref:`creating-your-own-singlepoint-dataset`. You'll need to create CLM datasets either according to ``CLM_USRDAT_NAME``. You may also need to modify DATM to use your forcing data. And you'll need to change your forcing data to be in a format that DATM can use.
+If you have meteorology data that you want to force your CLM simulations with, you'll need to setup cases as described in :ref:`pre-defined-single-pt-regional-resolutions`. You'll need to create CLM datasets either according to ``CLM_USRDAT_NAME``. You may also need to modify DATM to use your forcing data. And you'll need to change your forcing data to be in a format that DATM can use.
 
 ================
 Spinning up CTSM
