@@ -2,12 +2,12 @@
 name: Build and publish ctsm-docs Docker image
 
 on:
-  # Run this whenever something gets pushed to master
+  # Run this whenever a change to certain files gets pushed to master
   push:
     branches: ['master']
     paths:
-      - 'doc/ctsm-docs_container/Dockerfile'
-      - 'doc/ctsm-docs_container/requirements.txt'
+      - 'doc/ctsm-docs_container/**'
+      - '!doc/ctsm-docs_container/README.md'
 
   # Run this whenever it's manually called
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
     env:
       REGISTRY: ${{ needs.build-image-and-test-docs.outputs.REGISTRY }}
       IMAGE_NAME: ${{ needs.build-image-and-test-docs.outputs.IMAGE_NAME }}
-      IMAGE_TAG: ${{ needs.build-image-and-test-docs.outputs.image_tag }}
+      VERSION_TAG: ${{ needs.build-image-and-test-docs.outputs.version_tag }}
 
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
@@ -61,6 +61,7 @@ jobs:
       # This step uses the `docker/build-push-action` action to build the image, based on the ctsm-docs `Dockerfile`.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see [Usage](https://github.com/docker/build-push-action#usage) in the README of the `docker/build-push-action` repository.
       # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
+      # Note that we should avoid relying on the "latest" tag for anything, but it's good practice to have one.
       # v6.15.0
       - name: Push Docker image
         id: push
@@ -70,7 +71,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           load: false
-          tags: ${{ env.IMAGE_TAG }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.VERSION_TAG }}
           labels: ""
 
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
