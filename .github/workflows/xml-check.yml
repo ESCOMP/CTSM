@@ -1,6 +1,6 @@
 name: Check that XML files are well-formed
 # Only check files in our repo that AREN'T in submodules
-# Use a Python command to check each file
+# Use a Python command to check each file because xmllint isn't available on GH runners
 
 on: [push, pull_request] # Trigger on push or pull request
 

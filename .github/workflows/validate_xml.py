@@ -57,6 +57,10 @@ def main():
             continue
         if not validate_xml(xml_file):
             all_valid = False
+
+    if not all_valid:
+        print("\nUse xmllint to show problems in malformed files")
+
     return all_valid
 
 
