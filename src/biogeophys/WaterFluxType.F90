@@ -601,7 +601,7 @@ contains
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('Condensed water flux from AC dehumidification'), &
-         ptr_col=this%qflx_condensate_from_ac_col, set_nourb=spval, c2l_scale_type='urbanf', default='inactive')
+         ptr_col=this%qflx_condensate_from_ac_col, set_nourb=0.0_r8, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_snomelt_col(begc:endc) = spval
     call hist_addfld1d ( &

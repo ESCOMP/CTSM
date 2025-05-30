@@ -695,6 +695,8 @@ contains
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
+              ! Cathy [dev.17] help debug the water imbalance
+              write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
 
               write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_col(indexc)*dtime
 
@@ -824,6 +826,8 @@ contains
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
+             ! Cathy [dev.17] help debug the water imbalance
+             write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
 
              write(iulog,*)'CTSM is stopping'
              call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
