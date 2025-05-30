@@ -36,7 +36,7 @@ fxDONOTUSEurl = https://github.com/NGEET/fates
 [submodule "cism"]
 path = components/cism
 url = https://github.com/ESCOMP/CISM-wrapper
-fxtag = cismwrap_2_2_005
+fxtag = cismwrap_2_2_006
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CISM-wrapper
@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm1.0.23
+fxtag = ccs_config_cesm1.0.43
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -76,7 +76,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 path = cime
 url = https://github.com/ESMCI/cime
-fxtag = cime6.1.72
+fxtag = cime6.1.102
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -84,7 +84,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.0.39
+fxtag = cmeps1.0.47
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.70
+fxtag = cdeps1.0.73
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
@@ -108,7 +108,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
 [submodule "parallelio"]
 path = libraries/parallelio
 url = https://github.com/NCAR/ParallelIO
-fxtag = pio2_6_3
+fxtag = pio2_6_4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
@@ -116,7 +116,7 @@ fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
 [submodule "mpi-serial"]
 path = libraries/mpi-serial
 url = https://github.com/ESMCI/mpi-serial
-fxtag = MPIserial_2.5.1
+fxtag = MPIserial_2.5.4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
@@ -128,3 +128,13 @@ fxtag = v2.2.6
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
+
+# FTorch is an optional library useful for AI and Machine Learning
+# In order to use it -- it must be checked out with git-fleximod
+[submodule "FTorch"]
+path = libraries/FTorch
+url = https://github.com/ESCOMP/FTorch_interface
+fxtag = v0.0.5
+fxrequired = ToplevelOptional
+# Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
+fxDONOTUSEurl = https://github.com/ESCOMP/FTorch_interface
