@@ -265,7 +265,6 @@ module histFileMod
   ! practice are all disabled.  Fields for those tapes have to be specified
   ! explicitly and manually via hist_fincl2 et al.
   type, extends(entry_base) :: allhistfldlist_entry
-     ! 10) TODO DONE Add 2nd dim to actflag, which should make fld unique by file
      logical :: actflag(max_tapes,maxsplitfiles)  ! which history tapes to write to
      character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
@@ -340,14 +339,12 @@ module histFileMod
   ! Other variables
   !
   character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  ! 11a) TODO DONE History restart files seem to mirror history files => need the second dimension I think
   character(len=max_length_filename) :: locfnhr(max_tapes, maxsplitfiles)  ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
   !
   type(file_desc_t), target :: nfid(max_tapes, maxsplitfiles)  ! file ids
-  ! 11b) TODO DONE History restart files seem to mirror history files => need the second dimension I think
   type(file_desc_t), target :: ncid_hist(max_tapes, maxsplitfiles)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
   integer :: nbnd_dimid                      ! time bounds dimension id
@@ -755,7 +752,6 @@ contains
     character(len=*), intent(in), optional :: avgflag  ! time averaging flag
     !
     ! !LOCAL VARIABLES:
-    ! 7a) TODO DONE Replace old f with fld; search "do f" "(f" 'f)" ...
     integer :: fld          ! field index
     logical :: found        ! flag indicates field found in allhistfldlist
     character(len=*),parameter :: subname = 'allhistfldlist_make_active'
@@ -931,7 +927,6 @@ contains
        ! Add the field to the tape if specified via namelist (FINCL[1-max_tapes]),
        ! or if it is on by default and was not excluded via namelist (FEXCL[1-max_tapes]).
 
-       ! 8) TODO DONE do f = 1, maxsplitfiles where needed; search "do t"
        file_loop1: do f = 1, maxsplitfiles
           fld_loop: do fld = 1, nallhistflds
              allhistfldname = allhistfldlist(fld)%field%name
@@ -1001,7 +996,6 @@ contains
        if (ntapes > 0) exit
     end do
 
-    ! 9) TODO DONE Change nflds to nflds(f) throughout
     do t = 1, ntapes
        do f = 1, maxsplitfiles
           if (tape(t)%nflds(f) > 0) then
@@ -2396,7 +2390,6 @@ contains
     logical, intent(in), optional :: histrest  ! if creating the history restart file
     !
     ! !LOCAL VARIABLES:
-    ! 5) TODO DONE Rm old f in this subr. as unused and introduce f as file index
     integer :: p,c,l,n             ! indices
     integer :: ier                 ! error code
     integer :: num2d               ! size of second dimension (e.g. number of vertical levels)
@@ -2707,7 +2700,6 @@ contains
   end subroutine htape_add_cft_metadata
 
   !-----------------------------------------------------------------------
-  ! 7b) TODO DONE Add argument f in the call
   subroutine htape_timeconst3D(t, f, &
        bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
        cellsand_col, cellclay_col, mode)
@@ -2830,9 +2822,8 @@ contains
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
-                ! 6) TODO DONE Changed nfid(t) to (t,f) throughout
                 ! TODO LATER Use ncid => nfid(t,f) here and elsewhere if possible, as done in
-                !      subroutine hfields_1dinfo
+                !      subroutine hfields_1dinfo; repeat in mosart
                 call ncd_defvar(ncid=nfid(t,f), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levgrnd', &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
@@ -3080,7 +3071,6 @@ contains
   end subroutine htape_timeconst3D
 
   !-----------------------------------------------------------------------
-  ! 7c) TODO DONE Add argument f in the call
   subroutine htape_timeconst(t, f, mode)
     !
     ! !DESCRIPTION:
@@ -3627,7 +3617,6 @@ contains
   end subroutine htape_timeconst
 
   !-----------------------------------------------------------------------
-  ! 7d) TODO DONE Add argument f in the call
   subroutine hfields_write(t, f, mode)
     !
     ! !DESCRIPTION:
@@ -3824,7 +3813,6 @@ contains
     character(len=*), intent(in) :: mode    ! 'define' or 'write'
     !
     ! !LOCAL VARIABLES:
-    ! 7e) TODO DONE Rm old f in this subr. as unused and introduce f as file index
     integer :: k                         ! 1d index
     integer :: g,c,l,p                   ! indices
     integer :: ier                       ! errir status
@@ -4226,7 +4214,6 @@ contains
              cycle
           end if
 
-          ! 14) TODO NEXT is_endhist may need file dimension
           ! Determine if end of history interval
           tape(t)%is_endhist = .false.
           if (tape(t)%nhtfrq==0) then   !monthly average
@@ -4254,7 +4241,6 @@ contains
 
              if (tape(t)%ntimes(f) == 1) then
                 call t_startf('hist_htapes_wrapup_define')
-                ! 2) TODO DONE Changed locfnh(t) to locfnh(t,f) throughout
                 locfnh(t,f) = set_hist_filename (hist_freq=tape(t)%nhtfrq, &
                               hist_mfilt=tape(t)%mfilt, hist_file=t, f_index=f)
                 if (masterproc) then
@@ -4418,7 +4404,6 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    ! 11c) TODO DONE History restart files seem to mirror history files => need the second dimension I think
     character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
     character(len=max_chars)  :: locrest_onfile(maxsplitfiles, max_tapes)  ! local history restart file names, dims flipped
     character(len=max_chars)  :: locfnh_onfile(maxsplitfiles, max_tapes)  ! local history file names, dims flipped
@@ -4726,7 +4711,6 @@ contains
        ! Add history filenames to master restart file
        counter = 0
        tape_loop2: do t = 1, ntapes
-          ! 3) TODO DONE Changed history_tape_in_use(t) to (t,f) throughout
           file_loop2: do f = 1, maxsplitfiles
              counter = counter + 1
              if (history_tape_in_use(t,f) == 0) then
@@ -4741,7 +4725,6 @@ contains
           end do file_loop2
        end do tape_loop2
 
-       ! 12a) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
        fincl(:,1)  = hist_fincl1(:)
        fincl(:,2)  = hist_fincl2(:)
        fincl(:,3)  = hist_fincl3(:)
@@ -4779,7 +4762,6 @@ contains
                 cycle
              end if
 
-             ! 12c) TODO DONE (NOT DONE) fincl & fexcl may need the file dimension
              call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='write')
 
              call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='write')
@@ -4855,7 +4837,6 @@ contains
           end if
 
           ntapes_gt_0: if (ntapes > 0) then
-             ! 4) TODO DONE Changed history_tape_in_use_onfile(t) to (t,f) throughout
              allocate(history_tape_in_use_onfile(maxsplitfiles, ntapes))
              call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
                   readvar=readvar)
@@ -4928,7 +4909,6 @@ contains
                 call ncd_inqvid(ncid_hist(t,f), 'c2l_scale_type', varid, c2l_scale_type_desc)
                 call ncd_inqvid(ncid_hist(t,f), 'l2g_scale_type', varid, l2g_scale_type_desc)
 
-                ! 12d) TODO DONE (NOT DONE) fincl & fexcl may need the file dimension
                 call ncd_io(varname='fincl', data=fincl(:,t), ncid=ncid_hist(t,f), flag='read')
 
                 call ncd_io(varname='fexcl', data=fexcl(:,t), ncid=ncid_hist(t,f), flag='read')
@@ -5075,7 +5055,6 @@ contains
              end do file_loop6
           end do tape_loop6
 
-          ! 12b) TODO DONE (NOT DONE) LHS fincl & fexcl may need the file dimension
           hist_fincl1(:)  = fincl(:,1)
           hist_fincl2(:)  = fincl(:,2)
           hist_fincl3(:)  = fincl(:,3)
@@ -5385,10 +5364,6 @@ contains
    else if (f_index == accumulated_file_index) then
       file_index = 'a'  ! accumulated file_index
    end if
-   ! 1) TODO DONE After hist_index added file_index = "i" or "a"
-   !    See maxsplitfiles in https://github.com/ESCOMP/CAM/pull/903/files
-   !    See CAM#1003 for a bug-fix in monthly avged output
-   ! TODO FINAL search all the vars that I modified to make sure I did not miss any of them
    set_hist_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
                        ".h"//hist_index//file_index//"."//trim(cdate)//".nc"
 
