@@ -138,7 +138,7 @@
     </phase>
   </test>
   
-  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel"
+  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
     <phase name="MODEL_BUILD">
       <status>FAIL</status>
       <issue>#3182</issue>
