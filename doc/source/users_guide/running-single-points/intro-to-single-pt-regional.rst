@@ -21,7 +21,7 @@ Regional configurations support simulations over broader geographic areas define
 There are several different ways to set up single-point and regional cases.
 
 For supported tower sites: 
-You can run at a supported tower site if one of the supported single-point/regional datasets is your site of interest (see :ref:`intro-to-single-pt-regional`). All the datasets are created for you, and you can easily select one and run it out of the box using a supported resolution from the top level of the CESM scripts. You can also use this method for your own datasets, but you have to create the datasets, and add them to the XML database in scripts, CLM and to the DATM. This is worthwhile if you want to repeat many multiple cases for a given point or region.
+You can run at a supported tower site if one of the supported single-point/regional datasets is your site of interest (see :ref:`supported-tower-sites`). All the datasets are created for you, and you can easily select one and run it out of the box using a supported resolution from the top level of the CESM scripts. You can also use this method for your own datasets, but you have to create the datasets, and add them to the XML database in scripts, CLM and to the DATM. This is worthwhile if you want to repeat many multiple cases for a given point or region.
 
 Next, using ``subset_data`` is the best way to setup cases quickly where you can use a simple tool to create your own datasets (see :ref:`generic_single_point_runs`). With this method you don't have to change DATM or add files to the XML database. ``subset_data`` will create a usermod directory where you can store your files and the files needed to directly run a case.
 

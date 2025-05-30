@@ -12,10 +12,10 @@ CTSM has functionality for running single-point cases at particular supported to
 General Information on Running Supported Tower Sites
 ====================================================
 
-The `run_tower` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
+The `run_tower` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following
     1) Create a generic base case for cloning.
     2) Make the case for the specific neon or plumber site(s).
-    3) Make changes to the case, for:
+    3) Make changes to the case, for
         a. AD spinup
         b. post-AD spinup
         c. transient
@@ -50,8 +50,7 @@ These options include the following:
                         Continental US)
   --experiment EXPERIMENT
                         Appends the case name with string for model experiment
-  --run-from-postad     For transient runs only - should we start from the
-                        postad spinup or finidat? By default start from
+  --run-from-postad     For transient runs only. By default start from
                         finidat, if this flag is used the postad run must be
                         available.
   --neon-version        v1,v2,v3
