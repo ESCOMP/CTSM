@@ -32,4 +32,4 @@ jobs:
           echo
           echo "Checking if git fleximod matches expected externals"
           echo
-          git add . && git diff --quiet && git diff --cached --quiet
+          git add . && git diff --exit-code && git diff --cached --exit-code
