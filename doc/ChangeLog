@@ -1,4 +1,85 @@
 ===============================================================
+Tag name: ctsm5.3.053
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri May 30 14:56:48 MDT 2025
+One-line Summary: Fix and improve anomaly forcings for ISSP cases
+
+Purpose and description of changes
+----------------------------------
+
+Fixes a bug where all SSP cases would get RCP45 anomalies. Also makes it much simpler to run land-only SSP cases.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Fixes [Issue #2301: SSP cases get rcp45 anomalies](https://github.com/ESCOMP/CTSM/issues/2301)
+- Resolves [Issue #922: Turn on anomaly forcing for ISSP compsets](https://github.com/ESCOMP/CTSM/issues/922)
+- Resolves [Issue #1730: Example, user_nl_datm_streams file for anomaly forcing for NUOPC coupler](https://github.com/ESCOMP/CTSM/issues/1730)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Greatly simplifies the setup of ISSP cases where you want to use the CESM2 anomaly forcings. See updated documentation in User's Guide
+
+Changes to documentation:
+- User's Guide section on running with anomaly forcings
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+     ssp test suite ---- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ISSP cases other than ssp245 with anomaly forcings, if the user didn't manually specify all the anomaly forcing files
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff/same climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - n/a: This only affects ISSP cases
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #2686: ctsm5.3.053: Fix and improve anomaly forcings for ISSP cases by samsrabin](https://github.com/ESCOMP/CTSM/pull/2686)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.052
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri 30 May 2025 12:44:17 AM MDT
