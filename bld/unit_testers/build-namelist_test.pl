@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3375;
+my $ntests = 3285;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1980;
+   $ntests += 2161;
 }
 plan( tests=>$ntests );
 

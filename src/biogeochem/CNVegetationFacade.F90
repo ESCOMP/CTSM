@@ -284,7 +284,7 @@ contains
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            alloc_full_veg=alloc_full_veg)
+            alloc_full_veg=alloc_full_veg, params_ncid=params_ncid)
        call this%cnveg_nitrogenflux_inst%Init(bounds,alloc_full_veg=alloc_full_veg) 
        
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))

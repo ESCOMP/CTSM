@@ -426,7 +426,7 @@ contains
        end if
        
        call calc_allometry(num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_state_inst)
+            cnveg_carbonflux_inst, cnveg_state_inst, cnveg_nitrogenstate_inst)
        call t_stopf('cnalloc')
     end if
     
