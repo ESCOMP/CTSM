@@ -3175,9 +3175,9 @@ sub setup_logic_do_grossunrep {
 
    my $var = 'do_grossunrep';
 
-   # Start by assuming a default value of '.true.'. Then check a number of
+   # Start by assuming a default value of '.false.'. Then check a number of
    # conditions under which do_grossunrep cannot be true. Under these
-   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # conditions: (1) set default value to '.false.' again; (2) make sure that the
    # value is indeed false (e.g., that the user didn't try to set it to true).
 
    my $default_val = ".false.";
