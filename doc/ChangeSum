@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
        ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
        ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases
        ctsm5.3.051     erik 05/28/2025 Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
