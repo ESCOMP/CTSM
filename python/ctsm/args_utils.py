@@ -7,8 +7,6 @@ Types for command-lines error handling.
 import logging
 import argparse
 
-from ctsm.config_utils import lon_range_0_to_360
-
 logger = logging.getLogger(__name__)
 
 
@@ -34,9 +32,7 @@ def plat_type(plat):
 def plon_type(plon):
     """
     Function to define lon type for the parser and
-    convert negative longitudes to 0-360 and
     raise error if lon is not between -180 and 360.
-
     Args:
         plon (str): longitude
     Raises:
@@ -49,5 +45,4 @@ def plon_type(plon):
         raise argparse.ArgumentTypeError(
             "ERROR: Longitude should be between 0 and 360 or -180 and 180."
         )
-    plon_out = lon_range_0_to_360(plon_float)
-    return plon_out
+    return plon_float

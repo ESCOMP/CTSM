@@ -17,19 +17,27 @@ module CNVegNitrogenStateType
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use dynPatchStateUpdaterMod, only : patch_state_updater_type
+  use atm2lndType    , only : atm2lnd_type
   use CNSpeciesMod   , only : CN_SPECIES_N
   use CNVegComputeSeedMod, only : ComputeSeedAmounts
   use CropReprPoolsMod                       , only : nrepr, get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
+  use ncdio_pio
   !
   ! !PUBLIC TYPES:
   implicit none
 
   private
 
-
+  type :: cnveg_nstate_params_type
+     real(r8) :: leafcn_co2_base  ! ppm CO2 for target leaf CN scaling
+     real(r8) :: leafcn_co2_slope  ! CO2 effects on target leaf CN scaling (unitless)
+  end type cnveg_nstate_params_type
   !
+  type(cnveg_nstate_params_type), public, protected :: params_inst  ! params_inst is populated in readParams
+
   type, public :: cnveg_nitrogenstate_type
 
+     real(r8), pointer :: leafcn_t_evolving_patch             (:) ! (gC/gN) time evolving leafcn
      real(r8), pointer :: reproductiven_patch               (:,:) ! (gN/m2) reproductive (e.g., grain) N (crop)
      real(r8), pointer :: reproductiven_storage_patch       (:,:) ! (gN/m2) reproductive (e.g., grain) N storage (crop)
      real(r8), pointer :: reproductiven_xfer_patch          (:,:) ! (gN/m2) reproductive (e.g., grain) N transfer (crop)
@@ -218,6 +226,8 @@ module CNVegNitrogenStateType
      procedure , private :: InitAllocate 
      procedure , private :: InitHistory  
      procedure , private :: InitCold     
+     procedure , private :: ReadParams
+     procedure , public  :: time_evolv_leafcn  ! updates time-evolving leafcn
 
   end type cnveg_nitrogenstate_type
   !------------------------------------------------------------------------
@@ -231,10 +241,11 @@ contains
   !------------------------------------------------------------------------
   subroutine Init(this, bounds,  &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-       deadstemc_patch, alloc_full_veg)
+       deadstemc_patch, alloc_full_veg, params_ncid)
 
     class(cnveg_nitrogenstate_type)   :: this
     type(bounds_type) , intent(in)    :: bounds  
+    type(file_desc_t) , intent(inout) :: params_ncid  ! pio netCDF file id
     real(r8)          , intent(in)    :: leafc_patch         (:) !(begp:)
     real(r8)          , intent(in)    :: leafc_storage_patch (:) !(begp:)
     real(r8)          , intent(in)    :: frootc_patch        (:) !(begp:)     
@@ -248,6 +259,7 @@ contains
        call this%InitCold ( bounds, &
             leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
     end if
+    call this%ReadParams( params_ncid )
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -337,8 +349,8 @@ contains
     allocate(this%seedn_grc                              (begg:endg)) ; this%seedn_grc                           (:) = nan
     allocate(this%totvegn_col                            (begc:endc)) ; this%totvegn_col                         (:) = nan
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
-    
 
+    allocate(this%leafcn_t_evolving_patch                (begp:endp)) ; this%leafcn_t_evolving_patch             (:) = nan
     if(use_matrixcn)then
        allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
        allocate(this%leafn0_storage_patch                (begp:endp)) ; this%leafn0_storage_patch                (:) = nan     
@@ -492,6 +504,11 @@ contains
     !-------------------------------
     ! patch state variables 
     !-------------------------------
+
+    this%leafcn_t_evolving_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LEAFCN_TARGET', units='gC/gN', &
+        avgflag='A', long_name='Target leaf C:N; compare against leafC/leafN', &
+        ptr_patch=this%leafcn_t_evolving_patch)
     
     if (use_crop) then
        this%reproductiven_patch(begp:endp,:) = spval
@@ -828,6 +845,8 @@ contains
 
     do p = bounds%begp,bounds%endp
 
+       this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p))
+
        l = patch%landunit(p)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
@@ -847,11 +866,11 @@ contains
                 end if
              end if 
           else
-             this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+             this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+             this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
              if(use_matrixcn)then
-                this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
              end if
              if (MM_Nuptake_opt .eqv. .true.) then  
                 this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
@@ -1108,7 +1127,6 @@ contains
     !
     ! !USES:
     use restUtilMod
-    use ncdio_pio
     use clm_varctl             , only : spinup_state, use_cndv
     use clm_time_manager       , only : get_nstep, is_restart
     use clm_varctl             , only : MM_Nuptake_opt   
@@ -1815,11 +1833,11 @@ contains
                    end if
                 end if 
              else
-                this%leafn_patch(p)                           = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                this%leafn_patch(p)                           = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                this%leafn_storage_patch(p)                   = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
                 if(use_matrixcn)then
-                   this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / pftcon%leafcn(patch%itype(p))
-                   this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / pftcon%leafcn(patch%itype(p))
+                   this%matrix_cap_leafn_patch(p)             = leafc_patch(p)         / this%leafcn_t_evolving_patch(p)
+                   this%matrix_cap_leafn_storage_patch(p)     = leafc_storage_patch(p) / this%leafcn_t_evolving_patch(p)
                 end if
                 if (MM_Nuptake_opt .eqv. .true.) then  
                    this%frootn_patch(p)                       = frootc_patch(p) / pftcon%frootcn(patch%itype(p))           
@@ -1976,6 +1994,7 @@ contains
     do fi = 1,num_patch
        i = filter_patch(fi)
 
+       this%leafcn_t_evolving_patch(i)                = value_patch
        this%leafn_patch(i)                            = value_patch
        this%leafn_storage_patch(i)                    = value_patch
        this%leafn_xfer_patch(i)                       = value_patch
@@ -2277,6 +2296,73 @@ contains
   end subroutine Summary_nitrogenstate
 
   !-----------------------------------------------------------------------
+  subroutine ReadParams ( this, ncid )
+    !
+    ! !USES:
+    use paramUtilMod, only: readNcdioScalar
+
+    implicit none
+
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) :: this
+    type(file_desc_t), intent(inout) :: ncid  ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    ! read in parameters
+
+    ! read in the scalar parameters
+
+    ! ppm CO2 for target leaf CN scaling (ppmv)
+    call readNcdioScalar(ncid, 'leafcn_co2_base', sourcefile, params_inst%leafcn_co2_base)
+    ! CO2 effects on target leaf CN scaling (unitless)
+    call readNcdioScalar(ncid, 'leafcn_co2_slope', sourcefile, params_inst%leafcn_co2_slope)
+
+  end subroutine ReadParams
+
+  !-----------------------------------------------------------------------
+  subroutine time_evolv_leafcn(this, bounds, num_bgc_vegp, filter_bgc_vegp, atm2lnd_inst)
+    !
+    ! AUTHOR: slevis
+    !
+    ! !DESCRIPTION:
+    ! Update time-evolving parameters
+    !
+    ! Calculate time evolving leafcn from co2_ppmv and three paramfile
+    ! parameters. Of the three parameters, leafcn_co2_slope is set to 0
+    ! (as of ctsm5.4) so leafcn_t_evolving_patch defaults to the values of
+    ! paramfile parameter leafcn
+    ! !USES:
+    use pftconMod, only : pftcon
+    use clm_time_manager, only : is_first_step
+    !
+    ! !ARGUMENTS:
+    class(cnveg_nitrogenstate_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in) :: num_bgc_vegp  ! number of veg patches in filter
+    integer, intent(in) :: filter_bgc_vegp(:)  ! filter for veg patches
+    type(atm2lnd_type), intent(in) :: atm2lnd_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g, c, p, fp  ! indices
+    real(r8) :: co2_ppmv  ! atm co2 concentration
+    !-----------------------------------------------------------------------
+
+    ! Loop to get leafcn_col
+    do fp = 1, num_bgc_vegp
+       p = filter_bgc_vegp(fp)
+       c = patch%column(p)
+       g = patch%gridcell(p)
+       co2_ppmv = 1.e6_r8 * atm2lnd_inst%forc_pco2_grc(g) / &
+                            atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
+       this%leafcn_t_evolving_patch(p) = pftcon%leafcn(patch%itype(p)) + &
+          max(params_inst%leafcn_co2_slope * log(co2_ppmv / params_inst%leafcn_co2_base), 0._r8)
+    end do
+
+  end subroutine time_evolv_leafcn
+
+  !-----------------------------------------------------------------------
   subroutine DynamicPatchAdjustments(this, bounds, &
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        patch_state_updater, &
@@ -2323,8 +2409,6 @@ contains
     real(r8) :: seed_leafn_storage_patch(bounds%begp:bounds%endp)
     real(r8) :: seed_leafn_xfer_patch(bounds%begp:bounds%endp)
     real(r8) :: seed_deadstemn_patch(bounds%begp:bounds%endp)
-
-    character(len=*), parameter :: subname = 'DynamicPatchAdjustments'
     !-----------------------------------------------------------------------
 
     begp = bounds%begp
@@ -2344,6 +2428,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         leafcn_t_evolving = this%leafcn_t_evolving_patch(begp:endp), &
          species = CN_SPECIES_N, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &

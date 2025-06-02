@@ -9,14 +9,12 @@ import os
 
 from ctsm import unit_testing
 from ctsm.utils import fill_template_file, ensure_iterable
-from ctsm.config_utils import lon_range_0_to_360, _handle_config_value
+from ctsm.utils import find_one_file_matching_pattern
+from ctsm.config_utils import _handle_config_value
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
 # pylint: disable=invalid-name
-
-# When CTSM Issue #3001 is resolved, this should be deleted
-wrong_lon_type_error_regex = r"\[-180, 0\).*\[0, 360\)"
 
 
 class TestUtilsFillTemplateFile(unittest.TestCase):
@@ -56,61 +54,6 @@ zyzzyva
             final_contents = f.read()
 
         self.assertEqual(final_contents, expected_final_text)
-
-
-class TestUtilsLonRange0to360(unittest.TestCase):
-    """Test of utils: lon_range_0_to_360"""
-
-    def test_lonRange0To360_lonIsNeg180(self):
-        """
-        Tests that negative inputs to lon_range_0_to_360 get 360 added to them
-        """
-        inval = -180
-
-        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
-        # rest of this test uncommented
-        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
-            lon_range_0_to_360(inval)
-
-        # result = lon_range_0_to_360(inval)
-        # self.assertEqual(result, inval + 360)
-
-    def test_lonRange0To360_lonIsNegGreaterThan1(self):
-        """
-        Tests that negative inputs to lon_range_0_to_360 get 360 added to them
-        """
-        inval = -0.001
-
-        # When CTSM Issue #3001 is resolved, this assertRaisesRegex block should be deleted and the
-        # rest of this test uncommented
-        with self.assertRaisesRegex(NotImplementedError, wrong_lon_type_error_regex):
-            lon_range_0_to_360(inval)
-
-        # result = lon_range_0_to_360(inval)
-        # self.assertEqual(result, inval + 360)
-
-    def test_lonRange0To360_lonIs0(self):
-        """
-        Tests that input to lon_range_0_to_360 of 0 remains unchanged
-        """
-        inval = 0
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval)
-
-    def test_lonRange0To360_lonIs360(self):
-        """
-        Tests that input to lon_range_0_to_360 of 360 remains unchanged
-        """
-        inval = 360
-        result = lon_range_0_to_360(inval)
-        self.assertEqual(result, inval)
-
-    def test_lonRange0To360_outOfBounds(self):
-        """
-        Tests that lon_range_0_to_360 aborts gracefully when lon = 361
-        """
-        with self.assertRaisesRegex(SystemExit, "lon_in needs to be in the range 0 to 360"):
-            _ = lon_range_0_to_360(361)
 
 
 class TestUtilsHandleConfigValue(unittest.TestCase):
@@ -372,6 +315,54 @@ class TestUtilsEnsureIterable(unittest.TestCase):
         """
         with self.assertRaisesRegex(ValueError, "Input is iterable but wrong length"):
             ensure_iterable([11, 12], 3)
+
+
+class TestUtilsFindOneFileMatchingPattern(unittest.TestCase):
+    """Tests of utils: find_one_file_matching_pattern"""
+
+    def setUp(self):
+        self._testdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self._testdir)
+
+    def test_find_one_file_matching_pattern(self):
+        """
+        Tests that find_one_file_matching_pattern passes if one file matches
+        """
+        # Create empty file
+        # pylint: disable=consider-using-with,unspecified-encoding
+        test_file_path = os.path.join(self._testdir, "abc123.txt")
+        open(test_file_path, "x").close()
+
+        # Look for empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        result = find_one_file_matching_pattern(pattern)
+        self.assertEqual(result, test_file_path)
+
+    def test_find_one_file_matching_pattern_0found(self):
+        """
+        Tests that find_one_file_matching_pattern errors if no files match
+        """
+        # Look for non-existent empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        with self.assertRaisesRegex(FileNotFoundError, "No file found matching pattern"):
+            find_one_file_matching_pattern(pattern)
+
+    def test_find_one_file_matching_pattern_2found(self):
+        """
+        Tests that find_one_file_matching_pattern errors if multiple files match
+        """
+        # Create empty files
+        # pylint: disable=consider-using-with,unspecified-encoding
+        open(os.path.join(self._testdir, "abc123.txt"), "x").close()
+        open(os.path.join(self._testdir, "abc456.txt"), "x").close()
+
+        # Look for empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        err_msg = "Expected 1 but found 2 files found matching pattern"
+        with self.assertRaisesRegex(RuntimeError, err_msg):
+            find_one_file_matching_pattern(pattern)
 
 
 if __name__ == "__main__":

@@ -102,11 +102,11 @@ The default behaviors for the world's glacier and ice sheet regions are describe
 
 .. note::
 
-It is possible to have non-virtual, non-SMB-computing areas within the CISM domain (as is the case for the portion of CISM's Greenland domain outside of Greenland itself). However, these areas will send 0 SMB and will not be able to adjust to CISM-dictated changes in glacier area. Therefore, it is best to set up the glacier regions and their behaviors so that as much of the CISM domain as possible is covered by virtual, SMB-computing areas.
+   It is possible to have non-virtual, non-SMB-computing areas within the CISM domain (as is the case for the portion of CISM's Greenland domain outside of Greenland itself). However, these areas will send 0 SMB and will not be able to adjust to CISM-dictated changes in glacier area. Therefore, it is best to set up the glacier regions and their behaviors so that as much of the CISM domain as possible is covered by virtual, SMB-computing areas.
 
 .. note::
 
- The combination of the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors results in particularly non-physical behavior: During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). The net result is zero runoff but a positive sensible heat flux generated from glacial melt. Because of how physically unrealistic this is, CLM does not allow this combination of behaviors.
+   The combination of the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors results in particularly non-physical behavior: During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). The net result is zero runoff but a positive sensible heat flux generated from glacial melt. Because of how physically unrealistic this is, CLM does not allow this combination of behaviors.
 
 .. _Multiple elevation class scheme:
 

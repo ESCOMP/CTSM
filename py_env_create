@@ -18,8 +18,8 @@ cd "${SCRIPT_DIR}"
 condadir="${SCRIPT_DIR}/python"
 default_new_env_name=ctsm_pylib
 default_old_env_name=ctsm_pylib_3_7_9
-default_condafile="${condadir}/conda_env_ctsm_py.txt"
-default_condafile_old="${condadir}/conda_env_ctsm_py_old_3.7.9.txt"
+default_condafile="${condadir}/conda_env_ctsm_py.yml"
+default_condafile_old="${condadir}/conda_env_ctsm_py_old_3.7.9.yml"
 
 condafile="${default_condafile}"
 quiet=""
@@ -228,26 +228,15 @@ if [[ ${conda_env_does_exist} -gt 0 ]]; then
 fi
 
 #
-# Create the environment
-#
-echo "Create $new_env_name"
-if [[ "${quiet}" == "--quiet" ]]; then
-   (set -x; ${condamamba} create ${yes} --name $new_env_name ${quiet} 1>/dev/null)
-else
-   (set -x; ${condamamba} create ${yes} --name $new_env_name ${verbose})
-fi
-
-#
-# Install the environment
+# Create and install the environment
 #
 echo "Installing $new_env_name; this can take a few minutes."
-cmd=""
 if [[ "${quiet}" == "--quiet" ]]; then
-   # -q/--quiet option not available on Derecho
-   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${quiet} 1>/dev/null)
+   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name ${quiet} $option 1>/dev/null)
 else
-   (set -x; ${condamamba} install ${yes} --channel conda-forge --name $new_env_name --file $condafile $option ${verbose})
+   (set -x; ${condamamba} env create ${yes} --file "${condafile}" --name $new_env_name $option ${verbose})
 fi
+
 #
 # Report on success
 #

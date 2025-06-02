@@ -1,0 +1,20 @@
+name: Check that XML files are well-formed
+# Only check files in our repo that AREN'T in submodules
+# Use a Python command to check each file because xmllint isn't available on GH runners
+
+on: [push, pull_request] # Trigger on push or pull request
+
+jobs:
+  check-xml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Check XML files
+        run: python .github/workflows/validate_xml.py

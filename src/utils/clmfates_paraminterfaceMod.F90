@@ -2,7 +2,7 @@ module CLMFatesParamInterfaceMod
   ! NOTE(bja, 2017-01) this code can not go into the main clm-fates
   ! interface module because of circular dependancies with pftvarcon.
 
-  use shr_kind_mod,             only : r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod,             only : r8 => shr_kind_r8
   use FatesGlobals,             only : fates_log
   use FatesParametersInterface, only : fates_parameters_type
   use FatesParametersInterface, only : fates_param_reader_type

@@ -20,13 +20,14 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 .. code:: shell
 
    tools/site_and_regional/subset_data point \
-      --lat $my_lat --lon $my_lon --site $my_site_name \
+      --lat $my_lat --lon $my_lon --lon-type $my_lon_type --site $my_site_name \
       --create-surface --create-datm \
       --datm-syr $my_start_year --datm-eyr $my_end_year \
       --create-user-mods --outdir $my_output_dir
 
 -  ``$my_lat``: latitude of point, *must be between -90 and 90 degrees*. E.g., Boulder, CO, USA: 40.
--  ``$my_lon``: longitude of point, *must be between 0 and 360 degrees*. E.g., Boulder, CO, USA: 55.
+-  ``$my_lon``: longitude of point. *Must be between -180 and 360 degrees.* E.g., Boulder, CO, USA: 255 or -105.
+-  ``$my_lon_type``: 180 if your longitude is in the [-180, 180] format (i.e., centered at the Prime/0th Meridian); 360 if it's in the [0, 360] format (i.e., centered at the 180th Meridian). Note that ``--lon-type $my_lon_type`` is not necessary if your longitude is unambiguous---i.e., it's only needed if your longitude is in the range [0, 180].
 -  ``$my_site_name``: name of site, *used for file naming*
 -  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
 -  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2015; see note below about switching the default DATM data*
@@ -34,7 +35,8 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 
 You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
 
-**Note that this script defaults to subsetting specific surface, domain, and land-use files and the CRUJRA2024 DATM data, and can currently only be run as-is on Derecho. If you're not on Derecho, use the ``--inputdata-dir`` to specify where the top level of your CESM input data is. Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire datm_type = "datm_gswp3" (instead of the default "datm_crujra") in python/ctsm/subset_data.py.**
+.. note::
+   This script defaults to subsetting specific surface, domain, and land-use files and the CRUJRA2024 DATM data, and can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
 
 The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` settings. You can then use this user mods directory to set up your CTSM case, as described below.
 

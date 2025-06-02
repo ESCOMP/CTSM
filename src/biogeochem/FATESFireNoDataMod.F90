@@ -7,7 +7,7 @@ module FATESFireNoDataMod
   ! module for FATES when not obtaining fire inputs from data
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_log_mod, only: errmsg => shr_log_errMsg
   use abortutils, only: endrun
   use clm_varctl, only: iulog
@@ -27,6 +27,8 @@ module FATESFireNoDataMod
 
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: FATESNoFireInit! Initialization
+      procedure, public :: FireInit => FATESNoFireInit
       procedure, public :: need_lightning_and_popdens
       procedure, public :: GetLight24     ! Return the 24-hour averaged lightning data
       procedure, public :: GetGDP         ! Return the global gdp data
@@ -39,6 +41,28 @@ module FATESFireNoDataMod
   character(len=*), parameter, private :: sourcefile = __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine FATESNoFireInit( this, bounds )
+    !
+    ! !DESCRIPTION:
+    ! Initialize No Fire data module for FATES
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
+    use shr_log_mod      , only : errMsg => shr_log_errMsg
+    use clm_varctl       , only : fates_spitfire_mode
+    ! !ARGUMENTS:
+    class(fates_fire_no_data_type) :: this
+    type(bounds_type), intent(in) :: bounds
+
+    if ( (shr_fire_emis_mechcomps_n > 0) .and. (fates_spitfire_mode == 0) ) then
+      write(iulog,*) "Fire emissions can NOT be active for fates_spitfire_mode=0 (no_fire)",  &
+                  errMsg(sourcefile, __LINE__)
+      call endrun(msg="Having fire emissions on requires fates_spitfire_mode to be something besides no_fire (0)" )
+      return
+    end if
+    call this%CNFireInit( bounds )
+
+  end subroutine FATESNoFireInit
 
   !------------------------------------------------------------------------
   function need_lightning_and_popdens(this)

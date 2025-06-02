@@ -16,6 +16,7 @@ module NutrientCompetitionCLM45defaultMod
   use LandunitType        , only : lun
   use ColumnType          , only : col
   use PatchType           , only : patch
+  use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
@@ -89,7 +90,6 @@ contains
     use CanopyStateType        , only : canopystate_type
     use CNVegCarbonStateType  , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     !
@@ -113,7 +113,7 @@ contains
     call this%calc_plant_cn_alloc (bounds, num_soilp, filter_soilp,        &
          cnveg_state_inst, crop_inst, canopystate_inst, &
          cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-         c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+         c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
          fpg_col=fpg_col(bounds%begc:bounds%endc))
 
   end subroutine calc_plant_nutrient_competition
@@ -122,7 +122,7 @@ contains
   subroutine calc_plant_cn_alloc (this, bounds, num_soilp, filter_soilp,   &
        cnveg_state_inst, crop_inst, canopystate_inst, &
        cnveg_carbonstate_inst, cnveg_carbonflux_inst, c13_cnveg_carbonflux_inst, &
-       c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, fpg_col)
+       c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, fpg_col)
     !
     ! !USES:
     use pftconMod             , only : pftcon, npcropmin
@@ -150,6 +150,7 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
@@ -177,7 +178,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving            => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch          , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -274,7 +275,7 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(ivt(p))
+         cnl  = leafcn_t_evolving(p)
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
@@ -447,7 +448,6 @@ contains
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
     use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
@@ -512,7 +512,6 @@ contains
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
     use CNSharedParamsMod      , only : use_fun
@@ -552,7 +551,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch , & ! Input:  leaf C:N (gC/gN)
          frootcn               => pftcon%frootcn                                   ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn              => pftcon%livewdcn                                  , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          graincn               => pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)
@@ -645,7 +644,7 @@ contains
                      if (grain_flag(p) == 0._r8)then
                         if(.not.use_fun) then
                            t1 = 1 / dt
-                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(ivt(p))) - (leafc(p) / &
+                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn_t_evolving(p)) - (leafc(p) / &
                                 fleafcn(ivt(p))))
                            livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
                                 fstemcn(ivt(p))))
