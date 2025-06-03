@@ -882,9 +882,9 @@ of the components in the coupled modeling system, are presented in
    "Avogadro’s number", :math:`N_{A}`, 6.02214 :math:`\times 10^{26}`, molecule kmol\ :sup:`-1`
    "Universal gas constant", :math:`R_{gas}`, :math:`N_{A} \kappa`, J K :sup:`-1` kmol :sup:`-1`
    "Molecular weight of dry air", :math:`MW_{da}`, 28.966, kg kmol :sup:`-1`
-   "Dry air gas constant", :math:`R_{da}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{da} }} \right. \kern-\nulldelimiterspace} MW_{da} }`, J K :sup:`-1` kg :sup:`-1`
+   "Dry air gas constant", :math:`R_{da}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{da} }} \right.} MW_{da} }`, J K :sup:`-1` kg :sup:`-1`
    "Molecular weight of water vapor", :math:`MW_{wv}`, 18.016, kg kmol :sup:`-1`
-   "Water vapor gas constant", :math:`R_{wv}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{wv} }} \right. \kern-\nulldelimiterspace} MW_{wv} }`, J K :sup:`-1` kg :sup:`-1`
+   "Water vapor gas constant", :math:`R_{wv}`, :math:`{R_{gas} \mathord{\left/ {\vphantom {R_{gas}  MW_{wv} }} \right.} MW_{wv} }`, J K :sup:`-1` kg :sup:`-1`
    "Von Karman constant", :math:`k`, 0.4, "\-"
    "Freezing temperature of fresh water", :math:`T_{f}`, 273.15, K
    "Density of liquid water", :math:`\rho _{liq}`, 1000, kg m :sup:`-3`
