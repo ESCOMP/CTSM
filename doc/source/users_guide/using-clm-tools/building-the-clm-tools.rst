@@ -20,5 +20,5 @@ The only CLM FORTRAN tool is mksurfdata_esmf which has it's own build system tha
 
 ``cprnc`` and ``gen_domain`` both use the CIME configure/build system rather than the CLM specific version described above.
 
-See `CIME documentation on adding grids <http://esmci.github.io/cime/users_guide/grids.html?highlight=gen_domain#adding-grids>`_ for more information on adding grids, creating mapping files, and running ``gen_domain``. Also see the CIME file: ``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build ``gen_domain``.
+See `CIME documentation on adding grids <https://esmci.github.io/cime/versions/master/html/users_guide/grids.html>`_ for more information on adding grids, creating mapping files, and running ``gen_domain``. Also see the CIME file: ``$CTSMROOT/tools/mapping/gen_domain_files/INSTALL`` for how to build ``gen_domain``.
 
