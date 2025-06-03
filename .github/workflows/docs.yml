@@ -35,7 +35,7 @@ jobs:
 
   test-build-docs-container:
     if: ${{ always() }}
-    name: With container from registry
+    name: Using build_docs
     runs-on: ubuntu-latest
     steps:
 
@@ -46,7 +46,25 @@ jobs:
         run: |
           manage_externals/checkout_externals doc-builder
 
-      - name: Build docs using Docker (Podman has trouble on GitHub runners)
+      - name: Build docs
         id: build-docs
         run: |
           cd doc && ./build_docs -b ${PWD}/_build -c -d
+
+  test-build-to-publish-docs-container:
+    needs: test-build-docs-container
+    name: Using build_docs_to_publish
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout doc-builder external
+        run: |
+          manage_externals/checkout_externals doc-builder
+
+      - name: Build docs for publication
+        id: build-docs-to-publish
+        run: |
+          cd doc && ./build_docs_to_publish -d --site-root "$PWD/_publish"
