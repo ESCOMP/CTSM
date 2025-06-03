@@ -3,8 +3,8 @@ set -e
 
 if [ ! -f doc-builder/build_docs ]; then
     script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    pushd "${script_dir}/.." 1>/dev/null
-    manage_externals/checkout_externals doc-builder
+    pushd "${script_dir}"/.. 1>/dev/null
+    ${script_dir}/../manage_externals/checkout_externals doc-builder
     popd 1>/dev/null
 fi
 
