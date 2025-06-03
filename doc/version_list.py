@@ -17,12 +17,6 @@ LATEST_REF = get_git_head_or_branch()
 # List of version definitions
 VERSION_LIST = [
     DocsVersion(
-        short_name="latest",
-        display_name="Latest development code",
-        landing_version=True,
-        ref="master",
-    ),
-    DocsVersion(
         short_name="release-clm5.0",
         display_name="CLM5.0",
         ref=LATEST_REF,
