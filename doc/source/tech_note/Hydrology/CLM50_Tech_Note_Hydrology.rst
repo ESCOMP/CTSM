@@ -236,7 +236,7 @@ calculations, is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
 
    f_{wet} =
    \left\{\begin{array}{lr} 
-   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right. \kern-\nulldelimiterspace} 3} } \le 1 & \qquad L+S > 0 \\
+   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le 1 & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}
 
@@ -259,7 +259,7 @@ Similarly, the snow-covered fraction of the canopy is used for surface alebdo wh
 
    f_{can,\, sno} = 
    \left\{\begin{array}{lr} 
-   \left[\frac{W_{can,\, sno} }{p_{sno}\left(L+S\right)} \right]^{{3\mathord{\left/ {\vphantom {3 20}} \right. \kern-\nulldelimiterspace} 20} } \le 1 & \qquad L+S > 0 \\
+   \left[\frac{W_{can,\, sno} }{p_{sno}\left(L+S\right)} \right]^{{3\mathord{\left/ {\vphantom {3 20}} \right.} 20} } \le 1 & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}.
 

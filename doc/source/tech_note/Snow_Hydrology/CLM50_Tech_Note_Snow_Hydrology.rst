@@ -116,7 +116,7 @@ The conservation equation for mass of ice in snow layers is
 where :math:`q_{ice,\, i-1}`  is the rate of ice accumulation from
 precipitation or frost or the rate of ice loss from sublimation (kg
 m\ :sup:`-2` s\ :sup:`-1`) in the top layer and
-:math:`{\left(\Delta w_{ice,\, i} \right)_{p} \mathord{\left/ {\vphantom {\left(\Delta w_{ice,\, i} \right)_{p}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}` 
+:math:`{\left(\Delta w_{ice,\, i} \right)_{p} \mathord{\left/ {\vphantom {\left(\Delta w_{ice,\, i} \right)_{p}  \Delta t}} \right.} \Delta t}` 
 is the change in ice due to phase change (melting rate) (section :numref:`Phase Change`).
 The term :math:`q_{ice,\, i-1}`  is computed in two steps as
 
@@ -240,7 +240,7 @@ The conservation equation for mass of water in snow layers is
 where :math:`q_{liq,\, i-1}`  is the flow of liquid water into layer
 :math:`i` from the layer above, :math:`q_{liq,\, i}`  is the flow of
 water out of layer :math:`i` to the layer below,
-:math:`{\left(\Delta w_{liq,\, i} \right)_{p} \mathord{\left/ {\vphantom {\left(\Delta w_{liq,\, i} \right)_{p}  \Delta t}} \right. \kern-\nulldelimiterspace} \Delta t}` 
+:math:`{\left(\Delta w_{liq,\, i} \right)_{p} \mathord{\left/ {\vphantom {\left(\Delta w_{liq,\, i} \right)_{p}  \Delta t}} \right.} \Delta t}` 
 is the change in liquid water due to phase change (melting rate)
 (section :numref:`Phase Change`). For the top snow layer only,
 
@@ -515,9 +515,9 @@ where :math:`c_{3} =2.777\times 10^{-6}`  (s\ :sup:`-1`) is the fractional compa
 ..  upper limit (upplim_destruct_metamorph) used to be 100 but was changed to 175 for CLM5 (Van Kampenhout et al., 2017)
 
 where
-:math:`{w_{ice,\, i} \mathord{\left/ {\vphantom {w_{ice,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
+:math:`{w_{ice,\, i} \mathord{\left/ {\vphantom {w_{ice,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right.} \left(f_{sno} \Delta z_{i} \right)}` 
 and
-:math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right. \kern-\nulldelimiterspace} \left(f_{sno} \Delta z_{i} \right)}` 
+:math:`{w_{liq,\, i} \mathord{\left/ {\vphantom {w_{liq,\, i}  \left(f_{sno} \Delta z_{i} \right)}} \right.} \left(f_{sno} \Delta z_{i} \right)}` 
 are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
 
@@ -830,7 +830,7 @@ lower layer is first evaluated from
 .. math::
    :label: 8.62
 
-   T'_{3} =T_{2}^{n} -\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right) 2}} \right. \kern-\nulldelimiterspace} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right),
+   T'_{3} =T_{2}^{n} -\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1}^{n} +\Delta z_{2}^{n} \right) 2}} \right.} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right),
 
 then adjusted as,
 
@@ -839,7 +839,7 @@ then adjusted as,
 
    \begin{array}{lr} 
    T_{3}^{n+1} = T_{2}^{n} & \qquad T'_{3} \ge T_{f}  \\ 
-   T_{2}^{n+1} = T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right. \kern-\nulldelimiterspace} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right) & \qquad T'_{3} <T_{f} 
+   T_{2}^{n+1} = T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right.} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right) & \qquad T'_{3} <T_{f} 
    \end{array}
 
 where here the subscripts 1, 2, and 3 denote three layers numbered from
