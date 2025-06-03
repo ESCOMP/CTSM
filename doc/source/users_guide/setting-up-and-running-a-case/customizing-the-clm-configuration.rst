@@ -6,7 +6,7 @@
  Customizing CLM's Configuration
 ********************************
 
-The section of the |cesmrelease| Quickstart `CESM Create a Case <https://escomp.github.io/cesm/release-cesm2/quickstart.html#create-a-case>`_ gives instructions on creating a case. Also see a similar section in the CIME User's Guide `CIME Create a case <http://esmci.github.io/cime/users_guide/create-a-case.html>`_. What is of interest here is how to customize your use of CLM for the case that you created.
+The section of the |cesmrelease| Quickstart `CESM Create a Case <https://escomp.github.io/CESM/release-cesm2/quickstart.html#create-a-case>`_ gives instructions on creating a case. Also see a similar section in the CIME User's Guide `CIME Create a case <https://esmci.github.io/cime/versions/master/html/users_guide/create-a-case.html>`_. What is of interest here is how to customize your use of CLM for the case that you created.
 
 For CLM when ``preview_namelist``, ``case.build``, or ``case.run`` are called there are two steps that take place:
 
@@ -503,7 +503,7 @@ Like other datasets, if you want to use a given initial condition file to be use
 Other noteworthy configuration items
 ------------------------------------
 
-For running "I" cases there are several other noteworthy configuration items that you may want to work with. Most of these involve settings for the DATM, but one ``CCSM_CO2_PPMV`` applies to all models. The list of DATM settings is `here <http://esmci.github.io/cime/data_models/data-atm.html>`_. If you are running a B, E, or F case that doesn't use the DATM obviously the DATM_* settings will not be used. All of the settings below are in your ``env_build.xml`` and ``env_run.xml`` files
+For running "I" cases there are several other noteworthy configuration items that you may want to work with. Most of these involve settings for the DATM, but one ``CCSM_CO2_PPMV`` applies to all models. The list of DATM settings is (**link currently broken**). If you are running a B, E, or F case that doesn't use the DATM obviously the DATM_* settings will not be used. All of the settings below are in your ``env_build.xml`` and ``env_run.xml`` files
 ::
 
    CCSM_CO2_PPMV

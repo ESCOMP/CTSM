@@ -11,7 +11,7 @@ When running "I" compsets with CLM you use the DATM model to give atmospheric fo
 1. **DATM Main Namelist and Stream Namlist gorup** (``datm_in``)
 2. **DATM stream files**
 
-The `Data Model Documentation <http://esmci.github.io/cime/data_models/data-atm.html>`_ gives the details of all the options for the data models and for DATM specifically. It goes into detail on all namelist items both for DATM and for DATM streams. So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. But, we will talk about a few of the different options that are relevant for running with CLM. All of the options for changing the namelists or stream files is done by editing the ``user_nl_datm`` file.
+The Data Model Documentation (**link currently broken**) gives the details of all the options for the data models and for DATM specifically. It goes into detail on all namelist items both for DATM and for DATM streams. So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. But, we will talk about a few of the different options that are relevant for running with CLM. All of the options for changing the namelists or stream files is done by editing the ``user_nl_datm`` file.
 
 Because, they aren't useful for work with CLM we will NOT discuss any of the options for the main DATM namelist. Use the DATM Users Guide at the link above to find details of that. For the streams namelist we will discuss three items:
 
@@ -56,7 +56,7 @@ CLMCRUNCEPv7 mode and it's DATM settings
 
 In ``CLMCRUNCEPv7`` mode the CRUNCEP dataset is used and all of it's data is on a 6-hourly interval. Like ``CLM_QIAN`` the dataset is divided into those three data streams: solar, precipitation, and everything else (temperature, pressure, humidity and wind). The time-stamps of the data were also adjusted so that they are the beginning of the interval for solar, and the middle for the other two. Because, of this the ``offset`` is set to zero, and the ``tintalgo`` is: ``coszen``, ``nearest``, and ``linear`` for the solar, precipitation and other data respectively. ``taxmode`` is set to ``cycle`` and ``mapalgo`` is set to ``bilinear`` so that the data is spatially interpolated from the input exact half degree grid to the grid the atmosphere model is being run at (to run at this same model resolution use the 360x720cru_360x720cru resolution)... note:: The "everything else" data stream (of temperature, pressure, humidity and wind) also includes the data for longwave downward forcing as well. Our simulations showed sensitivity to this field, so we backed off in using it, and let DATM calculate longwave down from the other fields.
 
-For more information on CRUNCEP forcing see `http://dods.extra.cea.fr/data/p529viov/cruncep/ <http://dods.extra.cea.fr/data/p529viov/cruncep/>`_.
+For more information on CRUNCEP forcing see `https://rda.ucar.edu/datasets/d314003/ <https://rda.ucar.edu/datasets/d314003/>`_.
 
 .. _clmcruncep-and-its-datm:
 
