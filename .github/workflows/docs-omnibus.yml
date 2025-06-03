@@ -37,7 +37,7 @@ jobs:
 
       - name: Checkout doc-builder external
         run: |
-          bin/git-fleximod update doc-builder
+          manage_externals/checkout_externals doc-builder
 
       # Set up conda
       - name: Set up conda environment

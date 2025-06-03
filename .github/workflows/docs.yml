@@ -51,7 +51,7 @@ jobs:
 
       - name: Checkout doc-builder external
         run: |
-          bin/git-fleximod update doc-builder
+          manage_externals/checkout_externals doc-builder
 
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs

@@ -49,7 +49,7 @@ jobs:
       - name: Build docs using container
         id: build-docs
         run: |
-          bin/git-fleximod update -o
+          manage_externals/checkout_externals -o
           cd doc
           ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM
 

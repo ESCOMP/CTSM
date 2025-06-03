@@ -28,7 +28,7 @@ jobs:
 
       - name: Checkout doc-builder external
         run: |
-          bin/git-fleximod update doc-builder
+          manage_externals/checkout_externals doc-builder
 
       # Do this if not using conda
       # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
