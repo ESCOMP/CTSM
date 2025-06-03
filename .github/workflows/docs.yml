@@ -67,4 +67,11 @@ jobs:
       - name: Build docs for publication
         id: build-docs-to-publish
         run: |
+          echo "A"
+          git submodule add --force ./doc/doc-builder doc-builder
+          echo "B"
+          git submodule absorbgitdirs doc-builder
+          echo "C"
+          git config -f .gitmodules submodule.doc-builder.url https://github.com/ESMCI/doc-builder.git
+          echo "D"
           cd doc && ./build_docs_to_publish -d --site-root "$PWD/_publish"
