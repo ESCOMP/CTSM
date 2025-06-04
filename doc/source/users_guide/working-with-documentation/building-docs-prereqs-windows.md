@@ -100,7 +100,9 @@ You can use all of those to open and edit files, but Kate and VS Code let you op
 
 ### "Permission denied" error
 
-If you get this error, you may need to remind Linux that you do actually own your files. **In your Ubuntu terminal**, do:
+If you get this error, it may be a result of opening Ubuntu as an administrator (e.g., by right-clicking on its icon and choosing "Run as administrator.") Try not doing that, although this will result in you needing to get a new copy of CTSM to work in. 
+
+If that's not feasible or doesn't solve the problem, you may need to remind Linux that you do actually own your files. **In your Ubuntu terminal**, do:
 ```shell
 chown -R $USER:$USER $HOME
 ```
