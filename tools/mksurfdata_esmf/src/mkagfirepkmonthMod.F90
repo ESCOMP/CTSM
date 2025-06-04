@@ -20,9 +20,9 @@ module mkagfirepkmonthMod
 
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
 
-  integer , parameter :: min_valid = 1
-  integer , parameter :: max_valid = 13
-  integer , parameter :: unsetmon = 14
+  integer , parameter :: min_valid = 1  ! month value for January
+  integer , parameter :: max_valid = 13  ! value for no agricultural fire
+  integer , parameter :: unsetmon = 14  ! maximum value expected in the output file if raw dataset includes values outside the 1 through 13 range
 
   type(ESMF_DynamicMask) :: dynamicMask
 
@@ -36,6 +36,10 @@ contains
   subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make agricultural fire peak month data from higher resolution data
+    ! by selecting the dominant value from values 1 through 13
+    ! where 13 means no agricultural fire.
+    !
+    ! The relevant subroutine is get_dominant_indices.
     !
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
@@ -142,6 +146,7 @@ contains
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    ! This calls subroutine get_dominant_indices
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_indices,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
