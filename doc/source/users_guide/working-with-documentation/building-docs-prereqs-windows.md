@@ -122,3 +122,7 @@ If that's not feasible or doesn't solve the problem, you may need to remind Linu
 ```shell
 chown -R $USER:$USER $HOME
 ```
+
+### "The host 'wsl$' was not found in the list of allowed hosts"
+
+You may see this warning in a dialog box after trying to open a file with `wslview`, `explorer.exe`, or something else. Check "Permanently allow host 'wsl$'" and then press "Allow".
