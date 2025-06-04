@@ -8,7 +8,17 @@ Note that you may need administrator privileges on your PC (or approval from you
 
 ## Install Linux subsystem
 
-We don't support building our documentation in the native Windows command-line environment. Thus, you will need to install a little version of Linux inside a virtual machine (VM) to use instead.
+We don't support building our documentation in the native Windows command-line environment. Thus, you will need to install a little version of Linux inside a virtual machine (VM) to use instead. The process for doing this varies depending on how tightly the installation process is controlled on your computer.
+
+### NCAR computers
+
+Please follow the [Windows Subsystem for Linux (WSL) setup instructions](https://wiki.ucar.edu/pages/viewpage.action?pageId=514032264&spaceKey=CONFIGMGMT&title=Setup) on the UCAR Wiki. In the step about installing a Linux distribution, choose Ubuntu.
+
+Feel free to peruse the [overall WSL documentation](https://wiki.ucar.edu/spaces/CONFIGMGMT/pages/514032242/Windows+Subsystem+for+Linux) on and linked from the UCAR Wiki for additional information.
+
+### Non-NCAR computers
+
+If your computer is managed by an organization other than NCAR, please check with your IT department or equivalent for instructions on installing Windows Subsystem for Linux (WSL) and Ubuntu. Otherwise, follow these instructions:
 
 1. Download and install Ubuntu from the Microsoft Store.
 1. Restart your computer.
