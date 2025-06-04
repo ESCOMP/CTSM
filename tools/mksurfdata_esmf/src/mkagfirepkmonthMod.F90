@@ -21,8 +21,8 @@ module mkagfirepkmonthMod
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
 
   integer , parameter :: min_valid = 1
-  integer , parameter :: max_valid = 12
-  integer , parameter :: unsetmon = 13
+  integer , parameter :: max_valid = 13
+  integer , parameter :: unsetmon = 0
 
   type(ESMF_DynamicMask) :: dynamicMask
 
