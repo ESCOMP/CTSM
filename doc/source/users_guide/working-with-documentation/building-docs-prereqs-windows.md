@@ -53,11 +53,21 @@ which wslview || sudo apt-get -y install wslu
 
 We recommend building the software in what's called a container—basically a tiny little operating system with just some apps and utilities needed by the doc-building process. This is nice because, if we change the doc-building process in ways that require new versions of those apps and utilities, that will be completely invisible to you. You won't need to manually do anything to update your setup to work with the new process; it'll just happen automatically.
 
-We recommend using the container software Podman.
+For builds in WSL (Ubuntu), we recommend using the container software Docker. You can install it in Ubuntu like so:
 
-1. Install Podman with `sudo apt-get -y install podman`.
-1. Set up and start a Podman "virtual machine" with `podman machine init --now`.
-1. Test your installation by doing `podman run --rm hello-world`. If it worked, you should see ASCII art of the Podman logo.
+```shell
+# If needed, download and run the Docker installation script.
+# Ignore the message saying "We recommend using Docker Desktop for Windows." The script will make you wait 20 seconds to make sure this is want you want, and then it should continue automatically.
+which docker || curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh ./get-docker.sh
+
+# Set up the docker "group," if needed, and add your username to it.
+sudo groupadd docker  # Create docker group if it doesn't exist
+sudo usermod -aG docker $USER  # Add your user to the docker group
+newgrp docker  # Apply the new group membership (avoids needing to log out and back in)
+
+# Make sure it worked: This should print a "Hello from Docker!" message
+docker run hello-world
+```
 
 You may not be able to install Podman or any other containerization software, so there is an alternative method: a Conda environment.
 
