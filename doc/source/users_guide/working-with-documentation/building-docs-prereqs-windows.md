@@ -26,6 +26,8 @@ If your computer is managed by an organization other than NCAR, please check wit
 
 If Ubuntu opens in that last step but you see an error, you may need to manually enable Windows Subsystem for Linux (WSL). To do so: Open Control Panel, go to "Programs" > "Programs and Features" > "Turn Windows features on or off". Check the box next to "Windows Subsystem for Linux" and click OK.
 
+Once Ubuntu is working and open, you'll be asked to create a new UNIX username and password. This doesn't have to match your Windows username and password, but do make sure to save this information somewhere secure.
+
 .. _windows-docs-ubuntu-utilities:
 
 ## Install utilities
