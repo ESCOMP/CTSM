@@ -1,5 +1,4 @@
-name: Test building docs when they're updated
-# Does not include a test of building docs with ctsm_pylib; that's in a different Workflow because we only want it to run when ctsm_pylib is updated.
+name: Run an omnibus test script for the docs
 
 on:
   push:
@@ -10,7 +9,6 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
-      - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
@@ -22,38 +20,35 @@ on:
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
-      - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
 
   workflow_dispatch:
 
-permissions:
-  contents: read
 jobs:
-
-  test-build-docs:
-    if: ${{ always() }}
-    name: Without ctsm_pylib or container
-    uses: ./.github/workflows/docs-common.yml
-    with:
-      use_conda: false
-
-  test-build-docs-container:
-    if: ${{ always() }}
-    name: With container from registry
+  build-docs-omnibus-test:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
 
       - name: Checkout doc-builder external
         run: |
           bin/git-fleximod update doc-builder
 
-      - name: Build docs using Docker (Podman has trouble on GitHub runners)
-        id: build-docs
+      # Set up conda
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      # TODO: Split testing.sh tests into their own steps in this job
+      - name: Text Sphinx builds with omnibus script
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c -d
+          cd doc && conda run -n ctsm_pylib ./testing.sh
