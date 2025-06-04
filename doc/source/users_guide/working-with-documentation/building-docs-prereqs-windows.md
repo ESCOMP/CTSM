@@ -93,12 +93,12 @@ explorer.exe $(wslpath -w path/to/file_i_want_to_edit.rst)
 ```
 These both do the same thing, but the `wslview` method is simpler. Either way, at least the first time you do this, it will open a window asking which app you'd like to open the file in. Choose whatever you're most comfortable with. At the bottom of the window, you can then choose whether you always want to open HTML files using the selected app or just this once.
 
-You may also be able to edit files in your Ubuntu VM in the Ubuntu terminal by using the name of the Windows executable. For Notepad, for instance, you would do 
+You may also be able to open files in Windows apps by using the name of the Windows executable. For Notepad, for instance, you would do 
 ```shell
 notepad.exe $(wslpath -w path/to/file_i_want_to_edit.rst)
 ```
 
-If you use [VS Code](https://code.visualstudio.com/), you can install the [WSL VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl). Then you can open any file or folder in your Ubuntu VM by doing
+If you use [VS Code](https://code.visualstudio.com/), you can install the [WSL VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl). Then (after closing and re-opening Ubuntu) you can open any documentation file **or folder** by doing
 ```shell
 code path/to/file-or-folder
 ```
