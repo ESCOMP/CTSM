@@ -57,7 +57,9 @@ For builds in WSL (Ubuntu), we recommend using the container software Docker. Yo
 
 ```shell
 # If needed, download and run the Docker installation script.
-# Ignore the message saying "We recommend using Docker Desktop for Windows." The script will make you wait 20 seconds to make sure this is want you want, and then it should continue automatically.
+# Ignore the message saying "We recommend using Docker Desktop for Windows."
+# The script will make you wait 20 seconds to make sure this is want you want,
+# and then it should continue automatically.
 which docker || curl -fsSL https://get.docker.com -o get-docker.sh
 which docker || sudo sh ./get-docker.sh
 
