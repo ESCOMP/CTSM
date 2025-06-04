@@ -22,7 +22,7 @@ module mkagfirepkmonthMod
 
   integer , parameter :: min_valid = 1
   integer , parameter :: max_valid = 13
-  integer , parameter :: unsetmon = 0
+  integer , parameter :: unsetmon = 14
 
   type(ESMF_DynamicMask) :: dynamicMask
 
