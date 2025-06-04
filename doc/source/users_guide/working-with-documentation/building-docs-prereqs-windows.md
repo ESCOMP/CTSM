@@ -43,9 +43,8 @@ which make || sudo apt-get -y install make
 which git || sudo apt-get -y install git
 which git-lfs || sudo apt-get -y install git-lfs
 
-# Chromium: A web browser engine that's the basis for popular browsers like Google
-# Chrome and Microsoft Edge
-which chromium || sudo apt-get -y install chromium
+# WSL utilities, which will give us the wslview command for opening HTML pages in a Windows browser
+which wslview || sudo apt-get -y install wslu
 ```
 
 .. _container-or-conda-windows:
