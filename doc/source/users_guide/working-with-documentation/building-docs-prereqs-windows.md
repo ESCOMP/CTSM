@@ -69,7 +69,7 @@ newgrp docker  # Apply the new group membership (avoids needing to log out and b
 docker run hello-world
 ```
 
-You may not be able to install Podman or any other containerization software, so there is an alternative method: a Conda environment.
+You may not be able to install Docker or any other containerization software, so there is an alternative method: a Conda environment.
 
 1. Check whether you already have Conda installed by doing `which conda`. If that doesn't print anything, [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install#linux).
 1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
