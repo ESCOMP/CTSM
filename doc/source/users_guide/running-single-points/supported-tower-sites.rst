@@ -11,16 +11,18 @@ CTSM has functionality within the ``run_tower`` tool for running single-point ca
 This tool was developed as a collaboration between NCAR's modeling capabilities and NEON's measurement network that could drive scientific discovery at the confluence of geosciences and biological sciences. The tool was then expanded to include PLUMBER sites to support a wider variety of ecological research projects.
 
 Broadly, this tool can be used to probe questions such as:
-- What biases in NCAR models can current observations address?
-- How can NCAR models inform observational data streams?
-- What new hypotheses of atmospheric science and macroscale ecology can be tested with observations and NCAR models to increase our understanding of the biosphere-atmosphere system and its response to global environmental change?
-- Can Earth system prediction be extended to ecological forecasts?
+
+    * What biases in NCAR models can current observations address?
+    * How can NCAR models inform observational data streams?
+    * What new hypotheses of atmospheric science and macroscale ecology can be tested with observations and NCAR models to increase our understanding of the biosphere-atmosphere system and its response to global environmental change?
+    * Can Earth system prediction be extended to ecological forecasts?
 
 ====================================================
 General Information on Running Supported Tower Sites
 ====================================================
 
 The ``run_tower`` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
+
     1) Create a generic base case for cloning.
     2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for
@@ -33,6 +35,7 @@ The ``run_tower`` capability allows users to run Community Land Model (CLM) simu
 The available options can be shown by running ``run_tower --help``
 
 These options include the following:
+
   -h, --help            show this help message and exit
   --neon-sites          4-letter neon site code.
   --plumber-sites       six character PLUMBER2 site code (eg, AR-SLu)
@@ -70,6 +73,7 @@ These options include the following:
                         None]
 
 Logging options:
+
   -d, --debug           Print debug information (very verbose) to file /glade/
                         work/tking/ctsm_project/sam_ctsm/CTSM/tools/site_and_r
                         egional/run_tower.log
