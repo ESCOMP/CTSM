@@ -12,7 +12,7 @@ Note that this is not necessary in order for you to contribute an update to the 
    :end-before: VERSION LINKS WILL NOT RESOLVE
    :append: open _publish/index.html
 
-**Note:** This is not yet supported with Podman on Linux (including Ubuntu VM on Windows). See `doc-builder Issue #27: build_docs_to_publish fails on Linux (maybe just Ubuntu?) with Podman <https://github.com/ESMCI/doc-builder/issues/27>`_.
+**Note:** This is not yet supported with Podman on Linux (including Ubuntu VM on Windows). See `doc-builder Issue #27: build_docs_to_publish fails on Linux (maybe just Ubuntu?) with Podman <https://github.com/ESMCI/doc-builder/issues/27>`_. It does work with Docker on Linux, though.
 
 
 How this works
