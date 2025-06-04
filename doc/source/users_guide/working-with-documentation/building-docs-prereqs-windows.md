@@ -77,18 +77,31 @@ You may not be able to install Docker or any other containerization software, so
 
 .. _editing-text-files-wsl:
 
-## Editing text files in an Ubuntu VM
-If you prefer using an old-school text editor like `vim`, it's probably already installed, or can be installed with `sudo apt-get -y install EDITOR_NAME`. If you prefer a more user-friendly interface, there are several options.
+## Editing documentation files
+If you prefer using an old-school text editor like `vim`, it's probably already installed in your Ubuntu VM, or can be installed with `sudo apt-get -y install EDITOR_NAME`. If you prefer a more user-friendly interface, there are several options. Note that **all commands in this section are to be run in your Ubuntu VM, not a Windows terminal**.
 
-You may be able to edit files in your Ubuntu VM in the Ubuntu terminal by using the name of the Windows executable. For Notepad, for instance, you would do 
+### In a Windows app (recommended)
+If you installed `wslview` in the instructions above, you can edit files by doing 
 ```shell
-notepad.exe file_i_want_to_edit.rst
+wslview path/to/file_i_want_to_edit.rst
+```
+If not, you can do
+```shell
+explorer.exe $(wslpath -w path/to/file_i_want_to_edit.rst)
+```
+These both do the same thing, but the `wslview` method is simpler. Either way, at least the first time you do this, it will open a window asking which app you'd like to open the file in. Choose whatever you're most comfortable with. At the bottom of the window, you can then choose whether you always want to open HTML files using the selected app or just this once.
+
+You may also be able to edit files in your Ubuntu VM in the Ubuntu terminal by using the name of the Windows executable. For Notepad, for instance, you would do 
+```shell
+notepad.exe $(wslpath -w path/to/file_i_want_to_edit.rst)
 ```
 
 If you use [VS Code](https://code.visualstudio.com/), you can install the [WSL VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl). Then you can open any file or folder in your Ubuntu VM by doing
 ```shell
 code path/to/file-or-folder
 ```
+
+### In an Ubuntu app (not recommended)
 
 You can also install a user-friendly text editor in Ubuntu. This may be slower and have unexpected differences in behavior from what you expect from Windows apps, but it does work. For example:
 - [gedit](https://gedit-text-editor.org/): `sudo apt-get install -y gedit`
