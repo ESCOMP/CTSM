@@ -74,13 +74,6 @@ You may not be able to install Podman or any other containerization software, so
 1. Check whether you already have Conda installed by doing `which conda`. If that doesn't print anything, [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install#linux).
 1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
 
-
-## Set up your permissions
-This will make sure that you "own" your home directory in the Ubuntu VM. **In your Ubuntu terminal**, do:
-```shell
-chown -R $USER:$USER $HOME
-```
-
 .. _editing-text-files-wsl:
 
 ## Editing text files in an Ubuntu VM
@@ -102,3 +95,12 @@ You can also install a user-friendly text editor in Ubuntu. This may be slower a
 - [VS Code](https://code.visualstudio.com/) (if you don't already have it installed on Windows): `sudo snap install code --classic`
 
 You can use all of those to open and edit files, but Kate and VS Code let you open entire folders, which can be convenient. In any case, you'd do `EDITOR_NAME path/to/thing/youre/editing` to open it, where `EDITOR_NAME` is `gedit`, `kate`, or `code`, respectively.
+
+## Troubleshooting
+
+### "Permission denied" error
+
+If you get this error, you may need to remind Linux that you do actually own your files. **In your Ubuntu terminal**, do:
+```shell
+chown -R $USER:$USER $HOME
+```
