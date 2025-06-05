@@ -22,7 +22,6 @@ module mkagfirepkmonthMod
 
   integer , parameter :: min_valid = 1  ! month value for January
   integer , parameter :: max_valid = 13  ! value for no agricultural fire
-  integer , parameter :: unsetmon = 14  ! maximum value expected in the output file if raw dataset includes values outside the 1 through 13 range
 
   type(ESMF_DynamicMask) :: dynamicMask
 
@@ -168,8 +167,8 @@ contains
 
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
-        max_bad(agfirepkmon_o, unsetmon , 'agfirepkmon')) then
-        call shr_sys_abort()
+        max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
+        call shr_sys_abort(subname//" error in agfirepkmon_o value range; min_valid, max_valid are "//min_valid//", "//max_valid)
      end if
 
     ! Close the file 
@@ -245,7 +244,7 @@ contains
              maxindex = maxloc(wts_o(:)) 
              dynamicMaskList(no)%dstElement = real(maxindex(1), kind=r4)
           else
-             dynamicMaskList(no)%dstElement = real(unsetmon, kind=r4)
+             call shr_sys_abort(subname//" error: hasdata needs to be true")
           end if
        end do
     end if
