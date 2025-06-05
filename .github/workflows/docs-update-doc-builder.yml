@@ -35,6 +35,16 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update doc-builder
+
       - name: build_docs rv method
         run: |
-          cd doc/testing && ./testing.sh
+          cd doc/testing && ./test_build_docs_-r-v.sh
