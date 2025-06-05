@@ -1,6 +1,6 @@
-# https://pre-commit.com
+# Note that submodules should be automatically excluded.
+exclude: bin/git-fleximod, .lib/git_fleximod*, tools/contrib/.*
 
-exclude: tools/contrib/.*|.*\.svg|.*\.png|.*\.jpg|.*\.jpeg|.lib
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -12,7 +12,6 @@ repos:
       - id: check-yaml
         files: / python/ lilac/ .github/
       - id: check-xml
-        exclude: src/fates/.*|components/.*|env_mach_specific.xml|cime/.*|ccs_config/.*|libraries/.*
       - id: debug-statements
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
       - id: mixed-line-ending
