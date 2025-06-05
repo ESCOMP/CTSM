@@ -26,10 +26,18 @@ repos:
       - id: check-merge-conflict
       - id: check-docstring-first
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-# black as python formatter
+
+  # Run black formatter
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 25.1.0  # Keep this synced with version in python/conda_env_ctsm_py.yml
     hooks:
       - id: black
-        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-        args: [--config python/pyproject.toml]
+        args: [--config, python/pyproject.toml]
+        language_version: python3.13.2
+        files: >-
+          (?x)(
+            python/.*\.py
+            cime_config/SystemTests|
+            cime_config/buildlib|
+            cime_config/buildnml|
+          )
