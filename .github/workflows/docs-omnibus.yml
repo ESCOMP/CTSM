@@ -51,4 +51,4 @@ jobs:
       # TODO: Split testing.sh tests into their own steps in this job
       - name: Text Sphinx builds with omnibus script
         run: |
-          cd doc && conda run -n ctsm_pylib ./testing.sh
+          cd doc && ./testing.sh

@@ -5,41 +5,60 @@
 ==============================
  Running with anomaly forcing
 ==============================
-Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called 'anomaly forcing'.  The anomaly forcing method uses a previously completed fully coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes.  These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity.  Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
+Because performing fully coupled climate simulations is computationally expensive, an alternate method of running land-only simulations forced by future climate projections was developed for CTSM called "anomaly forcing." The anomaly forcing method uses a previously-completed, fully-coupled simulation to create monthly anomalies, relative to the present day, of near-surface atmospheric states and fluxes. These anomalies, representing the evolution of future climate projections, are applied to a repeating cycle of present day atmospheric forcing data, either as an additive (for states) or multiplicative (for fluxes) quantity. Thus, high-frequency variability is obtained from the present day atmospheric forcing data, while the long-term evolution of the climate is determined by the anomaly forcing dataset.
 
-To enable anomaly forcing in a CTSM simulation, the following namelist variable can be added to the user\_nl\_datm file:
+Anomaly climate forcings are automatically enabled for ``ISSP`` compsets (e.g., ``ISSP585``). After the namelist has been created, ``CaseDocs/datm.streams.xml`` will have an entry like this pointing to the anomaly forcing file being used:
 
-  anomaly\_forcing = 'Anomaly.Forcing.Precip','Anomaly.Forcing.Temperature','Anomaly.Forcing.Pressure','Anomaly.Forcing.Humidity','Anomaly.Forcing.Uwind','Anomaly.Forcing.Vwind','Anomaly.Forcing.Shortwave','Anomaly.Forcing.Longwave'
+::
 
-Any combination or subset of forcing variables can be used, e.g. to modify only a single atmospheric forcing variable, one could use:
+  <stream_info name="Anomaly.Forcing.cmip6.ssp585">
+     ...
+     <datafiles>
+        <file>/glade/campaign/cesm/cesmdata/inputdata/atm/datm7/anomaly_forcing/CMIP6-SSP5-8.5/af.allvars.CESM.SSP5-8.5.2015-2100_c20220628.nc</file>
+     </datafiles>
+     <datavars>
+        <var>huss  Sa_shum_af</var>
+        <var>pr    Faxa_prec_af</var>
+        <var>ps    Sa_pbot_af</var>
+        <var>rlds  Faxa_lwdn_af</var>
+        <var>rsds  Faxa_swdn_af</var>
+        <var>tas   Sa_tbot_af</var>
+        <var>uas   Sa_u_af</var>
+        <var>vas   Sa_v_af</var>
+     </datavars>
+     ...
+  </stream_info>
 
-  anomaly\_forcing = 'Anomaly.Forcing.Temperature'
+To use alternative data, add a ``user_nl_datm_streams`` namelist file to your case with contents like so:
 
-which will only adjust the temperature (TBOT).
+::
 
-After the namelist has been created, the run directory will be populated with files such as these:
+  Anomaly.Forcing.cmip6.ssp585:datafiles = /path/to/your/datafile
+  Anomaly.Forcing.cmip6.ssp585:meshfile = /path/to/meshfile/for/your/datafile
 
-  datm.streams.txt.Anomaly.Forcing.Temperature
+  ! List of Data types to use
+  ! Remove the variables you do NOT want to include in the anomaly forcing:
+  !     pr is precipitation
+  !     tas is temperature
+  !     huss is humidity
+  !     uas and vas are U and V winds
+  !     rsds is solare
+  !     rlds is LW down
+  Anomaly.Forcing.cmip6.ssp585:datavars = pr    Faxa_prec_af, \
+                                          tas   Sa_tbot_af, \
+                                          ps    Sa_pbot_af, \
+                                          huss  Sa_shum_af, \
+                                          uas   Sa_u_af, \
+                                          vas   Sa_v_af, \
+                                          rsds  Faxa_swdn_af, \
+                                          rlds  Faxa_lwdn_af
 
-which will contain the location of the default anomaly forcing datasets.  To use alternative data, copy these files to the case directory with the 'user\_' prefix, and modify the 'user\_*' files accordingly, e.g.:
+To instead disable anomaly forcing in ``ISSP`` compsets, the following can be added to the ``user_nl_datm`` file:
 
-  user\_datm.streams.txt.Anomaly.Forcing.Temperature
+::
 
-    For example, one could use the user\_datm.streams.txt.Anomaly.Forcing.* files to point to these SSP-derived anomaly forcing datasets:
+  anomaly_forcing = 'none'
 
-    /glade/p/cesmdata/cseg/inputdata/atm/datm7/anomaly\_forcing/CMIP6-SSP3-7.0
+Note that other inputs are also set automatically for ``ISSP`` compsets, including CO2 (``co2tseries``), ozone (``preso3``), N deposition (``presndep``), and aerosols (``presaero``).
 
-    af.huss.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-    af.pr.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-    af.ps.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-    af.rlds.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-    af.rsds.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-    af.tas.cesm2.SSP3-7.0.2015-2100\_c20200329.nc
-
-Users may wish to also update files such as the landuse\_timeseries and aerosol and Ndepostion files to correspond to the appropriate SSP.
-
-For single point simulations, the global anomaly forcing files can be used, but the map_algo namelist variable should be appended with nearest neighbor values for each of the anomaly forcing fields, e.g.
-
-    mapalgo = 'nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn','nn' (the number of 'nn' values will depend on the number of original streams plus the number of anomaly forcing streams)
-
-The cycling of the present-day (base) climate is controlled through the DATM\_YR\_START and DATM\_YR\_END variables in env\_run.xml.
+The first and last years over which the present-day (base) climate should cycle are set through the ``DATM_YR_START`` and ``DATM_YR_END`` XML variables.
