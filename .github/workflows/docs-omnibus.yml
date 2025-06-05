@@ -18,6 +18,9 @@ on:
 
 jobs:
   build-docs-omnibus-test:
+    # Don't run on forks
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

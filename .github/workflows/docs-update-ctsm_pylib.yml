@@ -22,7 +22,9 @@ permissions:
   contents: read
 jobs:
   test-update-dependency:
-    if: ${{ always() }}
+    # Don't run on forks
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     name: Tests to run when either docs dependency is updated
     uses: ./.github/workflows/docs-update-dependency-common.yml
     with:
