@@ -7,8 +7,6 @@ repos:
     hooks:
       - id: end-of-file-fixer
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-      - id: trailing-whitespace
-        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
       - id: check-yaml
         files: / python/ lilac/ .github/
       - id: check-xml
