@@ -10,16 +10,11 @@ Generic single-point runs
 subset_data:
 ============
 
-``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
-This can also be done for regional simulations in the next section but first we will describe how to use subset_data for a single point. 
+``subset_data`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround. This can also be done for regional simulations in the next section but first we will describe how to use subset_data for a single point. 
 
+For single-point cases, you need to subset a surface dataset and (optionally) DATM data.  The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
 
-For single-point cases, you need to subset a surface dataset and (optionally) DATM data. 
-The Python script to subset this data can be found in the CTSM repository at ``tools/site_and_regional/subset_data``.
-
-Note that you will need to have a python environment set up that includes the packages ``scipy``, ``xarray``, and ``numpy``. 
-If you have conda or miniconda installed, you can create a conda environment for this and other CTSM python tools using 
-the script ``py_env_create`` at the top level of your CTSM checkout. See :ref:`using-ctsm-pylib` for more information.
+Note that you will need to have a python environment set up that includes the packages ``scipy``, ``xarray``, and ``numpy``. If you have conda or miniconda installed, you can create a conda environment for this and other CTSM python tools using the script ``py_env_create`` at the top level of your CTSM checkout. See :ref:`using-ctsm-pylib` for more information.
 
 To subset surface data and climate forcings (DATM) for a single point, use the command:
 
@@ -39,9 +34,7 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 -  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2014; see note below about switching the default DATM data*
 -  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
-You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options.
-For example, depending on your application, it may be helpful to specify a dominant PFT using ``--dompft`` and ``--pctpft`` flags.  
-This allows you to control the PFTs that are present on your surface dataset
+You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options. For example, depending on your application, it may be helpful to specify a dominant PFT using ``--dompft`` and ``--pctpft`` flags. This allows you to control the PFTs that are present on your surface dataset
 
 .. note::
    This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024 DATM data. 
@@ -53,8 +46,7 @@ This allows you to control the PFTs that are present on your surface dataset
 
 
 
-The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` settings. You can then use this user mods directory to set up your CTSM case, as described below.
-``subset_data`` will default to subsetting surface data and land-use timeseries from the default, nominal one-degree resolution (f09) datasets.
+The ``--create-user-mods`` command tells the script to set up a user mods directory in your specified ``$my_output_dir`` and to specify the required ``PTS_LAT`` and ``PTS_LON`` settings. You can then use this user mods directory to set up your CTSM case, as described below. ``subset_data`` will default to subsetting surface data and land-use timeseries from the default, nominal one-degree resolution (f09) datasets.
 
 ================
 Create the case
