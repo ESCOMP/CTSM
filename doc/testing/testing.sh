@@ -2,6 +2,9 @@
 set -e
 set -x
 
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}"
+
 rm -rf _publish*
 
 # Build all docs using container
