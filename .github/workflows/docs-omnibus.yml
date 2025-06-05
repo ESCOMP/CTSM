@@ -6,11 +6,13 @@ on:
     branches: ['*']
     paths:
       - 'doc/testing/*'
+      - 'doc/Makefile'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'doc/testing/*'
+      - 'doc/Makefile'
 
   workflow_dispatch:
 
