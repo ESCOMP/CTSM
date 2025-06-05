@@ -32,3 +32,4 @@ repos:
     hooks:
       - id: black
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+        args: [--config python/pyproject.toml]
