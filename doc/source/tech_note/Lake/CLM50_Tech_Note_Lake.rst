@@ -160,7 +160,7 @@ where :math:`R_{0}` is the near-surface atmospheric roughness
 Reynolds number, :math:`z_{0h}` is the roughness
 length for sensible heat,  :math:`z_{0q}` is the
 roughness length for latent heat, :math:`\nu` (m\ :sup:`2` s\ :sup:`-1`) is the kinematic viscosity of air, and
-:math:`u_{\*}`  (m s\ :sup:`-1`) is the friction velocity in the
+:math:`u_{*}`  (m s\ :sup:`-1`) is the friction velocity in the
 atmospheric surface layer. For frozen lakes without resolved snow
 layers, :math:`z_{0m} =1\times 10^{-3} {\rm m}` (:ref:`Subin et al. (2012a) <Subinetal2012a>`),
 and the scalar roughness lengths are given by .
@@ -194,7 +194,7 @@ default:
 .. math::
    :label: 12.6 
 
-   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{\*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
+   \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
 
 where *A* and *B* define the fetch- and depth-limitation, respectively;
 :math:`C_{\min } =0.01` , :math:`C_{\max } =0.01`,
@@ -384,7 +384,7 @@ simultaneously with lake surface temperature as follows. The
 stability-related equations are the same as for non-vegetated surfaces
 (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`), 
 except that the surface roughnesses are here (weakly varying) functions 
-of the friction velocity :math:`u_{\*}` . To begin, *z*\ :sub:`0m` is set 
+of the friction velocity :math:`u_{*}` . To begin, *z*\ :sub:`0m` is set 
 based on the value calculated for the last timestep (for 
 :math:`T_{g} >T_{f}` ) or based on the values in section 
 :numref:`Surface Properties Lake` (otherwise), and the scalar roughness
@@ -406,11 +406,11 @@ lengths are set based on the relationships in section :numref:`Surface Propertie
 
 #. Thermal conductivity :math:`\lambda _{T}` \ (above)
 
-#. Friction velocity :math:`u_{\*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
+#. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Potential temperature scale :math:`\theta _{\*}`  (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
+#. Potential temperature scale :math:`\theta _{*}`  (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Humidity scale :math:`q_{\*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
+#. Humidity scale :math:`q_{*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
 #. Aerodynamic resistances :math:`r_{am}` , :math:`r_{ah}` , and
    :math:`r_{aw}`  (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)

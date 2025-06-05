@@ -155,7 +155,7 @@ In :eq:`29.5` , :math:`u_{*s}` is defined as the wind friction speed
 
    u_{\*s} = \left\{
    \begin{array}{lr} 
-   u_{\*} & \quad {\rm \; for \;} U_{10} <U_{10,t}  \\ 
+   u_{*} & \quad {\rm \; for \;} U_{10} <U_{10,t}  \\ 
    u_{*} +0.003\left(U_{10} -U_{10,t} \right)^{2} & \quad {\rm \; for\; }U_{10} \ge U_{10,t} 
    \end{array}\right.
 
