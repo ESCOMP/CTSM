@@ -20,7 +20,8 @@ repos:
       #  exclude: shell_commands
       #- id: check-shebang-scripts-are-executable
       #  exclude: shell_commands
-      - id: check-merge-conflict
+
+      # Checks for a common error of placing code before the docstring.
       - id: check-docstring-first
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
 
