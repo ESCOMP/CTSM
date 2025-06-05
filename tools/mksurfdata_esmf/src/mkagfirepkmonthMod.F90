@@ -58,9 +58,9 @@ contains
     integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
-    integer , allocatable          :: mask_i(:)
-    real(r4), allocatable          :: rmask_i(:)
-    real(r8), allocatable          :: frac_o(:)
+    integer , allocatable          :: mask_i(:)  ! TODO: What is this?
+    real(r4), allocatable          :: rmask_i(:)  ! TODO: What is this?
+    real(r8), allocatable          :: frac_o(:)  ! TODO: What is this?
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
     integer , allocatable          :: agfirepkmon_o(:) ! agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
@@ -210,10 +210,10 @@ contains
   subroutine get_dominant_indices(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
 
     ! input/output arguments
-    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue
-    integer                             , intent(out)          :: rc
+    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)  ! TODO: What is this?
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue  ! TODO: What is this?
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue  ! TODO: What is this?
+    integer                             , intent(out)          :: rc  ! TODO: What is this?
 
     ! local variables
     integer            :: ni, no, n
@@ -225,6 +225,7 @@ contains
     rc = ESMF_SUCCESS
 
     if (associated(dynamicMaskList)) then
+       ! TODO: Can parts of this loop and/or its subloops be broken out into separate functions/subroutines to facilitate testing?
        do no = 1, size(dynamicMaskList)
           hasdata = .false.
           wts_o(:) = 0.d0
