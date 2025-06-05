@@ -1,17 +1,23 @@
 # https://pre-commit.com
 
+exclude: tools/contrib/
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: end-of-file-fixer
+        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
       - id: trailing-whitespace
+        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
       - id: check-yaml
+        files: / python/ lilac/ .github/
       - id: debug-statements
+        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
       - id: mixed-line-ending
+        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
 # black as python formatter
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
       - id: black
-        files: python/
+        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
