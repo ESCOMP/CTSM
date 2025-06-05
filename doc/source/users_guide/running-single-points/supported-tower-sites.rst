@@ -99,14 +99,12 @@ Information on the specific sites can be found on the `NEON webpage <https://www
 
 .. note:: For NEON tower site simulations, the default run type is ``transient``.
 
-To run CTSM at a NEON site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this:
+To run CTSM at a NEON site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this::
 
-``cd CTSM/tools/site_and_regional``
+ cd CTSM/tools/site_and_regional
+ run_tower --neon-sites ABBY
 
-``run_tower --neon-sites ABBY``
-
-When a simulation completes, the data are stored in the archive directory under ``CTSM/tools/site_and_regional/archive``. In this directory you will find files that include data for every day of the simulation, as well as files that average model variables monthly.
-The output file names are automatically generated and are composed of the simulation name, which includes the site name, type of simulation (eg, ``transient``), and the date of simulated data.
+When a simulation completes, the data are stored in the archive directory under ``CTSM/tools/site_and_regional/archive``. In this directory you will find files that include data for every day of the simulation, as well as files that average model variables monthly. The output file names are automatically generated and are composed of the simulation name, which includes the site name, type of simulation (eg, ``transient``), and the date of simulated data.
 The tower simulations generate two types of files:
 
 1) ``h0`` Variables that are averaged monthly. One file is available for every month of the simulation. These files include hundreds of variables.
@@ -123,10 +121,9 @@ Currently supported PLUMBER Sites include the following: AR-SLu, AT-Neu, AU-ASM,
 
 Information on the specific sites can be found `here <https://researchdata.edu.au/plumber2-forcing-evaluation-surface-models/1656048>`_.
 
-To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this:
+To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this::
 
-``cd CTSM/tools/site_and_regional``
-
-``run_tower --plumber-sites AR-SLu``
+ cd CTSM/tools/site_and_regional
+ run_tower --plumber-sites AR-SLu
 
 The output for a PLUMBER case will be set up similarly to the output for a NEON case, as described above.
