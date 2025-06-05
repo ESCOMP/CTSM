@@ -1,4 +1,58 @@
 ===============================================================
+Tag name: ctsm5.3.055
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Jun  5 13:59:20 MDT 2025
+One-line Summary: Remove FTorch
+
+Purpose and description of changes
+----------------------------------
+
+Incorrect CMEPS version causes a build failure.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3210: build-and-deploy failure at ctsm5.3.053](https://github.com/ESCOMP/CTSM/issues/3210)
+- [Issue #3214: Build fails with FTorch checked out](https://github.com/ESCOMP/CTSM/issues/3214)
+
+
+Testing summary:
+----------------
+
+Model now builds successfully on Izumi with all optional submodules checked out.
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- FTorch removed
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3211: ctsm5.3.055: Remove broken FTorch submodule by samsrabin](https://github.com/ESCOMP/CTSM/pull/3211)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.054
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Mon Jun  2 11:39:50 MDT 2025
