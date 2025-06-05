@@ -25,7 +25,7 @@ jobs:
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       - name: Set up conda environment
         uses: conda-incubator/setup-miniconda@v3
@@ -51,7 +51,7 @@ jobs:
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       - name: Set up conda environment
         uses: conda-incubator/setup-miniconda@v3

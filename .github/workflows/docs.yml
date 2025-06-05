@@ -53,9 +53,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout doc-builder external
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs

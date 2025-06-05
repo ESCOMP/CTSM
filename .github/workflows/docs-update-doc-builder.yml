@@ -43,7 +43,7 @@ jobs:
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       - name: build_docs rv method
         run: |

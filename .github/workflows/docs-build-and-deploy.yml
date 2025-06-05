@@ -48,10 +48,14 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
       - name: Build docs using container
         id: build-docs
         run: |
-          bin/git-fleximod update -o
           cd doc
           ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM
 
