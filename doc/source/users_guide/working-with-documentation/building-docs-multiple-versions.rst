@@ -7,7 +7,7 @@ There is a menu in the lower left of the webpage that lets readers switch betwee
 
 Note that this is not necessary in order for you to contribute an update to the documentation. GitHub will test this automatically when you open a PR. But if you'd like to try, this will generate a local site for you in ``_publish/`` and then open it:
 
-.. literalinclude:: ../../../testing.sh
+.. literalinclude:: ../../../testing/test_container_eq_ctsm_pylib.sh
    :start-at: ./build_docs_to_publish
    :end-before: VERSION LINKS WILL NOT RESOLVE
    :append: open _publish/index.html
