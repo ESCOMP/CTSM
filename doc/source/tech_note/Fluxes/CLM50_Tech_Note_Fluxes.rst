@@ -138,8 +138,8 @@ fluxes of momentum, sensible heat, and latent heat to the mean profile
 gradients of :math:`\left|{\it u}\right|`, :math:`\theta` , and
 :math:`q` in the surface layer. In neutral conditions,
 :math:`\phi _{m} =\phi _{h} =\phi _{w} =1`. The velocity (i.e., friction
-velocity) :math:`u_{\*}`  (m s\ :sup:`-1`), temperature
-:math:`\theta _{\*}`  (K), and moisture :math:`q_{\*}`  (kg kg\ :sup:`-1`) scales are
+velocity) :math:`u_{*}`  (m s\ :sup:`-1`), temperature
+:math:`\theta _{*}`  (K), and moisture :math:`q_{*}`  (kg kg\ :sup:`-1`) scales are
 
 .. math::
    :label: 5.13
@@ -290,7 +290,7 @@ where :math:`w_{*}`  is the convective velocity scale
 .. math::
    :label: 5.29
 
-   w_{*} =\left(\frac{-gu_{\*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } ,
+   w_{*} =\left(\frac{-gu_{*} \theta _{v*} z_{i} }{\overline{\theta _{v,\, atm} }} \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } ,
 
 :math:`z_{i} =1000` is the convective boundary layer height (m), and :math:`\beta =1`.
 
@@ -802,7 +802,7 @@ across the interfacial sublayer. The following relation from
    z_{0h,\, g} =z_{0w,\, g} =z_{0m,\, g} e^{-a\left({u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right.} \upsilon } \right)^{0.45} }
 
 where the quantity
-:math:`{u_{\*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right.} \upsilon }` 
+:math:`{u_{*} z_{0m,\, g} \mathord{\left/ {\vphantom {u_{*} z_{0m,\, g}  \upsilon }} \right.} \upsilon }` 
 is the roughness Reynolds number (and may be interpreted as the Reynolds number of the smallest turbulent eddy in the flow) with the kinematic
 viscosity of air :math:`\upsilon =1.5\times 10^{-5}`  m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
 

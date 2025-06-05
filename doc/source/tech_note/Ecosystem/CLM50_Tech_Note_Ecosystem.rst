@@ -236,7 +236,7 @@ as
 
    A=A^{*} ( 1-f_{veg}^{sno} )
 
-where :math:`A^{\*}` is the leaf or stem area before adjustment for
+where :math:`A^{*}` is the leaf or stem area before adjustment for
 snow, :math:`A` is the remaining exposed leaf or stem area,
 :math:`f_{veg}^{sno}` is the vertical fraction of vegetation covered by snow
 

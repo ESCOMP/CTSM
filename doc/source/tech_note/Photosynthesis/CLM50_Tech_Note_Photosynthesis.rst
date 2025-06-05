@@ -160,7 +160,7 @@ s\ :sup:`-1`) is
 .. math::
    :label: 9.4
 
-   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
 The maximum rate of carboxylation allowed by the capacity to regenerate
 RuBP (i.e., the light-limited rate) :math:`A_{j}`  (:math:`\mu` \ mol
@@ -169,7 +169,7 @@ CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 .. math::
    :label: 9.5
 
-   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
+   A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{*} \right)}{4c_{i} +8\Gamma _{*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
 The product-limited rate of carboxylation for C\ :sub:`3` plants
 and the PEP carboxylase-limited rate of carboxylation for
@@ -185,7 +185,7 @@ In these equations, :math:`c_{i}`  is the internal leaf
 CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}` 
 is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}`  and
 :math:`K_{o}`  are the Michaelis-Menten constants (Pa) for
-CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{\*}`  (Pa) is
+CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{*}`  (Pa) is
 the CO\ :sub:`2` compensation point. :math:`V_{c\max }`  is the
 maximum rate of carboxylation (µmol m\ :sup:`-2`
 s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) 
@@ -350,7 +350,7 @@ with :math:`Q_{10} =2`.
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
  | :math:`K_{o}`          | 36380                                                           | –                                                               |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
- | :math:`\Gamma _{\*}`   | 37830                                                           | –                                                               |
+ | :math:`\Gamma _{*}`    | 37830                                                           | –                                                               |
  +------------------------+-----------------------------------------------------------------+-----------------------------------------------------------------+
 
 In the model, acclimation is 
