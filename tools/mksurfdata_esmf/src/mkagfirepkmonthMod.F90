@@ -57,9 +57,9 @@ contains
     integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
-    integer , allocatable          :: mask_i(:)  ! TODO: What is this?
-    real(r4), allocatable          :: rmask_i(:)  ! TODO: What is this?
-    real(r8), allocatable          :: frac_o(:)  ! TODO: What is this?
+    integer , allocatable          :: mask_i(:)  ! input grid: mesh file landmask
+    real(r4), allocatable          :: rmask_i(:)  ! input grid: raw dataset landmask
+    real(r8), allocatable          :: frac_o(:)  ! output grid: agricultural fire peak month
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
     integer , allocatable          :: agfirepkmon_o(:) ! agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
@@ -182,7 +182,7 @@ contains
 
     ! Output diagnostics comparing global area of each peak month on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         1, 13, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
+         min_valid, max_valid, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     
     ! Release memory
@@ -209,10 +209,10 @@ contains
   subroutine get_dominant_indices(dynamicMaskList, dynamicSrcMaskValue, dynamicDstMaskValue, rc)
 
     ! input/output arguments
-    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)  ! TODO: What is this?
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue  ! TODO: What is this?
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue  ! TODO: What is this?
-    integer                             , intent(out)          :: rc  ! TODO: What is this?
+    type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue  ! Source (i.e. input) grid mask
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue  ! Destination (i.e. output) grid mask
+    integer                             , intent(out)          :: rc  ! error status
 
     ! local variables
     integer            :: ni, no, n
@@ -224,7 +224,6 @@ contains
     rc = ESMF_SUCCESS
 
     if (associated(dynamicMaskList)) then
-       ! TODO: Can parts of this loop and/or its subloops be broken out into separate functions/subroutines to facilitate testing?
        do no = 1, size(dynamicMaskList)
           hasdata = .false.
           wts_o(:) = 0.d0
