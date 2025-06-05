@@ -7,14 +7,12 @@ on:
     paths:
       - 'python/conda_env_ctsm_py.txt'
       - 'doc/ctsm-docs_container/requirements.txt'
-      - '.github/workflows/docs-update-dependency-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'python/conda_env_ctsm_py.txt'
       - 'doc/ctsm-docs_container/requirements.txt'
-      - '.github/workflows/docs-update-dependency-common.yml'
 
   workflow_dispatch:
 
