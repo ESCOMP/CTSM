@@ -36,27 +36,6 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld5.f09_t232.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
-    <phase name="SETUP">
-      <status>FAIL</status>
-      <issue>#3209</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Ld5.f09_t232.ISSP370Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
-    <phase name="SETUP">
-      <status>FAIL</status>
-      <issue>#3209</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_Ld5.f09_t232.ISSP585Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
-    <phase name="SETUP">
-      <status>FAIL</status>
-      <issue>#3209</issue>
-    </phase>
-  </test>
-
   <test name="SMS_Ld5.f09_g17.IHistClm50Sp.derecho_intel.clm-nofire">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>

@@ -1,4 +1,78 @@
 ===============================================================
+Tag name: ctsm5.3.054
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Jun  2 11:39:50 MDT 2025
+One-line Summary: CDEPS: Allow anomaly forcings with any DATM
+
+Purpose and description of changes
+----------------------------------
+
+Updates CDEPS to version cdeps1.0.75, allowing anomaly forcings with any datm_mode. CRU-JRA thus now works with anomalies.
+
+Also brings in cdeps1.0.74: "In DATM with cplhist mode, make 1st timestep same as cam7 when using the cam7 option."
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3209: [CDEPS] Allow anomaly forcings with any datm](https://github.com/ESCOMP/CTSM/issues/3209)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci (just three tests that were failing before)
+     derecho ---- PASS 
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes (although not in tests)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CPLHIST
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): Roundoff
+
+   Only affects first timestep under lnd_tuning_mode clm6_0_cam7.0.
+
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps updated from cdeps1.0.73 to cdeps1.0.75
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3212: ctsm5.3.054: CDEPS: Allow anomaly forcings with any DATM by samsrabin](https://github.com/ESCOMP/CTSM/pull/3212)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.053
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri May 30 14:56:48 MDT 2025
