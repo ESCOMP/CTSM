@@ -2,19 +2,33 @@
 exclude: bin/git-fleximod, .lib/git_fleximod*, tools/contrib/.*
 
 repos:
+
+  # Various useful checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+
+      # Makes sure files end in a newline and only a newline.
       - id: end-of-file-fixer
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
       - id: check-yaml
         files: / python/ lilac/ .github/
+
       - id: check-xml
+
+      # Check for debugger imports and py37+ breakpoint() calls in python source
       - id: debug-statements
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
+      # Checks files for mixed line endings. By default, standardizes to the most common ending.
       - id: mixed-line-ending
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
+      # Prevent giant files from being committed. Default "too large" is 500KB.
+      # git-lfs files will be skipped if it is installed.
       - id: check-added-large-files
+
       # These two showed lot's of issues so should be worked on before turning on
       #- id: check-executables-have-shebangs
       #  exclude: shell_commands
