@@ -37,12 +37,9 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options. For example, depending on your application, it may be helpful to specify a dominant PFT using ``--dompft`` and ``--pctpft`` flags. This allows you to control the PFTs that are present on your surface dataset
 
 .. note::
-   This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024 DATM data. 
-   It can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify 
-   where the top level of your CESM input data is. 
+   This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024 DATM data. It can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. 
    
-   Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` 
-   (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
+   Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
 
 
 
