@@ -67,7 +67,7 @@ layers. Layer :math:`i=0` is the snow layer next to the soil surface and
 layer :math:`i=snl+1` is the top layer, where the variable :math:`snl`
 is the negative of the number of snow layers. The number of snow layers
 and the thickness of each layer is a function of snow depth
-:math:`z_{sno}`  (m) as follows.
+:math:`z_{sno}` (m) as follows.
 
 .. math:: 
 
