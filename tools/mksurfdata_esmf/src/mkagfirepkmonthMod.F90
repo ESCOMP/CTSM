@@ -20,9 +20,8 @@ module mkagfirepkmonthMod
 
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
 
-  integer , parameter :: min_valid = 1
-  integer , parameter :: max_valid = 12
-  integer , parameter :: unsetmon = 13
+  integer , parameter :: min_valid = 1  ! month value for January
+  integer , parameter :: max_valid = 13  ! value for no agricultural fire
 
   type(ESMF_DynamicMask) :: dynamicMask
 
@@ -36,6 +35,10 @@ contains
   subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make agricultural fire peak month data from higher resolution data
+    ! by selecting the dominant value from values 1 through 13
+    ! where 13 means no agricultural fire.
+    !
+    ! The relevant subroutine is get_dominant_indices.
     !
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
@@ -54,9 +57,9 @@ contains
     integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
-    integer , allocatable          :: mask_i(:)
-    real(r4), allocatable          :: rmask_i(:)
-    real(r8), allocatable          :: frac_o(:)
+    integer , allocatable          :: mask_i(:)  ! input grid: mesh file landmask
+    real(r4), allocatable          :: rmask_i(:)  ! input grid: raw dataset landmask
+    real(r8), allocatable          :: frac_o(:)  ! output grid: agricultural fire peak month
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
     integer , allocatable          :: agfirepkmon_o(:) ! agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
@@ -142,6 +145,7 @@ contains
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
+    ! This calls subroutine get_dominant_indices
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_indices,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -163,8 +167,8 @@ contains
 
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
-        max_bad(agfirepkmon_o, unsetmon , 'agfirepkmon')) then
-        call shr_sys_abort()
+        max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
+        call shr_sys_abort(subname//" error in agfirepkmon_o value range; min_valid, max_valid are "//min_valid//", "//max_valid)
      end if
 
     ! Close the file 
@@ -178,7 +182,7 @@ contains
 
     ! Output diagnostics comparing global area of each peak month on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         1, 13, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
+         min_valid, max_valid, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     
     ! Release memory
@@ -206,9 +210,9 @@ contains
 
     ! input/output arguments
     type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue
-    integer                             , intent(out)          :: rc
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue  ! Source (i.e. input) grid mask
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue  ! Destination (i.e. output) grid mask
+    integer                             , intent(out)          :: rc  ! error status
 
     ! local variables
     integer            :: ni, no, n
@@ -239,7 +243,7 @@ contains
              maxindex = maxloc(wts_o(:)) 
              dynamicMaskList(no)%dstElement = real(maxindex(1), kind=r4)
           else
-             dynamicMaskList(no)%dstElement = real(unsetmon, kind=r4)
+             call shr_sys_abort(subname//" error: hasdata needs to be true")
           end if
        end do
     end if
