@@ -8,6 +8,7 @@ import unittest
 import os
 import sys
 import shutil
+from pathlib import Path
 
 import tempfile
 
@@ -33,11 +34,6 @@ def add_args(machine, nodes, tasks):
     ]
     for item in args_to_add:
         sys.argv.append(item)
-
-
-def create_empty_file(filename):
-    """create an empty file"""
-    os.system("touch " + filename)
 
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
@@ -79,13 +75,13 @@ class TestFGenMkSurfJobscriptSingle(unittest.TestCase):
         os.makedirs(self._bld_path)
         self.assertTrue(os.path.isdir(self._bld_path))
         self._nlfile = os.path.join(self._tempdir, "namelist_file")
-        create_empty_file(self._nlfile)
+        Path.touch(self._nlfile)
         self.assertTrue(os.path.exists(self._nlfile))
         self._mksurf_exe = os.path.join(self._bld_path, "mksurfdata")
-        create_empty_file(self._mksurf_exe)
+        Path.touch(self._mksurf_exe)
         self.assertTrue(os.path.exists(self._mksurf_exe))
         self._env_mach = os.path.join(self._bld_path, ".env_mach_specific.sh")
-        create_empty_file(self._env_mach)
+        Path.touch(self._env_mach)
         self.assertTrue(os.path.exists(self._env_mach))
         sys.argv = [
             "gen_mksurfdata_jobscript_single",
