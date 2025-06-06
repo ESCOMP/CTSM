@@ -1346,6 +1346,7 @@
   <test name="ERP_D_Ld10_P64x2" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/ciso_decStart">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1733,7 +1734,6 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCru" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
@@ -2330,7 +2330,7 @@
   <test name="PEM_D_Ld5" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -2339,7 +2339,6 @@
   <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/till">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2348,7 +2347,6 @@
   <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/till--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -2855,6 +2853,7 @@
     <machines>
       <!-- no izumi tests since this has a pe layout specific for derecho -->
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -3074,15 +3073,65 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/datm_ssp126_anom_forc">
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ssp"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
     </options>
   </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ssp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with anomaly forcing future scenario SSP2-4.5 case</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/default--clm/noAnomalyForcing">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ssp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with future scenario SSP2-4.5 but NO anomaly forcing</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/datm_rcp45_anom_forc">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ssp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with anomaly forcing future scenario RCP4.5 (CMIP5) case</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP370Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ssp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with anomaly forcing future scenario SSP3-7.0 case</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP585Clm50BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ssp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Transient production with anomaly forcing future scenario SSP5-8.5 case</option>
+    </options>
+  </test>
+
+
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm">
@@ -3142,9 +3191,10 @@
       <option name="comment">Single point 3-year test with DV"</option>
     </options>
   </test>
-  <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
+  <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
@@ -3186,7 +3236,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_rtmColdSSP">
+  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm60BgcCrop" testmods="clm/ciso_rtmColdSSP">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -3355,6 +3405,7 @@
   <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3364,6 +3415,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
@@ -3374,7 +3426,6 @@
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3515,6 +3566,7 @@
   <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldas" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -3772,6 +3824,7 @@
   <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
@@ -3779,24 +3832,25 @@
       <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with dry deposition on and FATES-SP</option>
-    </options>
-  </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with MEGAN on and FATES-SP</option>
-    </options>
-  </test>
+  <!-- DISABLING UNTIL COMPATIBLE (RGK 051925) https://github.com/ESCOMP/CTSM/issues/1784
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
+       <machines>
+       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       </machines>
+       <options>
+       <option name="wallclock">00:20:00</option>
+       <option name="comment">Run a test with dry deposition on and FATES-SP</option>
+       </options>
+       </test>
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
+       <machines>
+       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       </machines>
+       <options>
+       <option name="wallclock">00:20:00</option>
+       <option name="comment">Run a test with MEGAN on and FATES-SP</option>
+       </options>
+       </test> -->
 
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
@@ -3830,6 +3884,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3918,6 +3973,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -3930,6 +3986,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -3983,12 +4040,6 @@
           <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
         </options>
       </machine>
-      <machine name="derecho" compiler="intel" category="prealpha">
-        <options>
-          <option name="wallclock">00:40:00</option>
-          <option name="comment">Run prealpha for this test as mksurfdata_esmf is tightly coupled to submodule updates and we want to catch issues with submodules for it ASAP.</option>
-        </options>
-      </machine>
     </machines>
   </test>
 
@@ -4008,6 +4059,7 @@
   <test name="LILACSMOKE_D_Ld2" grid="f10_f10_mg37" compset="I2000Ctsm50NwpSpAsRs" testmods="clm-lilac">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
     </machines>
     <options>

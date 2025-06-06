@@ -1,5 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
+       ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
+       ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
+       ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases
+       ctsm5.3.051     erik 05/28/2025 Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
+       ctsm5.3.050 samrabin 05/29/2025 Fix Linux Podman; prefer Linux Docker; update docs docs.
+       ctsm5.3.049 samrabin 05/27/2025 Switch docs to use Podman
+       ctsm5.3.048 samrabin 05/26/2025 Automatically publish docs to this repo
+       ctsm5.3.047 samrabin 05/26/2025 Merge b4b-dev to master
+       ctsm5.3.046   rgknox 05/26/2025 For FATES set itype to ispval and a few unused variables to nan to help prevent future problems
        ctsm5.3.045 glemieux 05/20/2025 FATES default parameter update for API 40
        ctsm5.3.044   slevis 05/14/2025 Introduce time-evolving LEAFCN_TARGET as function of leafcn param
        ctsm5.3.043   slevis 05/09/2025 Merge b4b-dev
