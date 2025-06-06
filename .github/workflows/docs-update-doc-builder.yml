@@ -1,23 +1,35 @@
-name: Run an omnibus test script for the docs
+name: Docs tests to run when doc-builder is updated
 
 on:
   push:
     # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
     branches: ['*']
     paths:
-      - 'doc/testing/*'
-      - 'doc/Makefile'
+      - 'doc/doc-builder'
+      - '.github/workflows/docs-update-dependency-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
-      - 'doc/testing/*'
-      - 'doc/Makefile'
+      - 'doc/doc-builder'
+      - '.github/workflows/docs-update-dependency-common.yml'
 
   workflow_dispatch:
 
+permissions:
+  contents: read
 jobs:
-  build-docs-omnibus-test:
+  test-update-dependency:
+    # Don't run on forks
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
+    name: Tests to run when either docs dependency is updated
+    uses: ./.github/workflows/docs-update-dependency-common.yml
+    with:
+      conda_env_file: python/conda_env_ctsm_py.yml
+      conda_env_name: ctsm_pylib
+
+  test-rv-setup:
     # Don't run on forks
     if: ${{ github.repository == 'ESCOMP/CTSM' }}
 
@@ -33,15 +45,6 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      # Set up conda
-      - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: ctsm_pylib
-          environment-file: python/conda_env_ctsm_py.yml
-          channels: conda-forge
-          auto-activate-base: false
-
-      - name: Text Sphinx builds with omnibus script
+      - name: build_docs rv method
         run: |
-          cd doc/testing && ./testing.sh
+          cd doc/testing && ./test_build_docs_-r-v.sh docker
