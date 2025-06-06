@@ -6,7 +6,7 @@
 Generic single-point runs
 ****************************************
 
-While there are capabilities to run single-point cases at specific tower sites with forcing data from those observations (see :ref:`_supported-tower-sites`), users can also run CTSM at a single lat/lon point of their choosing using the instructions below.
+While there are capabilities to run single-point cases at specific tower sites with forcing data from those observations (see :ref:`supported-tower-sites`), users can also run CTSM at a single lat/lon point of their choosing using the instructions below.
 
 ============
 subset_data:
