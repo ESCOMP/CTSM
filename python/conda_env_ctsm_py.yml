@@ -18,6 +18,12 @@ dependencies:
   - matplotlib=3.10.1
   - pip=25.0.1
 
+  # For running pre-commit hooks
+  - pre-commit=4.2.0
+
+  # For using fortls (Fortran Language Server) with VS Code
+  - fortls=3.2.2
+
   # For building docs
   - pip:
     - -r ../doc/ctsm-docs_container/requirements.txt
