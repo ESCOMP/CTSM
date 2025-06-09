@@ -2,6 +2,17 @@
 
 # Tips for working with reStructuredText
 
+If you've never used reStructuredText before, you should be aware that its syntax is pretty different from anything you've ever used before. We recommend the following resources as references for the syntax:
+- [Sphinx's reStructuredText Primer](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html)
+- The [Quick reStructuredText](https://docutils.sourceforge.io/docs/user/rst/quickref.html) cheat sheet
+
+Some especially useful bits:
+- [Section headers](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sections)
+- [Hyperlinks](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#hyperlinks)
+- [Callout blocks (e.g., warning, tip)](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#admonitions-messages-and-warnings)
+
+On this page, we've compiled some supplemental information that might be helpful, including a list of common errors and their causes.
+
 .. _rst-math:
 
 ## reStructuredText: Math
@@ -80,3 +91,59 @@ Make sure to include at least one empty line after the comment text.
 Tables defined with the [:table: directive](https://docutils.sourceforge.io/docs/ref/rst/directives.html#table) can be annoying because they're very sensitive to the cells inside them being precisely the right widths, as defined by the first `====` strings. If you don't get the widths right, you'll see "Text in column margin" errors. Instead, define your tables using the [list-table](https://docutils.sourceforge.io/docs/ref/rst/directives.html#list-table) directive.
 
 If you already have a table in some other format, like comma-separated values (CSV), you may want to check out the R package [knitr](https://cran.r-project.org/web/packages/knitr/index.html). Its [kable](https://bookdown.org/yihui/rmarkdown-cookbook/kable.html) command allows automatic conversion of R dataframes to tables in reStructuredText and other formats.
+
+
+## reStructuredText: Common error messages and how to handle them
+
+: _error-unexpected-unindent:
+
+### "ERROR: Unexpected indentation"
+
+Like Python, reStructuredText is very particular about how lines are indented. Indentation is used, for example, to denote [code ("literal") blocks](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks) and [quote blocks](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#lists-and-quote-like-blocks). An error like
+```
+/path/to/file.rst:102: ERROR: Unexpected indentation. [docutils]
+```
+indicates that line 102 is indented but not in a way that reStructuredText expects.
+
+### "WARNING: Block quote ends without a blank line; unexpected unindent"
+
+This is essentially the inverse of :ref:`error-unexpected-unindent`: The above line was indented but this one isn't. reStructuredText tried to interpret the indented line as a [block quote](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#lists-and-quote-like-blocks), but block quotes require a blank line after them.
+
+.. _inline-literal-start-without-end:
+
+### "WARNING: Inline literal start-string without end-string"
+
+An "inline literal" is when you want to mix code into a normal line of text (as opposed to in its own code block) ``like this``. This is accomplished with double-backticks:
+```reStructuredText
+An "inline literal" is when you want to mix code into a normal line of
+text (as opposed to in its own code block) ``like this``.
+```
+(A backtick is what you get if you press the key next to 1 on a standard US English keyboard.)
+
+If you have a double-backtick on a line, reStructuredText will say, "They want to start an inline literal here," then look for another double-backtick to end the literal. The "WARNING: Inline literal start-string without end-string" means it can't find one on that line.
+
+This might happen, for example, if you try to put a [Markdown code block](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) in a .rst file. In that case, use the [reStructuredText code block syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks) instead (optionally with [syntax highlighting](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-highlight)).
+
+### "WARNING: Inline interpreted text or phrase reference start-string without end-string"
+
+Like :ref:`inline-literal-start-without-end`, this is probably related to having one double-backtick without another on the same line. As with that other error, it could be the result of a Markdown code block in a .rst file.
+
+## "ERROR: Error in "code" directive: maximum 1 argument(s) allowed, 19 supplied"
+
+This error might show something other than "code," like "highlight" or "sourcecode". It also will probably show a second number that's not 19. The problem is that you tried to write a [reStructuredText code block with syntax highlighting](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-highlight) but didn't include a blank line after the first one:
+
+```reStructuredText
+.. code:: shell
+ # How to list all the available grids
+ cd cime/scripts
+ ./query_config --grids
+```
+
+Fix this by adding a blank line:
+```reStructuredText
+.. code:: shell
+ 
+ # How to list all the available grids
+ cd cime/scripts
+ ./query_config --grids
+```
