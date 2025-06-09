@@ -123,7 +123,7 @@ An "inline literal" is when you want to mix code into a normal line of text (as 
 An "inline literal" is when you want to mix code into a normal line of
 text (as opposed to in its own code block) ``like this``.
 ```
-(A backtick is what you get if you press the key next to 1 on a standard US English keyboard.)
+(A backtick is what you get if you press the key to the left of 1 on a standard US English keyboard.)
 
 If you have a double-backtick on a line, reStructuredText will say, "They want to start an inline literal here," then look for another double-backtick to end the literal. The "WARNING: Inline literal start-string without end-string" means it can't find one on that line.
 
