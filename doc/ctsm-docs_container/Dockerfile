@@ -29,4 +29,4 @@ CMD ["/bin/bash", "-l"]
 
 LABEL org.opencontainers.image.title="Container for building CTSM documentation"
 LABEL org.opencontainers.image.source=https://github.com/ESCOMP/CTSM
-LABEL org.opencontainers.image.version="v1.0.2c"
+LABEL org.opencontainers.image.version="v1.0.2d"
