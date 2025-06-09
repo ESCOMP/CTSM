@@ -1,35 +1,55 @@
-# https://pre-commit.com
+# Note that submodules should be automatically excluded.
+exclude: bin/git-fleximod, .lib/git_fleximod*, tools/contrib/.*
 
-exclude: tools/contrib/.*|.*\.svg|.*\.png|.*\.jpg|.*\.jpeg|.lib
 repos:
+
+  # Various useful checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+
+      # Makes sure files end in a newline and only a newline.
       - id: end-of-file-fixer
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-      - id: trailing-whitespace
-        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
       - id: check-yaml
         files: / python/ lilac/ .github/
+
       - id: check-xml
-        exclude: src/fates/.*|components/.*|env_mach_specific.xml|cime/.*|ccs_config/.*|libraries/.*
+
+      # Check for debugger imports and py37+ breakpoint() calls in python source
       - id: debug-statements
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
+      # Checks files for mixed line endings. By default, standardizes to the most common ending.
       - id: mixed-line-ending
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
+
+      # Prevent giant files from being committed. Default "too large" is 500KB.
+      # git-lfs files will be skipped if it is installed.
       - id: check-added-large-files
+
       # These two showed lot's of issues so should be worked on before turning on
       #- id: check-executables-have-shebangs
       #  exclude: shell_commands
       #- id: check-shebang-scripts-are-executable
       #  exclude: shell_commands
-      - id: check-merge-conflict
+
+      # Checks for a common error of placing code before the docstring.
       - id: check-docstring-first
         files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-# black as python formatter
+
+  # Run black formatter
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 25.1.0  # Keep this synced with version in python/conda_env_ctsm_py.yml
     hooks:
       - id: black
-        files: python/ cime_config/SystemTests/ cime_config/buildlib cime_config/buildnml
-        args: [--config python/pyproject.toml]
+        args: [--config, python/pyproject.toml]
+        language_version: python3.13.2
+        files: >-
+          (?x)(
+            python/.*\.py
+            cime_config/SystemTests|
+            cime_config/buildlib|
+            cime_config/buildnml|
+          )
