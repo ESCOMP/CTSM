@@ -13,6 +13,11 @@ Some especially useful bits:
 
 On this page, we've compiled some supplemental information that might be helpful, including a list of common errors and their causes.
 
+.. contents::
+   :depth: 1
+   :backlinks: top
+   :local:
+
 .. _rst-math:
 
 ## reStructuredText: Math
