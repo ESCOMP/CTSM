@@ -133,7 +133,7 @@ This might happen, for example, if you try to put a [Markdown code block](https:
 
 Like :ref:`inline-literal-start-without-end`, this is probably related to having one double-backtick without another on the same line. As with that other error, it could be the result of a Markdown code block in a .rst file.
 
-## "ERROR: Error in "code" directive: maximum 1 argument(s) allowed, 19 supplied"
+### "ERROR: Error in "code" directive: maximum 1 argument(s) allowed, 19 supplied"
 
 This error might show something other than "code," like "highlight" or "sourcecode". It also will probably show a second number that's not 19. The problem is that you tried to write a [reStructuredText code block with syntax highlighting](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-highlight) but didn't include a blank line after the first one:
 
