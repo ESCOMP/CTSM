@@ -95,7 +95,7 @@ If you already have a table in some other format, like comma-separated values (C
 
 ## reStructuredText: Common error messages and how to handle them
 
-: _error-unexpected-unindent:
+.. _error-unexpected-unindent:
 
 ### "ERROR: Unexpected indentation"
 
