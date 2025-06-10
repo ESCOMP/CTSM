@@ -38,10 +38,6 @@ Note (a) the leading spaces for each line after `.. math::` and (b) the empty li
 
 reStructuredText math largely follows LaTeX syntax.
 
-Common errors:
-- 'ERROR: Error in "math" directive: invalid option block': You might have forgotten the empty line after your equation label.
-- "WARNING: Explicit markup ends without a blank line; unexpected unindent": You might have forgotten the leading spaces for every line after `.. math::`. You need at least one leading space on each line.
-
 .. _rst-cross-references:
 
 ## reStructuredText: Cross-references
@@ -71,12 +67,6 @@ Here are some examples. Note that the displayed link text will update automatica
 You can have any link (except for equations) show custom text by putting the referenced label at the end in `<angled brackets>`. E.g., ``:ref:`Diagram of CLM subgrid hierarchy<Figure CLM subgrid hierarchy>``` → :ref:`Diagram of CLM subgrid hierarchy<Figure CLM subgrid hierarchy>`. 
 
 Note that this is necessary for labels that aren't immediately followed by a section heading, a table with a caption, or a figure with a caption. For instance, to refer to labels in our bibliography, you could do ``:ref:`(Bonan, 1996)<Bonan1996>``` → :ref:`(Bonan, 1996)<Bonan1996>`.
-
-Common errors:
-- "WARNING: Failed to create a cross reference. A title or caption not found": This probably means you tried to `:ref:` a label that's not immediately followed by (a) a table/figure with a caption or section or (b) a section (see above).
-- "WARNING: undefined label": If you're sure the label you referenced actually exists, this probably means you tried to ``:numref:`` a label that's not immediately followed by a table, figure, or section (see above). Alternatively, you might have tried to ``:ref:`` an :ref:`equation<rst-math>`; in that case, use ``:eq:`` instead.
-- "WARNING: malformed hyperlink target": You may have forgotten the trailing `:` on a label line.
-- If you forget to surround a label with blank lines, you will get errors like "Explicit markup ends without a blank line; unexpected unindent [docutils]" that often point to lines far away from the actual problem.
 
 .. _rst-comments:
 
@@ -152,3 +142,24 @@ Fix this by adding a blank line:
  cd cime/scripts
  ./query_config --grids
 ```
+
+### 'ERROR: Error in "math" directive: invalid option block'
+
+You might have forgotten the empty line after an equation label.
+
+### "WARNING: Explicit markup ends without a blank line; unexpected unindent"
+
+You might have forgotten the leading spaces for every line after `.. math::`. As a reminder, you need at least one leading space on each line.
+
+You can also get this error if you forget to surround a :ref:`cross-reference label<rst-cross-references>` with blank lines. In this case, the error message might point to lines far away from the actual problem.
+
+### "WARNING: Failed to create a cross reference: A title or caption not found"
+This probably means you tried to `:ref:` a label that's not immediately followed by (a) a table/figure with a caption or (b) a section.
+
+### "WARNING: undefined label"
+
+If you're sure the label you referenced actually exists, this probably means you tried to ``:numref:`` a label that's not immediately followed by a table, figure, or section (see above). Alternatively, you might have tried to ``:ref:`` an :ref:`equation<rst-math>`; in that case, use ``:eq:`` instead.
+
+### "WARNING: malformed hyperlink target"
+
+You may have forgotten the trailing `:` on a label line.
