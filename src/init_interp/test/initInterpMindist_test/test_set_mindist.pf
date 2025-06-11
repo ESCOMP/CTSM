@@ -748,13 +748,19 @@ contains
     integer :: mindist_index(1)
 
     associate( &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
          ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD, &
          ilun_urban_HD => subgrid_special_indices%ilun_urban_HD, &
          ilun_urban_MD => subgrid_special_indices%ilun_urban_MD &
          )
 
     call setup_landunit_ncols(ltype=ilun_urban_TBD, &
-         ctypes=[71,72,73,74,75], &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
          cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
          ptype=0)
 
@@ -780,6 +786,8 @@ contains
          fill_missing_urban_with_HD = .true., &
          fill_missing_with_natveg = .false.)
 
+    ! Note that the mindist_index should return the second index of the 
+    ! ltype array (2), not the actual value of ilun_urban_HD
     @assertEqual(2, mindist_index(1))
 
     end associate
@@ -799,13 +807,19 @@ contains
     character(len=:), allocatable :: expected_msg
 
     associate( &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
          ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD, &
          ilun_urban_HD => subgrid_special_indices%ilun_urban_HD, &
          ilun_urban_MD => subgrid_special_indices%ilun_urban_MD &
          )
 
     call setup_landunit_ncols(ltype=ilun_urban_TBD, &
-         ctypes=[71,72,73,74,75], &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
          cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
          ptype=0)
 
@@ -853,13 +867,19 @@ contains
 
     associate( &
          ipft_bare   => subgrid_special_indices%ipft_not_vegetated, &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
          icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
          ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
          ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD &
          )
 
     call setup_landunit_ncols(ltype=ilun_urban_TBD, &
-         ctypes=[71,72,73,74,75], &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
          cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
          ptype=0)
 
@@ -869,7 +889,7 @@ contains
          beg = 1, &
          name = 'pft', &
          ptype = [0], &
-         ctype = [71], &
+         ctype = [icol_urban_roof], &
          ltype = [ilun_urban_TBD], &
          lat = [my_lat], &
          lon = [my_lon])

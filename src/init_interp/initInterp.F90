@@ -294,6 +294,21 @@ contains
          'icol_vegetated_or_bare_soil', &
          subgrid_special_indices%icol_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_roof', &
+         subgrid_special_indices%icol_urban_roof)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_sunwall', &
+         subgrid_special_indices%icol_urban_sunwall)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_shadewall', &
+         subgrid_special_indices%icol_urban_shadewall)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_impervious_road', &
+         subgrid_special_indices%icol_urban_impervious_road)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_pervious_road', &
+         subgrid_special_indices%icol_urban_pervious_road)
+    status = pio_get_att(ncidi, pio_global, &
          'ilun_vegetated_or_bare_soil', &
          subgrid_special_indices%ilun_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
@@ -336,6 +351,16 @@ contains
             subgrid_special_indices%ipft_not_vegetated
        write(iulog,*)'icol_vegetated_or_bare_soil             = ' , &
             subgrid_special_indices%icol_vegetated_or_bare_soil
+       write(iulog,*)'icol_urban_roof                         = ' , &
+            subgrid_special_indices%icol_urban_roof
+       write(iulog,*)'icol_urban_sunwall                      = ' , &
+            subgrid_special_indices%icol_urban_sunwall
+       write(iulog,*)'icol_urban_shadewall                    = ' , &
+            subgrid_special_indices%icol_urban_shadewall
+       write(iulog,*)'icol_urban_impervious_road              = ' , &
+            subgrid_special_indices%icol_urban_impervious_road
+       write(iulog,*)'icol_urban_pervious_road                = ' , &
+            subgrid_special_indices%icol_urban_pervious_road
        write(iulog,*)'ilun_vegetated_or_bare_soil             = ' , &
             subgrid_special_indices%ilun_vegetated_or_bare_soil
        write(iulog,*)'ilun_crop                               = ' , &

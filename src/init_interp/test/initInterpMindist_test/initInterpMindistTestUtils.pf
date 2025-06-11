@@ -19,6 +19,11 @@ module initInterpMindistTestUtils
        subgrid_special_indices_type( &
        ipft_not_vegetated = 0, &
        icol_vegetated_or_bare_soil = 10, &
+       icol_urban_roof = 71, &
+       icol_urban_sunwall = 72, &
+       icol_urban_shadewall = 73, &
+       icol_urban_impervious_road = 74, &
+       icol_urban_pervious_road = 75, &
        ilun_vegetated_or_bare_soil = 3, &
        ilun_crop = 4, &
        ilun_landice = 5, &

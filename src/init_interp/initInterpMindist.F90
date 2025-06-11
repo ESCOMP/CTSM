@@ -32,6 +32,11 @@ module initInterpMindist
   type, public :: subgrid_special_indices_type
      integer :: ipft_not_vegetated
      integer :: icol_vegetated_or_bare_soil
+     integer :: icol_urban_roof
+     integer :: icol_urban_sunwall
+     integer :: icol_urban_shadewall
+     integer :: icol_urban_impervious_road
+     integer :: icol_urban_pervious_road
      integer :: ilun_vegetated_or_bare_soil
      integer :: ilun_crop
      integer :: ilun_landice
@@ -349,20 +354,27 @@ contains
                   &Cannot find any input points matching output point:'
              call subgrido%print_point(no, iulog)
              write(iulog,*) ' '
-             write(iulog,*) 'If this is an urban type (ltype = 7,8, or 9) then '
-             write(iulog,*) 'consider rerunning with the following in user_nl_clm:'
+             write(iulog,*) 'If this is an urban type'
+             write(iulog,*) '(ltype = ', subgrid_special_indices%ilun_urban_TBD, &
+                            ',', subgrid_special_indices%ilun_urban_HD, &
+                            ', or', subgrid_special_indices%ilun_urban_MD, ')'
+             write(iulog,*) 'then consider rerunning with the following in user_nl_clm:'
              write(iulog,*) 'init_interp_fill_missing_urban_with_HD = .true.'
              write(iulog,*) 'However, note that this will fill all urban missing types in the output'
              write(iulog,*) 'with the closest urban high density (HD) type in the input'
              write(iulog,*) 'So, you should consider whether that is what you want.'
              write(iulog,*) ' '
-             write(iulog,*) 'If this is a non-urban type (ltype \= 7,8, or 9) then '
+             write(iulog,*) 'If this is a non-urban type'
+             write(iulog,*) '(ltype \= ',subgrid_special_indices%ilun_urban_TBD, &
+                            ',', subgrid_special_indices%ilun_urban_HD, &
+                            ', or', subgrid_special_indices%ilun_urban_MD, ')'
              write(iulog,*) 'consider rerunning with the following in user_nl_clm:'
              write(iulog,*) 'init_interp_fill_missing_with_natveg = .true.'
              write(iulog,*) 'However, note that this will fill all non-urban missing types in the output'
              write(iulog,*) 'with the closest natural veg column in the input'
              write(iulog,*) '(using bare soil for patch-level variables).'
              write(iulog,*) 'So, you should consider whether that is what you want.'
+             write(iulog,*) errMsg(sourcefile, __LINE__)
              call endrun(msg=subname// &
                   ' ERROR: Cannot find any input points matching output point')
           end if
