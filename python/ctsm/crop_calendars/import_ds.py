@@ -5,11 +5,13 @@ and/or vegetation types and/or timesteps, concatenating by time.
 - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
     vegetation types.
 """
+
 import re
 import warnings
 from importlib.util import find_spec
 import numpy as np
 import xarray as xr
+from ctsm.utils import is_instantaneous
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 
@@ -23,7 +25,8 @@ def compute_derived_vars(ds_in, var):
         and "HDATES" in ds_in
         and ds_in.HDATES.dims == ("time", "mxharvests", "patch")
     ):
-        year_list = np.array([np.float32(x.year - 1) for x in ds_in.time.values])
+        year_adj = 1 if is_instantaneous(ds_in["time"]) else 0
+        year_list = np.array([np.float32(x.year - year_adj) for x in ds_in.time.values])
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),
@@ -191,6 +194,7 @@ def process_inputs(filelist, my_vars, my_vegtypes, my_vars_missing_ok):
 
 def import_ds(
     filelist,
+    *,
     my_vars=None,
     my_vegtypes=None,
     time_slice=None,
@@ -235,6 +239,7 @@ def import_ds(
     # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
     # allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes
     # directly, but that's bad practice as it could lead to scoping issues.
+    # pylint: disable=unnecessary-lambda-assignment
     mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, my_vars, my_vegtypes, time_slice)
 
     # Import

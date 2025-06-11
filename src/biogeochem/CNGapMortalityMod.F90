@@ -9,9 +9,11 @@ module CNGapMortalityMod
   !
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
+  use shr_infnan_mod                 , only : nan => shr_infnan_nan, assignment(=)
   use decompMod                      , only : bounds_type
   use abortutils                     , only : endrun
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
+  use clm_varpar                     , only : mxpft
   use pftconMod                      , only : pftcon
   use CNDVType                       , only : dgvs_type
   use CNVegCarbonStateType           , only : cnveg_carbonstate_type, spinup_factor_deadwood
@@ -34,8 +36,10 @@ module CNGapMortalityMod
   public :: CNGapMortality
 
   type, private :: params_type
-     real(r8):: am     ! mortality rate based on annual rate, fractional mortality (1/yr)
      real(r8):: k_mort ! coeff. of growth efficiency in mortality equation
+     real(r8), allocatable :: r_mort(:)  ! Mortality rate (1/year)
+  contains
+     procedure, private :: allocParams    ! Allocate the parameters
   end type params_type
   !
   type(params_type), private :: params_inst
@@ -48,6 +52,24 @@ module CNGapMortalityMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine allocParams ( this )
+    !
+    implicit none
+
+    ! !ARGUMENTS:
+    class(params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'allocParams'
+    !-----------------------------------------------------------------------
+
+    ! allocate parameters
+
+    allocate( this%r_mort    (0:mxpft) )          ; this%r_mort(:)   = nan
+
+  end subroutine allocParams
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -67,18 +89,21 @@ contains
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
+    real(r8)           :: temp1d(0:mxpft) ! temporary to read in parameter
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
-
-    tString='r_mort'
-    call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%am=tempr
 
     tString='k_mort'
     call ncd_io(varname=trim(tString),data=tempr, flag='read', ncid=ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%k_mort=tempr   
+
+    call params_inst%allocParams()
+
+    tString='r_mort'
+    call ncd_io(varname=trim(tString),data=temp1d, flag='read', ncid=ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%r_mort=temp1d
     
   end subroutine readParams
 
@@ -138,7 +163,6 @@ contains
          greffic                  => dgvs_inst%greffic_patch    , & ! Input:  [real(r8) (:) ]                                                    
          heatstress               => dgvs_inst%heatstress_patch , & ! Input:  [real(r8) (:) ]    
          
-         leafcn                   => pftcon%leafcn               , & ! Input:  [real(r8) (:)]  leaf C:N (gC/gN)                        
          livewdcn                 => pftcon%livewdcn             , & ! Input:  [real(r8) (:)]  live wood (phloem and ray parenchyma) C:N (gC/gN) 
          laisun                   => canopystate_inst%laisun_patch  , & ! Input:  [real(r8) (:)   ]  sunlit projected leaf area index      
          laisha                   => canopystate_inst%laisha_patch  , & ! Input:  [real(r8) (:)   ]  shaded projected leaf area index   
@@ -183,8 +207,6 @@ contains
          )
 
       dt = real( get_step_size(), r8 )
-      ! set the mortality rate based on annual rate
-      am = params_inst%am
       ! set coeff of growth efficiency in mortality equation 
       k_mort = params_inst%k_mort
 
@@ -216,9 +238,11 @@ contains
                am = min(1._r8, am + heatstress(p))
             else ! lpj didn't set this for grasses; cn does
                ! set the mortality rate based on annual rate
-               am = params_inst%am
+               am = params_inst%r_mort(ivt(p))
             end if
 
+         else
+            am = params_inst%r_mort(ivt(p)) 
          end if
 
          m  = am/(get_average_days_per_year() * secspday)

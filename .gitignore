@@ -1,23 +1,8 @@
-# directories checked out by manage_externals, and other files created
-# by manage_externals
-manage_externals.log
-ccs_config
-/src/fates/
-/cime/
-/components/
-/libraries/
-/share/
-/doc/doc-builder/
-/tools/external/
-
-# ignore svn directories
-**/.svn/**
-.svn/
-
 # netcdf files
 *.nc
 # but don't ignore netcdf files here:
 !/python/ctsm/test/testinputs/*.nc
+!/python/ctsm/test/testinputs/**/*.nc
 
 # editor files
 *.swp
@@ -91,12 +76,11 @@ ctsm.input_data_list.previous
 /tools/mksurfdata_esmf/mksurfdata_in
 /tools/mksurfdata_esmf/surfdata_*.nc
 /tools/mksurfdata_esmf/landuse.timeseries_*.nc
-/tools/mksurfdata_esmf/mksurfdata_jobscript_multi.sh
-/tools/mksurfdata_esmf/mksurfdata_jobscript_single.sh
 /tools/mksurfdata_esmf/pio_iotype.txt
 /tools/mksurfdata_esmf/*.sh
 /tools/mksurfdata_esmf/tool_bld
 /tools/mksurfdata_esmf/pio_iotype.txt
+/tools/mksurfdata_esmf/mpibind*.log
 
 # mksurfdata unit tests
 unit_test_build
@@ -105,8 +89,18 @@ unit_test_build
 /tools/site_and_regional/listing.csv
 /tools/site_and_regional/????/
 /tools/site_and_regional/????.ad/
+/tools/site_and_regional/????.*.ad/
 /tools/site_and_regional/????.postad/
+/tools/site_and_regional/????.*.postad/
 /tools/site_and_regional/????.transient/
+/tools/site_and_regional/????.*.transient/
+/tools/site_and_regional/??-???/
+/tools/site_and_regional/??-???.ad/
+/tools/site_and_regional/??-???.*.ad/
+/tools/site_and_regional/??-???.postad/
+/tools/site_and_regional/??-???.*.postad/
+/tools/site_and_regional/??-???.transient/
+/tools/site_and_regional/??-???.*.transient/
 /tools/site_and_regional/archive/
 
 # build output
@@ -117,3 +111,8 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# Docs build and testing output
+_build*/
+_publish*/
+doc/.coverage

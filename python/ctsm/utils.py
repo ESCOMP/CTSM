@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+import glob
 import string
 import re
 import pdb
@@ -105,6 +106,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
             abort(err_msg)
     today = date.today()
     today_string = today.strftime("%y%m%d")
+    fname_out = None
     if not replace_res:
         fname_out = basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
     else:
@@ -120,7 +122,7 @@ def add_tag_to_filename(filename, tag, replace_res=False):
     return fname_out
 
 
-def update_metadata(file, title, summary, contact, data_script, description):
+def update_metadata(file, *, title, summary, contact, data_script, description):
     """
     Description
     -----------
@@ -237,3 +239,31 @@ def parse_isoduration(iso_string):
     # Convert all to timedelta
     delta_t = timedelta(days=int(days) + 365 * int(years) + 30 * int(months))
     return int(delta_t.total_seconds() / 86400)
+
+
+def is_instantaneous(time_var):
+    """
+    Check whether a time variable came from an instantaneous file
+    """
+    long_name = time_var.attrs["long_name"]
+    if "time at end of" in long_name:
+        return True
+    if "time at exact middle" in long_name:
+        return False
+    raise RuntimeError(f"Does this long_name mean instantaneous or not? {long_name}")
+
+
+def find_one_file_matching_pattern(pattern):
+    """
+    Given a file path with wildcards, find all the matching files. Throw an error if there is not
+    exactly one matching file. If there's just one, return its path.
+    """
+    file_list = glob.glob(pattern)
+    if not file_list:
+        raise FileNotFoundError("No file found matching pattern: " + pattern)
+    n_found = len(file_list)
+    if n_found > 1:
+        raise RuntimeError(
+            f"Expected 1 but found {n_found} files found matching pattern: " + pattern
+        )
+    return file_list[0]

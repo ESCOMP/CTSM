@@ -18,13 +18,23 @@ import pandas as pd
 
 # Big ugly function to create usermod_dirs for each site
 def write_usermods(
-    lat, lon, site, start_year, end_year, start_date, start_year_actual, start_tod, atm_ncpl, stop_n
+    *,
+    lat,
+    lon,
+    site,
+    start_year,
+    end_year,
+    start_date,
+    start_year_actual,
+    start_tod,
+    atm_ncpl,
+    stop_n,
 ):
     """
     Write information to be added to user mods
     """
 
-    site_dir = os.path.join("../../cime_config/usermods_dirs/PLUMBER2/", site)
+    site_dir = os.path.join("../../cime_config/usermods_dirs/clm/PLUMBER2/", site)
 
     if not os.path.isdir(site_dir):
         os.makedirs(site_dir, exist_ok=True)
@@ -160,16 +170,16 @@ def main():
         stop_n = 1 + end_year - start_year
 
         write_usermods(
-            lat,
-            lon,
-            site,
-            start_year,
-            end_year,
-            start_date,
-            start_year_actual,
-            start_tod,
-            atm_ncpl,
-            stop_n,
+            lat=lat,
+            lon=lon,
+            site=site,
+            start_year=start_year,
+            end_year=end_year,
+            start_date=start_date,
+            start_year_actual=start_year_actual,
+            start_tod=start_tod,
+            atm_ncpl=atm_ncpl,
+            stop_n=stop_n,
         )
 
 

@@ -12,7 +12,9 @@ Step 0: Run a AD cold-start with matrix and matrix spinup off
 Step 3: Run a slow-mode spinup
 Step 4: matrix Spinup off
 """
+
 import shutil, glob, os, sys
+from datetime import datetime
 
 if __name__ == "__main__":
     CIMEROOT = os.environ.get("CIMEROOT")
@@ -22,8 +24,9 @@ if __name__ == "__main__":
     sys.path.append(os.path.join(CIMEROOT, "scripts", "lib"))
     sys.path.append(os.path.join(CIMEROOT, "scripts"))
 else:
-    from CIME.utils import append_testlog
+    from CIME.status import append_testlog
 
+from CIME.case import Case
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.SystemTests.test_utils import user_nl_utils
@@ -186,6 +189,26 @@ class SSPMATRIXCN(SystemTestsCommon):
             caseroot=caseroot, component=self.comp, contents=contents_to_append
         )
 
+    def run_indv(self, nstep, st_archive=True):
+        """
+        Individual run of a given step
+        """
+        suffix = "step{}".format(self.steps[nstep])
+        if isinstance(self._case, Case):
+            super().run_indv(suffix, st_archive=True)
+        else:
+            caseroot = self._case.get_value("CASEROOT")
+            dout_sr = self._case.get_value("DOUT_S_ROOT")
+            rest_r = os.path.join(dout_sr, "rest")
+            nyear = 1851 + nstep
+            rundate = "%s-01-01-00000" % nyear
+            restdir = os.path.join(rest_r, rundate)
+            os.mkdir(restdir)
+            rpoint = os.path.join(restdir, "rpointer.clm." + rundate)
+            os.mknod(rpoint)
+            rpoint = os.path.join(restdir, "rpointer.cpl." + rundate)
+            os.mknod(rpoint)
+
     def run_phase(self):
         "Run phase"
 
@@ -225,6 +248,7 @@ class SSPMATRIXCN(SystemTestsCommon):
                 self.append_user_nl(clone_path, n)
 
             dout_sr = clone.get_value("DOUT_S_ROOT")
+            ninst = self._case.get_value("NINST")
 
             self._skip_pnl = False
             #
@@ -247,14 +271,24 @@ class SSPMATRIXCN(SystemTestsCommon):
                             os.makedirs(rundir)
                         os.symlink(item, linkfile)
 
-                    for item in glob.glob("{}/*rpointer*".format(rest_path)):
-                        shutil.copy(item, rundir)
+                    # For a branch the cpl rpointer file needs to be handled
+                    if self.runtyp[n] == "branch":
 
+                        drvrest = "rpointer.cpl"
+                        if ninst > 1:
+                            drvrest += "_0001"
+                        drvrest += rest_time
+
+                        self._set_drv_restart_pointer(drvrest)
+                        try:
+                            shutil.copy(drvrest, rundir)
+                        except shutil.SameFileError:
+                            pass
             #
             # Run the case (Archiving on)
             #
             self._case.flush()
-            self.run_indv(suffix="step{}".format(self.steps[n]), st_archive=True)
+            self.run_indv(nstep=n, st_archive=True)
 
             #
             # Get the reference case from this step for the next step
@@ -267,6 +301,7 @@ class SSPMATRIXCN(SystemTestsCommon):
             )
             refsec = "00000"
             rest_path = os.path.join(dout_sr, "rest", "{}-{}".format(refdate, refsec))
+            rest_time = "." + refdate + "-" + refsec
 
         #
         # Last step in original case
@@ -292,10 +327,22 @@ class SSPMATRIXCN(SystemTestsCommon):
             linkfile = os.path.join(rundir, os.path.basename(item))
             if os.path.exists(linkfile):
                 os.remove(linkfile)
+            expect(True, os.path.exists(item), "expected file does NOT exist = " + item)
             os.symlink(item, linkfile)
 
-        for item in glob.glob("{}/*rpointer*".format(rest_path)):
-            shutil.copy(item, rundir)
+        # For a branch the cpl rpointer file needs to be handled
+        if self.runtyp[n] == "branch":
+
+            drvrest = "rpointer.cpl"
+            if ninst > 1:
+                drvrest += "_0001"
+            drvrest += rest_time
+
+            self._set_drv_restart_pointer(drvrest)
+            try:
+                shutil.copy(os.path.join(rest_path, drvrest), rundir)
+            except shutil.SameFileError:
+                pass
 
         self.append_user_nl(clone_path, n)
         #
@@ -306,66 +353,4 @@ class SSPMATRIXCN(SystemTestsCommon):
         # Run the case (short term archiving is off)
         #
         self._case.flush()
-        self.run_indv(suffix="step{}".format(self.steps[n]), st_archive=False)
-
-
-#
-# Unit testing for above
-#
-import unittest
-from CIME.case import Case
-from CIME.utils import _LessThanFilter
-from argparse import RawTextHelpFormatter
-
-
-class test_ssp_matrixcn(unittest.TestCase):
-    def setUp(self):
-        self.ssp = SSPMATRIXCN()
-
-    def test_logger(self):
-        # Test the logger
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-        logger.level = logging.DEBUG
-        logger.info("nyr_forcing = {}".format(self.ssp.nyr_forcing))
-        for n in range(self.ssp.n_steps()):
-            self.ssp.__logger__(n)
-            if self.ssp.spin[n] == "sasu":
-                logger.info("  SASU spinup is .true.")
-                if self.ssp.sasu[n] != -999:
-                    logger.info("  nyr_sasu = {}".format(self.ssp.sasu[n]))
-                if self.ssp.iloop[n] != -999:
-                    logger.info("  iloop_avg = {}".format(self.ssp.iloop[n]))
-
-        logger.info("Total number of years {}".format(self.ssp.total_years()))
-        logger.removeHandler(stream_handler)
-
-    def test_n_steps(self):
-        self.assertTrue(self.ssp.n_steps() == 3)
-
-    def test_valid_n(self):
-        for n in range(self.ssp.n_steps()):
-            self.ssp.check_n(n)
-
-    def test_negative_n(self):
-        self.assertRaises(SystemExit, self.ssp.check_n, -1)
-
-    def test_n_too_big(self):
-        self.assertRaises(SystemExit, self.ssp.check_n, self.ssp.n_steps())
-
-    def test_append_user_nl_step2(self):
-        ufile = "user_nl_clm"
-        if not os.path.exists(ufile):
-            os.mknod(ufile)
-        else:
-            expect(0, ufile + " file already exists, not overwritting it")
-
-        self.ssp.append_user_nl(caseroot=".", n=2)
-        print(ufile + " for step 2")
-        log = open(ufile, "r").read()
-        print(log)
-        os.remove(ufile)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.run_indv(nstep=n, st_archive=False)

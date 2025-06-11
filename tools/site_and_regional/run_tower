@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""
+This is a just top-level skeleton script that calls
+run_tower.py.
+The original code (run_tower.py) is located under
+python/ctsm/site_and_regional folder.
+
+For full instructions on how to run the code and different options,
+please check python/ctsm/site_and_regional/run_tower.py file.
+
+This script first creates and builds a generic base case.
+Next, it will clone the base_case for different neon sites and run
+types to reduce the need to build ctsm everytime.
+
+This script will do the following:
+    1) Create a generic base case for cloning.
+    2) Make the case for the specific neon site(s).
+    3) Make changes to the case, for:
+        a. AD spinup
+        b. post-AD spinup
+        c. transient
+        #---------------
+        d. SASU or Matrix spinup
+    4) Build and submit the case.
+
+----------------------------------------------------------------
+To see all available options for running tower sites:
+    ./run_tower --help
+----------------------------------------------------------------
+Instructions for running using conda python environments:
+../../py_env_create
+conda activate ctsm_pylib
+"""
+
+import os
+import sys
+
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+
+# pylint: disable=import-error, wrong-import-position
+from ctsm.site_and_regional.run_tower import main
+
+if __name__ == "__main__":
+    main(__doc__)

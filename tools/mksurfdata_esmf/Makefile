@@ -1,5 +1,7 @@
 # -*- mode:Makefile -*-
 #
+# Running with this Makefile requires that you build the code first.
+#
 # Before running "make urban-alpha" or any target that includes it,
 # execute "module load nco" first.
 #
@@ -28,14 +30,20 @@
 # Set up special characters
 null  :=
 
+# Path to the executable
+MKSURFDATA_EXE = tool_bld/mksurfdata_esmf
+
 # Set a few things needed for batch handling
-PROJECT = $(shell cat $(HOME)/.cesm_proj)
+PROJECT := ${PROJECT}
+ifeq ($(PROJECT),$(null))
+   PROJECT = $(shell cat $(HOME)/.cesm_proj)
+endif
 LOGOUT = $@.stdout.txt
 PWD = $(shell pwd)
 
 BATCHJOBS_ch = qsub
 ifeq ($(PROJECT),$(null))
-   $(error Can NOT find PROJECT number from ~/.cesm_proj file create it and try again)
+   $(error Can't get project number from either PROJECT environment variable or ~/.cesm_proj file. Try calling make like "PROJECT=P12345678 make ..." or put your project number in ~/.cesm_proj)
 endif
 BATCHJOBS = $(BATCHJOBS_ch)
 
@@ -52,7 +60,7 @@ SUBSETDATA_POINT_ALLLU = $(SUBSETDATA_POINT) --include-nonveg
 SUBSETDATA_POINT_URBAN = $(SUBSETDATA_POINT) --include-nonveg
 
 # Subset data sites...
-SUBSETDATA_1X1_BRAZIL := --lat -7 --lon -55 --site 1x1_brazil
+SUBSETDATA_1X1_BRAZIL := --lat -7 --lon 305 --site 1x1_brazil
 SUBSETDATA_1X1_NUMAIA := --lat 40.6878 --lon 267.0228 --site 1x1_numaIA
 SUBSETDATA_1X1_SMALL_IA  := --lat 40.6878 --lon 267.0228 --site 1x1_smallvilleIA \
 		--dompft 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 \
@@ -79,10 +87,13 @@ SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --o
 # low-res is for low resolutions for testing
 # nldas is for NWP working with WRF
 # STANDARD means no crop, so 16 pfts
+# global-hist-1850-f45 is used by FATES and we expect it to be phased out
 STANDARD = \
 	global-potveg \
 	global-present \
 	global-present-low-res \
+	global-hist-1850-f19 \
+	global-hist-1850-f45 \
 
 CROP = \
 	crop-global-future \
@@ -100,6 +111,10 @@ CROP = \
 	crop-global-1850-ne16 \
 	crop-global-1850-ne30 \
 	crop-global-1850-mpasa480 \
+
+# Build the executable if it doesn't exist and any target depends on it
+$(MKSURFDATA_EXE):
+	./gen_mksurfdata_build
 
 # Start all with all-subset because user is bound to forget to first run
 # module load nco
@@ -153,6 +168,12 @@ global-present-low-res : FORCE
 	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 64 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
+global-hist-1850-f19 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 8 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+global-hist-1850-f45 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
 #
 # Ultra high resolutions (Don't do by default user should select this by hand)
 #
