@@ -852,7 +852,7 @@ contains
   end subroutine TBDurban_usesHDurban_aborts
 
   @Test
-  subroutine urbanlandunits_NotFilled_with_natveg(this)
+  subroutine urbanlandunits_NotFilled_with_natveg_aborts(this)
     ! With fill_missing_urban_with_HD = .false. and fill_missing_with_natveg = .true.,
     ! urban landunit should not be filled with natveg, and an error in set_mindist will be
     ! thrown, and this test should pass.
@@ -913,7 +913,7 @@ contains
     @assertExceptionRaised(expected_msg)
 
     end associate
-  end subroutine urbanlandunits_NotFilled_with_natveg
+  end subroutine urbanlandunits_NotFilled_with_natveg_aborts
 
   @Test
   subroutine baresoil_ignoresSpecialLandunits(this)
