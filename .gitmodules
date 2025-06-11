@@ -132,7 +132,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/doc-builder
 [submodule "representative-hillslopes"]
 path = tools/external/representative-hillslopes
 url = https://github.com/samsrabin/Representative_Hillslopes
-fxtag = 2126ffe018b2268ed479469421763cbb45d9c264
+fxtag = 9f74dceb2428603e4258fc3ac93556817195f3c8
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/swensosc/Representative_Hillslopes
