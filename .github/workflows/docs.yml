@@ -14,6 +14,7 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
+      - 'tools/external/representative-hillslopes/shell_scripts/README.md'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -26,6 +27,7 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
+      - 'tools/external/representative-hillslopes/shell_scripts/README.md'
 
   workflow_dispatch:
 
