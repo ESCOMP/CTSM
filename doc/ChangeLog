@@ -1,4 +1,96 @@
 ===============================================================
+Tag name: ctsm5.3.056
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu 12 Jun 2025 12:54:49 PM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Several updates to documentation, from the documentation hackathon.
+Also remove /glade from paths for mksurfdata_esmf paths
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves Improve headings in single-point docs #3008
+  Resolves Docs needed: Supported towers #3175
+  Resolves Docs needed: NEON #3167
+  Documentation part of run_neon base case must be of same run type as a requested clone #1926
+  Resolves run_tower documentation needed #2997
+  Resolves Various subset_data and related docs needed #3000
+  Resolves Docs docs: Inline code rendered as italics #3164
+  Resolves Fix some missing equation references in Snow Hydrology chapter of Tech Note #3202
+  Resolves Fix Equation number label 2.5.119 in technical note #3196
+  Resolves Remove hardcoded /glade/campaign/cesm/cesmdata/inputdata/ paths to support --rawdata-dir flexibility #3031
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation: Yes!
+
+Notes of particular relevance for developers: None
+---------------------------------------------
+
+Testing summary: regular
+---------------- 
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS?
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  Merge b4b-dev to master #3242
+  Updates to run_tower/single point documentation #3194
+  fixed italics to be in-line code #3198
+  Fix some equation references in the Snow Hydrology chapter of the Tech Note #3203
+  Fix typo in Chapter 5 of technical note #3195
+  Remove hardcoded paths in gen_mksurfdata_namelist.xml #3162
+  Merge ctsm5.3.050 to b4b-dev #3200
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.055
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Jun  5 13:59:20 MDT 2025
