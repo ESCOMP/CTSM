@@ -2269,7 +2269,7 @@
       <option name="comment">Repeat LII_D... test with matrixcnOn</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2278,7 +2278,7 @@
       <option name="comment">Exercise the init_interp_method='use_finidat_areas' option. See documentation at the top of the python script implementing this test for more details and rationale. This test requires a compatible finidat file (i.e., a file that can be used without interpolation). If no such file is available out-of-the-box, then the test will need to use a testmod that points to a compatible file.</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
