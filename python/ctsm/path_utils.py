@@ -106,7 +106,8 @@ def add_ctsm_systests_to_path(standalone_only=False):
 
 
 def add_fates_testing_to_path():
-    """Adds the FATES testing dir to the python path, to allow importing Python modules from there
+    """
+    Adds the FATES testing dir to the python path, to allow importing Python modules from there
     """
     fates_testing_path = os.path.join(
         os.path.dirname(__file__),
