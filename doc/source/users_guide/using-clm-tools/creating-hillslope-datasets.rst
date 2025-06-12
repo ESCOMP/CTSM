@@ -13,7 +13,7 @@ Creating hillslope datasets for use in CTSM is a multi-step process:
 HAND analysis
 ===============
 
-The HAND analysis uses the optional ``Representative_Hillslopes`` submodule. Before following these instructions, do ``bin/git-fleximod update -o`` to make sure that's been downloaded. Then the instructions assume:
+The HAND analysis uses the optional ``Representative_Hillslopes`` submodule. Before following these instructions, do ``bin/git-fleximod update representative-hillslopes`` to make sure that's been downloaded. Then the instructions assume:
 
 #. You've installed the ``Representative_Hillslopes`` Conda environment, if needed (``conda env create -f tools/external/representative-hillslopes/conda_yml/casper.yml``).
 #. You've activated that environment (``conda activate Representative_Hillslopes``).
@@ -24,7 +24,7 @@ The HAND analysis uses the optional ``Representative_Hillslopes`` submodule. Bef
 Gridcell files to chunk files
 =============================
 
-(Instructions here assume you have activated the ``ctsm_pylib`` Conda environment.)
+(Instructions here assume you have activated the :ref:`ctsm_pylib<using-ctsm-pylib>` Conda environment.)
 
 This is performed by the ``tools/hillslopes/combine_gridcell_files`` script; do ``tools/hillslopes/combine_gridcell_files --help`` for usage help. Briefly, you need to provide three things:
 
