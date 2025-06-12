@@ -1005,7 +1005,7 @@ contains
        ! Cathy [dev.06]
        g = lun%gridcell(l)
        if (urbpoi(l)) then
-          if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
+          if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then ! Cathy: if use HAC scheme:
             t_building_bef_hac(l) = t_building(l)
             ! Cathy [dev.03]
             q_building_bef_hac(l) = q_building(l)
@@ -1015,8 +1015,8 @@ contains
             call QSat(t_building_bef_hac(l), forc_pbot(g), qsat_building_max)
             q_building_max = rh_building_max / 100._r8 * qsat_building_max
 
-            if (t_building_bef_hac(l) > t_building_max(l)) then
-              if (urban_explicit_ac) then   ! use explicit ac adoption rate parameterization scheme:
+            if (t_building_bef_hac(l) > t_building_max(l)) then ! Cathy: if AC is triggered:
+              if (urban_explicit_ac) then   ! Cathy: use explicit ac adoption rate parameterization scheme:
                 
                 ! Sensible heat
                 ! Here, t_building_max is the AC saturation setpoint
@@ -1029,7 +1029,7 @@ contains
                 
                 ! Cathy [dev.09]
                 ! Latent heat
-                if (q_building_bef_hac(l) > q_building_max) then
+                if (q_building_bef_hac(l) > q_building_max) then ! Cathy: if dehumidification is needed:
                   ! the latent heat removed from internal building air is released to urban canyon as sensible heat.
                   ! Humidification process for urban heating is not implemented.
                   ! Here, q_building_max is the AC humidity setpoint under saturated adoption
@@ -1042,50 +1042,44 @@ contains
                               * dtime / (ht_roof(l) * rho_dair(l) * hvap * wtlunit_roof(l))
                 
                 end if
+
                 eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
-              else
+                ! Cathy [dev.15]
+                ! Calculate total water condensed by dehumidification, if any [kg/m2 building area].
+                ! Assume all condensed water gets added to the roof column (that goes directly into surface runoff).
+                ! Cathy [dev.18]
+                ! Debug condensate flux: total condensed water should be calculated from difference between before and
+                ! after AC, not before and after this time step.
+                qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
+              else ! Cathy: not using explicit AC scheme:
                 t_building(l) = t_building_max(l)
-                eflx_urban_ac(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building(l) &
+                ! Cathy [dev.18] 
+                eflx_urban_ac_sen(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building(l) &
                                    - (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
+                eflx_urban_ac(l) = eflx_urban_ac_sen(l) + 0._r8 ! placeholder for eflx_urban_ac_lat(l)
+                qtot_condensate(l) = 0._r8
               end if
 
-            else if (t_building_bef_hac(l) < t_building_min(l)) then
+            else if (t_building_bef_hac(l) < t_building_min(l)) then ! Cathy: if heating is triggered:
               t_building(l) = t_building_min(l)
               eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building(l) &
                                    - (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
-            else
+            else ! Cathy: if no AC or heating is triggered:
               ! Cathy [dev.03]: need this because dehumidification below may reference it
               ! eflx_urban_ac_sat(l) = 0._r8
-              ! Cathy [dev.14]
+              ! Cathy [dev.14] [dev.18]
               eflx_urban_ac_sen(l) = 0._r8
               eflx_urban_ac(l) = 0._r8
               eflx_urban_heat(l) = 0._r8
+              qtot_condensate(l) = 0._r8
             end if
 
-            ! Cathy [dev.03]
-            ! Latent heat
-            ! Dehumidification process modifies eflx_urban_ac, and is only implemented for urban_explicit_ac = .true.;
-            ! the latent heat removed from internal building air is released to urban canyon as sensible heat.
-            ! Humidification process for urban heating is not implemented.
-            ! if (q_building_bef_hac(l) > q_building_max) then
-            !   if (urban_explicit_ac) then   ! use explicit ac adoption rate parameterization scheme:
-            !     ! Here, q_building_max is the AC humidity setpoint under saturated adoption
-            !     eflx_urban_ac_sat_lat(l) = wtlunit_roof(l) * abs( &
-            !                                (ht_roof(l) * rho_dair(l) * hvap / dtime) * q_building_max &
-            !                                - (ht_roof(l) * rho_dair(l) * hvap / dtime) * q_building_bef_hac(l) &
-            !                                )
-            !     eflx_urban_ac_sat(l) = eflx_urban_ac_sat(l) + eflx_urban_ac_sat_lat(l)
-            !     q_building(l) = q_building_max + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat_lat(l) &
-            !                   * dtime / (ht_roof(l) * rho_dair(l) * hvap * wtlunit_roof(l))
-            !     eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
-            !   end if
-            ! end if
-
           else
-            ! Cathy [dev.14]
+            ! Cathy [dev.14] [dev.18]
             eflx_urban_ac_sen(l) = 0._r8
             eflx_urban_ac(l) = 0._r8
             eflx_urban_heat(l) = 0._r8
+            qtot_condensate(l) = 0._r8
           end if
           ! Cathy [dev.02]
           ! eflx_building(l) = wtlunit_roof(l) * (ht_roof(l) * rho_dair(l)*cpair/dtime) * (t_building(l) - t_building_bef(l))
@@ -1093,12 +1087,6 @@ contains
                              (ht_roof(l) * rho_dair(l)*cp_hair(l)/dtime) * (t_building(l) - t_building_bef(l)) &
                              + (ht_roof(l) * rho_dair(l)*hvap/dtime) * (q_building(l) - q_building_bef(l)) &
                              )
-          
-          ! Cathy [dev.15]
-          
-          ! Calculate total water condensed by dehumidification, if any [kg/m2 building area].
-          ! Assume all condensed water gets added to the roof column (that goes directly into surface runoff).
-          qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef(l))) * ht_roof(l) * rho_dair(l)
           
           ! Calculate and assign water flux due to dehumidification to roof column [mm/s].
           ! water flux to other urban columns are set to 0.
