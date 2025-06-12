@@ -1688,6 +1688,7 @@ sub process_namelist_inline_logic {
   setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_c_isotope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1737,7 +1738,6 @@ sub process_namelist_inline_logic {
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_c_isotope($opts, $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ndepdyn_nml #
@@ -3175,10 +3175,11 @@ sub setup_logic_do_grossunrep {
 
    my $var = 'do_grossunrep';
 
-   # Start by assuming a default value of '.true.'. Then check a number of
+   # Start by assuming a default value of '.false.'. Then check a number of
    # conditions under which do_grossunrep cannot be true. Under these
-   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # conditions: (1) set default value to '.false.' again; (2) make sure that the
    # value is indeed false (e.g., that the user didn't try to set it to true).
+   # Ideally the default value would be set in namelist_defaults
 
    my $default_val = ".false.";
 
@@ -3703,63 +3704,53 @@ sub setup_logic_c_isotope {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
     if ( $nl_flags->{'bgc_mode'} ne "bgc" ) {
-      if ( defined($use_c13) && &value_is_true($use_c13) ) {
+      if ( &value_is_true($use_c13) ) {
         $log->warning("use_c13 is ONLY scientifically validated with the bgc=BGC configuration" );
       }
-      if ( defined($use_c14) && &value_is_true($use_c14) ) {
+      if ( &value_is_true($use_c14) ) {
         $log->warning("use_c14 is ONLY scientifically validated with the bgc=BGC configuration" );
       }
     }
-    if ( defined($use_c14) ) {
-      if ( &value_is_true($use_c14) ) {
-        my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
-        if ( defined($use_c14_bombspike) && &value_is_true($use_c14_bombspike) ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
-                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-        }
-      } else {
-        if ( defined($nl->get_value('use_c14_bombspike')) ||
-             defined($nl->get_value('atm_c14_filename')) ) {
-          $log->fatal_error("use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set");
-        }
+    if ( &value_is_true($use_c14) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+      my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
+      if ( &value_is_true($use_c14_bombspike) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
+                 'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
+                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
       }
     } else {
       if ( defined($nl->get_value('use_c14_bombspike')) ||
            defined($nl->get_value('atm_c14_filename')) ) {
-        $log->fatal_error("use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.");
+        $log->fatal_error("use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set");
       }
     }
-    if ( defined($use_c13) ) {
-      if ( &value_is_true($use_c13) ) {
-        my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
-        if ( defined($use_c13_timeseries) && &value_is_true($use_c13_timeseries) ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
-                   'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
-                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-        }
-      } else {
-        if ( defined($nl->get_value('use_c13_timeseries')) ||
-             defined($nl->get_value('atm_c13_filename')) ) {
-          $log->fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set");
-        }
+    if ( &value_is_true($use_c13) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13_timeseries', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+      my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
+      if ( &value_is_true($use_c13_timeseries) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
+                 'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
+                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
       }
     } else {
       if ( defined($nl->get_value('use_c13_timeseries')) ||
            defined($nl->get_value('atm_c13_filename')) ) {
-        $log->fatal_error("use_c13 NOT set to .true., but use_c13_bompspike/atm_c13_filename defined.");
+        $log->fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set");
       }
     }
   } else {
-    if ( defined($use_c13) ||
-         defined($use_c14) ||
-         defined($nl->get_value('use_c14_bombspike')) ||
+    if ( &value_is_true($use_c13) ||
+         &value_is_true($use_c14) ||
+         &value_is_true($nl->get_value('use_c14_bombspike')) ||
          defined($nl->get_value('atm_c14_filename'))  ||
-         defined($nl->get_value('use_c13_timeseries')) ||
+         &value_is_true($nl->get_value('use_c13_timeseries')) ||
          defined($nl->get_value('atm_c13_filename')) ) {
            $log->fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
