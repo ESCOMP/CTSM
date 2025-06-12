@@ -26,15 +26,13 @@ class FUNITFATES(FUNIT):
         FUNIT.__init__(self, case)
 
     def run_phase(self):
-        # Change to the FATES testing directory
-        os.chdir(_FATES_TESTING_PYTHON)
-
-        # Run the testing
-        script_name = "run_unit_tests.py"
+        tool_path = os.path.join(_FATES_TESTING_PYTHON, "run_unit_tests.py")
+        build_dir = os.path.join("bld", "fates_unit_tests")
+        cmd = f"{tool_path} -b {build_dir}"
 
         stu.run_python_script(
             self._get_caseroot(),
             "ctsm_pylib",
-            os.path.join(os.curdir, script_name),
-            os.path.join(os.curdir, script_name),
+            cmd,
+            tool_path,
         )

@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/adrifoster/fates
-fxtag = 5374f3924350a96ac0492d6c1ff93f7737bb97c1
+fxtag = f35b05f03a1f9ed976bf75af0543fc324647927f
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
