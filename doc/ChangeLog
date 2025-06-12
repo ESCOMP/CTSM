@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.056
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Thu 12 Jun 2025 12:54:49 PM MDT
+Date: Thu 12 Jun 2025 01:43:46 PM MDT
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
@@ -61,7 +61,8 @@ Testing summary: regular
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - PASS?
+    derecho - I ran it and there were fails but previous versions had this as well
+              One problem was with the NEON server, so outside our control
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
