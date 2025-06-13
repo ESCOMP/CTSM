@@ -145,7 +145,9 @@ def write_runscript(
             runfile.write(f"{output} \n")
             check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
             runfile.write(f"{check} \n")
-            runfile.write(f"echo Successfully ran resolution {res}\n")
+            runfile.write(
+                f"echo Started fsurdat/landuse generation; see .log file for progress {res}\n"
+            )
 
     runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
