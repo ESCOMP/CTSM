@@ -24,6 +24,15 @@ This defines various CTSM-specific system tests
     <DOUT_S>FALSE</DOUT_S>
   </test>
 
+  <test NAME="FUNCTIONALFATES">
+    <DESC>Run FATES's Fortran functional tests. Grid and compset (and most case settings) are ignored.</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <STOP_OPTION>ndays</STOP_OPTION>
+    <STOP_N>11</STOP_N>
+    <CHECK_TIMING>FALSE</CHECK_TIMING>
+    <DOUT_S>FALSE</DOUT_S>
+  </test>
+
   <test NAME="MKSURFDATAESMF">
     <DESC>Build and run the mksurfdata_esmf tool to generate a new fsurdat; then run the CTSM with this fsurdat</DESC>
     <INFO_DBUG>1</INFO_DBUG>
