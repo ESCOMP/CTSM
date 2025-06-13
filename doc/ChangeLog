@@ -1,4 +1,67 @@
 ===============================================================
+Tag name: ctsm5.3.057
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri Jun 13 17:00:00 MDT 2025
+One-line Summary: Fix PEM test for on-the-fly parameter file generation
+
+Purpose and description of changes
+----------------------------------
+
+This resolves an issue in which PEM tests that are used in conjunction with
+testmods that build the FATES parameter file on-the-fly might result in RUN
+failure due to the file not being generated for the second case.  This
+addresses the issue by simply by setting the fates_paramfile namelist setting
+to the full path for the primary test case directory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves #3097 Missing on-the-fly built fates parameter file for test types that have a "case2" subdirectory
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp is now added to the aux_clm test suite
+  Note that this test fails as expected on the COMPARE_mod_pes step
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+[ctsm5.3.057: Fix PEM test for FATES testmod that builds an on-the-fly parameter file](https://github.com/ESCOMP/CTSM/pull/3243)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.056
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu 12 Jun 2025 01:43:46 PM MDT
