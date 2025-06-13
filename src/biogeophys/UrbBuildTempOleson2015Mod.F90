@@ -1094,11 +1094,11 @@ contains
                              + (ht_roof(l) * rho_dair(l)*hvap/dtime) * (q_building(l) - q_building_bef(l)) &
                              )
           
-          ! Cathy [dev.15]
+          ! Cathy [dev.15] [dev.18]
           
           ! Calculate total water condensed by dehumidification, if any [kg/m2 building area].
           ! Assume all condensed water gets added to the roof column (that goes directly into surface runoff).
-          qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef(l))) * ht_roof(l) * rho_dair(l)
+          qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
           
           ! Calculate and assign water flux due to dehumidification to roof column [mm/s].
           ! water flux to other urban columns are set to 0.
