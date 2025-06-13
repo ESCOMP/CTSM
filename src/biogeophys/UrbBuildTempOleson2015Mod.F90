@@ -992,7 +992,7 @@ contains
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
        if (urbpoi(l)) then
-          q_building(l) = qaf(l) * (vent_ach/3600._r8 * dtime) + q_building_bef(l) * (1._r8 - vent_ach/3600._r8 * dtime)
+          q_building(l) = qaf(l) * (vent_ach/3600._r8 * dtime) + q_building_bef(l) * (1 - vent_ach/3600._r8 * dtime)
        end if
     end do
 
@@ -1050,9 +1050,7 @@ contains
                 ! Cathy [dev.18]
                 ! Debug condensate flux: total condensed water should be calculated from difference between before and
                 ! after AC, not before and after this time step.
-                ! qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
-                qtot_condensate(l) = abs ( (ht_roof(l) * rho_dair(l)) * q_building(l) &
-                                          - (ht_roof(l) * rho_dair(l)) * q_building_bef_hac(l) )
+                qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
               else ! Cathy: not using explicit AC scheme:
                 t_building(l) = t_building_max(l)
                 ! Cathy [dev.18] 
