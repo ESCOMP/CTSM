@@ -168,7 +168,8 @@ contains
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
         max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
-        call shr_sys_abort(subname//" error in agfirepkmon_o value range; min_valid, max_valid are "//min_valid//", "//max_valid)
+        if (root_task) write(ndiag, '(a)') trim(subname)//" error in agfirepkmon_o value range: min_valid and max_valid equal ", min_valid, max_valid
+        call shr_sys_abort()
      end if
 
     ! Close the file 
@@ -219,6 +220,7 @@ contains
     real(ESMF_KIND_R4) :: wts_o(min_valid:max_valid)
     integer            :: maxindex(1)
     logical            :: hasdata 
+    character(len=*), parameter :: subname = 'get_dominant_indices'
     !---------------------------------------------------------------
 
     rc = ESMF_SUCCESS
