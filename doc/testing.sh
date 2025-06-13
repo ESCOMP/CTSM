@@ -2,6 +2,10 @@
 set -e
 set -x
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "${SCRIPT_DIR}"
+
+../bin/git-fleximod update -o
 rm -rf _publish*
 
 # Build all docs using container
@@ -34,7 +38,7 @@ rm -rf _build_container
 # Check that Makefile method works
 echo "~~~~~ Check that Makefile method works"
 rm -rf _build
-make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build html
+conda run -n ctsm_pylib make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build html
 
 # Check that -b works
 echo "~~~~~ Check that -b works (Podman)"
