@@ -105,6 +105,24 @@ def add_ctsm_systests_to_path(standalone_only=False):
     sys.path.insert(1, ctsm_systest_dir)
 
 
+def add_fates_testing_to_path():
+    """
+    Adds the FATES testing dir to the python path, to allow importing Python modules from there
+    """
+    fates_testing_path = os.path.join(
+        os.path.dirname(__file__),
+        os.pardir,
+        os.pardir,
+        "src",
+        "fates",
+        "testing",
+    )
+    if not os.path.exists(fates_testing_path):
+        raise RuntimeError(f"src_path not found: '{fates_testing_path}'")
+    prepend_to_python_path(fates_testing_path)
+    sys.path.insert(1, fates_testing_path)
+
+
 # ========================================================================
 # Private functions
 # ========================================================================
