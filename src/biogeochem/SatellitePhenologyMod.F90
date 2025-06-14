@@ -18,7 +18,8 @@ module SatellitePhenologyMod
   use spmdMod      , only : masterproc, mpicom, iam
   use laiStreamMod , only : lai_init, lai_advance, lai_interp
   use clm_varctl   , only : use_fates
-  use ncdio_pio
+  use ncdio_pio    , only : ncd_pio_openfile, ncd_inqfdims, check_dim_size, ncd_io
+  use ncdio_pio    , only : ncd_pio_closefile, file_desc_t
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -56,6 +57,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
+    use shr_log_mod, only : errMsg => shr_log_errMsg
+    use clm_varctl, only : use_cn
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -63,6 +67,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ier    ! error code
     !-----------------------------------------------------------------------
+    if ( (shr_fire_emis_mechcomps_n > 0) .and. (.not. use_cn) ) then
+       write(iulog,*) "Fire emissions can NOT be active for Satellite Phenology mode (SP)" // &
+                   errMsg(sourcefile, __LINE__)
+       call endrun(msg="Fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case")
+       return
+    end if
 
     InterpMonths1 = -999  ! saved month index
 
