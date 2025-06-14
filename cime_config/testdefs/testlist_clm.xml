@@ -1261,7 +1261,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm60Sp" testmods="clm/decStart--clm/nofireinit">
+  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm60Sp" testmods="clm/decStart--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1758,7 +1758,7 @@
       <option name="comment">Repeat ERP_P64x2_D_Ld5...ciso test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Sp" testmods="clm/default">
+  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1827,7 +1827,7 @@
       <option name="comment">Repeat REP_P64x2_Ld396...13 month test with matrixcnOn as shorter REP_P64x2_Ld13 because the longer one fails as reported in issue #2619</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D" grid="f10_f10_mg37" compset="I2000Clm50SpRtmFl" testmods="clm/default">
+  <test name="ERP_P64x2_D" grid="f10_f10_mg37" compset="I2000Clm50SpRtmFl" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -1847,7 +1847,7 @@
       <option name="comment">cism is not answer preserving across processor changes, but short test length should be ok.</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/default">
+  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -3606,7 +3606,7 @@
     </options>
 
   </test>
-  <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldas" testmods="clm/default">
+  <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldas" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
@@ -3617,7 +3617,7 @@
       <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldas compset, which uses NLDAS datm forcing.</option>
     </options>
   </test>
-  <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldasRs" testmods="clm/default">
+  <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldasRs" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
