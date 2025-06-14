@@ -7,15 +7,15 @@
 
 .. _running-single-points:
 
-#####################################
-Running Single Point Regional Cases
-#####################################
+#######################################
+Running Single Point and Regional Cases
+#######################################
 
 .. toctree::
    :maxdepth: 2
 
-   single-point-and-regional-grid-configurations.rst
-   running-single-point-subset-data.rst
-   running-single-point-configurations.rst
-   running-pts_mode-configurations.rst
+   intro-to-single-pt-regional.rst
+   supported-tower-sites.rst
+   generic-single-point-regional.rst
+   predefined-single-point-regional-resolutions.rst
 
