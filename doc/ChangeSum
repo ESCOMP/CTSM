@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.057 glemieux 06/13/2025 Fix PEM test for on-the-fly parameter file generation
+       ctsm5.3.056     erik 06/12/2025 Merge b4b-dev to master
+       ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
+       ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
        ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
        ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases
        ctsm5.3.051     erik 05/28/2025 Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
