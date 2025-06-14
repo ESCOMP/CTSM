@@ -36,7 +36,7 @@ fxDONOTUSEurl = https://github.com/NCAR/fates-release
 [submodule "cism"]
 path = components/cism
 url = https://github.com/NorESMhub/CISM-wrapper
-fxtag = cismwrap_2_2_006_noresm_v0
+fxtag = cismwrap_2_2_007_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/CISM-wrapper
@@ -51,11 +51,11 @@ fxDONOTUSEurl = https://github.com/ESCOMP/RTM
 
 [submodule "mosart"]
 path = components/mosart
-url = https://github.com/ESCOMP/MOSART
-fxtag = mosart1.1.08
+url = https://github.com/NorESMhub/MOSART
+fxtag = mosart1.1.08_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
+fxDONOTUSEurl = https://github.com/NorESMhub/MOSART
 
 [submodule "mizuRoute"]
 path = components/mizuRoute
@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/NorESMhub/ccs_config_noresm.git
-fxtag = ccs_config_noresm0.0.45
+fxtag = ccs_config_noresm0.0.49
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/ccs_config_noresm
@@ -84,7 +84,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/NorESMhub/CMEPS.git
-fxtag = cmeps1.0.39_noresm_v0
+fxtag = cmeps1.0.39_noresm_v4
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/NorESMhub/CDEPS.git
-fxtag = cdeps1.0.70_noresm_v5
+fxtag = cdeps1.0.70_noresm_v7
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/CDEPS.git

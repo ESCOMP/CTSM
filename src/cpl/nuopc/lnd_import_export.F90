@@ -9,7 +9,8 @@ module lnd_import_export
   use NUOPC_Model             , only : NUOPC_ModelGet
   use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod             , only : shr_sys_abort
-  use clm_varctl              , only : iulog, use_hillslope_routing
+  use shr_string_mod          , only : shr_string_listGetNum, shr_string_listGetName
+  use clm_varctl              , only : iulog, use_hillslope_routing, use_nitrif_denitrif
   use clm_time_manager        , only : get_nstep
   use decompmod               , only : bounds_type, get_proc_bounds
   use lnd2atmType             , only : lnd2atm_type
@@ -20,8 +21,11 @@ module lnd_import_export
   use spmdMod                 , only : masterproc
   use shr_drydep_mod          , only : shr_drydep_readnl, n_drydep
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
+  use shr_lnd2rof_tracers_mod , only : shr_lnd2rof_tracers_readnl
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
+  use subgridAveMod           , only : c2g
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
 
   implicit none
   private ! except
@@ -68,6 +72,10 @@ module lnd_import_export
   logical                :: force_send_to_atm   ! Force sending export data to atmosphere even if ATM is not prognostic
   integer                :: glc_nec          ! number of glc elevation classes
   integer, parameter     :: debug = 0        ! internal debug level
+
+  ! from lnd->rof
+  character(len=CS)      :: lnd2rof_tracers  ! colon delimited string of liquid tracers other than water
+  integer                :: nflds_lnd2rof_tracers
 
   ! import fields
   character(*), parameter :: Sa_z                = 'Sa_z'
@@ -136,6 +144,7 @@ module lnd_import_export
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
   character(*), parameter :: Flrl_rofsur    = 'Flrl_rofsur'
+  character(*), parameter :: Flrl_rofsur_nonh2o = 'Flrl_rofsur_nonh2o'
   character(*), parameter :: Flrl_rofsub    = 'Flrl_rofsub'
   character(*), parameter :: Flrl_rofgwl    = 'Flrl_rofgwl'
   character(*), parameter :: Flrl_rofi      = 'Flrl_rofi'
@@ -183,7 +192,6 @@ contains
     integer           :: n, num
     logical           :: send_co2_to_atm = .false.
     logical           :: recv_co2_fr_atm = .false.
-
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -255,6 +263,9 @@ contains
     ! CARMA volumetric soil water from land
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
+    ! lnd2rof liquid tracers (other than water)
+    call shr_lnd2rof_tracers_readnl('drv_flds_in', lnd2rof_tracers)
+
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
@@ -300,6 +311,17 @@ contains
 
     ! export to rof
     if (rof_prognostic) then
+       if (lnd2rof_tracers == ' ') then
+          nflds_lnd2rof_tracers = 0
+       else
+          nflds_lnd2rof_tracers = shr_string_listGetNum(trim(lnd2rof_tracers))
+       end if
+       if (nflds_lnd2rof_tracers > 1) then
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur_nonh2o, &
+               ungridded_lbound=1, ungridded_ubound=nflds_lnd2rof_tracers)
+       else if (nflds_lnd2rof_tracers == 1) then
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur_nonh2o)
+       end if
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsur)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofgwl)
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_rofsub)
@@ -728,7 +750,7 @@ contains
 
   !===============================================================================
   subroutine export_fields( gcomp, bounds, glc_present, rof_prognostic, &
-       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+       waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, soilbiogeochem_nitrogenflux_inst, rc)
 
     !-------------------------------
     ! Pack the export state
@@ -737,6 +759,9 @@ contains
     !-------------------------------
 
     use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
+    use GridcellType         , only: grc
+    use abortutils           , only : endrun
+    use shr_log_mod          , only : errMsg => shr_log_errMsg
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
@@ -746,16 +771,18 @@ contains
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
     type(lnd2atm_type)          , intent(inout) :: lnd2atm_inst ! land to atmosphere exchange data type
     type(lnd2glc_type)          , intent(inout) :: lnd2glc_inst ! land to atmosphere exchange data type
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     integer                     , intent(out)   :: rc
 
     ! local variables
     type(ESMF_State)  :: exportState
-    real(r8), pointer :: fldPtr1d(:)
-    real(r8), pointer :: fldPtr2d(:,:)
-    character(len=CS) :: fldname
+    real(r8), pointer :: rofl2d(:,:)
+    real(r8), pointer :: rofl1d(:)
+    real(r8), pointer :: garr(:)
     integer           :: begg, endg
-    integer           :: i, g, num
+    integer           :: i, g, n, nt
     real(r8)          :: data1d(bounds%begg:bounds%endg)
+    character(len=CS) :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
     !---------------------------------------------------------------------------
 
@@ -890,6 +917,39 @@ contains
        call state_setexport_1d(exportState, Flrl_rofsur, waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(begg:), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+    if (fldchk(exportState, Flrl_rofsur_nonh2o)) then
+       allocate(rofl2d(begg:endg, nflds_lnd2rof_tracers))
+       allocate(garr(begg:endg))
+       rofl2d(:,:) = 0._r8
+       garr(:) = 0._r8
+       do nt = 1,nflds_lnd2rof_tracers
+          call shr_string_listGetName(lnd2rof_tracers, nt, fldname)
+          if (trim(fldname) == 'smin_no3_runoff') then
+             ! (gN/m2/s) soil mineral NO3 pool loss to runoff
+             if (.not. use_nitrif_denitrif) then
+                call shr_sys_abort('ERROR: must have  use_nitrif_denitrif set to true if ask for smin_no3_roff')
+             end if
+             call c2g( bounds = bounds, &
+                  carr = soilbiogeochem_nitrogenflux_inst%smin_no3_runoff_col(bounds%begc:bounds%endc), &
+                  garr = garr(begg:endg), &
+                  c2l_scale_type = 'unity', l2g_scale_type = 'unity')
+             do g = begg,endg
+                rofl2d(g,nt) = garr(g)
+             end do
+          else
+             call endrun(msg='ERROR only smin_no3_runoff is supported for lnd2rof_tracer name'//errMsg(u_FILE_u, __LINE__))
+          end if
+       end do
+       if (nflds_lnd2rof_tracers > 1) then
+          call state_setexport_2d(exportState, Flrl_rofsur_nonh2o, rofl2d, init_spval=.true., rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          call state_setexport_1d(exportState, Flrl_rofsur_nonh2o, garr(begg:), init_spval=.true., rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+       deallocate(rofl2d)
+       deallocate(garr)
     end if
     if (fldchk(exportState, Flrl_rofgwl)) then ! qgwl sent individually to mediator
        call state_setexport_1d(exportState, Flrl_rofgwl, waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(begg:), &
@@ -1334,7 +1394,7 @@ contains
     integer, target    :: tmp(1)
     type(ESMF_VM)      :: vm
     character(*), parameter :: nml_name = "ctsm_nuopc_cap" ! MUST match with namelist name below
-    
+
 
     namelist  /ctsm_nuopc_cap/ force_send_to_atm
 
@@ -1359,7 +1419,7 @@ contains
 
     ! Broadcast namelist to all processors
     call ESMF_VMBroadcast(vm, tmp, 1, 0, rc=rc)
-   
+
     force_send_to_atm = (tmp(1) == 1)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 

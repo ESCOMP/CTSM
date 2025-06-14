@@ -4632,4 +4632,14 @@
     </options>
   </test>
 
+  <test name="ERS" grid="f09_f09_mtn14" compset="I2000Clm60Bgc" testmods="clm/lnd2rof_tracers">
+    <machines>
+      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
 </testlist>
