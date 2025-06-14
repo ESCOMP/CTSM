@@ -1,4 +1,4 @@
-name: Check Python formatting
+name: Run Python tests
 
 on:
   push:
@@ -18,7 +18,27 @@ on:
       - 'cime_config/buildnml/**'
 
 jobs:
-  lint-and-format-check:
+  python-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v4
+
+      # Set up the conda environment
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      # Run Python unit tests check
+      - name: Run Python unit tests
+        run: |
+          cd python
+          conda run -n ctsm_pylib ./run_ctsm_py_tests -u
+
+  python-lint-and-black:
     runs-on: ubuntu-latest
     steps:
       # Checkout the code
