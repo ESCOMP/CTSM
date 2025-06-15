@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
-        ctsm_pymods: System tests for the python codes that also run CTSM cases (subset of aux_clm tests)
+        clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm tests)
         clm_short: The short CLM test for basic testing of a few configurations
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         fates: The FATES testlist, run when FATES is updated
@@ -151,7 +151,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
@@ -568,7 +568,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Include an excess ice test starting up from streams</option>
     </options>
   </test>
@@ -1203,6 +1203,15 @@
       <option name="comment">Smoke test of soil CN-matrix on with soil CN ratio set to 30</option>
     </options>
   </test>
+  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/leafcn_t_evolving">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment">Smoke test using custom paramfile with leafcn_co2_slope set to 30 (default = 0). This confirms that the calculation of leafcn_t_evolving does not fail.</option>
+    </options>
+  </test>
   <test name="ERS_D" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -1322,7 +1331,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/ciso--clm/matrixcnOn">
@@ -1398,7 +1407,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/o3lombardozzi2015">
@@ -1594,7 +1603,7 @@
       <machine name="izumi" compiler="nag" category="matrixcn"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Repeat ERP_D_P48x1...decStart test with matrixcnOn</option>
     </options>
   </test>
@@ -3021,7 +3030,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart">
@@ -3267,6 +3276,15 @@
       <option name="comment">Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdElecTransJB">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Ensure functionality of the JohnsonBerry2021 option in FATES</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTwoStream">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
@@ -3274,7 +3292,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Ensure functionality of two-stream radiation option in FATES</option>
     </options>
   </test>
