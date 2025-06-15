@@ -5,6 +5,7 @@ and/or vegetation types and/or timesteps, concatenating by time.
 - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
     vegetation types.
 """
+
 import re
 import warnings
 from importlib.util import find_spec
@@ -193,6 +194,7 @@ def process_inputs(filelist, my_vars, my_vegtypes, my_vars_missing_ok):
 
 def import_ds(
     filelist,
+    *,
     my_vars=None,
     my_vegtypes=None,
     time_slice=None,
@@ -237,6 +239,7 @@ def import_ds(
     # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
     # allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes
     # directly, but that's bad practice as it could lead to scoping issues.
+    # pylint: disable=unnecessary-lambda-assignment
     mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, my_vars, my_vegtypes, time_slice)
 
     # Import

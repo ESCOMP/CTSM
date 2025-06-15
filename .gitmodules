@@ -31,7 +31,7 @@ url = https://github.com/NorESMhub/fates
 fxtag = sci.1.82.3_api.39.0.0_noresm_v2
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/NCAR/fates-release
+fxDONOTUSEurl = https://github.com/NorESMhub/fates
 
 [submodule "cism"]
 path = components/cism
@@ -79,7 +79,7 @@ url = https://github.com/NorESMhub/cime
 fxtag = cime6.1.73_noresm_v0
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
-fxDONOTUSEurl = https://github.com/ESMCI/cime
+fxDONOTUSEurl = https://github.com/NorESMhub/cime
 
 [submodule "cmeps"]
 path = components/cmeps
@@ -124,7 +124,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 [submodule "doc-builder"]
 path = doc/doc-builder
 url = https://github.com/ESMCI/doc-builder
-fxtag = v1.0.8
+fxtag = v2.0.0
 fxrequired = ToplevelOptional
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/doc-builder

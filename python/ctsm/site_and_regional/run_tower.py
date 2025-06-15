@@ -19,10 +19,10 @@ This script will do the following:
     2) Make the case for the specific neon or plumber site(s).
     3) Make changes to the case, for:
         a. AD spinup
-	b. post-AD spinup
+        b. post-AD spinup
         c. transient
-    	#---------------
-    	d. SASU or Matrix spinup
+        #---------------
+        d. SASU or Matrix spinup
     4) Build and submit the case.
 
 -------------------------------------------------------------------
@@ -160,7 +160,14 @@ def parse_neon_listing(listing_file, valid_neon_sites):
                 if site_name in line:
                     finidat = line.split(",")[0].split("/")[-1]
 
-            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
+            neon_site = NeonSite(
+                name=site_name,
+                start_year=start_year,
+                end_year=end_year,
+                start_month=start_month,
+                end_month=end_month,
+                finidat=finidat,
+            )
             logger.debug(neon_site)
             available_list.append(neon_site)
 
@@ -192,7 +199,12 @@ def setup_plumber_data(valid_plumber_sites):
         finidat = None
 
         plumber_site = Plumber2Site(
-            site_name, start_year, end_year, start_month, end_month, finidat
+            name=site_name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
         )
         available_list.append(plumber_site)
 
@@ -265,16 +277,21 @@ def main(description):
                 if not base_case_root:
                     neon_site.set_default_user_mods_dirs()
                     base_case_root = neon_site.build_base_case(
-                        cesmroot, output_root, res, compset, overwrite, setup_only
+                        cesmroot,
+                        output_root,
+                        res,
+                        compset,
+                        overwrite=overwrite,
+                        setup_only=setup_only,
                     )
                 logger.info("-----------------------------------")
                 logger.info("Running CTSM for neon site : %s", neon_site.name)
 
                 neon_site.run_case(
-                    base_case_root,
-                    run_type,
-                    prism,
-                    user_version,
+                    base_case_root=base_case_root,
+                    run_type=run_type,
+                    prism=prism,
+                    user_version=user_version,
                     overwrite=overwrite,
                     setup_only=setup_only,
                     no_batch=no_batch,
@@ -296,15 +313,20 @@ def main(description):
                 if not base_case_root:
                     plumber_site.set_default_user_mods_dirs()
                     base_case_root = plumber_site.build_base_case(
-                        cesmroot, output_root, res, compset, overwrite, setup_only
+                        cesmroot,
+                        output_root,
+                        res,
+                        compset,
+                        overwrite=overwrite,
+                        setup_only=setup_only,
                     )
                 logger.info("-----------------------------------")
                 logger.info("Running CTSM for plumber site : %s", plumber_site.name)
                 plumber_site.run_case(
-                    base_case_root,
-                    run_type,
-                    prism,
-                    user_version,
+                    base_case_root=base_case_root,
+                    run_type=run_type,
+                    prism=prism,
+                    user_version=user_version,
                     overwrite=overwrite,
                     setup_only=setup_only,
                     no_batch=no_batch,
