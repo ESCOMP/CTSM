@@ -1,5 +1,5 @@
 """
- specify a synthetic hillslope profile
+specify a synthetic hillslope profile
 """
 
 import argparse
@@ -141,16 +141,10 @@ def calc_stream_geom(hillslope_vars):
     """
     uharea = np.sum(hillslope_vars.h_area, axis=0)
     adepth, bdepth = 1e-3, 0.4
-    hillslope_vars.h_stream_depth[
-        :,
-    ] = adepth * (uharea**bdepth)
+    hillslope_vars.h_stream_depth[:,] = adepth * (uharea**bdepth)
     awidth, bwidth = 1e-3, 0.6
-    hillslope_vars.h_stream_width[
-        :,
-    ] = awidth * (uharea**bwidth)
-    hillslope_vars.h_stream_slope[
-        :,
-    ] = 1e-2
+    hillslope_vars.h_stream_width[:,] = awidth * (uharea**bwidth)
+    hillslope_vars.h_stream_slope[:,] = 1e-2
     return hillslope_vars
 
 

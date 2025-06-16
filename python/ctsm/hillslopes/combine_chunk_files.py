@@ -1,6 +1,7 @@
 """
 Combine chunk files into a file for use in CTSM
 """
+
 import argparse
 import sys
 import os
@@ -142,11 +143,7 @@ def get_mask_var(surface_ds):
         ctsm_logging.logger.error(msg)
         raise KeyError(msg)
 
-    landmask = np.asarray(
-        surface_ds.variables[mask_var][
-            :,
-        ]
-    )
+    landmask = np.asarray(surface_ds.variables[mask_var][:,])
     return mask_var, landmask
 
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for hillslope processing
-
-"""
+"""System tests for hillslope processing"""
 
 import os
 

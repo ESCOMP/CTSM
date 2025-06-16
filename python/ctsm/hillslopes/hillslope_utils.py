@@ -1,6 +1,7 @@
 """
 Utilities for hillslope scripts to share
 """
+
 import shutil
 import os
 import glob
@@ -81,18 +82,10 @@ class HillslopeVars:
         Args:
             chunk_ds (xarray Dataset): Opened chunk file
         """
-        self.this_chunk.nhillcolumns = chunk_ds.variables["nhillcolumns"][
-            :,
-        ].astype(int)
-        self.this_chunk.pct_hillslope = chunk_ds.variables["pct_hillslope"][
-            :,
-        ]
-        self.this_chunk.hillslope_index = chunk_ds.variables["hillslope_index"][
-            :,
-        ].astype(int)
-        self.this_chunk.column_index = chunk_ds.variables["column_index"][
-            :,
-        ].astype(int)
+        self.this_chunk.nhillcolumns = chunk_ds.variables["nhillcolumns"][:,].astype(int)
+        self.this_chunk.pct_hillslope = chunk_ds.variables["pct_hillslope"][:,]
+        self.this_chunk.hillslope_index = chunk_ds.variables["hillslope_index"][:,].astype(int)
+        self.this_chunk.column_index = chunk_ds.variables["column_index"][:,].astype(int)
         self.this_chunk.downhill_column_index = chunk_ds.variables["downhill_column_index"][
             :,
         ].astype(int)
