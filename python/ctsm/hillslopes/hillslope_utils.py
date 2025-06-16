@@ -241,13 +241,13 @@ class HillslopeVars:
 
     def save(
         self,
+        *,
         input_file,
         output_file,
         ncolumns_per_gridcell,
         nhillslope,
         add_bedrock,
         add_stream,
-        *,
         logger=None,
         n_lon=None,
         n_lat=None,

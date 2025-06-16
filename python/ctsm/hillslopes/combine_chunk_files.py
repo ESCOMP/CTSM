@@ -209,12 +209,12 @@ def main():
 
     # -- Write data to file ------------------
     hillslope_vars.save(
-        args.input_file,
-        args.output_file,
-        ncolumns_per_gridcell,
-        nhillslope,
-        add_bedrock,
-        add_stream,
+        input_file=args.input_file,
+        output_file=args.output_file,
+        ncolumns_per_gridcell=ncolumns_per_gridcell,
+        nhillslope=nhillslope,
+        add_bedrock=add_bedrock,
+        add_stream=add_stream,
         logger=ctsm_logging.logger,
     )
     finish_saving(args)

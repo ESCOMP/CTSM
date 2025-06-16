@@ -167,18 +167,19 @@ def main():
                 )
 
         write_to_file(
-            outfile_path,
-            n_lat,
-            n_lon,
-            gfiles,
-            nhillslope,
-            nmaxhillcol,
-            add_bedrock,
-            do_add_stream_channel_vars,
+            outfile_path=outfile_path,
+            n_lat=n_lat,
+            n_lon=n_lon,
+            gfiles=gfiles,
+            nhillslope=nhillslope,
+            nmaxhillcol=nmaxhillcol,
+            add_bedrock=add_bedrock,
+            do_add_stream_channel_vars=do_add_stream_channel_vars,
         )
 
 
 def write_to_file(
+    *,
     outfile_path,
     n_lat,
     n_lon,
@@ -222,12 +223,12 @@ def write_to_file(
         )
 
     hillslope_vars.save(
-        None,
-        outfile_path,
-        nmaxhillcol,
-        nhillslope,
-        add_bedrock,
-        do_add_stream_channel_vars,
+        input_file=None,
+        output_file=outfile_path,
+        ncolumns_per_gridcell=nmaxhillcol,
+        nhillslope=nhillslope,
+        add_bedrock=add_bedrock,
+        add_stream=do_add_stream_channel_vars,
         logger=ctsm_logging.logger,
         n_lon=n_lon,
         n_lat=n_lat,

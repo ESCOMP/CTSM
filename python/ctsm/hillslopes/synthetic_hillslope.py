@@ -234,7 +234,7 @@ def get_cols_per_info(args):
 
 
 def loop_over_gridcells(
-    args, n_lon, n_lat, std_elev, lmask, max_columns_per_hillslope, bin_fractions, hillslope_vars
+    *, args, n_lon, n_lat, std_elev, lmask, max_columns_per_hillslope, bin_fractions, hillslope_vars
 ):
     """
     Loop over gridcells to fill most hillslope-related variables
@@ -331,14 +331,14 @@ def main():
     )
 
     hillslope_vars = loop_over_gridcells(
-        args,
-        n_lon,
-        n_lat,
-        std_elev,
-        lmask,
-        max_columns_per_hillslope,
-        bin_fractions,
-        hillslope_vars,
+        args=args,
+        n_lon=n_lon,
+        n_lat=n_lat,
+        std_elev=std_elev,
+        lmask=lmask,
+        max_columns_per_hillslope=max_columns_per_hillslope,
+        bin_fractions=bin_fractions,
+        hillslope_vars=hillslope_vars,
     )
 
     # Fill stream geometry variables
@@ -351,10 +351,10 @@ def main():
 
     # write to file  --------------------------------------------
     hillslope_vars.save(
-        args.input_file,
-        args.output_file,
-        max_columns_per_landunit,
-        args.num_hillslopes,
+        input_file=args.input_file,
+        output_file=args.output_file,
+        ncolumns_per_gridcell=max_columns_per_landunit,
+        nhillslope=args.num_hillslopes,
         add_bedrock=True,
         add_stream=True,
         save_fsurdat=args.fsurdat,
