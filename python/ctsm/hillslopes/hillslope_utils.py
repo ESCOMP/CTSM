@@ -7,7 +7,6 @@ import os
 import glob
 import re
 import numpy as np
-import xarray as xr
 
 # The below "pylint: disable" is because pylint complains that netCDF4 has no member Dataset, even
 # though it does.
@@ -29,6 +28,7 @@ class HillslopeVars:
         nhillslope,
         n_lat,
         n_lon,
+        *,
         recurse=True,
         incl_latlon=False,
         incl_pftndx=False,
@@ -161,6 +161,7 @@ class HillslopeVars:
         j,
         add_bedrock,
         add_stream,
+        *,
         landmask=None,
         incl_latlon=False,
         incl_chunkmask=False,
@@ -246,6 +247,7 @@ class HillslopeVars:
         nhillslope,
         add_bedrock,
         add_stream,
+        *,
         logger=None,
         n_lon=None,
         n_lat=None,
@@ -618,6 +620,7 @@ def create_variable(
     name,
     units,
     long_name,
+    *,
     dims=(
         "nmaxhillcol",
         "lsmlat",
@@ -642,6 +645,7 @@ def create_variable(
 
 
 def add_variable_nc(
+    *,
     name,
     units,
     long_name,

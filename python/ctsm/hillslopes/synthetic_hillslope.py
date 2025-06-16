@@ -148,13 +148,11 @@ def calc_stream_geom(hillslope_vars):
     return hillslope_vars
 
 
-"""
----------------------------------------------------
-#cosine - power law hillslope
-create bins of equal height
-this form ensures a near-zero slope at the hill top
----------------------------------------------------
-"""  # pylint: disable=pointless-string-statement
+# ---------------------------------------------------
+# cosine - power law hillslope
+# create bins of equal height
+# this form ensures a near-zero slope at the hill top
+# ---------------------------------------------------
 
 
 def cosp_height(x, hlen, hhgt, phill):

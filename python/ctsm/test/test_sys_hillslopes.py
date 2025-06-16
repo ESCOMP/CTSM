@@ -8,7 +8,6 @@ import unittest
 import tempfile
 import shutil
 import sys
-import subprocess
 import glob
 
 import xarray as xr
