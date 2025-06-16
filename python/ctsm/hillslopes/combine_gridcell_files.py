@@ -116,6 +116,8 @@ def main():
     chunks_to_process = get_chunks_to_process(args, "chunk")
 
     nhillslope = None
+    add_bedrock = None
+    do_add_stream_channel_vars = None
     nmaxhillcol = None
 
     for cndx in chunks_to_process:

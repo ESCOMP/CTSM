@@ -167,15 +167,18 @@ def main():
     if mask_var == "LANDFRAC_PFT":
         landmask[np.where(landmask > 0)] = 1
 
-    arrays_uninitialized = True
-    chunks_to_process = get_chunks_to_process(args, "combined_chunk")
+    hillslope_vars = None
+    add_bedrock = None
+    add_stream = None
+    file_prefix = "combined_chunk"
+    chunks_to_process = get_chunks_to_process(args, file_prefix)
     for cndx in chunks_to_process:
         ctsm_logging.logger.info("Chunk %d...", cndx)
         cstr = "{:02d}".format(cndx)
         chunk_file = cfile0.replace("ChunkIndex", cstr)
         file_exists = os.path.exists(chunk_file)
 
-        if arrays_uninitialized and file_exists:
+        if hillslope_vars is None and file_exists:
             chunk_ds = Dataset(chunk_file, "r")
 
             ncolumns_per_gridcell = len(chunk_ds.dimensions["nmaxhillcol"])
@@ -189,20 +192,23 @@ def main():
             chunk_ds.close()
 
             hillslope_vars = HillslopeVars(ncolumns_per_gridcell, nhillslope, n_lat, n_lon)
-            arrays_uninitialized = False
 
         if not file_exists:
             ctsm_logging.logger.info("Skipping; chunk file not found: %s", chunk_file)
             continue
 
         # Read hillslope variables from one chunk file
+        if hillslope_vars is None:
+            msg = f"No chunk files found in '{args.input_dir}' starting with '{file_prefix}'"
+            ctsm_logging.logger.error(msg)
+            raise FileNotFoundError(msg)
         hillslope_vars.read(chunk_file, add_bedrock, add_stream)
 
         for i in range(n_lon):
             for j in range(n_lat):
                 hillslope_vars.update(i, j, add_bedrock, add_stream, landmask=landmask)
 
-    if arrays_uninitialized:
+    if hillslope_vars is None:
         msg = f"No files found in '{args.input_dir}'"
         ctsm_logging.logger.error(msg)
         raise FileNotFoundError(msg)
