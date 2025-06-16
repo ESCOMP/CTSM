@@ -3027,7 +3027,7 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="ISSP370Clm60BgcCrop" testmods="clm/ciso_dec2050Start">
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="ISSP370Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
@@ -3073,7 +3073,7 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm60BgcCrop" testmods="clm/default">
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
@@ -3083,7 +3083,7 @@
       <option name="comment">Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP585Clm60BgcCrop" testmods="clm/default">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP585Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
@@ -3102,7 +3102,7 @@
       <option name="comment"  >Transient production with future scenario SSP2-4.5 but NO anomaly forcing</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCrop" testmods="clm/datm_rcp45_anom_forc">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/datm_rcp45_anom_forc">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
