@@ -1,4 +1,4 @@
-name: Check that clm6* compset aliases return CLM5* longnames
+name: Check that clm6* compset aliases return CLM6* longnames
 # Only check files in our repo that AREN'T in submodules
 # Use a Python command to check each file because xmllint isn't available on GH runners
 

@@ -15,7 +15,7 @@ The following clm60 compset aliases were actually returning long names with CLM5
    ISSP585Clm60BgcCropCrujra : SSP585_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
 ```
 
-This tag fixes them. It also adds a GitHub workflow to prevent this from happening again, at least for clm6 vs. clm5.
+This tag fixes them. It also adds a GitHub workflow to prevent this from happening again, at least for clm6.
 
 
 Significant changes to scientifically-supported configurations
@@ -49,6 +49,7 @@ Notes of particular relevance for developers:
 Changes to tests or testing:
 - Three ISSP tests in aux_clm changed from Clm50 to their Clm60 equivalents.
 - Other ISSP Clm50 tests are untouched.
+- Adds a GitHub workflow to check that Clm6 compset aliases return CLM6 longnames.
 
 
 Testing summary:
