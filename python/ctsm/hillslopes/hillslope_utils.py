@@ -670,60 +670,6 @@ def add_variable_nc(
     # Fill with data
     nc_var[:] = data
 
-
-def add_variable_xr(
-    name,
-    units,
-    long_name,
-    data,
-    dataset,
-    lsmlat,
-    lsmlon,
-    dims=["nmaxhillcol", "lsmlat", "lsmlon"],
-    ncolumns_per_gridcell=None,
-    nhillslope=None,
-):  # pylint: disable=dangerous-default-value
-    # pylint disable above: pylint thinks the dims default is empty list []
-    """
-    Convenient function to use for adding hillslope variables to a Dataset with xarray
-    """
-
-    if isinstance(dims, tuple):
-        dims = list(dims)
-
-    coords = {}
-    if dims == ["nmaxhillcol", "lsmlat", "lsmlon"]:
-        if ncolumns_per_gridcell is None:
-            raise RuntimeError("If nmaxhillcol is in dims, provide ncolumns_per_gridcell argument")
-        coords = {
-            "nmaxhillcol": np.arange(ncolumns_per_gridcell),
-        }
-    elif dims == ["nhillslope", "lsmlat", "lsmlon"]:
-        if nhillslope is None:
-            raise RuntimeError("If nhillslope is in dims, provide nhillslope argument")
-        coords = {
-            "nhillslope": np.arange(nhillslope),
-        }
-    elif dims != ["lsmlat", "lsmlon"]:
-        raise RuntimeError(f"Unhandled dim list: {dims}")
-    coords["lsmlat"] = lsmlat
-    coords["lsmlon"] = lsmlon
-
-    data_array = xr.DataArray(
-        data=data,
-        dims=dims,
-        coords=coords,
-        attrs={
-            "units": units,
-            "long_name": long_name,
-        },
-    )
-
-    dataset[name] = data_array
-
-    return dataset
-
-
 def get_chunks_to_process(args, prefix):
     """
     Get list of chunks to process
