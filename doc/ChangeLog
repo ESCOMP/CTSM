@@ -1,4 +1,251 @@
 ===============================================================
+Tag name: ctsm5.3.058
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Jun 16 11:43:52 MDT 2025
+One-line Summary: Fix clm6 compset aliases
+
+Purpose and description of changes
+----------------------------------
+
+The following clm60 compset aliases were actually returning long names with CLM50 physics:
+
+```
+   ISSP245Clm60BgcCropCrujra : SSP245_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+   ISSP370Clm60BgcCropCrujra : SSP370_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+   ISSP585Clm60BgcCropCrujra : SSP585_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+```
+
+This tag fixes them. It also adds a GitHub workflow to prevent this from happening again, at least for clm6.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3244: ISSP CLM60 Crujra compset aliases have longnames that use CLM50, not CLM60](https://github.com/ESCOMP/CTSM/issues/3244)
+- [Issue #3254: aux_clm has no Clm60 ISSP tests](https://github.com/ESCOMP/CTSM/issues/3254)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Three ISSP tests in aux_clm changed from Clm50 to their Clm60 equivalents.
+- Other ISSP Clm50 tests are untouched.
+- Adds a GitHub workflow to check that Clm6 compset aliases return CLM6 longnames.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ISSP245, ISSP370, and ISSP585 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        Larger than roundoff/same climate, since it only affects land-only (I) cases.
+        
+    Specifically, the following compsets now actually receive Clm60 physics instead of Clm50:
+    - ISSP245Clm60BgcCropCrujra
+    - ISSP370Clm60BgcCropCrujra
+    - ISSP585Clm60BgcCropCrujra
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [Pull Request #3248: ctsm5.3.058: Fix clm6 compset aliases by samsrabin](https://github.com/ESCOMP/CTSM/pull/3248)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.057
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri Jun 13 17:00:00 MDT 2025
+One-line Summary: Fix PEM test for on-the-fly parameter file generation
+
+Purpose and description of changes
+----------------------------------
+
+This resolves an issue in which PEM tests that are used in conjunction with
+testmods that build the FATES parameter file on-the-fly might result in RUN
+failure due to the file not being generated for the second case.  This
+addresses the issue by simply by setting the fates_paramfile namelist setting
+to the full path for the primary test case directory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves #3097 Missing on-the-fly built fates parameter file for test types that have a "case2" subdirectory
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp is now added to the aux_clm test suite
+  Note that this test fails as expected on the COMPARE_mod_pes step
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+[ctsm5.3.057: Fix PEM test for FATES testmod that builds an on-the-fly parameter file](https://github.com/ESCOMP/CTSM/pull/3243)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.056
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu 12 Jun 2025 01:43:46 PM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Several updates to documentation, from the documentation hackathon.
+Also remove /glade from paths for mksurfdata_esmf paths
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves Improve headings in single-point docs #3008
+  Resolves Docs needed: Supported towers #3175
+  Resolves Docs needed: NEON #3167
+  Documentation part of run_neon base case must be of same run type as a requested clone #1926
+  Resolves run_tower documentation needed #2997
+  Resolves Various subset_data and related docs needed #3000
+  Resolves Docs docs: Inline code rendered as italics #3164
+  Resolves Fix some missing equation references in Snow Hydrology chapter of Tech Note #3202
+  Resolves Fix Equation number label 2.5.119 in technical note #3196
+  Resolves Remove hardcoded /glade/campaign/cesm/cesmdata/inputdata/ paths to support --rawdata-dir flexibility #3031
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation: Yes!
+
+Notes of particular relevance for developers: None
+---------------------------------------------
+
+Testing summary: regular
+---------------- 
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - I ran it and there were fails but previous versions had this as well
+              One problem was with the NEON server, so outside our control
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  Merge b4b-dev to master #3242
+  Updates to run_tower/single point documentation #3194
+  fixed italics to be in-line code #3198
+  Fix some equation references in the Snow Hydrology chapter of the Tech Note #3203
+  Fix typo in Chapter 5 of technical note #3195
+  Remove hardcoded paths in gen_mksurfdata_namelist.xml #3162
+  Merge ctsm5.3.050 to b4b-dev #3200
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.055
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Jun  5 13:59:20 MDT 2025
