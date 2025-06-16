@@ -745,6 +745,15 @@ contains
        end if
     end do
 
+    ! Cathy [dev.03]
+    ! Update internal building air specific humidity
+    do fl = 1,num_urbanl
+       l = filter_urbanl(fl)
+       if (urbpoi(l)) then
+          q_building(l) = qaf(l) * (vent_ach/3600._r8 * dtime) + q_building_bef(l) * (1 - vent_ach/3600._r8 * dtime)
+       end if
+    end do
+
     ! Energy balance checks
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
@@ -984,15 +993,6 @@ contains
                                - ht_roof(l) * (vent_ach/3600._r8) * rho_dair(l) * cp_hair(l) * (taf(l) - t_building(l)) &
                                - ht_roof(l) * (vent_ach/3600._r8) * rho_dair(l) * hvap * (qaf(l) - q_building(l)) &
                                )
-       end if
-    end do
-
-    ! Cathy [dev.03]
-    ! Update internal building air specific humidity
-    do fl = 1,num_urbanl
-       l = filter_urbanl(fl)
-       if (urbpoi(l)) then
-          q_building(l) = qaf(l) * (vent_ach/3600._r8 * dtime) + q_building_bef(l) * (1 - vent_ach/3600._r8 * dtime)
        end if
     end do
 
