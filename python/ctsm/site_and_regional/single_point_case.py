@@ -152,13 +152,13 @@ class SinglePointCase(BaseCase):
         # self.check_nonveg()
         self.check_pct_pft()
 
-    def convert_plon_to_filetype_if_needed(self, input_ds):
+    def convert_plon_to_filetype_if_needed(self, lon_da):
         """
         Check that point and input file longitude types are equal. If not, convert point to match
         file.
         """
         plon_in = self.plon
-        f_lon_type = _detect_lon_type(input_ds["lsmlon"])
+        f_lon_type = _detect_lon_type(lon_da)
         plon_type = plon_in.lon_type()
         if f_lon_type == plon_type:
             plon_out = plon_in.get(plon_type)
@@ -385,7 +385,7 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in)
+        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
 
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
@@ -523,7 +523,7 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in)
+        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
 
         # extract gridcell closest to plon/plat
         f_tmp = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
@@ -595,8 +595,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
 
+        # get point longitude, converting to match file type if needed
+        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=plon_converted, nj=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
