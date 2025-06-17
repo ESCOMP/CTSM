@@ -19,6 +19,7 @@ Using CLM tools
    using-ctsm-pylib.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
+   creating-hillslope-datasets.rst
    creating-domain-files.rst
    observational-sites-datasets.rst
    cprnc.rst
