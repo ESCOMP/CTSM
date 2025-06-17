@@ -185,6 +185,95 @@ class TestSubsetDataSys(unittest.TestCase):
         ):
             subset_data.main()
 
+    def test_subset_data_pt_amazon_type360(self):
+        """
+        Test subset_data for Amazon point with longitude type 360
+        """
+        cfg_file = os.path.join(
+            self.inputdata_dir,
+            "ctsm",
+            "test",
+            "testinputs",
+            "subset_data_amazon.cfg",
+        )
+        print(cfg_file)
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--lat",
+            "-12",
+            "--lon",
+            "291",
+            "--site",
+            "TMP",
+            "--create-domain",
+            "--create-surface",
+            "--surf-year",
+            "2000",
+            "--create-user-mods",
+            "--outdir",
+            self.temp_dir_out.name,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--inputdata-dir",
+            self.inputdata_dir,
+            "--cfg-file",
+            cfg_file,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+        # Loop through all the output files, making sure they match what we expect.
+        daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        expected_output_files = [
+            f"surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
+        ]
+        self.assertTrue(self._check_result_file_matches_expected(expected_output_files))
+
+    def test_subset_data_pt_amazon_type180(self):
+        """
+        Test subset_data for Amazon point with longitude type 180
+        """
+        cfg_file = os.path.join(
+            self.inputdata_dir,
+            "ctsm",
+            "test",
+            "testinputs",
+            "subset_data_amazon.cfg",
+        )
+        print(cfg_file)
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--lat",
+            "-12",
+            "--lon",
+            "-69",
+            "--site",
+            "TMP",
+            "--create-surface",
+            "--surf-year",
+            "2000",
+            "--create-user-mods",
+            "--outdir",
+            self.temp_dir_out.name,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--inputdata-dir",
+            self.inputdata_dir,
+            "--cfg-file",
+            cfg_file,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+        # Loop through all the output files, making sure they match what we expect.
+        daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        expected_output_files = [
+            f"surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
+        ]
+        self.assertTrue(self._check_result_file_matches_expected(expected_output_files))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
