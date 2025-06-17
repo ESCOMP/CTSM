@@ -326,6 +326,58 @@ class TestSubsetDataSys(unittest.TestCase):
             except RuntimeError as e:
                 raise AssertionError(str(e)) from e
 
+    def test_subset_data_pt_amazon_type180_datm(self):
+        """
+        Test subset_data --create-datm for Amazon point with longitude type 180
+        FOR NOW CAN ONLY BE RUN ON DERECHO/CASPER
+        """
+        start_year = 1986
+        end_year = 1988
+        sitename = "TMP"
+        outdir = self.temp_dir_out.name
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--lat",
+            "-12",
+            "--lon",
+            "-69",
+            "--site",
+            sitename,
+            "--create-datm",
+            "--datm-syr",
+            str(start_year),
+            "--datm-eyr",
+            str(end_year),
+            "--create-user-mods",
+            "--outdir",
+            outdir,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+        # Loop through all the output files, making sure they exist.
+        daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        expected_output_files = [
+            f"domain.crujra_v2.3_0.5x0.5_{sitename}_c{daystr}.nc",
+        ]
+        for year in list(range(start_year, end_year + 1)):
+            for forcing in ["Solr", "Prec", "TPQWL"]:
+                expected_output_files.append(
+                    f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename}.{year}.nc"
+                )
+        for file_basename in expected_output_files:
+            file_path = os.path.join(outdir, "datmdata", file_basename)
+            # The below will error if exactly one matching file isn't found
+            try:
+                find_one_file_matching_pattern(file_path)
+            except FileNotFoundError as e:
+                raise AssertionError(str(e)) from e
+            except RuntimeError as e:
+                raise AssertionError(str(e)) from e
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
