@@ -15,6 +15,7 @@ import xarray as xr
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
+from ctsm.longitude import _detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,26 @@ class SinglePointCase(BaseCase):
         self.check_dom_pft()
         # self.check_nonveg()
         self.check_pct_pft()
+
+    def convert_plon_to_filetype_if_needed(self, input_ds):
+        """
+        Check that point and input file longitude types are equal. If not, convert point to match
+        file.
+        """
+        plon_in = self.plon
+        f_lon_type = _detect_lon_type(input_ds["lsmlon"])
+        plon_type = plon_in.lon_type()
+        if f_lon_type == plon_type:
+            plon_out = plon_in.get(plon_type)
+        else:
+            plon_orig = plon_in.get(plon_type)
+            plon_out = plon_in.get(f_lon_type)
+            if plon_orig != plon_out:
+                print(
+                    f"Converted plon from type {plon_type} (value {plon_orig}) "
+                    f"to type {f_lon_type} (value {plon_out})"
+                )
+        return plon_out
 
     def create_tag(self):
         """
@@ -498,8 +519,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_converted = self.convert_plon_to_filetype_if_needed(f_in)
+
         # extract gridcell closest to plon/plat
-        f_tmp = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_tmp = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
@@ -525,10 +549,10 @@ class SinglePointCase(BaseCase):
         # update lsmlat and lsmlon to match site specific instead of the nearest point
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        f_out["lsmlon"] = np.atleast_1d(self.plon)
+        f_out["lsmlon"] = np.atleast_1d(plon_converted)
         f_out["lsmlat"] = np.atleast_1d(self.plat)
         f_out["LATIXY"][:, :] = self.plat
-        f_out["LONGXY"][:, :] = self.plon
+        f_out["LONGXY"][:, :] = plon_converted
 
         # update attributes
         self.update_metadata(f_out)
