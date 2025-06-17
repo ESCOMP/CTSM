@@ -1104,23 +1104,26 @@ contains
           !                                  ( ht_roof(l) * rho_dair(l) / dtime ) * q_building(l) - &
           !                                  ( ht_roof(l) * rho_dair(l) / dtime ) * q_building_bef_hac(l) )
           qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
-          
-          ! Calculate and assign water flux due to dehumidification to roof column [mm/s].
-          ! water flux to other urban columns are set to 0.
-          do fc = 1, num_urbanc
-             c = filter_urbanc(fc)
-             if (ctype(c) == icol_roof) then
-                qflx_condensate_from_ac(c) = qtot_condensate(l)/dtime
-                ! write(iulog,*) '############# Cathy [dev.15] calculated qflx_condensate_from_ac: ', qflx_condensate_from_ac(c), '#############'
-             else ! if (ctype(c) == icol_road_imperv .or. ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall) then
-                qflx_condensate_from_ac(c) = 0._r8
-             end if
-          end do
 
           ! Cathy [dev.06]
           ! Calculate relative humidity based on specific humidity
           call QSat(t_building(l), forc_pbot(g), qsat_building)
           rh_building(l) = min(100._r8, q_building(l) / qsat_building * 100._r8)
+       end if
+    end do
+
+    ! Cathy [dev.18.03] Start a seperate loop for this:
+    ! Calculate and assign water flux due to dehumidification to roof column [mm/s].
+    ! water flux to other urban columns are set to 0.
+    do fc = 1,num_urbanc
+       c = filter_urbanc(fc)
+       l = clandunit(c)
+       if (urbpoi(l)) then
+         if (ctype(c) == icol_roof) then
+           qflx_condensate_from_ac(c) = qtot_condensate(l)/dtime
+         else
+           qflx_condensate_from_ac(c) = 0._r8
+         end if
        end if
     end do
 
