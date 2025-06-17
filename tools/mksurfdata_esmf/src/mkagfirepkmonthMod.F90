@@ -22,6 +22,7 @@ module mkagfirepkmonthMod
 
   integer , parameter :: min_valid = 1  ! month value for January
   integer , parameter :: max_valid = 13  ! value for no agricultural fire
+  integer , parameter :: unsetmon = 14  ! value for no data
 
   type(ESMF_DynamicMask) :: dynamicMask
 
@@ -119,6 +120,10 @@ contains
     call mkpio_get_rawdata(pioid_i, 'abm', mesh_i, idata_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
+    ! Update idata_i to unsetmon where mask_i == 0, i.e. over ocean
+    do ni = 1, ns_i
+       if (mask_i(ni) == 0) idata_i(ni) = unsetmon
+    end do
 
      ! Create ESMF fields that will be used below
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
@@ -167,8 +172,9 @@ contains
 
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
-        max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
-        call shr_sys_abort(subname//" error in agfirepkmon_o value range; min_valid, max_valid are "//min_valid//", "//max_valid)
+        max_bad(agfirepkmon_o, unsetmon , 'agfirepkmon')) then
+        if (root_task) write(ndiag, '(a)') trim(subname)//" error in agfirepkmon_o value range: expect min_valid to unsetmon which equal ", min_valid, unsetmon
+        call shr_sys_abort()
      end if
 
     ! Close the file 
@@ -182,7 +188,7 @@ contains
 
     ! Output diagnostics comparing global area of each peak month on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         min_valid, max_valid, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
+         min_valid, unsetmon, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     
     ! Release memory
@@ -219,6 +225,7 @@ contains
     real(ESMF_KIND_R4) :: wts_o(min_valid:max_valid)
     integer            :: maxindex(1)
     logical            :: hasdata 
+    character(len=*), parameter :: subname = 'get_dominant_indices'
     !---------------------------------------------------------------
 
     rc = ESMF_SUCCESS
