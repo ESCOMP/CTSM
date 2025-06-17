@@ -387,7 +387,7 @@ contains
     eflx_ventilation  => energyflux_inst%eflx_ventilation_lun, & ! Output: [real(r8) (:)]  sensible heat flux from building ventilation (W/m**2)
 
     ! Cathy [dev.15]
-    qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for impervious road area (mm/s)
+    qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col, & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for impervious road area (mm/s)
     qflx_condensate_from_ac_lu => waterfluxbulk_inst%qflx_condensate_from_ac_lun & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for urban area by land unit (mm/s)
     )
 
