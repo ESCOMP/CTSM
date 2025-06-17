@@ -288,9 +288,7 @@ class TestSubsetDataSys(unittest.TestCase):
             # The below will error if exactly one matching file isn't found
             try:
                 find_one_file_matching_pattern(file_path)
-            except FileNotFoundError as e:
-                raise AssertionError(str(e)) from e
-            except RuntimeError as e:
+            except Exception as e:
                 raise AssertionError(str(e)) from e
 
     def test_subset_data_pt_datm_amazon_type360(self):
