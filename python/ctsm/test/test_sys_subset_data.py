@@ -185,9 +185,9 @@ class TestSubsetDataSys(unittest.TestCase):
         ):
             subset_data.main()
 
-    def test_subset_data_pt_amazon_type360(self):
+    def test_subset_data_pt_amazon_type360_surface(self):
         """
-        Test subset_data for Amazon point with longitude type 360
+        Test subset_data --create-surface for Amazon point with longitude type 360
         """
         cfg_file = os.path.join(
             self.inputdata_dir,
@@ -230,9 +230,9 @@ class TestSubsetDataSys(unittest.TestCase):
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files))
 
-    def test_subset_data_pt_amazon_type180(self):
+    def test_subset_data_pt_amazon_type180_surface(self):
         """
-        Test subset_data for Amazon point with longitude type 180
+        Test subset_data --create-surface for Amazon point with longitude type 180
         """
         cfg_file = os.path.join(
             self.inputdata_dir,
@@ -273,6 +273,59 @@ class TestSubsetDataSys(unittest.TestCase):
             f"surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files))
+
+    def test_subset_data_pt_amazon_type360_datm(self):
+        """
+        Test subset_data --create-datm for Amazon point with longitude type 360
+        FOR NOW CAN ONLY BE RUN ON DERECHO/CASPER
+        """
+        start_year = 1986
+        end_year = 1988
+        sitename = "TMP"
+        # outdir = self.temp_dir_out.name
+        outdir = "/glade/work/samrabin/ctsm/python/abc456"
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--lat",
+            "-12",
+            "--lon",
+            "291",
+            "--site",
+            sitename,
+            "--create-datm",
+            "--datm-syr",
+            str(start_year),
+            "--datm-eyr",
+            str(end_year),
+            "--create-user-mods",
+            "--outdir",
+            outdir,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+        # Loop through all the output files, making sure they exist.
+        daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        expected_output_files = [
+            f"domain.crujra_v2.3_0.5x0.5_{sitename}_c{daystr}.nc",
+        ]
+        for year in list(range(start_year, end_year + 1)):
+            for forcing in ["Solr", "Prec", "TPQWL"]:
+                expected_output_files.append(
+                    f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename}.{year}.nc"
+                )
+        for file_basename in expected_output_files:
+            file_path = os.path.join(outdir, "datmdata", file_basename)
+            # The below will error if exactly one matching file isn't found
+            try:
+                find_one_file_matching_pattern(file_path)
+            except FileNotFoundError as e:
+                raise AssertionError(str(e)) from e
+            except RuntimeError as e:
+                raise AssertionError(str(e)) from e
 
 
 if __name__ == "__main__":
