@@ -389,6 +389,8 @@ contains
     ! Cathy [dev.15]
     qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for impervious road area (mm/s)
     )
+    qflx_condensate_from_ac_lu => waterfluxbulk_inst%qflx_condensate_from_ac_lun & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for urban area by land unit (mm/s)
+    )
 
     ! Get step size
 
@@ -1095,10 +1097,14 @@ contains
                              )
           
           ! Cathy [dev.15] [dev.18]
-          
           ! Calculate total water condensed by dehumidification, if any [kg/m2 building area].
           ! Assume all condensed water gets added to the roof column (that goes directly into surface runoff).
           qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
+          ! Cathy [dev.18.02]
+          ! qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * abs ( &
+          !                                  ( ht_roof(l) * rho_dair(l) / dtime ) * q_building(l) - &
+          !                                  ( ht_roof(l) * rho_dair(l) / dtime ) * q_building_bef_hac(l) )
+          qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
           
           ! Calculate and assign water flux due to dehumidification to roof column [mm/s].
           ! water flux to other urban columns are set to 0.
