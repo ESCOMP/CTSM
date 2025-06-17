@@ -384,8 +384,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_converted = self.convert_plon_to_filetype_if_needed(f_in)
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
