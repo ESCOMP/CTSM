@@ -15,10 +15,10 @@ from ctsm import ctsm_logging
 from ctsm.hillslopes.hillslope_utils import (
     add_variable_nc,
     add_longxy_latixy_nc,
-    HillslopeVars,
     NETCDF_FORMAT,
     get_chunks_to_process,
 )
+from ctsm.hillslopes.hillslope_vars import HillslopeVars
 
 
 def parse_arguments(argv):

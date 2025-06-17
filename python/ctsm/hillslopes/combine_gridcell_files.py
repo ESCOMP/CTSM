@@ -13,7 +13,8 @@ import datetime
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm import ctsm_logging
-from ctsm.hillslopes.hillslope_utils import HillslopeVars, get_chunks_to_process
+from ctsm.hillslopes.hillslope_utils import get_chunks_to_process
+from ctsm.hillslopes.hillslope_vars import HillslopeVars
 
 
 def parse_arguments(argv):

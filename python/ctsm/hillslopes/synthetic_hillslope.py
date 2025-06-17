@@ -13,11 +13,10 @@ import xarray as xr
 # though it does.
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
-from ctsm.hillslopes.hillslope_utils import HillslopeVars
+from ctsm.hillslopes.hillslope_vars import HillslopeVars
 
 # HillslopeVars.save() doesn't work right with synthetic data, so instead we'll copy using xarray
 INCL_LATLON = False
-
 
 def parse_arguments(argv):
     """
