@@ -18,6 +18,7 @@ from ctsm.hillslopes.hillslope_vars import HillslopeVars
 # HillslopeVars.save() doesn't work right with synthetic data, so instead we'll copy using xarray
 INCL_LATLON = False
 
+
 def parse_arguments(argv):
     """
     Parse arguments to script
