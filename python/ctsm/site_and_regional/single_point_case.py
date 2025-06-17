@@ -709,12 +709,8 @@ class SinglePointCase(BaseCase):
                 os.path.join(outdir, fprecip2),
                 os.path.join(outdir, ftpqw2),
             ]
-            solarfiles.append(
-                os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
-            )
-            precfiles.append(
-                os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
-            )
+            solarfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2))
+            precfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2))
             tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         for idx, out_f in enumerate(outfile):
