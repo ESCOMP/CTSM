@@ -282,8 +282,7 @@ class TestSubsetDataSys(unittest.TestCase):
         start_year = 1986
         end_year = 1988
         sitename = "TMP"
-        # outdir = self.temp_dir_out.name
-        outdir = "/glade/work/samrabin/ctsm/python/abc456"
+        outdir = self.temp_dir_out.name
         sys.argv = [
             "subset_data",
             "point",
