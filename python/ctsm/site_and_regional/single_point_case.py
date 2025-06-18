@@ -237,7 +237,8 @@ class SinglePointCase(BaseCase):
             if min_dom_pft < NAT_PFT <= max_dom_pft:
                 err_msg = (
                     "You are subsetting using mixed land units that have both "
-                    "natural pfts and crop cfts. Check your surface dataset. "
+                    "natural pfts and crop cfts. Check your surface dataset.\n"
+                    f"{min_dom_pft} < {NAT_PFT} <= {max_dom_pft}\n"
                 )
                 raise argparse.ArgumentTypeError(err_msg)
 

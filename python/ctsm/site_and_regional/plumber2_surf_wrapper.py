@@ -85,6 +85,13 @@ def execute(command):
     subset_data.main()
 
 
+def is_valid_pft(pft_num):
+    """
+    Given a number, check whether it represents a valid PFT
+    """
+    return pft_num >= 1
+
+
 def main():
     """
     Read plumber2_sites from csv, iterate through sites, and add dominant PFT
@@ -101,88 +108,87 @@ def main():
         lat = row["Lat"]
         lon = row["Lon"]
         site = row["Site"]
+
+        clmsite = "1x1_PLUMBER2_" + site
+        print("Now processing site :", site)
+
+        # Set up part of subset_data command that is shared among all options
+        subset_command = [
+            "./subset_data",
+            "point",
+            "--lat",
+            str(lat),
+            "--lon",
+            str(lon),
+            "--site",
+            clmsite,
+            "--create-surface",
+            "--uniform-snowpack",
+            "--cap-saturation",
+            "--overwrite",
+            "--lon-type",
+            "180",
+        ]
+
+        # Read info for first PFT
         pft1 = row["pft1"]
+        if not is_valid_pft(pft1):
+            raise RuntimeError(f"pft1 must be a valid PFT; got {pft1}")
         pctpft1 = row["pft1-%"]
         cth1 = row["pft1-cth"]
         cbh1 = row["pft1-cbh"]
+
+        # Read info for second PFT, if a valid one is given in the .csv file
         pft2 = row["pft2"]
-        pctpft2 = row["pft2-%"]
-        cth2 = row["pft2-cth"]
-        cbh2 = row["pft2-cbh"]
-        # overwrite missing values from .csv file
-        if pft1 == -999:
-            pft1 = 0
-            pctpft1 = 0
-            cth1 = 0
-            cbh1 = 0
-        if pft2 == -999:
-            pft2 = 0
-            pctpft2 = 0
-            cth2 = 0
-            cbh2 = 0
-        clmsite = "1x1_PLUMBER2_" + site
-        print("Now processing site :", site)
+        if is_valid_pft(pft2):
+            pctpft2 = row["pft2-%"]
+            cth2 = row["pft2-cth"]
+            cbh2 = row["pft2-cbh"]
+
+        # Set dominant PFT(s)
+        if is_valid_pft(pft2):
+            subset_command += [
+                "--dompft",
+                str(pft1),
+                str(pft2),
+                "--pctpft",
+                str(pctpft1),
+                str(pctpft2),
+            ]
+        else:
+            subset_command += [
+                "--dompft",
+                str(pft1),
+                "--pctpft",
+                str(pctpft1),
+            ]
 
         if args.pft_16:
             # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
             # don't set crop flag
-            # set dominant pft
-            subset_command = [
-                "./subset_data",
-                "point",
-                "--lat",
-                str(lat),
-                "--lon",
-                str(lon),
-                "--site",
-                clmsite,
-                "--dompft",
-                str(pft1),
-                str(pft2),
-                "--pctpft",
-                str(pctpft1),
-                str(pctpft2),
-                "--cth",
-                str(cth1),
-                str(cth2),
-                "--cbh",
-                str(cbh1),
-                str(cbh2),
-                "--create-surface",
-                "--uniform-snowpack",
-                "--cap-saturation",
-                "--overwrite",
-                "--lon-type",
-                "180",
-            ]
+            # set canopy top and bottom heights
+            if is_valid_pft(pft2):
+                subset_command += [
+                    "--cth",
+                    str(cth1),
+                    str(cth2),
+                    "--cbh",
+                    str(cbh1),
+                    str(cbh2),
+                ]
+            else:
+                subset_command += [
+                    "--cth",
+                    str(cth1),
+                    "--cbh",
+                    str(cbh1),
+                ]
         else:
             # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
             # NOTE: FATES will currently not run with a 78-PFT surface dataset
             # set crop flag
-            # set dominant pft
-            subset_command = [
-                "./subset_data",
-                "point",
-                "--lat",
-                str(lat),
-                "--lon",
-                str(lon),
-                "--site",
-                clmsite,
-                "--crop",
-                "--dompft",
-                str(pft1),
-                str(pft2),
-                "--pctpft",
-                str(pctpft1),
-                str(pctpft2),
-                "--create-surface",
-                "--uniform-snowpack",
-                "--cap-saturation",
-                "--overwrite",
-                "--lon-type",
-                "180",
-            ]
+            subset_command += ["--crop"]
+            # don't set canopy top and bottom heights
 
         if args.verbose:
             subset_command += ["--verbose"]
