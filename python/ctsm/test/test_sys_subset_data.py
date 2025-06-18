@@ -242,6 +242,65 @@ class TestSubsetDataSys(unittest.TestCase):
         """
         self._do_test_subset_data_pt_surface(-69)
 
+    def _do_test_subset_data_pt_landuse(self, lon):
+        """
+        Given a longitude, test subset_data point --create-landuse
+        """
+        cfg_file = os.path.join(
+            self.inputdata_dir,
+            "ctsm",
+            "test",
+            "testinputs",
+            "subset_data_amazon_1850.cfg",
+        )
+        print(cfg_file)
+        sys.argv = [
+            "subset_data",
+            "point",
+            "--lat",
+            "-12",
+            "--lon",
+            str(lon),
+            "--site",
+            "TMP",
+            "--create-domain",
+            "--create-surface",
+            "--surf-year",
+            "1850",
+            "--create-landuse",
+            "--create-user-mods",
+            "--outdir",
+            self.temp_dir_out.name,
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+            "--inputdata-dir",
+            self.inputdata_dir,
+            "--cfg-file",
+            cfg_file,
+            "--overwrite",
+        ]
+        subset_data.main()
+
+        # Loop through all the output files, making sure they match what we expect.
+        daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        expected_output_files = [
+            f"surfdata_TMP_amazon_hist_1850_78pfts_c{daystr}.nc",
+            f"landuse.timeseries_TMP_amazon_hist_1850-1853_78pfts_c{daystr}.nc",
+        ]
+        self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
+
+    def test_subset_data_pt_landuse_amazon_type360(self):
+        """
+        Test subset_data --create-landuse for Amazon point with longitude type 360
+        """
+        self._do_test_subset_data_pt_landuse(291)
+
+    def test_subset_data_pt_landuse_amazon_type180(self):
+        """
+        Test subset_data --create-landuse for Amazon point with longitude type 180
+        """
+        self._do_test_subset_data_pt_landuse(-69)
+
     def _do_test_subset_data_pt_datm(self, lon):
         """
         Given a longitude, test subset_data point --create-datm
