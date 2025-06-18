@@ -22,4 +22,4 @@ def read_plumber2_sites_csv():
     """
     Read PLUMBER2_sites.csv using pandas
     """
-    return pd.read_csv(PLUMBER2_SITES_CSV, skiprows=4)
+    return pd.read_csv(PLUMBER2_SITES_CSV, skiprows=5)

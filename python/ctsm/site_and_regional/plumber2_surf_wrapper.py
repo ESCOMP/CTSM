@@ -152,6 +152,8 @@ def main():
                 "--cap-saturation",
                 "--verbose",
                 "--overwrite",
+                "--lon-type",
+                "180",
             ]
         else:
             # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
@@ -179,6 +181,8 @@ def main():
                 "--cap-saturation",
                 "--verbose",
                 "--overwrite",
+                "--lon-type",
+                "180",
             ]
         execute(subset_command)
 
