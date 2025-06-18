@@ -3027,14 +3027,14 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Transient production low res future scenario SSP2-4.5 case with isotopes with a december 2050 start, use gnu to move off of intel</option>
+      <option name="comment">Transient production low res future scenario SSP3-7.0 case with isotopes with a december 2050 start, use gnu to move off of intel</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
@@ -3073,7 +3073,7 @@
       <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP126Clm50BgcCrop" testmods="clm/default">
+  <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
@@ -3083,14 +3083,14 @@
       <option name="comment">Transient production with anomaly forcing future scenario SSP1-2.6 case</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/default">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production with anomaly forcing future scenario SSP2-4.5 case</option>
+      <option name="comment"  >Transient production with anomaly forcing future scenario SSP5-8.5 case</option>
     </options>
   </test>
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/default--clm/noAnomalyForcing">
@@ -3102,7 +3102,7 @@
       <option name="comment"  >Transient production with future scenario SSP2-4.5 but NO anomaly forcing</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/datm_rcp45_anom_forc">
+  <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/datm_rcp45_anom_forc">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
@@ -3280,6 +3280,7 @@
   <test name="PEM_D_Ld20" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
