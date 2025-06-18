@@ -250,7 +250,7 @@ contains
              maxindex = maxloc(wts_o(:)) 
              dynamicMaskList(no)%dstElement = real(maxindex(1), kind=r4)
           else
-             call shr_sys_abort(subname//" error: hasdata needs to be true")
+             dynamicMaskList(no)%dstElement = real(unsetmon, kind=r4)
           end if
        end do
     end if
