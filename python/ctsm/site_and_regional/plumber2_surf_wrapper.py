@@ -24,7 +24,6 @@ import argparse
 import logging
 import os
 import sys
-import subprocess
 import tqdm
 
 # Get the ctsm tools
@@ -33,6 +32,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint:disable=wrong-import-position
 from ctsm.site_and_regional.plumber2_shared import read_plumber2_sites_csv
+from ctsm import subset_data
 
 
 def get_parser():
@@ -77,12 +77,10 @@ def execute(command):
     print("\n", " >>  ", *command, "\n")
 
     try:
-        subprocess.check_call(command, stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT)
+        sys.argv = command
+        subset_data.main()
 
-    except subprocess.CalledProcessError as err:
-        # raise RuntimeError("command '{}' return with error
-        # (code {}): {}".format(e.cmd, e.returncode, e.output))
-        # print (e.ouput)
+    except Exception as err:  # pylint: disable=broad-exception-caught
         print(err)
 
 
