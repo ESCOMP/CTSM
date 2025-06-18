@@ -11,9 +11,15 @@ Creates individual usermod_dirs for each PLUMBER2 site with shell_commands
 from __future__ import print_function
 
 import os
+import sys
 import tqdm
 
-import pandas as pd
+# Get the ctsm tools
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
+sys.path.insert(1, _CTSM_PYTHON)
+
+# pylint:disable=wrong-import-position
+from ctsm.site_and_regional.plumber2_shared import read_plumber2_sites_csv
 
 
 # Big ugly function to create usermod_dirs for each site
@@ -155,7 +161,7 @@ def main():
     """
 
     # For now we can just run the 'main' program as a loop
-    plumber2_sites = pd.read_csv("PLUMBER2_sites.csv", skiprows=4)
+    plumber2_sites = read_plumber2_sites_csv()
 
     for _, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row["Lat"]
