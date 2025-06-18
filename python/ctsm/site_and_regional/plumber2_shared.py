@@ -18,8 +18,8 @@ PLUMBER2_SITES_CSV = os.path.realpath(
 )
 
 
-def read_plumber2_sites_csv():
+def read_plumber2_sites_csv(file=PLUMBER2_SITES_CSV):
     """
     Read PLUMBER2_sites.csv using pandas
     """
-    return pd.read_csv(PLUMBER2_SITES_CSV, skiprows=5)
+    return pd.read_csv(file, skiprows=5)

@@ -31,7 +31,7 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint:disable=wrong-import-position
-from ctsm.site_and_regional.plumber2_shared import read_plumber2_sites_csv
+from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plumber2_sites_csv
 from ctsm import subset_data
 
 
@@ -59,6 +59,12 @@ def get_parser():
         action="store_true",
         dest="pft_16",
         default=True,
+    )
+
+    parser.add_argument(
+        "--plumber2-sites-csv",
+        help=f"Comma-separated value (CSV) file with Plumber2 sites. Default: {PLUMBER2_SITES_CSV}",
+        default=PLUMBER2_SITES_CSV,
     )
 
     return parser
@@ -89,7 +95,7 @@ def main():
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    plumber2_sites = read_plumber2_sites_csv()
+    plumber2_sites = read_plumber2_sites_csv(args.plumber2_sites_csv)
 
     for _, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row["Lat"]
