@@ -75,12 +75,8 @@ def execute(command):
     """
     print("\n", " >>  ", *command, "\n")
 
-    try:
-        sys.argv = command
-        subset_data.main()
-
-    except Exception as err:  # pylint: disable=broad-exception-caught
-        print(err)
+    sys.argv = command
+    subset_data.main()
 
 
 def main():
