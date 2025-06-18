@@ -51,7 +51,6 @@ def get_parser():
         help="Verbose mode will print more information. ",
         action="store_true",
         dest="verbose",
-        default=False,
     )
 
     parser.add_argument(
@@ -150,7 +149,6 @@ def main():
                 "--create-surface",
                 "--uniform-snowpack",
                 "--cap-saturation",
-                "--verbose",
                 "--overwrite",
                 "--lon-type",
                 "180",
@@ -179,11 +177,14 @@ def main():
                 "--create-surface",
                 "--uniform-snowpack",
                 "--cap-saturation",
-                "--verbose",
                 "--overwrite",
                 "--lon-type",
                 "180",
             ]
+
+        if args.verbose:
+            subset_command += ["--verbose"]
+
         execute(subset_command)
 
 
