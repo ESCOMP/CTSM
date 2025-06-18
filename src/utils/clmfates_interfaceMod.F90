@@ -2909,7 +2909,7 @@ module CLMFatesInterfaceMod
  ! ==============================================================================
 
  subroutine wrap_co2_to_atm(this, bounds_clump, num_soilc, filter_soilc, & 
-                            soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc)
+                            soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc )
 
    ! USES
    use subgridAveMod, only : c2g
@@ -2948,7 +2948,12 @@ module CLMFatesInterfaceMod
          garr = net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg), &
          c2l_scale_type = 'unity', &
          l2g_scale_type = 'unity')
-  ! change sign, same way it is done in get_net_carbon_exchange
+   ! change sign, same way it is done in get_net_carbon_exchange
+
+   do g = bounds_clump%begg,bounds_clump%endg
+       net_carbon_exchange_grc(g) = net_carbon_exchange_grc(g) - soilbiogeochem_carbonflux_inst%fates_product_loss_grc(g)
+    enddo
+
   net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = - net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
 
  end subroutine wrap_co2_to_atm

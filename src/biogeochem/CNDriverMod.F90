@@ -902,13 +902,16 @@ contains
     if (use_c13) call c13_products_inst%ComputeProductSummaryVars(bounds)
     if (use_c14) call c14_products_inst%ComputeProductSummaryVars(bounds)
     call n_products_inst%ComputeProductSummaryVars(bounds)
-
-
+    
     call c_products_inst%ComputeSummaryVars(bounds)
     if (use_c13) call c13_products_inst%ComputeSummaryVars(bounds)
     if (use_c14) call c14_products_inst%ComputeSummaryVars(bounds)
     call n_products_inst%ComputeSummaryVars(bounds)
-    
+
+    if(use_fates_bgc)then
+       soilbiogeochem_carbonflux_inst%fates_product_loss_grc(bounds%begg:bounds%endg)=c_products_inst%product_loss_grc(bounds%begg:bounds%endg)
+    endif
+
     call t_stopf('CNWoodProducts')
        
     !--------------------------------------------
