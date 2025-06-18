@@ -76,14 +76,16 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # Try building our docs using the new container
-      - name: Checkout doc-builder external
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
+
       - name: Set image tag for docs build
         id: set-image-tag
         run: |
           echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1 | cut -d',' -f1)" >> $GITHUB_ENV
+
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs
         run: |
