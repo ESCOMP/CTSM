@@ -35,9 +35,9 @@ from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plum
 from ctsm import subset_data
 
 
-def get_parser():
+def get_args():
     """
-    Get parser object for this script.
+    Get arguments for this script.
     """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -67,7 +67,7 @@ def get_parser():
         default=PLUMBER2_SITES_CSV,
     )
 
-    return parser
+    return parser.parse_args()
 
 
 def execute(command):
@@ -97,7 +97,7 @@ def main():
     Read plumber2_sites from csv, iterate through sites, and add dominant PFT
     """
 
-    args = get_parser().parse_args()
+    args = get_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
