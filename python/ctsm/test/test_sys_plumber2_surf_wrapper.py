@@ -53,10 +53,31 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
 
     def test_plumber2_surf_wrapper(self):
         """
-        Run the entire tool
+        Run the entire tool with default settings.
+        CAN ONLY RUN ON SYSTEMS WITH INPUTDATA
         """
 
         sys.argv = [self.tool_path]
+        main()
+
+        # How many files do we expect?
+        plumber2_csv = read_plumber2_sites_csv()
+        n_files_expected = len(plumber2_csv)
+
+        # How many files did we get?
+        file_list = os.listdir("subset_data_single_point")
+        n_files = len(file_list)
+
+        # Check
+        self.assertEqual(n_files_expected, n_files)
+
+    def test_plumber2_surf_wrapper_16pft(self):
+        """
+        Run the entire tool with --16pft.
+        CAN ONLY RUN ON SYSTEMS WITH INPUTDATA
+        """
+
+        sys.argv = [self.tool_path, "--16pft"]
         main()
 
         # How many files do we expect?
