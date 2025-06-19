@@ -339,7 +339,10 @@ contains
     real(r8) :: esat_building              ! internal building air saturated vapor pressure used to calculate p_vapor (Pa)
     real(r8) :: p_vapor                    ! internal building air partial pressure of water vapor (Pa)
     ! Cathy [dev.15]
-    real(r8) :: qtot_condensate(bounds%begl:bounds%endl) ! total condensed water due to dehumidification per building area (kg/m2)
+    real(r8) :: qtot_condensate(bounds%begl:bounds%endl) ! total condensed water due to dehumidification per building area (kg m-2)
+    ! Cathy [dev.19]
+    real(r8) :: eflx_urban_ac_lat_derived(bounds%begl:bounds%endl) ! urban air conditioning latent heat flux derived from condensate output, for error check (W m-2)
+    real(r8) :: err_eflx_urban_ac_lat(bounds%begl:bounds%endl) ! Difference in urban air conditioning latent heat flux for error check (W m-2)
 !EOP
 !-----------------------------------------------------------------------
 
@@ -1109,6 +1112,24 @@ contains
           ! Calculate relative humidity based on specific humidity
           call QSat(t_building(l), forc_pbot(g), qsat_building)
           rh_building(l) = min(100._r8, q_building(l) / qsat_building * 100._r8)
+       end if
+    end do
+
+    ! Cathy [dev.19] Dehumidification scheme consistency check:
+    ! The following code block checks if the energy and water calculations from the dehumidification scheme match
+    do fl = 1,num_urbanl
+       l = filter_urbanl(fl)
+       if (urbpoi(l)) then
+          ! dehumidification energy flux calculated from condensate:
+          eflx_urban_ac_lat_derived(l) = qflx_condensate_from_ac_lu(l) * hvap
+          ! Difference in dehumidification energy flux:
+          err_eflx_urban_ac_lat(l) = eflx_urban_ac_lat_derived(l) - (eflx_urban_ac(l) - eflx_urban_ac_sen(l))
+          if (abs(err_eflx_urban_ac_lat(l)) > 1.e-5_r8 ) then
+             write (iulog,*) 'urban dehumidification energy does not match condensate output,' 
+             write (iulog,*) 'error in dehumidification energy flux [W/m2 urban]: ',err_eflx_urban_ac_lat(l)
+             write (iulog,*) 'clm model is stopping'
+             call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+          end if
        end if
     end do
 
