@@ -54,10 +54,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--16pft",
-        help="Create and/or modify 16-PFT surface datasets (e.g. for a FATES run) ",
+        "--78pft",
+        help="Create and/or modify 78-PFT surface datasets (e.g. for a non-FATES run) ",
         action="store_true",
-        dest="pft_16",
+        dest="pft_78",
     )
 
     parser.add_argument(
@@ -167,8 +167,8 @@ def main():
                 str(pctpft1),
             ]
 
-        if args.pft_16:
-            # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
+        if not args.pft_78:
+            # use surface dataset with 78 pfts, but overwrite to 100% 1 dominant PFT
             # don't set crop flag
             # set canopy top and bottom heights
             if is_valid_pft(pft2):

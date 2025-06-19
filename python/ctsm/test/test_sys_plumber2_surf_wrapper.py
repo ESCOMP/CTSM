@@ -71,13 +71,13 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
         # Check
         self.assertEqual(n_files_expected, n_files)
 
-    def test_plumber2_surf_wrapper_16pft(self):
+    def test_plumber2_surf_wrapper_78pft(self):
         """
-        Run the entire tool with --16pft.
+        Run the entire tool with --78pft.
         CAN ONLY RUN ON SYSTEMS WITH INPUTDATA
         """
 
-        sys.argv = [self.tool_path, "--16pft"]
+        sys.argv = [self.tool_path, "--78pft"]
         main()
 
         # How many files do we expect?

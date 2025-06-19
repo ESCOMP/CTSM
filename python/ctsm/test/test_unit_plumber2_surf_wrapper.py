@@ -64,22 +64,22 @@ class TestPlumber2SurfWrapper(unittest.TestCase):
         args = get_args()
         self.assertTrue(args.verbose)
 
-    def test_parser_16pft_false_default(self):
+    def test_parser_78pft_false_default(self):
         """
-        Test that script does not use 16pft mode by default
+        Test that script does not use 78pft mode by default
         """
 
         args = get_args()
-        self.assertFalse(args.pft_16)
+        self.assertFalse(args.pft_78)
 
-    def test_parser_16pft_true(self):
+    def test_parser_78pft_true(self):
         """
-        Test that --16pft sets pft_16 to True
+        Test that --78pft sets pft_78 to True
         """
 
-        sys.argv += ["--16pft"]
+        sys.argv += ["--78pft"]
         args = get_args()
-        self.assertTrue(args.pft_16)
+        self.assertTrue(args.pft_78)
 
 
 if __name__ == "__main__":
