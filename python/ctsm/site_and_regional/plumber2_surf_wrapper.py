@@ -58,7 +58,6 @@ def get_args():
         help="Create and/or modify 16-PFT surface datasets (e.g. for a FATES run) ",
         action="store_true",
         dest="pft_16",
-        default=True,
     )
 
     parser.add_argument(
