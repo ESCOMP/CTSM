@@ -77,12 +77,12 @@ def get_args():
 
 def execute(command):
     """
-    Function for running a command on shell.
+    Runs subset_data with given arguments.
     Args:
-        command (str):
-            command that we want to run.
+        command (list):
+            list of args for command that we want to run.
     Raises:
-        Error with the return code from shell.
+        Whatever error subset_data gives, if any.
     """
     print("\n", " >>  ", *command, "\n")
 
