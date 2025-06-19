@@ -2,7 +2,6 @@
 
 """System tests for plumber2_surf_wrapper"""
 
-import glob
 import os
 import unittest
 import tempfile
