@@ -31,6 +31,19 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
         self._tempdir = tempfile.mkdtemp()
         os.chdir(self._tempdir)  # cd to tempdir
 
+        # Path to script
+        self.tool_path = os.path.join(
+            path_to_ctsm_root(),
+            "tools",
+            "site_and_regional",
+            "plumber2_surf_wrapper",
+        )
+
+        # Path to test inputs directory
+        self.test_inputs = os.path.join(
+            os.path.dirname(__file__), "testinputs", "plumber2_surf_wrapper"
+        )
+
     def tearDown(self):
         """
         Remove temporary directory
@@ -43,13 +56,7 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
         Run the entire tool
         """
 
-        tool_path = os.path.join(
-            path_to_ctsm_root(),
-            "tools",
-            "site_and_regional",
-            "plumber2_surf_wrapper",
-        )
-        sys.argv = [tool_path]
+        sys.argv = [self.tool_path]
         main()
 
         # How many files do we expect?
@@ -62,6 +69,19 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
 
         # Check
         self.assertEqual(n_files_expected, n_files)
+
+    def test_plumber2_surf_wrapper_invalid_pft(self):
+        """
+        plumber2_surf_wrapper should error if invalid PFT is given
+        """
+
+        sys.argv = [
+            self.tool_path,
+            "--plumber2-sites-csv",
+            os.path.join(self.test_inputs, "PLUMBER2_sites_invalid_pft.csv"),
+        ]
+        with self.assertRaisesRegex(RuntimeError, "must be a valid PFT"):
+            main()
 
 
 if __name__ == "__main__":
