@@ -104,6 +104,43 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "must be a valid PFT"):
             main()
 
+    def test_plumber2_surf_wrapper_existing_no_overwrite_fails(self):
+        """
+        plumber2_surf_wrapper should fail if file exists but --overwrite isn't given
+        """
+
+        sys_argv_shared = [
+            self.tool_path,
+            "--plumber2-sites-csv",
+            os.path.join(self.test_inputs, "PLUMBER2_site_valid.csv"),
+        ]
+
+        # Run twice, expecting second to fail
+        sys.argv = sys_argv_shared
+        main()
+        sys.argv = sys_argv_shared
+        with self.assertRaisesRegex(SystemExit, "exists"):
+            main()
+
+    def test_plumber2_surf_wrapper_existing_overwrite_passes(self):
+        """
+        plumber2_surf_wrapper should pass if file exists and --overwrite is given
+        """
+
+        sys_argv_shared = [
+            self.tool_path,
+            "--plumber2-sites-csv",
+            os.path.join(self.test_inputs, "PLUMBER2_site_valid.csv"),
+        ]
+
+        # Run once to generate the files
+        sys.argv = sys_argv_shared
+        main()
+
+        # Run again with --overwrite, expecting pass
+        sys.argv = sys_argv_shared + ["--overwrite"]
+        main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

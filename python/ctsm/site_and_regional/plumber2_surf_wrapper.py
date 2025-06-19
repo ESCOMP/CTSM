@@ -61,6 +61,12 @@ def get_args():
     )
 
     parser.add_argument(
+        "--overwrite",
+        help="Overwrite any existing files",
+        action="store_true",
+    )
+
+    parser.add_argument(
         "--plumber2-sites-csv",
         help=f"Comma-separated value (CSV) file with Plumber2 sites. Default: {PLUMBER2_SITES_CSV}",
         default=PLUMBER2_SITES_CSV,
@@ -124,7 +130,6 @@ def main():
             "--create-surface",
             "--uniform-snowpack",
             "--cap-saturation",
-            "--overwrite",
             "--lon-type",
             "180",
         ]
@@ -191,6 +196,8 @@ def main():
 
         if args.verbose:
             subset_command += ["--verbose"]
+        if args.overwrite:
+            subset_command += ["--overwrite"]
 
         execute(subset_command)
 
