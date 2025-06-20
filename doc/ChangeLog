@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.060
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 20 Jun 2025 04:48:54 PM MDT
+Date: Fri 20 Jun 2025 05:48:54 PM MDT
 One-line Summary: Preliminary update of ctsm54 defaults (answer changing)
 
 Purpose and description of changes
@@ -43,7 +43,7 @@ Changes to the datasets (e.g., parameter, surface or initial files):
  a75e488 introduces new paramfile to clm6 cases
  b1890ac introduces new f09 and ne30 fsurdat/landuse files
  3a8c432 introduces new f09 and ne30 finidat files for 1850 and 2000 clm6 cases
- Also, prior to the changes coming in with #3206, the ctsm54 branch had already changed the default raw datasets in mksurfdata_esmf, so the MKSURFDATAESMF test changed from the baseline (additional info in #3206)
+ Reverted changes to the default raw datasets that came in with #3206 (preexisting #3206 in the ctsm54 branch)
 
 Changes to documentation:
  None, yet
