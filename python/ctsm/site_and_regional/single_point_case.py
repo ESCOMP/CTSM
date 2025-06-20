@@ -16,12 +16,9 @@ import xarray as xr
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
 from ctsm.longitude import detect_lon_type
+from ctsm.pft_utils import NAT_PFT, NUM_PFT, MAX_PFT
 
 logger = logging.getLogger(__name__)
-
-NAT_PFT = 15  # natural pfts
-NUM_PFT = 17  # for runs with generic crops
-MAX_PFT = 78  # for runs with explicit crops
 
 
 class SinglePointCase(BaseCase):

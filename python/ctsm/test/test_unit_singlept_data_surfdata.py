@@ -23,6 +23,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.pft_utils import MAX_PFT
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-lines
@@ -667,7 +668,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     dom_pft = [17]
     evenly_split_cropland = False
     pct_pft = None
-    num_pft = 78
+    num_pft = MAX_PFT
     cth = 0.9
     cbh = 0.1
     include_nonveg = False

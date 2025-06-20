@@ -15,6 +15,7 @@ import netCDF4
 
 from ctsm.path_utils import path_to_ctsm_root, path_to_cime
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.pft_utils import MAX_PFT
 
 logger = logging.getLogger(__name__)
 
@@ -308,7 +309,7 @@ def main():
     if nocrop_flag:
         num_pft = "16"
     else:
-        num_pft = "78"
+        num_pft = str(MAX_PFT)
     logger.info("num_pft is %s", num_pft)
 
     # Write out if surface dataset will be created
