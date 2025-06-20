@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/NorESMhub/fates
-fxtag = sci.1.85.1_api.40.0.0_noresm_v1
+fxtag = sci.1.85.1_api.40.0.0_noresm_v2
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/fates
