@@ -15,16 +15,13 @@ import xarray as xr
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
+from ctsm.longitude import detect_lon_type
 
 logger = logging.getLogger(__name__)
 
 NAT_PFT = 15  # natural pfts
 NUM_PFT = 17  # for runs with generic crops
 MAX_PFT = 78  # for runs with explicit crops
-
-# -- constants to represent months of year
-FIRST_MONTH = 1
-LAST_MONTH = 12
 
 
 class SinglePointCase(BaseCase):
@@ -150,6 +147,26 @@ class SinglePointCase(BaseCase):
         self.check_dom_pft()
         # self.check_nonveg()
         self.check_pct_pft()
+
+    def convert_plon_to_filetype_if_needed(self, lon_da):
+        """
+        Check that point and input file longitude types are equal. If not, convert point to match
+        file.
+        """
+        plon_in = self.plon
+        f_lon_type = detect_lon_type(lon_da)
+        plon_type = plon_in.lon_type()
+        if f_lon_type == plon_type:
+            plon_out = plon_in.get(plon_type)
+        else:
+            plon_orig = plon_in.get(plon_type)
+            plon_out = plon_in.get(f_lon_type)
+            if plon_orig != plon_out:
+                print(
+                    f"Converted plon from type {plon_type} (value {plon_orig}) "
+                    f"to type {f_lon_type} (value {plon_out})"
+                )
+        return plon_out
 
     def create_tag(self):
         """
@@ -363,8 +380,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
@@ -498,8 +518,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+
         # extract gridcell closest to plon/plat
-        f_tmp = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_tmp = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
@@ -525,10 +548,10 @@ class SinglePointCase(BaseCase):
         # update lsmlat and lsmlon to match site specific instead of the nearest point
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        f_out["lsmlon"] = np.atleast_1d(self.plon)
+        f_out["lsmlon"] = np.atleast_1d(plon_float)
         f_out["lsmlat"] = np.atleast_1d(self.plat)
         f_out["LATIXY"][:, :] = self.plat
-        f_out["LONGXY"][:, :] = self.plon
+        f_out["LONGXY"][:, :] = plon_float
 
         # update attributes
         self.update_metadata(f_out)
@@ -568,8 +591,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=plon_float, nj=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
@@ -591,14 +617,17 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lon=self.plon, lat=self.plat, method="nearest")
+        f_out = f_in.sel(lon=plon_float, lat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lat", "lon"])
 
         # specify dimension order
-        f_out = f_out.transpose("scalar", "time", "lat", "lon")
+        f_out = f_out.transpose("time", "lat", "lon")
 
         # update attributes
         self.update_metadata(f_out)
@@ -653,46 +682,36 @@ class SinglePointCase(BaseCase):
         tpqwfiles = []
         for year in range(datm_syr, datm_eyr + 1):
             ystr = str(year)
-            for month in range(FIRST_MONTH, LAST_MONTH + 1):
-                mstr = str(month)
-                if month < 10:
-                    mstr = "0" + mstr
 
-                dtag = ystr + "-" + mstr
+            fsolar = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_solar,
+                "{}{}.nc".format(datm_tuple.tag_solar, ystr),
+            )
+            fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, ystr)
+            fprecip = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_prec,
+                "{}{}.nc".format(datm_tuple.tag_prec, ystr),
+            )
+            fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, ystr)
+            ftpqw = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_tpqw,
+                "{}{}.nc".format(datm_tuple.tag_tpqw, ystr),
+            )
+            ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, ystr)
 
-                fsolar = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_solar,
-                    "{}{}.nc".format(datm_tuple.tag_solar, dtag),
-                )
-                fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
-                fprecip = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_prec,
-                    "{}{}.nc".format(datm_tuple.tag_prec, dtag),
-                )
-                fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
-                ftpqw = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_tpqw,
-                    "{}{}.nc".format(datm_tuple.tag_tpqw, dtag),
-                )
-                ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
-
-                outdir = os.path.join(self.out_dir, datm_tuple.outdir)
-                infile += [fsolar, fprecip, ftpqw]
-                outfile += [
-                    os.path.join(outdir, fsolar2),
-                    os.path.join(outdir, fprecip2),
-                    os.path.join(outdir, ftpqw2),
-                ]
-                solarfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
-                )
-                precfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
-                )
-                tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
+            outdir = os.path.join(self.out_dir, datm_tuple.outdir)
+            infile += [fsolar, fprecip, ftpqw]
+            outfile += [
+                os.path.join(outdir, fsolar2),
+                os.path.join(outdir, fprecip2),
+                os.path.join(outdir, ftpqw2),
+            ]
+            solarfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2))
+            precfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2))
+            tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         for idx, out_f in enumerate(outfile):
             logger.debug(out_f)

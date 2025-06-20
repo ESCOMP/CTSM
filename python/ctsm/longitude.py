@@ -58,7 +58,7 @@ def _convert_lon_type_180_to_360(lon_in):
     return lon_out
 
 
-def _detect_lon_type(lon_in):
+def detect_lon_type(lon_in):
     """
     Detect longitude type of a given numeric. If lon_in contains more than one number (as in a list
     or Numpy array), this function will assume all members are of the same type if (a) there is at
