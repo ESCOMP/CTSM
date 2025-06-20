@@ -28,7 +28,7 @@ import tqdm
 # pylint:disable=wrong-import-position
 from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plumber2_sites_csv
 from ctsm import subset_data
-from ctsm import pft_utils
+from ctsm.pft_utils import MAX_PFT_MANAGEDCROPS, is_valid_pft
 
 
 def get_args():
@@ -51,10 +51,8 @@ def get_args():
 
     parser.add_argument(
         "--crop",
-        help=(
-            f"Create and/or modify {pft_utils.MAX_PFT_MANAGEDCROPS}-PFT ",
-            "surface datasets (e.g. for a non-FATES run)",
-        ),
+        help=f"Create and/or modify {MAX_PFT_MANAGEDCROPS}-PFT "
+        "surface datasets (e.g. for a non-FATES run)",
         action="store_true",
         dest="use_managed_crops",
     )
@@ -87,13 +85,6 @@ def execute(command):
 
     sys.argv = command
     subset_data.main()
-
-
-def is_valid_pft(pft_num):
-    """
-    Given a number, check whether it represents a valid PFT
-    """
-    return pft_num >= 1
 
 
 def main():
@@ -135,7 +126,7 @@ def main():
 
         # Read info for first PFT
         pft1 = row["pft1"]
-        if not is_valid_pft(pft1):
+        if not is_valid_pft(pft1, args.use_managed_crops):
             raise RuntimeError(f"pft1 must be a valid PFT; got {pft1}")
         pctpft1 = row["pft1-%"]
         cth1 = row["pft1-cth"]
@@ -143,13 +134,13 @@ def main():
 
         # Read info for second PFT, if a valid one is given in the .csv file
         pft2 = row["pft2"]
-        if is_valid_pft(pft2):
+        if is_valid_pft(pft2, args.use_managed_crops):
             pctpft2 = row["pft2-%"]
             cth2 = row["pft2-cth"]
             cbh2 = row["pft2-cbh"]
 
         # Set dominant PFT(s)
-        if is_valid_pft(pft2):
+        if is_valid_pft(pft2, args.use_managed_crops):
             subset_command += [
                 "--dompft",
                 str(pft1),
@@ -170,7 +161,7 @@ def main():
             # use surface dataset with 78 pfts, but overwrite to 100% 1 dominant PFT
             # don't set crop flag
             # set canopy top and bottom heights
-            if is_valid_pft(pft2):
+            if is_valid_pft(pft2, args.use_managed_crops):
                 subset_command += [
                     "--cth",
                     str(cth1),
