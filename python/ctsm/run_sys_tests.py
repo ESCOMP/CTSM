@@ -24,7 +24,7 @@ from ctsm.machine import (
 )
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.os_utils import make_link
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, add_fates_testing_to_path
 from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
 
 logger = logging.getLogger(__name__)
@@ -748,6 +748,14 @@ def _check_py_env(test_attributes):
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+
+    # Check requirements for FUNCTIONALFATES, if needed
+    if any("FUNCTIONALFATES" in t for t in test_attributes):
+        add_fates_testing_to_path()
+        try:
+            import run_functional_tests
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("FATES run_functional_tests" + err_msg) from err
 
     # Check requirements for RXCROPMATURITY, if needed
     if any("RXCROPMATURITY" in t for t in test_attributes):
