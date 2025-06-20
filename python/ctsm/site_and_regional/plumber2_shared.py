@@ -4,17 +4,13 @@ Things shared between plumber2 scripts
 
 import os
 import pandas as pd
+from ctsm.path_utils import path_to_ctsm_root
 
-PLUMBER2_SITES_CSV = os.path.realpath(
-    os.path.join(
-        os.path.dirname(__file__),
-        os.pardir,
-        os.pardir,
-        os.pardir,
-        "tools",
-        "site_and_regional",
-        "PLUMBER2_sites.csv",
-    )
+PLUMBER2_SITES_CSV = os.path.join(
+    path_to_ctsm_root(),
+    "tools",
+    "site_and_regional",
+    "PLUMBER2_sites.csv",
 )
 
 
