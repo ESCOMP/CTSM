@@ -629,15 +629,26 @@ def setup_files(args, defaults, cesmroot):
     file_dict = {"main_dir": clmforcingindir}
 
     # DATM data
-    # TODO Issue #2960: Make datm_type a user option at the command
-    # line. For reference, this option affects three .cfg files:
+    # For reference, this option affects three .cfg files:
     #      tools/site_and_regional/default_data_1850.cfg
     #      tools/site_and_regional/default_data_2000.cfg
     #      python/ctsm/test/testinputs/default_data.cfg
     if args.create_datm:
-        datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
+        datm_cfg_section = "datm"
+
+        # Issue #3269: Changes in PR #3259 mean that --create-datm won't work with GSWP3
+        settings_to_check_for_gswp3 = ["solartag", "prectag", "tpqwtag"]
+        for setting in settings_to_check_for_gswp3:
+            value = defaults.get(datm_cfg_section, setting)
+            if "gswp3" in value.lower():
+                msg = (
+                    "--create-datm is no longer supported for GSWP3 data; "
+                    "see https://github.com/ESCOMP/CTSM/issues/3269"
+                )
+                raise NotImplementedError(msg)
+
         dir_output_datm = "datmdata"
-        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
+        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_cfg_section, "dir"))
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
         logger.info("dir_input_datm : %s", dir_input_datm)
@@ -645,16 +656,16 @@ def setup_files(args, defaults, cesmroot):
         file_dict["datm_tuple"] = DatmFiles(
             dir_input_datm,
             dir_output_datm,
-            defaults.get(datm_type, "domain"),
-            defaults.get(datm_type, "solardir"),
-            defaults.get(datm_type, "precdir"),
-            defaults.get(datm_type, "tpqwdir"),
-            defaults.get(datm_type, "solartag"),
-            defaults.get(datm_type, "prectag"),
-            defaults.get(datm_type, "tpqwtag"),
-            defaults.get(datm_type, "solarname"),
-            defaults.get(datm_type, "precname"),
-            defaults.get(datm_type, "tpqwname"),
+            defaults.get(datm_cfg_section, "domain"),
+            defaults.get(datm_cfg_section, "solardir"),
+            defaults.get(datm_cfg_section, "precdir"),
+            defaults.get(datm_cfg_section, "tpqwdir"),
+            defaults.get(datm_cfg_section, "solartag"),
+            defaults.get(datm_cfg_section, "prectag"),
+            defaults.get(datm_cfg_section, "tpqwtag"),
+            defaults.get(datm_cfg_section, "solarname"),
+            defaults.get(datm_cfg_section, "precname"),
+            defaults.get(datm_cfg_section, "tpqwname"),
         )
 
     # if the crop flag is on - we need to use a different land use and surface data file
