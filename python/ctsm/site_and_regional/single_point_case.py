@@ -216,18 +216,19 @@ class SinglePointCase(BaseCase):
 
             # -- check dom_pft values should be between 0-MAX_PFT_MANAGEDCROPS
             if min_dom_pft < 0 or max_dom_pft > MAX_PFT_MANAGEDCROPS:
-                err_msg = "values for --dompft should be between 1 and 78."
+                err_msg = f"values for --dompft should be between 1 and {MAX_PFT_MANAGEDCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs num_pft
             if max_dom_pft > self.num_pft:
-                err_msg = "Please use --crop flag when --dompft is above 16."
+                err_msg = f"Please use --crop flag when --dompft is above {MAX_PFT_GENERICCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs MAX_pft
             if self.num_pft - 1 < max_dom_pft <= MAX_PFT_GENERICCROPS:
                 logger.info(
-                    "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
+                    "WARNING, you are trying to run with generic crops (%s PFT surface dataset)",
+                    MAX_PFT_GENERICCROPS,
                 )
 
             # -- check if all dom_pft are in the same range:

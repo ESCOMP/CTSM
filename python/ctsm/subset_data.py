@@ -70,6 +70,7 @@ from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
 from ctsm.longitude import Longitude, detect_lon_type
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -597,9 +598,9 @@ def determine_num_pft(crop):
         num_pft (int) : number of pfts for surface dataset
     """
     if crop:
-        num_pft = "78"
+        num_pft = str(MAX_PFT_MANAGEDCROPS)
     else:
-        num_pft = "16"
+        num_pft = str(MAX_PFT_GENERICCROPS)
     logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
