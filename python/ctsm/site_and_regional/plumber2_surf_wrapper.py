@@ -22,13 +22,8 @@ from __future__ import print_function
 
 import argparse
 import logging
-import os
 import sys
 import tqdm
-
-# Get the ctsm tools
-_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
-sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint:disable=wrong-import-position
 from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plumber2_sites_csv
