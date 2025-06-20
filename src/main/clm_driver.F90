@@ -1343,7 +1343,21 @@ contains
     ! don't have explicit bounds on the left-hand-side of this assignment: excluding these
     ! explicit bounds seemed to be needed to get around other compiler bugs.
     allocate(net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
-    net_carbon_exchange_grc = bgc_vegetation_inst%get_net_carbon_exchange_grc(bounds_proc)
+    if (.not. use_fates) then
+       net_carbon_exchange_grc = bgc_vegetation_inst%get_net_carbon_exchange_grc(bounds_proc)
+    else 
+       net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg) = 0.0_r8
+       if (use_fates_bgc) then
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+             call clm_fates%wrap_co2_to_atm(bounds_clump, &
+                         filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc, &
+                         soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg))
+          end do
+          !$OMP END PARALLEL DO
+       endif
+    endif
 
     call lnd2atm(bounds_proc,                                            &
          atm2lnd_inst, surfalb_inst, temperature_inst, frictionvel_inst, &

@@ -272,6 +272,7 @@ module CLMFatesInterfaceMod
       procedure, public  :: wrap_hydraulics_drive
       procedure, public  :: WrapUpdateFatesRmean
       procedure, public  :: wrap_WoodProducts
+      procedure, public  :: wrap_co2_to_atm
       procedure, public  :: WrapGlobalSeedDispersal
       procedure, public  :: WrapUpdateFatesSeedInOut
       procedure, public  :: UpdateCLitterFluxes
@@ -2904,6 +2905,58 @@ module CLMFatesInterfaceMod
     
    return
  end subroutine wrap_WoodProducts
+
+ ! ==============================================================================
+
+ subroutine wrap_co2_to_atm(this, bounds_clump, num_soilc, filter_soilc, & 
+                            soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc )
+
+   ! USES
+   use subgridAveMod, only : c2g
+   use FatesConstantsMod, only:  g_per_kg
+   ! !ARGUMENTS:
+   class(hlm_fates_interface_type)     , intent(inout) :: this
+   type(bounds_type)                   , intent(in)    :: bounds_clump
+   integer                             , intent(in)    :: num_soilc          ! size of column filter
+   integer                             , intent(in)    :: filter_soilc(:)    ! column filter
+   type(soilbiogeochem_carbonflux_type), intent(in)    :: soilbiogeochem_carbonflux_inst
+   real(r8)                            , intent(inout) :: net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
+
+  ! Locals
+   integer                                        :: s,c,g,fc
+   integer                                        :: ci                 ! Clump index
+   real(r8)                                       :: net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc)
+
+   net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc) = 0.0_r8
+   net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = 0.0_r8
+   ci = bounds_clump%clump_index
+
+   ! Loop over columns
+   do fc = 1, num_soilc
+      
+      c = filter_soilc(fc)
+      s = this%f2hmap(ci)%hsites(c)
+      ! nbp = npp -fire - graz - soil respiratation
+      ! hr_col is updated above this call in CNDriver summaries
+      net_carbon_exchange_col(c) = this%fates(ci)%bc_out(s)%npp_site - &
+                                   (this%fates(ci)%bc_out(s)%grazing_closs_to_atm_si + &
+                                   this%fates(ci)%bc_out(s)%fire_closs_to_atm_si) * g_per_kg - &
+                                   soilbiogeochem_carbonflux_inst%hr_col(c)
+   end do
+   call c2g( bounds = bounds_clump, &
+         carr = net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc), &
+         garr = net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg), &
+         c2l_scale_type = 'unity', &
+         l2g_scale_type = 'unity')
+   ! change sign, same way it is done in get_net_carbon_exchange
+
+   do g = bounds_clump%begg,bounds_clump%endg
+       net_carbon_exchange_grc(g) = net_carbon_exchange_grc(g) - soilbiogeochem_carbonflux_inst%fates_product_loss_grc(g)
+    enddo
+
+  net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = - net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
+
+ end subroutine wrap_co2_to_atm
  
  ! ======================================================================================
 

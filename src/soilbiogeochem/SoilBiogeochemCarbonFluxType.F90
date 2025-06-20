@@ -6,7 +6,7 @@ module SoilBiogeochemCarbonFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi, ndecomp_pools_vr, i_cwdl2
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_fates,use_cn
+  use clm_varctl                         , only : use_fates,use_fates_bgc,use_cn
   use pftconMod                          , only : pftcon
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
@@ -61,7 +61,9 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
      real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) A summary of the total litter
                                                                             ! flux passed in from FATES.
-                                                                            ! This is a diagnostic for balance checks only
+     ! This is a diagnostic for balance checks only
+     real(r8), pointer :: fates_product_loss_grc                     (:)    ! (gC/m2/s)  product loss flux at gridcell scale to be used with FATES is on 
+     
      ! track tradiagonal matrix  
      real(r8), pointer :: matrix_decomp_fire_k_col                  (:,:)   ! decomposition rate due to fire (gC*m3)/(gC*m3*step))
      real(r8), pointer :: tri_ma_vr                                 (:,:)   ! vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
@@ -121,11 +123,13 @@ contains
      ! !LOCAL VARIABLES:
      integer           :: begp,endp            ! Begin and end patch
      integer           :: begc,endc            ! Begin and end column
+     integer           :: begg, endg           ! Begin and end gridcell
      integer           :: Ntrans,Ntrans_diag   ! N trans size for matrix solution
      !------------------------------------------------------------------------
 
      begp = bounds%begp; endp = bounds%endp
      begc = bounds%begc; endc = bounds%endc
+     begg = bounds%begg; endg = bounds%endg     
 
      allocate(this%t_scalar_col      (begc:endc,1:nlevdecomp_full)); this%t_scalar_col      (:,:) =spval
      allocate(this%w_scalar_col      (begc:endc,1:nlevdecomp_full)); this%w_scalar_col      (:,:) =spval
@@ -136,7 +140,7 @@ contains
      allocate(this%somc_fire_col     (begc:endc))                  ; this%somc_fire_col     (:)   =nan
      allocate(this%hr_vr_col         (begc:endc,1:nlevdecomp_full)); this%hr_vr_col         (:,:) =nan
 
-     allocate(this%decomp_cpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))                  
+     allocate(this%decomp_cpools_sourcesink_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
      this%decomp_cpools_sourcesink_col(:,:,:)= nan
 
      allocate(this%c_overflow_vr(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
@@ -180,6 +184,7 @@ contains
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
 
      if(use_fates)then
+        allocate(this%fates_product_loss_grc(begg:endg)) ; this%fates_product_loss_grc(:) = nan
         allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
      else
         allocate(this%fates_litter_flux(0:0)); this%fates_litter_flux(:) = nan
@@ -682,6 +687,10 @@ contains
     call this%SetValues (num_column=num_special_col, filter_column=special_col, &
          value_column=0._r8)
 
+    if(use_fates_bgc)then
+      this%fates_product_loss_grc(bounds%begg:bounds%endg) = 0._r8
+    endif
+
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
@@ -796,6 +805,7 @@ contains
        this%michr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
     end do
+    
 
   end subroutine SetValues
 
