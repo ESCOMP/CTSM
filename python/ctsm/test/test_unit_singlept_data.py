@@ -18,7 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
-from ctsm.pft_utils import MAX_PFT
+from ctsm.pft_utils import MAX_PFT_MANAGEDCROPS
 
 # pylint: disable=invalid-name
 
@@ -224,7 +224,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5, 15]
-        single_point.num_pft = MAX_PFT
+        single_point.num_pft = MAX_PFT_MANAGEDCROPS
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError, "You are subsetting using mixed land*"
         ):
