@@ -1307,7 +1307,7 @@
       <option name="comment">Test Hist compset with Sp for CLM6.0</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50SpCru" testmods="clm/default">
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50SpCru" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1316,7 +1316,7 @@
       <option name="comment">Science support for IHistClm50SpCru at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50SpCru" testmods="clm/default">
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50SpCru" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
