@@ -381,10 +381,10 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
 
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
@@ -519,10 +519,10 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
 
         # extract gridcell closest to plon/plat
-        f_tmp = f_in.sel(lsmlon=plon_converted, lsmlat=self.plat, method="nearest")
+        f_tmp = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
@@ -548,10 +548,10 @@ class SinglePointCase(BaseCase):
         # update lsmlat and lsmlon to match site specific instead of the nearest point
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        f_out["lsmlon"] = np.atleast_1d(plon_converted)
+        f_out["lsmlon"] = np.atleast_1d(plon_float)
         f_out["lsmlat"] = np.atleast_1d(self.plat)
         f_out["LATIXY"][:, :] = self.plat
-        f_out["LONGXY"][:, :] = plon_converted
+        f_out["LONGXY"][:, :] = plon_float
 
         # update attributes
         self.update_metadata(f_out)
@@ -592,10 +592,10 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
 
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(ni=plon_converted, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=plon_float, nj=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
@@ -618,10 +618,10 @@ class SinglePointCase(BaseCase):
         f_in = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
 
         # get point longitude, converting to match file type if needed
-        plon_converted = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
 
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lon=plon_converted, lat=self.plat, method="nearest")
+        f_out = f_in.sel(lon=plon_float, lat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lat", "lon"])
