@@ -278,13 +278,13 @@
   </test>
 
   <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
-    <phase name="RUN">
+    <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
-      <issue>#3097</issue>
+      <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
