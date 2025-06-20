@@ -332,7 +332,7 @@ class TestSubsetDataSys(unittest.TestCase):
         ]
         subset_data.main()
 
-        # Loop through all the output files, making sure they exist.
+        # Loop through all the output files, making sure they match what we expect.
         daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
         expected_output_files = [
             f"domain.crujra_v2.3_0.5x0.5_{sitename}_c{daystr}.nc",
@@ -342,13 +342,8 @@ class TestSubsetDataSys(unittest.TestCase):
                 expected_output_files.append(
                     f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename}.{year}.nc"
                 )
-        for file_basename in expected_output_files:
-            file_path = os.path.join(outdir, "datmdata", file_basename)
-            # The below will error if exactly one matching file isn't found
-            try:
-                find_one_file_matching_pattern(file_path)
-            except Exception as e:
-                raise AssertionError(str(e)) from e
+        expected_output_files = [os.path.join("datmdata", x) for x in expected_output_files]
+        self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
     def test_subset_data_pt_datm_amazon_type360(self):
         """
