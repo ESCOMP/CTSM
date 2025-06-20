@@ -69,7 +69,7 @@ from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude, _detect_lon_type
+from ctsm.longitude import Longitude, detect_lon_type
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -833,10 +833,10 @@ def process_args(args):
     if any(lon_arg_values):
         if args.lon_type is None:
             if hasattr(args, "plon"):
-                args.lon_type = _detect_lon_type(args.plon)
+                args.lon_type = detect_lon_type(args.plon)
             else:
-                lon1_type = _detect_lon_type(args.lon1)
-                lon2_type = _detect_lon_type(args.lon2)
+                lon1_type = detect_lon_type(args.lon1)
+                lon2_type = detect_lon_type(args.lon2)
                 if lon1_type != lon2_type:
                     raise argparse.ArgumentTypeError(
                         "--lon1 and --lon2 seem to be of different types"

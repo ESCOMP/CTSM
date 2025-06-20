@@ -15,7 +15,7 @@ import xarray as xr
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
-from ctsm.longitude import _detect_lon_type
+from ctsm.longitude import detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ class SinglePointCase(BaseCase):
         file.
         """
         plon_in = self.plon
-        f_lon_type = _detect_lon_type(lon_da)
+        f_lon_type = detect_lon_type(lon_da)
         plon_type = plon_in.lon_type()
         if f_lon_type == plon_type:
             plon_out = plon_in.get(plon_type)
