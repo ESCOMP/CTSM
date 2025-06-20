@@ -200,7 +200,8 @@ class SinglePointCase(BaseCase):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of (0 - MAX_NAT_PFT) and (MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS).
+                dom_pft values are both in range of
+                (0 - MAX_NAT_PFT) and (MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS).
 
 
         """
