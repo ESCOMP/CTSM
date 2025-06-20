@@ -40,6 +40,10 @@ class TestSubsetDataSys(unittest.TestCase):
     def _check_result_file_matches_expected(self, expected_output_files, caller_n):
         """
         Loop through a list of output files, making sure they match what we expect.
+
+        caller_n should be an integer giving the number of levels above this function you need to
+        traverse before you hit the actual test name. If the test is calling this function directly,
+        caller_n = 1. If the test is calling a function that calls this function, caller_n = 2. Etc.
         """
         all_files_present_and_match = True
         for basename in expected_output_files:
