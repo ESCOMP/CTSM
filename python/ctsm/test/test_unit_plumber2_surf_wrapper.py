@@ -70,16 +70,16 @@ class TestPlumber2SurfWrapper(unittest.TestCase):
         """
 
         args = get_args()
-        self.assertFalse(args.pft_78)
+        self.assertFalse(args.use_managed_crops)
 
     def test_parser_78pft_true(self):
         """
-        Test that --78pft sets pft_78 to True
+        Test that --crop sets use_managed_crops to True
         """
 
-        sys.argv += ["--78pft"]
+        sys.argv += ["--crop"]
         args = get_args()
-        self.assertTrue(args.pft_78)
+        self.assertTrue(args.use_managed_crops)
 
 
 if __name__ == "__main__":

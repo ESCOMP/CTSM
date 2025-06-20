@@ -73,11 +73,11 @@ class TestSysPlumber2SurfWrapper(unittest.TestCase):
 
     def test_plumber2_surf_wrapper_78pft(self):
         """
-        Run the entire tool with --78pft.
+        Run the entire tool with --crop.
         CAN ONLY RUN ON SYSTEMS WITH INPUTDATA
         """
 
-        sys.argv = [self.tool_path, "--78pft"]
+        sys.argv = [self.tool_path, "--crop"]
         main()
 
         # How many files do we expect?

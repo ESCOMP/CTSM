@@ -28,6 +28,7 @@ import tqdm
 # pylint:disable=wrong-import-position
 from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plumber2_sites_csv
 from ctsm import subset_data
+from ctsm import pft_utils
 
 
 def get_args():
@@ -49,10 +50,13 @@ def get_args():
     )
 
     parser.add_argument(
-        "--78pft",
-        help="Create and/or modify 78-PFT surface datasets (e.g. for a non-FATES run) ",
+        "--crop",
+        help=(
+            f"Create and/or modify {pft_utils.MAX_PFT_MANAGEDCROPS}-PFT ",
+            "surface datasets (e.g. for a non-FATES run)",
+        ),
         action="store_true",
-        dest="pft_78",
+        dest="use_managed_crops",
     )
 
     parser.add_argument(
@@ -162,7 +166,7 @@ def main():
                 str(pctpft1),
             ]
 
-        if not args.pft_78:
+        if not args.use_managed_crops:
             # use surface dataset with 78 pfts, but overwrite to 100% 1 dominant PFT
             # don't set crop flag
             # set canopy top and bottom heights
