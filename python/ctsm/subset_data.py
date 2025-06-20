@@ -629,10 +629,8 @@ def setup_files(args, defaults, cesmroot):
     file_dict = {"main_dir": clmforcingindir}
 
     # DATM data
-    # For reference, this option affects three .cfg files:
-    #      tools/site_and_regional/default_data_1850.cfg
-    #      tools/site_and_regional/default_data_2000.cfg
-    #      python/ctsm/test/testinputs/default_data.cfg
+    # To find the affected files, from the top level of ctsm, do:
+    #     grep "\[datm\]" $(find . -type f -name "*cfg")
     if args.create_datm:
         datm_cfg_section = "datm"
 
