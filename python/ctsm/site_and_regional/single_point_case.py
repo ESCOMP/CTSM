@@ -424,7 +424,7 @@ class SinglePointCase(BaseCase):
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
             # -- First initialize everything:
-            if max_dom_pft <= MAX_NAT_PFT :
+            if max_dom_pft <= MAX_NAT_PFT:
                 f_mod["PCT_NAT_PFT"][:, :, :] = 0
             else:
                 f_mod["PCT_CFT"][:, :, :] = 0
