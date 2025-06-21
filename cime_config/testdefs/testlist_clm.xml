@@ -415,6 +415,16 @@
       <option name="comment">Include a test of this scientifically-supported compset at a scientifically-supported resolution</option>
     </options>
   </test>
+  <test name="SEQ_D_Ld10_PS" grid="f09_f09_mt232" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Include a test that ensures that answers for concurrent and sequential CTSM are identical</option>
+    </options>
+  </test>
   <!-- science support for workhorse resolutions with CLM5_0 physics -->
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
@@ -2691,13 +2701,14 @@
       <option name="comment">Run mpasa480 to make sure will work for CAM"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm50Sp" testmods="clm/clm50cam6LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Run coarse resolution ne3pg3_ne3pg3_mg37 to make sure will work for CAM"</option>
+      <option name="comment">Run coarse resolution ne3pg3_ne3pg3_mt232 to make sure will work for CAM"</option>
       <option name="comment">Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
@@ -2980,6 +2991,16 @@
     <options>
       <option name="wallclock">0:50:00</option>
       <option name="comment">Include a test of transient urban</option>
+    </options>
+  </test>
+  <test name="PEA_Ld370" grid="1x1_smallvilleIA" compset="IHistClm60BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:50:00</option>
+      <option name="comment">Include a test that compares mpi-serial to full mpi and ensure identical answers</option>
     </options>
   </test>
   <test name="SMS_D_P48x1_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_spunup">
@@ -3991,10 +4012,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">The main point of this test is simply to make sure that the CMIP6WACCMDECK moifierd works. (This configuration is basically the same as I1850Clm50BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
+      <option name="comment">The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works. (This configuration is basically the same as I1850Clm50BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f19_g17" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">
+  <test name="SMS_Lm1" grid="f19_g17" compset="I1850Clm60BgcCropCmip6waccm" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -4018,6 +4039,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
@@ -4031,6 +4053,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
