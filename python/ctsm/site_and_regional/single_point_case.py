@@ -16,12 +16,9 @@ import xarray as xr
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
 from ctsm.longitude import detect_lon_type
+from ctsm.pft_utils import MAX_NAT_PFT, MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 logger = logging.getLogger(__name__)
-
-NAT_PFT = 15  # natural pfts
-NUM_PFT = 17  # for runs with generic crops
-MAX_PFT = 78  # for runs with explicit crops
 
 
 class SinglePointCase(BaseCase):
@@ -190,20 +187,21 @@ class SinglePointCase(BaseCase):
           same range.
           e.g. If users specified multiple dom_pft, they should be
           either in :
-            - 0 - NAT_PFT-1 range
+            - 0 - MAX_NAT_PFT range
             or
-            - NAT_PFT - MAX_PFT range
+            - MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS range
             - give an error: mixed land units not possible
 
         -------------
         Raises:
             Error (ArgumentTypeError):
-                If any dom_pft is bigger than MAX_PFT.
+                If any dom_pft is bigger than MAX_PFT_MANAGEDCROPS.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of (0 - NAT_PFT-1) and (NAT_PFT - MAX_PFT).
+                dom_pft values are both in range of
+                (0 - MAX_NAT_PFT) and (MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS).
 
 
         """
@@ -217,27 +215,29 @@ class SinglePointCase(BaseCase):
             min_dom_pft = min(self.dom_pft)
             max_dom_pft = max(self.dom_pft)
 
-            # -- check dom_pft values should be between 0-MAX_PFT
-            if min_dom_pft < 0 or max_dom_pft > MAX_PFT:
-                err_msg = "values for --dompft should be between 1 and 78."
+            # -- check dom_pft values should be between 0-MAX_PFT_MANAGEDCROPS
+            if min_dom_pft < 0 or max_dom_pft > MAX_PFT_MANAGEDCROPS:
+                err_msg = f"values for --dompft should be between 1 and {MAX_PFT_MANAGEDCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs num_pft
             if max_dom_pft > self.num_pft:
-                err_msg = "Please use --crop flag when --dompft is above 16."
+                err_msg = f"Please use --crop flag when --dompft is above {MAX_PFT_GENERICCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs MAX_pft
-            if self.num_pft - 1 < max_dom_pft < NUM_PFT:
+            if self.num_pft - 1 < max_dom_pft <= MAX_PFT_GENERICCROPS:
                 logger.info(
-                    "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
+                    "WARNING, you are trying to run with generic crops (%s PFT surface dataset)",
+                    MAX_PFT_GENERICCROPS,
                 )
 
             # -- check if all dom_pft are in the same range:
-            if min_dom_pft < NAT_PFT <= max_dom_pft:
+            if min_dom_pft <= MAX_NAT_PFT < max_dom_pft:
                 err_msg = (
                     "You are subsetting using mixed land units that have both "
-                    "natural pfts and crop cfts. Check your surface dataset. "
+                    "natural pfts and crop cfts. Check your surface dataset.\n"
+                    f"{min_dom_pft} <= {MAX_NAT_PFT} < {max_dom_pft}\n"
                 )
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -425,7 +425,7 @@ class SinglePointCase(BaseCase):
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
             # -- First initialize everything:
-            if max_dom_pft < NAT_PFT:
+            if max_dom_pft <= MAX_NAT_PFT:
                 f_mod["PCT_NAT_PFT"][:, :, :] = 0
             else:
                 f_mod["PCT_CFT"][:, :, :] = 0
@@ -444,10 +444,10 @@ class SinglePointCase(BaseCase):
                 if cth is not None:
                     f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
                     f_mod["MONTHLY_HEIGHT_BOT"][:, :, :, dom_pft] = cbh
-                if dom_pft < NAT_PFT:
+                if dom_pft <= MAX_NAT_PFT:
                     f_mod["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:
-                    dom_pft = dom_pft - NAT_PFT
+                    dom_pft = dom_pft - (MAX_NAT_PFT + 1)
                     f_mod["PCT_CFT"][:, :, dom_pft] = pct_pft
 
         # -------------------------------
@@ -465,7 +465,7 @@ class SinglePointCase(BaseCase):
 
             if self.dom_pft is not None:
                 max_dom_pft = max(self.dom_pft)
-                if max_dom_pft < NAT_PFT:
+                if max_dom_pft <= MAX_NAT_PFT:
                     f_mod["PCT_NATVEG"][:, :] = 100
                     f_mod["PCT_CROP"][:, :] = 0
                 else:

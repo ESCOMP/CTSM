@@ -18,6 +18,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 # pylint: disable=invalid-name
 
@@ -38,7 +39,7 @@ class TestSinglePointCase(unittest.TestCase):
     dom_pft = [8]
     evenly_split_cropland = False
     pct_pft = None
-    num_pft = 16
+    num_pft = MAX_PFT_GENERICCROPS
     cth = [0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9]
     cbh = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     include_nonveg = False
@@ -131,7 +132,7 @@ class TestSinglePointCase(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.dom_pft = [16, 36, 79]
+        single_point.dom_pft = [MAX_PFT_GENERICCROPS, 36, 79]
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
@@ -161,7 +162,7 @@ class TestSinglePointCase(unittest.TestCase):
             out_dir=self.out_dir,
             overwrite=self.overwrite,
         )
-        single_point.dom_pft = [16, 36, -1]
+        single_point.dom_pft = [MAX_PFT_GENERICCROPS, 36, -1]
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
@@ -192,7 +193,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [15, 53]
-        single_point.num_pft = 16
+        single_point.num_pft = MAX_PFT_GENERICCROPS
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "Please use --crop*"):
             single_point.check_dom_pft()
 
@@ -223,7 +224,7 @@ class TestSinglePointCase(unittest.TestCase):
             overwrite=self.overwrite,
         )
         single_point.dom_pft = [1, 5, 15]
-        single_point.num_pft = 78
+        single_point.num_pft = MAX_PFT_MANAGEDCROPS
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError, "You are subsetting using mixed land*"
         ):
