@@ -328,13 +328,17 @@ sub print_categories {
    my $scrdir   = shift(@_);
    my %csstatus = @_;
 
-   my $expectedfailfile = "$scrdir/components/clm/cime_config/testdefs/ExpectedTestFails.xml";
-   if ( ! -f $expectedfailfile ) {
-      $expectedfailfile = "$scrdir/cime_config/testdefs/ExpectedTestFails.xml";
+   my $srcroot = "$scrdir";
+   my $expectedfailfile = "$srcroot/cime_config/testdefs/ExpectedTestFails.xml";
+   if ( $srcroot =~ m|/components/clm$|) {
+      $srcroot = absolute_path( "$scrdir/../.." );
+      if ( ! -f $expectedfailfile ) {
+        die "ERROR: CTSM ExpectedTestFails.xml file NOT found in $scrdir\n";
+      }
    }
-   my @failfiles = (  $expectedfailfile, "$scrdir/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml",
-                      #"$scrdir/components/mosart/cime_config/testdefs/ExpectedTestFails.xml",
-                      "$scrdir/components/cmeps/cime_config/ExpectedTestFails.xml" );
+   my @failfiles = (  $expectedfailfile, "$srcroot/components/mizuroute/cime_config/testdefs/ExpectedTestFails.xml",
+                      "$srcroot/components/mosart/cime_config/testdefs/ExpectedTestFails.xml",
+                      "$srcroot/components/cmeps/cime_config/ExpectedTestFails.xml" );
    my @passes;
    my @fails;
    my @pendings;
