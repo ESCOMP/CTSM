@@ -1481,6 +1481,8 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/mimics">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
