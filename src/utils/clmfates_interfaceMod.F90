@@ -3231,7 +3231,8 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    call this%fates_fire_data_method%FireInit(bounds, NLFilename)
+    call this%fates_fire_data_method%FireInit(bounds)
+    call this%fates_fire_data_method%FireReadNML(bounds, NLFilename)
 
     call t_stopf('fates_init2')
 
