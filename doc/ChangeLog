@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.059
 Originator(s): erik (Erik Kluzek)
-Date: Fri Jun 20 16:51:17 MDT 2025
+Date: Mon 23 Jun 2025 01:39:37 AM MDT
 One-line Summary: Bring in various cleanup efforts found in previous testing after the chill changes came in
 
 Purpose and description of changes
@@ -13,11 +13,10 @@ Including the following:
 
 - Fix SHR_ASSERT so single-point matrix test passes
 - ne3np4 to namelist_defaults_ctsm.xml and Makefile for PTS mode and add ability
-- for warm starts in PTS mode
+- Fixes warm starts in PTS_MODE so that SCAM can use restart files
 - f19 + f45 16pft fsurdat/landuse files to namelist_defaults_ctsm + Makefile
 - Changes in the FORTRAN code to properly abort when fire-emission is asked for
-- it can't be provided. Added unit testing for this.
-
+  it can't be provided. Added unit testing for this.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -40,16 +39,16 @@ Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
-  Fixes #2868
-  Fixes #2791
-  Fixes #2768
-  Fixes #2780
-  Fixes #2762
-  Fixes #3073
-  Some of #2810
+  Fixes #2868 -- Custom crop calendar instructions
+  Fixes #2791 -- f19 16 pft for PPE work
+  Fixes #2768 -- ne3np4 added in
+  Fixes #2780 -- CN matrix single point
+  Fixes #2762 -- Don't allow FATES, SP, or nofire to turn fire-emis on
+  Fixes #3073 -- Wrong order for testmods with nofireemis
+  Some of #2810 -- 16pft f45 landuse.timeseries for FATES
   CTSM namelist checking for:
-     https://github.com/NGEET/fates/issues/1356
-  Some work on https://github.com/ESCOMP/CTSM/issues/2643
+     https://github.com/NGEET/fates/issues/1356 -- FatesSp and FATES ST3 on at same time
+  Some work on https://github.com/ESCOMP/CTSM/issues/2643 -- standarize logical settings for FATES
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -97,7 +96,7 @@ Testing summary: regular, ctsm_sci
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - OK
+    derecho - Fails, but ctsm5.3.058 does as well
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
@@ -108,14 +107,18 @@ Testing summary: regular, ctsm_sci
 
   ctsm_sci
      derecho ---- OK
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
+     cesm_testing:
+        SMS_D_Ln9.f19_f19_mg17.FWma2000climo.derecho_intel.cam-outfrq9s_waccm_ma_mam4			
+        SMS_D_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.FHIST.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P1280x1.ne0CONUSne30x8_ne0CONUSne30x8_mt12.FCHIST.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P1280x1.ne0CONUSne30x8_ne0CONUSne30x8_mt12.FCnudged.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P5120x1.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.FHIST.derecho_intel.cam-outfrq9s			
 
 Answer changes
 --------------
 
 Changes answers relative to baseline: no-bit-for-bit
+   Some tests that allowed fire-emissions to be on, have a different field list now
 
 Other details
 -------------
@@ -125,10 +128,10 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
-   #2840
-   #2835
-   #2834
-   #2844
+   #2840 -- Fix single point matrixcn fails
+   #2835 -- n3np4 + warm start fixes for PTS_MODE
+   #2834 -- f19 + f45 16 pft datasets
+   #2844 -- Fortran code abort when fire-emission asked for and can't be provided
 
 ===============================================================
 ===============================================================
