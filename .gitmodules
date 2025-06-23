@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 87f618b62b3723bafff74ea4e2d6e5feddc63421  # edge-area-202410: Fix FatesHistoryInterfaceMod.
+fxtag = b11baa6ab686cc2fb282da6af7887babb23a5e67  # edge-area-202410: Update default edge params with values from dev .cdl file.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
