@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = d9845cd97e9ac59081438832327cbf8f2f19c27a  # edge-area-202410: Merge tag 'sci.1.84.0_api.40.0.0' into edge-area-202410.
+fxtag = 87f618b62b3723bafff74ea4e2d6e5feddc63421  # edge-area-202410: Fix FatesHistoryInterfaceMod.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
