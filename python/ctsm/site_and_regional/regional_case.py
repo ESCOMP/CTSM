@@ -1,6 +1,7 @@
 """
 This module includes the definition for a RegionalCase classs.
 """
+
 # -- Import libraries
 # -- Import Python Standard Libraries
 import logging
@@ -17,6 +18,8 @@ from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
+from ctsm.config_utils import check_lon1_lt_lon2
+from ctsm.longitude import Longitude, _detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +39,8 @@ class RegionalCase(BaseCase):
         first (bottom) longitude of a region.
     lon2 : float
         second (top) longitude of a region.
+    lon_type : int
+        180 if longitudes are in [-180, 180], 360 if they're in [0, 360]
     reg_name: str -- default = None
         Region's name
     create_domain : bool
@@ -64,9 +69,6 @@ class RegionalCase(BaseCase):
     check_region_bounds
         Check for the regional bounds
 
-    check_region_lons
-        Check for the regional lons
-
     check_region_lats
         Check for the regional lats
 
@@ -91,6 +93,7 @@ class RegionalCase(BaseCase):
 
     def __init__(
         self,
+        *,
         lat1,
         lat2,
         lon1,
@@ -109,13 +112,14 @@ class RegionalCase(BaseCase):
         Initializes RegionalCase with the given arguments.
         """
         super().__init__(
-            create_domain,
-            create_surfdata,
-            create_landuse,
-            create_datm,
-            create_user_mods,
-            overwrite,
+            create_domain=create_domain,
+            create_surfdata=create_surfdata,
+            create_landuse=create_landuse,
+            create_datm=create_datm,
+            create_user_mods=create_user_mods,
+            overwrite=overwrite,
         )
+
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
@@ -128,6 +132,33 @@ class RegionalCase(BaseCase):
         self.create_tag()
         self.ni = None
         self.nj = None
+
+    def _subset_lon_lat(self, x_dim, y_dim, f_in):
+        """
+        subset longitude and latitude arrays
+        """
+        lat = f_in["lat"]
+        lon = f_in["lon"]
+
+        # Detect longitude type (180 or 360) of input file, throwing a helpful error if it can't be
+        # determined.
+        f_lon_type = _detect_lon_type(lon)
+        lon1_type = self.lon1.lon_type()
+        lon2_type = self.lon2.lon_type()
+        if lon1_type != lon2_type:
+            raise RuntimeError(f"lon1 type ({lon1_type}) doesn't match lon2 type ({lon2_type})")
+        if f_lon_type != lon1_type:
+            # This may be overly strict; we might want to allow conversion to lon1 type.
+            raise RuntimeError(
+                f"File lon type ({f_lon_type}) doesn't match boundary lon type ({lon1_type})"
+            )
+
+        # Convert input file longitudes to Longitude class, then trim where it's in region bounds
+        lon = Longitude(lon, lon1_type)
+        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f_out = f_in.isel({y_dim: yind, x_dim: xind})
+        return f_out
 
     def create_tag(self):
         """
@@ -146,27 +177,18 @@ class RegionalCase(BaseCase):
         """
         Check for the regional bounds
         """
-        self.check_region_lons()
-        self.check_region_lats()
-
-    def check_region_lons(self):
-        """
-        Check for the regional lon bounds
-        """
-        if self.lon1 >= self.lon2:
-            err_msg = """
-            \n
-            ERROR: lon1 is bigger than lon2.
-            lon1 points to the westernmost longitude of the region. {}
-            lon2 points to the easternmost longitude of the region. {}
-            Please make sure lon1 is smaller than lon2.
-
-            Please note that if longitude in -180-0, the code automatically
-            convert it to 0-360.
-            """.format(
-                self.lon1, self.lon2
+        # If you're calling this, lat/lon bounds need to have been provided
+        if any(x is None for x in [self.lon1, self.lon2, self.lat1, self.lat2]):
+            raise argparse.ArgumentTypeError(
+                "Latitude and longitude bounds must be provided and not None.\n"
+                + f"   lon1: {self.lon1}\n"
+                + f"   lon2: {self.lon2}\n"
+                + f"   lat1: {self.lat1}\n"
+                + f"   lat2: {self.lat2}"
             )
-            raise argparse.ArgumentTypeError(err_msg)
+        # By now, you need to have already converted to longitude [0, 360]
+        check_lon1_lt_lon2(self.lon1, self.lon2, 360)
+        self.check_region_lats()
 
     def check_region_lats(self):
         """
@@ -198,14 +220,12 @@ class RegionalCase(BaseCase):
         logger.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "ni"
+        y_dim = "nj"
+        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(nj=yind, ni=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -246,14 +266,12 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -310,14 +328,12 @@ class RegionalCase(BaseCase):
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -357,10 +373,10 @@ class RegionalCase(BaseCase):
 
         self.mesh = mesh_out
 
-        node_coords, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
+        _, subset_element, subset_node, conn_dict = self.subset_mesh_at_reg(mesh_in)
 
         f_in = xr.open_dataset(mesh_in)
-        self.write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out)
+        self.write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out)
 
     def subset_mesh_at_reg(self, mesh_in):
         """
@@ -378,9 +394,7 @@ class RegionalCase(BaseCase):
 
         for n in range(elem_count):
             endx = elem_conn[n, : num_elem_conn[n].values].values
-            endx[
-                :,
-            ] -= 1  # convert to zero based index
+            endx[:,] -= 1  # convert to zero based index
             endx = [int(xi) for xi in endx]
 
             nlon = node_coords[endx, 0].values
@@ -425,14 +439,11 @@ class RegionalCase(BaseCase):
         return node_coords, subset_element, subset_node, conn_dict
 
     @staticmethod
-    def write_mesh(f_in, node_coords, subset_element, subset_node, conn_dict, mesh_out):
-        # pylint: disable=unused-argument
+    def write_mesh(f_in, subset_element, subset_node, conn_dict, mesh_out):
         """
         This function writes out the subsetted mesh file.
         """
-        corner_pairs = f_in.variables["nodeCoords"][
-            subset_node,
-        ]
+        corner_pairs = f_in.variables["nodeCoords"][subset_node,]
         variables = f_in.variables
         global_attributes = f_in.attrs
 
@@ -440,9 +451,7 @@ class RegionalCase(BaseCase):
 
         elem_count = len(subset_element)
         elem_conn_out = np.empty(shape=[elem_count, max_node_dim])
-        elem_conn_index = f_in.variables["elementConn"][
-            subset_element,
-        ]
+        elem_conn_index = f_in.variables["elementConn"][subset_element,]
 
         for n in range(elem_count):
             for m in range(max_node_dim):
@@ -454,9 +463,7 @@ class RegionalCase(BaseCase):
                 elem_count,
             ]
         )
-        num_elem_conn_out[:] = f_in.variables["numElementConn"][
-            subset_element,
-        ]
+        num_elem_conn_out[:] = f_in.variables["numElementConn"][subset_element,]
 
         center_coords_out = np.empty(shape=[elem_count, 2])
         center_coords_out[:, :] = f_in.variables["centerCoords"][subset_element, :]
@@ -467,9 +474,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_mask_out[:] = f_in.variables["elementMask"][
-                subset_element,
-            ]
+            elem_mask_out[:] = f_in.variables["elementMask"][subset_element,]
 
         if "elementArea" in variables:
             elem_area_out = np.empty(
@@ -477,9 +482,7 @@ class RegionalCase(BaseCase):
                     elem_count,
                 ]
             )
-            elem_area_out[:] = f_in.variables["elementArea"][
-                subset_element,
-            ]
+            elem_area_out[:] = f_in.variables["elementArea"][subset_element,]
 
         # -- create output dataset
         f_out = xr.Dataset()

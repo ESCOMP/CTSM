@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : iulog, use_crop, use_crop_agsys, use_cn
+  use clm_varctl                      , only : use_crop, use_crop_agsys, use_cn
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
@@ -60,7 +60,7 @@ module CNDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNDriverInit(bounds, NLFilename, cnfire_method)
+  subroutine CNDriverInit(bounds, NLFilename)
     !
     ! !DESCRIPTION:
     ! Initialzation of the CN Ecosystem dynamics.
@@ -68,24 +68,21 @@ contains
     ! !USES:
     use CNSharedParamsMod           , only : use_fun
     use CNPhenologyMod              , only : CNPhenologyInit
-    use FireMethodType              , only : fire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds      
     character(len=*)                       , intent(in)    :: NLFilename     ! Namelist filename
-    class(fire_method_type)                , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
     call SoilBiogeochemCompetitionInit(bounds)
     if(use_cn)then
        call CNPhenologyInit(bounds)
-       call cnfire_method%FireInit(bounds, NLFilename)
     end if
   end subroutine CNDriverInit
 
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
-       num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp,                                   &
+       num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp,                     &
        num_pcropp, filter_pcropp, num_soilnopcropp, filter_soilnopcropp,                   &
        num_actfirec, filter_actfirec, num_actfirep, filter_actfirep,                       &
        num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp,       &
@@ -103,8 +100,8 @@ contains
        active_layer_inst, clm_fates,                                                       &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,    &
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst,          &
-       soil_water_retention_curve, crop_inst, ch4_inst,            &
-       dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,                   &
+       soil_water_retention_curve, crop_inst, ch4_inst,                                    &
+       dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,           &
        nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm)
     !
     ! !DESCRIPTION:
@@ -429,7 +426,7 @@ contains
        end if
        
        call calc_allometry(num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_state_inst)
+            cnveg_carbonflux_inst, cnveg_state_inst, cnveg_nitrogenstate_inst)
        call t_stopf('cnalloc')
     end if
     
@@ -594,12 +591,9 @@ contains
             c14_cnveg_carbonstate_inst, cnveg_nitrogenstate_inst)
        call t_stopf('CNPrecisionControl')
     end if
-    !--------------------------------------------------------------------------
+    !--------------------------------------------
     ! Update1
-    ! The state updates are still called for the matrix solution (use_matrixn
-    ! and use_soil_matrixcn) but most of the state updates are done after
-    ! the matrix multiply in VegMatrix and SoilMatrix.
-    !--------------------------------------------------------------------------
+    !--------------------------------------------
 
     call t_startf('CNUpdate1')
 
@@ -815,18 +809,22 @@ contains
        end if
 
        call CStateUpdate2g( num_bgc_soilc, filter_bgc_soilc,  num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst)
+            cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+            soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
        if ( use_c13 ) then
           call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst)
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
+               c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst)
        end if
        if ( use_c14 ) then
           call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
+               c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst)
        end if
 
        call NStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst)
+            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+            soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
 
        call t_stopf('CNUpdate2')
 
@@ -921,7 +919,7 @@ contains
             num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
             atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
             waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-            cnveg_state_inst, cnveg_carbonstate_inst, &
+            crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, &
             totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
             decomp_cpools_vr_col=soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools), &
             t_soi17cm_col=temperature_inst%t_soi17cm_col(begc:endc))
@@ -1025,9 +1023,11 @@ contains
     use SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
     use CNNStateUpdate3Mod        , only: NStateUpdate3
     use CNNStateUpdate3Mod        , only: NStateUpdateLeaching
+    use CNVegMatrixMod            , only: CNVegMatrix
+    use CNSoilMatrixMod           , only: CNSoilMatrix
     use clm_time_manager          , only: is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
     use CNSharedParamsMod         , only: use_matrixcn
-    use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
+    use SoilBiogeochemDecompCascadeConType, only: use_soil_matrixcn
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -1073,10 +1073,6 @@ contains
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     call t_stopf('SoilBiogeochemNLeaching')
 
-    
-    
-
-    
     ! Nitrogen state variable update, mortality fluxes.
     if(num_bgc_vegp>0)then
        call t_startf('NUpdate3')
@@ -1093,14 +1089,23 @@ contains
 
     if ( use_matrixcn ) then
        call t_startf('CNVMatrix')
-       ! Matrix cn code will go here:
-       call t_stopf( 'CNVMatrix')
+       call CNVegMatrix(bounds, num_bgc_vegp, filter_bgc_vegp(1:num_bgc_vegp), &
+          num_actfirep, filter_actfirep, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+          cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, cnveg_state_inst,soilbiogeochem_nitrogenflux_inst, &
+          c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, c13_cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst)
+       call t_stopf('CNVMatrix')
     end if
 
-    if ( use_soil_matrixcn ) then
+    if(use_soil_matrixcn)then
        call t_startf('CNSoilMatrix')
-       ! Soil Matrix cn code will go here:
-       call t_stopf( 'CNSoilMatrix')
+       call CNSoilMatrix(bounds,num_bgc_soilc, filter_bgc_soilc(1:num_bgc_soilc), num_actfirec, filter_actfirec, &
+       cnveg_carbonflux_inst,soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_carbonflux_inst,soilbiogeochem_state_inst, &
+       cnveg_nitrogenflux_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_nitrogenstate_inst,c13_soilbiogeochem_carbonstate_inst,&
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonstate_inst,&
+       c14_soilbiogeochem_carbonflux_inst)  
+    call t_stopf('CNSoilMatrix')
     end if
     
   end subroutine CNDriverLeaching

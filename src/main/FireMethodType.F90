@@ -34,6 +34,9 @@ module FireMethodType
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
+     ! Deallocate the fire datasets
+     procedure(FireClean_interface)   , public, deferred :: FireClean
+
   end type fire_method_type
 
   abstract interface
@@ -52,7 +55,7 @@ module FireMethodType
      !   consistent between different implementations.
      !
      !---------------------------------------------------------------------------
-  subroutine FireInit_interface(this, bounds, NLFilename )
+  subroutine FireInit_interface(this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize Fire datasets
@@ -63,20 +66,21 @@ module FireMethodType
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
   end subroutine FireInit_interface
 
-  subroutine FireReadNML_interface(this, NLFilename )
+  subroutine FireReadNML_interface(this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read general fire namelist
     !
     ! USES
+    use decompMod              , only : bounds_type
     import :: fire_method_type
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
@@ -96,6 +100,20 @@ module FireMethodType
     !-----------------------------------------------------------------------
 
   end subroutine FireInterp_interface
+
+  !-----------------------------------------------------------------------
+  subroutine FireClean_interface(this)
+    !
+    ! !DESCRIPTION:
+    ! Deallocate Fire datasets
+    !
+    ! USES
+    import :: fire_method_type
+    ! !ARGUMENTS:
+    class(fire_method_type)     :: this
+    !-----------------------------------------------------------------------
+
+  end subroutine FireClean_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireReadParams_interface( this, ncid )
@@ -119,7 +137,7 @@ module FireMethodType
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
        waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       crop_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area 
@@ -137,6 +155,7 @@ module FireMethodType
     use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
     use CNVegStateType                     , only : cnveg_state_type
     use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+    use CropType                           , only : crop_type
     import :: fire_method_type
     !
     ! !ARGUMENTS:
@@ -160,6 +179,7 @@ module FireMethodType
     class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
+    type(crop_type)                       , intent(in)    :: crop_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
     real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
     real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)

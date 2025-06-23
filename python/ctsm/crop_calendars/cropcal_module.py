@@ -12,6 +12,7 @@ from ctsm.crop_calendars.convert_axis_time2gs import convert_axis_time2gs
 from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 from ctsm.crop_calendars.import_ds import import_ds
+from ctsm.utils import is_instantaneous
 
 MISSING_RX_GDD_VAL = -1
 
@@ -20,28 +21,23 @@ def check_and_trim_years(year_1, year_n, ds_in):
     """
     After importing a file, restrict it to years of interest.
     """
-    ### In annual outputs, file with name Y is actually results from year Y-1.
-    ### Note that time values refer to when it was SAVED. So 1981-01-01 is for year 1980.
-
-    def get_year_from_cftime(cftime_date):
-        # Subtract 1 because the date for annual files is when it was SAVED
-        return cftime_date.year - 1
 
     # Check that all desired years are included
-    if get_year_from_cftime(ds_in.time.values[0]) > year_1:
-        raise RuntimeError(
-            f"Requested year_1 is {year_1} but first year in outputs is "
-            + f"{get_year_from_cftime(ds_in.time.values[0])}"
-        )
-    if get_year_from_cftime(ds_in.time.values[-1]) < year_1:
-        raise RuntimeError(
-            f"Requested year_n is {year_n} but last year in outputs is "
-            + f"{get_year_from_cftime(ds_in.time.values[-1])}"
-        )
+    year = utils.get_timestep_year(ds_in, ds_in.time.values[0])
+    if year > year_1:
+        raise RuntimeError(f"Requested year_1 is {year_1} but first year in outputs is {year}")
+    year = utils.get_timestep_year(ds_in, ds_in.time.values[-1])
+    if year < year_1:
+        raise RuntimeError(f"Requested year_n is {year_n} but last year in outputs is {year}")
 
     # Remove years outside range of interest
     ### Include an extra year at the end to finish out final seasons.
-    ds_in = utils.safer_timeslice(ds_in, slice(f"{year_1+1}-01-01", f"{year_n+2}-01-01"))
+    slice_yr_1 = year_1
+    slice_yr_n = year_n + 1
+    if is_instantaneous(ds_in["time"]):
+        slice_yr_1 += 1
+        slice_yr_n += 1
+    ds_in = utils.safer_timeslice(ds_in, slice(f"{slice_yr_1}-01-01", f"{slice_yr_n}-12-31"))
 
     # Make sure you have the expected number of timesteps (including extra year)
     n_years_expected = year_n - year_1 + 2
@@ -343,9 +339,10 @@ def check_no_zeros(this_ds, varlist_no_zero, which_file, verbose):
 def import_output(
     filename,
     my_vars,
+    *,
     year_1=None,
     year_n=None,
-    my_vegtypes=utils.define_mgdcrop_list(),
+    my_vegtypes=utils.define_mgdcrop_list_withgrasses(),
     sdates_rx_ds=None,
     gdds_rx_ds=None,
     verbose=False,
@@ -425,7 +422,7 @@ def import_output(
     # Check that e.g., GDDACCUM <= HUI
     for var_list in [["GDDACCUM", "HUI"], ["SYEARS", "HYEARS"]]:
         if all(v in this_ds_gs for v in var_list):
-            any_bad = check_v0_le_v1(
+            any_bad = any_bad or check_v0_le_v1(
                 this_ds_gs, var_list, both_nan_ok=True, throw_error=throw_errors
             )
 
@@ -443,10 +440,7 @@ def import_output(
         )
 
     # Convert time axis to integer year, saving original as 'cftime'
-    this_ds_gs = this_ds_gs.assign_coords(
-        {"cftime": this_ds["time_bounds"].isel({"hist_interval": 0})}
-    )
-    this_ds_gs = this_ds_gs.assign_coords({"time": [t.year for t in this_ds_gs["cftime"].values]})
+    this_ds_gs = convert_time_to_int_year(filename, this_ds, this_ds_gs)
 
     # Get number of harvests
     this_ds_gs["NHARVESTS"] = (this_ds_gs["GDDHARV_PERHARV"] > 0).sum(dim="mxharvests")
@@ -456,6 +450,33 @@ def import_output(
     this_ds_gs["NHARVEST_DISCREP"] = (this_ds_gs["NHARVESTS"] == 2).astype(int)
 
     return this_ds_gs, any_bad
+
+
+def convert_time_to_int_year(filename, this_ds, this_ds_gs):
+    """
+    Convert time axis to integer year, saving original as 'cftime'
+    """
+    if "time_bounds" in this_ds:
+        # Always true before PR #2838, when even files with all instantaneous variables got
+        # time_bounds saved. After that PR (and before the segregation of instantaneous and other
+        # variables onto separate files), files with an instantaneous variable first in their list
+        # do not get time_bounds saved.
+        this_ds_gs = this_ds_gs.assign_coords({"cftime": this_ds["time_bounds"].isel({"nbnd": 0})})
+        this_ds_gs = this_ds_gs.assign_coords(
+            {"time": [t.year for t in this_ds_gs["cftime"].values]}
+        )
+    elif this_ds["time"].attrs["long_name"] == "time at end of time step":
+        # This is an "instantaneous file."
+        this_ds_gs = this_ds_gs.assign_coords({"cftime": this_ds["time"]})
+        this_ds_gs = this_ds_gs.assign_coords(
+            {"time": [t.year - 1 for t in this_ds_gs["cftime"].values]}
+        )
+    else:
+        raise RuntimeError(
+            f"{filename} is neither an instantaneous nor a combined/non-instantaneous file."
+        )
+
+    return this_ds_gs
 
 
 def handle_zombie_crops(this_ds):

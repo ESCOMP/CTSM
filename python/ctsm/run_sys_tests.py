@@ -8,6 +8,7 @@ import subprocess
 from datetime import datetime
 
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
+from CIME.test_utils import test_to_string  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
 
 from ctsm.ctsm_logging import (
@@ -97,6 +98,7 @@ def main(cime_path):
 def run_sys_tests(
     machine,
     cime_path,
+    *,
     skip_testroot_creation=False,
     skip_git_status=False,
     dry_run=False,
@@ -238,6 +240,7 @@ def run_sys_tests(
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
         running_ctsm_py_tests = testfile == "/path/to/testfile"
+        testname_list = None
         if testfile:
             test_args = ["--testfile", os.path.abspath(testfile)]
             if not running_ctsm_py_tests:
@@ -248,7 +251,7 @@ def run_sys_tests(
             testname_list = testlist
         else:
             raise RuntimeError("None of suite_name, testfile or testlist were provided")
-        if not running_ctsm_py_tests:
+        if testname_list:
             _check_py_env(testname_list)
         _run_create_test(
             cime_path=cime_path,
@@ -603,6 +606,7 @@ def _record_git_status(testroot, retry, dry_run):
 
 
 def _get_create_test_args(
+    *,
     compare_name,
     generate_name,
     baseline_root,
@@ -675,6 +679,7 @@ def _cs_status_xfail_arg():
 
 
 def _run_test_suite(
+    *,
     cime_path,
     suite_name,
     suite_compilers,
@@ -736,12 +741,28 @@ def _check_py_env(test_attributes):
     # whether import is possible.
     # pylint: disable=import-error disable
 
-    # Check requirements for FSURDATMODIFYCTSM, if needed
-    if any("FSURDATMODIFYCTSM" in t for t in test_attributes):
+    # Check requirements for using modify_fsurdat Python module, if needed
+    modify_fsurdat_users = ["FSURDATMODIFYCTSM", "RXCROPMATURITY"]
+    if any(any(u in t for u in modify_fsurdat_users) for t in test_attributes):
         try:
             import ctsm.modify_input_files.modify_fsurdat
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+
+    # Check requirements for RXCROPMATURITY, if needed
+    if any("RXCROPMATURITY" in t for t in test_attributes):
+        try:
+            import ctsm.crop_calendars.check_rxboth_run
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("check_rxboth_run" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.generate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("generate_gdds" + err_msg) from err
+        try:
+            import ctsm.crop_calendars.interpolate_gdds
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("interpolate_gdds" + err_msg) from err
 
     # Check that list for any testmods that use modify_fates_paramfile.py
     testmods_to_check = ["clm-FatesColdTwoStream", "clm-FatesColdTwoStreamNoCompFixedBioGeo"]
@@ -764,6 +785,11 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
         raise RuntimeError(
             "No tests found for suite {} on machine {}".format(suite_name, machine_name)
         )
+    if logger.getEffectiveLevel() <= logging.INFO:
+        logger.info("Tests:")
+        for test in test_data:
+            test_string = test_to_string(test).split(" ")[1]
+            logger.info("   %s", test_string)
     if not running_ctsm_py_tests:
         _check_py_env([t["testname"] for t in test_data])
         _check_py_env([t["testmods"] for t in test_data if "testmods" in t.keys()])
@@ -772,7 +798,7 @@ def _get_compilers_for_suite(suite_name, machine_name, running_ctsm_py_tests):
     return compilers
 
 
-def _run_create_test(cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
+def _run_create_test(*, cime_path, test_args, machine, testid, testroot, create_test_args, dry_run):
     create_test_cmd = _build_create_test_cmd(
         cime_path=cime_path,
         test_args=test_args,

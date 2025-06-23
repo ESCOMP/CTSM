@@ -86,14 +86,15 @@ def run_python_script(caseroot, this_conda_env, command_in, tool_path):
         print(f"ERROR trying to run {tool_name}.")
         raise
 
+
 # Read a user_nl file and return the namelist option if found
 def find_user_nl_option(caseroot, component, namelist_option):
-    
+
     # This is a copy of the CIME _get_list_of_user_nl_files
     # which could be used if this moved into the CIME project
     file_pattern = "user_nl_" + component + "*"
     file_list = glob.glob(os.path.join(caseroot, file_pattern))
-    
+
     # Check that there is at least one file
     if len(file_list) == 0:
         raise RuntimeError("No user_nl files found for component " + component)
@@ -103,7 +104,7 @@ def find_user_nl_option(caseroot, component, namelist_option):
     for one_file in file_list:
         with open(one_file, "r") as user_nl_file:
             user_nl_text = user_nl_file.read()
-            reg = fr'{namelist_option}.*?(?=,|\n)'
+            reg = rf"{namelist_option}.*?(?=,|\n)"
             find_out = re.findall(reg, user_nl_text)
             output[one_file] = find_out
     return output

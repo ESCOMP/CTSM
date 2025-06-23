@@ -3,6 +3,7 @@ gen_mksurfdata_jobscript_multi.py generates a jobscript for running the
 mksurfdata executable to generate many fsurdat files at once. For detailed
 instructions, see README.
 """
+
 import os
 import sys
 import logging
@@ -23,6 +24,8 @@ valid_scenarios = [
     "global-present",
     "global-present-low-res",
     "global-present-ultra-hi-res",
+    "global-hist-1850-f19",
+    "global-hist-1850-f45",
     "crop-tropics-present",
     "crop",
     "crop-global-present",
@@ -42,6 +45,7 @@ valid_scenarios = [
     "crop-global-hist-low-res",
     "crop-global-hist-ne16",
     "crop-global-hist-ne30",
+    "crop-global-hist-f09",
     "crop-global-SSP1-1.9-f09",
     "crop-global-SSP1-2.6-f09",
     "crop-global-SSP2-4.5-f09",
@@ -82,6 +86,7 @@ def get_parser():
 
 
 def write_runscript(
+    *,
     args,
     scenario,
     jobscript_file,
@@ -89,7 +94,6 @@ def write_runscript(
     tasks_per_node,
     account,
     walltime,
-    machine,
     target_list,
     resolution_dict,
     dataset_dict,
@@ -103,12 +107,12 @@ def write_runscript(
     # --------------------------
     name = f"mksrf_{scenario}"
     attribs = write_runscript_part1(
-        number_of_nodes,
-        tasks_per_node,
-        machine,
-        account,
-        walltime,
-        runfile,
+        number_of_nodes=number_of_nodes,
+        tasks_per_node=tasks_per_node,
+        machine=args.machine,
+        account=account,
+        walltime=walltime,
+        runfile=runfile,
         descrip=scenario,
         name=name,
     )
@@ -198,22 +202,25 @@ def main():
         "low_res_no_crop": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["4x5", "10x15", "ne3np4.pg3"],
+        "standard_res_no_f09": ["360x720cru", "1.9x2.5", "C96", "mpasa120"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3", "ne3np4"],
         "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
-        "ne3": ["ne3np4.pg3"],
+        "ne3": ["ne3np4", "ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
         "ne0np4": [
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
             "ne0np4CONUS.ne30x8",
+            "ne0np4.POLARCAP.ne30x4",
         ],
         "ne120": [
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
             "ne0np4CONUS.ne30x8",
+            "ne0np4.POLARCAP.ne30x4",
             "ne120np4.pg3",
         ],
     }
@@ -238,16 +245,24 @@ def main():
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "ultra_hi_res_no_crop",
         ),
+        "global-hist-1850-f19": (
+            "--start-year 1850 --end-year 2023 --nocrop --res",
+            "f19",
+        ),
+        "global-hist-1850-f45": (
+            "--start-year 1850 --end-year 2023 --nocrop --res",
+            "f45",
+        ),
         "crop-tropics-present": (
             "--start-year 2000 --end-year 2000                                 --res",
             "5x5_amazon",
         ),
         "crop-global-present": (
-            "--start-year 2000 --end-year 2000 --vic                           --res",
+            "--start-year 2000 --end-year 2000                                 --res",
             "standard_res",
         ),
         "crop-global-present-low-res": (
-            "--start-year 2000 --end-year 2000 --vic                           --res",
+            "--start-year 2000 --end-year 2000                                 --res",
             "low_res",
         ),
         "crop-global-present-ne16": (
@@ -267,7 +282,6 @@ def main():
             "mpasa480",
         ),
         "crop-global-present-nldas": (
-            # TODO slevis: --hirespft uses old data for now, so keep out
             "--start-year 2000 --end-year 2000                                 --res",
             "nldas_res",
         ),
@@ -296,20 +310,24 @@ def main():
             "mpasa480",
         ),
         "crop-global-hist": (
-            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
-            "standard_res",
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
+            "standard_res_no_f09",
         ),
         "crop-global-hist-low-res": (
-            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "low_res",
         ),
         "crop-global-hist-ne16": (
-            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "ne16",
         ),
         "crop-global-hist-ne30": (
-            "--start-year 1850 --end-year 2015 --nosurfdata                    --res",
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "ne30",
+        ),
+        "crop-global-hist-f09": (
+            "--start-year 1700 --end-year 2023                                 --res",
+            "f09",
         ),
         "crop-global-SSP1-1.9-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
@@ -391,18 +409,17 @@ def main():
     with open(jobscript_file, "w", encoding="utf-8") as runfile:
 
         write_runscript(
-            args,
-            scenario,
-            jobscript_file,
-            number_of_nodes,
-            tasks_per_node,
-            account,
-            walltime,
-            args.machine,
-            target_list,
-            resolution_dict,
-            dataset_dict,
-            runfile,
+            args=args,
+            scenario=scenario,
+            jobscript_file=jobscript_file,
+            number_of_nodes=number_of_nodes,
+            tasks_per_node=tasks_per_node,
+            account=account,
+            walltime=walltime,
+            target_list=target_list,
+            resolution_dict=resolution_dict,
+            dataset_dict=dataset_dict,
+            runfile=runfile,
         )
 
     print(f"echo Successfully created jobscript {jobscript_file}\n")

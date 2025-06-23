@@ -16,6 +16,8 @@ module unittestDustEmisInputs
   use FrictionVelocityMod, only : frictionvel_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use SoilStateInitTimeConstMod, only : ThresholdSoilMoistZender2003, MassFracClay
+  use SoilStateInitTimeConstMod, only : MassFracClayLeung2023
+  use abortutils, only : endrun
 
   implicit none
   private
@@ -50,11 +52,13 @@ contains
 
     character(len=5) :: NLFilename = 'none'
     real(r8), allocatable :: urb_em(:)
+    real(r8), allocatable :: exice_init_conc_col(:)
     integer :: begl, endl, begc, endc
     integer :: c
     type(atm2lnd_params_type) :: atm2lnd_params
     integer, parameter :: snl = 3
 
+    !-----------------------------------------------------------------------
     ! Settings needed for clm_varpar
     soil_layerstruct_predefined = '20SL_8.5m'
     create_crop_landunit = .true.
@@ -80,6 +84,7 @@ contains
                                           glcmec_downscale_longwave = .false., &
                                           lapse_rate = 0.01_r8 &  ! arbitrary (this is unused for these tests)
     )
+
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
@@ -91,12 +96,15 @@ contains
     call this%frictionvel_inst%InitForTesting(bounds)
     allocate( urb_em(begl:endl) )
     urb_em(begl:endl) = 0.99_r8  ! Arbitrary won't matter here
+    allocate( exice_init_conc_col(begc:endc) )
+    exice_init_conc_col(begc:endc) = 0.0_r8 ! zero, so it doesn't affect anything.
     call this%temperature_inst%Init(bounds,           &
                                em_roof_lun=urb_em(begl:endl), &
                                em_wall_lun=urb_em(begl:endl), &
                                em_improad_lun=urb_em(begl:endl), &
                                em_perroad_lun=urb_em(begl:endl), &
-                               is_simple_buildtemp=.true., is_prog_buildtemp=.false.)
+                               is_simple_buildtemp=.true., is_prog_buildtemp=.false., &
+                               exice_init_conc_col = exice_init_conc_col(begc:endc))
     deallocate( urb_em )
   end subroutine setUp
 
@@ -124,6 +132,7 @@ contains
     !
     use ColumnType, only : col
     use GridcellType, only : grc
+    use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
     class(unittest_dust_emis_input_type), intent(in) :: this
     !
     integer :: c,j
@@ -145,7 +154,13 @@ contains
     ! These are needed for dust emissions initialization
     do c = bounds%begc, bounds%endc
        this%soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay )
-       this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       if ( is_dust_emis_zender() )then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay )
+       else if ( is_dust_emis_leung() )then
+          this%soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay )
+       else
+          call endrun("ERROR: do NOT know about this dust_emis_method")
+       end if
     end do
 
   end subroutine setupSoilState
@@ -187,17 +202,19 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine create_fv(this, fv, u10, ram1)
+  subroutine create_fv(this, fv, u10, ram1, obu)
     ! Initializes some fields needed for dust emissions in this%frictionvel_inst, and sets
     ! fields based on inputs. Excluded inputs are given a default value
     class(unittest_dust_emis_input_type), intent(inout) :: this
     real(r8), intent(in), optional :: fv
     real(r8), intent(in), optional :: u10
     real(r8), intent(in), optional :: ram1
+    real(r8), intent(in), optional :: obu
 
     real(r8), parameter :: fv_default = 2.0_r8
     real(r8), parameter :: u10_default = 4._r8
     real(r8), parameter :: ram1_default = 200._r8
+    real(r8), parameter :: obu_default = -100._r8
     ! ------------------------------------------------------------------------
 
     if (present(fv)) then
@@ -216,6 +233,12 @@ contains
        this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1
     else
        this%frictionvel_inst%ram1_patch(bounds%begp:bounds%endp) = ram1_default
+    end if
+
+    if (present(obu)) then
+       this%frictionvel_inst%obu_patch(bounds%begp:bounds%endp) = obu
+    else
+       this%frictionvel_inst%obu_patch(bounds%begp:bounds%endp) = obu_default
     end if
 
   end subroutine create_fv

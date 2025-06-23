@@ -204,10 +204,12 @@ contains
     !
     ! !USES:
     use CNFireFactoryMod , only : create_cnfire_method
+    use CNFireNoFireMod  , only : cnfire_nofire_type
     use clm_varcon       , only : c13ratio, c14ratio
     use ncdio_pio        , only : file_desc_t
     use filterMod        , only : filter
     use decompMod        , only : get_proc_clumps
+
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -282,7 +284,7 @@ contains
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            alloc_full_veg=alloc_full_veg)
+            alloc_full_veg=alloc_full_veg, params_ncid=params_ncid)
        call this%cnveg_nitrogenflux_inst%Init(bounds,alloc_full_veg=alloc_full_veg) 
        
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
@@ -302,10 +304,21 @@ contains
        ! use_cndv is true so that it can be used in associate statements (nag compiler
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
-    end if
     
-    call create_cnfire_method(NLFilename, this%cnfire_method)
-    call this%cnfire_method%CNFireReadParams( params_ncid )
+       call create_cnfire_method( this%cnfire_method )
+       call this%cnfire_method%FireInit( bounds )
+       call this%cnfire_method%FireReadNML( bounds, NLFilename )
+       call this%cnfire_method%CNFireReadParams( params_ncid )
+    end if
+
+    !
+    ! For FATES we HAVE to allocate a cnfire_method even through it won't be used
+    ! cnfire_method is passed down to CN routines that are used for FATES
+    ! so there has to be something allocated that is passed down
+    !
+    if ( use_fates_bgc )then
+      allocate(cnfire_nofire_type :: this%cnfire_method)
+    end if
 
   end subroutine Init
 
@@ -469,6 +482,8 @@ contains
     use clm_varcon,      only : c3_r2, c14ratio
     use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
     use CNSharedParamsMod, only : use_matrixcn
+    use CNVegMatrixMod,  only : CNVegMatrixRest
+    use CNSoilMatrixMod, only : CNSoilMatrixRest
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -545,6 +560,14 @@ contains
                template_multiplier = c14ratio)
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
+
+       if ( use_matrixcn )then
+          call CNVegMatrixRest( ncid, flag )
+       end if
+    end if
+
+    if ( use_soil_matrixcn )then
+       call CNSoilMatrixRest( ncid, flag )
     end if
        
     if (use_cndv) then
@@ -574,7 +597,7 @@ contains
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
-    call CNDriverInit(bounds, NLFilename, this%cnfire_method)
+    call CNDriverInit(bounds, NLFilename)
 
     if (use_cndv) then
        call dynCNDV_init(bounds, this%dgvs_inst)
@@ -1275,7 +1298,7 @@ contains
        ! Call dv (dynamic vegetation) at last time step of year
 
        call t_startf('d2dgvm')
-       if (is_end_curr_year() .and. .not. is_first_step())  then
+       if (is_end_curr_year())  then
 
           ! Get date info.  kyr is used in lpj().  At end of first year, kyr = 2.
           call get_curr_date(yr, mon, day, sec)
@@ -1327,7 +1350,7 @@ contains
 
     ! Write to CNDV history buffer if appropriate
     if (use_cndv) then
-       if (is_end_curr_year() .and. .not. is_first_step())  then
+       if (is_end_curr_year())  then
           call t_startf('clm_drv_io_hdgvm')
           call CNDVHist( bounds, this%dgvs_inst )
           if (masterproc) write(iulog,*) 'Annual CNDV calculations are complete'

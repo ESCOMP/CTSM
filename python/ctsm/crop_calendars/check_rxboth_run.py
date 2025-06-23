@@ -1,6 +1,7 @@
 """
 Check the results of a run with prescribed sowing dates and maturity requirements
 """
+
 import sys
 import argparse
 import glob
@@ -156,7 +157,16 @@ def main(argv):
             any_bad = any_bad or gdds_not_obeyed
 
     if any_bad:
-        raise RuntimeError("Unexpected behavior in rxboth run")
+        msg = "\n   ".join(
+            [
+                "Unexpected behavior in rxboth run:",
+                f"any_bad_import_output:    {any_bad_import_output}",
+                f"any_bad_check_const_vars: {any_bad_check_const_vars}",
+                f"sdate_not_obeyed:         {sdate_not_obeyed}",
+                f"gdds_not_obeyed:          {gdds_not_obeyed}",
+            ]
+        )
+        raise RuntimeError(msg)
 
 
 if __name__ == "__main__":

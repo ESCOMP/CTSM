@@ -16,6 +16,7 @@ module NutrientCompetitionCLM45defaultMod
   use LandunitType        , only : lun
   use ColumnType          , only : col
   use PatchType           , only : patch
+  use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
@@ -89,10 +90,8 @@ contains
     use CanopyStateType        , only : canopystate_type
     use CNVegCarbonStateType  , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -134,8 +133,7 @@ contains
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
     use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun, use_matrixcn
+    use CNSharedParamsMod     , only : use_fun
     use shr_infnan_mod        , only : shr_infnan_isnan
 
     !
@@ -152,7 +150,7 @@ contains
     type(cnveg_carbonflux_type)     , intent(inout) :: c13_cnveg_carbonflux_inst
     type(cnveg_carbonflux_type)     , intent(inout) :: c14_cnveg_carbonflux_inst
     type(cnveg_nitrogenflux_type)   , intent(inout) :: cnveg_nitrogenflux_inst
-    type(cnveg_nitrogenstate_type)  , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     real(r8)                        , intent(in)    :: fpg_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
@@ -180,7 +178,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving            => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch          , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn                     => pftcon%deadwdcn                                           , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -229,7 +227,6 @@ contains
          npool_to_reproductiven_storage      => cnveg_nitrogenflux_inst%npool_to_reproductiven_storage_patch     , & ! Output: [real(r8) (:,:)   ]  allocation to grain N storage (gN/m2/s)
          retransn_to_npool            => cnveg_nitrogenflux_inst%retransn_to_npool_patch           , & ! Output: [real(r8) (:)   ]  deployment of retranslocated N (gN/m2/s)
          sminn_to_npool               => cnveg_nitrogenflux_inst%sminn_to_npool_patch              , & ! Output: [real(r8) (:)   ]  deployment of soil mineral N uptake (gN/m2/s)
-         retransn                     => cnveg_nitrogenstate_inst%retransn_patch                   , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
          npool_to_leafn               => cnveg_nitrogenflux_inst%npool_to_leafn_patch              , & ! Output: [real(r8) (:)   ]  allocation to leaf N (gN/m2/s)
          npool_to_leafn_storage       => cnveg_nitrogenflux_inst%npool_to_leafn_storage_patch      , & ! Output: [real(r8) (:)   ]  allocation to leaf N storage (gN/m2/s)
          npool_to_frootn              => cnveg_nitrogenflux_inst%npool_to_frootn_patch             , & ! Output: [real(r8) (:)   ]  allocation to fine root N (gN/m2/s)
@@ -278,7 +275,7 @@ contains
          f4   = flivewd(ivt(p))
          g1   = grperc(ivt(p))
          g2   = grpnow(ivt(p))
-         cnl  = leafcn(ivt(p))
+         cnl  = leafcn_t_evolving(p)
          cnfr = frootcn(ivt(p))
          cnlw = livewdcn(ivt(p))
          cndw = deadwdcn(ivt(p))
@@ -311,11 +308,6 @@ contains
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
 
-         ! Assign the above terms to the CN-Matrix solution
-         if (use_matrixcn)then 
-         end if
-
-
          if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code.
             excess_cflux(p) = availc(p) - plant_calloc(p)
 	    ! reduce gpp fluxes due to N limitation
@@ -330,13 +322,13 @@ contains
 	               c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
 	          c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
 	               c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	       end if
+	       endif
 	       if ( use_c14 ) then
 	          c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
 	               c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
 	          c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
 	               c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-	       end if
+	       endif
 	    end if
 
 	 end if !use_fun
@@ -411,10 +403,6 @@ contains
             end do
          end if
 
-         ! Assign above terms to the matrix solution
-         if (use_matrixcn) then
-         end if !end use_matrixcn
-
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
          ! Allows for the fraction of growth respiration that is released at the
@@ -440,9 +428,6 @@ contains
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
-         ! Assign above terms to the matrix solution
-         if(use_matrixcn)then
-         end if !end use_matrixcn  
       end do ! end patch loop
 
     end associate
@@ -463,13 +448,11 @@ contains
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
     use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
     use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     use EnergyFluxType         , only : energyflux_type
-    use CNSharedParamsMod      , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -525,12 +508,10 @@ contains
     use pftconMod              , only : npcropmin, pftcon
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
-    use CNSharedParamsMod      , only : use_matrixcn
     use clm_time_manager       , only : get_step_size_real
     use CropType               , only : crop_type
     use CNVegStateType         , only : cnveg_state_type
     use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
     use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
     use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
     use CNSharedParamsMod      , only : use_fun
@@ -570,7 +551,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch , & ! Input:  leaf C:N (gC/gN)
          frootcn               => pftcon%frootcn                                   ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn              => pftcon%livewdcn                                  , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          graincn               => pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)
@@ -598,9 +579,6 @@ contains
          livestemc             => cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:)   ]
 
          retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N
-         leafn                 => cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N
-         livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
-         frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N
 
          gpp                   => cnveg_carbonflux_inst%gpp_before_downreg_patch    , & ! Input:  [real(r8) (:)   ]  GPP flux before downregulation (gC/m2/s)
          availc                => cnveg_carbonflux_inst%availc_patch                , & ! Input:  [real(r8) (:)   ]  C flux available for allocation (gC/m2/s)
@@ -666,7 +644,7 @@ contains
                      if (grain_flag(p) == 0._r8)then
                         if(.not.use_fun) then
                            t1 = 1 / dt
-                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn(ivt(p))) - (leafc(p) / &
+                           leafn_to_retransn(p) = t1 * ((leafc(p) / leafcn_t_evolving(p)) - (leafc(p) / &
                                 fleafcn(ivt(p))))
                            livestemn_to_retransn(p) = t1 * ((livestemc(p) / livewdcn(ivt(p))) - (livestemc(p) / &
                                 fstemcn(ivt(p))))
@@ -681,9 +659,6 @@ contains
                         end if !fun
                         grain_flag(p) = 1._r8
 
-                        ! Apply above to the matrix solution
-                        if(use_matrixcn)then
-                        end if
                      end if
                   end if
                end if

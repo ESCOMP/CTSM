@@ -1213,9 +1213,9 @@ The numerical solution for vegetation temperature and the fluxes of momentum, se
 
 #. Magnitude of the wind velocity incident on the leaves :math:`U_{av}` (:eq:`5.117` )
 
-#. Leaf boundary layer resistance :math:`r_{b}` (:eq:`5.136` )
+#. Leaf boundary layer resistance :math:`r_{b}` (:eq:`5.122` )
 
-#. Aerodynamic resistances :math:`r_{ah} ^{{'} }` and :math:`r_{aw} ^{{'} }`(:eq:`5.116` )
+#. Aerodynamic resistances :math:`r_{ah} ^{{'} }` and :math:`r_{aw} ^{{'} }` (:eq:`5.116` )
 
 #. Sunlit and shaded stomatal resistances :math:`r_{s}^{sun}` and :math:`r_{s}^{sha}` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`)
 

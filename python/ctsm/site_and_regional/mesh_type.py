@@ -2,6 +2,7 @@
 This module includes the definition and functions for defining a Grid or Mesh.
 This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
+
 import logging
 import argparse
 import datetime
@@ -24,7 +25,7 @@ class MeshType:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None, area=None):
+    def __init__(self, center_lats, center_lons, *, mask=None, mesh_name=None, area=None):
         """
         Construct a mesh object
 
@@ -217,6 +218,8 @@ class MeshType:
         elif self.lat_dims == 2:
             # -- 2D mask
             mask = np.ones(self.center_lats.shape, dtype=np.int8)
+        else:
+            raise NotImplementedError(f"self.lat_dims = {self.lat_dims}")
         # mask_da = da.from_array(mask)
         mask_da = mask
         self.mask = mask_da
@@ -235,8 +238,16 @@ class MeshType:
             lons_size = self.center_lons.size
 
             # -- convert center points from 1d to 2d
-            self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
-            self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            try:
+                self.center_lat2d = np.broadcast_to(self.center_lats[:], (lons_size, lats_size))
+                self.center_lon2d = np.broadcast_to(self.center_lons[:], (lons_size, lats_size))
+            except ValueError:
+                self.center_lat2d = np.broadcast_to(
+                    np.expand_dims(self.center_lats[:], 0), (lons_size, lats_size)
+                )
+                self.center_lon2d = np.broadcast_to(
+                    np.expand_dims(self.center_lons[:], 1), (lons_size, lats_size)
+                )
         elif self.lat_dims == 2:
             # -- 2D lats and lons
             dims = self.center_lons.shape
@@ -351,7 +362,7 @@ class MeshType:
         )
         # Longitudes should stay within 0 to 360
         if np.any(self.corner_lons > 360.0):
-            abort("Corners have longitudes greater than 360")
+            abort(f"Corners have longitudes greater than 360 (max: {np.max(self.corner_lons)})")
         if np.any(self.corner_lons < 0.0):
             logger.warning(
                 "Corners have longitudes less than zero -- %s %s",

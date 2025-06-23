@@ -2,8 +2,11 @@
 utility functions
 copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py
 """
+
 import numpy as np
 import xarray as xr
+
+from ctsm.utils import is_instantaneous
 
 
 def define_pftlist():
@@ -147,10 +150,13 @@ def is_this_vegtype(this_vegtype, this_filter, this_method):
     notok_exact:    True if this_vegtype does not match any member of
                     this_filter exactly.
     """
+
     # Make sure data type of this_vegtype is acceptable
+    def data_type_ok(x):
+        return isinstance(x, (int, np.int64, str))
+
     if isinstance(this_vegtype, float) and int(this_vegtype) == this_vegtype:
         this_vegtype = int(this_vegtype)
-    data_type_ok = lambda x: isinstance(x, (int, np.int64, str))
     ok_input = True
     if not data_type_ok(this_vegtype):
         if isinstance(this_vegtype, xr.core.dataarray.DataArray):
@@ -207,11 +213,46 @@ def is_each_vegtype(this_vegtypelist, this_filter, this_method):
     return [is_this_vegtype(x, this_filter, this_method) for x in this_vegtypelist]
 
 
-def define_mgdcrop_list():
+def define_crop_list():
+    """
+    List (strings) of managed crops in CLM.
+    """
+    notcrop_list = [
+        "tree",
+        "c3_arctic_grass",
+        "c3_non-arctic_grass",
+        "c4_grass",
+        "shrub",
+        "not_vegetated",
+    ]
+    defined_pftlist = define_pftlist()
+    is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
+    return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
+
+
+def define_mgdcrop_list_nograsses():
     """
     List (strings) of managed crops in CLM.
     """
     notcrop_list = ["tree", "grass", "shrub", "unmanaged", "not_vegetated"]
+    defined_pftlist = define_pftlist()
+    is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
+    return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
+
+
+def define_mgdcrop_list_withgrasses():
+    """
+    List (strings) of managed crops in CLM.
+    """
+    notcrop_list = [
+        "tree",
+        "c3_arctic_grass",
+        "c3_non-arctic_grass",
+        "c4_grass",
+        "shrub",
+        "unmanaged",
+        "not_vegetated",
+    ]
     defined_pftlist = define_pftlist()
     is_crop = is_each_vegtype(defined_pftlist, notcrop_list, "notok_contains")
     return [defined_pftlist[i] for i, x in enumerate(is_crop) if x]
@@ -282,11 +323,12 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
     """
     ctsm_pylib can't handle time slicing like Dataset.sel(time=slice("1998-01-01", "2005-12-31"))
     for some reason. This function tries to fall back to slicing by integers. It should work with
-    both Datasets and DataArrays.
+    both Datasets and DataArrays. NOTE: This isn't a problem for more modern Python environments.
+    Even npl-2022b can use the straightforward slicing in the "try" block.
     """
     try:
         ds_in = ds_in.sel({time_var: time_slice})
-    except:  # pylint: disable=bare-except
+    except Exception as this_exception:  # pylint: disable=broad-except
         # If the issue might have been slicing using strings, try to fall back to integer slicing
         can_try_integer_slicing = (
             isinstance(time_slice.start, str)
@@ -302,23 +344,22 @@ def safer_timeslice(ds_in, time_slice, time_var="time"):
         if can_try_integer_slicing:
             fileyears = np.array([x.year for x in ds_in.time.values])
             if len(np.unique(fileyears)) != len(fileyears):
-                print("Could not fall back to integer slicing of years: Time axis not annual")
-                raise
+                msg = "Could not fall back to integer slicing of years: Time axis not annual"
+                raise RuntimeError(msg) from this_exception
             y_start = int(time_slice.start.split("-")[0])
             y_stop = int(time_slice.stop.split("-")[0])
             where_in_timeslice = np.where((fileyears >= y_start) & (fileyears <= y_stop))[0]
             ds_in = ds_in.isel({time_var: where_in_timeslice})
         else:
-            print(f"Could not fall back to integer slicing for time_slice {time_slice}")
-            raise
+            msg = f"Could not fall back to integer slicing for time_slice {time_slice}"
+            raise RuntimeError(msg) from this_exception
 
     return ds_in
 
 
-def lon_idl2pm(lons_in, fail_silently=False):
+def lon_axis_type180_to_type360(lons_in, fail_silently=False):
     """
-    Convert a longitude axis that's -180 to 180 around the international date line to one that's 0
-    to 360 around the prime meridian.
+    Convert a longitude axis that's -180 to 180 to one that's 0 to 360
 
     - If you pass in a Dataset or DataArray, the "lon" coordinates will be changed. Otherwise, it
       assumes you're passing in numeric data.
@@ -355,13 +396,13 @@ def lon_idl2pm(lons_in, fail_silently=False):
         lons_out = do_it(lons_in)
         if not is_strictly_increasing(lons_out):
             print(
-                "WARNING: You passed in numeric longitudes to lon_idl2pm() and these have been"
-                " converted, but they're not strictly increasing."
+                "WARNING: You passed in numeric longitudes to lon_axis_type180_to_type360() and"
+                " these have been converted, but they're not strictly increasing."
             )
         print(
             "To assign the new longitude coordinates to an Xarray object, use"
-            " xarrayobject.assign_coordinates()! (Pass the object directly in to lon_idl2pm() in"
-            " order to suppress this message.)"
+            " xarrayobject.assign_coordinates()! (Pass the object directly in to"
+            " lon_axis_type180_to_type360() in order to suppress this message.)"
         )
 
     return lons_out
@@ -395,3 +436,38 @@ def make_lon_increasing(xr_obj):
         raise RuntimeError("Unable to rearrange longitude axis so it's monotonically increasing")
 
     return xr_obj.roll(lon=shift, roll_coords=True)
+
+
+def get_beg_inst_timestep_year(timestep):
+    """
+    Get year associated with the BEGINNING of a timestep in an
+    instantaneous file
+    """
+    year = timestep.year
+
+    is_jan1 = timestep.dayofyr == 1
+    is_midnight = timestep.hour == timestep.minute == timestep.second == 0
+    if is_jan1 and is_midnight:
+        year -= 1
+
+    return year
+
+
+def get_timestep_year(dsa, timestep):
+    """
+    Get the year associated with a timestep, with different handling
+    depending on whether the file is instantaneous
+    """
+    if is_instantaneous(dsa["time"]):
+        year = get_beg_inst_timestep_year(timestep)
+    else:
+        year = timestep.year
+    return year
+
+
+def get_integer_years(dsa):
+    """
+    Convert time axis to numpy array of integer years
+    """
+    out_array = [get_timestep_year(dsa, t) for t in dsa["time"].values]
+    return out_array

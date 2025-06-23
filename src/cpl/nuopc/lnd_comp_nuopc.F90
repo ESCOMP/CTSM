@@ -29,7 +29,7 @@ module lnd_comp_nuopc
   use NUOPC_Model            , only : NUOPC_ModelGet
   use shr_kind_mod           , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod            , only : shr_sys_abort
-  use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
+  use shr_log_mod            , only : shr_log_setLogUnit, shr_log_getLogUnit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use spmdMod                , only : masterproc, mpicom, spmd_init
@@ -38,6 +38,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : inst_index, inst_suffix, inst_name
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl             , only : FL => fname_len
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -66,7 +67,7 @@ module lnd_comp_nuopc
   private :: clm_orbital_init    ! Initialize the orbital information
   private :: clm_orbital_update  ! Update the orbital information
   private :: CheckImport
-  
+
   !--------------------------------------------------------------------------
   ! Private module data
   !--------------------------------------------------------------------------
@@ -235,7 +236,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! Note still need compid for those parts of the code that use the data model
-    ! functionality through subroutine calls
+    ! functionality through subroutine calls (MCTID just means the Model ComonenT IDentification number)
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) compid  ! convert from string to integer
@@ -333,8 +334,7 @@ contains
     !----------------------------------------------------------------------------
     ! reset shr logging to original values
     !----------------------------------------------------------------------------
-
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit(shrlogunit)
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
   end subroutine InitializeAdvertise
@@ -384,7 +384,7 @@ contains
     integer                 :: shrlogunit            ! original log unit
     integer                 :: n, ni, nj             ! Indices
     character(len=CL)       :: cvalue                ! config data
-    character(len=CL)       :: meshfile_mask         ! filename of mesh file with land mask
+    character(len=FL)       :: meshfile_mask         ! filename of mesh file with land mask
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
     real(r8)                :: scol_lat              ! single-column latitude
@@ -393,7 +393,7 @@ contains
     real(r8)                :: scol_frac             ! single-column frac
     integer                 :: scol_mask             ! single-column mask
     real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
-    character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
+    character(len=FL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
     type(bounds_type)      :: bounds                          ! bounds
     type(ESMF_Field)        :: lfield                         ! Land field read in
     character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
@@ -497,8 +497,8 @@ contains
     ! Reset shr logging to my log file
     !----------------------------------------------------------------------------
 
-    call shr_file_getLogUnit (shrlogunit)
-    call shr_file_setLogUnit (iulog)
+    call shr_log_getLogUnit (shrlogunit)
+    call shr_log_setLogUnit (iulog)
 #if (defined _MEMTRACE)
     if (masterproc) then
        lbnum=1
@@ -656,7 +656,10 @@ contains
     ! ---------------------
     ! Finish initializing ctsm
     ! ---------------------
-    call initialize2(ni, nj)
+    call ESMF_ClockGet(clock, currTime=currtime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    call initialize2(ni, nj, currtime)
 
     !--------------------------------
     ! Create land export state
@@ -683,7 +686,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     endif
 
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit (shrlogunit)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -741,7 +744,6 @@ contains
     integer                :: localPeCount   ! Number of local Processors
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
-    logical                :: dosend         ! true => send data back to driver
     logical                :: doalb          ! .true. ==> do albedo calculation on this time step
     real(r8)               :: nextsw_cday    ! calday from clock of next radiation computation
     real(r8)               :: caldayp1       ! ctsm calday plus dtime offset
@@ -774,8 +776,8 @@ contains
     ! Reset share log units
     !--------------------------------
 
-    call shr_file_getLogUnit (shrlogunit)
-    call shr_file_setLogUnit (iulog)
+    call shr_log_getLogUnit (shrlogunit)
+    call shr_log_setLogUnit (iulog)
 
 #if (defined _MEMTRACE)
     if(masterproc) then
@@ -817,112 +819,104 @@ contains
     !--------------------------------
 
     dtime = get_step_size()
-    dosend = .false.
-    do while(.not. dosend)
 
-       ! TODO: This is currently hard-wired - is there a better way for nuopc?
-       ! Note that the model clock is updated at the end of the time step not at the beginning
-       nstep = get_nstep()
-       if (nstep > 0) then
-          dosend = .true.
-       end if
+    ! TODO: This is currently hard-wired - is there a better way for nuopc?
+    ! Note that the model clock is updated at the end of the time step not at the beginning
+    nstep = get_nstep()
 
-       !--------------------------------
-       ! Determine doalb based on nextsw_cday sent from atm model
-       !--------------------------------
+    !--------------------------------
+    ! Determine doalb based on nextsw_cday sent from atm model
+    !--------------------------------
 
-       caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
+    caldayp1 = get_curr_calday(offset=dtime, reuse_day_365_for_day_366=.true.)
 
-       if (nstep == 0) then
-          doalb = .false.
-       else if (nstep == 1) then
-          doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
-       else
-          doalb = (nextsw_cday >= -0.5_r8)
-       end if
-       call update_rad_dtime(doalb)
+    if (nstep == 1) then
+       doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
+    else
+       doalb = (nextsw_cday >= -0.5_r8)
+    end if
 
-       !--------------------------------
-       ! Determine if time to stop
-       !--------------------------------
+    call update_rad_dtime(doalb)
 
-       call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
+    !--------------------------------
+    ! Determine if time to stop
+    !--------------------------------
+
+    call ESMF_ClockGetAlarm(clock, alarmname='alarm_stop', alarm=alarm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       nlend = .true.
+       call ESMF_AlarmRingerOff( alarm, rc=rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       nlend = .false.
+    endif
 
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          nlend = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          nlend = .false.
-       endif
-
-       !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
-       rstwr = .false.
-       if (nlend .and. write_restart_at_endofrun) then
-          rstwr = .true.
-       else 
-          call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
-             if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                rstwr = .true.
-                call ESMF_AlarmRingerOff( alarm, rc=rc )
-                if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             endif
+    !--------------------------------
+    ! Determine if time to write restart
+    !--------------------------------
+    rstwr = .false.
+    if (nlend .and. write_restart_at_endofrun) then
+       rstwr = .true.
+    else 
+       call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
+          if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             rstwr = .true.
+             call ESMF_AlarmRingerOff( alarm, rc=rc )
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
           endif
-       end if
+       endif
+    end if
 
-       !--------------------------------
-       ! Run CTSM
-       !--------------------------------
+    !--------------------------------
+    ! Run CTSM
+    !--------------------------------
 
-       ! call ESMF_VMBarrier(vm, rc=rc)
-       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! call ESMF_VMBarrier(vm, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       call t_startf ('shr_orb_decl')
-       ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
-       call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
-       call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
-       call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-       call t_stopf ('shr_orb_decl')
+    call t_startf ('shr_orb_decl')
+    ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
+    call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
+    call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
+    call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
+    call t_stopf ('shr_orb_decl')
 
-       call t_startf ('ctsm_run')
-       ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
-       ! the timestep and is preferred for restart file names
-       call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
-       call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
-       call t_stopf ('ctsm_run')
+    call t_startf ('ctsm_run')
+    ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
+    ! the timestep and is preferred for restart file names
+    call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
+    call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
+    call t_stopf ('ctsm_run')
 
-       !--------------------------------
-       ! Pack export state
-       !--------------------------------
+    !--------------------------------
+    ! Pack export state
+    !--------------------------------
 
-       call t_startf ('lc_lnd_export')
-       call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
-            water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call t_stopf ('lc_lnd_export')
+    call t_startf ('lc_lnd_export')
+    call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
+         water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_export')
 
-       !--------------------------------
-       ! Advance ctsm time step
-       !--------------------------------
+    !--------------------------------
+    ! Advance ctsm time step
+    !--------------------------------
 
-       call t_startf ('lc_ctsm2_adv_timestep')
-       call advance_timestep()
-       call t_stopf ('lc_ctsm2_adv_timestep')
-
-    end do
+    call t_startf ('lc_ctsm2_adv_timestep')
+    call advance_timestep()
+    call t_stopf ('lc_ctsm2_adv_timestep')
 
     ! Check that internal clock is in sync with master clock
     ! Note that the driver clock has not been updated yet - so at this point
@@ -964,7 +958,7 @@ contains
     ! Reset shr logging to my original values
     !--------------------------------
 
-    call shr_file_setLogUnit (shrlogunit)
+    call shr_log_setLogUnit (shrlogunit)
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
@@ -1038,9 +1032,35 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_LogWrite(subname//'setting alarms for ' // trim(name), ESMF_LOGMSG_INFO)
 
-       !----------------
+       !----------------------------------------------------------------------------------
+       ! Stop alarm
+       ! MUST be set before the restart alarm in case restarts happen at the stop alarm
+       !----------------------------------------------------------------------------------
+       call NUOPC_CompAttributeGet(gcomp, name="stop_option", value=stop_option, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call NUOPC_CompAttributeGet(gcomp, name="stop_n", value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) stop_n
+
+       call NUOPC_CompAttributeGet(gcomp, name="stop_ymd", value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) stop_ymd
+
+       call alarmInit(mclock, stop_alarm, stop_option, &
+            opt_n   = stop_n,           &
+            opt_ymd = stop_ymd,         &
+            RefTime = mcurrTime,           &
+            alarmname = 'alarm_stop', rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_AlarmSet(stop_alarm, clock=mclock, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       !----------------------------------------------------------------------------------
        ! Restart alarm
-       !----------------
+       ! MUST be set after the stop alarm in case restarts happen at the stop alarm
+       !----------------------------------------------------------------------------------
        call NUOPC_CompAttributeGet(gcomp, name="restart_option", value=restart_option, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -1062,29 +1082,6 @@ contains
        call ESMF_AlarmSet(restart_alarm, clock=mclock, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       !----------------
-       ! Stop alarm
-       !----------------
-       call NUOPC_CompAttributeGet(gcomp, name="stop_option", value=stop_option, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call NUOPC_CompAttributeGet(gcomp, name="stop_n", value=cvalue, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stop_n
-
-       call NUOPC_CompAttributeGet(gcomp, name="stop_ymd", value=cvalue, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stop_ymd
-
-       call alarmInit(mclock, stop_alarm, stop_option, &
-            opt_n   = stop_n,           &
-            opt_ymd = stop_ymd,         &
-            RefTime = mcurrTime,           &
-            alarmname = 'alarm_stop', rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_AlarmSet(stop_alarm, clock=mclock, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     end if
 
@@ -1289,14 +1286,14 @@ contains
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
-    
+
     ! This is the routine that enforces the explicit time dependence on the
     ! import fields. This simply means that the timestamps on the Fields in the
-    ! importState are checked against the currentTime on the Component's 
+    ! importState are checked against the currentTime on the Component's
     ! internalClock. Consequenty, this model starts out with forcing fields
-    ! at the current time as it does its forward step from currentTime to 
+    ! at the current time as it does its forward step from currentTime to
     ! currentTime + timeStep.
-    
+
     ! local variables
     type(ESMF_Clock)              :: clock
     type(ESMF_Time)               :: time
@@ -1320,7 +1317,7 @@ contains
     ! query the component for info
     call NUOPC_CompGet(gcomp, name=name, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    
+
     ! query the Component for its clock and importState
     call ESMF_GridCompGet(gcomp, clock=clock, importState=importState, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -1328,11 +1325,11 @@ contains
     ! get the current time out of the clock
     call ESMF_ClockGet(clock, currTime=time, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-    
+
     ! check that Fields in the importState show correct timestamp
     allCurrent = NUOPC_IsAtTime(importState, time, fieldList=fieldList, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-      
+
     if (.not.allCurrent) then
       !TODO: introduce and use INCOMPATIBILITY return codes!!!!
       do i=1, size(fieldList)
@@ -1354,6 +1351,6 @@ contains
         rcToReturn=rc)
       return  ! bail out
     endif
-    
+
   end subroutine CheckImport
 end module lnd_comp_nuopc

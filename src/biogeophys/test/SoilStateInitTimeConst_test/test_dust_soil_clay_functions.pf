@@ -71,11 +71,32 @@ contains
 
     value = MassFracClay( 0.0_r8 )
     @assertEqual( value, 0.0_r8, tolerance=tol )
+    value = MassFracClay( 10.0_r8 )
+    @assertEqual( value, 0.10_r8, tolerance=tol )
     value = MassFracClay( 20.0_r8 )
     @assertEqual( value, 0.20_r8, tolerance=tol )
+    ! value after 20% clay should stay at 0.2
     value = MassFracClay( 25.0_r8 )
     @assertEqual( value, 0.20_r8, tolerance=tol )
 
   end subroutine TestClayMassFracValues
 
+
+  @Test
+  subroutine TestClayMassFracValuesLeung2023(this)
+    class(TestDustEmisSoilFunctions), intent(inout) :: this
+    real(r8) :: value
+
+    value = MassFracClayLeung2023( 0.0_r8 )
+    @assertEqual( value, 0.1_r8, tolerance=tol )
+    value = MassFracClayLeung2023( 10.0_r8 )
+    @assertEqual( value, 0.15_r8, tolerance=tol )
+    value = MassFracClayLeung2023( 20.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+    ! value after 20% clay should stay at 0.2
+    value = MassFracClayLeung2023( 25.0_r8 )
+    @assertEqual( value, 0.20_r8, tolerance=tol )
+
+  end subroutine TestClayMassFracValuesLeung2023
+  
 end module test_dust_soil_clay_functions

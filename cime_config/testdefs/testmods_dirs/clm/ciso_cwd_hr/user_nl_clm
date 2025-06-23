@@ -1,2 +1,2 @@
-paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm51_ciso_cwd_hr_params.c240208.nc'
+paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm60_ciso_cwd_hr_params.c250311.nc'
 hist_fincl1 = 'CWDC_HR','C13_CWDC_HR','C14_CWDC_HR','CWD_HR_L2','CWD_HR_L2_vr','CWD_HR_L3','CWD_HR_L3_vr'

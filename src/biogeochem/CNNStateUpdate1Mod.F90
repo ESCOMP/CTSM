@@ -12,8 +12,9 @@ module CNNStateUpdate1Mod
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
+  use clm_varpar                      , only : i_met_lit, i_str_lit, i_phys_som, i_chem_som
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+  use SoilBiogeochemDecompCascadeConType, only : decomp_method, mimics_decomp, use_soil_matrixcn
   use CNSharedParamsMod               , only : use_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
@@ -129,6 +130,7 @@ contains
     associate(                                                                   & 
          ivt                   => patch%itype                                    , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
+         mimics_fi             => pftcon%mimics_fi                             , & ! Input:  MIMICS parameter fi
          woody                 => pftcon%woody                                 , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
 
          nf_veg                => cnveg_nitrogenflux_inst                      , & ! Input:
@@ -163,10 +165,21 @@ contains
             ! State update without the matrix solution
             !
             if (.not. use_soil_matrixcn) then ! to be consistent with C
-               do i = i_litr_min, i_litr_max
-                  nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
-                     nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
-               end do
+               if (decomp_method == mimics_decomp) then
+                  do i = i_litr_min, i_litr_max  ! in MIMICS these are 1 and 2
+                     nf_soil%decomp_npools_sourcesink_col(c,j,i) = (1 - mimics_fi(i)) * &
+                        nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
+                  end do
+                  nf_soil%decomp_npools_sourcesink_col(c,j,i_phys_som) = mimics_fi(1) * &
+                     nf_veg%phenology_n_to_litr_n_col(c,j,i_met_lit) * dt
+                  nf_soil%decomp_npools_sourcesink_col(c,j,i_chem_som) = mimics_fi(2) * &
+                     nf_veg%phenology_n_to_litr_n_col(c,j,i_str_lit) * dt
+               else
+                  do i = i_litr_min, i_litr_max
+                     nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
+                        nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
+                  end do
+               end if
 
                ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
                ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
@@ -182,6 +195,8 @@ contains
             else
                ! Do the above to the matrix solution
                do i = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
+                       nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_n_col(c,j,i) *dt
                end do
             end if
          end do
@@ -286,6 +301,14 @@ contains
                   (nf_veg%leafn_to_biofueln_patch(p) + nf_veg%leafn_to_removedresiduen_patch(p))*dt
                ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
+               do k = repr_grain_min, repr_grain_max
+                  ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
+               end do
+               do k = repr_structure_min, repr_structure_max
+                  ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
+                       - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
+               end do
             !
             ! For the matrix solution the actual state update comes after the matrix
             ! multiply in VegMatrix, but the matrix needs to be setup with
@@ -298,14 +321,8 @@ contains
             ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     - nf_veg%crop_seedn_to_leaf_patch(p) * dt
             do k = repr_grain_min, repr_grain_max
-               ns_veg%reproductiven_patch(p,k)   = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_grainn_to_food_patch(p,k) + nf_veg%repr_grainn_to_seed_patch(p,k))*dt
                ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
                     + nf_veg%repr_grainn_to_seed_patch(p,k) * dt
-            end do
-            do k = repr_structure_min, repr_structure_max
-               ns_veg%reproductiven_patch(p,k) = ns_veg%reproductiven_patch(p,k) &
-                    - (nf_veg%repr_structuren_to_cropprod_patch(p,k) + nf_veg%repr_structuren_to_litter_patch(p,k))*dt
             end do
          end if
 

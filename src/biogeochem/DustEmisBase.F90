@@ -16,7 +16,8 @@ module DustEmisBase
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr
+  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr, &
+                                    natpft_lb, natpft_ub, natpft_size
   use clm_varcon           , only : grav, spval
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
@@ -31,7 +32,6 @@ module DustEmisBase
   use LandunitType         , only : lun
   use ColumnType           , only : col
   use PatchType            , only : patch
-  use clm_varctl           , only : dust_emis_method
   !
   ! !PUBLIC TYPES
   implicit none
@@ -69,6 +69,8 @@ module DustEmisBase
      procedure , public   :: GetConstVars    ! Get important constant variables
      procedure , public   :: CleanBase       ! Base object deallocation (allows extension)
      procedure , public   :: Clean => CleanBase ! Deallocation used by callers
+     procedure , public   :: SetDragPartitionBase ! Base SetDragPartition method that just aborts
+     procedure , public   :: SetDragPartition => SetDragPartitionBase ! SetDrgPartiotion used by callers
      procedure , private  :: InitAllocateBase
      procedure , private  :: InitHistoryBase
      procedure , private  :: InitDustVars    ! Initialize variables used in DustEmission method
@@ -237,6 +239,23 @@ contains
 
   end subroutine InitHistoryBase
 
+  !------------------------------------------------------------------------
+
+  subroutine SetDragPartitionBase(this, bounds, drag_partition)
+      !
+      ! !DESCRIPTION:
+      ! Set the drag partition for testing -- only aborts as only used by the Leung instance
+      !
+      ! !USES:
+      ! !ARGUMENTS:
+      class(dust_emis_base_type) :: this
+      type(bounds_type), intent(in) :: bounds
+      real(r8), intent(in) :: drag_partition
+
+      call endrun(msg="SetDragPartition is NOT allowed for this dust emission class type")
+
+  end subroutine SetDragPartitionBase
+
   !-----------------------------------------------------------------------
 
   subroutine WritePatchToLog(this, p)
@@ -271,6 +290,7 @@ contains
    real(r8), optional, intent(out) :: vlc_trb_2
    real(r8), optional, intent(out) :: vlc_trb_3
    real(r8), optional, intent(out) :: vlc_trb_4
+
 
    if ( present(flx_mss_vrt_dst    ) ) flx_mss_vrt_dst     = this%flx_mss_vrt_dst_patch(p,:)
    if ( present(flx_mss_vrt_dst_tot) ) flx_mss_vrt_dst_tot = this%flx_mss_vrt_dst_tot_patch(p)
@@ -788,6 +808,6 @@ contains
 
   end subroutine InitDustVars
 
-  !------------------------------------------------------------------------
+  !==============================================================================
 
 end module DustEmisBase

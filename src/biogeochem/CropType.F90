@@ -52,6 +52,9 @@ module CropType
      integer , pointer :: rx_swindow_starts_thisyr_patch(:,:) ! all prescribed sowing window start dates for this patch this year (day of year) [patch, mxsowings]
      integer , pointer :: rx_swindow_ends_thisyr_patch  (:,:) ! all prescribed sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: rx_cultivar_gdds_thisyr_patch (:,:) ! all cultivar GDD targets for this patch this year (ddays) [patch, mxsowings]
+     real(r8), pointer :: gdd20_baseline_patch          (:)   ! GDD20 baseline for this patch (ddays) [patch]
+     real(r8), pointer :: gdd20_season_start_patch(:) ! gdd20 season start date for this patch (day of year) [patch]. Real to enable history field.
+     real(r8), pointer :: gdd20_season_end_patch  (:) ! gdd20 season end   date for this patch (day of year) [patch]. Real to enable history field.
      real(r8), pointer :: sdates_thisyr_patch     (:,:) ! all actual sowing dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_starts_thisyr_patch(:,:) ! all sowing window start dates for this patch this year (day of year) [patch, mxsowings]
      real(r8), pointer :: swindow_ends_thisyr_patch  (:,:) ! all sowing window end   dates for this patch this year (day of year) [patch, mxsowings]
@@ -235,6 +238,9 @@ contains
     allocate(this%rx_swindow_starts_thisyr_patch(begp:endp,1:mxsowings)); this%rx_swindow_starts_thisyr_patch(:,:) = -1
     allocate(this%rx_swindow_ends_thisyr_patch(begp:endp,1:mxsowings))  ; this%rx_swindow_ends_thisyr_patch  (:,:) = -1
     allocate(this%rx_cultivar_gdds_thisyr_patch(begp:endp,1:mxsowings)) ; this%rx_cultivar_gdds_thisyr_patch(:,:) = spval
+    allocate(this%gdd20_baseline_patch(begp:endp)) ; this%gdd20_baseline_patch(:) = spval
+    allocate(this%gdd20_season_start_patch(begp:endp)); this%gdd20_season_start_patch(:) = spval
+    allocate(this%gdd20_season_end_patch(begp:endp))  ; this%gdd20_season_end_patch  (:) = spval
     allocate(this%sdates_thisyr_patch(begp:endp,1:mxsowings)) ; this%sdates_thisyr_patch(:,:) = spval
     allocate(this%swindow_starts_thisyr_patch(begp:endp,1:mxsowings)) ; this%swindow_starts_thisyr_patch(:,:) = spval
     allocate(this%swindow_ends_thisyr_patch  (begp:endp,1:mxsowings)) ; this%swindow_ends_thisyr_patch  (:,:) = spval
@@ -357,6 +363,19 @@ contains
          type2d='mxharvests', &
          avgflag='I', long_name='Reason for each crop harvest; should only be output annually', &
          ptr_patch=this%harvest_reason_thisyr_patch, default='inactive')
+
+    this%gdd20_baseline_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GDD20_BASELINE', units='ddays', &
+         avgflag='I', long_name='Baseline mean growing-degree days accumulated during accumulation period (from input)', &
+         ptr_patch=this%gdd20_baseline_patch, default='inactive')
+    this%gdd20_season_start_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GDD20_SEASON_START', units='day of year', &
+         avgflag='I', long_name='Start of the GDD20 accumulation season (from input)', &
+         ptr_patch=this%gdd20_season_start_patch, default='inactive')
+    this%gdd20_season_end_patch(begp:endp) = spval
+    call hist_addfld1d (fname='GDD20_SEASON_END', units='day of year', &
+         avgflag='I', long_name='End of the GDD20 accumulation season (from input)', &
+         ptr_patch=this%gdd20_season_end_patch, default='inactive')
 
   end subroutine InitHistory
 
@@ -772,7 +791,7 @@ contains
     ! Should only be called if use_crop is true.
     !
     ! !USES:
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep
     use clm_varpar       , only : nlevsno, nlevmaxurbgrnd
@@ -848,7 +867,8 @@ contains
              rbufslp(p) = rbufslp(p) * this%vf_patch(p)
           end if
        else
-          rbufslp(p) = accumResetVal
+          call markreset_accum_field('HUI', p)
+          call markreset_accum_field('GDDACCUM', p)
        end if
     end do
     call update_accum_field  ('HUI', rbufslp, nstep)
@@ -872,7 +892,7 @@ contains
              rbufslp(p) = rbufslp(p) * this%vf_patch(p)
           end if
        else
-          rbufslp(p) = accumResetVal
+          call markreset_accum_field('GDDTSOI', p)
        end if
     end do
     call update_accum_field  ('GDDTSOI', rbufslp, nstep)
@@ -910,7 +930,7 @@ contains
     ! Update nyrs when it's the end of the year (unless it's the very start of the
     ! run). This assumes that, if this patch is active at the end of the year, then it was
     ! active for the whole year.
-    if ((kmo == 1 .and. kda == 1 .and. mcsec == 0) .and. .not. is_first_step()) then
+    if ((kmo == 1 .and. kda == 1 .and. mcsec == 0)) then
        do fp = 1, num_pcropp
           p = filter_pcropp(fp)
 

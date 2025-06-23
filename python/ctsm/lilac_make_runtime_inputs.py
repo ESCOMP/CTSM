@@ -28,7 +28,7 @@ _CONFIG_CACHE_TEMPLATE = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies ctsm physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies ctsm physics</entry>
 </config_definition>
 """
 
@@ -43,6 +43,12 @@ _ENV_LILAC_TEMPLATE = """
 <file id="env_lilac.xml" version="2.0">
   <group id="run_glc">
     <entry id="GLC_TWO_WAY_COUPLING" value="FALSE">
+      <type>logical</type>
+      <valid_values>TRUE,FALSE</valid_values>
+    </entry>
+  </group>
+  <group id="run_cpl">
+    <entry id="LND_SETS_DUST_EMIS_DRV_FLDS" value="TRUE">
       <type>logical</type>
       <valid_values>TRUE,FALSE</valid_values>
     </entry>
@@ -157,7 +163,7 @@ def buildnml(cime_path, rundir):
         "buildnml_input",
         "ctsm_phys",
         ctsm_cfg_path,
-        allowed_values=["clm4_5", "clm5_0", "clm5_1", "clm6_0"],
+        allowed_values=["clm4_5", "clm5_0", "clm6_0"],
     )
     configuration = get_config_value(
         config,
@@ -301,7 +307,6 @@ def buildnml(cime_path, rundir):
     # remove temporary files in rundir
     os.remove(os.path.join(rundir, "config_cache.xml"))
     os.remove(os.path.join(rundir, "env_lilac.xml"))
-    os.remove(os.path.join(rundir, "drv_flds_in"))
     os.remove(infile)
 
 

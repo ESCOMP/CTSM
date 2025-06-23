@@ -5,11 +5,13 @@ and/or vegetation types and/or timesteps, concatenating by time.
 - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
     vegetation types.
 """
+
 import re
 import warnings
 from importlib.util import find_spec
 import numpy as np
 import xarray as xr
+from ctsm.utils import is_instantaneous
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 
@@ -23,7 +25,8 @@ def compute_derived_vars(ds_in, var):
         and "HDATES" in ds_in
         and ds_in.HDATES.dims == ("time", "mxharvests", "patch")
     ):
-        year_list = np.array([np.float32(x.year - 1) for x in ds_in.time.values])
+        year_adj = 1 if is_instantaneous(ds_in["time"]) else 0
+        year_list = np.array([np.float32(x.year - year_adj) for x in ds_in.time.values])
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),
@@ -39,6 +42,28 @@ def compute_derived_vars(ds_in, var):
     else:
         raise RuntimeError(f"Unable to compute derived variable {var}")
     return ds_in
+
+
+def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice):
+    """
+    Opening a list of files with Xarray's open_mfdataset requires dask. This function is a
+    workaround for Python environments that don't have dask.
+    """
+    ds_out = None
+    for filename in filelist:
+        ds_in = xr.open_dataset(filename)
+        ds_in = mfdataset_preproc(ds_in, my_vars, my_vegtypes, time_slice)
+        if ds_out is None:
+            ds_out = ds_in
+        else:
+            ds_out = xr.concat(
+                [ds_out, ds_in],
+                data_vars="minimal",
+                compat="override",
+                coords="all",
+                dim="time",
+            )
+    return ds_out
 
 
 def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice):
@@ -169,6 +194,7 @@ def process_inputs(filelist, my_vars, my_vegtypes, my_vars_missing_ok):
 
 def import_ds(
     filelist,
+    *,
     my_vars=None,
     my_vegtypes=None,
     time_slice=None,
@@ -213,6 +239,7 @@ def import_ds(
     # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
     # allows this. Could also just allow mfdataset_preproc() to access my_vars and my_vegtypes
     # directly, but that's bad practice as it could lead to scoping issues.
+    # pylint: disable=unnecessary-lambda-assignment
     mfdataset_preproc_closure = lambda ds: mfdataset_preproc(ds, my_vars, my_vegtypes, time_slice)
 
     # Import
@@ -221,22 +248,20 @@ def import_ds(
     if isinstance(filelist, list):
         with warnings.catch_warnings():
             warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-            if find_spec("dask") is None:
-                raise ModuleNotFoundError(
-                    "You have asked xarray to import a list of files as a single Dataset using"
-                    " open_mfdataset(), but this requires dask, which is not available.\nFile"
-                    f" list: {filelist}"
-                )
-        this_ds = xr.open_mfdataset(
-            sorted(filelist),
-            data_vars="minimal",
-            preprocess=mfdataset_preproc_closure,
-            compat="override",
-            coords="all",
-            concat_dim="time",
-            combine="nested",
-            chunks=chunks,
-        )
+            dask_unavailable = find_spec("dask") is None
+        if dask_unavailable:
+            this_ds = manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice)
+        else:
+            this_ds = xr.open_mfdataset(
+                sorted(filelist),
+                data_vars="minimal",
+                preprocess=mfdataset_preproc_closure,
+                compat="override",
+                coords="all",
+                concat_dim="time",
+                combine="nested",
+                chunks=chunks,
+            )
     elif isinstance(filelist, str):
         this_ds = xr.open_dataset(filelist, chunks=chunks)
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)

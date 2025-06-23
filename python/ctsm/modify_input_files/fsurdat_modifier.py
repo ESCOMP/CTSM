@@ -238,6 +238,7 @@ def read_cfg_var_list(config, idealized=True):
 
 
 def modify_optional(
+    *,
     modify_fsurdat,
     idealized,
     include_nonveg,
@@ -498,6 +499,13 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
         file_path=cfg_path,
         convert_to_type=float,
     )
+    lon_type = get_config_value(
+        config=config,
+        section=section,
+        item="lon_type",
+        file_path=cfg_path,
+        convert_to_type=int,
+    )
 
     landmask_file = get_config_value(
         config=config,
@@ -513,7 +521,16 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
     lon_dimname = get_config_value(
         config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
     )
-    return (lnd_lat_1, lnd_lat_2, lnd_lon_1, lnd_lon_2, landmask_file, lat_dimname, lon_dimname)
+    return (
+        lnd_lat_1,
+        lnd_lat_2,
+        lnd_lon_1,
+        lnd_lon_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type,
+    )
 
 
 def fsurdat_modifier(parser):
@@ -568,17 +585,19 @@ def fsurdat_modifier(parser):
         landmask_file,
         lat_dimname,
         lon_dimname,
+        lon_type,
     ) = read_cfg_required_basic_opts(config, section, cfg_path)
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
-        fsurdat_in,
-        lnd_lon_1,
-        lnd_lon_2,
-        lnd_lat_1,
-        lnd_lat_2,
-        landmask_file,
-        lat_dimname,
-        lon_dimname,
+        fsurdat_in=fsurdat_in,
+        lon_1=lnd_lon_1,
+        lon_2=lnd_lon_2,
+        lat_1=lnd_lat_1,
+        lat_2=lnd_lat_2,
+        landmask_file=landmask_file,
+        lat_dimname=lat_dimname,
+        lon_dimname=lon_dimname,
+        lon_type=lon_type,
     )
 
     # Read control information about the optional sections
@@ -611,18 +630,18 @@ def fsurdat_modifier(parser):
     # ------------------------------
 
     modify_optional(
-        modify_fsurdat,
-        idealized,
-        include_nonveg,
-        max_sat_area,
-        std_elev,
-        soil_color,
-        dom_pft,
-        evenly_split_cropland,
-        lai,
-        sai,
-        hgt_top,
-        hgt_bot,
+        modify_fsurdat=modify_fsurdat,
+        idealized=idealized,
+        include_nonveg=include_nonveg,
+        max_sat_area=max_sat_area,
+        std_elev=std_elev,
+        soil_color=soil_color,
+        dom_pft=dom_pft,
+        evenly_split_cropland=evenly_split_cropland,
+        lai=lai,
+        sai=sai,
+        hgt_top=hgt_top,
+        hgt_bot=hgt_bot,
     )
     #
     # Handle optional sections
