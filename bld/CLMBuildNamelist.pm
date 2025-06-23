@@ -4480,7 +4480,7 @@ sub setup_logic_cngeneral {
   }
   if ( &value_is_true($nl->get_value('reseed_dead_plants')) &&
        &remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) eq "branch") {
-      $log->fatal_error("reseed_dead_plants MUST be .false. in a branch run in order to match a corresponding continue simulation bit-for-bit");
+      $log->fatal_error("reseed_dead_plants MUST be .false. in a branch run");
   }
 }
 
