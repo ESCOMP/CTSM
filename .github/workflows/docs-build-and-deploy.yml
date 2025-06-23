@@ -12,6 +12,7 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
+      - 'tools/external/representative-hillslopes/shell_scripts/README.md'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

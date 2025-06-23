@@ -61,6 +61,7 @@ buildnmlc
 td.*.status
 td.*.log
 td.*.status.xFail
+.coverage
 
 # mksurfdata output
 surfdata_*.log
@@ -115,4 +116,3 @@ Depends
 # Docs build and testing output
 _build*/
 _publish*/
-doc/.coverage
