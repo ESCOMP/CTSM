@@ -4478,6 +4478,10 @@ sub setup_logic_cngeneral {
                   "(eg. don't use these options with SP mode).");
     }
   }
+  if ( &value_is_true($nl->get_value('reseed_dead_plants')) &&
+       &remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) eq "branch") {
+      $log->fatal_error("reseed_dead_plants MUST be .false. in a branch run");
+  }
 }
 
 #-------------------------------------------------------------------------------
