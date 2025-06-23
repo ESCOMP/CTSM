@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.060
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon 23 Jun 2025 09:40:22 AM MDT
+Date: Mon 23 Jun 2025 04:01:13 PM MDT
 One-line Summary: Preliminary update of ctsm54 defaults (answer changing)
 
 Purpose and description of changes
@@ -51,10 +51,11 @@ Changes to documentation:
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
- The next 3 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issues #3250 and #3252:
+ The next 4 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issues #3250 and #3252:
  LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings
  LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default
  SMS_D_Ld5.f09_g17.ISSP126Clm50BgcCrop.derecho_intel.clm-default
+ SMS_D_Ld5.f09_g17.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-default
 
 Testing summary:
 ----------------
@@ -69,14 +70,9 @@ Testing summary:
     derecho ----- OK (see Changes to tests above)
     izumi ------- OK
 
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
-
-  ctsm_sci
-     derecho ----
+  fates tests: (-c fates-sci.1.84.0_api.40.0.0-ctsm5.3.051 -g fates-sci.1.84.0_api.40.0.0-ctsm5.3.060)
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
