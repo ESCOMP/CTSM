@@ -28,8 +28,6 @@ jobs:
       conda_env_name: ctsm_pylib
 
   test-rv-setup:
-    # Don't run on forks
-    if: ${{ github.repository == 'ESCOMP/CTSM' }}
 
     runs-on: ubuntu-latest
     steps:
