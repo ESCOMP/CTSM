@@ -1,13 +1,13 @@
 ===============================================================
 Tag name: ctsm5.3.060
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon 23 Jun 2025 04:01:13 PM MDT
+Date: Tue 24 Jun 2025 02:13:05 PM MDT
 One-line Summary: Preliminary update of ctsm54 defaults (answer changing)
 
 Purpose and description of changes
 ----------------------------------
 
- Brings to master the work done in #3206, which I merged to the ctsm5.4 alpha branch recently as tag alpha-ctsm5.4.CMIP7.02.ctsm5.3.055.
+ Brings to master some of the work done in #3206, which I merged to the ctsm5.4 alpha branch recently as tag alpha-ctsm5.4.CMIP7.02.ctsm5.3.055.
 
  Allows Cecile to run coupled without having to adjust clm things manually: updates namelist defaults and IC files that have been limited to the ctsm5.4 branch so far.
 
@@ -41,9 +41,9 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
  a75e488 introduces new paramfile to clm6 cases
- b1890ac introduces new f09 and ne30 fsurdat/landuse files
  3a8c432 introduces new f09 and ne30 finidat files for 1850 and 2000 clm6 cases
- Reverted changes to the default raw datasets that came in with #3206 (preexisting #3206 in the ctsm54 branch)
+ Reverted preexisting changes to the default raw datasets that came in with #3206 (from the ctsm54 branch)
+ Reverted changes to the f09 and ne30 fsurdat/landuse files that came in with b1890ac
 
 Changes to documentation:
  None, yet
@@ -51,11 +51,9 @@ Changes to documentation:
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
- The next 4 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issues #3250 and #3252:
+ The next 2 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issue #3252:
  LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings
  LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default
- SMS_D_Ld5.f09_g17.ISSP126Clm50BgcCrop.derecho_intel.clm-default
- SMS_D_Ld5.f09_g17.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-default
 
 Testing summary:
 ----------------
@@ -84,7 +82,7 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: all
     - nature of change: larger than roundoff/same climate
 
- See above in changes to namelist defaults and datasets for various sources of change.
+ See above in changes to namelist defaults and datasets for the sources of change.
 
 Other details
 -------------
