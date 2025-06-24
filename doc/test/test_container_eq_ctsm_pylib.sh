@@ -30,6 +30,6 @@ cp -a _publish "${d2}"
 # Make sure container version is identical to no-container version
 echo "~~~~~ Make sure container version is identical to no-container version"
 diff -qr "${d1}" "${d2}"
-echo "Yep!"
+echo "Successful: Docs built with container are identical to those built without"
 
 exit 0
