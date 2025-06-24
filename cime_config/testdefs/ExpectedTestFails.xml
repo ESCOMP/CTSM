@@ -76,20 +76,6 @@
       <comment>Works with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc' and fails with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc'.</comment>
     </phase>
   </test>
-  <test name="SMS_D_Ld5.f09_g17.ISSP126Clm50BgcCrop.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3250</issue>
-      <comment>SSP landuse files not available for ctsm54, yet.</comment>
-    </phase>
-  </test>
-  <test name="SMS_D_Ld5.f09_g17.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3250</issue>
-      <comment>SSP landuse files not available for ctsm54, yet.</comment>
-    </phase>
-  </test>
   <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
     <phase name="RUN">
       <status>FAIL</status>
