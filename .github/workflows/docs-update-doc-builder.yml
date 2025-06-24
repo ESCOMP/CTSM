@@ -40,4 +40,4 @@ jobs:
 
       - name: build_docs rv method
         run: |
-          cd doc/testing && ./test_build_docs_-r-v.sh docker
+          cd doc/test/ && ./test_build_docs_-r-v.sh docker

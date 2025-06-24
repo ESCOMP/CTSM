@@ -47,7 +47,7 @@ jobs:
 
       - name: Compare docs built with container vs. ctsm_pylib
         run: |
-          cd doc/testing
+          cd doc/test/
           ./test_container_eq_ctsm_pylib.sh
 
   makefile-method:
@@ -73,5 +73,5 @@ jobs:
 
       - name: Check that Makefile method works
         run: |
-          cd doc/testing
+          cd doc/test/
           conda run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh

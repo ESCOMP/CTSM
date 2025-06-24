@@ -7,7 +7,7 @@ on:
     branches: ['*']
     paths:
       - 'doc/**'
-      - '!doc/testing/*'
+      - '!doc/test/*'
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
@@ -15,13 +15,13 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
-      - 'doc/testing/test_container_eq_ctsm_pylib.sh'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'doc/**'
-      - '!doc/testing/*'
+      - '!doc/test/*'
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
@@ -29,7 +29,7 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
-      - 'doc/testing/test_container_eq_ctsm_pylib.sh'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   workflow_dispatch:
 
