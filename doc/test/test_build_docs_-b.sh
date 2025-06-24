@@ -9,7 +9,7 @@ cd "${SCRIPT_DIR}/.."
 msg="~~~~~ Check that -b works"
 cmd="./build_docs -b _build -c"
 
-. testing/compose_test_cmd.sh
+. test/compose_test_cmd.sh
 set -x
 $cmd
 
