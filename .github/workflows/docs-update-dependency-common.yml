@@ -6,11 +6,11 @@ on:
       conda_env_file:
         required: false
         type: string
-        default: ""
+        default: "python/conda_env_ctsm_py.yml"
       conda_env_name:
         required: false
         type: string
-        default: ""
+        default: "ctsm_pylib"
     secrets: {}
 
 jobs:

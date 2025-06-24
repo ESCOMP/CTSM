@@ -23,9 +23,6 @@ jobs:
 
     name: Tests to run when either docs dependency is updated
     uses: ./.github/workflows/docs-update-dependency-common.yml
-    with:
-      conda_env_file: python/conda_env_ctsm_py.yml
-      conda_env_name: ctsm_pylib
 
   test-rv-setup:
 
