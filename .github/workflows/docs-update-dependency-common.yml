@@ -15,6 +15,11 @@ on:
 
 jobs:
   compare-docbuilder-vs-ctsmpylib:
+    # Don't run on forks, because test_container_eq_ctsm_pylib.sh uses
+    # build_docs_to_publish, which will look for branch(es) that forks
+    # may not have
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
