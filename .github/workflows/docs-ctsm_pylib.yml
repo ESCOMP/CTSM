@@ -1,4 +1,4 @@
-name: Test building docs with ctsm_pylib
+name: Docs tests to run when ctsm_pylib is updated
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
       - 'python/conda_env_ctsm_py.txt'
       - 'doc/ctsm-docs_container/requirements.txt'
       - '.github/workflows/docs-common.yml'
+      - '.github/workflows/docs-update-dependency-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -15,6 +16,7 @@ on:
       - 'python/conda_env_ctsm_py.txt'
       - 'doc/ctsm-docs_container/requirements.txt'
       - '.github/workflows/docs-common.yml'
+      - '.github/workflows/docs-update-dependency-common.yml'
 
   schedule:
     # 8 am every Monday UTC
@@ -27,14 +29,23 @@ permissions:
 jobs:
   test-build-docs-ctsm_pylib:
     if: ${{ always() }}
-    name: With ctsm_pylib
+    name: Build with ctsm_pylib
     uses: ./.github/workflows/docs-common.yml
     with:
       use_conda: true
       conda_env_file: python/conda_env_ctsm_py.yml
       conda_env_name: ctsm_pylib
 
-  # File an issue if the docs build failed during a scheduled run
+  test-update-dependency:
+    if: ${{ always() }}
+    name: Tests for when either docs dependency is updated
+    uses: ./.github/workflows/docs-update-dependency-common.yml
+
+  # File an issue if the docs build failed during a scheduled run.
+  # The main thing we're concerned about in that case is something having
+  # changed outside the repository that's causing the ctsm_pylib setup to
+  # fail. Thus, we don't need this job to wait for BOTH the above jobs---
+  # if one fails, they both will.
   file-issue-on-failure:
     if: |
       failure() &&
