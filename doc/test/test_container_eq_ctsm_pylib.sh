@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# Fail on any non-zero exit code
 set -e
 
 # Compare docs built with container vs. ctsm_pylib

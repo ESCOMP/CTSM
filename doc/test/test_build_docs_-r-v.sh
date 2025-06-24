@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# Fail on any non-zero exit code
 set -e
 
 cli_tool="$1"
