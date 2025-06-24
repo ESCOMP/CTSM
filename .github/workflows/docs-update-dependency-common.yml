@@ -3,6 +3,9 @@ name: Jobs shared by docs workflows that run when a dependency is updated
 on:
   workflow_call:
     inputs:
+      # Conda is always needed for both jobs in this workflow. Here,
+      # we set default values for the variables in case the calling
+      # workflow doesn't provide them.
       conda_env_file:
         required: false
         type: string
