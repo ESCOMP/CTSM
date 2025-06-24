@@ -18,6 +18,8 @@ on:
 
 jobs:
   compare-docbuilder-vs-ctsmpylib:
+    name: Are both methods identical?
+
     # Don't run on forks, because test_container_eq_ctsm_pylib.sh uses
     # build_docs_to_publish, which will look for branch(es) that forks
     # may not have

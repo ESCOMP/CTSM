@@ -38,7 +38,7 @@ jobs:
 
   test-update-dependency:
     if: ${{ always() }}
-    name: Tests for when either docs dependency is updated
+    name: Docs dependency update tests
     uses: ./.github/workflows/docs-update-dependency-common.yml
 
   # File an issue if the docs build failed during a scheduled run.
