@@ -23,6 +23,17 @@ from ctsm import subset_data
 from ctsm.utils import find_one_file_matching_pattern
 
 
+def _get_sitename_str_point(include_sitename, sitename, lon, lat):
+    """
+    Given a site, return the string to use in output filenames
+    """
+    if include_sitename:
+        sitename_str = sitename
+    else:
+        sitename_str = f"{float(lon)}_{float(lat)}"
+    return sitename_str
+
+
 class TestSubsetDataSys(unittest.TestCase):
     """
     Basic class for testing subset_data.py.
@@ -46,9 +57,18 @@ class TestSubsetDataSys(unittest.TestCase):
         caller_n = 1. If the test is calling a function that calls this function, caller_n = 2. Etc.
         """
         all_files_present_and_match = True
+        result_file_found = True
+        expected_file_found = True
         for basename in expected_output_files:
+
+            # Check whether result (output) file exists. If not, note it but continue.
             result_file = os.path.join(self.temp_dir_out.name, basename)
-            result_file = find_one_file_matching_pattern(result_file)
+            try:
+                result_file = find_one_file_matching_pattern(result_file)
+            except FileNotFoundError:
+                result_file_found = False
+
+            # Check whether expected file exists. If not, note it but continue.
             expected_file = os.path.join(
                 os.path.dirname(__file__),
                 "testinputs",
@@ -56,7 +76,27 @@ class TestSubsetDataSys(unittest.TestCase):
                 inspect.stack()[caller_n][3],  # Name of calling function (i.e., test name)
                 basename,
             )
-            expected_file = find_one_file_matching_pattern(expected_file)
+            try:
+                expected_file = find_one_file_matching_pattern(expected_file)
+            except FileNotFoundError:
+                expected_file_found = False
+
+            # Raise an AssertionError if either file was not found
+            if not (result_file_found and expected_file_found):
+                msg = ""
+                if not result_file_found:
+                    this_dir = os.path.dirname(result_file)
+                    msg += f"\nResult file '{result_file}' not found. "
+                    msg += f"Contents of directory '{this_dir}':\n\t"
+                    msg += "\n\t".join(os.listdir(this_dir))
+                if not expected_file_found:
+                    this_dir = os.path.dirname(expected_file)
+                    msg += f"\nExpected file '{expected_file}' not found. "
+                    msg += f"Contents of directory '{this_dir}':\n\t"
+                    msg += "\n\t".join(os.listdir(this_dir))
+                raise AssertionError(msg)
+
+            # Compare the two files
             ds_result = xr.open_dataset(result_file)
             ds_expected = xr.open_dataset(expected_file)
             if not ds_result.equals(ds_expected):
@@ -66,10 +106,15 @@ class TestSubsetDataSys(unittest.TestCase):
                 all_files_present_and_match = False
         return all_files_present_and_match
 
-    def test_subset_data_reg_amazon(self):
+    def _do_test_subset_data_reg_amazon(self, include_regname=True):
         """
-        Test subset_data for Amazon region
+        Convenience function for multiple tests of subset_data region for the Amazon
         """
+        regname = "TMP"
+        lat1 = -12
+        lat2 = -7
+        lon1 = 291
+        lon2 = 299
         cfg_file = os.path.join(
             self.inputdata_dir,
             "ctsm",
@@ -82,15 +127,13 @@ class TestSubsetDataSys(unittest.TestCase):
             "subset_data",
             "region",
             "--lat1",
-            "-12",
+            str(lat1),
             "--lat2",
-            "-7",
+            str(lat2),
             "--lon1",
-            "291",
+            str(lon1),
             "--lon2",
-            "299",
-            "--reg",
-            "TMP",
+            str(lon2),
             "--create-mesh",
             "--create-domain",
             "--create-surface",
@@ -107,16 +150,34 @@ class TestSubsetDataSys(unittest.TestCase):
             cfg_file,
             "--overwrite",
         ]
+        if include_regname:
+            sys.argv += ["--reg", regname]
         subset_data.main()
 
         # Loop through all the output files, making sure they match what we expect.
         daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        if include_regname:
+            regname_str = regname
+        else:
+            regname_str = f"{float(lon1)}-{float(lon2)}_{float(lat1)}-{float(lat2)}"
         expected_output_files = [
-            f"domain.lnd.5x5pt-amazon_navy_TMP_c{daystr}_ESMF_UNSTRUCTURED_MESH.nc",
-            f"domain.lnd.5x5pt-amazon_navy_TMP_c{daystr}.nc",
-            f"surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
+            f"domain.lnd.5x5pt-amazon_navy_{regname_str}_c{daystr}_ESMF_UNSTRUCTURED_MESH.nc",
+            f"domain.lnd.5x5pt-amazon_navy_{regname_str}_c{daystr}.nc",
+            f"surfdata_{regname_str}_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
         ]
-        self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 1))
+        self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
+
+    def test_subset_data_reg_amazon(self):
+        """
+        Test subset_data for Amazon region
+        """
+        self._do_test_subset_data_reg_amazon()
+
+    def test_subset_data_reg_amazon_noregname(self):
+        """
+        Test subset_data for Amazon region
+        """
+        self._do_test_subset_data_reg_amazon(include_regname=False)
 
     def test_subset_data_reg_infile_detect360(self):
         """
@@ -189,10 +250,11 @@ class TestSubsetDataSys(unittest.TestCase):
         ):
             subset_data.main()
 
-    def _do_test_subset_data_pt_surface(self, lon):
+    def _do_test_subset_data_pt_surface(self, lon, include_sitename=True):
         """
         Given a longitude, test subset_data point --create-surface
         """
+        lat = -12
         cfg_file = os.path.join(
             self.inputdata_dir,
             "ctsm",
@@ -205,11 +267,9 @@ class TestSubsetDataSys(unittest.TestCase):
             "subset_data",
             "point",
             "--lat",
-            "-12",
+            str(lat),
             "--lon",
             str(lon),
-            "--site",
-            "TMP",
             "--create-domain",
             "--create-surface",
             "--surf-year",
@@ -225,12 +285,16 @@ class TestSubsetDataSys(unittest.TestCase):
             cfg_file,
             "--overwrite",
         ]
+        sitename = "TMP"
+        if include_sitename:
+            sys.argv += ["--site", sitename]
         subset_data.main()
 
         # Loop through all the output files, making sure they match what we expect.
         daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        sitename_str = _get_sitename_str_point(include_sitename, sitename, lon, lat)
         expected_output_files = [
-            f"surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
+            f"surfdata_{sitename_str}_amazon_hist_16pfts_CMIP6_2000_c{daystr}.nc",
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
@@ -246,10 +310,19 @@ class TestSubsetDataSys(unittest.TestCase):
         """
         self._do_test_subset_data_pt_surface(-69)
 
-    def _do_test_subset_data_pt_landuse(self, lon):
+    def test_subset_data_pt_surface_amazon_type180_nositename(self):
+        """
+        Test subset_data --create-surface for Amazon point with longitude type 180
+        without specifying a site name
+        """
+        self._do_test_subset_data_pt_surface(-69, include_sitename=False)
+
+    def _do_test_subset_data_pt_landuse(self, lon, include_sitename=True):
         """
         Given a longitude, test subset_data point --create-landuse
         """
+        lat = -12
+        sitename = "TMP"
         cfg_file = os.path.join(
             self.inputdata_dir,
             "ctsm",
@@ -262,11 +335,9 @@ class TestSubsetDataSys(unittest.TestCase):
             "subset_data",
             "point",
             "--lat",
-            "-12",
+            str(lat),
             "--lon",
             str(lon),
-            "--site",
-            "TMP",
             "--create-domain",
             "--create-surface",
             "--surf-year",
@@ -283,13 +354,16 @@ class TestSubsetDataSys(unittest.TestCase):
             cfg_file,
             "--overwrite",
         ]
+        if include_sitename:
+            sys.argv += ["--site", sitename]
         subset_data.main()
 
         # Loop through all the output files, making sure they match what we expect.
         daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        sitename_str = _get_sitename_str_point(include_sitename, sitename, lon, lat)
         expected_output_files = [
-            f"surfdata_TMP_amazon_hist_1850_78pfts_c{daystr}.nc",
-            f"landuse.timeseries_TMP_amazon_hist_1850-1853_78pfts_c{daystr}.nc",
+            f"surfdata_{sitename_str}_amazon_hist_1850_78pfts_c{daystr}.nc",
+            f"landuse.timeseries_{sitename_str}_amazon_hist_1850-1853_78pfts_c{daystr}.nc",
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
@@ -299,29 +373,34 @@ class TestSubsetDataSys(unittest.TestCase):
         """
         self._do_test_subset_data_pt_landuse(291)
 
+    def test_subset_data_pt_landuse_amazon_type360_nositename(self):
+        """
+        Test subset_data --create-landuse for Amazon point with longitude type 360 and no site name
+        """
+        self._do_test_subset_data_pt_landuse(291, include_sitename=False)
+
     def test_subset_data_pt_landuse_amazon_type180(self):
         """
         Test subset_data --create-landuse for Amazon point with longitude type 180
         """
         self._do_test_subset_data_pt_landuse(-69)
 
-    def _do_test_subset_data_pt_datm(self, lon):
+    def _do_test_subset_data_pt_datm(self, lon, include_sitename=True):
         """
         Given a longitude, test subset_data point --create-datm
         """
         start_year = 1986
         end_year = 1988
         sitename = "TMP"
+        lat = -12
         outdir = self.temp_dir_out.name
         sys.argv = [
             "subset_data",
             "point",
             "--lat",
-            "-12",
+            str(lat),
             "--lon",
             str(lon),
-            "--site",
-            sitename,
             "--create-datm",
             "--datm-syr",
             str(start_year),
@@ -334,17 +413,20 @@ class TestSubsetDataSys(unittest.TestCase):
             self.temp_dir_umd.name,
             "--overwrite",
         ]
+        if include_sitename:
+            sys.argv += ["--site", sitename]
         subset_data.main()
 
         # Loop through all the output files, making sure they match what we expect.
         daystr = "[0-9][0-9][0-9][0-9][0-9][0-9]"  # 6-digit day code, yymmdd
+        sitename_str = _get_sitename_str_point(include_sitename, sitename, lon, lat)
         expected_output_files = [
-            f"domain.crujra_v2.3_0.5x0.5_{sitename}_c{daystr}.nc",
+            f"domain.crujra_v2.3_0.5x0.5_{sitename_str}_c{daystr}.nc",
         ]
         for year in list(range(start_year, end_year + 1)):
             for forcing in ["Solr", "Prec", "TPQWL"]:
                 expected_output_files.append(
-                    f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename}.{year}.nc"
+                    f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename_str}.{year}.nc"
                 )
         expected_output_files = [os.path.join("datmdata", x) for x in expected_output_files]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
@@ -362,6 +444,14 @@ class TestSubsetDataSys(unittest.TestCase):
         FOR NOW CAN ONLY BE RUN ON DERECHO/CASPER
         """
         self._do_test_subset_data_pt_datm(-69)
+
+    def test_subset_data_pt_datm_amazon_type180_nositename(self):
+        """
+        Test subset_data --create-datm for Amazon point with longitude type 180 without providing
+        site name.
+        FOR NOW CAN ONLY BE RUN ON DERECHO/CASPER
+        """
+        self._do_test_subset_data_pt_datm(-69, include_sitename=False)
 
 
 if __name__ == "__main__":
