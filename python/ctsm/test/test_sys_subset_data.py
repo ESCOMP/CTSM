@@ -12,7 +12,7 @@ import sys
 import tempfile
 import inspect
 import xarray as xr
-from CIME.scripts.create_newcase import _main_func as create_newcase # pylint: disable=import-error
+from CIME.scripts.create_newcase import _main_func as create_newcase  # pylint: disable=import-error
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
