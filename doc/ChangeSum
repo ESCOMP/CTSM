@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.060   slevis 06/24/2025 Preliminary update of ctsm54 defaults (answer changing)
+       ctsm5.3.059     erik 06/23/2025 Bring in various cleanup efforts found in previous testing after the chill changes came in
+       ctsm5.3.058 samrabin 06/16/2025 Fix clm6 compset aliases
+       ctsm5.3.057 glemieux 06/13/2025 Fix PEM test for on-the-fly parameter file generation
        ctsm5.3.056     erik 06/12/2025 Merge b4b-dev to master
        ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
        ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM

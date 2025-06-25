@@ -1,4 +1,386 @@
 ===============================================================
+Tag name: ctsm5.3.060
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 24 Jun 2025 02:13:05 PM MDT
+One-line Summary: Preliminary update of ctsm54 defaults (answer changing)
+
+Purpose and description of changes
+----------------------------------
+
+ Brings to master some of the work done in #3206, which I merged to the ctsm5.4 alpha branch recently as tag alpha-ctsm5.4.CMIP7.02.ctsm5.3.055.
+
+ Allows Cecile to run coupled without having to adjust clm things manually: updates namelist defaults and IC files that have been limited to the ctsm5.4 branch so far.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3116 modify snow thermal conductivity defaults
+ Resolves #3005 ctsm54 initial condition files
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ a3ce6a7 changes the default snow thermal conductivity schemes over lakes and glaciers in clm6 cases
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ a75e488 introduces new paramfile to clm6 cases
+ 3a8c432 introduces new f09 and ne30 finidat files for 1850 and 2000 clm6 cases
+ Reverted preexisting changes to the default raw datasets that came in with #3206 (from the ctsm54 branch)
+ Reverted changes to the f09 and ne30 fsurdat/landuse files that came in with b1890ac
+
+Changes to documentation:
+ None, yet
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ The next 2 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issue #3252:
+ LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings
+ LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK (see Changes to tests above)
+    izumi ------- OK
+
+  fates tests: (-c fates-sci.1.84.0_api.40.0.0-ctsm5.3.051 -g fates-sci.1.84.0_api.40.0.0-ctsm5.3.060)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: various
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+ See above in changes to namelist defaults and datasets for the sources of change.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3268
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.059
+Originator(s): erik (Erik Kluzek)
+Date: Mon 23 Jun 2025 01:39:37 AM MDT
+One-line Summary: Bring in various cleanup efforts found in previous testing after the chill changes came in
+
+Purpose and description of changes
+----------------------------------
+
+Various updates for testing and other problems identified in the
+cesm3_0_beta04 tag. So fixes and cleanup for usability.
+Including the following:
+
+- Fix SHR_ASSERT so single-point matrix test passes
+- ne3np4 to namelist_defaults_ctsm.xml and Makefile for PTS mode and add ability
+- Fixes warm starts in PTS_MODE so that SCAM can use restart files
+- f19 + f45 16pft fsurdat/landuse files to namelist_defaults_ctsm + Makefile
+- Changes in the FORTRAN code to properly abort when fire-emission is asked for
+  it can't be provided. Added unit testing for this.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Fixes #2868 -- Custom crop calendar instructions
+  Fixes #2791 -- f19 16 pft for PPE work
+  Fixes #2768 -- ne3np4 added in
+  Fixes #2780 -- CN matrix single point
+  Fixes #2762 -- Don't allow FATES, SP, or nofire to turn fire-emis on
+  Fixes #3073 -- Wrong order for testmods with nofireemis
+  Some of #2810 -- 16pft f45 landuse.timeseries for FATES
+  CTSM namelist checking for:
+     https://github.com/NGEET/fates/issues/1356 -- FatesSp and FATES ST3 on at same time
+  Some work on https://github.com/ESCOMP/CTSM/issues/2643 -- standarize logical settings for FATES
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+    Turning on fire-emissions can NOT be turned on now for configurations that
+    don't allow it.
+       - FATES
+       - Sp
+       - Bgc but with nofire
+
+    Also now CTSM fire-emiss, drydep and MEGAN are turned off for CTSM when coupled to CAM
+      This means that CAM will be the one that sets each of these
+      They can be added and turned on for CTSM I compsets though
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   FATES-SP and FATES-ST3 can't be both on at the same time
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Changes to some of the finidat file settings for 2013 at ne0np4CONUS.ne30x8
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   New fsurdat/flanduse_timeseries for ne3np4 needed for SCAM
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Path for mizuroute changed to lowercase so that it matches CESM checkouts
+
+Changes to tests or testing:
+   Many tests now need to explicitly set nofireemis. Some testmods that assume
+   Sp include that explicitly. Other tests also include --clm-nofireemis
+   PTS_MODE testing changed from f45 to ne3np4 for SCAM
+   Add more tests for CAM VR grids
+   Add more namelist testing for ne3np4 and for fire-emission options and
+   FatesSp and FATES ST3 mode fails correctly
+
+
+Testing summary: regular, ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - Fails, but ctsm5.3.058 does as well
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+     cesm_testing:
+        SMS_D_Ln9.f19_f19_mg17.FWma2000climo.derecho_intel.cam-outfrq9s_waccm_ma_mam4			
+        SMS_D_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.FHIST.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P1280x1.ne0CONUSne30x8_ne0CONUSne30x8_mt12.FCHIST.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P1280x1.ne0CONUSne30x8_ne0CONUSne30x8_mt12.FCnudged.derecho_intel.cam-outfrq9s			
+        SMS_D_Ln9_P5120x1.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.FHIST.derecho_intel.cam-outfrq9s			
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no-bit-for-bit
+   Some tests that allowed fire-emissions to be on, have a different field list now
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   Change name of components/mizuroute directory so the same as used in CESM
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #2840 -- Fix single point matrixcn fails
+   #2835 -- n3np4 + warm start fixes for PTS_MODE
+   #2834 -- f19 + f45 16 pft datasets
+   #2844 -- Fortran code abort when fire-emission asked for and can't be provided
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.058
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Jun 16 11:43:52 MDT 2025
+One-line Summary: Fix clm6 compset aliases
+
+Purpose and description of changes
+----------------------------------
+
+The following clm60 compset aliases were actually returning long names with CLM50 physics:
+
+```
+   ISSP245Clm60BgcCropCrujra : SSP245_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+   ISSP370Clm60BgcCropCrujra : SSP370_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+   ISSP585Clm60BgcCropCrujra : SSP585_DATM%CRUJRA2024_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV
+```
+
+This tag fixes them. It also adds a GitHub workflow to prevent this from happening again, at least for clm6.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3244: ISSP CLM60 Crujra compset aliases have longnames that use CLM50, not CLM60](https://github.com/ESCOMP/CTSM/issues/3244)
+- [Issue #3254: aux_clm has no Clm60 ISSP tests](https://github.com/ESCOMP/CTSM/issues/3254)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Three ISSP tests in aux_clm changed from Clm50 to their Clm60 equivalents.
+- Other ISSP Clm50 tests are untouched.
+- Adds a GitHub workflow to check that Clm6 compset aliases return CLM6 longnames.
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ISSP245, ISSP370, and ISSP585 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+        Larger than roundoff/same climate, since it only affects land-only (I) cases.
+        
+    Specifically, the following compsets now actually receive Clm60 physics instead of Clm50:
+    - ISSP245Clm60BgcCropCrujra
+    - ISSP370Clm60BgcCropCrujra
+    - ISSP585Clm60BgcCropCrujra
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [Pull Request #3248: ctsm5.3.058: Fix clm6 compset aliases by samsrabin](https://github.com/ESCOMP/CTSM/pull/3248)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.057
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri Jun 13 17:00:00 MDT 2025
+One-line Summary: Fix PEM test for on-the-fly parameter file generation
+
+Purpose and description of changes
+----------------------------------
+
+This resolves an issue in which PEM tests that are used in conjunction with
+testmods that build the FATES parameter file on-the-fly might result in RUN
+failure due to the file not being generated for the second case.  This
+addresses the issue by simply by setting the fates_paramfile namelist setting
+to the full path for the primary test case directory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Resolves #3097 Missing on-the-fly built fates parameter file for test types that have a "case2" subdirectory
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp is now added to the aux_clm test suite
+  Note that this test fails as expected on the COMPARE_mod_pes step
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+[ctsm5.3.057: Fix PEM test for FATES testmod that builds an on-the-fly parameter file](https://github.com/ESCOMP/CTSM/pull/3243)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.056
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu 12 Jun 2025 01:43:46 PM MDT
