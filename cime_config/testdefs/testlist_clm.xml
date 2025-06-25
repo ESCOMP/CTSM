@@ -150,7 +150,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
@@ -561,7 +561,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:50:00</option>
     </options>
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/SNICARFRC">
@@ -569,7 +569,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:50:00</option>
     </options>
   </test>
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm60Sp" testmods="clm/ExcessIceStreams">
@@ -577,7 +577,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Include an excess ice test starting up from streams</option>
     </options>
   </test>
@@ -1349,7 +1349,7 @@
       <machine name="izumi" compiler="nag" category="matrixcn"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">Repeat last ERP_D_Ld5_P48x1...ciso test with matrixcnOn</option>
     </options>
   </test>
@@ -1605,7 +1605,7 @@
       <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart--clm/matrixcnOn_ignore_warnings">
@@ -2283,7 +2283,7 @@
       <option name="comment">Repeat LII_D... test with matrixcnOn</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2292,7 +2292,7 @@
       <option name="comment">Exercise the init_interp_method='use_finidat_areas' option. See documentation at the top of the python script implementing this test for more details and rationale. This test requires a compatible finidat file (i.e., a file that can be used without interpolation). If no such file is available out-of-the-box, then the test will need to use a testmod that points to a compatible file.</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -2759,7 +2759,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm45BgcCrop" testmods="clm/no_subgrid_fluxes">
@@ -2889,7 +2889,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment">Add at least one test of a NEON site with SP</option>
     </options>
@@ -2931,7 +2931,7 @@
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment">Add at least one test of a FATES NEON site that needs lightning data</option>
     </options>
@@ -2946,7 +2946,7 @@
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment">Add at least one test of a FATES NEON site with PRISM precipitation</option>
     </options>
@@ -3382,7 +3382,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">Ensure functionality of two-stream radiation option in FATES</option>
     </options>
   </test>
@@ -3431,7 +3431,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:50:00</option>
     </options>
   </test>
   <test name="ERS_Ld397" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
@@ -4398,7 +4398,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:30:00</option>
+      <option name="wallclock">00:40:00</option>
     </options>
   </test>
 

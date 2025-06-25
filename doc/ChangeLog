@@ -1,4 +1,96 @@
 ===============================================================
+Tag name: ctsm5.3.060
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 24 Jun 2025 02:13:05 PM MDT
+One-line Summary: Preliminary update of ctsm54 defaults (answer changing)
+
+Purpose and description of changes
+----------------------------------
+
+ Brings to master some of the work done in #3206, which I merged to the ctsm5.4 alpha branch recently as tag alpha-ctsm5.4.CMIP7.02.ctsm5.3.055.
+
+ Allows Cecile to run coupled without having to adjust clm things manually: updates namelist defaults and IC files that have been limited to the ctsm5.4 branch so far.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3116 modify snow thermal conductivity defaults
+ Resolves #3005 ctsm54 initial condition files
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ a3ce6a7 changes the default snow thermal conductivity schemes over lakes and glaciers in clm6 cases
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ a75e488 introduces new paramfile to clm6 cases
+ 3a8c432 introduces new f09 and ne30 finidat files for 1850 and 2000 clm6 cases
+ Reverted preexisting changes to the default raw datasets that came in with #3206 (from the ctsm54 branch)
+ Reverted changes to the f09 and ne30 fsurdat/landuse files that came in with b1890ac
+
+Changes to documentation:
+ None, yet
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ The next 2 tests are now labeled EXPECTED FAILURE in the RUN phase, to be addressed in issue #3252:
+ LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings
+ LII2FINIDATAREAS_D_P256x2_Ld1.f09_g17.I1850Clm50BgcCrop.derecho_intel.clm-default
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK (see Changes to tests above)
+    izumi ------- OK
+
+  fates tests: (-c fates-sci.1.84.0_api.40.0.0-ctsm5.3.051 -g fates-sci.1.84.0_api.40.0.0-ctsm5.3.060)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: various
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+ See above in changes to namelist defaults and datasets for the sources of change.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3268
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.059
 Originator(s): erik (Erik Kluzek)
 Date: Mon 23 Jun 2025 01:39:37 AM MDT
