@@ -12,6 +12,7 @@ import sys
 import tempfile
 import inspect
 import xarray as xr
+from CIME.scripts.create_newcase import _main_func as create_newcase # pylint: disable=import-error
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -40,13 +41,35 @@ class TestSubsetDataSys(unittest.TestCase):
     """
 
     def setUp(self):
+        self.previous_dir = os.getcwd()
         self.temp_dir_out = tempfile.TemporaryDirectory()
         self.temp_dir_umd = tempfile.TemporaryDirectory()
+        self.temp_dir_caseparent = tempfile.TemporaryDirectory()
         self.inputdata_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
     def tearDown(self):
         self.temp_dir_out.cleanup()
         self.temp_dir_umd.cleanup()
+        os.chdir(self.previous_dir)
+
+    def _check_create_newcase(self):
+        """
+        Check that you can call create_newcase using the usermods from subset_data
+        """
+        case_dir = os.path.join(self.temp_dir_caseparent.name, "case")
+        sys.argv = [
+            "create_newcase",
+            "--case",
+            case_dir,
+            "--res",
+            "CLM_USRDAT",
+            "--compset",
+            "I2000Clm60Bgc",
+            "--run-unsupported",
+            "--user-mods-dir",
+            self.temp_dir_umd.name,
+        ]
+        create_newcase()
 
     def _check_result_file_matches_expected(self, expected_output_files, caller_n):
         """
@@ -167,15 +190,21 @@ class TestSubsetDataSys(unittest.TestCase):
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
+        # Check that create_newcase works
+        # SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
+        self._check_create_newcase()
+
     def test_subset_data_reg_amazon(self):
         """
         Test subset_data for Amazon region
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_reg_amazon()
 
     def test_subset_data_reg_amazon_noregname(self):
         """
         Test subset_data for Amazon region
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_reg_amazon(include_regname=False)
 
@@ -298,15 +327,21 @@ class TestSubsetDataSys(unittest.TestCase):
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
+        # Check that create_newcase works
+        # SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
+        self._check_create_newcase()
+
     def test_subset_data_pt_surface_amazon_type360(self):
         """
         Test subset_data --create-surface for Amazon point with longitude type 360
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_surface(291)
 
     def test_subset_data_pt_surface_amazon_type180(self):
         """
         Test subset_data --create-surface for Amazon point with longitude type 180
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_surface(-69)
 
@@ -314,6 +349,7 @@ class TestSubsetDataSys(unittest.TestCase):
         """
         Test subset_data --create-surface for Amazon point with longitude type 180
         without specifying a site name
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_surface(-69, include_sitename=False)
 
@@ -367,21 +403,28 @@ class TestSubsetDataSys(unittest.TestCase):
         ]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
 
+        # Check that create_newcase works
+        # SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
+        self._check_create_newcase()
+
     def test_subset_data_pt_landuse_amazon_type360(self):
         """
         Test subset_data --create-landuse for Amazon point with longitude type 360
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_landuse(291)
 
     def test_subset_data_pt_landuse_amazon_type360_nositename(self):
         """
         Test subset_data --create-landuse for Amazon point with longitude type 360 and no site name
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_landuse(291, include_sitename=False)
 
     def test_subset_data_pt_landuse_amazon_type180(self):
         """
         Test subset_data --create-landuse for Amazon point with longitude type 180
+        SHOULD WORK ONLY ON CESM-SUPPORTED MACHINES
         """
         self._do_test_subset_data_pt_landuse(-69)
 
@@ -430,6 +473,9 @@ class TestSubsetDataSys(unittest.TestCase):
                 )
         expected_output_files = [os.path.join("datmdata", x) for x in expected_output_files]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
+
+        # Check that create_newcase works
+        self._check_create_newcase()
 
     def test_subset_data_pt_datm_amazon_type360(self):
         """
