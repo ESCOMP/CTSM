@@ -57,6 +57,14 @@ add_subdirectory(${CLM_ROOT}/src/main clm_main)
 add_subdirectory(${CLM_ROOT}/src/init_interp clm_init_interp)
 add_subdirectory(${CLM_ROOT}/src/self_tests clm_self_tests)
 
+# Add FATES source directories
+add_subdirectory(${CLM_ROOT}/src/fates/main fates_main)
+add_subdirectory(${CLM_ROOT}/src/fates/biogeochem fates_biogeochem)
+add_subdirectory(${CLM_ROOT}/src/fates/biogeophys fates_biogeophys)
+add_subdirectory(${CLM_ROOT}/src/fates/parteh fates_parteh)
+add_subdirectory(${CLM_ROOT}/src/fates/fire fates_fire)
+add_subdirectory(${CLM_ROOT}/src/fates/radiation fates_radiation)
+
 # Add general unit test directories (stubbed out files, etc.)
 add_subdirectory(unit_test_stubs)
 add_subdirectory(unit_test_shr)
@@ -90,8 +98,9 @@ endforeach()
 add_library(csm_share ${share_sources} ${drv_sources_needed})
 declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(clm ${clm_sources})
+add_library(fates ${fates_sources})
 declare_generated_dependencies(clm "${clm_genf90_sources}")
-add_dependencies(clm csm_share esmf)
+add_dependencies(clm csm_share esmf fates)
 
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CLM_ROOT}/share/include)

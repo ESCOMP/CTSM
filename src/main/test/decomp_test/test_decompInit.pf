@@ -1,0 +1,88 @@
+module test_decompInit
+
+  ! Tests of decompInitMod
+
+  use funit
+  use decompMod, only : bounds
+  use decompInitMod
+  use unittestSubgridMod
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
+  use glcBehaviorMod, only: glc_behavior_type
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDecomp
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: create_glc_behavior
+  end type TestDecomp
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestDecomp), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDecomp), intent(inout) :: this
+
+  end subroutine tearDown
+
+  !-----------------------------------------------------------------------
+  function create_glc_behavior() result(glc_behavior)
+    !
+    ! !DESCRIPTION:
+    ! Creates a glc_behavior instance with collapse_to_atm_topo set for all
+    !
+    ! Must be called *after* setting up the subgrid structure.
+    !
+    use unittestArrayMod, only : grc_array
+    ! !ARGUMENTS:
+    type(glc_behavior_type) :: glc_behavior  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'create_glc_behavior'
+    !-----------------------------------------------------------------------
+
+    call glc_behavior%InitSetDirectly(bounds%begg, bounds%endg, &
+         has_virtual_columns = grc_array(.false.), &
+         collapse_to_atm_topo = grc_array(collapse_to_atm_topo=.true.))
+
+  end function create_glc_behavior
+
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+  @Test
+  subroutine decompInitClumps_basic(this)
+    use glcBehaviorMod, only : glc_behavior_type
+    ! Test basic operation of decompInit_clumps
+    class(TestDecomp), intent(inout) :: this
+
+    ! Local
+    type(glc_behavior_type) :: glc_behavior
+    integer :: ni, nj
+
+    ! Setup a single grid cell
+    nj = 1
+    ni = 1
+    call setup_single_veg_patch(pft_type=1)
+    glc_behavior = create_glc_behavior()
+
+    ! Exercise
+    ! Determine decomposition of subgrid scale landunits, columns, patches
+    call decompInit_clumps(ni, nj, glc_behavior)
+
+    ! Verify
+  end subroutine decompInitClumps_basic
+
+end module test_decompInit
