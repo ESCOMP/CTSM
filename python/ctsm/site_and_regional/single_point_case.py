@@ -176,7 +176,7 @@ class SinglePointCase(BaseCase):
         if self.site_name:
             self.tag = self.site_name
         else:
-            self.tag = "{}_{}".format(str(self.plon), str(self.plat))
+            self.tag = "{}_{}".format(self.plon.get_str(self.plon.lon_type()), str(self.plat))
 
     def check_dom_pft(self):
         """
@@ -336,7 +336,11 @@ class SinglePointCase(BaseCase):
         Create domain file for this SinglePointCase class.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating domain file at %s, %s.", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating domain file at %s, %s.",
+            self.plon.get_str(self.plon.lon_type()),
+            str(self.plat),
+        )
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -370,7 +374,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating land use file at %s, %s.",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -505,7 +509,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -580,7 +584,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating DATM domain file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -649,7 +653,9 @@ class SinglePointCase(BaseCase):
         with open(file, "w") as nl_file:
             self.write_to_file("# Change below line if you move the subset data directory", nl_file)
             self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
-            self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
+            self.write_to_file(
+                "./xmlchange PTS_LON={}".format(self.plon.get_str(self.plon.lon_type())), nl_file
+            )
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
             if self.create_datm:
@@ -675,7 +681,9 @@ class SinglePointCase(BaseCase):
         Create all of a DATM dataset at a point.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating DATM files at %s, %s", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating DATM files at %s, %s", self.plon.get_str(self.plon.lon_type()), str(self.plat)
+        )
 
         # --  create data files
         infile = []
