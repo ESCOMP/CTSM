@@ -159,9 +159,12 @@ class SinglePointCase(BaseCase):
             plon_orig = plon_in.get(plon_type)
             plon_out = plon_in.get(f_lon_type)
             if plon_orig != plon_out:
-                print(
-                    f"Converted plon from type {plon_type} (value {plon_orig}) "
-                    f"to type {f_lon_type} (value {plon_out})"
+                logger.info(
+                    "Converted plon from type %s (value %f) to type %s (value %f)",
+                    plon_type,
+                    plon_orig,
+                    f_lon_type,
+                    plon_out,
                 )
         return plon_out
 
