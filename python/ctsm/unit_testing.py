@@ -14,8 +14,7 @@ def add_args(machine, nodes, tasks):
         "--tasks-per-node",
         str(tasks),
     ]
-    for item in args_to_add:
-        sys.argv.append(item)
+    sys.argv += args_to_add
 
 
 def setup_for_tests(enable_critical_logs=False):
