@@ -6,7 +6,6 @@ that CTSM does not fail using the just-generated input files
 import os
 import sys
 import logging
-import subprocess
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 
@@ -14,9 +13,9 @@ _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
-from ctsm.subset_data import (
+from ctsm.subset_data import (  # pylint: disable=wrong-import-position
     main as subset_data,
-)  # pylint: disable=wrong-import-position
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,23 +64,5 @@ class SUBSETDATAPOINT(SystemTestsCommon):
         ]
         subset_data()
 
-        # Append files in usermods_dir to equivalents in top level of case
-        for file in os.listdir(usermods_dir):
-            # Get the full path to source and destination files
-            source_file_path = os.path.join(usermods_dir, file)
-            dest_file_path = os.path.join(self._get_caseroot(), file)
-
-            # Read the content of the source file
-            with open(source_file_path, "r", encoding="utf-8") as source_file:
-                content_to_append = source_file.read()
-
-            # Append the content to the destination file
-            with open(dest_file_path, "a", encoding="utf-8") as dest_file:
-                dest_file.write("\n\n\n" + content_to_append)
-
-            # Run the generated shell_commands
-            if file == "shell_commands":
-                cmd = f"chmod +x {source_file_path}; {source_file_path}"
-                subprocess.check_call(cmd, shell=True)
-
+        self._case.apply_user_mods([usermods_dir])
         super().build_phase(sharedlib_only, model_only)
