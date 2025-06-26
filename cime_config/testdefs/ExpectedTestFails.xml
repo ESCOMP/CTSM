@@ -62,6 +62,20 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>Works with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc' and fails with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc'.</comment>
+    </phase>
+  </test>
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>Works with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc' and fails with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc'.</comment>
+    </phase>
+  </test>
   <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
     <phase name="RUN">
       <status>FAIL</status>
@@ -257,13 +271,13 @@
   </test>
 
   <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
-    <phase name="RUN">
+    <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
-      <issue>#3097</issue>
+      <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
