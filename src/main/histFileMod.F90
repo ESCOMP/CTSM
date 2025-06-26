@@ -49,7 +49,7 @@ module histFileMod
   integer , private, parameter :: scale_type_strlen = 32  ! maximum number of characters for scale types
   integer , private, parameter :: avgflag_strlen = 10   ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
-  integer , private, parameter :: maxsplitfiles = 2  ! max number of files per tape
+  integer , private, parameter :: max_split_files = 2  ! max number of files per tape
   integer , private, parameter :: accumulated_file_index = 1  ! non-instantaneous file identifier
   integer , private, parameter :: instantaneous_file_index = 2  ! instantaneous file identifier
 
@@ -82,10 +82,6 @@ module histFileMod
        hist_dov2xy(max_tapes) = (/.true.,(.true.,ni=2,max_tapes)/) ! namelist: true=> do grid averaging
   integer, public :: &
        hist_nhtfrq(max_tapes) = (/0, (-24, ni=2,max_tapes)/)        ! namelist: history write freq(0=monthly)
-  ! TODO slevis: My intuition currently says that namelist hist_* variables and the User should
-  ! remain agnostic as to whether tapes correspond to instantaneous or non files.
-  ! The split will happen under the covers at runtime, and the hist_* vars should NOT
-  ! have a 2nd (i.e. file) dimension.
   character(len=avgflag_strlen), public :: &
        hist_avgflag_pertape(max_tapes) = (/(' ',ni=1,max_tapes)/)   ! namelist: per tape averaging flag
   character(len=max_namlen), public :: &
@@ -148,7 +144,7 @@ module histFileMod
        fexcl(max_flds,max_tapes)         ! copy of hist_fexcl* fields in 2-D format. Note Fortran
                                          ! used to have a bug in 2-D namelists, thus this workaround.
 
-  logical, private :: if_disphist(max_tapes, maxsplitfiles)  ! restart, true => save history file
+  logical, private :: if_disphist(max_tapes, max_split_files)  ! restart, true => save history file
   !
   ! !PUBLIC MEMBER FUNCTIONS:  (in rough call order)
   public :: hist_addfld1d        ! Add a 1d single-level field to the list of all history fields
@@ -265,7 +261,7 @@ module histFileMod
   ! practice are all disabled.  Fields for those tapes have to be specified
   ! explicitly and manually via hist_fincl2 et al.
   type, extends(entry_base) :: allhistfldlist_entry
-     logical :: actflag(max_tapes,maxsplitfiles)  ! which history tapes to write to
+     logical :: actflag(max_tapes,max_split_files)  ! which history tapes to write to
      character(len=avgflag_strlen) :: avgflag(max_tapes)  ! type of time averaging
   contains
      procedure :: copy => copy_allhistfldlist_entry
@@ -287,16 +283,15 @@ module histFileMod
   ! tapes is assembled in the 'allhistfldlist' variable. Note that the first history tape is index 1 in
   ! the code but contains 'h0' in its output filenames (see set_hist_filename method).
   type history_tape
-     integer  :: nflds(maxsplitfiles)          ! number of active fields on file
-     integer  :: ntimes(maxsplitfiles)         ! current number of time samples on tape
+     integer  :: nflds(max_split_files)        ! number of active fields on file
+     integer  :: ntimes(max_split_files)       ! current number of time samples on tape, same value on all max_split_files
      integer  :: mfilt                         ! maximum number of time samples per tape
      integer  :: nhtfrq                        ! number of time samples per tape
      integer  :: ncprec                        ! netcdf output precision
      logical  :: dov2xy                        ! true => do xy average for all fields
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
-     ! 13) DONE slevis: change hlist to (max_flds,maxsplitfiles)
-     type (history_entry) :: hlist(max_flds, maxsplitfiles)  ! array of active history tape entries listed in the same order as in allhistfldlist, but hlist contains the active subset of all the fields
+     type (history_entry) :: hlist(max_flds, max_split_files)  ! array of active history tape and file entries listed in the same order as in allhistfldlist, but hlist contains the active subset of all the fields
   end type history_tape
 
   type clmpoint_rs                             ! Pointer to real scalar data (1D)
@@ -322,7 +317,7 @@ module histFileMod
   ! Whether each history tape is in use in this run. If history_tape_in_use(i,j) is 0 (i.e. false),
   ! then data in [tape(i), file(j)] is undefined and should not be referenced.
   !
-  integer :: history_tape_in_use(max_tapes, maxsplitfiles)  ! history tape is/isn't in use in this run (1 or 0)
+  integer :: history_tape_in_use(max_tapes, max_split_files)  ! history tape is/isn't in use in this run (1 or 0)
   !
   ! The actual (accumulated) history data for all active fields in each in-use tape. See
   ! 'history_tape_in_use' for in-use tapes, and 'allhistfldlist' for active fields. See also
@@ -338,14 +333,14 @@ module histFileMod
   !
   ! Other variables
   !
-  character(len=max_length_filename) :: locfnh(max_tapes, maxsplitfiles)  ! local history file names
-  character(len=max_length_filename) :: locfnhr(max_tapes, maxsplitfiles)  ! local history restart file names
+  character(len=max_length_filename) :: locfnh(max_tapes, max_split_files)  ! local history file names
+  character(len=max_length_filename) :: locfnhr(max_tapes, max_split_files)  ! local history restart file names
   logical :: htapes_defined = .false.        ! flag indicates history output fields have been defined
   !
   ! NetCDF  Id's
   !
-  type(file_desc_t), target :: nfid(max_tapes, maxsplitfiles)  ! file ids
-  type(file_desc_t), target :: ncid_hist(max_tapes, maxsplitfiles)  ! file ids for history restart files
+  type(file_desc_t), target :: nfid(max_tapes, max_split_files)  ! file ids
+  type(file_desc_t), target :: ncid_hist(max_tapes, max_split_files)  ! file ids for history restart files
   integer :: time_dimid                      ! time dimension id
   integer :: nbnd_dimid                      ! time bounds dimension id
   integer :: strlen_dimid                    ! string dimension id
@@ -927,7 +922,7 @@ contains
        ! Add the field to the tape if specified via namelist (FINCL[1-max_tapes]),
        ! or if it is on by default and was not excluded via namelist (FEXCL[1-max_tapes]).
 
-       file_loop1: do f = 1, maxsplitfiles
+       file_loop1: do f = 1, max_split_files
           fld_loop: do fld = 1, nallhistflds
              allhistfldname = allhistfldlist(fld)%field%name
              call list_index (fincl(1,t), allhistfldname, ff)
@@ -938,10 +933,17 @@ contains
                 ! will be called for field
 
                 avgflag = getflag (fincl(ff,t))
+                ! This if-statement is in a loop of f (instantaneous_ or
+                ! accumulated_file_index) so it matters whether f is one
+                ! or the other when going through here. Otherwise all fields
+                ! would end up on all files, which is not the intent.
                 if (f == instantaneous_file_index .and. avgflag == 'I') then
                    call htape_addfld (t, f, fld, avgflag)
                 else if (f == accumulated_file_index .and. avgflag /= 'I') then
                    call htape_addfld (t, f, fld, avgflag)
+                else
+                   write(iulog,*) trim(subname),' ERROR: f =', f, ' but model expected f = ', instantaneous_file_index, ' or ', accumulated_file_index
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 end if
 
              else if (.not. hist_empty_htapes) then
@@ -987,7 +989,7 @@ contains
 
     ntapes = 0
     do t = max_tapes,1,-1
-       do f = 1, maxsplitfiles
+       do f = 1, max_split_files
           if (tape(t)%nflds(f) > 0) then
              ntapes = t
              exit
@@ -997,7 +999,7 @@ contains
     end do
 
     do t = 1, ntapes
-       do f = 1, maxsplitfiles
+       do f = 1, max_split_files
           if (tape(t)%nflds(f) > 0) then
              history_tape_in_use(t,f) = 1  ! equivalent to .true.
           end if
@@ -1036,7 +1038,7 @@ contains
           end if
           write(iulog,*)'Number of time samples on history tape ',t,' is ',hist_mfilt(t)
           write(iulog,*)'Output precision on history tape ',t,'=',hist_ndens(t)
-          file_loop2: do f = 1, maxsplitfiles
+          file_loop2: do f = 1, max_split_files
              if (history_tape_in_use(t,f) == 0) then
                 write(iulog,*) 'History tape ', t,' and file ', f, ' has no fields,'
                 write(iulog,*) 'so it will not be written!'
@@ -1366,7 +1368,7 @@ contains
     !-----------------------------------------------------------------------
 
     tape_loop: do t = 1, ntapes
-       file_loop: do f = 1, maxsplitfiles
+       file_loop: do f = 1, max_split_files
 !$OMP PARALLEL DO PRIVATE (fld, num2d, numdims)
           do fld = 1, tape(t)%nflds(f)
 
@@ -2822,8 +2824,6 @@ contains
           end if
           if (tape(t)%dov2xy) then
              if (ldomain%isgrid2d) then
-                ! TODO LATER Use ncid => nfid(t,f) here and elsewhere if possible, as done in
-                !      subroutine hfields_1dinfo; repeat in mosart
                 call ncd_defvar(ncid=nfid(t,f), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levgrnd', &
                      long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
@@ -4208,7 +4208,7 @@ contains
     ! Loop over active history tapes, create new history files if necessary
     ! and write data to history files if end of history interval.
     tape_loop1: do t = 1, ntapes
-       file_loop1: do f = 1, maxsplitfiles
+       file_loop1: do f = 1, max_split_files
 
           if (history_tape_in_use(t,f) == 0) then
              cycle
@@ -4309,7 +4309,7 @@ contains
 
     ! Determine if file needs to be closed
 
-    file_loop1b: do f = 1, maxsplitfiles
+    file_loop1b: do f = 1, max_split_files
        call hist_do_disp (ntapes, tape(:)%ntimes(f), tape(:)%mfilt, if_stop, if_disphist(:,f), rstwr, nlend)
     end do file_loop1b
 
@@ -4318,7 +4318,7 @@ contains
     ! must reopen the files
 
     tape_loop2: do t = 1, ntapes
-       file_loop2: do f = 1, maxsplitfiles
+       file_loop2: do f = 1, max_split_files
           if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
@@ -4349,7 +4349,7 @@ contains
     ! Reset number of time samples to zero if file is full
 
     do t = 1, ntapes
-       do f = 1, maxsplitfiles
+       do f = 1, max_split_files
           if (history_tape_in_use(t,f) == 0) then
              cycle
           end if
@@ -4404,9 +4404,9 @@ contains
     character(len=max_chars)  :: units           ! units of variable
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
-    character(len=max_chars)  :: locrest(max_tapes, maxsplitfiles)  ! local history restart file names
-    character(len=max_chars)  :: locrest_onfile(maxsplitfiles, max_tapes)  ! local history restart file names, dims flipped
-    character(len=max_chars)  :: locfnh_onfile(maxsplitfiles, max_tapes)  ! local history file names, dims flipped
+    character(len=max_chars)  :: locrest(max_tapes, max_split_files)  ! local history restart file names
+    character(len=max_chars)  :: locrest_onfile(max_split_files, max_tapes)  ! local history restart file names, dims flipped
+    character(len=max_chars)  :: locfnh_onfile(max_split_files, max_tapes)  ! local history file names, dims flipped
     character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
     character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
@@ -4493,27 +4493,27 @@ contains
        ! and then add the history and history restart filenames
        !
        call ncd_defdim( ncid, 'ntapes'       , ntapes      , dimid)
-       call ncd_defdim( ncid, 'maxsplitfiles', maxsplitfiles, dimid)
-       call ncd_defdim( ncid, 'ntapes_by_maxsplitfiles', ntapes * maxsplitfiles, dimid)
+       call ncd_defdim( ncid, 'max_split_files', max_split_files, dimid)
+       call ncd_defdim( ncid, 'ntapes_by_max_split_files', ntapes * max_split_files, dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
        call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_int, &
             long_name="Whether this history tape is/isn't (1 or 0) in use", &
-            dim1name="ntapes_by_maxsplitfiles")
+            dim1name="ntapes_by_max_split_files")
        ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
             long_name="History filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes_by_maxsplitfiles" )
+            dim1name='max_chars', dim2name="ntapes_by_max_split_files" )
        ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
             long_name="Restart history filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes_by_maxsplitfiles" )
+            dim1name='max_chars', dim2name="ntapes_by_max_split_files" )
        ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
@@ -4526,7 +4526,7 @@ contains
        ! only read/write accumulators and counters if needed
 
        tape_loop1: do t = 1, ntapes
-          file_loop1: do f = 1, maxsplitfiles
+          file_loop1: do f = 1, max_split_files
              if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
@@ -4537,6 +4537,9 @@ contains
                 file_index = 'i'  ! instantaneous file_index
              else if (f == accumulated_file_index) then
                 file_index = 'a'  ! accumulated file_index
+             else
+                write(iulog,*) trim(subname),' ERROR: f =', f, ' but model expected f = ', instantaneous_file_index, ' or ', accumulated_file_index
+                call endrun(msg=errMsg(sourcefile, __LINE__))
              end if
              locfnhr(t,f) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
                           // ".rh" // hnum // file_index //"."// trim(rdate) //".nc"
@@ -4711,7 +4714,7 @@ contains
        ! Add history filenames to master restart file
        counter = 0
        tape_loop2: do t = 1, ntapes
-          file_loop2: do f = 1, maxsplitfiles
+          file_loop2: do f = 1, max_split_files
              counter = counter + 1
              if (history_tape_in_use(t,f) == 0) then
                 locfnh(t,f) = 'non_existent_file'
@@ -4757,7 +4760,7 @@ contains
        allocate(itemp(max_nflds))
 
        tape_loop3: do t = 1, ntapes
-          file_loop3: do f = 1, maxsplitfiles
+          file_loop3: do f = 1, max_split_files
              if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
@@ -4837,7 +4840,7 @@ contains
           end if
 
           ntapes_gt_0: if (ntapes > 0) then
-             allocate(history_tape_in_use_onfile(maxsplitfiles, ntapes))
+             allocate(history_tape_in_use_onfile(max_split_files, ntapes))
              call ncd_io('history_tape_in_use', history_tape_in_use_onfile, 'read', ncid, &
                   readvar=readvar)
              if (.not. readvar) then
@@ -4847,7 +4850,7 @@ contains
                 history_tape_in_use_onfile(:,:) = 1  ! equivalent to .true.
              end if
              tape_loop4: do t = 1, ntapes
-                file_loop4: do f = 1, maxsplitfiles
+                file_loop4: do f = 1, max_split_files
                    if (history_tape_in_use_onfile(f,t) /= history_tape_in_use(t,f)) then
                       write(iulog,*) subname//' ERROR: history_tape_in_use on restart file'
                       write(iulog,*) 'disagrees with current run: For tape and file ', t, f
@@ -4865,7 +4868,7 @@ contains
              call ncd_io('locfnh',  locfnh_onfile, 'read', ncid )
              call ncd_io('locfnhr', locrest_onfile, 'read', ncid )
              tape_loop5: do t = 1, ntapes
-                file_loop5: do f = 1, maxsplitfiles
+                file_loop5: do f = 1, max_split_files
                    call strip_null(locrest_onfile(f,t))
                    call strip_null(locfnh_onfile(f,t))
                    ! These character variables get read with their dimensions backwards
@@ -4883,7 +4886,7 @@ contains
 
        if_restart2: if ( is_restart() ) then
           tape_loop6: do t = 1, ntapes
-             file_loop6: do f = 1, maxsplitfiles
+             file_loop6: do f = 1, max_split_files
                 if (history_tape_in_use(t,f) == 0) then
                    cycle
                 end if
@@ -5093,7 +5096,7 @@ contains
     read_write: if (flag == 'write') then
 
        tape_loop7: do t = 1, ntapes
-          file_loop7: do f = 1, maxsplitfiles
+          file_loop7: do f = 1, max_split_files
              if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
@@ -5150,7 +5153,7 @@ contains
        ! Read history restart information if history files are not full
 
        tape_loop8: do t = 1, ntapes
-          file_loop8: do f = 1, maxsplitfiles
+          file_loop8: do f = 1, max_split_files
              if (history_tape_in_use(t,f) == 0) then
                 cycle
              end if
@@ -5220,7 +5223,7 @@ contains
 
     max_nFields = 0
     do t = 1,ntapes
-       do f = 1, maxsplitfiles
+       do f = 1, max_split_files
           max_nFields = max(max_nFields, tape(t)%nflds(f))
        end do
     end do
