@@ -1688,6 +1688,7 @@ sub process_namelist_inline_logic {
   setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_c_isotope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1737,7 +1738,6 @@ sub process_namelist_inline_logic {
   # namelist group: ch4par_in   #
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_c_isotope($opts, $nl_flags, $definition, $defaults, $nl);
 
   ###############################
   # namelist group: ndepdyn_nml #
@@ -3175,10 +3175,11 @@ sub setup_logic_do_grossunrep {
 
    my $var = 'do_grossunrep';
 
-   # Start by assuming a default value of '.true.'. Then check a number of
+   # Start by assuming a default value of '.false.'. Then check a number of
    # conditions under which do_grossunrep cannot be true. Under these
-   # conditions: (1) set default value to '.false.'; (2) make sure that the
+   # conditions: (1) set default value to '.false.' again; (2) make sure that the
    # value is indeed false (e.g., that the user didn't try to set it to true).
+   # Ideally the default value would be set in namelist_defaults
 
    my $default_val = ".false.";
 
@@ -3703,63 +3704,53 @@ sub setup_logic_c_isotope {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
     if ( $nl_flags->{'bgc_mode'} ne "bgc" ) {
-      if ( defined($use_c13) && &value_is_true($use_c13) ) {
+      if ( &value_is_true($use_c13) ) {
         $log->warning("use_c13 is ONLY scientifically validated with the bgc=BGC configuration" );
       }
-      if ( defined($use_c14) && &value_is_true($use_c14) ) {
+      if ( &value_is_true($use_c14) ) {
         $log->warning("use_c14 is ONLY scientifically validated with the bgc=BGC configuration" );
       }
     }
-    if ( defined($use_c14) ) {
-      if ( &value_is_true($use_c14) ) {
-        my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
-        if ( defined($use_c14_bombspike) && &value_is_true($use_c14_bombspike) ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                   'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
-                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-        }
-      } else {
-        if ( defined($nl->get_value('use_c14_bombspike')) ||
-             defined($nl->get_value('atm_c14_filename')) ) {
-          $log->fatal_error("use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set");
-        }
+    if ( &value_is_true($use_c14) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+      my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
+      if ( &value_is_true($use_c14_bombspike) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
+                 'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
+                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
       }
     } else {
       if ( defined($nl->get_value('use_c14_bombspike')) ||
            defined($nl->get_value('atm_c14_filename')) ) {
-        $log->fatal_error("use_c14 NOT set to .true., but use_c14_bompspike/atm_c14_filename defined.");
+        $log->fatal_error("use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set");
       }
     }
-    if ( defined($use_c13) ) {
-      if ( &value_is_true($use_c13) ) {
-        my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
-        if ( defined($use_c13_timeseries) && &value_is_true($use_c13_timeseries) ) {
-           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
-                   'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
-                   'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-        }
-      } else {
-        if ( defined($nl->get_value('use_c13_timeseries')) ||
-             defined($nl->get_value('atm_c13_filename')) ) {
-          $log->fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set");
-        }
+    if ( &value_is_true($use_c13) ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13_timeseries', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+      my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
+      if ( &value_is_true($use_c13_timeseries) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
+                 'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
+                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
       }
     } else {
       if ( defined($nl->get_value('use_c13_timeseries')) ||
            defined($nl->get_value('atm_c13_filename')) ) {
-        $log->fatal_error("use_c13 NOT set to .true., but use_c13_bompspike/atm_c13_filename defined.");
+        $log->fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set");
       }
     }
   } else {
-    if ( defined($use_c13) ||
-         defined($use_c14) ||
-         defined($nl->get_value('use_c14_bombspike')) ||
+    if ( &value_is_true($use_c13) ||
+         &value_is_true($use_c14) ||
+         &value_is_true($nl->get_value('use_c14_bombspike')) ||
          defined($nl->get_value('atm_c14_filename'))  ||
-         defined($nl->get_value('use_c13_timeseries')) ||
+         &value_is_true($nl->get_value('use_c13_timeseries')) ||
          defined($nl->get_value('atm_c13_filename')) ) {
            $log->fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
@@ -4071,7 +4062,16 @@ sub setup_logic_fire_emis {
         if ( &value_is_true( $nl_flags->{'use_fates'} ) ) {
           $log->warning("Fire emission option $var can NOT be on when FATES is also on.\n" .
                       "  DON'T use the '--fire_emis' option when '--bgc fates' is activated");
-       }
+        } elsif ( ! &value_is_true( $nl_flags->{'use_cn'} ) ) {
+          $log->fatal_error("Fire emission option $var can NOT be on when BGC SP (i.e. Satellite Phenology) is also on.\n" .
+                           "  DON'T use the '--fire_emis' option when '--bgc sp' is activated");
+        } elsif ( &value_is_true( $nl_flags->{'use_cn'}) ) {
+          my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+          if ( $fire_method eq "nofire" ) {
+             $log->fatal_error("Fire emission option $var can NOT be on with BGC and fire_method=='nofire'.\n" .
+                              "  DON'T use the '--fire_emis' option when fire_method is nofire");
+          }
+        }
      }
    }
 }
@@ -4235,7 +4235,7 @@ sub setup_logic_lai_streams {
   if ( &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_lai_streams'))  ) {
     $log->fatal_error("turning use_lai_streams on is incompatable with use_crop set to true.");
   }
-  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl->get_value('use_fates_sp')) )) {
+  if ( $nl_flags->{'bgc_mode'} eq "sp" || ($nl_flags->{'bgc_mode'} eq "fates" && &value_is_true($nl_flags->{'use_fates_sp'}) )) {
      if ( &value_is_true($nl->get_value('use_lai_streams')) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_lai_streams');
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lai_mapalgo',
@@ -4749,29 +4749,26 @@ sub setup_logic_fates {
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
         #
-        my $var = "use_fates_sp";
-        if ( defined($nl->get_value($var))  ) {
-           if ( &value_is_true($nl->get_value($var)) ) {
-              my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
-              foreach my $var ( @list ) {
-                 if ( ! &value_is_true($nl->get_value($var)) ) {
-                    $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
-                 }
-              }
-              # spit-fire can't be on with FATES SP mode is active
-              if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
-                    $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
-              }
+        if ( &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+           my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
+           foreach my $var ( @list ) {
+                if ( ! &value_is_true($nl->get_value($var)) ) {
+                   $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
+                }
+           }
+           # spit-fire can't be on with FATES SP mode is active
+           if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
+                 $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
+           }
 
-              # fates landuse can't be on with FATES SP mode is active
-              if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
-                   $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
-              }
+           # fates landuse can't be on with FATES SP mode is active
+           if ( &value_is_true($nl->get_value('use_fates_luh')) ) {
+                $log->fatal_error('use_fates_luh can NOT be true when use_fates_sp is true');
+           }
 
-              # hydro isn't currently supported to work when FATES SP mode is active
-              if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
-                    $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
-              }
+           # hydro isn't currently supported to work when FATES SP mode is active
+           if (&value_is_true( $nl->get_value('use_fates_planthydro') )) {
+                 $log->fatal_error('fates sp mode is currently not supported to work with fates hydro');
            }
         }
         my $var = "use_fates_inventory_init";
@@ -4795,6 +4792,13 @@ sub setup_logic_fates {
               }
             }
           }
+        }
+        # Check that both FaTES-SP and FATES ST3 aren't both on
+        my $var = "use_fates_ed_st3";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) && &value_is_true($nl_flags->{'use_fates_sp'}) ) {
+              $log->fatal_error("$var can NOT also be true with use_fates_sp true" );
+           }
         }
         # check that fates landuse change mode has the necessary luh2 landuse timeseries data
         # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.
