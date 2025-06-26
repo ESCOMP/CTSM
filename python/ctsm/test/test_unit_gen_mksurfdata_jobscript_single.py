@@ -42,7 +42,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 1
         tasks = 64
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
@@ -63,7 +63,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 1
         tasks = 129
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         check_parser_args(args)
         with open(self._jobscript_file, "w", encoding="utf-8") as runfile:
@@ -86,7 +86,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 5
         tasks = 0
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         with self.assertRaisesRegex(
             SystemExit,
@@ -99,7 +99,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 10
         tasks = 64
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         # Remove the build path directory
         shutil.rmtree(self._bld_path, ignore_errors=True)
         args = get_parser().parse_args()
@@ -111,7 +111,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 10
         tasks = 64
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         os.remove(self._mksurf_exe)
         with self.assertRaisesRegex(SystemExit, "mksurfdata_esmf executable "):
@@ -122,7 +122,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 10
         tasks = 64
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         os.remove(self._env_mach)
         with self.assertRaisesRegex(SystemExit, "Environment machine specific file"):
@@ -133,7 +133,7 @@ class TestFGenMkSurfJobscriptSingle(TestFGenMkSurfJobscriptSingleParent):
         machine = "zztop"
         nodes = 1
         tasks = 64
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         with self.assertRaises(SystemExit):
             get_parser().parse_args()
 

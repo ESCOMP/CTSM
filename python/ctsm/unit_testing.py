@@ -4,7 +4,7 @@ import sys
 from ctsm.ctsm_logging import setup_logging_for_tests
 
 
-def add_args(machine, nodes, tasks):
+def add_machine_node_args(machine, nodes, tasks):
     """add arguments to sys.argv"""
     args_to_add = [
         "--machine",

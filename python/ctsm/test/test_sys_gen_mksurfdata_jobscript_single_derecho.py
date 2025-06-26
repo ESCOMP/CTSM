@@ -36,7 +36,7 @@ class TestFGenMkSurfJobscriptSingleDerecho(TestFGenMkSurfJobscriptSingleParent):
         machine = "derecho"
         nodes = 4
         tasks = 128
-        unit_testing.add_args(machine, nodes, tasks)
+        unit_testing.add_machine_node_args(machine, nodes, tasks)
         args = get_parser().parse_args()
         check_parser_args(args)
         self.assertEqual(machine, args.machine)
