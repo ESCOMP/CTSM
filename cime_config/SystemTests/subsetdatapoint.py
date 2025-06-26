@@ -34,20 +34,22 @@ class SUBSETDATAPOINT(SystemTestsCommon):
         if "serial" not in self._case.get_value("MPILIB"):
             raise RuntimeError("SUBSETDATAPOINT tests require a serial MPILIB")
 
+    def build_phase(self, sharedlib_only=False, model_only=False):
+
         # Where the output files will be saved
-        self.out_dir = os.path.join(self._get_caseroot(), "subset_data_output")
-        self.usermods_dir = os.path.join(self.out_dir, "user_mods")
+        out_dir = os.path.join(self._get_caseroot(), "subset_data_output")
+        usermods_dir = os.path.join(out_dir, "user_mods")
 
         # Run the tool
-        self.lat = 45.402252
-        self.lon = -92.798085
+        lat = 45.402252
+        lon = -92.798085
         sys.argv = [
             "tools/site_and_regional/subset_data",
             "point",
             "--lat",
-            str(self.lat),
+            str(lat),
             "--lon",
-            str(self.lon),
+            str(lon),
             "--create-surface",
             "--create-datm",
             "--datm-syr",
@@ -56,16 +58,17 @@ class SUBSETDATAPOINT(SystemTestsCommon):
             "2000",
             "--create-user-mods",
             "--outdir",
-            self.out_dir,
+            out_dir,
             "--user-mods-dir",
-            self.usermods_dir,
+            usermods_dir,
+            "--overwrite",
         ]
         subset_data()
 
         # Append files in usermods_dir to equivalents in top level of case
-        for file in os.listdir(self.usermods_dir):
+        for file in os.listdir(usermods_dir):
             # Get the full path to source and destination files
-            source_file_path = os.path.join(self.usermods_dir, file)
+            source_file_path = os.path.join(usermods_dir, file)
             dest_file_path = os.path.join(self._get_caseroot(), file)
 
             # Read the content of the source file
@@ -76,10 +79,9 @@ class SUBSETDATAPOINT(SystemTestsCommon):
             with open(dest_file_path, "a", encoding="utf-8") as dest_file:
                 dest_file.write("\n\n\n" + content_to_append)
 
-
-    def build_phase(self, sharedlib_only=False, model_only=False):
-
-        # Run shell_commands
-        subprocess.check_call("./shell_commands", shell=True)
+            # Run the generated shell_commands
+            if file == "shell_commands":
+                cmd = f"chmod +x {source_file_path}; {source_file_path}"
+                subprocess.check_call(cmd, shell=True)
 
         super().build_phase(sharedlib_only, model_only)
