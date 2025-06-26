@@ -10,7 +10,7 @@ from ctsm import unit_testing
 from ctsm.longitude import Longitude
 from ctsm.longitude import _convert_lon_type_180_to_360, _convert_lon_type_360_to_180
 from ctsm.longitude import _check_lon_type_180, _check_lon_type_360
-from ctsm.longitude import _detect_lon_type
+from ctsm.longitude import detect_lon_type
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -369,57 +369,57 @@ class TestLongitude(unittest.TestCase):
 
     def test_detect_lon_type_mid_180(self):
         """test that detect_lon_type works for an unambiguously 180 value"""
-        self.assertEqual(_detect_lon_type(-150), 180)
+        self.assertEqual(detect_lon_type(-150), 180)
 
     def test_detect_lon_type_min_180(self):
         """test that detect_lon_type works at -180"""
-        self.assertEqual(_detect_lon_type(-180), 180)
+        self.assertEqual(detect_lon_type(-180), 180)
 
     def test_detect_lon_type_mid_360(self):
         """test that detect_lon_type works for an unambiguously 360 value"""
-        self.assertEqual(_detect_lon_type(355), 360)
+        self.assertEqual(detect_lon_type(355), 360)
 
     def test_detect_lon_type_max_360(self):
         """test that detect_lon_type works at 360"""
-        self.assertEqual(_detect_lon_type(360), 360)
+        self.assertEqual(detect_lon_type(360), 360)
 
     def test_detect_lon_type_list_180(self):
         """test that detect_lon_type works for a list with just one unambiguously 180 value"""
-        self.assertEqual(_detect_lon_type([-150, 150]), 180)
+        self.assertEqual(detect_lon_type([-150, 150]), 180)
 
     def test_detect_lon_type_list_360(self):
         """test that detect_lon_type works for a list with just one unambiguously 360 value"""
-        self.assertEqual(_detect_lon_type([256, 150]), 360)
+        self.assertEqual(detect_lon_type([256, 150]), 360)
 
     def test_detect_lon_type_ambig(self):
         """test that detect_lon_type fails if ambiguous"""
         with self.assertRaisesRegex(ArgumentTypeError, r"Longitude\(s\) ambiguous"):
-            _detect_lon_type(150)
+            detect_lon_type(150)
 
     def test_detect_lon_type_list_ambig(self):
         """test that detect_lon_type fails for an ambiguous list"""
         with self.assertRaisesRegex(ArgumentTypeError, r"Longitude\(s\) ambiguous"):
-            _detect_lon_type([150, 170])
+            detect_lon_type([150, 170])
 
     def test_detect_lon_type_list_both(self):
         """test that detect_lon_type fails for a list with unambiguous members of both types"""
         with self.assertRaisesRegex(RuntimeError, r"Longitude array contains values of both types"):
-            _detect_lon_type([-150, 270])
+            detect_lon_type([-150, 270])
 
     def test_detect_lon_type_ambig0(self):
         """test that detect_lon_type fails at 0"""
         with self.assertRaisesRegex(ArgumentTypeError, r"Longitude\(s\) ambiguous"):
-            _detect_lon_type(0)
+            detect_lon_type(0)
 
     def test_detect_lon_type_oob_low(self):
         """test that detect_lon_type fails if out of bounds below min"""
         with self.assertRaisesRegex(ValueError, r"\(Minimum\) longitude < -180"):
-            _detect_lon_type(-300)
+            detect_lon_type(-300)
 
     def test_detect_lon_type_oob_high(self):
         """test that detect_lon_type fails if out of bounds above max"""
         with self.assertRaisesRegex(ValueError, r"\(Maximum\) longitude > 360"):
-            _detect_lon_type(500)
+            detect_lon_type(500)
 
     def test_list_as_lon(self):
         """

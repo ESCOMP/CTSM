@@ -1,4 +1,84 @@
 ===============================================================
+Tag name: ctsm5.3.061
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 26 Jun 2025 11:28:43 AM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+PR #3231 Clean up docs workflows
+Resolves #3160
+Resolves #3213
+
+PR #3272 Throw error if reseed_dead_plants = .true. in a branch simulation
+Resolves #3257
+
+PR #3264 Fix plumber2_surf_wrapper
+Resolves #3262
+
+PR #3259 subset_data point: Fix --create-datm and Longitude TypeErrors
+Resolves #3258
+Resolves #3260
+Resolves #3197
+Resolves #2960
+
+PR #3227 Docs docs: Update Windows instructions
+Resolves #3185
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Listed along with corresponding PRs in "Purpose and description of changes" above
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ #3272 Throw error if reseed_dead_plants = .true. in a branch simulation
+
+Changes to documentation:
+ #3227 Docs docs: Update Windows instructions
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3283
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.060
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Tue 24 Jun 2025 02:13:05 PM MDT

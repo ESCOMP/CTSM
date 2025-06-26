@@ -19,7 +19,7 @@ from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude, _detect_lon_type
+from ctsm.longitude import Longitude, detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +142,7 @@ class RegionalCase(BaseCase):
 
         # Detect longitude type (180 or 360) of input file, throwing a helpful error if it can't be
         # determined.
-        f_lon_type = _detect_lon_type(lon)
+        f_lon_type = detect_lon_type(lon)
         lon1_type = self.lon1.lon_type()
         lon2_type = self.lon2.lon_type()
         if lon1_type != lon2_type:
