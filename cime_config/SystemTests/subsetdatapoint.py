@@ -7,6 +7,7 @@ import os
 import sys
 import logging
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
+from CIME.user_mod_support import apply_user_mods
 from CIME.XML.standard_module_setup import *
 
 # In case we need to import subset_data later
@@ -67,5 +68,10 @@ class SUBSETDATAPOINT(SystemTestsCommon):
         ]
         subset_data()
 
-        self._case.apply_user_mods([usermods_dir])
+        # Apply the user mods
+        self._case.flush(flushall=True)
+        apply_user_mods(self._get_caseroot(), usermods_dir)
+        self._case.read_xml()
+
+        # Do the build
         super().build_phase(sharedlib_only, model_only)
