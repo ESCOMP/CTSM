@@ -937,13 +937,13 @@ contains
                 ! accumulated_file_index) so it matters whether f is one
                 ! or the other when going through here. Otherwise all fields
                 ! would end up on all files, which is not the intent.
+                ! An "else" that error checks for f out of bounds will
+                ! not work because it is possible to get
+                ! f == a_valid_value .and. avgflag unspecified
                 if (f == instantaneous_file_index .and. avgflag == 'I') then
                    call htape_addfld (t, f, fld, avgflag)
                 else if (f == accumulated_file_index .and. avgflag /= 'I') then
                    call htape_addfld (t, f, fld, avgflag)
-                else
-                   write(iulog,*) trim(subname),' ERROR: f =', f, ' but model expected f = ', instantaneous_file_index, ' or ', accumulated_file_index
-                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 end if
 
              else if (.not. hist_empty_htapes) then
