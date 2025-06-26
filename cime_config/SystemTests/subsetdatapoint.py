@@ -9,13 +9,11 @@ import logging
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
 from CIME.XML.standard_module_setup import *
 
+# In case we need to import subset_data later
 _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
-from ctsm.subset_data import (  # pylint: disable=wrong-import-position
-    main as subset_data,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +36,11 @@ class SUBSETDATAPOINT(SystemTestsCommon):
         # Where the output files will be saved
         out_dir = os.path.join(self._get_caseroot(), "subset_data_output")
         usermods_dir = os.path.join(out_dir, "user_mods")
+
+        # Import subset_data. Do it here rather than at top because otherwise the import will
+        # be attempted even during RUN phase.
+        # pylint: disable=wrong-import-position,import-outside-toplevel
+        from ctsm.subset_data import main as subset_data
 
         # Run the tool
         lat = 45.402252
