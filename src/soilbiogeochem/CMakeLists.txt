@@ -2,6 +2,7 @@
 # source files that are currently used in unit tests
 
 list(APPEND clm_sources 
+  SoilBiogeochemCarbonFluxType.F90
   SoilBiogeochemStateType.F90
   SoilBiogeochemDecompCascadeConType.F90
   SoilBiogeochemStateType.F90

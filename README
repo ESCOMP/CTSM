@@ -66,7 +66,7 @@ components/cmeps -------------------- CESM top level driver (for NUOPC driver [w
 components/cdeps -------------------- CESM top level data model shared code (for NUOPC driver).
 components/cism --------------------- CESM Community land Ice Sheet Model.
 components/mosart ------------------- Model for Scale Adaptive River Transport
-components/mizuRoute ---------------- Reached based river transport model for water routing 
+components/mizuroute ---------------- Reached based river transport model for water routing 
                                       (allows both gridded river and Hydrologic Responce Unit river grids)
 components/rtm ---------------------- CESM River Transport Model.
 

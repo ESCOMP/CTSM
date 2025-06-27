@@ -605,7 +605,7 @@ def determine_num_pft(crop):
     return num_pft
 
 
-def setup_files(args, defaults, cesmroot):
+def setup_files(args, defaults, cesmroot, testing=False):
     """
     Sets up the files and folders needed for this program
     """
@@ -623,9 +623,9 @@ def setup_files(args, defaults, cesmroot):
     else:
         clmforcingindir = args.inputdatadir
 
-    if not os.path.isdir(clmforcingindir):
+    if not testing and not os.path.isdir(clmforcingindir):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
-        abort("inputdata directory does not exist")
+        abort(f"inputdata directory does not exist: {clmforcingindir}")
 
     file_dict = {"main_dir": clmforcingindir}
 
