@@ -4129,7 +4129,7 @@
     </options>
   </test>
 
-  <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial" grid="CLM_USRDAT" compset="I2000Clm60BgcCrujra" testmods="clm-default">
+  <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial" grid="CLM_USRDAT" compset="I2000Clm60BgcCropCrujra" testmods="clm-default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>

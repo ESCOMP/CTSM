@@ -31,6 +31,8 @@ class SUBSETDATAPOINT(SystemTestsCommon):
             raise RuntimeError("SUBSETDATAPOINT tests require resolution CLM_USRDAT")
         if "serial" not in self._case.get_value("MPILIB"):
             raise RuntimeError("SUBSETDATAPOINT tests require a serial MPILIB")
+        if "BGC-CROP" not in self._case.get_value("COMPSET"):
+            raise RuntimeError("SUBSETDATAPOINT tests require a BGC-CROP compset")
 
     def build_phase(self, sharedlib_only=False, model_only=False):
 
@@ -54,6 +56,7 @@ class SUBSETDATAPOINT(SystemTestsCommon):
             "--lon",
             str(lon),
             "--create-surface",
+            "--crop",
             "--create-landuse",
             "--surf-year",
             "1850",
