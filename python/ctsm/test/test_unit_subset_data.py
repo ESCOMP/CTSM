@@ -104,7 +104,7 @@ class TestSubsetData(unittest.TestCase):
         Test
         """
         self.args = check_args(self.args)
-        files = setup_files(self.args, self.defaults, self.cesmroot)
+        files = setup_files(self.args, self.defaults, self.cesmroot, testing=True)
         self.assertEqual(
             files["fsurf_in"],
             "surfdata_0.9x1.25_hist_2000_16pfts_c240908.nc",
@@ -184,7 +184,7 @@ class TestSubsetData(unittest.TestCase):
         sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         self.args = check_args(self.args)
-        files = setup_files(self.args, self.defaults, self.cesmroot)
+        files = setup_files(self.args, self.defaults, self.cesmroot, testing=True)
         self.assertEqual(
             files["fsurf_out"],
             "outputsurface.nc",
