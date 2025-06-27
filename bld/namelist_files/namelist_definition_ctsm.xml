@@ -1274,10 +1274,20 @@ For testing whether to bypass the rest of the initialization after the self test
 For testing whether to bypass most of the run phase other than the clock advance
 </entry>
 
+<entry id="for_testing_exit_after_self_tests" type="logical" category="default_settings"
+       group="clm_inparm" >
+Whether to exit early after the initialization self tests are run. This is typically only used in automated tests.
+</entry>
 
 <entry id="for_testing_run_ncdiopio_tests" type="logical" category="default_settings"
        group="clm_inparm" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
+typically only used in automated tests.
+</entry>
+
+<entry id="for_testing_run_decomp_init_tests" type="logical" category="default_settings"
+       group="clm_inparm" >
+Whether to run some tests of decompInit (to get the gridcell to MPI task decomposition) as part of the model run. This is
 typically only used in automated tests.
 </entry>
 

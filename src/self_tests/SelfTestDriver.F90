@@ -40,6 +40,14 @@ contains
     ! This subroutine should be called all the time, but each set of self tests is only
     ! run if the appropriate flag is set.
     !
+    ! !USES:
+    use clm_varctl, only : for_testing_run_ncdiopio_tests, for_testing_run_decomp_init_tests
+    use clm_varctl, only : for_testing_exit_after_self_tests, iulog
+    use decompMod, only : bounds_type
+    use TestNcdioPio, only : test_ncdio_pio
+    use ESMF, only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_Finalize
+    use shr_sys_mod, only : shr_sys_flush
+    use spmdMod, only : masterproc
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
