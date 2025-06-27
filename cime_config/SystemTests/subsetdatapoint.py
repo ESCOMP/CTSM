@@ -71,6 +71,11 @@ class SUBSETDATAPOINT(SystemTestsCommon):
         ]
         subset_data()
 
+        # Required so that CTSM doesn't fail
+        user_nl_clm_path = os.path.join(usermods_dir, "user_nl_clm")
+        with open(user_nl_clm_path, "a", encoding="utf-8") as user_nl_clm:
+            user_nl_clm.write("\ncheck_dynpft_consistency = .false.")
+
         # Apply the user mods
         self._case.flush(flushall=True)
         apply_user_mods(self._get_caseroot(), usermods_dir)
