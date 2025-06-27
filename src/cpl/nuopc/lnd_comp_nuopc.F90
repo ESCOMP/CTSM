@@ -39,6 +39,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varctl             , only : FL => fname_len
+  use clm_varctl             , only : for_testing_exit_after_self_tests
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -492,6 +493,12 @@ contains
     else
        single_column = .false.
     end if
+    if ( for_testing_exit_after_self_tests) then
+       ! *******************
+       ! *** RETURN HERE ***
+       ! *******************
+       RETURN
+    end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -662,6 +669,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call initialize2(ni, nj, currtime)
+    if (for_testing_exit_after_self_tests) then
+       RETURN
+    end if
 
     !--------------------------------
     ! Create land export state
@@ -769,6 +779,9 @@ contains
     !--------------------------------
 
     if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+    if (for_testing_exit_after_self_tests) then
        RETURN
     end if
 
@@ -1002,6 +1015,7 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
     if (.not. scol_valid) return
+    if (for_testing_exit_after_self_tests) return
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1285,6 +1299,7 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
+    use clm_varctl, only : for_testing_exit_after_self_tests
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
@@ -1311,6 +1326,9 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+    if (for_testing_exit_after_self_tests) then
        RETURN
     end if
     ! The remander of this should be equivalent to the NUOPC internal routine

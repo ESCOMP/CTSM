@@ -56,7 +56,7 @@ module clm_varctl
   logical, public :: for_testing_run_decomp_init_tests = .false.
 
   ! true => exit after the self-tests run
-  logical, public :: for_testing_after_self_tests_run = .false.
+  logical, public :: for_testing_exit_after_self_tests = .false.
 
   ! true => allocate memory for and use a second grain pool. This is meant only for
   ! software testing of infrastructure to support the AgSys crop model integration. This
