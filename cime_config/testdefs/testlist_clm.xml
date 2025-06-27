@@ -4316,7 +4316,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:59:00</option>
     </options>
   </test>
 
