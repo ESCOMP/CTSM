@@ -83,6 +83,7 @@ contains
     ! !USES:
     use clm_varpar       , only : nlevdecomp, nlevsoi
     use clm_time_manager , only : get_step_size_real
+    use SoilNitrogenMovementMod , only: use_nvmovement
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -212,16 +213,20 @@ contains
                if (h2osoi_liq(c,j) > 0._r8) then
                   disn_conc = (sf_no3 * smin_no3_vr(c,j) * col%dz(c,j) )/(h2osoi_liq(c,j) )
                end if
-               !
-               ! calculate the N leaching flux as a function of the dissolved
-               ! concentration and the sub-surface drainage flux
-               smin_no3_leached_vr(c,j) = disn_conc * drain_tot(c) * h2osoi_liq(c,j) / ( tot_water(c) * col%dz(c,j) )
-               !
-               ! ensure that leaching rate isn't larger than soil N pool
-               smin_no3_leached_vr(c,j) = min(smin_no3_leached_vr(c,j), smin_no3_vr(c,j) / dt )
-               !
-               ! limit the leaching flux to a positive value
-               smin_no3_leached_vr(c,j) = max(smin_no3_leached_vr(c,j), 0._r8)
+               ! Evaluating the leaching flux in SoilNitrogenMovementMod, if use_nvmovement is true 
+               if (.not. use_nvmovement) then
+                  !
+                  ! calculate the N leaching flux as a function of the dissolved
+                  ! concentration and the sub-surface drainage flux
+                  smin_no3_leached_vr(c,j) = disn_conc * drain_tot(c) * h2osoi_liq(c,j) / ( tot_water(c) * col%dz(c,j) )
+                  !
+                  ! ensure that leaching rate isn't larger than soil N pool
+                  smin_no3_leached_vr(c,j) = min(smin_no3_leached_vr(c,j), smin_no3_vr(c,j) / dt )
+                  !
+                  ! limit the leaching flux to a positive value
+                  smin_no3_leached_vr(c,j) = max(smin_no3_leached_vr(c,j), 0._r8)
+               end if
+
                !
                !
                ! calculate the N loss from surface runoff, assuming a shallow mixing of surface waters into soil and removal based on runoff
@@ -242,13 +247,16 @@ contains
                ! limit the flux to a positive value
                smin_no3_runoff_vr(c,j) = max(smin_no3_runoff_vr(c,j), 0._r8)
 
-               ! limit the flux based on current smin_no3 state
-               ! only let at most the assumed soluble fraction
-               ! of smin_no3 be leached on any given timestep
-               smin_no3_leached_vr(c,j) = min(smin_no3_leached_vr(c,j), (sf_no3 * smin_no3_vr(c,j))/dt)
+               ! Evaluating the leaching flux in SoilNitrogenMovementMod, if use_nvmovement is true 
+               if (.not. use_nvmovement) then
+                  ! limit the flux based on current smin_no3 state
+                  ! only let at most the assumed soluble fraction
+                  ! of smin_no3 be leached on any given timestep
+                  smin_no3_leached_vr(c,j) = min(smin_no3_leached_vr(c,j), (sf_no3 * smin_no3_vr(c,j))/dt)
 
-               ! limit the flux to a positive value
-               smin_no3_leached_vr(c,j) = max(smin_no3_leached_vr(c,j), 0._r8)
+                  ! limit the flux to a positive value
+                  smin_no3_leached_vr(c,j) = max(smin_no3_leached_vr(c,j), 0._r8)
+               end if
 
             end do
          end do
