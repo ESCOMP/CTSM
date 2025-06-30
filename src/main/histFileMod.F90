@@ -5012,7 +5012,7 @@ contains
                              tape(t)%hlist(fld,f)%nacs(beg1d_out:end1d_out,num2d), &
                              stat=status)
                    if (status /= 0) then
-                      write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f=',t,f
+                      write(iulog,*) trim(subname),' ERROR: allocation error for hbuf,nacs at t,f,fld=',t,f,fld
                       call endrun(msg=errMsg(sourcefile, __LINE__))
                    endif
                    tape(t)%hlist(fld,f)%hbuf(:,:) = 0._r8
