@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = b11baa6ab686cc2fb282da6af7887babb23a5e67  # edge-area-202410: Update default edge params with values from dev .cdl file.
+fxtag = 0b2168415c189810bcbb9a4a985348886f5a1bec  # edge-area-202410: Factor out new subroutine assign_patch_to_bins().
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
