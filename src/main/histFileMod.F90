@@ -4405,8 +4405,8 @@ contains
     character(len=max_chars)  :: units_acc       ! accumulator units
     character(len=max_chars)  :: fname           ! full name of history file
     character(len=max_chars)  :: locrest(max_tapes, max_split_files)  ! local history restart file names
-    character(len=max_chars)  :: locrest_onfile(max_split_files, max_tapes)  ! local history restart file names, dims flipped
-    character(len=max_chars)  :: locfnh_onfile(max_split_files, max_tapes)  ! local history file names, dims flipped
+    character(len=max_chars)  :: locrest_onfile(max_split_files, max_tapes)  ! history restart file names on file, dims flipped
+    character(len=max_chars)  :: locfnh_onfile(max_split_files, max_tapes)  ! history file names on file, dims flipped
     character(len=max_length_filename) :: my_locfnh  ! temporary version of locfnh
     character(len=max_length_filename) :: my_locfnhr ! temporary version of locfnhr
 
