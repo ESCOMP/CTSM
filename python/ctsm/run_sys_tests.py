@@ -750,7 +750,7 @@ def _check_py_env(test_attributes):
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
     # Check requirements for using subset_data Python module, if needed
-    subset_data_users = ["SUBSETDATAPOINT"]
+    subset_data_users = ["SUBSETDATAPOINT", "SUBSETDATAREGION"]
     if any(any(u in t for u in subset_data_users) for t in test_attributes):
         try:
             import ctsm.subset_data

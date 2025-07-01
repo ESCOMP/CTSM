@@ -53,19 +53,20 @@ class SUBSETDATASHARED(SystemTestsCommon):
         # pylint: disable=wrong-import-position,import-outside-toplevel
         from ctsm.subset_data import main as subset_data
 
-        # Run the tool
-        sys.argv = self.subset_data_cmd
-        subset_data()
+        # Run the tool, if not already run, and apply usermods
+        if not os.path.exists(self.usermods_dir):
+            sys.argv = self.subset_data_cmd
+            subset_data()
 
-        # Required so that CTSM doesn't fail
-        user_nl_clm_path = os.path.join(self.usermods_dir, "user_nl_clm")
-        with open(user_nl_clm_path, "a", encoding="utf-8") as user_nl_clm:
-            user_nl_clm.write("\ncheck_dynpft_consistency = .false.")
+            # Required so that CTSM doesn't fail
+            user_nl_clm_path = os.path.join(self.usermods_dir, "user_nl_clm")
+            with open(user_nl_clm_path, "a", encoding="utf-8") as user_nl_clm:
+                user_nl_clm.write("\ncheck_dynpft_consistency = .false.\n")
 
-        # Apply the user mods
-        self._case.flush(flushall=True)
-        apply_user_mods(self._get_caseroot(), self.usermods_dir)
-        self._case.read_xml()
+            # Apply the user mods
+            self._case.flush(flushall=True)
+            apply_user_mods(self._get_caseroot(), self.usermods_dir)
+            self._case.read_xml()
 
         # Do the build
         super().build_phase(sharedlib_only, model_only)
