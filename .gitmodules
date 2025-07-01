@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 5467f292d9d58c5104cf5f1005fcc62ed1dc4251  # fix_testing_ssr: add and track netcdf files for test data
+fxtag = e0037facd11bdc8866af1cf4578cdbc49269c8bd  # fix_testing_ssr: Remove datm_file_url.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
