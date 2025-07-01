@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 0b2168415c189810bcbb9a4a985348886f5a1bec  # edge-area-202410: Factor out new subroutine assign_patch_to_bins().
+fxtag = f656191adb2619f97490b88bac56052e4660a800  # edge-area-202410: Add test_gffeb_gaussian_numerator().
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
