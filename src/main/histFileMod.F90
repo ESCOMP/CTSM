@@ -933,17 +933,30 @@ contains
                 ! will be called for field
 
                 avgflag = getflag (fincl(ff,t))
+
+                ! Set time averaging flag based on allhistfldlist setting or
+                ! override the default averaging flag with namelist setting
+
+                if (.not. avgflag_valid(avgflag, blank_valid=.true.)) then
+                   write(iulog,*) trim(subname),' ERROR: unknown avgflag=', avgflag
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
+                end if
+
+                if (avgflag == ' ') then
+                   avgflag = allhistfldlist(fld)%avgflag(t)
+                end if
+
                 ! This if-statement is in a loop of f (instantaneous_ or
                 ! accumulated_file_index) so it matters whether f is one
                 ! or the other when going through here. Otherwise all fields
                 ! would end up on all files, which is not the intent.
-                ! An "else" that error checks for f out of bounds will
-                ! not work because it is possible to get
-                ! f == a_valid_value .and. avgflag unspecified
                 if (f == instantaneous_file_index .and. avgflag == 'I') then
                    call htape_addfld (t, f, fld, avgflag)
                 else if (f == accumulated_file_index .and. avgflag /= 'I') then
                    call htape_addfld (t, f, fld, avgflag)
+                else if (f /= instantaneous_file_index .and. f /= accumulated_file_index) then
+                   write(iulog,*) trim(subname),' ERROR: invalid f =', f, ' should be one of these values:', accumulated_file_index, instantaneous_file_index
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
                 end if
 
              else if (.not. hist_empty_htapes) then
