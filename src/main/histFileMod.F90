@@ -4551,8 +4551,9 @@ contains
              else if (f == accumulated_file_index) then
                 file_index = 'a'  ! accumulated file_index
              else
-                write(iulog,*) trim(subname),' ERROR: f =', f, ' but model expected f = ', instantaneous_file_index, ' or ', accumulated_file_index
-                call endrun(msg=errMsg(sourcefile, __LINE__))
+                write(iulog,*) trim(subname),' ERROR: f index =', f, ' but model expected f = ', instantaneous_file_index, ' (instantaneous file index) or ', accumulated_file_index, ' (accumulated file index)'
+                write(iulog,*) errMsg(sourcefile, __LINE__)
+                call endrun(msg="ERROR: file index not in range")
              end if
              locfnhr(t,f) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
                           // ".rh" // hnum // file_index //"."// trim(rdate) //".nc"
