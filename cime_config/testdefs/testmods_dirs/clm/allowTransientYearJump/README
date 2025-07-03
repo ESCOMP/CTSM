@@ -1,0 +1,8 @@
+This testmod has changes that are needed in transient (e.g., HIST) tests that have a jump
+in years relative to an initial conditions file. For example, this comes up in the ERI
+test, where the hybrid run starts two years later than the initial run.
+
+This testmod is meant to be a mix-in with other testmods (e.g.,
+'clm-something--clm-allowTransientYearJump'), so it does not have an include of the
+default testmod or any other testmods (it is assumed that any needed includes come from
+the primary testmod of the test, and that this is just added on top of that).

@@ -1,5 +1,0 @@
-
-! The following is needed in a transient ERI test so that the hybrid case works,
-! given the 2-year jump from the initial case to the hybrid case:
-! https://github.com/ESMCI/cime/blob/f0b9d218e97eb92ea84decaf6ae1bfc263b8ddc9/CIME/SystemTests/eri.py#L93
-check_finidat_year_consistency = .false.
