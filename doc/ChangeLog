@@ -19,7 +19,7 @@ Purpose and description of changes
  ...
  rhX becomes rhXa and rhXi
 
- The clm could and still can handle not generating history (and corresponding history restart) files when empty. The rtm and mosart could not handle not generating empty files. Instead of refactoring rtm and mosart (out of scope), I introduced one active instantaneous field in mosart and one in rtm.
+ The clm handles empty history (and corresponding history restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (out of scope), I have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -55,10 +55,6 @@ Changes to documentation:
  Not, yet:
  - clm documentation
  - Adam Phillips' cmip documentation
-
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
 
 
 Testing summary:
