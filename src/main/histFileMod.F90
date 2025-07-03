@@ -4507,26 +4507,26 @@ contains
        !
        call ncd_defdim( ncid, 'ntapes'       , ntapes      , dimid)
        call ncd_defdim( ncid, 'max_split_files', max_split_files, dimid)
-       call ncd_defdim( ncid, 'ntapes_by_max_split_files', ntapes * max_split_files, dimid)
+       call ncd_defdim( ncid, 'ntapes_multiply_by_max_split_files', ntapes * max_split_files, dimid)
        call ncd_defdim( ncid, 'max_chars'    , max_chars   , dimid)
 
        call ncd_defvar(ncid=ncid, varname='history_tape_in_use', xtype=ncd_log, &
             long_name="Whether this history tape is/isn't in use", &
-            dim1name="ntapes_by_max_split_files")
+            dim1name="ntapes_multiply_by_max_split_files")
        ier = PIO_inq_varid(ncid, 'history_tape_in_use', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        call ncd_defvar(ncid=ncid, varname='locfnh', xtype=ncd_char, &
             long_name="History filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes_by_max_split_files" )
+            dim1name='max_chars', dim2name="ntapes_multiply_by_max_split_files" )
        ier = PIO_inq_varid(ncid, 'locfnh', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
        call ncd_defvar(ncid=ncid, varname='locfnhr', xtype=ncd_char, &
             long_name="Restart history filename",     &
             comment="This variable NOT needed for startup or branch simulations", &
-            dim1name='max_chars', dim2name="ntapes_by_max_split_files" )
+            dim1name='max_chars', dim2name="ntapes_multiply_by_max_split_files" )
        ier = PIO_inq_varid(ncid, 'locfnhr', vardesc)
        ier = PIO_put_att(ncid, vardesc%varid, 'interpinic_flag', iflag_skip)
 
