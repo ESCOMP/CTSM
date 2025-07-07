@@ -47,14 +47,24 @@ class SUBSETDATASHARED(SystemTestsCommon):
         ]
 
     def build_phase(self, sharedlib_only=False, model_only=False):
+        """
+        Run subset_data and then build the model
+        """
 
         # Import subset_data. Do it here rather than at top because otherwise the import will
         # be attempted even during RUN phase.
         # pylint: disable=wrong-import-position,import-outside-toplevel
         from ctsm.subset_data import main as subset_data
 
-        # Run the tool, if not already run, and apply usermods
-        if not os.path.exists(self.usermods_dir):
+        # Run subset_data.
+        # build_phase gets called twice:
+        # - once with sharedlib_only = True and
+        # - once with model_only = True
+        # Because we only need subset_data run once, we only do it for the sharedlib_only call.
+        # We could also check for the existence of the subset_data outputs, but that might lead to
+        # a situation where the user expects subset_data to be called but it's not. Better to run
+        # unnecessarily (e.g., if you fixed some FORTRAN code and just need to rebuild).
+        if not sharedlib_only:
             sys.argv = self.subset_data_cmd
             subset_data()
 
