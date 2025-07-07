@@ -18,6 +18,7 @@ module VOCEmissionMod
   use pftconMod          , only : nc4_grass,           noveg
   use shr_megan_mod      , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod      , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
+  use shr_megan_mod      , only : use_gamma_sm=>shr_megan_use_gamma_sm, min_gamma_sm=>shr_megan_min_gamma_sm
   use MEGANFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
@@ -566,7 +567,11 @@ contains
           gamma_l = get_gamma_L(fsun240(p), elai(p))
 
           ! Impact of soil moisture on isoprene emission
-          gamma_sm = get_gamma_SM(btran(p))
+          if (use_gamma_sm) then
+             gamma_sm = get_gamma_SM(btran(p))
+          else
+             gamma_sm = 1._r8
+          end if
 
           ! Loop through VOCs for light, temperature and leaf age activity factor & apply
           ! all final activity factors to baseline emission factors
@@ -843,6 +848,8 @@ contains
     else
        get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - btran_threshold)))
     endif
+
+    get_gamma_SM = max(get_gamma_SM, min_gamma_sm)
 
   end function get_gamma_SM
 
