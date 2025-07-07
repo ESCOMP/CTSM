@@ -64,7 +64,8 @@ class SUBSETDATASHARED(SystemTestsCommon):
         # We could also check for the existence of the subset_data outputs, but that might lead to
         # a situation where the user expects subset_data to be called but it's not. Better to run
         # unnecessarily (e.g., if you fixed some FORTRAN code and just need to rebuild).
-        if not sharedlib_only:
+        # If the subset_data outputs don't exist, though, run regardless of what phase we're in.
+        if not sharedlib_only or not os.path.exists(self.usermods_dir):
             sys.argv = self.subset_data_cmd
             subset_data()
 
