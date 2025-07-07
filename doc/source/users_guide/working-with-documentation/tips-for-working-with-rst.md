@@ -115,7 +115,7 @@ text (as opposed to in its own code block) ``like this``.
 ```
 (A backtick is what you get if you press the key to the left of 1 on a standard US English keyboard.)
 
-If you have a double-backtick on a line, reStructuredText will say, "They want to start an inline literal here," then look for another double-backtick to end the literal. The "WARNING: Inline literal start-string without end-string" means it can't find one on that line.
+If you have a double-backtick on a line, reStructuredText will think, "They want to start an inline literal here," then look for another double-backtick to end the literal. The "WARNING: Inline literal start-string without end-string" means it can't find one on that line.
 
 This might happen, for example, if you try to put a [Markdown code block](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) in a .rst file. In that case, use the [reStructuredText code block syntax](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks) instead (optionally with [syntax highlighting](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-highlight)).
 
