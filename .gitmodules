@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/samsrabin/CDEPS.git
-fxtag = 732abf339299e65658a5b627f53c10b7fc6def67  # cx-length-filenames: Merge tag 'cdeps1.0.77' into cx-length-filenames
+fxtag = 786ccc3a14cfb5730aff1086251c039b438eb8be  # cx-length-filenames: Delete DATAMODELTEST test
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
