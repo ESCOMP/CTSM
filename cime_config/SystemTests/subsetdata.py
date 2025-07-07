@@ -69,4 +69,4 @@ class SUBSETDATASHARED(SystemTestsCommon):
             self._case.read_xml()
 
         # Do the build
-        super().build_phase(sharedlib_only, model_only)
+        self.build_indv(sharedlib_only=sharedlib_only, model_only=model_only)
