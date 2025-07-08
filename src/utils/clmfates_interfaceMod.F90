@@ -50,6 +50,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_tree_damage
+   use clm_varctl        , only : use_fates_edge_forest
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_daylength_factor
@@ -415,6 +416,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
+     integer                                        :: pass_edge_forest
      integer                                        :: pass_use_potentialveg
      integer                                        :: pass_num_luh_states
      integer                                        :: pass_num_luh_transitions
@@ -471,6 +473,13 @@ module CLMFatesInterfaceMod
            pass_tree_damage = 0
         end if
         call set_fates_ctrlparms('use_tree_damage',ival=pass_tree_damage)
+
+        if (use_fates_edge_forest) then
+           pass_edge_forest = 1
+        else
+           pass_edge_forest = 0
+        end if
+        call set_fates_ctrlparms('use_edge_forest',ival=pass_edge_forest)
         
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less

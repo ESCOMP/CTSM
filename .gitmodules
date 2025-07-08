@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 12f21da948decb9f86b570433e5d71cdbd54f511  # edge-area-202410: Add checks of edge forest parameters.
+fxtag = af1eb805866403e424600a2bc7bc402a28eb2439  # edge-area-202410: Add hlm_use_edge_forest flag.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates

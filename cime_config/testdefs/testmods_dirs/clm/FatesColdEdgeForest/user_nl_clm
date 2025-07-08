@@ -1,5 +1,6 @@
 
 fates_spitfire_mode = 5
+use_fates_edge_forest = .true.
 
 hist_empty_htapes = .true.
 hist_mfilt        = 1

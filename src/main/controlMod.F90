@@ -255,6 +255,7 @@ contains
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
           use_fates_tree_damage,                        &
+          use_fates_edge_forest,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
           fates_history_dimlevel
@@ -827,6 +828,7 @@ contains
     call mpi_bcast (fates_electron_transport_model, len(fates_electron_transport_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_edge_forest, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1243,6 +1245,7 @@ contains
        write(iulog, *) '    fates_photosynth_acclimation = ', trim(fates_photosynth_acclimation)
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
        write(iulog, *) '    use_fates_tree_damage = ', use_fates_tree_damage
+       write(iulog, *) '    use_fates_edge_forest = ', use_fates_edge_forest
        write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_daylength_factor = ', use_fates_daylength_factor
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
