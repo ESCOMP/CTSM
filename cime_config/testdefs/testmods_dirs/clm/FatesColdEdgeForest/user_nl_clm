@@ -2,6 +2,14 @@
 fates_spitfire_mode = 5
 
 hist_empty_htapes = .true.
+hist_mfilt        = 1
+hist_nhtfrq       = -24
+hist_empty_htapes = .false.
+fates_spitfire_mode = 1
+fates_history_dimlevel = 2,2
+use_fates_tree_damage = .true.
+hist_ndens = 1
+
 hist_fincl1 += 'FATES_CANOPYAREA_AP','FATES_PATCHAREA_LU'
 hist_fincl1 += 'FATES_CROWNAREA_PF','FATES_CANOPYCROWNAREA_PF'
 hist_fincl1 += 'FATES_VEGC_ABOVEGROUND'

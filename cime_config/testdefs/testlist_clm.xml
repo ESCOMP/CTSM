@@ -13,6 +13,7 @@
         rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
+        fates_edgeforest: Tests exercising (or not) the FATES edge forest module
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -2924,10 +2925,31 @@
   <test name="SMS_Lm49" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdAllVarsMonthly">
     <machines>
       <machine name="derecho" compiler="intel"   category="fates"/>
+      <machine name="derecho" compiler="intel"   category="fates_edgeforest"/>
     </machines>
     <options>
       <option name="wallclock">03:00:00</option>
       <option name="comment"  >This is a long fates test with a lot of variables being written.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdEdgeForest">
+    <machines>
+      <machine name="derecho" compiler="intel"   category="fates"/>
+      <machine name="derecho" compiler="intel"   category="fates_edgeforest"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Lm49" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdEdgeForestMonthly">
+    <machines>
+      <machine name="derecho" compiler="intel"   category="fates"/>
+      <machine name="derecho" compiler="intel"   category="fates_edgeforest"/>
+    </machines>
+    <options>
+      <option name="wallclock">03:00:00</option>
     </options>
   </test>
 
