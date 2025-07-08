@@ -18,7 +18,6 @@ module VOCEmissionMod
   use pftconMod          , only : nc4_grass,           noveg
   use shr_megan_mod      , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod      , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
-  use shr_megan_mod      , only : use_gamma_sm=>shr_megan_use_gamma_sm, min_gamma_sm=>shr_megan_min_gamma_sm
   use MEGANFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
@@ -76,6 +75,8 @@ module VOCEmissionMod
   type(megan_out_type), private, pointer :: meg_out(:) ! (n_megan_comps) points to output fluxes
   !
   logical, parameter :: debug = .false.
+  logical :: megan_use_gamma_sm = .false.
+  real(r8) :: megan_min_gamma_sm = 0._r8
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -84,11 +85,65 @@ module VOCEmissionMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine VOCReadNML(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the namelist for CropType
+    !
+    ! !USES:
+    use fileutils      , only : getavu, relavu, opnfil
+    use shr_nl_mod     , only : shr_nl_find_group_name
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    use clm_varctl     , only : iulog
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    integer :: ierr                 ! error code
+    integer :: unitn                ! unit for namelist file
+
+    character(len=*), parameter :: subname = 'VOCReadNML'
+    character(len=*), parameter :: nmlname = 'megan_opts'
+
+    namelist /megan_opts/ megan_use_gamma_sm, megan_min_gamma_sm
+
+    if (masterproc) then
+       unitn = getavu()
+       write(iulog,*) 'Read in '//nmlname//'  namelist'
+       call opnfil (NLFilename, unitn, 'F')
+       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=megan_opts, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+          end if
+       !else
+       !   call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+       end if
+       call relavu( unitn )
+    end if
+
+    call shr_mpi_bcast(megan_use_gamma_sm, mpicom)
+    call shr_mpi_bcast(megan_min_gamma_sm, mpicom)
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) nmlname//' settings:'
+       write(iulog,nml=megan_opts)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine VOCReadNML
+
+  !------------------------------------------------------------------------
+  subroutine Init(this, bounds, NLFilename)
 
     use clm_varctl     , only : use_fates, use_fates_sp
     class(vocemis_type) :: this
-    type(bounds_type), intent(in)    :: bounds
+    type(bounds_type), intent(in) :: bounds
+    character(len=*) , intent(in) :: NLFilename ! Namelist filename
 
     if ( shr_megan_mechcomps_n > 0) then
        if ( use_fates .and. (.not. use_fates_sp) ) then
@@ -98,6 +153,10 @@ contains
        call this%InitAllocate(bounds)
        call this%InitHistory(bounds)
        call this%InitCold(bounds)
+
+       ! read run-time options
+       call VOCReadNML(NLFilename)
+
     end if
 
   end subroutine Init
@@ -113,7 +172,7 @@ contains
     !
     ! !ARGUMENTS:
     class(vocemis_type) :: this
-    type(bounds_type)  , intent(in)  :: bounds
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer            :: i, imeg
@@ -124,7 +183,6 @@ contains
     integer            :: begp, endp
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     !-----------------------------------------------------------------------
-
 
     begg = bounds%begg; endg = bounds%endg
     begp = bounds%begp; endp = bounds%endp
@@ -567,7 +625,7 @@ contains
           gamma_l = get_gamma_L(fsun240(p), elai(p))
 
           ! Impact of soil moisture on isoprene emission
-          if (use_gamma_sm) then
+          if (megan_use_gamma_sm) then
              gamma_sm = get_gamma_SM(btran(p))
           else
              gamma_sm = 1._r8
@@ -849,7 +907,7 @@ contains
        get_gamma_SM = 1._r8 / (1._r8 + b1 * exp(a1 * (btran_in - btran_threshold)))
     endif
 
-    get_gamma_SM = max(get_gamma_SM, min_gamma_sm)
+    get_gamma_SM = max(get_gamma_SM, megan_min_gamma_sm)
 
   end function get_gamma_SM
 

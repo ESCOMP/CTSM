@@ -994,7 +994,7 @@ sub setup_cmdl_bgc {
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'use_fates'=>$nl_flags->{'use_fates'},
               , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
               , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
@@ -1230,7 +1230,7 @@ sub setup_cmdl_spinup {
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
                 $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
                 use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
@@ -4988,7 +4988,7 @@ sub setup_logic_exice {
   # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string());
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   # Put use_exice into nl_flags so can be referenced later
   if ( value_is_true($use_exice) ) {
@@ -5202,7 +5202,7 @@ sub write_output_files {
 
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
-               cropcal_streams
+               cropcal_streams megan_opts
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
