@@ -1155,7 +1155,7 @@
       <pes pesize="XL" compset="any">
 	  <comment>eXtra-Large Derecho ne120 layout</comment>
 	<ntasks>
-	  <ntasks_atm>-44</ntasks_atm>
+	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-44</ntasks_lnd>
 	  <ntasks_rof>-44</ntasks_rof>
 	  <ntasks_ice>-44</ntasks_ice>
@@ -1176,13 +1176,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm>
-	  <rootpe_lnd>0</rootpe_lnd>
-	  <rootpe_rof>0</rootpe_rof>
-	  <rootpe_ice>0</rootpe_ice>
-	  <rootpe_ocn>0</rootpe_ocn>
-	  <rootpe_glc>0</rootpe_glc>
-	  <rootpe_wav>0</rootpe_wav>
-	  <rootpe_cpl>0</rootpe_cpl>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
 	</rootpe>
       </pes>
     </mach>
@@ -1193,7 +1193,7 @@
       <pes pesize="L" compset="any">
 	  <comment>Large Derecho ne120 layout</comment>
 	<ntasks>
-	  <ntasks_atm>-22</ntasks_atm>
+	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-22</ntasks_lnd>
 	  <ntasks_rof>-22</ntasks_rof>
 	  <ntasks_ice>-22</ntasks_ice>
@@ -1214,13 +1214,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm>
-	  <rootpe_lnd>0</rootpe_lnd>
-	  <rootpe_rof>0</rootpe_rof>
-	  <rootpe_ice>0</rootpe_ice>
-	  <rootpe_ocn>0</rootpe_ocn>
-	  <rootpe_glc>0</rootpe_glc>
-	  <rootpe_wav>0</rootpe_wav>
-	  <rootpe_cpl>0</rootpe_cpl>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
 	</rootpe>
       </pes>
     </mach>
@@ -1231,7 +1231,7 @@
       <pes pesize="M" compset="any">
 	  <comment>Medium Derecho ne120 layout</comment>
 	<ntasks>
-	  <ntasks_atm>-11</ntasks_atm>
+	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-11</ntasks_lnd>
 	  <ntasks_rof>-11</ntasks_rof>
 	  <ntasks_ice>-11</ntasks_ice>
@@ -1252,13 +1252,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm>
-	  <rootpe_lnd>0</rootpe_lnd>
-	  <rootpe_rof>0</rootpe_rof>
-	  <rootpe_ice>0</rootpe_ice>
-	  <rootpe_ocn>0</rootpe_ocn>
-	  <rootpe_glc>0</rootpe_glc>
-	  <rootpe_wav>0</rootpe_wav>
-	  <rootpe_cpl>0</rootpe_cpl>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
 	</rootpe>
       </pes>
     </mach>
@@ -1269,7 +1269,7 @@
       <pes pesize="S" compset="any">
 	  <comment>Small Derecho ne120 layout</comment>
 	<ntasks>
-	  <ntasks_atm>-6</ntasks_atm>
+	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-6</ntasks_lnd>
 	  <ntasks_rof>-6</ntasks_rof>
 	  <ntasks_ice>-6</ntasks_ice>
@@ -1290,13 +1290,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm>
-	  <rootpe_lnd>0</rootpe_lnd>
-	  <rootpe_rof>0</rootpe_rof>
-	  <rootpe_ice>0</rootpe_ice>
-	  <rootpe_ocn>0</rootpe_ocn>
-	  <rootpe_glc>0</rootpe_glc>
-	  <rootpe_wav>0</rootpe_wav>
-	  <rootpe_cpl>0</rootpe_cpl>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
 	</rootpe>
       </pes>
     </mach>
@@ -1307,7 +1307,7 @@
       <pes pesize="XS" compset="any">
 	  <comment>eXtra-Small Derecho ne120 layout</comment>
 	<ntasks>
-	  <ntasks_atm>-3</ntasks_atm>
+	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-3</ntasks_lnd>
 	  <ntasks_rof>-3</ntasks_rof>
 	  <ntasks_ice>-3</ntasks_ice>
@@ -1328,13 +1328,13 @@
 	</nthrds>
 	<rootpe>
 	  <rootpe_atm>0</rootpe_atm>
-	  <rootpe_lnd>0</rootpe_lnd>
-	  <rootpe_rof>0</rootpe_rof>
-	  <rootpe_ice>0</rootpe_ice>
-	  <rootpe_ocn>0</rootpe_ocn>
-	  <rootpe_glc>0</rootpe_glc>
-	  <rootpe_wav>0</rootpe_wav>
-	  <rootpe_cpl>0</rootpe_cpl>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
 	</rootpe>
       </pes>
     </mach>
