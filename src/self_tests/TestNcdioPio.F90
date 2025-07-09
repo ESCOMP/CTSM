@@ -6,7 +6,7 @@ module TestNcdioPio
 
 #include "shr_assert.h"
   use ncdio_pio
-  use shr_kind_mod, only : r8 => shr_kind_r8
+  use shr_kind_mod, only : r4 => shr_kind_r4, r8 => shr_kind_r8
   use Assertions, only : assert_equal
   use clm_varcon, only : nameg
   use abortutils, only : endrun
@@ -443,7 +443,16 @@ contains
     local_int_1d_grc(:) = 0._r8
     call ncd_io(varname='data_double_1d_grc_float', data=local_int_1d_grc, &
          dim1name=nameg, ncid=ncid, flag='read')
-    call assert_equal(expected=int(data_double_1d_grc), actual=local_int_1d_grc, &
+    ! Note that, in the following assertion, for the expected value, we need to do a
+    ! two-step conversion: first convert to float (i.e., r4 real), then convert to int.
+    ! This is because this two-step conversion is done in the process of
+    ! writing-then-reading (double converted to float upon write, then float converted to
+    ! int upon read). If we instead convert directly to int, this is prone to rounding
+    ! errors that can sometimes lead to mismatches (if the actual value is very close to
+    ! an integer, the double representation can be slightly greater than the integer while
+    ! the float representation can be slightly smaller, or vice versa). (See also
+    ! https://github.com/ESCOMP/CTSM/issues/3316.)
+    call assert_equal(expected=int(real(data_double_1d_grc, r4)), actual=local_int_1d_grc, &
          msg='data_double_1d_grc_float to int')
 
     call write_to_log(subname//': Reading int into logical')
