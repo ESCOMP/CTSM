@@ -1941,7 +1941,7 @@
   <grid name="l%mpasa15">
     <mach name="derecho">
       <pes pesize="any" compset="any">
-	<comment>none</comment>
+	  <comment>Derecho mpasa15 layout</comment>
 	<ntasks>
 	  <ntasks_atm>-1</ntasks_atm>
 	  <ntasks_lnd>-36</ntasks_lnd>
@@ -1952,6 +1952,123 @@
 	  <ntasks_wav>-36</ntasks_wav>
 	  <ntasks_cpl>-36</ntasks_cpl>
 	  <ntasks_lnd>-36</ntasks_lnd>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>1</nthrds_atm>
+	  <nthrds_lnd>1</nthrds_lnd>
+	  <nthrds_rof>1</nthrds_rof>
+	  <nthrds_ice>1</nthrds_ice>
+	  <nthrds_ocn>1</nthrds_ocn>
+	  <nthrds_glc>1</nthrds_glc>
+	  <nthrds_wav>1</nthrds_wav>
+	  <nthrds_cpl>1</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
+  <!-- Large pesize for derecho ~250 pts/task -->
+  <grid name="l%mpasa15">
+    <mach name="derecho">
+      <pes pesize="L" compset="any">
+	  <comment>Large Derecho mpasa15 layout</comment>
+	<ntasks>
+	  <ntasks_atm>-1</ntasks_atm>
+	  <ntasks_lnd>-72</ntasks_lnd>
+	  <ntasks_rof>-72</ntasks_rof>
+	  <ntasks_ice>-72</ntasks_ice>
+	  <ntasks_ocn>-72</ntasks_ocn>
+	  <ntasks_glc>-72</ntasks_glc>
+	  <ntasks_wav>-72</ntasks_wav>
+	  <ntasks_cpl>-72</ntasks_cpl>
+	  <ntasks_lnd>-72</ntasks_lnd>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>1</nthrds_atm>
+	  <nthrds_lnd>1</nthrds_lnd>
+	  <nthrds_rof>1</nthrds_rof>
+	  <nthrds_ice>1</nthrds_ice>
+	  <nthrds_ocn>1</nthrds_ocn>
+	  <nthrds_glc>1</nthrds_glc>
+	  <nthrds_wav>1</nthrds_wav>
+	  <nthrds_cpl>1</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
+  <!-- Small pesize for derecho ~1000 pts/task -->
+  <grid name="l%mpasa15">
+    <mach name="derecho">
+      <pes pesize="S" compset="any">
+	  <comment>Small Derecho mpasa15 layout</comment>
+	<ntasks>
+	  <ntasks_atm>-1</ntasks_atm>
+	  <ntasks_lnd>-18</ntasks_lnd>
+	  <ntasks_rof>-18</ntasks_rof>
+	  <ntasks_ice>-18</ntasks_ice>
+	  <ntasks_ocn>-18</ntasks_ocn>
+	  <ntasks_glc>-18</ntasks_glc>
+	  <ntasks_wav>-18</ntasks_wav>
+	  <ntasks_cpl>-18</ntasks_cpl>
+	  <ntasks_lnd>-18</ntasks_lnd>
+	</ntasks>
+	<nthrds>
+	  <nthrds_atm>1</nthrds_atm>
+	  <nthrds_lnd>1</nthrds_lnd>
+	  <nthrds_rof>1</nthrds_rof>
+	  <nthrds_ice>1</nthrds_ice>
+	  <nthrds_ocn>1</nthrds_ocn>
+	  <nthrds_glc>1</nthrds_glc>
+	  <nthrds_wav>1</nthrds_wav>
+	  <nthrds_cpl>1</nthrds_cpl>
+	</nthrds>
+	<rootpe>
+	  <rootpe_atm>0</rootpe_atm>
+	  <rootpe_lnd>-1</rootpe_lnd>
+	  <rootpe_rof>-1</rootpe_rof>
+	  <rootpe_ice>-1</rootpe_ice>
+	  <rootpe_ocn>-1</rootpe_ocn>
+	  <rootpe_glc>-1</rootpe_glc>
+	  <rootpe_wav>-1</rootpe_wav>
+	  <rootpe_cpl>-1</rootpe_cpl>
+	</rootpe>
+      </pes>
+    </mach>
+  </grid>
+  <!-- eXtra-Small pesize for derecho ~2000 pts/task -->
+  <grid name="l%mpasa15">
+    <mach name="derecho">
+      <pes pesize="XS" compset="any">
+	  <comment>eXtra-Small Derecho mpasa15 layout</comment>
+	<ntasks>
+	  <ntasks_atm>-1</ntasks_atm>
+	  <ntasks_lnd>-9</ntasks_lnd>
+	  <ntasks_rof>-9</ntasks_rof>
+	  <ntasks_ice>-9</ntasks_ice>
+	  <ntasks_ocn>-9</ntasks_ocn>
+	  <ntasks_glc>-9</ntasks_glc>
+	  <ntasks_wav>-9</ntasks_wav>
+	  <ntasks_cpl>-9</ntasks_cpl>
+	  <ntasks_lnd>-9</ntasks_lnd>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>
