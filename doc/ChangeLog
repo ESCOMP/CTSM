@@ -1,12 +1,14 @@
 ===============================================================
 Tag name: ctsm5.3.062
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 03 Jul 2025 12:23:00 PM MDT
+Date: Wed 09 Jul 2025 09:03:55 AM MDT
 One-line Summary: Put instantaneous and non-inst. fields on separate hist files
 
 Purpose and description of changes
 ----------------------------------
- Following ctsm5.3.018 "Change history time to be the middle of the time bounds" the current change intends to prevent confusion associated with the time corresponding to instantaneous history fields by putting them on separate files than non-instantaneous fields. The result is
+ Following ctsm5.3.018 "Change history time to be the middle of the time bounds"
+ the current change intends to prevent confusion associated with the time corresponding to instantaneous history fields by putting them on separate files than non-instantaneous fields. The result is
+
  1) two history files per clm, mosart, and rtm history tape:
  tape h0 becomes h0a and h0i
  tape h1 becomes h1a and h1i
@@ -19,7 +21,7 @@ Purpose and description of changes
  ...
  rhX becomes rhXa and rhXi
 
- The clm handles empty history (and corresponding history restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (out of scope), I have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
+ The clm handles empty history (and corresponding history restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (considered out of scope), I have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -92,25 +94,28 @@ Testing summary:
     derecho ----- OK
     izumi ------- OK
 
-  crop_calendars tests: (tested while in ctsm5.3.058, before updating to ctsm5.3.061)
+  crop_calendars tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
     derecho ----- OK
     izumi ------- OK
 
-  ssp tests: (tested while in ctsm5.3.058, before updating to ctsm5.3.061)
+  ssp tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
     derecho ----- OK
 
-  hillslope tests: (tested while in ctsm5.3.058, before updating to ctsm5.3.061)
+  hillslope tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
     derecho ----- OK
 
-  fire tests: (tested while in ctsm5.3.058, before updating to ctsm5.3.061)
+  fire tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
     derecho ----- OK
 
 Answer changes
 --------------
 
-Changes answers relative to baseline: No, but read caveat
-
- Caveat: h0 files become h0a (containing non-instantaneous fields) and h0i (containing instantaneous fields). I spot-checked clm, mosart, and rtm files and confirmed no bitwise change in answers.
+Changes answers relative to baseline: No, but read caveat:
+ h0 files become h0a (containing non-instantaneous fields) and h0i (containing instantaneous fields):
+ - I spot-checked clm, mosart, and rtm files and confirmed no bitwise change in answers.
+ - I ran Sam Rabin's comparison tool written specifically to compare hX files against hXa + hXi files:
+   ~samrabin/pr_2445_baseline_compare/pr_2445_baseline_compare.py -1 /glade/campaign/cgd/tss/ctsm_baselines/ctsm5.3.061 tests_0701-173109de
+   and it returned a single DIFF that appears to be a false positive.
 
 Other details
 -------------
