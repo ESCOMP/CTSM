@@ -11,9 +11,6 @@
 ./xmlchange CLM_STRUCTURE="fast"
 ./xmlchange CLM_CONFIGURATION="nwp"
 
-# Turn cpl history off
-./xmlchange HIST_OPTION="never"
-
 # Restarts aren't allowed for these tests, and turn off CPL history
 ./xmlchange REST_OPTION="never"
 ./xmlchange HIST_OPTION="never"
