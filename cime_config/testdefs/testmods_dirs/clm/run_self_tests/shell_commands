@@ -12,4 +12,4 @@
 ./xmlchange CLM_CONFIGURATION="nwp"
 
 # Turn cpl history off
-./xmlchagne HIST_OPTION="never"
+./xmlchange HIST_OPTION="never"
