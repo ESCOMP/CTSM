@@ -173,6 +173,16 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
     </options>
   </test>
+
+  <test name="SMS_D_Ld10" grid="f09_f09_mt232" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Testing that a initial condition file with an missing urban landunit will be filled with another urban landunit</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
