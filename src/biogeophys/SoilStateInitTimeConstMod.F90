@@ -455,20 +455,20 @@ contains
              if (lev .eq. 1) then
                 clay = clay3d(g,1)
                 sand = sand3d(g,1)
-                om_frac = min(distparams%om_frac_sf(c)*organic3d(g,1)/organic_max, 1._r8)
+                om_frac = min(params_inst%om_frac_sf*organic3d(g,1)/organic_max, 1._r8)
              else if (lev <= nlevsoi) then
                 found = 0  ! reset value
                 if (zsoi(lev) <= zisoifl(1)) then
                    ! Search above the dataset's range of zisoifl depths
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = min(distparams%om_frac_sf(c)*organic3d(g,1)/organic_max, 1._r8)
+                   om_frac = min(params_inst%om_frac_sf*organic3d(g,1)/organic_max, 1._r8)
                    found = 1
                 else if (zsoi(lev) > zisoifl(nlevsoifl)) then
                    ! Search below the dataset's range of zisoifl depths
                    clay = clay3d(g,nlevsoifl)
                    sand = sand3d(g,nlevsoifl)
-                   om_frac = min(distparams%om_frac_sf(c)*organic3d(g,nlevsoifl)/organic_max, 1._r8)
+                   om_frac = min(params_inst%om_frac_sf*organic3d(g,nlevsoifl)/organic_max, 1._r8)
                    found = 1
                 else
                    ! For remaining model soil levels, search within dataset's
@@ -478,7 +478,7 @@ contains
                       if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
                          clay = clay3d(g,j+1)
                          sand = sand3d(g,j+1)
-                         om_frac = min(distparams%om_frac_sf(c)*organic3d(g,j+1)/organic_max, 1._r8)
+                         om_frac = min(params_inst%om_frac_sf*organic3d(g,j+1)/organic_max, 1._r8)
                          found = 1
                       endif
                       if (found == 1) exit  ! no need to stay in the loop
@@ -631,9 +631,9 @@ contains
                 clay    =  soilstate_inst%cellclay_col(c,lev)
                 sand    =  soilstate_inst%cellsand_col(c,lev)
                 if ( organic_frac_squared )then
-                   om_frac = min( distparams%om_frac_sf(c)*(soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8, 1._r8)
+                   om_frac = min( params_inst%om_frac_sf*(soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8, 1._r8)
                 else
-                   om_frac = min(distparams%om_frac_sf(c)*soilstate_inst%cellorg_col(c,lev)/organic_max, 1._r8)
+                   om_frac = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev)/organic_max, 1._r8)
                 end if
              else
                 clay    = soilstate_inst%cellclay_col(c,nlevsoi)

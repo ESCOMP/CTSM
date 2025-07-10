@@ -48,7 +48,6 @@ module DistParamType
      ! initVerticalMod
      real(r8), pointer :: slopebeta                    (:)   ! exponent for microtopography pdf sigma (unitless)
      real(r8), pointer :: slopemax                     (:)   ! max topographic slope for microtopography pdf sigma (unitless)
-     real(r8), pointer :: zbedrock_sf                  (:)   ! parameter to scale zbedrock (m)
 
      ! SnowCoverFractionSwensonLawrence2012Mod
      real(r8), pointer :: n_melt_coef                  (:)   ! SCA shape parameter
@@ -56,10 +55,6 @@ module DistParamType
 
      ! SnowHydrologyMod
      real(r8), pointer :: upplim_destruct_metamorph    (:)   ! Upper limit on destructive metamorphism compaction (kg/m3)
-
-     ! SoilHydrologyInitTimeConstMod
-     real(r8), pointer :: pc                           (:)   ! Threshold probability for surface water (unitless)
-     real(r8), pointer :: om_frac_sf                   (:)   ! Scale factor for organic matter fraction (unitless)
 
      ! SoilStateInitTimeConstMod
      real(r8), pointer :: bsw_sf                       (:)   ! Scale factor for bsw (unitless)
@@ -72,6 +67,7 @@ module DistParamType
      real(r8), pointer :: frac_sat_soil_dsl_init       (:)   ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
 
      ! SurfaceWaterMod
+     real(r8), pointer :: pc                           (:)   ! Threshold probability for surface water (unitless)
      real(r8), pointer :: mu                           (:)   ! Connectivity exponent for surface water (unitless)
 
      ! WaterDiagnosticBulkType
@@ -133,7 +129,6 @@ contains
     ! initVertical
     allocate(this%slopebeta                 (begg:endc))                     ; this%slopebeta                 (:) = nan
     allocate(this%slopemax                  (begg:endc))                     ; this%slopemax                  (:) = nan
-    allocate(this%zbedrock_sf               (begg:endg))                     ; this%zbedrock_sf               (:) = nan
 
     ! SnowCoverFractionSwensonLawrence2012Mod
     allocate(this%n_melt_coef               (begg:endc))                     ; this%n_melt_coef               (:) = nan
@@ -141,10 +136,6 @@ contains
 
      ! SnowHydrologyMod
     allocate(this%upplim_destruct_metamorph (begg:endc))                     ; this%upplim_destruct_metamorph (:) = nan
-
-    ! SoilHydrologyInitTimeConstMod
-    allocate(this%pc                        (begg:endc))                     ; this%pc                        (:) = nan
-    allocate(this%om_frac_sf                (begg:endc))                     ; this% om_frac_sf               (:) = nan
 
     ! SoilStateInitTimeConstMod
     allocate(this%bsw_sf                    (begg:endc))                     ; this%bsw_sf                    (:) = nan
@@ -157,6 +148,7 @@ contains
     allocate(this%frac_sat_soil_dsl_init    (begg:endc))                     ; this%frac_sat_soil_dsl_init    (:) = nan
 
     ! SurfaceWaterMod
+    allocate(this%pc                        (begg:endc))                     ; this%pc                        (:) = nan
     allocate(this%mu                        (begg:endc))                     ; this%mu                        (:) = nan
 
     ! WaterDiagnosticBulkType
@@ -515,23 +507,6 @@ contains
        call readNcdioScalar(ncids, 'slopemax', subname, fscalar_in)
        this%slopemax(:) = fscalar_in
     endif
-
-    ! parameter to scale zbedrock (m)
-    call check_var(ncidd, 'zbedrock_sf', readvar)
-    if (readvar) then
-       ! if distributed parameter found, overwrite global value
-       allocate(fparam_in(bounds%begg:bounds%endg))
-       call ncd_io(ncid=ncidd, varname='zbedrock_sf', flag='read', data=fparam_in, dim1name=grlnd, readvar=readvar)
-
-       do g = bounds%begg,bounds%endg
-          this%zbedrock_sf(g) = fparam_in(g)
-       enddo
-
-       deallocate(fparam_in)
-    else ! use global parameter value
-       call readNcdioScalar(ncids, 'zbedrock_sf', subname, fscalar_in)
-       this%zbedrock_sf(:) = fscalar_in
-    endif
        
     !-----------------------------------------------------------
     ! SnowCoverFractionSwensonLawrence2012 !
@@ -593,28 +568,6 @@ contains
     else ! use global parameter value
        call readNcdioScalar(ncids, 'upplim_destruct_metamorph', subname, fscalar_in)
        this%upplim_destruct_metamorph(:) = fscalar_in
-    endif
-
-    !-----------------------------------------------------------
-    ! SoilHydrologyInitTimeConstMod !
-    !-----------------------------------------------------------
-
-    ! Scale factor for organic matter fraction (unitless)
-    call check_var(ncidd, 'om_frac_sf', readvar)
-    if (readvar) then
-       ! if distributed parameter found, overwrite global value
-       allocate(fparam_in(bounds%begg:bounds%endg))
-       call ncd_io(ncid=ncidd, varname='om_frac_sf', flag='read', data=fparam_in, dim1name=grlnd, readvar=readvar)
-
-       do c = bounds%begc,bounds%endc
-          g = col%gridcell(c)
-          this%om_frac_sf(c) = fparam_in(g)
-       enddo
-
-       deallocate(fparam_in)
-    else ! use global parameter value
-       call readNcdioScalar(ncids, 'om_frac_sf', subname, fscalar_in)
-       this%om_frac_sf(:) = fscalar_in
     endif
 
     !-----------------------------------------------------------
@@ -914,7 +867,6 @@ contains
 
     deallocate(this%slopebeta)
     deallocate(this%slopemax)
-    deallocate(this%zbedrock_sf)
 
     deallocate(this%n_melt_coef)
     deallocate(this%accum_factor)
@@ -928,7 +880,6 @@ contains
     deallocate(this%hksat_sf)
     deallocate(this%sucsat_sf)
     deallocate(this%watsat_sf)
-    deallocate(this%om_frac_sf)
 
     deallocate(this%d_max)
     deallocate(this%frac_sat_soil_dsl_init)

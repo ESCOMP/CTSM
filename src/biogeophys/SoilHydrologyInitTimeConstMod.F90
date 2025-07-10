@@ -188,7 +188,7 @@ contains
                    if ( lev <= nlevsoi )then
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,lev)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,lev)
-                      om_fraccol(c,lev) = min(distparams%om_frac_sf(c)*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
+                      om_fraccol(c,lev) = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
                    else
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,nlevsoi)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,nlevsoi)
