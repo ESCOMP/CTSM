@@ -1,4 +1,228 @@
 ===============================================================
+Tag name: ctsm5.3.063
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Jul 10 12:28:36 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Regular merge of b4b-dev branch to master. See "Bugs fixed" and "Other details" for more information.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- [Issue #2985: Fix need/checks for inputdata path in subset_data and Python testing](https://github.com/ESCOMP/CTSM/issues/2985)
+- [Issue #2986: Avoid use of os.mknod() in Python testing for portability](https://github.com/ESCOMP/CTSM/issues/2986)
+- [Issue #2984: Python unit tests aren't portable](https://github.com/ESCOMP/CTSM/issues/2984)
+- [Issue #3279: subset_data still having trouble with Longitude](https://github.com/ESCOMP/CTSM/issues/3279)
+- [Issue #2911: Docs: Specify that snow/ice units are liquid water equivalent](https://github.com/ESCOMP/CTSM/issues/2911)
+- [Issue #3312: Add some PE layout test sizes for some resolutions to facilitate testing decompInit time testing for different problem sizes / task counts](https://github.com/ESCOMP/CTSM/issues/3312)
+- [Issue #3313: Hist fields REPRODUCTIVE1N_TO_FOOD_PERHARV and _ANN lose their suffixes in LREPR* tests](https://github.com/ESCOMP/CTSM/issues/3313)
+- [Issue #3110: Initialization of historical using CTSM5.4 surface datasets fails](https://github.com/ESCOMP/CTSM/issues/3110)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New init_interp_fill_missing_urban_with_HD option (default `.false.`). See [Pull Request #3132: Fix #3110 (Initialization of historical using CTSM5.4 surface datasets fails) by olyson](https://github.com/ESCOMP/CTSM/pull/3132).
+
+Changes to documentation:
+- Tech Note now specifies that snow/ice units are liquid water equivalent.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Adds SMS_D_Ld10.f09_f09_mt232.IHistClm60BgcCrop.derecho_intel.clm-f09_FillMissingW_Urban test to aux_clm
+- Adds various tests to new decomp_init test suite ("Initialization tests specifically for examining the PE layout decomposition initialization")
+- Adds various Python unit and system tests
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    * Will run fates suite after aux_clm, just to generate fates-sci.1.84.0_api.40.0.0-ctsm5.3.063 baseline. Will not compare against any baseline or even check for errors.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [Pull Request #3238: Add GitHub workflow for Python unit tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3238)
+- [Pull Request #3286: subset_data: Fix conversion of Longitude to string by samsrabin](https://github.com/ESCOMP/CTSM/pull/3286)
+- [Pull Request #3247: add notes to specify snow/ice units are liquid water equivalent by sy-li](https://github.com/ESCOMP/CTSM/pull/3247)
+- [Pull Request #3315: Add decomp_init testlist and some extra PE layouts for some grids by ekluzek](https://github.com/ESCOMP/CTSM/pull/3315)
+- [Pull Request #3314: Fix string replacements in lreprstruct test by billsacks](https://github.com/ESCOMP/CTSM/pull/3314)
+- [Pull Request #3132: Fix #3110 (Initialization of historical using CTSM5.4 surface datasets fails) by olyson](https://github.com/ESCOMP/CTSM/pull/3132)
+- [Pull Request #3240: tips-for-working-with-rst.md: Add common errors, cheatsheet links. by samsrabin](https://github.com/ESCOMP/CTSM/pull/3240)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.062
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed 09 Jul 2025 09:03:55 AM MDT
+One-line Summary: Put instantaneous and non-inst. fields on separate hist files
+
+Purpose and description of changes
+----------------------------------
+ Following ctsm5.3.018 "Change history time to be the middle of the time bounds"
+ the current change intends to prevent confusion associated with the time corresponding to instantaneous history fields by putting them on separate files than non-instantaneous fields. The result is
+
+ 1) two history files per clm, mosart, and rtm history tape:
+ tape h0 becomes h0a and h0i
+ tape h1 becomes h1a and h1i
+ ...
+ tape hX becomes hXa and hXi
+
+ 2) two history restart files per history restart tape:
+ rh0 becomes rh0a and rh0i
+ rh1 becomes rh1a and rh1i
+ ...
+ rhX becomes rhXa and rhXi
+
+ The clm handles empty history (and corresponding history restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (considered out of scope), I have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #1059 Don't allow inst. fields and averaged fields to be on the same history file
+ Resolves ESCOMP/RTM#32
+ Resolves ESCOMP/MOSART#52
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ History tapes have new extensions, e.g. h0 becomes h0a and h0i
+ History restart tapes have new extensions, e.g. rh0 becomes rh0a and rh0i
+
+Changes to documentation:
+ Not, yet:
+ - clm documentation
+ - Adam Phillips' cmip documentation
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (-c fates-sci.1.84.0_api.40.0.0-ctsm5.3.061 -g fates-sci.1.84.0_api.40.0.0-ctsm5.3.062)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci (-c ctsm_sci-ctsm5.3.059 -g ctsm_sci-ctsm5.3.062)
+     derecho ---- FAIL and I will open an issue and mark EXPECTED FAILURE as the problem originates in ctsm5.3.060
+
+  mosart tests: (-c mosart1.1.08-ctsm5.3.061 -g mosart1.1.09-ctsm5.3.062)
+    derecho ----- OK
+    izumi ------- OK
+
+  rtm tests: (-c rtm1_0_86-ctsm5.3.061 -g rtm1_0_87-ctsm5.3.062)
+    derecho ----- OK
+    izumi ------- OK
+
+  crop_calendars tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
+    derecho ----- OK
+    izumi ------- OK
+
+  ssp tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
+    derecho ----- OK
+
+  hillslope tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
+    derecho ----- OK
+
+  fire tests: (tested while in ctsm5.3.058 and again in ctsm5.3.061)
+    derecho ----- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, but read caveat:
+ h0 files become h0a (containing non-instantaneous fields) and h0i (containing instantaneous fields):
+ - I spot-checked clm, mosart, and rtm files and confirmed no bitwise change in answers.
+ - I ran Sam Rabin's comparison tool written specifically to compare hX files against hXa + hXi files:
+   ~samrabin/pr_2445_baseline_compare/pr_2445_baseline_compare.py -1 /glade/campaign/cgd/tss/ctsm_baselines/ctsm5.3.061 tests_0701-173109de
+   and it returned a single DIFF that appears to be a false positive.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ mosart1.1.08 --> mosart1.1.09
+ rtm1_0_86 --> rtm1_0_87
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2445
+ https://github.com/ESCOMP/MOSART/pull/117
+ https://github.com/ESCOMP/RTM/pull/61
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.061
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 26 Jun 2025 11:28:43 AM MDT

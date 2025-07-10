@@ -4298,17 +4298,6 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITYINST_Lm61" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
-      <machine name="derecho" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">6:00:00</option>
-      <option name="comment">As RXCROPMATURITY, but ensure that h1 file is instantaneous. Can be removed once instantaneous and other variables are separated onto separate files.</option>
-    </options>
-  </test>
-
   <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -4318,17 +4307,6 @@
     <options>
       <option name="wallclock">00:45:00</option>
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. Unlike the RXCROPMATURITY test, however, it does not generate its own maturity requirements, instead interpolating a pre-existing maturity requirement file. (This allows the "GDD-generating" run to be mostly skipped.) This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
-    </options>
-  </test>
-
-  <test name="RXCROPMATURITYSKIPGENINST_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
-      <machine name="derecho" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:45:00</option>
-      <option name="comment">As RXCROPMATURITYSKIPGEN, but ensure that h1 file is instantaneous. Can be removed once instantaneous and other variables are separated onto separate files.</option>
     </options>
   </test>
 
@@ -4446,7 +4424,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">02:00:00</option>
     </options>
   </test>
 
