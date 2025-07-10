@@ -280,13 +280,13 @@ def import_and_process_1yr(
         chunks = None
 
     # Get h1 file (list)
-    h1_pattern = os.path.join(indir, "*h1.*.nc")
+    h1_pattern = os.path.join(indir, "*h1i.*.nc")
     h1_filelist = glob.glob(h1_pattern)
     if not h1_filelist:
-        h1_pattern = os.path.join(indir, "*h1.*.nc.base")
+        h1_pattern = os.path.join(indir, "*h1i.*.nc.base")
         h1_filelist = glob.glob(h1_pattern)
         if not h1_filelist:
-            error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
+            error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
 
     # Get list of crops to include
     if skip_crops is not None:
@@ -566,7 +566,7 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    patterns = [f"*h2.{this_year-1}-01*.nc", f"*h2.{this_year-1}-01*.nc.base"]
+    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
     for pat in patterns:
         pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
