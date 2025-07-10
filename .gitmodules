@@ -27,8 +27,8 @@
 #
 [submodule "fates"]
 path = src/fates
-url = https://github.com/NGEET/fates
-fxtag = sci.1.84.0_api.40.0.0
+url = https://github.com/samsrabin/fates
+fxtag = e0037facd11bdc8866af1cf4578cdbc49269c8bd  # fix_testing_ssr: Remove datm_file_url.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates

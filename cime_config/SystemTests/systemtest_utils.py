@@ -43,6 +43,9 @@ def cmds_to_run_via_conda(caseroot, conda_run_call, command):
 
 def run_python_script(caseroot, this_conda_env, command_in, tool_path):
 
+    if not isinstance(command_in, str):
+        raise TypeError(f"command_in must be a string, not {type(command_in)}")
+
     # First, try with "conda run -n"
     command = cmds_to_run_via_conda(caseroot, f"conda run -n {this_conda_env}", command_in)
 
