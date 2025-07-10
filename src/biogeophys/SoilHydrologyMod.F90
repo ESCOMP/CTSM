@@ -58,16 +58,7 @@ module SoilHydrologyMod
   public :: RenewCondensation    ! Misc. corrections
   public :: CalcIrrigWithdrawals ! Calculate irrigation withdrawals from groundwater by layer
   public :: WithdrawGroundwaterIrrigation   ! Remove groundwater irrigation from unconfined and confined aquifers
-  public :: readParams
 
-  type, private :: params_type
-     real(r8) :: aq_sp_yield_min         ! Minimum aquifer specific yield (unitless)
-     real(r8) :: n_baseflow              ! Drainage power law exponent (unitless)
-     real(r8) :: perched_baseflow_scalar ! Scalar multiplier for perched base flow rate (kg/m2/s)
-     real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
-  end type params_type
-  type(params_type), public ::  params_inst
-  
   !-----------------------------------------------------------------------
   real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
@@ -171,32 +162,6 @@ contains
     endif
 
   end subroutine hillslope_hydrology_ReadNML
-
-  !-----------------------------------------------------------------------
-  subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_SoilHydrology'
-    !--------------------------------------------------------------------
-
-    ! Minimum aquifer specific yield (unitless)
-    call readNcdioScalar(ncid, 'aq_sp_yield_min', subname, params_inst%aq_sp_yield_min)
-    ! Drainage power law exponent (unitless)
-    call readNcdioScalar(ncid, 'n_baseflow', subname, params_inst%n_baseflow)
-    ! Scalar multiplier for perched base flow rate (kg/m2/s)
-    call readNcdioScalar(ncid, 'perched_baseflow_scalar', subname, params_inst%perched_baseflow_scalar)
-    ! Soil ice impedance factor (unitless)
-    call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
-
-  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine soilHydReadNML( NLFilename )

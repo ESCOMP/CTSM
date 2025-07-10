@@ -51,12 +51,6 @@ module SaturatedExcessRunoffMod
      procedure, private, nopass :: ComputeFsatTopmodel
      procedure, private, nopass :: ComputeFsatVic
   end type saturated_excess_runoff_type
-  public :: readParams
-
-  type, private :: params_type
-     real(r8) :: fff  ! Decay factor for fractional saturated area (1/m)
-  end type params_type
-  type(params_type), private ::  params_inst
 
   ! !PRIVATE DATA MEMBERS:
 
@@ -175,26 +169,6 @@ contains
     end if
 
   end subroutine InitCold
-
-  !-----------------------------------------------------------------------
-  subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_SaturatedExcessRunoff'
-    !--------------------------------------------------------------------
-
-    ! Decay factor for fractional saturated area (1/m)
-    call readNcdioScalar(ncid, 'fff', subname, params_inst%fff)
-
-  end subroutine readParams
 
   ! ========================================================================
   ! Science routines

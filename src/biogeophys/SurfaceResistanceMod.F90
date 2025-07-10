@@ -30,13 +30,6 @@ module SurfaceResistanceMod
   public :: do_soilevap_beta, do_soil_resistance_sl14
 !  public :: init_soil_resistance
   public :: soil_resistance_readNL
-  public :: readParams
-
-  type, private :: params_type
-     real(r8) :: d_max  ! Dry surface layer parameter (mm)
-     real(r8) :: frac_sat_soil_dsl_init  ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
-  end type params_type
-  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -166,28 +159,6 @@ contains
     endif
 
   end subroutine soil_resistance_readNL
-   
-   !------------------------------------------------------------------------------   
-   subroutine readParams( ncid )
-     !
-     ! !USES:
-     use ncdio_pio, only: file_desc_t
-     use paramUtilMod, only: readNcdioScalar
-     !
-     ! !ARGUMENTS:
-     implicit none
-     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-     !
-     ! !LOCAL VARIABLES:
-     character(len=*), parameter :: subname = 'readParams_SurfaceResistance'
-     !--------------------------------------------------------------------
-
-     ! Dry surface layer parameter (mm)
-     call readNcdioScalar(ncid, 'd_max', subname, params_inst%d_max)
-     ! Fraction of saturated soil for moisture value at which DSL initiates (unitless)
-     call readNcdioScalar(ncid, 'frac_sat_soil_dsl_init', subname, params_inst%frac_sat_soil_dsl_init)
-
-   end subroutine readParams
 
    !------------------------------------------------------------------------------   
    subroutine calc_soilevap_resis(bounds, num_nolakec, filter_nolakec, &
