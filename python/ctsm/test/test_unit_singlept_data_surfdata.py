@@ -23,6 +23,8 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
+from ctsm.longitude import Longitude
 
 # pylint: disable=invalid-name
 # pylint: disable=too-many-lines
@@ -36,7 +38,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     """
 
     plat = 20.1
-    plon = 50.5
+    plon = Longitude(50.5, lon_type=180)
     site_name = None
     create_domain = True
     create_surfdata = True
@@ -46,7 +48,7 @@ class TestSinglePointCaseSurfaceNoCrop(unittest.TestCase):
     dom_pft = [8]
     evenly_split_cropland = False
     pct_pft = None
-    num_pft = 16
+    num_pft = MAX_PFT_GENERICCROPS
     cth = 0.9
     cbh = 0.1
     include_nonveg = False
@@ -657,7 +659,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     """
 
     plat = 20.1
-    plon = 50.5
+    plon = Longitude(50.5, lon_type=180)
     site_name = None
     create_domain = True
     create_surfdata = True
@@ -667,7 +669,7 @@ class TestSinglePointCaseSurfaceCrop(unittest.TestCase):
     dom_pft = [17]
     evenly_split_cropland = False
     pct_pft = None
-    num_pft = 78
+    num_pft = MAX_PFT_MANAGEDCROPS
     cth = 0.9
     cbh = 0.1
     include_nonveg = False
