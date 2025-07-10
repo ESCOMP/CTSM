@@ -21,6 +21,7 @@ module WaterDiagnosticBulkType
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
+  use DistParamType  , only : distparams
   use filterColMod   , only : filter_col_type, col_filter_from_ltypes
   use WaterDiagnosticType, only : waterdiagnostic_type
   use WaterInfoBaseType, only : water_info_base_type
@@ -757,7 +758,7 @@ contains
                fmelt    = (snowbd/100.)**1.
                ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
                ! reconsidered, optimal value of 1.5 in Niu et al., 2007
-               this%frac_sno_col(c) = tanh( this%snow_depth_col(c) / (2.5 * params_inst%zlnd * fmelt) )
+               this%frac_sno_col(c) = tanh( this%snow_depth_col(c) / (2.5 * distparams%zlnd(c) * fmelt) )
             endif
          end if
       end do

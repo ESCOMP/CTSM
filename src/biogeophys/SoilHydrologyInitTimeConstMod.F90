@@ -13,6 +13,7 @@ module SoilHydrologyInitTimeConstMod
   use WaterStateBulkType, only : waterstatebulk_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
+  use DistParamType     , only : distparams
   use SoilStateInitTimeConstMod, only: organic_max
   !
   implicit none
@@ -187,7 +188,7 @@ contains
                    if ( lev <= nlevsoi )then
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,lev)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,lev)
-                      om_fraccol(c,lev) = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
+                      om_fraccol(c,lev) = min(distparams%om_frac_sf(c)*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
                    else
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,nlevsoi)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,nlevsoi)
@@ -220,7 +221,7 @@ contains
          if (micro_sigma(c) > 1.e-6_r8 .and. (soilhydrology_inst%h2osfcflag /= 0)) then
             d = 0.0_r8
             do p = 1,4
-               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - params_inst%pc
+               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - distparams%pc(c)
                dfdd = exp(-d**2/(2.0_r8*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0_r8*shr_const_pi))
                d    = d - fd/dfdd
             enddo

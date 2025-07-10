@@ -8,14 +8,17 @@ module readParamsMod
   !
   ! ! USES:
   use clm_varctl , only : paramfile, iulog, use_fates, use_cn
+  use clm_varctl , only : distributed_paramfile
   use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use spmdMod    , only : masterproc
   use fileutils  , only : getfil
   use ncdio_pio  , only : ncd_pio_closefile, ncd_pio_openfile
   use ncdio_pio  , only : file_desc_t , ncd_inqdid, ncd_inqdlen
+  use decompMod  , only : bounds_type
 
   implicit none
   private
+  character(len=*), parameter, private :: sourcefile = __FILE__
   !
   public :: readParameters
 
@@ -63,6 +66,7 @@ contains
     use SoilHydrologyInitTimeConstMod     , only : readParams_SoilHydrologyInitTimeConst  => readParams
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
+
     !
     ! !ARGUMENTS:
     type(photosyns_type)                   , intent(in) :: photosyns_inst

@@ -36,6 +36,7 @@ module SnowHydrologyMod
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
+  use DistParamType   , only : distparams
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice, istcrop
   use clm_time_manager, only : get_step_size_real, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
@@ -70,7 +71,7 @@ module SnowHydrologyMod
   public :: SnowHydrologySetControlForTesting ! Set some of the control settings
 
   type, private :: params_type
-      real(r8) :: wimp                  ! Water impremeable if porosity less than wimp (unitless)
+      real(r8) :: wimp                  ! Water impermeable if porosity less than wimp (unitless)
       real(r8) :: ssi                   ! Irreducible water saturation of snow (unitless)
       real(r8) :: drift_gs              ! Wind drift compaction / grain size (fixed value for now) (unitless)
       real(r8) :: eta0_anderson         ! Viscosity coefficent from Anderson1976 (kg*s/m2)
@@ -1972,8 +1973,8 @@ contains
                 ! Settling as a result of destructive metamorphism
 
                 ddz1 = -c3*dexpf
-                if (bi > params_inst%upplim_destruct_metamorph) ddz1 = &
-                        ddz1*exp(-46.0e-3_r8*(bi-params_inst%upplim_destruct_metamorph))
+                if (bi > distparams%upplim_destruct_metamorph(c)) ddz1 = &
+                        ddz1*exp(-46.0e-3_r8*(bi-distparams%upplim_destruct_metamorph(c)))
 
                 ! Liquid water term
 

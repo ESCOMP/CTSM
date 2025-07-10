@@ -10,6 +10,7 @@ module SoilStateInitTimeConstMod
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
   use PatchType     , only : patch                
+  use DistParamType , only : distparams
   use abortUtils    , only : endrun
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   !
@@ -454,20 +455,20 @@ contains
              if (lev .eq. 1) then
                 clay = clay3d(g,1)
                 sand = sand3d(g,1)
-                om_frac = min(params_inst%om_frac_sf*organic3d(g,1)/organic_max, 1._r8)
+                om_frac = min(distparams%om_frac_sf(c)*organic3d(g,1)/organic_max, 1._r8)
              else if (lev <= nlevsoi) then
                 found = 0  ! reset value
                 if (zsoi(lev) <= zisoifl(1)) then
                    ! Search above the dataset's range of zisoifl depths
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = min(params_inst%om_frac_sf*organic3d(g,1)/organic_max, 1._r8)
+                   om_frac = min(distparams%om_frac_sf(c)*organic3d(g,1)/organic_max, 1._r8)
                    found = 1
                 else if (zsoi(lev) > zisoifl(nlevsoifl)) then
                    ! Search below the dataset's range of zisoifl depths
                    clay = clay3d(g,nlevsoifl)
                    sand = sand3d(g,nlevsoifl)
-                   om_frac = min(params_inst%om_frac_sf*organic3d(g,nlevsoifl)/organic_max, 1._r8)
+                   om_frac = min(distparams%om_frac_sf(c)*organic3d(g,nlevsoifl)/organic_max, 1._r8)
                    found = 1
                 else
                    ! For remaining model soil levels, search within dataset's
@@ -477,7 +478,7 @@ contains
                       if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
                          clay = clay3d(g,j+1)
                          sand = sand3d(g,j+1)
-                         om_frac = min(params_inst%om_frac_sf*organic3d(g,j+1)/organic_max, 1._r8)
+                         om_frac = min(distparams%om_frac_sf(c)*organic3d(g,j+1)/organic_max, 1._r8)
                          found = 1
                       endif
                       if (found == 1) exit  ! no need to stay in the loop
@@ -547,13 +548,13 @@ contains
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*params_inst%pd
                 ! do not allow watsat_sf to push watsat above 0.93
-                soilstate_inst%watsat_col(c,lev)    = min(params_inst%watsat_sf * ( (1._r8 - om_frac) * &
+                soilstate_inst%watsat_col(c,lev)    = min(distparams%watsat_sf(c) * ( (1._r8 - om_frac) * &
                                                       soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac ), 0.93_r8)
                 tkm                                 = (1._r8-om_frac) * (params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/ &
                                                       (sand+clay)+params_inst%tkm_om*om_frac ! W/(m K)
-                soilstate_inst%bsw_col(c,lev)       = params_inst%bsw_sf * ( (1._r8-om_frac) * &
+                soilstate_inst%bsw_col(c,lev)       = distparams%bsw_sf(c) * ( (1._r8-om_frac) * &
                                                       (2.91_r8 + 0.159_r8*clay) + om_frac*om_b )
-                soilstate_inst%sucsat_col(c,lev)    = params_inst%sucsat_sf * ( (1._r8-om_frac) * &
+                soilstate_inst%sucsat_col(c,lev)    = distparams%sucsat_sf(c) * ( (1._r8-om_frac) * &
                                                       soilstate_inst%sucsat_col(c,lev) + om_sucsat*om_frac ) 
                 soilstate_inst%hksat_min_col(c,lev) = xksat
 
@@ -575,7 +576,7 @@ contains
                 else
                    uncon_hksat = 0._r8
                 end if
-                soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_sf * ( uncon_frac*uncon_hksat + &
+                soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf(c) * ( uncon_frac*uncon_hksat + &
                                                    (perc_frac*om_frac)*om_hksat )
 
                 soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))           
@@ -630,9 +631,9 @@ contains
                 clay    =  soilstate_inst%cellclay_col(c,lev)
                 sand    =  soilstate_inst%cellsand_col(c,lev)
                 if ( organic_frac_squared )then
-                   om_frac = min( params_inst%om_frac_sf*(soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8, 1._r8)
+                   om_frac = min( distparams%om_frac_sf(c)*(soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8, 1._r8)
                 else
-                   om_frac = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev)/organic_max, 1._r8)
+                   om_frac = min(distparams%om_frac_sf(c)*soilstate_inst%cellorg_col(c,lev)/organic_max, 1._r8)
                 end if
              else
                 clay    = soilstate_inst%cellclay_col(c,nlevsoi)
@@ -649,16 +650,16 @@ contains
              bd = (1._r8-soilstate_inst%watsat_col(c,lev))*params_inst%pd
 
              ! do not allow watsat_sf to push watsat above 0.93
-             soilstate_inst%watsat_col(c,lev) = min(params_inst%watsat_sf * ( (1._r8 - om_frac) * &
+             soilstate_inst%watsat_col(c,lev) = min(distparams%watsat_sf(c) * ( (1._r8 - om_frac) * &
                     soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac), 0.93_r8)
 
              tkm = (1._r8-om_frac)*(params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/(sand+clay) + &
                    params_inst%tkm_om * om_frac ! W/(m K)
 
-             soilstate_inst%bsw_col(c,lev)    = params_inst%bsw_sf * ( (1._r8-om_frac) * &
+             soilstate_inst%bsw_col(c,lev)    = distparams%bsw_sf(c) * ( (1._r8-om_frac) * &
                    (2.91_r8 + 0.159_r8*clay) + om_frac * om_b_lake )
 
-             soilstate_inst%sucsat_col(c,lev) = params_inst%sucsat_sf * ( (1._r8-om_frac) * &
+             soilstate_inst%sucsat_col(c,lev) = distparams%sucsat_sf(c) * ( (1._r8-om_frac) * &
                    soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac )
 
              xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
@@ -682,7 +683,7 @@ contains
                 uncon_hksat = 0._r8
              end if
 
-             soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_sf * ( uncon_frac*uncon_hksat + &
+             soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf(c) * ( uncon_frac*uncon_hksat + &
                                        (perc_frac*om_frac)*om_hksat_lake )
              soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))
              soilstate_inst%tksatu_col(c,lev) = soilstate_inst%tkmg_col(c,lev)*0.57_r8**soilstate_inst%watsat_col(c,lev)

@@ -16,9 +16,10 @@ module SaturatedExcessRunoffMod
   use clm_varcon   , only : spval,ispval
   use LandunitType , only : landunit_type
   use landunit_varcon  , only : istcrop
-  use ColumnType   , only : column_type
+  use ColumnType       , only : column_type
+  use DistParamType    , only : distparams
   use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType, only : soilstate_type
+  use SoilStateType    , only : soilstate_type
   use WaterFluxBulkType, only : waterfluxbulk_type
 
   implicit none
@@ -349,9 +350,9 @@ contains
        c = filter_hydrologyc(fc)
        if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
           ! use perched water table to determine fsat (if present)
-          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt_perched(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff(c)*zwt_perched(c))
        else
-          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff(c)*zwt(c))
        end if
     end do
 

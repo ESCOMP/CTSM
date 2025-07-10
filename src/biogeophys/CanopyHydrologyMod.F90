@@ -31,8 +31,9 @@ module CanopyHydrologyMod
   use WaterStateBulkType      , only : waterstatebulk_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterTracerUtils        , only : CalcTracerFromBulk
-  use ColumnType      , only : col, column_type
-  use PatchType       , only : patch, patch_type
+  use ColumnType              , only : col, column_type
+  use PatchType               , only : patch, patch_type
+
   !
   ! !PUBLIC TYPES:
   implicit none

@@ -25,6 +25,7 @@ module clm_initializeMod
   use LandunitType          , only : lun           ! instance
   use ColumnType            , only : col           ! instance
   use PatchType             , only : patch         ! instance
+  use DistParamType         , only : distparams
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
@@ -342,12 +343,15 @@ contains
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
-    ! Read in parameters files
+    ! Read in parameters
     call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
 
+    ! Read in spatially distributed parameters
+    call distparams%Init(bounds_proc)
+    call distparams%readDistributedParams(bounds_proc)
     
     ! Initialize time manager
     if (nsrest == nsrStartup) then

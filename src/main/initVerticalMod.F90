@@ -27,6 +27,7 @@ module initVerticalMod
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
+  use DistParamType     , only : distparams
   use glcBehaviorMod    , only : glc_behavior_type
   use abortUtils        , only : endrun    
   use ncdio_pio
@@ -45,10 +46,7 @@ module initVerticalMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   type, private :: params_type
-     real(r8) :: slopebeta      ! exponent for microtopography pdf sigma (unitless)
-     real(r8) :: slopemax       ! max topographic slope for microtopography pdf sigma (unitless)
      real(r8) :: zbedrock       ! parameter to substitute for zbedrock (m)
-     real(r8) :: zbedrock_sf    ! parameter to scale zbedrock (m)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -76,13 +74,7 @@ contains
     character(len=*), parameter :: subname = 'readParams_initVertical'
     !--------------------------------------------------------------------
 
-    ! Exponent for microtopography pdf sigma (unitless)
-    call readNcdioScalar(ncid, 'slopebeta', subname, params_inst%slopebeta)
-    ! Max topographic slope for microtopography pdf sigma (unitless) 
-    call readNcdioScalar(ncid, 'slopemax', subname, params_inst%slopemax)
-
     call readNcdioScalar(ncid, 'zbedrock', subname, params_inst%zbedrock)
-    call readNcdioScalar(ncid, 'zbedrock_sf', subname, params_inst%zbedrock_sf)
 
   end subroutine readParams
 
@@ -455,9 +447,11 @@ contains
        if (params_inst%zbedrock>=0._r8) then
           zbedrock_in(:) = params_inst%zbedrock
        end if
-       if (params_inst%zbedrock_sf/=1._r8) then
-          zbedrock_in(:) = params_inst%zbedrock_sf*zbedrock_in(:)
-       end if
+       do g = bounds%begg,bounds%endg
+          if (distparams%zbedrock_sf(g)/=1._r8) then
+             zbedrock_in(g) = distparams%zbedrock_sf(g)*zbedrock_in(g)
+          end if
+       enddo
 
     !  if use_bedrock = false, set zbedrock to lowest layer bottom interface
     else
@@ -657,12 +651,12 @@ contains
 
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
-       slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
+       slope0 = distparams%slopemax(c)**(1._r8/distparams%slopebeta(c))
 
        if (col%is_hillslope_column(c)) then
-          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(params_inst%slopebeta)
+          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(distparams%slopebeta(c))
        else
-          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(distparams%slopebeta(c))
        endif
 
     end do

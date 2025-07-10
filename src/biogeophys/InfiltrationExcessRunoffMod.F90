@@ -14,9 +14,10 @@ module InfiltrationExcessRunoffMod
   use clm_varcon       , only : spval
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
+  use DistParamType    , only : distparams
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
-  use WaterFluxBulkType    , only : waterfluxbulk_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use WaterFluxBulkType       , only : waterfluxbulk_type
+  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
 
   implicit none
   save
@@ -296,7 +297,7 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       qinmax_on_unsaturated_area(c) = minval(10._r8**(-params_inst%e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
+       qinmax_on_unsaturated_area(c) = minval(10._r8**(-distparams%e_ice(c)*(icefrac(c,1:3)))*hksat(c,1:3))
     end do
 
     end associate
