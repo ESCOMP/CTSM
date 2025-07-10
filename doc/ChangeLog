@@ -1,4 +1,97 @@
 ===============================================================
+Tag name: ctsm5.3.063
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Jul 10 12:28:36 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Regular merge of b4b-dev branch to master. See "Bugs fixed" and "Other details" for more information.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- [Issue #2985: Fix need/checks for inputdata path in subset_data and Python testing](https://github.com/ESCOMP/CTSM/issues/2985)
+- [Issue #2986: Avoid use of os.mknod() in Python testing for portability](https://github.com/ESCOMP/CTSM/issues/2986)
+- [Issue #2984: Python unit tests aren't portable](https://github.com/ESCOMP/CTSM/issues/2984)
+- [Issue #3279: subset_data still having trouble with Longitude](https://github.com/ESCOMP/CTSM/issues/3279)
+- [Issue #2911: Docs: Specify that snow/ice units are liquid water equivalent](https://github.com/ESCOMP/CTSM/issues/2911)
+- [Issue #3312: Add some PE layout test sizes for some resolutions to facilitate testing decompInit time testing for different problem sizes / task counts](https://github.com/ESCOMP/CTSM/issues/3312)
+- [Issue #3313: Hist fields REPRODUCTIVE1N_TO_FOOD_PERHARV and _ANN lose their suffixes in LREPR* tests](https://github.com/ESCOMP/CTSM/issues/3313)
+- [Issue #3110: Initialization of historical using CTSM5.4 surface datasets fails](https://github.com/ESCOMP/CTSM/issues/3110)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New init_interp_fill_missing_urban_with_HD option (default `.false.`). See [Pull Request #3132: Fix #3110 (Initialization of historical using CTSM5.4 surface datasets fails) by olyson](https://github.com/ESCOMP/CTSM/pull/3132).
+
+Changes to documentation:
+- Tech Note now specifies that snow/ice units are liquid water equivalent.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Adds SMS_D_Ld10.f09_f09_mt232.IHistClm60BgcCrop.derecho_intel.clm-f09_FillMissingW_Urban test to aux_clm
+- Adds various tests to new decomp_init test suite ("Initialization tests specifically for examining the PE layout decomposition initialization")
+- Adds various Python unit and system tests
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    * Will run fates suite after aux_clm, just to generate fates-sci.1.84.0_api.40.0.0-ctsm5.3.063 baseline. Will not compare against any baseline or even check for errors.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [Pull Request #3238: Add GitHub workflow for Python unit tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3238)
+- [Pull Request #3286: subset_data: Fix conversion of Longitude to string by samsrabin](https://github.com/ESCOMP/CTSM/pull/3286)
+- [Pull Request #3247: add notes to specify snow/ice units are liquid water equivalent by sy-li](https://github.com/ESCOMP/CTSM/pull/3247)
+- [Pull Request #3315: Add decomp_init testlist and some extra PE layouts for some grids by ekluzek](https://github.com/ESCOMP/CTSM/pull/3315)
+- [Pull Request #3314: Fix string replacements in lreprstruct test by billsacks](https://github.com/ESCOMP/CTSM/pull/3314)
+- [Pull Request #3132: Fix #3110 (Initialization of historical using CTSM5.4 surface datasets fails) by olyson](https://github.com/ESCOMP/CTSM/pull/3132)
+- [Pull Request #3240: tips-for-working-with-rst.md: Add common errors, cheatsheet links. by samsrabin](https://github.com/ESCOMP/CTSM/pull/3240)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.062
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Wed 09 Jul 2025 09:03:55 AM MDT

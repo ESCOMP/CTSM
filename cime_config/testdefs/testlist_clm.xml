@@ -13,6 +13,7 @@
         rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
+        decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -170,6 +171,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld10" grid="f09_f09_mt232" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Testing that a initial condition file with an missing urban landunit will be filled with another urban landunit</option>
     </options>
   </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
@@ -4149,6 +4160,53 @@
     <options>
       <option name="wallclock">0:20:00</option>
       <option name="comment">Include a test that triggers runtime self-tests. The grid and compset aren't very important here, but we do want more than a single-point test so that we can run on more than one processor; we use Qian atm forcing to facilitate running this test on small systems (to avoid large input data needs). The self-tests are run in initialization, so we only need to run for a single time step.</option>
+    </options>
+  </test>
+
+  <!-- decomp_init tests -->
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Small" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne120pg3 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
     </options>
   </test>
 

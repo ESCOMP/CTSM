@@ -361,4 +361,13 @@
     </phase>
   </test>
 
+  <!-- decomp_init test list-->
+
+  <test name="SMS_Ln1_PL.mpasa15_mpasa15.I2000Clm45Sp.derecho_intel.clm-run_self_tests">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3316</issue>
+    </phase>
+  </test>
+
 </expectedFails>
