@@ -9,6 +9,7 @@ import os
 
 from ctsm import unit_testing
 from ctsm.utils import fill_template_file, ensure_iterable
+from ctsm.utils import find_one_file_matching_pattern
 from ctsm.config_utils import _handle_config_value
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
@@ -314,6 +315,54 @@ class TestUtilsEnsureIterable(unittest.TestCase):
         """
         with self.assertRaisesRegex(ValueError, "Input is iterable but wrong length"):
             ensure_iterable([11, 12], 3)
+
+
+class TestUtilsFindOneFileMatchingPattern(unittest.TestCase):
+    """Tests of utils: find_one_file_matching_pattern"""
+
+    def setUp(self):
+        self._testdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self._testdir)
+
+    def test_find_one_file_matching_pattern(self):
+        """
+        Tests that find_one_file_matching_pattern passes if one file matches
+        """
+        # Create empty file
+        # pylint: disable=consider-using-with,unspecified-encoding
+        test_file_path = os.path.join(self._testdir, "abc123.txt")
+        open(test_file_path, "x").close()
+
+        # Look for empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        result = find_one_file_matching_pattern(pattern)
+        self.assertEqual(result, test_file_path)
+
+    def test_find_one_file_matching_pattern_0found(self):
+        """
+        Tests that find_one_file_matching_pattern errors if no files match
+        """
+        # Look for non-existent empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        with self.assertRaisesRegex(FileNotFoundError, "No file found matching pattern"):
+            find_one_file_matching_pattern(pattern)
+
+    def test_find_one_file_matching_pattern_2found(self):
+        """
+        Tests that find_one_file_matching_pattern errors if multiple files match
+        """
+        # Create empty files
+        # pylint: disable=consider-using-with,unspecified-encoding
+        open(os.path.join(self._testdir, "abc123.txt"), "x").close()
+        open(os.path.join(self._testdir, "abc456.txt"), "x").close()
+
+        # Look for empty file given a pattern with wildcard
+        pattern = os.path.join(self._testdir, "abc*")
+        err_msg = "Expected 1 but found 2 files found matching pattern"
+        with self.assertRaisesRegex(RuntimeError, err_msg):
+            find_one_file_matching_pattern(pattern)
 
 
 if __name__ == "__main__":

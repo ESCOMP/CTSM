@@ -26,9 +26,10 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Checkout doc-builder external
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       # Do this if not using conda
       # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
