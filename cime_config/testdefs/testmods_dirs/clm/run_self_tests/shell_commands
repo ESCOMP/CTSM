@@ -12,5 +12,14 @@
 ./xmlchange CLM_CONFIGURATION="nwp"
 
 # Restarts aren't allowed for these tests, and turn off CPL history
+# First change in env_test.xml, then in the standard one so it won't complain there
+./xmlchange --force REST_OPTION="never" --file env_test.xml
+./xmlchange --force HIST_OPTION="never" --file env_test.xml
 ./xmlchange REST_OPTION="never"
 ./xmlchange HIST_OPTION="never"
+
+# Timer settings
+./xmlchange TIMER_DETAIL="2"
+./xmlchange SAVE_TIMING="TRUE"
+./xmlchange CHECK_TIMING="TRUE"
+./xmlchange ESMF_PROFILING_LEVEL="10"
