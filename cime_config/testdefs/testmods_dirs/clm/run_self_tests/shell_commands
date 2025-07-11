@@ -5,7 +5,7 @@
 ./xmlchange ROF_NCPL='$ATM_NCPL'
 
 # Turn MEGAN off to run faster
-./xmlchange CLM_BLDNML_OPTS='--no-megan' -append
+./xmlchange CLM_BLDNML_OPTS='--no-megan' --append
 
 # Use fast structure and NWP configuration for speed
 ./xmlchange CLM_STRUCTURE="fast"
