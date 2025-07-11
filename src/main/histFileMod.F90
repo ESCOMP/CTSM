@@ -3952,7 +3952,7 @@ contains
           call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
                long_name='1d column index of corresponding pft', ifill_value=ispval, ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
+          call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, dim2name='time', &
                long_name='pft weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtlunit', xtype=ncd_double, dim1name=namep, &
@@ -4109,7 +4109,7 @@ contains
             subgrid_level=subgrid_level_column)
        call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
 
-       call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
+       call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_wtcol'    , data=patch%wtcol   , dim1name=namep, ncid=ncid, flag='write')
        call ncd_io(varname='pfts1d_itype_veg', data=patch%itype   , dim1name=namep, ncid=ncid, flag='write')
