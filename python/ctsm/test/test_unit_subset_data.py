@@ -7,6 +7,8 @@ You can run this by:
 """
 
 import unittest
+import tempfile
+import shutil
 import configparser
 import argparse
 import os
@@ -85,12 +87,24 @@ class TestSubsetData(unittest.TestCase):
         self.defaults = configparser.ConfigParser()
         self.defaults.read(os.path.join(self.cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
 
+        # Work in temporary directory
+        self._previous_dir = os.getcwd()
+        self._tempdir = tempfile.mkdtemp()
+        os.chdir(self._tempdir)  # cd to tempdir
+
+    def tearDown(self):
+        """
+        Remove temporary directory
+        """
+        os.chdir(self._previous_dir)
+        shutil.rmtree(self._tempdir, ignore_errors=True)
+
     def test_inputdata_setup_files_basic(self):
         """
         Test
         """
         self.args = check_args(self.args)
-        files = setup_files(self.args, self.defaults, self.cesmroot)
+        files = setup_files(self.args, self.defaults, self.cesmroot, testing=True)
         self.assertEqual(
             files["fsurf_in"],
             "surfdata_0.9x1.25_hist_2000_16pfts_c240908.nc",
@@ -114,6 +128,23 @@ class TestSubsetData(unittest.TestCase):
         self.args = check_args(self.args)
         self.defaults.set("main", "clmforcingindir", "/zztop")
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
+            setup_files(self.args, self.defaults, self.cesmroot)
+
+    def test_inputdata_setup_files_gswp3_error(self):
+        """
+        Test that error is thrown if user tries to --create-datm GSWP3
+        """
+        cfg_file = os.path.join(
+            _CTSM_PYTHON, "ctsm", "test", "testinputs", "default_data_gswp3.cfg"
+        )
+        sys.argv = ["subset_data", "point", "--create-datm", "--cfg-file", cfg_file]
+        self.args = self.parser.parse_args()
+        self.defaults = configparser.ConfigParser()
+        self.defaults.read(self.args.config_file)
+
+        with self.assertRaisesRegex(
+            NotImplementedError, "https://github.com/ESCOMP/CTSM/issues/3269"
+        ):
             setup_files(self.args, self.defaults, self.cesmroot)
 
     def test_check_args_nooutput(self):
@@ -153,7 +184,7 @@ class TestSubsetData(unittest.TestCase):
         sys.argv = ["subset_data", "point", "--create-surface", "--out-surface", "outputsurface.nc"]
         self.args = self.parser.parse_args()
         self.args = check_args(self.args)
-        files = setup_files(self.args, self.defaults, self.cesmroot)
+        files = setup_files(self.args, self.defaults, self.cesmroot, testing=True)
         self.assertEqual(
             files["fsurf_out"],
             "outputsurface.nc",
@@ -229,7 +260,7 @@ class TestSubsetData(unittest.TestCase):
         for an existing dataset without the overwrite option
         """
         outfile = os.path.join(
-            os.getcwd(),
+            _CTSM_PYTHON,
             "ctsm/test/testinputs/",
             "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )

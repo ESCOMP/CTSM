@@ -3018,13 +3018,21 @@ snow melt of Brock et al. (2006)
        group="clm_initinterp_inparm" valid_values="" >
 If FALSE (which is the default): If an output type cannot be found in the input for initInterp,
 code aborts
-If TRUE: If an output type cannot be found in the input, fill with closest natural veg column
+If TRUE: If a non-urban output type cannot be found in the input, fill with closest natural veg column
 (using bare soil for patch-level variables)
 
 NOTE: Natural vegetation and crop landunits always behave as if this were true. e.g., if
 we can't find a column with the same type as a given crop column in the output, then we
 always fill with the closest natural veg patch / column, regardless of the value of this
 flag. So interpolation from non-crop to crop cases can be done without setting this flag.
+</entry>
+
+<entry id="init_interp_fill_missing_urban_with_HD" type="logical" category="datasets"
+       group="clm_initinterp_inparm" valid_values="" >
+If FALSE (which is the default): If an urban output type cannot be found in the input for initInterp,
+code aborts
+If TRUE: If an urban output type cannot be found in the input, fill with closest urban high density
+(HD) landunit
 </entry>
 
 <entry id="init_interp_method" type="char*64" category="datasets"
