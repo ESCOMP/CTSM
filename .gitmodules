@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 8462bf2c189dd2b3b098627192ff8ded1c01b2d0  # edge-area-202410: Merge branch 'fix_testing_ssr' into edge-area-202410
+fxtag = 61a24edec48fbe9fd7762f601d6421ee87e84e4c  # edge-area-202410: Make logical_to_real() public.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
