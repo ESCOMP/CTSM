@@ -12,12 +12,14 @@ module decompInitMod
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog
+  use proc_status_vm, only : prt_vm_status
+  use shr_mem_mod  , only : shr_mem_init, shr_mem_getusage
   !
   implicit none
   private
   !
   ! !PUBLIC TYPES:
-  !
+  !b
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
   public :: decompInit_clumps ! initializes atm grid decomposition into clumps
@@ -34,6 +36,7 @@ module decompInitMod
   integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
+   real(r8) :: msize, mrss ! memory usage variables
 
 #include <mpif.h>         ! mpi library include file
   !------------------------------------------------------------------------------
@@ -72,7 +75,16 @@ contains
     integer, pointer  :: clumpcnt(:)  ! clump index counter
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data
+    real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
+
+    call shr_mem_init(prt=.true.) ! initialize memory tracking
+    if(masterproc) then 
+       call prt_vm_status('CTSM: decompInit_lnd: before')
+    endif
+    call shr_mem_getusage( msize, mrss, prt=.true.)
+    write(iulog,*) 'msize, mrss = ',msize, mrss
+    call shr_sys_flush(iulog)
 
     lns = lni * lnj
 
@@ -291,6 +303,13 @@ contains
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
+    if(masterproc) then 
+       call prt_vm_status('CTSM: decompInit_lnd: afterwards before deallocate')
+    endif
+    call shr_mem_getusage( msize, mrss, prt=.true.)
+    write(iulog,*) 'msize, mrss = ',msize, mrss
+    call shr_sys_flush(iulog)
+
     deallocate(clumpcnt)
     deallocate(gdc2glo)
 
@@ -349,6 +368,9 @@ contains
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
+    if(masterproc) then 
+       call prt_vm_status('CTSM: decompInit_clumps: before')
+    endif
     !--- assign gridcells to clumps (and thus pes) ---
     call get_proc_bounds(bounds)
     begg = bounds%begg; endg = bounds%endg
@@ -470,6 +492,10 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     enddo
+
+    if(masterproc) then 
+       call prt_vm_status('CTSM: decompInit_clumps: after before deallocate')
+    endif
 
     deallocate(allvecg,allvecl)
     deallocate(lcid)
