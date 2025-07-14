@@ -2936,7 +2936,6 @@
   <test name="SMS_Lm49" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdAllVarsMonthly">
     <machines>
       <machine name="derecho" compiler="intel"   category="fates"/>
-      <machine name="derecho" compiler="intel"   category="fates_edgeforest"/>
     </machines>
     <options>
       <option name="wallclock">03:00:00</option>

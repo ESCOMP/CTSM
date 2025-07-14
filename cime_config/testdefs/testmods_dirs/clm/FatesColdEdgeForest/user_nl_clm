@@ -5,7 +5,6 @@ use_fates_edge_forest = .true.
 hist_empty_htapes = .true.
 hist_mfilt        = 1
 hist_nhtfrq       = -24
-hist_empty_htapes = .false.
 fates_spitfire_mode = 1
 fates_history_dimlevel = 2,2
 use_fates_tree_damage = .true.
