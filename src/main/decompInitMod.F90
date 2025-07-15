@@ -78,13 +78,13 @@ contains
     real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
 
-    call shr_mem_init(prt=.true.) ! initialize memory tracking
     if(masterproc) then 
+       call shr_mem_init(prt=.true.) ! initialize memory tracking
        call prt_vm_status('CTSM: decompInit_lnd: before')
+       call shr_mem_getusage( msize, mrss, prt=.true.)
+       write(iulog,*) 'msize, mrss = ',msize, mrss
+       call shr_sys_flush(iulog)
     endif
-    call shr_mem_getusage( msize, mrss, prt=.true.)
-    write(iulog,*) 'msize, mrss = ',msize, mrss
-    call shr_sys_flush(iulog)
 
     lns = lni * lnj
 
@@ -305,10 +305,10 @@ contains
 
     if(masterproc) then 
        call prt_vm_status('CTSM: decompInit_lnd: afterwards before deallocate')
+       call shr_mem_getusage( msize, mrss, prt=.true.)
+       write(iulog,*) 'msize, mrss = ',msize, mrss
+       call shr_sys_flush(iulog)
     endif
-    call shr_mem_getusage( msize, mrss, prt=.true.)
-    write(iulog,*) 'msize, mrss = ',msize, mrss
-    call shr_sys_flush(iulog)
 
     deallocate(clumpcnt)
     deallocate(gdc2glo)
