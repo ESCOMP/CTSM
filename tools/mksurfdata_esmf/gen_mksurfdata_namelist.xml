@@ -168,7 +168,7 @@ version of the raw dataset will probably go away.
 
   <mksrf_fabm>
     <entry>
-      <data_filename>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_simyr2000.c240821.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_simyr2000.c250715.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
     <entry pft_years="PtVg">
