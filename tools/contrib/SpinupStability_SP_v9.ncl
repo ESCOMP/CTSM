@@ -54,9 +54,9 @@ begin
   tws_thresh = 0.001             ; disequilibrium threshold for individual gridcells (m)
 
   if (annual_hist .eq. "True") then
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
   else
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 

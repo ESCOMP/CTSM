@@ -81,9 +81,9 @@ begin
   totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr)
 
   if (annual_hist) then
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
+    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
   else
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
+    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 

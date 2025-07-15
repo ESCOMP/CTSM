@@ -241,12 +241,24 @@
     <type>char</type>
     <default_value></default_value>
     <values>
-      <!--- All versions -->
-      <value compset="_CLM[^_]*%SP"       >-bgc sp</value>
-      <value compset="_CLM[^_]*BGC"       >-bgc bgc</value>
-      <value compset="_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
-      <value compset="_CLM[^_]*FATES"     >-bgc fates -no-megan</value>
-      <value compset="_CLM[^_]*FATES-SP"  >-bgc fates -no-megan</value>
+      <!--- All versions with DATM -->
+      <value compset="DATM[^_]*_CLM[^_]*%SP"       >-bgc sp</value>
+      <value compset="DATM[^_]*_CLM[^_]*BGC"       >-bgc bgc</value>
+      <value compset="DATM[^_]*_CLM[^_]*BGC-CROP"  >-bgc bgc -crop</value>
+
+      <!-- FATES currently can't use MEGAN, drydep, or fire-emission whether coupled to CAM or NOT-->
+      <value compset="CLM[^_]*FATES" >--bgc fates --no-megan --no-drydep --no-fire_emis</value>
+
+      <!-- ======================================= Coupled to CAM Options ======================================
+        All versions with CAM - turn off sending test drv_flds_in namelists from CTSM
+
+        When coupled to CAM - expect CAM to determine these drv_flds settings
+        See issue #2713 for more information on this.
+      -->
+      <value compset="CAM[^_]*_CLM[^_]*%SP"       >--bgc sp --no-megan --no-drydep --no-fire_emis</value>
+      <value compset="CAM[^_]*_CLM[^_]*BGC"       >--bgc bgc --no-megan --no-drydep --no-fire_emis</value>
+      <value compset="CAM[^_]*_CLM[^_]*BGC-CROP"  >--bgc bgc --crop --no-megan --no-drydep --no-fire_emis</value>
+      <!-- ======================================= End of Coupled to CAM Options ===============================  -->
 
       <!-- Options specific for CLM4.5 -->
       <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>

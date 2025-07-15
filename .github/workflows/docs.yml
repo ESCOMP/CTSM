@@ -7,6 +7,7 @@ on:
     branches: ['*']
     paths:
       - 'doc/**'
+      - '!doc/test/*'
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
@@ -14,11 +15,13 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'doc/**'
+      - '!doc/test/*'
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
@@ -26,6 +29,7 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
       - 'tools/README'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   workflow_dispatch:
 
@@ -49,9 +53,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout doc-builder external
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs

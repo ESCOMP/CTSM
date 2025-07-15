@@ -642,8 +642,10 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call t_startf ('lc_lnd_set_decomp_and_domain_from_readmesh')
        call lnd_set_decomp_and_domain_from_readmesh(driver='cmeps', vm=vm, &
             meshfile_lnd=model_meshfile, meshfile_mask=meshfile_mask, mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+       call t_stopf ('lc_lnd_set_decomp_and_domain_from_readmesh')
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 

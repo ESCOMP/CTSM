@@ -145,28 +145,8 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
-  <test NAME="RXCROPMATURITYINST">
-    <DESC>As RXCROPMATURITY but ensure instantaneous h1. Can be removed once instantaneous and other variables are on separate files.</DESC>
-    <INFO_DBUG>1</INFO_DBUG>
-    <DOUT_S>FALSE</DOUT_S>
-    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
-    <REST_OPTION>never</REST_OPTION>
-    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
-    <HIST_N>$STOP_N</HIST_N>
-  </test>
-
   <test NAME="RXCROPMATURITYSKIPGEN">
     <DESC>As RXCROPMATURITY but don't actually generate GDDs. Allows short testing with existing GDD inputs.</DESC>
-    <INFO_DBUG>1</INFO_DBUG>
-    <DOUT_S>FALSE</DOUT_S>
-    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
-    <REST_OPTION>never</REST_OPTION>
-    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
-    <HIST_N>$STOP_N</HIST_N>
-  </test>
-
-  <test NAME="RXCROPMATURITYSKIPGENINST">
-    <DESC>As RXCROPMATURITYSKIPGEN but ensure instantaneous h1. Can be removed once instantaneous and other variables are on separate files.</DESC>
     <INFO_DBUG>1</INFO_DBUG>
     <DOUT_S>FALSE</DOUT_S>
     <CONTINUE_RUN>FALSE</CONTINUE_RUN>
