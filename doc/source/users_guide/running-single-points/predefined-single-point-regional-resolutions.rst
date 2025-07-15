@@ -1,13 +1,13 @@
 .. include:: ../substitutions.rst
 
-.. _pts_mode:
+.. _pre-defined-single-pt-regional-resolutions:
 
 ****************************************************
-Running a single point using global data - PTS_MODE
+Pre-defined single-point and regional resolutions
 ****************************************************
 
 .. warning::
-   ``PTS_MODE`` has been mostly deprecated in favor of ``subset_data`` (Sect. :numref:`single_point_subset_data`). You should only consider using it if you are using the Single Column Atmospheric Model (SCAM).
+   ``PTS_MODE`` has been mostly deprecated in favor of ``subset_data`` (Sect. :numref:`generic_single_point_runs`). You should only consider using it if you are using the Single Column Atmospheric Model (SCAM).
 
 ``PTS_MODE`` enables you to run the model using global datasets, but just picking a single point from those datasets and operating on it. It can be a very quick way to do fast simulations and get a quick turnaround.
 

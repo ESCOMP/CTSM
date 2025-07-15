@@ -81,7 +81,7 @@ URBALPHA_TMP2_FNAME        := surfdata_1x1_urbanc_alpha_hist_2000_78pfts_tmp.nc
 URBALPHA_FNAME             := surfdata_1x1_urbanc_alpha_hist_2000_78pfts_c$(CDATE).nc
 SUBSETDATA_1X1_MEXICOCITY  := --lat 19.5 --lon 260.5 --site 1x1_mexicocityMEX --out-surface $(MEXICOCITY_TMP_FNAME)
 SUBSETDATA_1X1_VANCOUVER   := --lat 49.5 --lon 236.5 --site 1x1_vancouverCAN --out-surface  $(VANCOUVER_TMP_FNAME)
-SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 0 --site 1x1_urbanc_alpha --out-surface $(URBALPHA_TMP_FNAME)
+SUBSETDATA_1X1_URBALPHA    := --lat -37.7308 --lon 360 --site 1x1_urbanc_alpha --out-surface $(URBALPHA_TMP_FNAME)
 
 # ne120np4 and hi-res are for high resolution, ne16np4 is for mid-resolution testing
 # low-res is for low resolutions for testing
