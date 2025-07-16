@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = ec60dfbfa019f87c8492266e9f458ce163de5035  # edge-area-202410: Change longname of fates_levedge.
+fxtag = 824ec00e611f9b1dbaf0e691ad55bcfa806f312c  # edge-area-202410: Clean up FATES edge forest work.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
