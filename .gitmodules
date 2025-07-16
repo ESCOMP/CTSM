@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 61a24edec48fbe9fd7762f601d6421ee87e84e4c  # edge-area-202410: Make logical_to_real() public.
+fxtag = ec60dfbfa019f87c8492266e9f458ce163de5035  # edge-area-202410: Change longname of fates_levedge.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates

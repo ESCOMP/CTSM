@@ -3263,7 +3263,7 @@ contains
              call ncd_defvar(varname='fates_levage',xtype=tape(t)%ncprec, dim1name='fates_levage', &
                   long_name='FATES patch age (yr)', ncid=nfid(t,f))
              call ncd_defvar(varname='fates_levedge',xtype=tape(t)%ncprec, dim1name='fates_levedge', &
-                  long_name='FATES edge number', ncid=nfid(t,f))
+                  long_name='FATES edge bin min. distance to nonforest', ncid=nfid(t,f))
              call ncd_defvar(varname='fates_levheight',xtype=tape(t)%ncprec, dim1name='fates_levheight', &
                   long_name='FATES height (m)', ncid=nfid(t,f))
              call ncd_defvar(varname='fates_levpft',xtype=ncd_int, dim1name='fates_levpft', &
