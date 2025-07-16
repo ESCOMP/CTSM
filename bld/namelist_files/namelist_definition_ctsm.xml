@@ -2295,14 +2295,12 @@ If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
 
 <entry id="megan_use_gamma_sm" type="logical" category="MEGAN_emissions"
        group="megan_opts" valid_values="" >
-  If TRUE, use activity factor for soil moisture for MEGAN isoprene emissions.
-<default>Default: FALSE </default>
+If TRUE, use activity factor for soil moisture for MEGAN isoprene emissions.
 </entry>
 
 <entry id="megan_min_gamma_sm" type="real" category="MEGAN_emissions"
        group="megan_opts" valid_values="" >
-  Minimum activity factor for soil moisture for MEGAN isoprene emissions.
-<default>Default: Zero </default>
+Minimum activity factor for soil moisture for MEGAN isoprene emissions.
 </entry>
 
 <entry id="sim_year" type="char*4" category="default_settings"
