@@ -152,6 +152,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan clm_accelerated_spinup="sasu">0</megan>
 <megan configuration="nwp"          >0</megan>
 
+<!-- Setting to TRUE replicates previous ctsm5.3.063 answers, setting to false turns the soil moisture effect off -->
+<megan_use_gamma_sm>.false.</megan_use_gamma_sm>
+
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
 <suplnitro use_fates=".true." >ALL</suplnitro>
