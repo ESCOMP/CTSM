@@ -323,7 +323,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
-                         "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist'\"",
+                         "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist' ndepmapalgo='mapconsd' popdensmapalgo='mapconsf'\"",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
