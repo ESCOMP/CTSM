@@ -1,2 +1,5 @@
 ./xmlchange CLM_BLDNML_OPTS="-no-megan" --append
 ./xmlchange BFBFLAG="TRUE"
+
+# The following is done as documented in #3184 where more memory is needed for FATES single processor cases
+./xmlchange MEM_PER_TASK=20
