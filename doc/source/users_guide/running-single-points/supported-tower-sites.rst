@@ -70,9 +70,10 @@ PLUMBER Tower Single Point Simulations
 
 .. note:: A few important notes regarding the PLUMBER tower site simulations are that the default run type is ``ad``; additionally, PLUMBER cases all start in different years.
 
-Currently supported PLUMBER Sites can be found by running ``run_tower --help``.
-
+Currently, the ``run_tower`` tool supports running CTSM at PLUMBER 2 sites using forcing data from the PLUMBER2 projects. Detailed site information is provided in `Ukkola et al. 2022 <https://doi.org/10.5194/essd-14-449-2022>`_ , and the description of the experiment and its results is provided in `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_.
 Information on the specific sites can be found `here <https://researchdata.edu.au/plumber2-forcing-evaluation-surface-models/1656048>`_.
+
+Currently supported PLUMBER Sites can be found by running ``run_tower --help``. Keep in mind that the experiment was designed to run 170 sites; however, they identified different issues with the sites, and most of the article only uses 156 sites.
 
 To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this::
 
@@ -80,3 +81,13 @@ To run CTSM at a PLUMBER site, change directories to where the run_tower tool is
  run_tower --plumber-sites AR-SLu
 
 The output for a PLUMBER case will be set up similarly to the output for a NEON case, as described above.
+
+A few notes regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
+
+
+1) By default, all simulations (e.g., ad, post-ad, transient) are designed to run for 1 hour of wall clock time. For the spin-up simulations, it is recommended to extend the time to match the length of the simulations. 
+2) By default, the initial period of the simulations differs for the spin-up (e.g., ad and post-ad) and transient simulations. It is important to revisit for each site the best period to use for the spin-up simulations. It is suggested to run the spin-up simulations using the no_leap calendar to avoid issues with Feb 28/29 on leap years. It is also recommended to set a dtlimit value of 50 in the spin-up simulation of the user_nl_datm_strems files. 
+3) By default, the tools call for surfdata files in a default location. These might not be available for all sites. Users can create their own surfdata files, using tools/site_and_regional/plumber2_usermods. 
+4) It is suggested to use the flags-- setup-only to examine how the site files are being configured before running the simulations.
+5) It is suggested to add ``echo "baseflow_scalar = 0" >> user_nl_clm`` to the user_nl_clm file to avoid issues with the baseflow in the wetland sites.
+6) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to use the user mods directory ``/CTSM/cime_config/usermods_dirs/clm/PLUMBER2/${site}``, which contains the necessary modifications to run the simulations in SP mode. 
