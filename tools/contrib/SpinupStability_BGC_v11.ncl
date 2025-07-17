@@ -1,14 +1,9 @@
 ; NCL script
-; SpinupStability_BGC_v10.ncl
+; SpinupStability_BGC_v11.ncl
 ; Script to examine stability of BGC spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
 ; NOTE: THIS SCRIPT IS ONLY INTENDED FOR USE WITH 2-D LAT/LON GRIDS
-; Keith Oleson, Mar 2020
-
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "~oleson/lnd_diag/run/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
+; Keith Oleson, July 2025
 
 begin
 
@@ -30,17 +25,18 @@ begin
 ;  annual_hist flag to False if your case has monthly mean history files.
 ;  AND set the region (supported options: Global, Arctic, SPT).
 ;  AND set the subper (subsampling period in years, number of years that atm forcing repeats).
-; The script assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
+; The script assumes that your history files are in /glade/derecho/scratch/$username/archive/$caseid/lnd/hist
 ; You need a run consisting of at least three cycles of atmospheric data
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
-  caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
-  username = "oleson"
+  caseid = "ctsm53026_BNF_AD"
+  username = "slevis"
   annual_hist = True
   region = "Global"              ; Global, Arctic, or SPT (single point)
   subper = 20                    ; Subsampling period in years
   paleo = False                  ; Use paleo map
+  hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
 ; SPT (single point) EXAMPLE
 ; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
@@ -49,12 +45,13 @@ begin
 ; region = "SPT"                 ; Global, Arctic, or SPT (single point)
 ; subper = 20                    ; Subsampling period in years
 ; paleo = False                  ; Use paleo map
+; hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
   do_plot = True
 ; do_plot = False
 ;=======================================================================;
 
-  data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+  data_dir = "/glade/derecho/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
   if ( systemfunc("test -d "+data_dir+"; echo $?" ) .ne. 0 )then
      print( "Input directory does not exist or not found: "+data_dir );
      print( "Make sure username and caseid and base directory is set correctly" )
@@ -85,9 +82,9 @@ begin
   end if
 
   if (annual_hist) then
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*-*-*"+".nc")
   else
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 
