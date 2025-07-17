@@ -39,6 +39,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varctl             , only : FL => fname_len
+  use clm_varctl             , only : for_testing_exit_after_self_tests
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -80,6 +81,7 @@ module lnd_comp_nuopc
 
   logical                :: glc_present
   logical                :: rof_prognostic
+  logical                :: atm_present
   logical                :: atm_prognostic
   integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
@@ -284,6 +286,11 @@ contains
     else
        atm_prognostic = .true.
     end if
+    if (trim(atm_model) == 'satm') then
+       atm_present = .false.
+    else
+       atm_present = .true.
+    end if
     call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=glc_model, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (trim(glc_model) == 'sglc') then
@@ -310,6 +317,9 @@ contains
        write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
        write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
        write(iulog,'(a,L2)')' atm_prognostic                = ',atm_prognostic
+       if (.not. atm_present) then
+          write(iulog,'(a,L2)')' atm_present                  = ',atm_present
+       end if
        write(iulog,'(a,L2)')' rof_prognostic                = ',rof_prognostic
        write(iulog,'(a,L2)')' glc_present                   = ',glc_present
        if (glc_present) then
@@ -328,7 +338,8 @@ contains
     call control_setNL("lnd_in"//trim(inst_suffix))
 
 
-    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
+                          atm_prognostic, atm_present, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -491,6 +502,12 @@ contains
        end if
     else
        single_column = .false.
+    end if
+    if ( for_testing_exit_after_self_tests) then
+       ! *******************
+       ! *** RETURN HERE ***
+       ! *******************
+       RETURN
     end if
 
     !----------------------------------------------------------------------------
@@ -771,6 +788,9 @@ contains
     if (single_column .and. .not. scol_valid) then
        RETURN
     end if
+    if (for_testing_exit_after_self_tests) then
+       RETURN
+    end if
 
     !$  call omp_set_num_threads(nthrds)
 
@@ -1002,6 +1022,7 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
     if (.not. scol_valid) return
+    if (for_testing_exit_after_self_tests) return
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1285,6 +1306,7 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
+    use clm_varctl, only : for_testing_exit_after_self_tests
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
@@ -1311,6 +1333,9 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+    if (for_testing_exit_after_self_tests) then
        RETURN
     end if
     ! The remander of this should be equivalent to the NUOPC internal routine
