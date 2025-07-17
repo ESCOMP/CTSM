@@ -8,7 +8,7 @@ module SoilBiogeochemCompetitionMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use clm_varcon                      , only : dzsoi_decomp
-  use clm_varctl                      , only : use_nitrif_denitrif
+  use clm_varctl                      , only : use_nitrif_denitrif, use_soil_nox
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -30,6 +30,7 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
+  use DryDepVelocity                  , only : drydepvel_type 
   !
   implicit none
   private
@@ -59,7 +60,7 @@ module SoilBiogeochemCompetitionMod
   ! !PRIVATE DATA MEMBERS:
   real(r8) :: dt   ! decomp timestep (seconds)
   real(r8) :: bdnr ! bulk denitrification rate (1/s)
-
+  real(r8) :: dthr   ! decomp timestep (hours)  for soil nox rain pulsing  
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -143,7 +144,7 @@ contains
 
     ! set time steps
     dt = get_step_size_real()
-
+    dthr=dt/3600._r8 !time step in hours  for soil nox nitrif rain pulsing
     ! set space-and-time parameters from parameter file
     bdnr = params_inst%bdnr * (dt/secspday)
 
@@ -172,7 +173,8 @@ contains
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                          soilbiogeochem_carbonflux_inst,                                           &              
                                          soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst,             &
-                                         soilbiogeochem_nitrogenflux_inst,canopystate_inst)
+                                         soilbiogeochem_nitrogenflux_inst,canopystate_inst,                        &
+                                         drydepvel_inst)
     !
     ! !USES:
     use clm_varctl       , only: cnallocate_carbon_only, iulog
@@ -207,7 +209,8 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst   
-!
+    type(drydepvel_type)                    , intent(in)    :: drydepvel_inst !for NO soil canopy reduction
+
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,l,pi,j,k                                          ! indices
@@ -241,6 +244,10 @@ contains
     real(r8) :: residual_smin_no3(bounds%begc:bounds%endc)
     real(r8) :: residual_plant_ndemand(bounds%begc:bounds%endc)
     real(r8) :: sminn_to_plant_new(bounds%begc:bounds%endc)
+    real(r8) :: h2osoi_diff(bounds%begc:bounds%endc,1:nlevdecomp)     !soil NO rain pulse
+    real(r8), pointer :: crf_drydep_col(:)   !soil NO canopy_reduction 
+    real(r8), target  :: crf_drydep_col_target(bounds%begc:bounds%endc)
+    
     !-----------------------------------------------------------------------
 
     associate(                                                                                           &
@@ -272,6 +279,22 @@ contains
          n2_n2o_ratio_denit_vr        => soilbiogeochem_nitrogenflux_inst%n2_n2o_ratio_denit_vr_col    , & ! Output: [real(r8) (:,:) ]  ratio of N2 to N2O production by denitrification [gN/gN]
          f_n2o_denit_vr               => soilbiogeochem_nitrogenflux_inst%f_n2o_denit_vr_col           , & ! Output: [real(r8) (:,:) ]  flux of N2O from denitrification [gN/m3/s]
          f_n2o_nit_vr                 => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_vr_col             , & ! Output: [real(r8) (:,:) ]  flux of N2O from nitrification [gN/m3/s]
+!!!!SOIL NOx         
+         f_n2_denit_vr               => soilbiogeochem_nitrogenflux_inst%f_n2_denit_vr_col           , & ! Output: [real(r8) (:,:) ]  flux of N2 from denitrification [gN/m3/s]
+         nox_n2o_ratio_vr             => soilbiogeochem_nitrogenflux_inst%nox_n2o_ratio_vr_col        , &  ! Output: [real(r8) (:,:) ]  ratio of NOx to N2O production by nitrification and denitrification [gN/gN]
+         pot_f_nox_denit_vr             => soilbiogeochem_nitrogenflux_inst%pot_f_nox_denit_vr_col           , & ! Output: [real(r8) (:,:) ]  potential flux of NOx from denitrification [gN/m3/s]
+         pot_f_nox_nit_vr               => soilbiogeochem_nitrogenflux_inst%pot_f_nox_nit_vr_col             , & ! Output: [real(r8) (:,:) ]  potential flux of NOx from nitrification [gN/m3/s]
+         f_nox_denit_vr               => soilbiogeochem_nitrogenflux_inst%f_nox_denit_vr_col           , & ! Output: [real(r8) (:,:) ]  flux of NOx from denitrification [gN/m3/s]
+         f_nox_nit_vr                 => soilbiogeochem_nitrogenflux_inst%f_nox_nit_vr_col             , & ! Output: [real(r8) (:,:) ]  flux of NOx from nitrification [gN/m3/s]
+         crf_drydep                    =>drydepvel_inst%crf_drydep_patch                               ,& ! Input: [real(r8) (:)   ]  canopy reduction factor for NOx associated with dry deposition velocity [unitless])
+         f_nox_denit_atmos_vr          => soilbiogeochem_nitrogenflux_inst%f_nox_denit_atmos_vr_col    , & ! Output: [real(r8) (:,:) ]  flux of NOx from denitrification [gN/m3/s]
+         f_nox_nit_atmos_vr           => soilbiogeochem_nitrogenflux_inst%f_nox_nit_atmos_vr_col       , & ! Output: [real(r8) (:,:) ]  flux of NOx from nitrification [gN/m3/s]
+         pfactor_vr                    => soilbiogeochem_nitrogenstate_inst%pfactor_vr_col               , & ! Output: [real(r8) (:,:) ]  rain pulse factor for NOx nitrification flux [unitless]
+         ldry_vr                       => soilbiogeochem_nitrogenstate_inst%ldry_vr_col               , & ! In/Output: [real(r8) (:,:) ]   dry period counter for rain pulse in NOx nitrification flux [hours]
+         h2osoi_diff_vr                => soilbiogeochem_nitrogenflux_inst%h2osoi_diff_vr_col           , & ! Output: [real(r8) (:,:) ]  delta volumetric water content from day and previous day [m3/m3]
+         h2osoi_vol_old               => waterstatebulk_inst%h2osoi_vol_old_col                             , & ! Input:  [real(r8) (:,:)  ]  volumetric soil water previous time step (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+         h2osoi_vol                    => waterstatebulk_inst%h2osoi_vol_col                                , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+!!!!!         
          supplement_to_sminn_vr       => soilbiogeochem_nitrogenflux_inst%supplement_to_sminn_vr_col   , & ! Output: [real(r8) (:,:) ]                                        
          sminn_to_plant_vr            => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_vr_col        , & ! Output: [real(r8) (:,:) ]                                        
          potential_immob_vr           => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col       , & ! Input:  [real(r8) (:,:) ]                                        
@@ -281,6 +304,13 @@ contains
          sminn_to_plant_fun_nh4_vr    => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col  & ! Iutput: [real(r8) (:)   ]  Total layer nh4 uptake of FUN (gN/m2/s)
          )
 
+      !pft to column average for soil NO canopy reduction
+      crf_drydep_col => crf_drydep_col_target
+      call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
+           crf_drydep(bounds%begp:bounds%endp), &
+           crf_drydep_col(bounds%begc:bounds%endc))
+
+      
       ! calcualte nitrogen uptake profile
       ! nuptake_prof(:,:) = nan
       ! call SoilBiogelchemNitrogenUptakeProfile(bounds, &
@@ -721,6 +751,76 @@ contains
                f_n2o_nit_vr(c,j) = f_nit_vr(c,j) * nitrif_n2o_loss_frac
                f_n2o_denit_vr(c,j) = f_denit_vr(c,j) / (1._r8 + n2_n2o_ratio_denit_vr(c,j))
 
+               if (use_soil_nox) then
+
+                  !need to have released N2 to balance the cycle later
+                  f_n2_denit_vr(c,j) = f_denit_vr(c,j)/ (1._r8 + 1._r8/n2_n2o_ratio_denit_vr(c,j))
+ 
+               
+               !soil NOx emissions nitrification
+                  pot_f_nox_nit_vr(c,j)   = f_n2o_nit_vr(c,j) * nox_n2o_ratio_vr(c,j) 
+
+               ! RAIN PULSES FOR NOX NITRIFICATION
+               !An increase of 0.5% (v/v) in 7 cm of surface soil is equivalent to about 3.5 mm of rainfall, which 
+               !is the rainfall amount often reported to cause a pulse
+               ! Calculate the change in volumetric soil moisture since previous timestep 
+                  h2osoi_diff(c,j)=h2osoi_vol(c,j)-h2osoi_vol_old(c,j)
+                  if (h2osoi_vol(c,j)  < 0.30_r8 .and. pfactor_vr(c,j) .eq. 1._r8) then
+
+                  ! If change in soil moisture is > 0.005 (0.5% v/v) and there is precipitation, then start pulsing
+                     if ( h2osoi_diff(c,j) > 0.005_r8 ) then
+                     ! Initialize new pulse factor (dry period hours)
+                        if ( ldry_vr(c,j) > 72._r8 ) then
+                           pfactor_vr(c,j) = 13._r8 *LOG(ldry_vr(c,j)) - 53.6_r8
+                        else
+                           pfactor_vr(c,j)=1._r8
+                        endif
+                     ! If dry period < ~3 days then no pulse.  "13._r8 *LOG(ldry(c,j))" becomes > 53.6 at > 72 hours
+                     ! Reinitialize dry period
+                        ldry_vr(c,j) = 0._r8
+                     else ! If no rain (i.e.,  change in soil moisture is < 0.5%)
+                     ! Add one timestep (in hours) to dry period
+                        ldry_vr(c,j) = ldry_vr(c,j) + dthr
+                     endif
+                  else
+                     pfactor_vr(c,j) = pfactor_vr(c,j) * exp( -0.068_r8 * dthr )
+
+                  ! Update dry period
+                     If ( h2osoi_vol(c,j) < 0.30_r8 ) then
+                        ldry_vr(c,j)=ldry_vr(c,j) + dthr
+                     endif
+                  endif
+
+               ! If end of pulse
+                  if ( pfactor_vr(c,j) < 1._r8 ) then
+                     pfactor_vr(c,j) = 1._r8
+                  endif
+                  ! Apply the pulse factor to NOx nitrification emission
+                  pot_f_nox_nit_vr(c,j)   = pot_f_nox_nit_vr(c,j) * pfactor_vr(c,j)
+                  
+                  !soil NOx denitrification (DayCent code)
+                  pot_f_nox_denit_vr(c,j) = f_n2o_denit_vr(c,j) * nox_n2o_ratio_vr(c,j)  
+                                 
+                  
+               ! final NOx cannot be larger than available nitrogen from nitrification, considering the N2O nitrified
+                  f_nox_nit_vr(c,j)   = min(pot_f_nox_nit_vr(c,j), max(0._r8,f_nit_vr(c,j)-f_n2o_nit_vr(c,j)))
+               ! final NOx from denitrification cannot be larger than available nitrogen from denitrification
+                  f_nox_denit_vr(c,j)   = min(pot_f_nox_denit_vr(c,j), max(0._r8, f_n2o_denit_vr(c,j)))
+                
+               !some of the NOx denit needs to come from f_n2 as f_NOx+f_N2+f_N2O cannot be larger than Fdenit)
+                  f_n2_denit_vr(c,j)=f_n2_denit_vr(c,j)-f_nox_denit_vr(c,j)
+               
+               !remove NOx trapped in canopy, ie, NO that makes it into the atmosphere. N in canopy is assumed to returned to the soil for now.            
+               !NOx flux above canopy
+               !sanity check, make sure CRF ranges from 0 to 1
+                  crf_drydep_col(c)= min(1._r8, max(0._r8, crf_drydep_col(c)))
+               
+                  f_nox_nit_atmos_vr(c,j) =f_nox_nit_vr(c,j)* crf_drydep_col(c)
+                  f_nox_denit_atmos_vr(c,j)=f_nox_denit_vr(c,j)*crf_drydep_col(c)
+               endif
+
+
+               
 
                ! this code block controls the addition of N to sminn pool
                ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
@@ -744,6 +844,7 @@ contains
                   end if
                   sminn_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)
                end if
+               
 
                ! sum up no3 and nh4 fluxes
                fpi_vr(c,j) = fpi_no3_vr(c,j) + fpi_nh4_vr(c,j)
@@ -752,6 +853,11 @@ contains
             end do
          end do
 
+         
+
+
+
+         
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
             call CNFUN(bounds,num_bgc_soilc,filter_bgc_soilc,num_bgc_vegp,filter_bgc_vegp,waterstatebulk_inst,&

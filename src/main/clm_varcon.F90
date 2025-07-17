@@ -198,6 +198,7 @@ module clm_varcon
 
  !real(r8), parameter :: nitrif_n2o_loss_frac = 0.02_r8  ! fraction of N lost as N2O in nitrification (Parton et al., 2001)
   real(r8), public, parameter :: nitrif_n2o_loss_frac = 6.e-4_r8 ! fraction of N lost as N2O in nitrification (Li et al., 2000)
+  
   real(r8), public, parameter :: frac_minrlztn_to_no3 = 0.2_r8   ! fraction of N mineralized that is dieverted to the nitrification stream (Parton et al., 2001)
 
   !------------------------------------------------------------------

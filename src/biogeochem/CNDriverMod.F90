@@ -45,6 +45,7 @@ module CNDriverMod
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   use CropReprPoolsMod                , only : nrepr
   use SoilHydrologyType               , only: soilhydrology_type
+  use DryDepVelocity                  , only : drydepvel_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -106,7 +107,8 @@ contains
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst,          &
        soil_water_retention_curve, crop_inst, ch4_inst,                                    &
        dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,           &
-       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm)
+       nutrient_competition_method, cnfire_method, dribble_crophrv_xsmrpool_2atm,          &
+       drydepvel_inst)
     !
     ! !DESCRIPTION:
     ! The core CN code is executed here. Calculates fluxes for maintenance
@@ -210,6 +212,7 @@ contains
     class(fire_method_type)                 , intent(inout) :: cnfire_method
     logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
+    type(drydepvel_type)                    , intent(inout)    :: drydepvel_inst
     !
     ! !LOCAL VARIABLES:
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
@@ -482,7 +485,7 @@ contains
                                      cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                      soilbiogeochem_carbonflux_inst,&
                                      soilbiogeochem_state_inst,soilbiogeochem_nitrogenstate_inst,              &
-                                     soilbiogeochem_nitrogenflux_inst,canopystate_inst)
+                                     soilbiogeochem_nitrogenflux_inst,canopystate_inst, drydepvel_inst)
      call t_stopf('soilbiogeochemcompetition')
 
     ! distribute the available N between the competing patches  on the basis of 

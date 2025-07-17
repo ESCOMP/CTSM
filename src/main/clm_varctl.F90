@@ -454,6 +454,14 @@ module clm_varctl
   logical, public :: use_hydrstress = .false. ! true => use plant hydraulic stress calculation
 
   !----------------------------------------------------------
+  ! SOIL EMISSIONS (Flow of Soil NOx) switch
+  !----------------------------------------------------------
+  ! 
+  logical, public :: use_soil_nox = .false. ! true => add soil NOx emissions in N cycle
+
+
+  
+  !----------------------------------------------------------
   ! glacier_mec control variables: default values (may be overwritten by namelist)
   !----------------------------------------------------------
 

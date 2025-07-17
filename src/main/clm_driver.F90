@@ -1037,7 +1037,7 @@ contains
                water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
                soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-               nutrient_competition_method, fireemis_inst)
+               nutrient_competition_method, fireemis_inst,drydepvel_inst)
           call t_stopf('ecosysdyn')
        end if
 
@@ -1552,7 +1552,10 @@ contains
          eflx_bot           => energyflux_inst%eflx_bot_col              , & ! Output: [real(r8) (:)   ]  heat flux from beneath soil/ice column (W/m**2)
 
          cisun_z            => photosyns_inst%cisun_z_patch              , & ! Output: [real(r8) (:)   ]  intracellular sunlit leaf CO2 (Pa)
-         cisha_z            => photosyns_inst%cisha_z_patch                & ! Output: [real(r8) (:)   ]  intracellular shaded leaf CO2 (Pa)
+         cisha_z            => photosyns_inst%cisha_z_patch              , & ! Output: [real(r8) (:)   ]  intracellular shaded leaf CO2 (Pa)
+         
+         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col       , & ! Input: [real(r8) (:,:) ]  volumetric soil water (m3/m3) 
+         h2osoi_vol_old     => waterstatebulk_inst%h2osoi_vol_old_col      & ! Output: [real(r8) (:,:) ]  volumetric soil water for previous time step m3/m3
          )
 
       ! Initialize intracellular CO2 (Pa) parameters each timestep for use in VOCEmission
@@ -1564,6 +1567,8 @@ contains
       do c = bounds%begc,bounds%endc
          ! Reset flux from beneath soil/ice column
          eflx_bot(c)  = 0._r8
+         !save volumetric water from previous time step-soil nox
+         h2osoi_vol_old(c, :)=h2osoi_vol(c, :)
       end do
 
       ! Initialize fraction of vegetation not covered by snow

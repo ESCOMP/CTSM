@@ -7,7 +7,7 @@ module SoilBiogeochemNitrogenFluxType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, ndecomp_pools_vr
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_fates
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_fates, use_soil_nox
   use CNSharedParamsMod                  , only : use_fun
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use abortutils                         , only : endrun
@@ -66,7 +66,29 @@ module SoilBiogeochemNitrogenFluxType
      real(r8), pointer :: f_n2o_denit_col                           (:)     ! col flux of N2o from denitrification [gN/m^2/s]
      real(r8), pointer :: f_n2o_nit_vr_col                          (:,:)   ! col flux of N2o from nitrification [gN/m^3/s]
      real(r8), pointer :: f_n2o_nit_col                             (:)     ! col flux of N2o from nitrification [gN/m^2/s]
-
+!for NOx fluxes
+     real(r8), pointer :: f_n2_denit_vr_col                         (:,:)   ! col flux of N2 from denitrification [gN/m^3/s]
+     real(r8), pointer :: f_n2_denit_col                            (:)     ! col flux of N2 from denitrification [gN/m^2/s]
+     real(r8), pointer :: nox_n2o_ratio_vr_col                      (:,:)   ! col ratio of NOx to N2O production by nitrification and denitrification [gN/gN]
+     real(r8), pointer :: f_nox_denit_vr_col                        (:,:)   ! col flux of NOx from denitrifiation [gN/m3/s]  
+     real(r8), pointer :: f_nox_denit_col                           (:)     ! col (integrated)  flux of NOx from denitrifiation [gN/m2/s]  
+     real(r8), pointer :: f_nox_nit_vr_col                          (:,:)   ! col flux of NOx from nitrification [gN/m3/s] 
+     real(r8), pointer :: f_nox_nit_col                             (:)     ! col (integrated) flux of NOx from nitrification [gN/m2/s] 
+     real(r8), pointer :: h2osoi_diff_vr_col                       (:,:)   ! col volumtric water content different [m3/m3]. FOR DIAGNOSTICS
+     real(r8), pointer :: pot_f_nox_denit_vr_col                        (:,:)   ! col potential flux of NOx from denitrifiation [gN/m3/s]  
+     real(r8), pointer :: pot_f_nox_denit_col                           (:)     ! col potential (integrated)  flux of NOx from denitrifiation [gN/m2/s]  
+     real(r8), pointer :: pot_f_nox_nit_vr_col                          (:,:)   ! col potential flux of NOx from nitrification [gN/m3/s] 
+     real(r8), pointer :: pot_f_nox_nit_col                             (:)     ! col potential (integrated) flux of NOx from nitrification [gN/m2/s] 
+     real(r8), pointer :: f_nox_denit_atmos_vr_col                    (:,:)   ! col flux of NOx from denitrifiation with canopy reduction [gN/m3/s]  
+     real(r8), pointer :: f_nox_denit_atmos_col                       (:)     ! col (integrated)  flux of NOx from denitrifiation with canopy reduction [gN/m2/s]  
+     real(r8), pointer :: f_nox_nit_atmos_vr_col                      (:,:)   ! col flux of NOx from nitrification with canopy reduction [gN/m3/s] 
+     real(r8), pointer :: f_nox_nit_atmos_col                         (:)     ! col (integrated) flux of NOx from nitrification with canopy reduction [gN/m2/s] 
+     real(r8), pointer :: soil_nox_atmos_col                          (:)     ! col (integrated) flux of NOx from nitrification and denitrification with canopy reduction [gN/m2/s]. This is the output to the atmosphere
+     real(r8), pointer :: soil_nox_atmos_crop_col                     (:)    ! col (integrated) flux of NOx from nitrification and denitrification from croplands with canopy reduction [gN/m2/s]. This is the output to the atmosphere
+     real(r8), pointer :: soil_nox_atmos_nat_col                     (:)     ! col (integrated) flux of NOx from nitrification and denitrification from natural ecosystems with canopy reduction [gN/m2/s]. This is the output to the atmosphere     
+     real(r8), pointer :: afps_vr_col                               (:,:)    ! air soil porosity
+   
+     
      ! immobilization / uptake fluxes
      real(r8), pointer :: actual_immob_no3_vr_col                   (:,:)   ! col vertically-resolved actual immobilization of NO3 (gN/m3/s)
      real(r8), pointer :: actual_immob_nh4_vr_col                   (:,:)   ! col vertically-resolved actual immobilization of NH4 (gN/m3/s)
@@ -235,7 +257,28 @@ contains
     allocate(this%f_n2o_denit_vr_col                (begc:endc,1:nlevdecomp_full)) ; this%f_n2o_denit_vr_col         (:,:) = nan
     allocate(this%f_n2o_nit_col                     (begc:endc))                   ; this%f_n2o_nit_col              (:)   = nan
     allocate(this%f_n2o_nit_vr_col                  (begc:endc,1:nlevdecomp_full)) ; this%f_n2o_nit_vr_col           (:,:) = nan
-
+!for soil NO fluxes
+    allocate(this%nox_n2o_ratio_vr_col              (begc:endc,1:nlevdecomp_full)) ; this%nox_n2o_ratio_vr_col       (:,:) = nan
+    allocate(this%f_nox_denit_col                   (begc:endc))                   ; this%f_nox_denit_col            (:)   = nan
+    allocate(this%f_nox_denit_vr_col                (begc:endc,1:nlevdecomp_full)) ; this%f_nox_denit_vr_col         (:,:) = nan
+    allocate(this%f_nox_nit_col                     (begc:endc))                   ; this%f_nox_nit_col              (:)   = nan
+    allocate(this%f_nox_nit_vr_col                  (begc:endc,1:nlevdecomp_full)) ; this%f_nox_nit_vr_col           (:,:) = nan
+    allocate(this%h2osoi_diff_vr_col                (begc:endc,1:nlevdecomp_full)) ; this%h2osoi_diff_vr_col          (:,:) = nan !for nox nit rain pulse
+    allocate(this%pot_f_nox_denit_col               (begc:endc))                   ; this%pot_f_nox_denit_col         (:)   = nan
+    allocate(this%pot_f_nox_denit_vr_col            (begc:endc,1:nlevdecomp_full)) ; this%pot_f_nox_denit_vr_col     (:,:) = nan
+    allocate(this%pot_f_nox_nit_col                 (begc:endc))                   ; this%pot_f_nox_nit_col           (:)   = nan
+    allocate(this%pot_f_nox_nit_vr_col              (begc:endc,1:nlevdecomp_full)) ; this%pot_f_nox_nit_vr_col        (:,:) = nan
+    allocate(this%f_n2_denit_col                    (begc:endc))                   ; this%f_n2_denit_col            (:)   = nan
+    allocate(this%f_n2_denit_vr_col                 (begc:endc,1:nlevdecomp_full)) ; this%f_n2_denit_vr_col         (:,:) = nan
+    allocate(this%f_nox_denit_atmos_col             (begc:endc))                   ; this%f_nox_denit_atmos_col            (:)   = nan
+    allocate(this%f_nox_denit_atmos_vr_col          (begc:endc,1:nlevdecomp_full)) ; this%f_nox_denit_atmos_vr_col         (:,:) = nan
+    allocate(this%f_nox_nit_atmos_col               (begc:endc))                   ; this%f_nox_nit_atmos_col              (:)   = nan
+    allocate(this%f_nox_nit_atmos_vr_col            (begc:endc,1:nlevdecomp_full)) ; this%f_nox_nit_atmos_vr_col           (:,:) = nan
+    allocate(this%soil_nox_atmos_col                (begc:endc))                   ; this%soil_nox_atmos_col         (:)   = nan
+    allocate(this%soil_nox_atmos_crop_col           (begc:endc))                   ; this%soil_nox_atmos_crop_col    (:)   = nan
+    allocate(this%soil_nox_atmos_nat_col            (begc:endc))                   ; this%soil_nox_atmos_nat_col    (:)   = nan
+    allocate(this%afps_vr_col                       (begc:endc,1:nlevdecomp_full)) ; this%afps_vr_col                (:,:) = nan
+    
     allocate(this%smin_no3_massdens_vr_col          (begc:endc,1:nlevdecomp_full)) ; this%smin_no3_massdens_vr_col   (:,:) = nan
     allocate(this%soil_bulkdensity_col              (begc:endc,1:nlevdecomp_full)) ; this%soil_bulkdensity_col       (:,:) = nan
     allocate(this%k_nitr_t_vr_col                   (begc:endc,1:nlevdecomp_full)) ; this%k_nitr_t_vr_col            (:,:) = nan
@@ -857,6 +900,56 @@ contains
        call hist_addfld1d (fname='F_N2O_DENIT', units='gN/m^2/s', &
             avgflag='A', long_name='denitrification N2O flux', &
             ptr_col=this%f_n2o_denit_col)
+
+       if (use_soil_nox) then
+
+          this%nox_n2o_ratio_vr_col(begc:endc,:) = spval            
+          call hist_addfld_decomp (fname='NOx_N2O_RATIO', units='gN/gN', type2d='levdcmp', &
+               avgflag='A', long_name='NOx to N2O ratio', &
+               ptr_col=this%nox_n2o_ratio_vr_col)
+          
+          this%f_nox_nit_col(begc:endc) = spval
+          call hist_addfld1d (fname='F_NOx_NIT', units='gN/m^2/s', &
+               avgflag='A', long_name='nitrification NOx flux', &
+               ptr_col=this%f_nox_nit_col)
+          
+          this%f_nox_denit_col(begc:endc) = spval
+          call hist_addfld1d (fname='F_NOx_DENIT', units='gN/m^2/s', &
+               avgflag='A', long_name='denitrification NOx flux', &
+               ptr_col=this%f_nox_denit_col)
+          
+          this%f_n2_denit_col(begc:endc) = spval
+          call hist_addfld1d (fname='F_N2_DENIT', units='gN/m^2/s', &
+               avgflag='A', long_name='denitrification N2 flux', &
+               ptr_col=this%f_n2_denit_col)
+          
+          this%f_nox_nit_atmos_col(begc:endc) = spval
+          call hist_addfld1d (fname='F_NOx_NIT_ATMOS', units='gN/m^2/s', &
+               avgflag='A', long_name='nitrification NOx flux with canopy reduction', &
+               ptr_col=this%f_nox_nit_atmos_col)
+       
+          this%f_nox_denit_atmos_col(begc:endc) = spval
+          call hist_addfld1d (fname='F_NOx_DENIT_ATMOS', units='gN/m^2/s', &
+               avgflag='A', long_name='denitrification NOx flux with canopy reduction', &
+               ptr_col=this%f_nox_denit_atmos_col)
+
+          this%soil_nox_atmos_col(begc:endc) = spval
+          call hist_addfld1d (fname='SOIL_NOx', units='gN/m^2/s', &
+               avgflag='A', long_name='total soil NOx (nit+denit) that is passed to the atmosphere)', &
+               ptr_col=this%soil_nox_atmos_col)
+          
+          this%soil_nox_atmos_crop_col(begc:endc) = spval
+          call hist_addfld1d (fname='SOIL_NOx_CROP', units='gN/m^2/s', &
+               avgflag='A', long_name='soil NOx (nit+denit) from croplands that is passed to the atmosphere)', &
+               ptr_col=this%soil_nox_atmos_crop_col)
+          
+          this%soil_nox_atmos_nat_col(begc:endc) = spval
+          call hist_addfld1d (fname='SOIL_NOx_NAT', units='gN/m^2/s', &
+               avgflag='A', long_name='soil NOx (nit+denit) from natural ecosystems that is passed to the atmosphere)', &
+               ptr_col=this%soil_nox_atmos_nat_col)
+       endif
+
+       
     end if
 
     if (use_crop) then
@@ -954,7 +1047,18 @@ contains
              this%smin_nh4_to_plant_vr_col(i,j)          = value_column
              this%f_n2o_denit_vr_col(i,j)                = value_column
              this%f_n2o_nit_vr_col(i,j)                  = value_column
-
+             !soil NOx fluxes
+             this%f_n2_denit_vr_col(i,j)                 = value_column
+             this%f_nox_denit_vr_col(i,j)                = value_column
+             this%f_nox_nit_vr_col(i,j)                  = value_column
+             this%nox_n2o_ratio_vr_col(i,j)              = value_column
+             this%pot_f_nox_denit_vr_col(i,j)            = value_column
+             this%pot_f_nox_nit_vr_col(i,j)              = value_column
+             this%f_nox_denit_atmos_vr_col(i,j)          = value_column
+             this%f_nox_nit_atmos_vr_col(i,j)            = value_column
+             this%h2osoi_diff_vr_col(i,j)                = value_column
+             this%afps_vr_col(i,j)                       = value_column 
+             
              this%smin_no3_massdens_vr_col(i,j)          = value_column
              this%k_nitr_t_vr_col(i,j)                   = value_column
              this%k_nitr_ph_vr_col(i,j)                  = value_column
@@ -1011,6 +1115,17 @@ contains
           this%f_n2o_nit_col(i)              = value_column
           this%smin_no3_leached_col(i)       = value_column
           this%smin_no3_runoff_col(i)        = value_column
+           !soil NOx flux
+          this%f_n2_denit_col(i)             = value_column
+          this%f_nox_denit_col(i)            = value_column
+          this%f_nox_nit_col(i)              = value_column
+          this%f_nox_denit_atmos_col(i)      = value_column
+          this%f_nox_nit_atmos_col(i)        = value_column
+          this%pot_f_nox_denit_col(i)        = value_column
+          this%pot_f_nox_nit_col(i)          = value_column
+          this%soil_nox_atmos_col(i)         = value_column
+          this%soil_nox_atmos_crop_col(i)    = value_column
+          this%soil_nox_atmos_nat_col(i)     = value_column         
        else
           this%sminn_to_denit_excess_col(i)  = value_column
           this%sminn_leached_col(i)          = value_column
@@ -1081,6 +1196,7 @@ contains
     ! !USES:
     use clm_varpar , only: nlevdecomp, ndecomp_cascade_transitions,ndecomp_pools
     use clm_varctl , only: use_nitrif_denitrif
+    use landunit_varcon , only : istcrop       
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenflux_type) :: this
@@ -1193,7 +1309,7 @@ contains
              this%f_n2o_denit_col(c) = &
                   this%f_n2o_denit_col(c) + &
                   this%f_n2o_denit_vr_col(c,j) * dzsoi_decomp(j)
-
+             
              ! leaching/runoff flux
              this%smin_no3_leached_col(c) = &
                   this%smin_no3_leached_col(c) + &
@@ -1203,12 +1319,49 @@ contains
                   this%smin_no3_runoff_col(c) + &
                   this%smin_no3_runoff_vr_col(c,j) * dzsoi_decomp(j)
 
+ !soil NOx fluxes
+             this%f_n2_denit_col(c) = &
+                  this%f_n2_denit_col(c) + &
+                  this%f_n2_denit_vr_col(c,j) * dzsoi_decomp(j)            
+
+             this%f_nox_nit_col(c) = &
+                  this%f_nox_nit_col(c) + &
+                  this%f_nox_nit_vr_col(c,j) * dzsoi_decomp(j)
+
+             this%f_nox_denit_col(c) = &
+                  this%f_nox_denit_col(c) + &
+                  this%f_nox_denit_vr_col(c,j) * dzsoi_decomp(j)
+
+           this%f_nox_nit_atmos_col(c) = &
+                  this%f_nox_nit_atmos_col(c) + &
+                  this%f_nox_nit_atmos_vr_col(c,j) * dzsoi_decomp(j)
+
+             this%f_nox_denit_atmos_col(c) = &
+                  this%f_nox_denit_atmos_col(c) + &
+                  this%f_nox_denit_atmos_vr_col(c,j) * dzsoi_decomp(j)
+
+             this%pot_f_nox_nit_col(c) = &
+                  this%pot_f_nox_nit_col(c) + &
+                  this%pot_f_nox_nit_vr_col(c,j) * dzsoi_decomp(j)
+
+             this%pot_f_nox_denit_col(c) = &
+                  this%pot_f_nox_denit_col(c) + &
+                  this%pot_f_nox_denit_vr_col(c,j) * dzsoi_decomp(j)
+             
           end do
        end do
 
        do fc = 1,num_bgc_soilc
           c = filter_bgc_soilc(fc)
           this%denit_col(c) = this%f_denit_col(c)
+
+          this%soil_nox_atmos_col(c)=this%f_nox_nit_atmos_col(c)+this%f_nox_denit_atmos_col(c)
+
+          if (lun%itype(col%landunit(c)) == istcrop) then
+             this%soil_nox_atmos_crop_col(c)= this%f_nox_nit_atmos_col(c)+this%f_nox_denit_atmos_col(c)
+          else
+             this%soil_nox_atmos_nat_col(c)= this%f_nox_nit_atmos_col(c)+this%f_nox_denit_atmos_col(c)
+          end if
        end do
 
     end if
