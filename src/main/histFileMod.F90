@@ -3883,7 +3883,7 @@ contains
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, dim2name='time', &
                long_name='landunit weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
-          call ncd_defvar(varname='land1d_ityplunit', xtype=ncd_int, dim1name=namel, dim2name='time', &
+          call ncd_defvar(varname='land1d_ityplunit', xtype=ncd_int, dim1name=namel, &
                long_name='landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
                   ifill_value=ispval, ncid=ncid)
 
@@ -3916,10 +3916,10 @@ contains
           call ncd_defvar(varname='cols1d_wtlunit', xtype=ncd_double, dim1name=namec, dim2name='time', &
                long_name='column weight relative to corresponding landunit', fill_value=spval, ncid=ncid)
 
-          call ncd_defvar(varname='cols1d_itype_col', xtype=ncd_int, dim1name=namec, dim2name='time', &
+          call ncd_defvar(varname='cols1d_itype_col', xtype=ncd_int, dim1name=namec, &
                long_name='column type (see global attributes)', ifill_value=ispval, ncid=ncid)
 
-          call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name=namec, dim2name='time', &
+          call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name=namec, &
                long_name='column landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
                   ifill_value=ispval, ncid=ncid)
 
@@ -3961,13 +3961,13 @@ contains
           call ncd_defvar(varname='pfts1d_wtcol', xtype=ncd_double, dim1name=namep, dim2name='time', &
                long_name='pft weight relative to corresponding column', fill_value=spval, ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_itype_veg', xtype=ncd_int, dim1name=namep, dim2name='time', &
+          call ncd_defvar(varname='pfts1d_itype_veg', xtype=ncd_int, dim1name=namep, &
                long_name='pft vegetation type', ifill_value=ispval, ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_itype_col', xtype=ncd_int, dim1name=namep, dim2name='time', &
+          call ncd_defvar(varname='pfts1d_itype_col', xtype=ncd_int, dim1name=namep, &
                long_name='pft column type (see global attributes)', ifill_value=ispval, ncid=ncid)
 
-          call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name=namep, dim2name='time', &
+          call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name=namep, &
                long_name='pft landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)',  &
                   ifill_value=ispval, ncid=ncid)
 
@@ -4036,7 +4036,7 @@ contains
             subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
-       call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_active'   , data=lun%active  , dim1name=namel, ncid=ncid, flag='write')
 
        ! Write column info
@@ -4068,12 +4068,12 @@ contains
 
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
        call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
-       call ncd_io(varname='cols1d_itype_col', data=col%itype , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='cols1d_itype_col', data=col%itype , dim1name=namec, ncid=ncid, flag='write')
 
        do c = bounds%begc,bounds%endc
          icarr(c) = lun%itype(col%landunit(c))
        enddo
-       call ncd_io(varname='cols1d_itype_lunit', data=icarr   , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='cols1d_itype_lunit', data=icarr   , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_active' , data=col%active  , dim1name=namec, ncid=ncid, flag='write')
        call ncd_io(varname='cols1d_nbedrock', data=col%nbedrock , dim1name=namec, ncid=ncid, flag='write')
@@ -4112,17 +4112,17 @@ contains
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
        call ncd_io(varname='pfts1d_wtlunit'  , data=patch%wtlunit , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
        call ncd_io(varname='pfts1d_wtcol'    , data=patch%wtcol   , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
-       call ncd_io(varname='pfts1d_itype_veg', data=patch%itype   , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='pfts1d_itype_veg', data=patch%itype   , dim1name=namep, ncid=ncid, flag='write')
 
        do p = bounds%begp,bounds%endp
           iparr(p) = col%itype(patch%column(p))
        end do
-       call ncd_io(varname='pfts1d_itype_col', data=iparr         , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='pfts1d_itype_col', data=iparr         , dim1name=namep, ncid=ncid, flag='write')
 
        do p = bounds%begp,bounds%endp
           iparr(p) = lun%itype(patch%landunit(p))
        enddo
-       call ncd_io(varname='pfts1d_itype_lunit', data=iparr       , dim1name=namep, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
+       call ncd_io(varname='pfts1d_itype_lunit', data=iparr       , dim1name=namep, ncid=ncid, flag='write')
 
        call ncd_io(varname='pfts1d_active'   , data=patch%active  , dim1name=namep, ncid=ncid, flag='write')
 
