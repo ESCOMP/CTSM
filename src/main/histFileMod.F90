@@ -3819,7 +3819,7 @@ contains
     ! !USES:
     use decompMod   , only : gindex_global
     use domainMod   , only : ldomain, ldomain
-    use dynSubgridControlMod, only : get_flanduse_timeseries
+    use dynSubgridControlMod, only : run_has_transient_landcover, get_1dwt_vars_w_time
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                ! tape index
@@ -3958,7 +3958,7 @@ contains
                ifill_value=0, long_name='true => do computations on this pft', ncid=ncid)
 
           ! group the wt variables together in an if-statement
-          if (get_flanduse_timeseries() /= ' ') then  ! transient simulation
+          if (run_has_transient_landcover .or. get_1dwt_vars_w_time()) then  ! transient simulation
              call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, dim2name='time', &
                   long_name='landunit weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
@@ -4143,7 +4143,7 @@ contains
        call ncd_io(varname='pfts1d_active'   , data=patch%active  , dim1name=namep, ncid=ncid, flag='write')
 
        ! group the wt variables together in an if-statement
-       if (get_flanduse_timeseries() /= ' ') then  ! transient simulation
+       if (run_has_transient_landcover() .or. get_1dwt_vars_w_time()) then  ! transient simulation
           call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
           call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))
           call ncd_io(varname='cols1d_wtlunit', data=col%wtlunit , dim1name=namec, ncid=ncid, flag='write', nt=tape(t)%ntimes(f))

@@ -2779,6 +2779,15 @@ or more, which causes CAM to blow up. However, note that setting it to true will
 break water and energy conservation!
 </entry>
 
+<entry id="1dwt_vars_w_time" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+A TRUE setting adds the time dimension to all 1dwt variables that appear in
+files generated when hist_dov2xy = .false. (e.g. pfts1d_wtcol).
+Transient simulations (flanduse_timeseries file is not blank) have the same
+outcome as TRUE.
+Use this flag to change FALSE to TRUE when flanduse_timeseries file is blank.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to finidat consistency checks                                    -->
 <!-- ========================================================================================  -->

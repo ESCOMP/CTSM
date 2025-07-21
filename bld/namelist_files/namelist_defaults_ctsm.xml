@@ -2472,6 +2472,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <do_transient_lakes>.false.</do_transient_lakes>
 <do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+<1dwt_vars_w_time>.false.</1dwt_vars_w_time>
 
 <!-- =========================================  -->
 <!-- Defaults for water tracers                 -->
