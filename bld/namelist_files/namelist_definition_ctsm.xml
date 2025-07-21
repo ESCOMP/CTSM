@@ -2782,10 +2782,10 @@ break water and energy conservation!
 <entry id="vars_1dwt_w_time" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 A TRUE setting adds the time dimension to all 1dwt variables that appear in
-files generated when hist_dov2xy = .false. (e.g. pfts1d_wtcol).
-Transient simulations (flanduse_timeseries file is not blank) have the same
-outcome as TRUE.
-Use this flag to change FALSE to TRUE when flanduse_timeseries file is blank.
+files generated as a result of hist_dov2xy = .false. (e.g. pfts1d_wtcol).
+Transient simulations (run_has_transient_landcover = .true.) have the same
+outcome as vars_1dwt_w_time = .true..
+Use this flag if you wish to change FALSE to TRUE when run_has_transient_landcover = .false..
 </entry>
 
 <!-- ========================================================================================  -->
