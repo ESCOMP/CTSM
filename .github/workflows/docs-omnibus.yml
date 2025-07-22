@@ -5,29 +5,23 @@ on:
     # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
     branches: ['*']
     paths:
-      - 'doc/**'
-      - '!doc/*ChangeLog*'
-      - '!doc/*ChangeSum*'
-      - '!doc/UpdateChangelog.pl'
-      # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'doc/test/*'
+      - 'doc/Makefile'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
-      - 'doc/**'
-      - '!doc/*ChangeLog*'
-      - '!doc/*ChangeSum*'
-      - '!doc/UpdateChangelog.pl'
-      # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'doc/test/*'
+      - 'doc/Makefile'
 
   workflow_dispatch:
 
 jobs:
   build-docs-omnibus-test:
+    # Don't run on forks, because part(s) of omnibus testing script will look for
+    # branch(es) that forks may not have.
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,9 +29,10 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Checkout doc-builder external
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
         run: |
-          bin/git-fleximod update doc-builder
+          bin/git-fleximod update -o
 
       # Set up conda
       - name: Set up conda environment
@@ -48,7 +43,6 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
-      # TODO: Split testing.sh tests into their own steps in this job
       - name: Text Sphinx builds with omnibus script
         run: |
-          cd doc && ./testing.sh
+          cd doc/test/ && ./testing.sh
