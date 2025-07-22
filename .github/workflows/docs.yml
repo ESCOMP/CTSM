@@ -51,7 +51,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules

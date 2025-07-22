@@ -21,7 +21,7 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
           lfs: true
@@ -35,7 +35,7 @@ jobs:
       # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Install python
         if: ${{ ! inputs.use_conda }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13.2'  # needs to be coordinated with version in python/conda_env_ctsm_py.txt
       - name: Cache pip
