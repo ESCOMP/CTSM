@@ -85,9 +85,9 @@ begin
   end if
 
   if (annual_hist) then
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
   else
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 

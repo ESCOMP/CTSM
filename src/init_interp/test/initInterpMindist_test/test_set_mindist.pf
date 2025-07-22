@@ -10,6 +10,7 @@ module test_set_mindist
   use clm_varcon   , only: spval
   use unittestSimpleSubgridSetupsMod
   use unittestSubgridMod
+  use unittestUtils, only : endrun_msg
   use glcBehaviorMod, only: glc_behavior_type
 
   implicit none
@@ -41,7 +42,7 @@ contains
   end subroutine tearDown
 
   subroutine wrap_set_mindist(subgridi, subgrido, mindist_index, activei, activeo, &
-       glc_behavior, glc_elevclasses_same, fill_missing_with_natveg)
+       glc_behavior, glc_elevclasses_same, fill_missing_with_natveg, fill_missing_urban_with_HD)
     ! Wrap the call to set_mindist.
     !
     ! If activei / activeo are not provided, they are assumed to be .true. for all points.
@@ -52,6 +53,7 @@ contains
     ! If glc_elevclasses_same is not present, it is assumed to be true.
     !
     ! If fill_missing_with_natveg is not provided, it is assumed to be false
+    ! If fill_missing_urban_with_HD is not provided, it is assumed to be false
 
     ! Arguments:
     type(subgrid_type), intent(in) :: subgridi
@@ -62,6 +64,7 @@ contains
     type(glc_behavior_type), intent(in), optional :: glc_behavior
     logical, intent(in), optional :: glc_elevclasses_same
     logical, intent(in), optional :: fill_missing_with_natveg
+    logical, intent(in), optional :: fill_missing_urban_with_HD
 
     ! Local variables:
     integer :: npts_i, npts_o
@@ -71,6 +74,7 @@ contains
     type(glc_behavior_type) :: l_glc_behavior
     logical :: l_glc_elevclasses_same
     logical :: l_fill_missing_with_natveg
+    logical :: l_fill_missing_urban_with_HD
 
     !-----------------------------------------------------------------------
 
@@ -115,12 +119,19 @@ contains
        l_fill_missing_with_natveg = .false.
     end if
 
+    if (present(fill_missing_urban_with_HD)) then
+       l_fill_missing_urban_with_HD = fill_missing_urban_with_HD
+    else
+       l_fill_missing_urban_with_HD = .false.
+    end if
+
     call set_mindist(begi = 1, endi = npts_i, bego = bego, endo = endo, &
          activei = l_activei, activeo = l_activeo, subgridi = subgridi, subgrido = subgrido, &
          subgrid_special_indices = subgrid_special_indices, &
          glc_behavior = l_glc_behavior, &
          glc_elevclasses_same = l_glc_elevclasses_same, &
          fill_missing_with_natveg = l_fill_missing_with_natveg, &
+         fill_missing_urban_with_HD = l_fill_missing_urban_with_HD, &
          mindist_index = mindist_index)
 
   end subroutine wrap_set_mindist
@@ -723,6 +734,186 @@ contains
 
     end associate
   end subroutine newveg_usesBaresoil
+
+  @Test
+  subroutine TBDurban_usesHDurban(this)
+    ! If there's a new urban TBD type, this should take inputs from the closest
+    ! HD type, if fill_missing_urban_with_HD = .true and fill_missing_with_natveg = .false.
+    !
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+
+    associate( &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
+         ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD, &
+         ilun_urban_HD => subgrid_special_indices%ilun_urban_HD, &
+         ilun_urban_MD => subgrid_special_indices%ilun_urban_MD &
+         )
+
+    call setup_landunit_ncols(ltype=ilun_urban_TBD, &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
+         cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
+         ptype=0)
+
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
+         npts = 1, &
+         beg = 1, &
+         name = 'landunit', &
+         ltype = [ilun_urban_TBD], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! Input points differ in landunit type
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
+         npts = 2, &
+         name = 'landunit', &
+         ltype = [ilun_urban_MD, ilun_urban_HD], &
+         lat = [(my_lat, i=1,2)], &
+         lon = [(my_lon, i=1,2)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_urban_with_HD = .true., &
+         fill_missing_with_natveg = .false.)
+
+    ! Note that the mindist_index should return the second index of the 
+    ! ltype array (2), not the actual value of ilun_urban_HD
+    @assertEqual(2, mindist_index(1))
+
+    end associate
+  end subroutine TBDurban_usesHDurban
+ 
+  @Test
+  subroutine TBDurban_usesHDurban_aborts(this)
+    ! If there's a new urban TBD type, this should take inputs from the closest
+    ! HD type. This test will abort correctly if fill_missing_urban_with_HD = .false.
+    !
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+    character(len=:), allocatable :: expected_msg
+
+    associate( &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
+         ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD, &
+         ilun_urban_HD => subgrid_special_indices%ilun_urban_HD, &
+         ilun_urban_MD => subgrid_special_indices%ilun_urban_MD &
+         )
+
+    call setup_landunit_ncols(ltype=ilun_urban_TBD, &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
+         cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
+         ptype=0)
+
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
+         npts = 1, &
+         beg = 1, &
+         name = 'landunit', &
+         ltype = [ilun_urban_TBD], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    ! Input points differ in landunit type
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
+         npts = 2, &
+         name = 'landunit', &
+         ltype = [ilun_urban_MD, ilun_urban_HD], &
+         lat = [(my_lat, i=1,2)], &
+         lon = [(my_lon, i=1,2)])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_urban_with_HD = .false.)
+
+    expected_msg = endrun_msg( &
+         'set_mindist ERROR: Cannot find any input points matching output point')
+    @assertExceptionRaised(expected_msg)
+
+    end associate
+  end subroutine TBDurban_usesHDurban_aborts
+
+  @Test
+  subroutine urbanlandunits_NotFilled_with_natveg_aborts(this)
+    ! With fill_missing_urban_with_HD = .false. and fill_missing_with_natveg = .true.,
+    ! urban landunit should not be filled with natveg, and an error in set_mindist will be
+    ! thrown, and this test should pass.
+    !
+    class(TestSetMindist), intent(inout) :: this
+    type(subgrid_type) :: subgridi, subgrido
+    real(r8), parameter :: my_lat = 31._r8
+    real(r8), parameter :: my_lon = 41._r8
+    integer :: i
+    integer :: mindist_index(1)
+    character(len=:), allocatable :: expected_msg
+
+    associate( &
+         ipft_bare   => subgrid_special_indices%ipft_not_vegetated, &
+         icol_urban_roof => subgrid_special_indices%icol_urban_roof, &
+         icol_urban_sunwall => subgrid_special_indices%icol_urban_sunwall, &
+         icol_urban_shadewall => subgrid_special_indices%icol_urban_shadewall, &
+         icol_urban_impervious_road => subgrid_special_indices%icol_urban_impervious_road, &
+         icol_urban_pervious_road => subgrid_special_indices%icol_urban_pervious_road, &
+         icol_natveg => subgrid_special_indices%icol_vegetated_or_bare_soil, &
+         ilun_natveg => subgrid_special_indices%ilun_vegetated_or_bare_soil, &
+         ilun_urban_TBD => subgrid_special_indices%ilun_urban_TBD &
+         )
+
+    call setup_landunit_ncols(ltype=ilun_urban_TBD, &
+         ctypes=[icol_urban_roof,icol_urban_sunwall,icol_urban_shadewall, &
+                 icol_urban_impervious_road,icol_urban_pervious_road], &
+         cweights=[0.6_r8,0.1_r8,0.1_r8,0.1_r8,0.1_r8], &
+         ptype=0)
+
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
+         npts = 1, &
+         beg = 1, &
+         name = 'pft', &
+         ptype = [0], &
+         ctype = [icol_urban_roof], &
+         ltype = [ilun_urban_TBD], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
+         npts = 1, &
+         name = 'pft', &
+         ptype = [ipft_bare], &
+         ctype = [icol_natveg], &
+         ltype = [ilun_natveg], &
+         lat = [my_lat], &
+         lon = [my_lon])
+
+    call wrap_set_mindist(subgridi, subgrido, mindist_index, &
+         fill_missing_urban_with_HD = .false., &
+         fill_missing_with_natveg = .true.)
+
+    expected_msg = endrun_msg( &
+         'set_mindist ERROR: Cannot find any input points matching output point')
+    @assertExceptionRaised(expected_msg)
+
+    end associate
+  end subroutine urbanlandunits_NotFilled_with_natveg_aborts
 
   @Test
   subroutine baresoil_ignoresSpecialLandunits(this)
