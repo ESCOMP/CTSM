@@ -1,4 +1,106 @@
 ===============================================================
+Tag name: ctsm5.3.064
+Originator(s): slevis (Samuel Levis)
+Date: Tue Jul 22 16:04:40 MDT 2025
+One-line Summary: Add time dimension to 1d_wt fields in transient runs
+
+Purpose and description of changes
+----------------------------------
+
+ 1d_wt fields (e.g. pfts1d_wtgcell) appear in history when hist_dov2xy = .false.
+ This PR:
+ - adds the time dimension to these variables in Hist runs because these variables change with time
+ - adds new namelist variable vars_1dwt_w_time to let users add the time dimension when it is not added by default, i.e. in non-transient runs
+ - throws a build namelist error when the new namelist variable is .false. in a transient simulation
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3307 Updating vector history file output...
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist variable vars_1dwt_w_time
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ vars_1dwt_w_time defaults to true when one of the following is .true.:
+ do_transient_pfts, do_transient_crops, do_transient_lakes, do_transient_urban
+ else vars_1dwt_w_time defaults to .false.
+
+Changes to documentation:
+ Added vars_1dwt_w_time to namelist_definition_ctsm.xml with an explanation of its use
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
+     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
+     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
+     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
+     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
+     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
+     separately run the clm_pymods test suite, and you can remove the following line.]
+
+    clm_pymods test suite on derecho - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- PEND
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No, but read caveat:
+
+ 1d_wt fields with the time dimension will display different answers in transient simulations, but this is diagnostic in nature
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3328
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.063
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Jul 10 12:28:36 MDT 2025
