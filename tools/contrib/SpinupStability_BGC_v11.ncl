@@ -1,13 +1,9 @@
 ; NCL script
-; SpinupStability_BGC_v11_SE.ncl
-; Script to examine stability of spinup simulation.
+; SpinupStability_BGC_v11.ncl
+; Script to examine stability of BGC spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
-; and supports ne30 grids only
-; Keith Oleson, March 2025
-;
-; ARH mods, April 2020 - modified to work for unstructured grids via remapping to FV 1 deg. grid.
-; KO mods, March 2025 - regrid history file using ncremap to get area and landfrac instead of 
-;  reading from domain file.
+; NOTE: THIS SCRIPT IS ONLY INTENDED FOR USE WITH 2-D LAT/LON GRIDS
+; Keith Oleson, July 2025
 
 begin
 
@@ -21,76 +17,81 @@ begin
 ; and/or in disequilibrium is also produced to standard out. The postscript output
 ; is $caseid_spinup.ps in the pwd.
 ; The variables examined are TOTECOSYSC,TOTSOMC,TOTVEGC,TLAI,GPP,TWS,H2OSNO.
-; The percentage of land area in TOTECOSYSC disequilibrium is also examined.
+; The percentage of land area in TOTECOSYSC disequilibrium is also examined (not for single point).
 ; Thresholds are defined below (i.e., global_thresh_*) and can be changed for individual
 ; variables.
 ; To run this script, just enter in your case name and username below. 
 ;  AND set the annual_hist flag to True if your case has annual mean history files or set 
 ;  annual_hist flag to False if your case has monthly mean history files.
-;  AND set the region (supported options: Global).
+;  AND set the region (supported options: Global, Arctic, SPT).
 ;  AND set the subper (subsampling period in years, number of years that atm forcing repeats).
-; If dout_s=True, the script assumes that your history files are in 
-;  /glade/derecho/scratch/$username/archive/$caseid/lnd/hist
+; The script assumes that your history files are in /glade/derecho/scratch/$username/archive/$caseid/lnd/hist
 ; You need a run consisting of at least three cycles of atmospheric data
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
- caseid = "ctsm53n02ctsm52027_ne30pg3t232_AD"
- username = "oleson"
- annual_hist = True
- region = "Global"              ; Global
- subper = 20                    ; Subsampling period in years
- paleo = False                  ; Use paleo map ; UNTESTED IN THIS VERSION
+  caseid = "ctsm53026_BNF_AD"
+  username = "slevis"
+  annual_hist = True
+  region = "Global"              ; Global, Arctic, or SPT (single point)
+  subper = 20                    ; Subsampling period in years
+  paleo = False                  ; Use paleo map
+  hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
-;--- ARH mods ---
- map_method = "conserve"      ;bilinear,conserve or patch
- dout_s = False               ;short term storage (archive) directory structure
-
-;srcGrid = "ne120pg3"
-;srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne120pg3_scrip_c170628.nc"
- srcGrid = "ne30pg3"
- srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne30pg3_scrip_170604.nc"
-;srcGrid = "ne30pg2"
-;srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne30pg2_scrip_c170608.nc"
-
- dstGrid = "f09"
- dstGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/share/scripgrids/0.9x1.25_SCRIP_desc.181018.nc"
-;--- ARH mods ---
+; SPT (single point) EXAMPLE
+; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
+; username = "oleson"
+; annual_hist = True
+; region = "SPT"                 ; Global, Arctic, or SPT (single point)
+; subper = 20                    ; Subsampling period in years
+; paleo = False                  ; Use paleo map
+; hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
   do_plot = True
+; do_plot = False
 ;=======================================================================;
 
-;--- ARH mods ---
-  if (dout_s) then
-    data_dir = "/glade/derecho/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
-  else if (.not.dout_s) then
-    data_dir = "/glade/campaign/cgd/tss/common/Land_Only_Simulations/CTSM53_DEV/"+caseid+"/lnd/hist/"
+  data_dir = "/glade/derecho/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+  if ( systemfunc("test -d "+data_dir+"; echo $?" ) .ne. 0 )then
+     print( "Input directory does not exist or not found: "+data_dir );
+     print( "Make sure username and caseid and base directory is set correctly" )
+     status_exit( -1 )
   end if
-  end if
-;--- ARH mods ---
 
 ; Thresholds 
-  glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
-  glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta PgC / yr)
-  glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta PgC / yr)
-  glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
-  glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta PgC / yr)
-  glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
-  glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
-  glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
-  totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr)
+  if (region .eq. "SPT") then
+    glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta MgC / yr)
+    glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta MgC / yr)
+    glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta MgC / yr)
+    glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
+    glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta MgC / yr)
+    glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
+    glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
+    glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr (not used)
+    totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr) (not used)
+  else
+    glob_thresh_totecosysc = 0.02  ; global threshold for TOTECOSYSC equilibrium (delta PgC / yr)
+    glob_thresh_totsomc = 0.02     ; global threshold for TOTSOMC equilibrium (delta PgC / yr)
+    glob_thresh_totvegc = 0.02     ; global threshold for TOTVEGC equilibrium (delta PgC / yr)
+    glob_thresh_tlai = 0.02        ; global threshold for TLAI equilibrium (delta m2/m2 / yr)
+    glob_thresh_gpp = 0.02         ; global threshold for GPP equilibrium (delta PgC / yr)
+    glob_thresh_tws = 0.001        ; global threshold for TWS equilibrium (delta m / yr)
+    glob_thresh_h2osno = 1.0       ; global threshold for H2OSNO equilibrium (delta mm / yr)
+    glob_thresh_area = 3.0         ; global threshold percent area with TOTECOSYSC disequilibrium gt 1 g C/m2/yr
+    totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr)
+  end if
 
   if (annual_hist) then
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*-*-*"+".nc")
   else
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 
   if (annual_hist) then
-    lstfile                 = addfile(fls(flsdims-1),"r")
+    lstfile                   = addfile(fls(flsdims-1),"r")
   else
-    lstfile                 = addfile(fls(flsdims-12),"r")  ;last month (DEC) of any year has mdate for next year
+    lstfile                   = addfile(fls(flsdims-12),"r")  ;last month (DEC) of any year has mdate for next year
                                                               ;so grab JAN of last year
   end if
 
@@ -115,9 +116,9 @@ begin
   year                      = ispan(fstyr,lstyr,subper) - fstyr
   nyrs                      = dimsizes(year)
   if (subper .eq. 1) then
-    yearpltmid              = ispan(fstyr+subper/2,yearplt(nyrs-2),subper)
+    yearpltmid                = ispan(fstyr+subper/2,yearplt(nyrs-2),subper)
   else
-    yearpltmid              = ispan(fstyr+subper/2,yearplt(nyrs-1),subper)
+    yearpltmid                = ispan(fstyr+subper/2,yearplt(nyrs-1),subper)
   end if
 
 ; Build an array of monthly indices
@@ -135,12 +136,8 @@ begin
   end if
 
 ; Convert to annual means if required
-
-
   if (annual_hist) then
-
-    ;--- untested ARH mods ---
-    if (isfilevardim(data[0],"landfrac","lndgrid")) then
+    if (region .eq. "SPT") then
       totecosysc              = data[:]->TOTECOSYSC(year,:)
       totsomc                 = data[:]->TOTSOMC(year,:)
       totvegc                 = data[:]->TOTVEGC(year,:)
@@ -148,7 +145,7 @@ begin
       gpp                     = data[:]->GPP(year,:)
       tws                     = data[:]->TWS(year,:)
       if (isfilevar(data[0],"H2OSNO")) then
-        h2osno                = data[:]->H2OSNO(year,:)
+        h2osno                  = data[:]->H2OSNO(year,:)
       else
         h2osno                = tws
         h2osno                = h2osno@_FillValue
@@ -161,7 +158,7 @@ begin
       gpp                     = data[:]->GPP(year,:,:)
       tws                     = data[:]->TWS(year,:,:)
       if (isfilevar(data[0],"H2OSNO")) then
-        h2osno                = data[:]->H2OSNO(year,:,:)
+        h2osno                  = data[:]->H2OSNO(year,:,:)
       else
         h2osno                = tws
         h2osno                = h2osno@_FillValue
@@ -196,110 +193,42 @@ begin
       delete(tmp5s)
     end if
     if (isfilevar(data[0],"H2OSNO")) then
-      h2osno                = month_to_annual(data[:]->H2OSNO,1)
+      h2osno                  = month_to_annual(data[:]->H2OSNO,1)
     else
       h2osno                = tws
       h2osno                = h2osno@_FillValue
     end if
   end if
-
-;;;---begin ARH mods---
-
-  if (isfilevardim(data[0],"landfrac","lndgrid")) then
-    print("History fields on unstructured grid.")  
-    ;
-    if(isfilepresent(srcGridName)) then
-      print("Found srcGrid description "+srcGridName)
-    else
-      print("Cannot find srcGrid description "+srcGridName)
-      exit
-    end if
-    ;
-    if(isfilepresent(dstGridName)) then
-      print("Found dstGrid description "+dstGridName)
-    else
-      print("Cannot find dstGrid description "+dstGridName)     
-      exit
-    end if
-    ;
-    ;    Generate the weights file, using the grid description files
-    ;----------------------------------------------------------------
-    wgtFileName = srcGrid+"_to_"+dstGrid+"_"+map_method+".nc"
-    if(isfilepresent(wgtFileName)) then
-      print("Found WeightFile "+wgtFileName)
-    else
-      print("Creating WeightFile "+wgtFileName)
-      Opt               = True
-      Opt@InterpMethod  =map_method ;"bilinear"  "patch", "conserve"
-      Opt@ForceOverWrite=True
-      Opt@SrcESMF       =False
-      Opt@DstESMF       =False
-      Opt@Debug         =False ; True
-      Opt@PrintTimings  =False ; True
-      ESMF_regrid_gen_weights(srcGridName,dstGridName,wgtFileName,Opt)
-      delete(Opt)
-    end if
-
-    print("Regridding with WeightFile " + wgtFileName)
-    totecosysc_regrid       = ESMF_regrid_with_weights(totecosysc,wgtFileName,False) 
-    totsomc_regrid          = ESMF_regrid_with_weights(totsomc,wgtFileName,False)
-    totvegc_regrid          = ESMF_regrid_with_weights(totvegc,wgtFileName,False)
-    tlai_regrid             = ESMF_regrid_with_weights(tlai,wgtFileName,False)
-    gpp_regrid              = ESMF_regrid_with_weights(gpp,wgtFileName,False)
-    tws_regrid              = ESMF_regrid_with_weights(tws,wgtFileName,False)
-    h2osno_regrid           = ESMF_regrid_with_weights(h2osno,wgtFileName,False)
-
-    delete([/totecosysc,totsomc,totvegc,tlai,gpp,tws,h2osno/])
-    totecosysc = totecosysc_regrid
-    totsomc    = totsomc_regrid
-    totvegc    = totvegc_regrid
-    tlai       = tlai_regrid
-    gpp        = gpp_regrid
-    tws        = tws_regrid
-    h2osno     = h2osno_regrid
-
-    lat = h2osno&lat
-    lon = h2osno&lon
-    nlat = dimsizes(lat)
-    nlon = dimsizes(lon)
-
-    print ((/"Regridding the first file using ncremap to get area and landfrac"/))
-    arealandfracFileName = "regridded_area_landfrac.nc"
-    if (isfilepresent(arealandfracFileName)) then
-      command="rm "+arealandfracFileName
-      print((/command/))
-      system(command)
-    end if
-    command="ncremap -t 1 -P clm --sgs_frc=landfrac --sgs_msk=landmask -m " + wgtFileName + " " + fls(0) + " " + arealandfracFileName
-    print((/command/))
-    system(command)
-    df = addfile(arealandfracFileName,"r")
-    area = tofloat(df->area)
-    landfrac = df->landfrac
-  else if (isfilevardim(data[0],"landfrac","lat")) then
-    print("history fields on lat-lon grid")
-    lat                       = data[0]->lat
-    lon                       = data[0]->lon
-    nlat                      = dimsizes(lat)
-    nlon                      = dimsizes(lon)
-    area                      = data[0]->area
-    landfrac                  = data[0]->landfrac
-  end if
-  end if
-
-;;;--- End ARH mods ---
-
-  aream                     = area*1.e6         ; to m^2
+  lat                       = data[0]->lat
+  nlat                      = dimsizes(lat)
+  lon                       = data[0]->lon
+  nlon                      = dimsizes(lon)
+  landfrac                  = data[0]->landfrac
+  area                      = data[0]->area
+  aream                     = area*1.e6
   landarea                  = landfrac*aream
-  gtoXg                     = 1e-15 ;Pg
-  units                     = "Pg C"
+  if (region .eq. "SPT") then
+    gtoXg                     = 1e-12 ;Tg
+    units                     = "Tg C"
+  else
+    gtoXg                     = 1e-15 ;Pg
+    units                     = "Pg C"
+  end if
   secinyr                   = 60.*60.*24.*365.
 
 ; TOTECOSYSC
-  landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
+  if (region .eq. "SPT") then
+    landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1/))   ; conforming dimensions of landarea to totecosysc
+  else
+    landareaC                 = conform_dims(dimsizes(totecosysc),landarea,(/1,2/)) ; conforming dimensions of landarea to totecosysc
+  end if
   totecosysc_area           = totecosysc*landareaC                                ; correcting totecosysc for total land area
   totecosysc_Xg             = totecosysc_area*gtoXg                               ; g to Xg
-  totecosysc_glob           = dim_sum_n(totecosysc_Xg, (/1,2/))                   ; sums over all latitudes
+  if (region .eq. "SPT") then
+    totecosysc_glob           = dim_sum_n(totecosysc_Xg, (/1/))                     ; sums over single point
+  else
+    totecosysc_glob           = dim_sum_n(totecosysc_Xg, (/1,2/))                   ; sums over all latitudes
+  end if
   totecosysc_glob!0         = "year"                                              
   totecosysc_glob&year      = yearplt                                             
   totecosysc_glob_del       = new(nyrs-1,"float")
@@ -329,6 +258,7 @@ begin
   delete(indx)
 
 ; Land area not in TOTECOSYSC equilibrium
+  if (region .ne. "SPT") then
   landarea_noequil = new((/nyrs-1,nlat,nlon/),"float")
   do i = 0,nyrs-2
     landarea_noequil(i,:,:) = where(abs(totecosysc(i+1,:,:) - totecosysc(i,:,:))/subper .gt. totecosysc_thresh, landarea, 0.)
@@ -360,11 +290,16 @@ begin
   totecosysc_1_map&lon = lon
   totecosysc_2_map = where(landarea_noequil(nyrs-3,:,:) .ne. 0.,(totecosysc(nyrs-2,:,:)-totecosysc(nyrs-3,:,:))/subper,totecosysc@_FillValue)
   copy_VarCoords(totecosysc_1_map,totecosysc_2_map)
+  end if
 
 ; TOTSOMC
   totsomc_area           = totsomc*landareaC                                   ; correcting totsomc for total land area
   totsomc_Xg             = totsomc_area*gtoXg                                  ; g to Xg
-  totsomc_glob           = dim_sum_n(totsomc_Xg, (/1,2/))                      ; sums over all latitudes
+  if (region .eq. "SPT") then
+    totsomc_glob           = dim_sum_n(totsomc_Xg, (/1/))                        ; sums over single point
+  else
+    totsomc_glob           = dim_sum_n(totsomc_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   totsomc_glob!0         = "year"                                                
   totsomc_glob&year      = yearplt                                               
   totsomc_glob_del       = new(nyrs-1,"float")
@@ -396,7 +331,11 @@ begin
 ; TOTVEGC
   totvegc_area              = totvegc*landareaC                                   ; correcting totvegc for total land area
   totvegc_Xg                = totvegc_area*gtoXg                                  ; g to Xg
-  totvegc_glob              = dim_sum_n(totvegc_Xg, (/1,2/))                      ; sums over all latitudes
+  if (region .eq. "SPT") then
+    totvegc_glob              = dim_sum_n(totvegc_Xg, (/1/))                        ; sums over single point
+  else
+    totvegc_glob              = dim_sum_n(totvegc_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   totvegc_glob!0            = "year"                                                
   totvegc_glob&year         = yearplt                                               
   totvegc_glob_del          = new(nyrs-1,"float")
@@ -428,8 +367,13 @@ begin
 ; TLAI
   areasum             = sum(area*landfrac)
   areaL               = area*landfrac
-  landareaL           = conform_dims(dimsizes(tlai),areaL,(/1,2/))                ; conforming dimensions of areaL to tlai
-  tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1,2/))                 ; weighted global tlai
+  if (region .eq. "SPT") then
+    landareaL           = conform_dims(dimsizes(tlai),areaL,(/1/))                  ; conforming dimensions of areaL to tlai
+    tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1/))                   ; weighted tlai
+  else
+    landareaL           = conform_dims(dimsizes(tlai),areaL,(/1,2/))                ; conforming dimensions of areaL to tlai
+    tlai_glob           = dim_sum_n(tlai*landareaL/areasum,(/1,2/))                 ; weighted global tlai
+  end if
   tlai_glob!0         = "year"                                                
   tlai_glob&year      = yearplt                                               
   tlai_glob_del       = new(nyrs-1,"float")
@@ -461,7 +405,11 @@ begin
 ; GPP
   gpp_area              = gpp*landareaC                                   ; correcting gpp for total land area
   gpp_Xg                = gpp_area*gtoXg*secinyr                          ; g to Xg and sec to yrs
-  gpp_glob              = dim_sum_n(gpp_Xg, (/1,2/))                      ; sums over all latitudes
+  if (region .eq. "SPT") then
+    gpp_glob              = dim_sum_n(gpp_Xg, (/1/))                        ; sums over single point
+  else
+    gpp_glob              = dim_sum_n(gpp_Xg, (/1,2/))                      ; sums over all latitudes
+  end if
   gpp_glob!0            = "year"                                                
   gpp_glob&year         = yearplt                                               
   gpp_glob_del       = new(nyrs-1,"float")
@@ -491,9 +439,11 @@ begin
   delete(indx)
 
 ; TWS
-; if (isfilevar(data[0],"TWS")) then
-
-  tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
+  if (region .eq. "SPT") then
+    tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1/)))/1.e3    ; weighted tws (meters)
+  else
+    tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
+  end if
   tws_glob!0         = "year"                                                
   tws_glob&year      = yearplt                                               
   tws_glob_del       = new(nyrs-1,"float")
@@ -522,19 +472,14 @@ begin
   tws_glob_equil@_FillValue = -999
   delete(indx)
 
-; else
-;   tws_glob_equil = new(1,typeof(yearplt),-999)
-;   tws_glob_equil = -999
-;   tws_glob       = new(dimsizes(dim_sum_n(tws,(/1,2/))),typeof(tws),-999)
-;   tws_glob       = -999
-;   tws_glob_del   = new(nyrs-1,"float",-999.)
-;   tws_glob_del   = -999.
-; end if
-
 ; H2OSNO
   if (isfilevar(data[0],"H2OSNO")) then
 
-  h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1,2/))    ; weighted global h2osno (mm)
+  if (region .eq. "SPT") then
+    h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1/))      ; weighted h2osno (mm)
+  else
+    h2osno_glob           = dim_sum_n(h2osno*landareaL/areasum,(/1,2/))    ; weighted global h2osno (mm)
+  end if
   h2osno_glob!0         = "year"                                                
   h2osno_glob&year      = yearplt                                               
   h2osno_glob_del       = new(nyrs-1,"float")
@@ -567,7 +512,11 @@ begin
     h2osno_glob_equil = -999
     h2osno_glob_equil = new(1,typeof(yearplt),-999)
     h2osno_glob_equil = -999
-    h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
+    if (region .eq. "SPT") then
+      h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1/))),typeof(h2osno),-999)
+    else
+      h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
+    end if
     h2osno_glob       = -999
     h2osno_glob_del   = new(nyrs-1,"float",-999.)
     h2osno_glob_del   = -999.
@@ -697,15 +646,18 @@ begin
   prim17 = gsn_add_polyline(wks,plot(11),(/0.,yearpltmid(nyrs-2)/),(/-glob_thresh_tws,-glob_thresh_tws/),polyres2)
   prim18 = gsn_add_polyline(wks,plot(11),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_tws,glob_thresh_tws/),polyres2)
 
-  res@tiYAxisString          = "%"
-  res@tiMainString           = "% Land Area in TOTECOSYSC Disequil " + "EqYr: "+perc_landarea_glob_noequil
-  res@trYMaxF                = 80.0
-  res@trYMinF                =  0.0
-  plot(12)                   = gsn_csm_xy(wks,yearpltmid,perc_landarea_noequil,res)
-  prim19 = gsn_add_polyline(wks,plot(12),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_area,glob_thresh_area/),polyres2)
+  if (region .ne. "SPT") then
+    res@tiYAxisString          = "%"
+    res@tiMainString           = "% Land Area in TOTECOSYSC Disequil " + "EqYr: "+perc_landarea_glob_noequil
+    res@trYMaxF                = 80.0
+    res@trYMinF                =  0.0
+    plot(12)                   = gsn_csm_xy(wks,yearpltmid,perc_landarea_noequil,res)
+    prim19 = gsn_add_polyline(wks,plot(12),(/0.,yearpltmid(nyrs-2)/),(/glob_thresh_area,glob_thresh_area/),polyres2)
+  end if
 
   gsn_panel(wks,plot,(/4,4/),resP)
 
+  if (region .ne. "SPT") then
   delete(plot)
   resc                       = True             ; turn on plotting options
   if (paleo) then
@@ -726,6 +678,15 @@ begin
   resc@cnLineLabelsOn        = False            ; turn off contour line labels
   resc@cnLevelSelectionMode  = "ExplicitLevels" 
   resc@mpProjection          = "robinson"       ; Robinson grid projection
+  if (region .eq. "Arctic") then
+    resc@mpLimitMode   = "LatLon"
+    resc@mpMinLatF     = 50.
+    resc@mpMaxLatF     = 85.
+    resc@mpMinLonF     = -180.
+    resc@mpMaxLonF     = -95.
+    resc@gsnAddCyclic  = False
+    resc@mpProjection  = "CylindricalEquidistant"
+  end if
   resc@gsnDraw               = True
   resc@gsnFrame              = False
   resc@lbAutoManage          = False
@@ -748,6 +709,8 @@ begin
   resc@vpHeightF             = 0.30
   resc@gsnCenterString       = "TOTECOSYSC Disequil Yr " + yearplt(nyrs-2) + " - " + yearplt(nyrs-3)
   plot                       = gsn_csm_contour_map(wks,totecosysc_2_map,resc)
+
+  end if
 
   frame(wks)
   delete(plot)
@@ -813,6 +776,7 @@ begin
   else
     print((/"WARNING: H2OSNO is NOT in equilibrium or is missing"/))
   end if
+  if (region .ne. "SPT") then
   if (.not.(ismissing(perc_landarea_glob_noequil))) then
     print((/"At least "+(100.-glob_thresh_area)+" percent of the land surface is in TOTECOSYSC equilibrium. Eq. Yr. = "+perc_landarea_glob_noequil/))
     print((/"Percent of the land surface not in equilibrium ("+sprintf("%6.2f",perc_landarea_noequil(nyrs-2))+"% )"/))
@@ -830,9 +794,11 @@ begin
     print((/"FATAL: Your simulation is not in equilibrium, 8 hours have been deducted from your PTO bank, try again"/))
   end if
   print((/"======================================================================="/))
+  end if
 
   print ("=========================================")
   print ("Finish Time: "+systemfunc("date") )
   print ("=========================================")
+  print ("Successfully ran the script")
 
 end
