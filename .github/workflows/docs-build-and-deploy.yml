@@ -40,13 +40,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           # Get all history, ensuring all branches are available for checkout
           fetch-depth: 0
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b  # v5
 
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules
@@ -60,11 +60,11 @@ jobs:
           ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8  # v3
         with:
           # Upload publish dir
           path: 'doc/_publish'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@f33f41b675f0ab2dc5a6863c9a170fe83af3571e  # v4

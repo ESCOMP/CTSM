@@ -27,7 +27,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           fetch-depth: 0
           lfs: true
@@ -38,7 +38,7 @@ jobs:
           bin/git-fleximod update -o
 
       - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
         with:
           activate-environment: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
@@ -53,7 +53,7 @@ jobs:
   makefile-method:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           fetch-depth: 0
           lfs: true
@@ -64,7 +64,7 @@ jobs:
           bin/git-fleximod update -o
 
       - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
         with:
           activate-environment: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
