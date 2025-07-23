@@ -1,8 +1,10 @@
+! Try all the different mapalgo options in the various stream files
 ndepmapalgo = 'nn'
 zender_soil_erod_source = 'lnd'
 zendersoilerod_mapalgo = 'nn'
-lightngmapalgo = 'mapconsf'
-popdensmapalgo = 'mapconsd'
+lightngmapalgo = 'consf'
+popdensmapalgo = 'consd'
 urbantvmapalgo = 'redist'
-exice_streams = .true.
+use_excess_ice = .true.
+use_excess_ice_streams = .true.
 stream_mapalgo_exice = 'nn'
