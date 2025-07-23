@@ -97,6 +97,15 @@
       <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
+  <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/obscureMapping">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">simple test to make sure adding obscure stream options works</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>

@@ -1,0 +1,5 @@
+This test runs different map algo options for various streams to make sure they work.
+
+Tests with it need to be at f09 resolution so that the redist and none options can be tried
+It also needs to run with CLM_PHYSICS older than clm6_0 because it assumes the Zender dust emissions
+model is going to be used.
