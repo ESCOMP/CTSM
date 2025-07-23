@@ -1,5 +1,6 @@
 ! Try all the different mapalgo options in the various stream files
-ndepmapalgo = 'nn'
+ndepmapalgo = 'redist'
+dust_emis_method = 'Zender_2003'
 zender_soil_erod_source = 'lnd'
 zendersoilerod_mapalgo = 'nn'
 lightngmapalgo = 'consf'
