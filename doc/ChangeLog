@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.064
 Originator(s): slevis (Samuel Levis)
-Date: Wed Jul 23 10:48:50 MDT 2025
+Date: Wed Jul 23 11:51:50 MDT 2025
 One-line Summary: Add time dimension to 1d_wt fields in transient runs
 
 Purpose and description of changes
@@ -54,44 +54,18 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on derecho - 
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
     izumi ------- OK
 
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
-
-  ctsm_sci
-     derecho ----
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
-
 Answer changes
 --------------
 
 Changes answers relative to baseline: Yes
- - 1d_wt fields with the time dimension will display different answers in transient simulations, but this is diagnostic in nature.
+ - 1d_wt fields with the time dimension will display different answers in transient simulations, though this is diagnostic in nature.
  - Only one test is affected in aux_clm: RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput
 
 Other details
