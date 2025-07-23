@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.064
 Originator(s): slevis (Samuel Levis)
-Date: Tue Jul 22 16:04:40 MDT 2025
+Date: Wed Jul 23 10:48:50 MDT 2025
 One-line Summary: Add time dimension to 1d_wt fields in transient runs
 
 Purpose and description of changes
@@ -72,7 +72,7 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- PEND
+    derecho ----- OK
     izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
@@ -90,9 +90,9 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: No, but read caveat:
-
- 1d_wt fields with the time dimension will display different answers in transient simulations, but this is diagnostic in nature
+Changes answers relative to baseline: Yes
+ - 1d_wt fields with the time dimension will display different answers in transient simulations, but this is diagnostic in nature.
+ - Only one test is affected in aux_clm: RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput
 
 Other details
 -------------
