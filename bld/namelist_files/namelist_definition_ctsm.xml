@@ -1784,8 +1784,8 @@ Mapping method from Nitrogen deposition input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -1808,6 +1808,18 @@ Filename of input stream data for aeolian roughness length (from Prigent's rough
 mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
 
+<entry id="prigentroughnessmapalgo" type="char*256" category="physics"
+       group="prigentroughness" valid_values="bilinear,nn,redist,consd,consf,none" >
+Mapping method for the Prigent roughness input file to the model resolution
+(Only used when use_prigent_roughness is TRUE and normally only needed with the Leung_2023 dust emission method)
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
@@ -1820,8 +1832,8 @@ here in CTSM, or in the ATM model.
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -1851,6 +1863,18 @@ to hydrologic variables (either TWS or ZWT)
        input_pathname="abs" group="ch4finundated" valid_values="" >
 mesh filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
+</entry>
+
+<entry id="ch4finundatedmapalgo" type="char*256" category="physics"
+       group="ch4finundated" valid_values="bilinear,nn,redist,consd,consf,none" >
+Mapping method for the finundated inversion input file to the model resolution
+(Only used when use_ch4 is TRUE)
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- Prescribed soil moisture -->
@@ -1950,8 +1974,8 @@ Mapping method from LAI input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -2096,8 +2120,8 @@ Mapping method from Lightning input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -2143,8 +2167,8 @@ Mapping method from human population density input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -2190,8 +2214,8 @@ Mapping method from urban time varying input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
@@ -3109,8 +3133,8 @@ Mapping method from excess ice input stream data to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
     redist   = Redistributes data from source mesh to destination mesh
-    consd = First-order conservative interpolation
-    consf = Same as consd with fraction area normalization
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
