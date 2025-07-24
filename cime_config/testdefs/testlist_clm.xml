@@ -781,14 +781,14 @@
       <option name="comment">Repeat last ERP_D...decStart test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERI_Ld20" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/midDecStart--clm-allowTransientYearJump">
+  <test name="ERI_D_Ld20" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/midDecStart--clm-allowTransientYearJump">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side</option>
+      <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side (DEBUG to work on izumi_nag)</option>
     </options>
   </test>
   <test name="ERP_D_Ld3_P64x2" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
