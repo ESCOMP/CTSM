@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3391;
+my $ntests = 3397;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1392,6 +1392,14 @@ my %warntest = (
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
                                      namelst=>"megan_specifier='ZZTOP=zztop%'",
                                      phys=>"clm4_5",
+                                   },
+     "megan_opts_wo_megan"       =>{ options=>"--envxml_dir . --bgc bgc --no-megan",
+                                     namelst=>"megan_use_gamma_sm=TRUE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
+                                   },
+     "megan_min_wo_megan_use"    =>{ options=>"--envxml_dir . --bgc bgc --megan",
+                                     namelst=>"megan_use_gamma_sm=FALSE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
                                    },
      "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_fun=.true.,use_flexiblecn=.false.",
