@@ -1717,9 +1717,9 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_1850_16pfts_c241007.nc</fsurd
 <fsurdat hgrid="360x720cru"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_360x720cru_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"    sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"     sim_year="1850" use_crop=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1.9x2.5_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="10x15"       sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"         sim_year="1850" use_crop=".true.">
@@ -1735,7 +1735,7 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4_hist_1850_78pfts_c240908.nc</f
 <fsurdat hgrid="ne30np4.pg2" sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg2_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg3" sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne3np4"       sim_year="1850">
@@ -1795,9 +1795,9 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 
 <!-- 78-pft landuse files -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
- >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_0.9x1.25_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000" use_crop=".true."
- >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_1.9x2.5_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1850-2000"
@@ -1827,7 +1827,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4.pg3"   sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_ne30np4.pg3_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
