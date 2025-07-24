@@ -79,6 +79,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_lch4
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
+   use clm_varctl        , only : carbon_only
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -1149,6 +1150,11 @@ module CLMFatesInterfaceMod
       real(r8) :: s_node, smp_node         ! local for relative water content and potential
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
+      logical  :: nitr_suppl                             ! Is CLM currently supplementing N
+      logical, parameter :: phos_dummy_suppl = .false.   ! This argument is needed for FATES
+                                                         ! to specify if phosphorus is being
+                                                         ! supplemented, this is not cycled in CLM
+                                                         ! so we set it to false
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -1330,10 +1336,16 @@ module CLMFatesInterfaceMod
 
       end do
 
+      if(carbon_only)then
+         nitr_suppl = .true.
+      else
+         nitr_suppl = .false.
+      end if
+      
       ! Nutrient uptake fluxes have been accumulating with each short
       ! timestep, here, we unload them from the boundary condition
       ! structures into the cohort structures.
-      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in, nitr_suppl, phos_dummy_suppl)
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapGlobalSeedDispersal call
