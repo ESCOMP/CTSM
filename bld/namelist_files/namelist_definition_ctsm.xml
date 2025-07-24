@@ -2314,7 +2314,7 @@ to run with a different type of atmospheric forcing.
 
 <entry id="megan" type="integer" category="default_settings"
        group="default_settings"  valid_values="0,1">
-If 1, turn on the MEGAN model for BVOC's (Biogenic Volitile Organic Compounds)
+If 1, turn on the MEGAN model for BVOC's (Biogenic Volatile Organic Compounds)
 </entry>
 
 <entry id="megan_use_gamma_sm" type="logical" category="MEGAN_emissions"
