@@ -2867,13 +2867,19 @@ sub setup_logic_do_transient_pfts {
    }
 
    # if do_transient_pfts is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_pfts'=>$nl_flags->{'do_transient_pfts'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_pfts is .true.");
       }
    }
 }
@@ -2944,13 +2950,19 @@ sub setup_logic_do_transient_crops {
    }
 
    # if do_transient_crops is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_crops'=>$nl_flags->{'do_transient_crops'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_crops is .true.");
       }
    }
 
@@ -3021,7 +3033,7 @@ sub setup_logic_do_transient_lakes {
    }
 
    # if do_transient_lakes is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
@@ -3030,6 +3042,12 @@ sub setup_logic_do_transient_lakes {
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_lakes'=>$nl_flags->{'do_transient_lakes'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_lakes is .true.");
       }
    }
 }
@@ -3093,7 +3111,7 @@ sub setup_logic_do_transient_urban {
    }
 
    # if do_transient_urban is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
@@ -3102,6 +3120,12 @@ sub setup_logic_do_transient_urban {
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_urban'=>$nl_flags->{'do_transient_urban'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_urban is .true.");
       }
    }
 }
