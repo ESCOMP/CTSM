@@ -1151,10 +1151,11 @@ module CLMFatesInterfaceMod
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
       logical  :: nitr_suppl                             ! Is CLM currently supplementing N
-      logical, parameter :: phos_dummy_suppl = .false.   ! This argument is needed for FATES
+      logical, parameter :: phos_dummy_suppl = .true .   ! This argument is needed for FATES
                                                          ! to specify if phosphorus is being
                                                          ! supplemented, this is not cycled in CLM
-                                                         ! so we set it to false
+                                                         ! so we set it to TRUE (which essentially
+                                                         ! means it is NOT limiting)
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
