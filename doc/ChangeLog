@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.064
 Originator(s): slevis (Samuel Levis)
-Date: Wed Jul 23 11:51:50 MDT 2025
+Date: Thu 24 Jul 2025 01:13:00 PM MDT
 One-line Summary: Add time dimension to 1d_wt fields in transient runs
 
 Purpose and description of changes
@@ -38,10 +38,11 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 Notes of particular relevance for users
 ---------------------------------------
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
- New namelist variable vars_1dwt_w_time
+ New namelist variable vars_1dwt_w_time; user will get an error if they set it to .false. when any of the following is .true.:
+ do_transient_pfts, do_transient_crops, do_transient_lakes, do_transient_urban
 
 Changes made to namelist defaults (e.g., changed parameter values):
- vars_1dwt_w_time defaults to true when one of the following is .true.:
+ vars_1dwt_w_time defaults to true when any of the following is .true.:
  do_transient_pfts, do_transient_crops, do_transient_lakes, do_transient_urban
  else vars_1dwt_w_time defaults to .false.
 
