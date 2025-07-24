@@ -1779,14 +1779,14 @@ Colon delimited list of variables to read from the streams file for nitrogen dep
 </entry>
 
 <entry id="ndepmapalgo" type="char*256" category="datasets"
-       group="ndepdyn_nml" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="ndepdyn_nml" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from Nitrogen deposition input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- ========================================================================================  -->
@@ -1808,21 +1808,33 @@ Filename of input stream data for aeolian roughness length (from Prigent's rough
 mesh filename of input stream data for aeolian roughness length (from Prigent's roughness dataset)
 </entry>
 
+<entry id="prigentroughnessmapalgo" type="char*256" category="physics"
+       group="prigentroughness" valid_values="bilinear,nn,redist,consd,consf,none" >
+Mapping method for the Prigent roughness input file to the model resolution
+(Only used when use_prigent_roughness is TRUE and normally only needed with the Leung_2023 dust emission method)
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Dust namelist and Zender soil erodibility stream                                          -->
 <!-- ========================================================================================  -->
 
 <entry id="zendersoilerod_mapalgo" type="char*256" category="physics"
-       group="zendersoilerod" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="zendersoilerod" valid_values="bilinear,nn,redist,consd,consf,none" >
 Option only applying for the Zender_2003 method for whether the soil erodibility file is handled
 here in CTSM, or in the ATM model.
 (only used when dust_emis_method is Zender_2003)
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <entry id="stream_fldfilename_zendersoilerod" type="char*512" category="datasets"
@@ -1851,6 +1863,18 @@ to hydrologic variables (either TWS or ZWT)
        input_pathname="abs" group="ch4finundated" valid_values="" >
 mesh filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
+</entry>
+
+<entry id="ch4finundatedmapalgo" type="char*256" category="physics"
+       group="ch4finundated" valid_values="bilinear,nn,redist,consd,consf,none" >
+Mapping method for the finundated inversion input file to the model resolution
+(Only used when use_ch4 is TRUE)
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- Prescribed soil moisture -->
@@ -1945,14 +1969,14 @@ Time interpolation method to use with LAI streams
 </entry>
 
 <entry id="lai_mapalgo" type="char*256" category="datasets"
-       group="lai_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="lai_streams" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from LAI input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2091,14 +2115,14 @@ Time interpolation method to use with Lightning streams
 </entry>
 
 <entry id="lightngmapalgo" type="char*256" category="datasets"
-       group="light_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="light_streams" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from Lightning input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2138,14 +2162,14 @@ Time interpolation method to use with human population density streams
 </entry>
 
 <entry id="popdensmapalgo" type="char*256" category="datasets"
-       group="popd_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="popd_streams" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from human population density input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2185,14 +2209,14 @@ Time interpolation method to use with urban time varying streams
 </entry>
 
 <entry id="urbantvmapalgo" type="char*256" category="datasets"
-       group="urbantv_streams" valid_values="bilinear,nn,nnoni,nnonj,spval,copy" >
+       group="urbantv_streams" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from urban time varying input file to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
+    none     = no interpolation
 </entry>
 
 <entry id="diri" type="char*512" category="datm"
@@ -3104,10 +3128,13 @@ mesh filename of input stream data for excess ice
 </entry>
 
 <entry id="stream_mapalgo_exice" type="char*256" category="datasets"
-       group="exice_streams" valid_values="bilinear,nn,none" >
+       group="exice_streams" valid_values="bilinear,nn,redist,consd,consf,none" >
 Mapping method from excess ice input stream data to the model resolution
     bilinear = bilinear interpolation
     nn       = nearest neighbor
+    redist   = Redistributes data from source mesh to destination mesh
+    consd    = First-order conservative interpolation
+    consf    = Same as consd with fraction area normalization
     none     = no interpolation
 </entry>
 
