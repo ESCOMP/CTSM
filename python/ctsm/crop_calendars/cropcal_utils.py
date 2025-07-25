@@ -9,6 +9,23 @@ import xarray as xr
 from ctsm.utils import is_instantaneous
 
 
+def log(logger_in, string):
+    """
+    Simultaneously print INFO messages to console and to log file
+    """
+    print(string)
+    logger_in.info(string)
+
+
+def error(logger_in, string):
+    """
+    Simultaneously print ERROR messages to console and to log file
+    """
+    print(string)
+    logger_in.error(string)
+    raise RuntimeError(string)
+
+
 def define_pftlist():
     """
     Return list of PFTs used in CLM

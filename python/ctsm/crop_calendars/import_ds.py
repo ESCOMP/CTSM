@@ -44,13 +44,15 @@ def compute_derived_vars(ds_in, var):
     return ds_in
 
 
-def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice):
+def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice, logger=None):
     """
     Opening a list of files with Xarray's open_mfdataset requires dask. This function is a
     workaround for Python environments that don't have dask.
     """
     ds_out = None
     for filename in filelist:
+        if logger:
+            utils.log(logger, f"manual_mfdataset(): Opening ds_in: {ds_in}")
         ds_in = xr.open_dataset(filename)
         ds_in = mfdataset_preproc(ds_in, my_vars, my_vegtypes, time_slice)
         if ds_out is None:
@@ -201,6 +203,7 @@ def import_ds(
     my_vars_missing_ok=None,
     rename_lsmlatlon=False,
     chunks=None,
+    logger=None,
 ):
     """
     Import a dataset that can be spread over multiple files, only including specified variables
@@ -221,10 +224,13 @@ def import_ds(
     if time_slice:
         new_filelist = []
         for file in sorted(filelist):
+            if logger:
+                utils.log(logger, f"import_ds(): Getting filetime from file: {file}")
             filetime = xr.open_dataset(file).time
             filetime_sel = utils.safer_timeslice(filetime, time_slice)
             include_this_file = filetime_sel.size
-            if include_this_file:
+            if include_this_file and logger:
+                utils.log(logger, f"import_ds(): Including filetime : {filetime_sel['time'].values}")
                 new_filelist.append(file)
 
             # If you found some matching files, but then you find one that doesn't, stop going
@@ -250,7 +256,7 @@ def import_ds(
             warnings.filterwarnings(action="ignore", category=DeprecationWarning)
             dask_unavailable = find_spec("dask") is None
         if dask_unavailable:
-            this_ds = manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice)
+            this_ds = manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice, logger=logger)
         else:
             this_ds = xr.open_mfdataset(
                 sorted(filelist),
@@ -263,6 +269,8 @@ def import_ds(
                 chunks=chunks,
             )
     elif isinstance(filelist, str):
+        if logger:
+            utils.log(logger, f"import_ds(): Opening this_ds from filelist: {filelist}")
         this_ds = xr.open_dataset(filelist, chunks=chunks)
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)
         this_ds = this_ds.compute()

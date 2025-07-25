@@ -54,28 +54,11 @@ except ModuleNotFoundError:
     CAN_PLOT = False
 
 
-def log(logger, string):
-    """
-    Simultaneously print INFO messages to console and to log file
-    """
-    print(string)
-    logger.info(string)
-
-
-def error(logger, string):
-    """
-    Simultaneously print ERROR messages to console and to log file
-    """
-    print(string)
-    logger.error(string)
-    raise RuntimeError(string)
-
-
 def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     """
     Checking that input and output sdates match
     """
-    log(logger, "   Checking that input and output sdates match...")
+    utils.log(logger, "   Checking that input and output sdates match...")
 
     sdates_grid = grid_one_variable(dates_ds, "SDATES")
 
@@ -89,12 +72,12 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
         this_var = f"gs1_{vegtype_int}"
         if this_var not in sdates_rx:
             vegtypes_skipped = vegtypes_skipped + [vegtype_str]
-            # log(logger, f"    {vt_str} ({vt}) SKIPPED...")
+            # utils.log(logger, f"    {vt_str} ({vt}) SKIPPED...")
             continue
         vegtypes_included = vegtypes_included + [vegtype_str]
         any_found = True
         if verbose:
-            log(logger, f"    {vegtype_str} ({vegtype_int})...")
+            utils.log(logger, f"    {vegtype_str} ({vegtype_int})...")
         in_map = sdates_rx[this_var].squeeze(drop=True)
 
         # Output
@@ -104,23 +87,23 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
         diff_map = out_map - in_map
         diff_map_notnan = diff_map.values[np.invert(np.isnan(diff_map.values))]
         if np.any(diff_map_notnan):
-            log(logger, f"Difference(s) found in {vegtype_str}")
+            utils.log(logger, f"Difference(s) found in {vegtype_str}")
             here = np.where(diff_map_notnan)
-            log(logger, "in:")
+            utils.log(logger, "in:")
             in_map_notnan = in_map.values[np.invert(np.isnan(diff_map.values))]
-            log(logger, in_map_notnan[here][0:4])
+            utils.log(logger, in_map_notnan[here][0:4])
             out_map_notnan = out_map.values[np.invert(np.isnan(diff_map.values))]
-            log(logger, "out:")
-            log(logger, out_map_notnan[here][0:4])
-            log(logger, "diff:")
-            log(logger, diff_map_notnan[here][0:4])
+            utils.log(logger, "out:")
+            utils.log(logger, out_map_notnan[here][0:4])
+            utils.log(logger, "diff:")
+            utils.log(logger, diff_map_notnan[here][0:4])
             first_diff = all_ok
             all_ok = False
 
             if CAN_PLOT:
                 sdate_diffs_dir = os.path.join(outdir_figs, "sdate_diffs")
                 if first_diff:
-                    log(logger, f"Saving sdate difference figures to {sdate_diffs_dir}")
+                    utils.log(logger, f"Saving sdate difference figures to {sdate_diffs_dir}")
                 if not os.path.exists(sdate_diffs_dir):
                     os.makedirs(sdate_diffs_dir)
                 in_map.where(~np.isnan(out_map)).plot()
@@ -137,24 +120,24 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
                 plt.close()
 
     if not any_found:
-        error(logger, "No matching variables found in sdates_rx!")
+        utils.error(logger, "No matching variables found in sdates_rx!")
 
     # Sanity checks for included vegetation types
     vegtypes_skipped = np.unique([x.replace("irrigated_", "") for x in vegtypes_skipped])
     vegtypes_skipped_weird = [x for x in vegtypes_skipped if x in vegtypes_included]
     if np.array_equal(vegtypes_included, [x.replace("irrigated_", "") for x in vegtypes_included]):
-        log(logger, "\nWARNING: No irrigated crops included!!!\n")
+        utils.log(logger, "\nWARNING: No irrigated crops included!!!\n")
     elif vegtypes_skipped_weird:
-        log(
+        utils.log(
             logger,
             "\nWarning: Some crop types had output rainfed patches but no irrigated patches: "
             + f"{vegtypes_skipped_weird}",
         )
 
     if all_ok:
-        log(logger, "   ✅ Input and output sdates match!")
+        utils.log(logger, "   ✅ Input and output sdates match!")
     else:
-        error(logger, "   ❌ Input and output sdates differ.")
+        utils.error(logger, "   ❌ Input and output sdates differ.")
 
 
 def import_rx_dates(s_or_h, date_infile, incl_patches1d_itype_veg, mxsowings, logger):
@@ -164,7 +147,7 @@ def import_rx_dates(s_or_h, date_infile, incl_patches1d_itype_veg, mxsowings, lo
     if isinstance(date_infile, xr.Dataset):
         return date_infile
     if not isinstance(date_infile, str):
-        error(
+        utils.error(
             logger,
             f"Importing {s_or_h}dates_rx: Expected date_infile to be str or DataArray,"
             + f"not {type(date_infile)}",
@@ -220,7 +203,7 @@ def yp_list_to_ds(yp_list, daily_ds, incl_vegtypes_str, dates_rx, longname_prefi
         if isinstance(data, type(None)):
             continue
         this_crop_str = incl_vegtypes_str[this_crop_int]
-        log(logger, f"   {this_crop_str}...")
+        utils.log(logger, f"   {this_crop_str}...")
         new_var = f"gdd1_{utils.ivt_str2int(this_crop_str)}"
         this_ds = daily_ds.isel(
             patch=np.where(daily_ds.patches1d_itype_veg_str.values == this_crop_str)[0]
@@ -270,8 +253,8 @@ def import_and_process_1yr(
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    log(logger, f"netCDF year {this_year}...")
-    log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    utils.log(logger, f"netCDF year {this_year}...")
+    utils.log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -286,7 +269,7 @@ def import_and_process_1yr(
         h1_pattern = os.path.join(indir, "*h1i.*.nc.base")
         h1_filelist = glob.glob(h1_pattern)
         if not h1_filelist:
-            error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
+            utils.error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
 
     # Get list of crops to include
     if skip_crops is not None:
@@ -308,6 +291,7 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
+        logger=logger,
     )
     for timestep in dates_ds["time"].values:
         print(timestep)
@@ -315,7 +299,7 @@ def import_and_process_1yr(
     if dates_ds.dims["time"] > 1:
         if dates_ds.dims["time"] == 365:
             if not incorrectly_daily:
-                log(
+                utils.log(
                     logger,
                     "   ℹ️ You saved SDATES and HDATES daily, but you only needed annual. Fixing.",
                 )
@@ -334,9 +318,9 @@ def import_and_process_1yr(
     )
     n_unmatched_nans = np.sum(sdates_all_nan != hdates_all_nan)
     if n_unmatched_nans > 0:
-        error(logger, "Output SDATE and HDATE NaN masks do not match.")
+        utils.error(logger, "Output SDATE and HDATE NaN masks do not match.")
     if np.sum(~np.isnan(dates_ds.SDATES.values)) == 0:
-        error(logger, "All SDATES are NaN!")
+        utils.error(logger, "All SDATES are NaN!")
 
     # Just work with non-NaN patches for now
     skip_patches_for_isel_nan = np.where(sdates_all_nan)[0]
@@ -345,7 +329,7 @@ def import_and_process_1yr(
         skip_patches_for_isel_nan_last_year, skip_patches_for_isel_nan
     )
     if different_nan_mask:
-        log(logger, "   Different NaN mask than last year")
+        utils.log(logger, "   Different NaN mask than last year")
         incl_thisyr_but_nan_lastyr = [
             dates_ds.patch.values[p]
             for p in incl_patches_for_isel_nan
@@ -355,7 +339,7 @@ def import_and_process_1yr(
         incl_thisyr_but_nan_lastyr = []
     skipping_patches_for_isel_nan = len(skip_patches_for_isel_nan) > 0
     if skipping_patches_for_isel_nan:
-        log(
+        utils.log(
             logger,
             f"   Ignoring {len(skip_patches_for_isel_nan)} patches with all-NaN sowing and "
             + "harvest dates.",
@@ -374,14 +358,14 @@ def import_and_process_1yr(
         if isinstance(incl_vegtypes_str, np.ndarray):
             incl_vegtypes_str = list(incl_vegtypes_str)
         if incl_vegtypes_str != list(dates_incl_ds.vegtype_str.values):
-            error(
+            utils.error(
                 logger,
                 f"Included veg types differ. Previously {incl_vegtypes_str}, "
                 + f"now {dates_incl_ds.vegtype_str.values}",
             )
 
     if np.sum(~np.isnan(dates_incl_ds.SDATES.values)) == 0:
-        error(logger, "All SDATES are NaN after ignoring those patches!")
+        utils.error(logger, "All SDATES are NaN after ignoring those patches!")
 
     # Some patches can have -1 sowing date?? Hopefully just an artifact of me incorrectly saving
     # SDATES/HDATES daily.
@@ -394,14 +378,14 @@ def import_and_process_1yr(
             dates_incl_ds.HDATES.isel(mxharvests=0, patch=skip_patches_for_isel_sdatelt1).values
         )
         if incorrectly_daily and list(unique_hdates) == [364]:
-            log(
+            utils.log(
                 logger,
                 f"   ❗ {len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1, but this"
                 + "might have just been because of incorrectly daily outputs. Setting them to 365.",
             )
             new_sdates_ar = dates_incl_ds.SDATES.values
             if mxsowings_dim != 0:
-                error(logger, "Code this up")
+                utils.error(logger, "Code this up")
             new_sdates_ar[0, skip_patches_for_isel_sdatelt1] = 365
             dates_incl_ds["SDATES"] = xr.DataArray(
                 data=new_sdates_ar,
@@ -409,7 +393,7 @@ def import_and_process_1yr(
                 attrs=dates_incl_ds["SDATES"].attrs,
             )
         else:
-            error(
+            utils.error(
                 logger,
                 f"{len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1. "
                 + f"Unique affected hdates: {unique_hdates}",
@@ -432,10 +416,10 @@ def import_and_process_1yr(
         if np.any(hdates_thisyr_where_nan_lastyr < 1):
             new_hdates = dates_incl_ds.HDATES.values
             if mxharvests_dim != 0:
-                error(logger, "Code this up")
+                utils.error(logger, "Code this up")
             patch_list = list(hdates_thisyr.patch.values)
             here = [patch_list.index(x) for x in incl_thisyr_but_nan_lastyr]
-            log(
+            utils.log(
                 logger,
                 f"   ❗ {len(here)} patches have harvest date -1 because they weren't active last"
                 + "year (and were either never active or were harvested when last active). "
@@ -460,7 +444,7 @@ def import_and_process_1yr(
             dates_incl_ds.SDATES.isel(patch=skip_patches_for_isel_hdatelt1).values
         )
         if incorrectly_daily and list(unique_sdates) == [1]:
-            log(
+            utils.log(
                 logger,
                 f"   ❗ {len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1??? Seems like "
                 + "this might have just been because of incorrectly daily outputs; setting them to "
@@ -468,7 +452,7 @@ def import_and_process_1yr(
             )
             new_hdates_ar = dates_incl_ds.HDATES.values
             if mxharvests_dim != 0:
-                error(logger, "Code this up")
+                utils.error(logger, "Code this up")
             new_hdates_ar[0, skip_patches_for_isel_hdatelt1] = 365
             dates_incl_ds["HDATES"] = xr.DataArray(
                 data=new_hdates_ar,
@@ -476,7 +460,7 @@ def import_and_process_1yr(
                 attrs=dates_incl_ds["HDATES"].attrs,
             )
         else:
-            error(
+            utils.error(
                 logger,
                 f"{len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1. Possible causes:\n"
                 + "* Not using constant crop areas (e.g., flanduse_timeseries from "
@@ -492,7 +476,7 @@ def import_and_process_1yr(
         >= 1
     )
     if n_extra_harv > 0:
-        error(logger, f"{n_extra_harv} patches have >1 harvest.")
+        utils.error(logger, f"{n_extra_harv} patches have >1 harvest.")
 
     # Make sure harvest happened the day before sowing
     sdates_clm = dates_incl_ds.SDATES.values.squeeze()
@@ -500,7 +484,7 @@ def import_and_process_1yr(
     diffdates_clm = sdates_clm - hdates_clm
     diffdates_clm[(sdates_clm == 1) & (hdates_clm == 365)] = 1
     if list(np.unique(diffdates_clm)) != [1]:
-        error(logger, f"Not all sdates-hdates are 1: {np.unique(diffdates_clm)}")
+        utils.error(logger, f"Not all sdates-hdates are 1: {np.unique(diffdates_clm)}")
 
     # Import expected sowing dates. This will also be used as our template output file.
     imported_sdates = isinstance(sdates_rx, str)
@@ -563,7 +547,7 @@ def import_and_process_1yr(
     else:
         hdates_rx = hdates_rx_orig
 
-    log(logger, "   Importing accumulated GDDs...")
+    utils.log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
     patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
@@ -577,24 +561,25 @@ def import_and_process_1yr(
         if h2_files:
             break
     if not h2_files:
-        error(logger, f"No files found matching patterns: {patterns}")
+        utils.error(logger, f"No files found matching patterns: {patterns}")
     h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
+        logger=logger,
     )
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
         if not np.array_equal(dates_ds.patch.values, h2_ds.patch.values):
-            error(logger, "dates_ds and h2_ds don't have the same patch list!")
+            utils.error(logger, "dates_ds and h2_ds don't have the same patch list!")
         h2_incl_ds = h2_ds.isel(patch=incl_patches_for_isel_nan)
     else:
         h2_incl_ds = h2_ds
 
     if not np.any(h2_incl_ds[clm_gdd_var].values != 0):
-        error(logger, f"All {clm_gdd_var} values are zero!")
+        utils.error(logger, f"All {clm_gdd_var} values are zero!")
 
     # Get standard datetime axis for outputs
     n_years = year_n - year_1 + 1
@@ -608,7 +593,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            log(logger, f"      SKIPPING {vegtype_str}")
+            utils.log(logger, f"      SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -623,7 +608,7 @@ def import_and_process_1yr(
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        log(logger, f"      {vegtype_str}...")
+        utils.log(logger, f"      {vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches
@@ -656,7 +641,7 @@ def import_and_process_1yr(
         if not np.all(
             this_crop_gddaccum_da.patch.values[:-1] <= this_crop_gddaccum_da.patch.values[1:]
         ):
-            error(logger, "This code depends on DataArray patch list being sorted.")
+            utils.error(logger, "This code depends on DataArray patch list being sorted.")
         sortorder = np.argsort(patches)
         i_patches = list(np.array(i_patches)[np.array(sortorder)])
         i_times = list(np.array(i_times)[np.array(sortorder)])
@@ -666,17 +651,17 @@ def import_and_process_1yr(
         if save_figs:
             gddharv_atharv_p = this_crop_gddharv_da.values[(i_times, i_patches)]
         if np.any(np.isnan(gddaccum_atharv_p)):
-            log(
+            utils.log(
                 logger,
                 f"         ❗ {np.sum(np.isnan(gddaccum_atharv_p))}/{len(gddaccum_atharv_p)} "
                 + "NaN after extracting GDDs accumulated at harvest",
             )
         if save_figs and gddharv_atharv_p is not None and np.any(np.isnan(gddharv_atharv_p)):
             if np.all(np.isnan(gddharv_atharv_p)):
-                log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
+                utils.log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
                 check_gddharv = False
             else:
-                log(
+                utils.log(
                     logger,
                     f"         ❗ {np.sum(np.isnan(gddharv_atharv_p))}/{len(gddharv_atharv_p)} "
                     + "NaN after extracting GDDHARV",
@@ -703,14 +688,14 @@ def import_and_process_1yr(
             ]
             if not np.array_equal(last_year_active_patch_indices, this_year_active_patch_indices):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ This year's active patch indices differ from last year's. "
                         + "Allowing because this might just be an artifact of incorrectly daily "
                         + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(logger, "This year's active patch indices differ from last year's.")
+                    utils.error(logger, "This year's active patch indices differ from last year's.")
             # Make sure we're not about to overwrite any existing values.
             if np.any(
                 ~np.isnan(
@@ -718,28 +703,28 @@ def import_and_process_1yr(
                 )
             ):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ Unexpected non-NaN for last season's GDD accumulation. "
                         + "Allowing because this might just be an artifact of incorrectly daily "
                         + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(logger, "Unexpected non-NaN for last season's GDD accumulation")
+                    utils.error(logger, "Unexpected non-NaN for last season's GDD accumulation")
             if save_figs and np.any(
                 ~np.isnan(
                     gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ Unexpected non-NaN for last season's GDDHARV. Allowing "
                         + "because this might just be an artifact of incorrectly daily outputs, "
                         + "BUT RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(logger, "Unexpected non-NaN for last season's GDDHARV")
+                    utils.error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
             gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
                 gddaccum_atharv_p[where_gs_lastyr]
@@ -755,14 +740,14 @@ def import_and_process_1yr(
                 )
             ):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ Unexpected NaN for last season's GDD accumulation. Allowing "
                         + "because this might just be an artifact of incorrectly daily outputs, "
                         + "BUT RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(logger, "Unexpected NaN for last season's GDD accumulation.")
+                    utils.error(logger, "Unexpected NaN for last season's GDD accumulation.")
             if (
                 save_figs
                 and check_gddharv
@@ -775,14 +760,14 @@ def import_and_process_1yr(
                 )
             ):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ Unexpected NaN for last season's GDDHARV. Allowing because "
                         + "this might just be an artifact of incorrectly daily outputs, BUT "
                         + "RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(logger, "Unexpected NaN for last season's GDDHARV.")
+                    utils.error(logger, "Unexpected NaN for last season's GDDHARV.")
         gddaccum_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddaccum
         if save_figs:
             gddharv_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddharv
@@ -798,14 +783,14 @@ def import_and_process_1yr(
             nanmask_output_gdds_lastyr = np.isnan(gddaccum_yp_list[var][year_index - 1, :])
             if not np.array_equal(nanmask_output_gdds_lastyr, nanmask_output_sdates):
                 if incorrectly_daily:
-                    log(
+                    utils.log(
                         logger,
                         "         ❗ NaN masks differ between this year's sdates and 'filled-out' "
                         + "GDDs from last year. Allowing because this might just be an artifact of "
                         + "incorrectly daily outputs, BUT RESULTS MUST NOT BE TRUSTED.",
                     )
                 else:
-                    error(
+                    utils.error(
                         logger,
                         "NaN masks differ between this year's sdates and 'filled-out' GDDs from "
                         + "last year",
@@ -815,7 +800,7 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_last_year = skip_patches_for_isel_nan
 
     # Could save space by only saving variables needed for gridding
-    log(logger, "   Saving h2_ds...")
+    utils.log(logger, "   Saving h2_ds...")
     h2_ds.to_netcdf(h2_ds_file)
 
     return (
@@ -1085,7 +1070,7 @@ if CAN_PLOT:
         """
         if not gdd_maps_ds:
             if not this_dir:
-                error(
+                utils.error(
                     logger,
                     "If not providing gdd_maps_ds, you must provide thisDir (location of "
                     + "gdd_maps.nc)",
@@ -1093,7 +1078,7 @@ if CAN_PLOT:
             gdd_maps_ds = xr.open_dataset(this_dir + "gdd_maps.nc")
         if not gddharv_maps_ds:
             if not this_dir:
-                error(
+                utils.error(
                     logger,
                     "If not providing gddharv_maps_ds, you must provide thisDir (location of "
                     + "gddharv_maps.nc)",
@@ -1120,7 +1105,7 @@ if CAN_PLOT:
         if land_use_file:
             year_1_lu = year_1 if first_land_use_year is None else first_land_use_year
             year_n_lu = year_n if last_land_use_year is None else last_land_use_year
-            lu_ds = cc.open_lu_ds(land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, ungrid=False)
+            lu_ds = cc.open_lu_ds(land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, logger, ungrid=False)
             lu_years_text = f" (masked by {year_1_lu}-{year_n_lu} area)"
             lu_years_file = f"_mask{year_1_lu}-{year_n_lu}"
         else:
@@ -1156,7 +1141,7 @@ if CAN_PLOT:
         # Maps
         nplot_y = 3
         nplot_x = 1
-        log(logger, "Making before/after maps...")
+        utils.log(logger, "Making before/after maps...")
         vegtype_list = incl_vegtypes_str
         if land_use_file:
             vegtype_list += ["Corn", "Cotton", "Rice", "Soybean", "Sugarcane", "Wheat"]
@@ -1217,7 +1202,7 @@ if CAN_PLOT:
                 spec = fig.add_gridspec(nrows=3, ncols=2, width_ratios=[0.5, 0.5], wspace=0.2)
                 this_axis = fig.add_subplot(spec[0, 0], projection=ccrs.PlateCarree())
             else:
-                error(logger, f"layout {layout} not recognized")
+                utils.error(logger, f"layout {layout} not recognized")
 
             gddharv_all_nan = np.all(np.isnan(gddharv_map_yx.values))
             if gddharv_all_nan:
@@ -1242,7 +1227,7 @@ if CAN_PLOT:
             elif layout in ["2x2", "3x2"]:
                 this_axis = fig.add_subplot(spec[1, 0], projection=ccrs.PlateCarree())
             else:
-                error(logger, f"layout {layout} not recognized")
+                utils.error(logger, f"layout {layout} not recognized")
             this_min = int(np.round(np.nanmin(gdd_map_yx)))
             this_max = int(np.round(np.nanmax(gdd_map_yx)))
             this_title = f"{run2_name} (range {this_min}–{this_max})"
@@ -1327,7 +1312,7 @@ if CAN_PLOT:
             elif layout in ["2x2", "3x2"]:
                 this_axis = fig.add_subplot(spec[:, 1])
             else:
-                error(logger, f"layout {layout} not recognized")
+                utils.error(logger, f"layout {layout} not recognized")
 
             # Shift bottom of plot up to make room for legend
             ax_pos = this_axis.get_position()
@@ -1380,4 +1365,4 @@ if CAN_PLOT:
             plt.savefig(outfile, dpi=300, transparent=False, facecolor="white", bbox_inches="tight")
             plt.close()
 
-        log(logger, "Done.")
+        utils.log(logger, "Done.")
