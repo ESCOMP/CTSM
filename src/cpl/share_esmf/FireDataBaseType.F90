@@ -246,6 +246,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_popdens , mpicom)
    call shr_mpi_bcast(stream_meshfile_popdens    , mpicom)
    call shr_mpi_bcast(popdens_tintalgo           , mpicom)
+   call shr_mpi_bcast(popdensmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)'   ) ' '
@@ -413,6 +414,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_lightng , mpicom)
    call shr_mpi_bcast(stream_meshfile_lightng    , mpicom)
    call shr_mpi_bcast(lightng_tintalgo           , mpicom)
+   call shr_mpi_bcast(lightngmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)') ' '

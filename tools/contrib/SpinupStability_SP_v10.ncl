@@ -1,13 +1,8 @@
 ; NCL script
-; SpinupStability_SP_v9.ncl
+; SpinupStability_SP_v10.ncl
 ; Script to examine stability of SP spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
-; Keith Oleson, Sep 2018
-
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
-load "~oleson/lnd_diag/run/contributed.ncl"
-load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
+; Keith Oleson, July 2025
 
 begin
 
@@ -27,21 +22,24 @@ begin
 ; To run this script, just enter in your case name and username below. 
 ;  AND set the annual_hist flag to "True" if your case has annual mean history files or set 
 ;  annual_hist flag to "False" if your case has monthly mean history files.
-; The script ; assumes that your history files are in /glade/scratch/$username/archive/$caseid/lnd/hist
+; The script assumes that your history files are in /glade/derecho/scratch/$username/archive/$caseid/lnd/hist
 ;=======================================================================;
 
-  caseid = "cesm20exp10j_1deg_CPLHST_nndep_1850pAD"
+  caseid = "clm50sp_cesm23a02cPPEn08ctsm51d030_1deg_GSWP3V1_1850spin"
   username = "oleson"
   annual_hist = "False"
   cplot = "Global"
   subper = 20
   h2osoi_layer = 8               ; Desired soil layer (layer 8 is about 1m)
   tsoi_layer = 10                ; Desired soil layer (layer 10 is about 3m)
+  hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
   do_plot = "True"
 ;=======================================================================;
 
-  data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+  data_dir = "/glade/derecho/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+; FOR TESTING
+; data_dir = "/glade/campaign/cgd/tss/common/Land_Only_Simulations/CTSM51_DEV/CLM50_CTSM51_LAND_ONLY_RELEASE/"+caseid+"/lnd/hist/"
 
 ; Thresholds 
   glob_thresh_fsh = 0.02         ; global threshold for FSH equilibrium (delta W m-2 / yr)
@@ -54,9 +52,9 @@ begin
   tws_thresh = 0.001             ; disequilibrium threshold for individual gridcells (m)
 
   if (annual_hist .eq. "True") then
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*-*-*"+".nc")
   else
-    fls                       = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
+    fls                       = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 

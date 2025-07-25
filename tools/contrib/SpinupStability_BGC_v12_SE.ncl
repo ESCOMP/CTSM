@@ -1,9 +1,9 @@
 ; NCL script
-; SpinupStability_BGC_v11_SE.ncl
+; SpinupStability_BGC_v12_SE.ncl
 ; Script to examine stability of spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
 ; and supports ne30 grids only
-; Keith Oleson, March 2025
+; Keith Oleson, July 2025
 ;
 ; ARH mods, April 2020 - modified to work for unstructured grids via remapping to FV 1 deg. grid.
 ; KO mods, March 2025 - regrid history file using ncremap to get area and landfrac instead of 
@@ -41,6 +41,7 @@ begin
  region = "Global"              ; Global
  subper = 20                    ; Subsampling period in years
  paleo = False                  ; Use paleo map ; UNTESTED IN THIS VERSION
+ hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
 
 ;--- ARH mods ---
  map_method = "conserve"      ;bilinear,conserve or patch
@@ -81,9 +82,9 @@ begin
   totecosysc_thresh = 1.0        ; disequilibrium threshold for individual gridcells (gC/m2/yr)
 
   if (annual_hist) then
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*-*-*"+".nc")
+    fls                     = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*-*-*"+".nc")
   else
-    fls                     = systemfunc("ls " + data_dir + caseid+".clm2.h0a.*-*"+".nc")
+    fls                     = systemfunc("ls " + data_dir + caseid+".clm2."+hist_ext+".*-*"+".nc")
   end if
   flsdims                   = dimsizes(fls)
 
