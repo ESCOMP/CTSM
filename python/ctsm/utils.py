@@ -2,11 +2,14 @@
 
 import logging
 import os
+import stat
 import sys
 import glob
 import string
 import re
 import pdb
+import tempfile
+import subprocess
 
 from datetime import date, timedelta
 from getpass import getuser
@@ -191,6 +194,7 @@ def write_output(file, file_in, file_out, file_type):
     """
 
     # update attributes
+    logger.info("Updating metadata: %s", file_out)
     title = "Modified " + file_type + " file"
     summary = "Modified " + file_type + " file"
     contact = "N/A"
@@ -205,10 +209,50 @@ def write_output(file, file_in, file_out, file_type):
         description=description,
     )
 
+    logger.info("Writing: %s", file_out)
     # mode 'w' overwrites file if it exists
-    file.to_netcdf(path=file_out, mode="w", format="NETCDF3_64BIT")
+    file.to_netcdf(path=file_out, mode="w", format="NETCDF4_CLASSIC")
     logger.info("Successfully created: %s", file_out)
     file.close()
+
+    logger.info("Trying to convert to NETCDF3_CLASSIC: %s", file_out)
+    if convert_netcdf_to_classic(file_out):
+        logger.info("Conversion succeeded")
+    else:
+        logger.info("Conversion failed, perhaps because nccopy wasn't found in your shell")
+
+
+def convert_netcdf_to_classic(filepath):
+    """
+    Try to convert netCDF to netCDF-3 Classic format using nccopy.
+    """
+
+    # Get temporary file path
+    dirpath = os.path.dirname(filepath)
+    with tempfile.NamedTemporaryFile(delete=False, dir=dirpath, suffix=".nc") as tmp:
+        temp_path = tmp.name
+
+    try:
+        subprocess.run(["nccopy", "-3", filepath, temp_path], check=True)
+        copy_permissions(filepath, temp_path)  # nccopy doesn't preserve permissions
+        os.replace(temp_path, filepath)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def copy_permissions(src_file, dst_file):
+    """
+    Copy file permissions from src to dest
+    """
+    # Get the mode (permissions) of the source file
+    src_mode = os.stat(src_file).st_mode
+
+    # Extract the permission bits
+    permissions = stat.S_IMODE(src_mode)
+
+    # Apply them to the destination file
+    os.chmod(dst_file, permissions)
 
 
 def get_isosplit(iso_string, split):
