@@ -100,7 +100,7 @@ def create_filled_array(this_ds, fill_value, thisvar_da, new_dims):
     if fill_value:
         thisvar_gridded[:] = fill_value
     else:
-        thisvar_gridded[:] = np.NaN
+        thisvar_gridded[:] = np.nan
     return thisvar_gridded
 
 
