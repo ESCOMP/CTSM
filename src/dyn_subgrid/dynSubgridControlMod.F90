@@ -26,6 +26,7 @@ module dynSubgridControlMod
   public :: get_do_transient_crops  ! return the value of the do_transient_crops control flag
   public :: get_do_transient_lakes  ! return the value of the do_transient_lakes control flag
   public :: get_do_transient_urban  ! return the value of the do_transient_urban control flag
+  public :: get_vars_1dwt_w_time  ! return the value of the vars_1dwt_w_time control flag
   public :: run_has_transient_landcover ! returns true if any aspects of prescribed transient landcover are enabled
   public :: get_do_harvest          ! return the value of the do_harvest control flag
   public :: get_do_grossunrep       ! return the value of the do_grossunrep control flag
@@ -47,6 +48,7 @@ module dynSubgridControlMod
      logical :: do_transient_urban = .false. ! whether to apply transient urban from dataset
      logical :: do_harvest         = .false. ! whether to apply harvest from dataset
      logical :: do_grossunrep      = .false. ! whether to apply gross unrepresented landcover change from dataset
+     logical :: vars_1dwt_w_time = .false. ! whether to add the time dimension to 1dwt variables, e.g. pfts1d_wtcol
 
      logical :: reset_dynbal_baselines = .false. ! whether to reset baseline values of total column water and energy in the first step of the run
 
@@ -126,6 +128,7 @@ contains
     logical :: do_transient_urban
     logical :: do_harvest
     logical :: do_grossunrep
+    logical :: vars_1dwt_w_time
     logical :: reset_dynbal_baselines
     logical :: for_testing_allow_non_annual_changes
     logical :: for_testing_zero_dynbal_fluxes
@@ -144,6 +147,7 @@ contains
          do_transient_urban, &
          do_harvest, &
          do_grossunrep, &
+         vars_1dwt_w_time, &
          reset_dynbal_baselines, &
          for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes
@@ -156,6 +160,7 @@ contains
     do_transient_urban = .false.
     do_harvest         = .false.
     do_grossunrep      = .false.
+    vars_1dwt_w_time = .false.
     reset_dynbal_baselines = .false.
     for_testing_allow_non_annual_changes = .false.
     for_testing_zero_dynbal_fluxes = .false.
@@ -183,6 +188,7 @@ contains
     call shr_mpi_bcast (do_transient_urban, mpicom)
     call shr_mpi_bcast (do_harvest, mpicom)
     call shr_mpi_bcast (do_grossunrep, mpicom)
+    call shr_mpi_bcast (vars_1dwt_w_time, mpicom)
     call shr_mpi_bcast (reset_dynbal_baselines, mpicom)
     call shr_mpi_bcast (for_testing_allow_non_annual_changes, mpicom)
     call shr_mpi_bcast (for_testing_zero_dynbal_fluxes, mpicom)
@@ -195,6 +201,7 @@ contains
          do_transient_urban = do_transient_urban, &
          do_harvest = do_harvest, &
          do_grossunrep = do_grossunrep, &
+         vars_1dwt_w_time = vars_1dwt_w_time, &
          reset_dynbal_baselines = reset_dynbal_baselines, &
          for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
@@ -398,6 +405,18 @@ contains
   end function get_do_transient_urban
   
   !-----------------------------------------------------------------------
+  logical function get_vars_1dwt_w_time()
+    ! !DESCRIPTION:
+    ! Return the value of the vars_1dwt_w_time control flag
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
+
+    get_vars_1dwt_w_time = dyn_subgrid_control_inst%vars_1dwt_w_time
+
+  end function get_vars_1dwt_w_time
+
+  !-----------------------------------------------------------------------
   logical function run_has_transient_landcover()
     ! !DESCRIPTION:
     ! Returns true if any aspects of prescribed transient landcover are enabled
@@ -406,6 +425,7 @@ contains
     run_has_transient_landcover = &
          (get_do_transient_pfts() .or. &
          get_do_transient_crops() .or. &
+         get_do_transient_lakes() .or. &
          get_do_transient_urban())
   end function run_has_transient_landcover
 

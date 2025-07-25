@@ -2813,6 +2813,15 @@ or more, which causes CAM to blow up. However, note that setting it to true will
 break water and energy conservation!
 </entry>
 
+<entry id="vars_1dwt_w_time" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+A TRUE setting adds the time dimension to all 1dwt variables that appear in
+files generated as a result of hist_dov2xy = .false. (e.g. pfts1d_wtcol).
+Transient simulations (run_has_transient_landcover = .true.) have the same
+outcome as vars_1dwt_w_time = .true..
+Use this flag if you wish to change FALSE to TRUE when run_has_transient_landcover = .false..
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Namelist options related to finidat consistency checks                                    -->
 <!-- ========================================================================================  -->
