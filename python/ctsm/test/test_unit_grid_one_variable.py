@@ -67,6 +67,50 @@ class TestGridOneVariable(unittest.TestCase):
         self.expected = np.full_like(self.lat_da, fill_value)
         self._compare_arrays()
 
+    def test_create_filled_array_fill6_ivtstr(self):
+        """Test create_filled_array() with fill_value = 6.0 and ivt_str in new_dims"""
+        this_da = xr.DataArray(
+            data=np.array([[1, 2], [3, 4]]),
+            dims=["lat", "lon"],
+            coords={"lat": self.lat_da, "lon": self.lon_da},
+        )
+
+        ivt_da = xr.DataArray(
+            data=[14, 15, 16],
+            dims=["ivt"],
+        )
+        this_ds = xr.Dataset(coords={"ivt": ivt_da})
+
+        fill_value = 6.0
+        self.result = g1v.create_filled_array(this_ds, fill_value, this_da, ["ivt_str"])
+
+        self.expected = np.full_like(ivt_da, fill_value)
+        self._compare_arrays()
+
+    def test_create_filled_array_fill6_extradim(self):
+        """
+        Test create_filled_array() with fill_value = -7.0 and some non-ivt_str in new_dims that is
+        also not in this_da.coords
+        """
+        this_da = xr.DataArray(
+            data=np.array([[1, 2], [3, 4]]),
+            dims=["lat", "lon"],
+            coords={"lat": self.lat_da, "lon": self.lon_da},
+        )
+
+        extradim_name = "extra_dim"
+        extradim_da = xr.DataArray(
+            data=[14, 15, 16],
+            dims=[extradim_name],
+        )
+        this_ds = xr.Dataset(coords={extradim_name: extradim_da})
+
+        fill_value = -7.0
+        self.result = g1v.create_filled_array(this_ds, fill_value, this_da, [extradim_name])
+
+        self.expected = np.full_like(extradim_da, fill_value)
+        self._compare_arrays()
+
     def test_create_filled_array_fillfalse(self):
         """Test create_filled_array() with false(y) fill_value"""
         this_da = xr.DataArray(
