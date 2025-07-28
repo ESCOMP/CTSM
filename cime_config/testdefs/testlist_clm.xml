@@ -14,6 +14,7 @@
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
+        interim_restart: Tests having to do with interim restart capability.
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -95,6 +96,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple test to make sure adding obscure stream options works</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -1671,15 +1681,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for I1850Clm50BgcCropCru at f19</option>
-    </options>
-  </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN_BNF">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
@@ -4489,6 +4490,35 @@
   <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
     <machines>
       <machine name="derecho" compiler="gnu" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="ERR_Ld7" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="IRT_Ld11" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="interim_restart"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
