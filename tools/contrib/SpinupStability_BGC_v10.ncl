@@ -35,8 +35,8 @@ begin
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
-  caseid = "ctsm53027_LEACHING_pAD"
-  username = "jinmuluo"
+  caseid = "clm50_release-clm5.0.15_2deg_GSWP3V1_1850AD"
+  username = "oleson"
   annual_hist = True
   region = "Global"              ; Global, Arctic, or SPT (single point)
   subper = 20                    ; Subsampling period in years
@@ -54,7 +54,7 @@ begin
 ; do_plot = False
 ;=======================================================================;
 
-  data_dir = "/glade/derecho/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
+  data_dir = "/glade/scratch/"+username+"/archive/"+caseid+"/lnd/hist/"
   if ( systemfunc("test -d "+data_dir+"; echo $?" ) .ne. 0 )then
      print( "Input directory does not exist or not found: "+data_dir );
      print( "Make sure username and caseid and base directory is set correctly" )
