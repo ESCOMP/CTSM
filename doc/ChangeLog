@@ -1,4 +1,147 @@
 ===============================================================
+Tag name: ctsm5.3.065
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon 28 Jul 2025 09:30:35 AM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Implement namelist options for soil moisture activation factor used in MEGAN isoprene emissions.
+
+Adds a GitHub issue template for things related to documentation.
+
+Fixes a self-test.
+
+Adds a broadcast of the namelist value for a few mapalgo items after reading it in so it is consistent across all ranks when not using the default value. Also update the mapalgo options list to be consistent with the NUOPC options, the MCT list was in place before this.
+
+Update submodules so we are using the latest in cesm development for cesm3_0_alpha07b.
+
+Harden github actions to improve security (use a hash, rather than a tag, reduce permissions to readonly when possible)
+
+Update SpinupStability scripts for h0->h0a transition (backwards compatible).
+Update run_clm_historical script for nuopc, extension through 2023, produces restart files for 1979 and 2000, and h0->h0a transition (backwards compatible).
+
+Remove flexCN_FUN_BNF test and testmods as redundant
+
+Fix string replacements in lreprstruct test:
+The previous logic caused problems if "GRAIN" appeared in two (or more) strings, where one was a substring of the other. For example, in LREPRSTRUCT_Ly1_P128x1.f10_f10_mg37.I1850Clm50BgcCrop.derecho_gnu.clm-ciso--clm-cropMonthOutput, before this replacement, one line contained 'GRAINN_TO_FOOD' and a later line contained (among other things) "'GRAINN_TO_FOOD_PERHARV', 'GRAINN_TO_FOOD_ANN'". This was problematic because the first replacement of GRAINN_TO_FOOD incorrectly led to replacements in the later strings as well.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3316 Fix mpas15a self test
+   Work on #3016 low MEGAN emissions
+   Fixes #2533 Fix broadcast of urbantvmapalgo
+   Fixes #3345 Fix broadcast of other mapalgo namelist items
+   Fixes #1912 Fix list of valid options for mapalgo namelist items
+   Fixes #3303 Update submodules to cesm3_0_alpha07b
+   Fixes #2983 Remove redundant test
+   Fixes #3316 self test fails for mpasa15
+   Fixes #3316 Problem with LREPR* tests
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Changes to megan_opts namelist only happen if megan is on
+  You can only set megan_min_gamma_sm if megan_use_gamma_sm is TRUE
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Two new CTSM megan_opts namelist items:
+      megan_use_gamma_sm
+      megan_min_gamma_sm
+
+   Add ch4finundatedmapalgo to namelist XML, was in the code but not in the XML
+
+   Fix the list of options for the mapalgo namelist items:
+      Remove nnonj, nnoni, spval, copy
+      Add: consf, consd, none
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Sets defaults for megan_opts namelist to reproduce answers
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   LREPR test was fixed, but didn't have a unit tester for it
+
+Changes to tests or testing:
+   Add f09_ObscureStreamOpts testmod and test, and remove a BNF test and testmod
+
+
+Testing summary:   regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - (I still get #3205 when running the testing)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): rtm, mostart, ccs_config, cime, cmeps, cdeps, pio
+ In general update to cesm3_0_alpha07b submodules
+   RTM to rtm1_0_88       (fixes history metadata)
+   MOSART to mosart1.1.10 (fixes history metadata)
+   ccs_config to ccs_config_cesm1.0.48
+   CIME to cime6.1.107
+   CMEPS to cmeps1.1.2
+   CDEPS to cdeps1.0.79
+   PIO to pio2_6_6
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   - #3309
+   - #3144
+   - #3318
+   - #2534 
+   - #3334 
+   - #3343
+   - #3338 
+   - #3329 
+   - #3314 
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.064
 Originator(s): slevis (Samuel Levis)
 Date: Thu 24 Jul 2025 01:13:00 PM MDT
