@@ -994,7 +994,7 @@ sub setup_cmdl_bgc {
   # Set soil matrix (which is needed later for spinup)
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              , 'use_fates'=>$nl_flags->{'use_fates'}, 
+              , 'use_fates'=>$nl_flags->{'use_fates'},
               , 'soil_decomp_method'=>$nl_flags->{'soil_decomp_method'},
               , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
@@ -1230,7 +1230,7 @@ sub setup_cmdl_spinup {
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
                 $defaults, $nl, "spinup_state", clm_accelerated_spinup=>$nl_flags->{'clm_accelerated_spinup'},
-                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'}, 
+                use_cn=>$nl_flags->{'use_cn'}, use_fates=>$nl_flags->{'use_fates'},
                 use_soil_matrixcn=>$nl_flags->{"use_soil_matrixcn"} );
     if ( $nl->get_value("spinup_state") ne 0 ) {
        $nl_flags->{'bgc_spinup'} = "on";
@@ -1803,6 +1803,7 @@ sub process_namelist_inline_logic {
   # NOTE: After setup_logic_dust_emis #
   #####################################
   setup_logic_megan($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_megan_opts($opts, $nl_flags, $definition, $defaults, $nl);
 
   ##################################
   # namelist group: lai_streams  #
@@ -2867,13 +2868,19 @@ sub setup_logic_do_transient_pfts {
    }
 
    # if do_transient_pfts is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soi > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_pfts'=>$nl_flags->{'do_transient_pfts'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_pfts is .true.");
       }
    }
 }
@@ -2944,13 +2951,19 @@ sub setup_logic_do_transient_crops {
    }
 
    # if do_transient_crops is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_crops'=>$nl_flags->{'do_transient_crops'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_crops is .true.");
       }
    }
 
@@ -3021,7 +3034,7 @@ sub setup_logic_do_transient_lakes {
    }
 
    # if do_transient_lakes is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
@@ -3030,6 +3043,12 @@ sub setup_logic_do_transient_lakes {
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_lakes'=>$nl_flags->{'do_transient_lakes'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_lakes is .true.");
       }
    }
 }
@@ -3093,7 +3112,7 @@ sub setup_logic_do_transient_urban {
    }
 
    # if do_transient_urban is .true. and any of these (n_dom_* or toosmall_*)
-   # are > 0 or collapse_urban = .true., then give fatal error
+   # are > 0 or collapse_urban = .true., or vars_1dwt_w_time = .false., then give fatal error
    if (&value_is_true($nl->get_value($var))) {
       if (&value_is_true($nl->get_value('collapse_urban'))) {
          $log->fatal_error("$var cannot be combined with collapse_urban");
@@ -3102,6 +3121,12 @@ sub setup_logic_do_transient_urban {
       }
       if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
          $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
+
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'vars_1dwt_w_time',
+               'do_transient_urban'=>$nl_flags->{'do_transient_urban'});
+      if (!&value_is_true($nl->get_value('vars_1dwt_w_time'))) {
+        $log->fatal_error("vars_1dwt_w_time cannot be .false. if do_transient_urban is .true.");
       }
    }
 }
@@ -4152,6 +4177,7 @@ sub setup_logic_dust_emis {
 
 sub setup_logic_megan {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Setup megan_emis_nl namelist for drv_flds_in
 
   my $var   = "megan";
 
@@ -4176,6 +4202,29 @@ sub setup_logic_megan {
 			  "   Use the '-no-megan' option when '-bgc fates' is activated");
     }
     &remove_newlines( $nl, $definition, "megan_specifier" );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_megan_opts {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  # Setup megan_opts namelist
+  # This should be set when megan is turned on by CTSM, but also when CAM has turned it on
+
+  if ($nl_flags->{'megan'} ) {
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_use_gamma_sm');
+    if ( &value_is_true( $nl->get_value('megan_use_gamma_sm') ) ) {
+       add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_min_gamma_sm');
+    } elsif ( defined($nl->get_value('megan_min_gamma_sm')) ) {
+       $log->fatal_error("megan_min_gamma_sm should NOT be set when megan_use_gamma_sm NOT TRUE.\n" );
+    }
+  }
+  else {
+     if ( defined($nl->get_value('megan_use_gamma_sm')) ||
+          defined($nl->get_value('megan_min_gamma_sm')) ) {
+          $log->fatal_error("MEGAN options should NOT be set when MEGAN is NOT in use.\n" );
+     }
   }
 }
 
@@ -4992,7 +5041,7 @@ sub setup_logic_exice {
   # excess ice streams, must be set before initial conditions
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string()); 
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_excess_ice', 'phys'=>$physv->as_string());
   my $use_exice = $nl->get_value( 'use_excess_ice' );
   # Put use_exice into nl_flags so can be referenced later
   if ( value_is_true($use_exice) ) {
@@ -5206,7 +5255,7 @@ sub write_output_files {
 
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
-               cropcal_streams
+               cropcal_streams megan_opts
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
