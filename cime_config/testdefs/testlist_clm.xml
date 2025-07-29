@@ -4507,6 +4507,15 @@
 
   <test name="ERR_Ld7" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
+      <machine name="derecho" compiler="intel" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="ERR_Ld7" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="drv/interim_restart">
+    <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="interim_restart"/>
     </machines>
