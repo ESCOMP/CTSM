@@ -20,6 +20,7 @@ module lnd_set_decomp_and_domain
   use spmdMod      , only : masterproc, mpicom
   use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
+  use perf_mod     , only : t_startf, t_stopf
 
   implicit none
   private ! except
@@ -106,6 +107,7 @@ contains
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
 
     ! Read in the land mesh from the file
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -142,6 +144,7 @@ contains
     else
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call t_startf ('decompInit_lnd')
@@ -192,6 +195,7 @@ contains
     end do
 
     ! Generate a new mesh on the gindex decomposition
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -200,6 +204,7 @@ contains
     ! Set ldomain%lonc, ldomain%latc and ldomain%area
     call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
 
     ! Set ldomain%lfrac
     ! Create fields on the input decomp and ctsm decomp
@@ -208,6 +213,7 @@ contains
     ! Redistribute field_lnd to field_ctsm
 
     ! Determine ldomain%frac using ctsm decomposition
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: land frac')
     if (trim(driver) == 'cmeps') then
 
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
@@ -247,6 +253,7 @@ contains
        deallocate(lndfrac_glob)
 
     end if
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
 
     ! Deallocate local pointer memory
     deallocate(gindex_lnd)
