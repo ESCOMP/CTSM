@@ -199,6 +199,7 @@ contains
     end do
 
     ! Generate a new mesh on the gindex decomposition
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -207,6 +208,7 @@ contains
     ! Set ldomain%lonc, ldomain%latc and ldomain%area
     call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
 
     ! Set ldomain%lfrac
     ! Create fields on the input decomp and ctsm decomp
@@ -215,6 +217,7 @@ contains
     ! Redistribute field_lnd to field_ctsm
 
     ! Determine ldomain%frac using ctsm decomposition
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: land frac')
     if (trim(driver) == 'cmeps') then
 
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
@@ -254,6 +257,7 @@ contains
        deallocate(lndfrac_glob)
 
     end if
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
 
     ! Deallocate local pointer memory
     deallocate(gindex_lnd)
