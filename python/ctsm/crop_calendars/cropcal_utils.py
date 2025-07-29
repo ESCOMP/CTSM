@@ -298,10 +298,8 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
             f"Not sure how to handle vegtype_mainlist as type {type(vegtype_mainlist[0])}"
         )
 
-    if vegtype_str.shape == ():
-        indices = np.array([-1])
-    else:
-        indices = np.full(len(vegtype_str), -1)
+    vegtype_str = np.atleast_1d(vegtype_str)
+    indices = np.full(len(vegtype_str), -1)
     for vegtype_str_2 in np.unique(vegtype_str):
         indices[np.where(vegtype_str == vegtype_str_2)] = vegtype_mainlist.index(vegtype_str_2)
     if convert_to_ndarray:
