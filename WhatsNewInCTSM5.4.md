@@ -2,21 +2,32 @@
 
 ## Purpose and description of changes since CTSM 5.3 (tag `ctsm5.3.021`)
 
+REMOVE THESE NOTES WHEN DONE AND READY TO RELEASE
+- As of 2025/7/29 slevis has gone through the ChangeLog from cctsm5.3.022 to ctsm5.3.065
+- Ask for reviewers to browse/read this doc for accuracy, omissions, and redundancies
+- For omissions, request contributions from the relevant developers
+
 ### New features
 
-* 
+* Can now choose the CRUJRA2024 atmospheric driver data with clm6 and clm5 [PR \#2956](https://github.com/ESCOMP/ctsm/pull/2956))
+* Can now run PLUMBER towers, similar to the NEON tower capability ([issue \#1487](https://github.com/ESCOMP/CTSM/issues/1487))
+* New namelist variables `snow_thermal_cond_glc_method` and `snow_thermal_cond_lake_method` ([PR \#3072](https://https://github.com/ESCOMP/CTSM/pull/3072))
+* Potentially time-evolving `leafcn_target` replaces time-constant `leafcn`: the former is calculated as a function of the latter and can be time-evolving depending on new paramfile parameter `leafcn_co2_slope` ([PR \#1654](https://github.com/ESCOMP/ctsm/pull/1654)
+* Easier, more flexible use of anomaly forcings for ISSP cases ([PR \#2686](https://github.com/ESCOMP/CTSM/pull/2686) [PR \#3212](https://github.com/ESCOMP/CTSM/pull/3212))
+* New equilibrium script in /tools/contrib for spectral element grids ([PR \#2991](https://github.com/ESCOMP/ctsm/pull/2991))
 
 ### Answer changes
 
 Changes to defaults for `clm6_0` physics:
 
-* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000) resolutions.
-* Updates to MEGAN for BVOCs. ([PR \#xxxx](https://github.com/ESCOMP/CTSM/pull/xxxx))
+* Bytnerowicz is now the default nfix_method for clm6 ([PR \#2972](https://github.com/ESCOMP/ctsm/pull/2972))
+* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000) resolutions?
+* Updates to MEGAN for BVOCs ([PR \#3065](https://github.com/ESCOMP/CTSM/pull/3065) [PR \#3309](https://github.com/ESCOMP/CTSM/pull/3309))
 
 Changes for all physics versions:
 
-* Parameters updated: PPE-based modifications were made to the parameters `xxxx`. ([PR \#xxxx](https://github.com/ESCOMP/CTSM/pull/xxxx))
-* FATES parameter file updated?
+* Parameters updated: Added MIMICS parameter `mimics_fi`. ([PR \#2365](https://github.com/ESCOMP/CTSM/pull/2365))
+* FATES parameter file updated: ([PR \#2965](https://github.com/ESCOMP/CTSM/pull/2965) [PR \#2904](https://github.com/ESCOMP/CTSM/pull/2904) [PR \#1344](https://https://github.com/NGEET/fates/pull/1344) [PR \#3087](https://github.com/ESCOMP/CTSM/pull/3087))
 * New surface datasets and landuse timeseries files (see section below).
 
 ### Heads up
