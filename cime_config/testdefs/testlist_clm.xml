@@ -4210,7 +4210,7 @@
       <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests--clm-mpas3p75">
+  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests--clm-mpasa3p75">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
     </machines>
