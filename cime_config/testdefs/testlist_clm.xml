@@ -14,6 +14,7 @@
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
+        uhr_decomp_init: Initialization tests at Ultra High Resolution -- specifically for examining the PE layout decomposition initialization
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -4207,6 +4208,15 @@
     <options>
       <option name="wallclock">0:05:00</option>
       <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75" compset="I2000Clm45Sp" testmods="clm-run_self_tests--clm-mpas3p75">
+    <machines>
+      <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:15:00</option>
+      <option name="comment">Initialization test for mpasa3p75 default layout</option>
     </options>
   </test>
 
