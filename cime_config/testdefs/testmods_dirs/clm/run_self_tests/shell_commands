@@ -1,6 +1,9 @@
 #!/bin/bash
 ./xmlchange CLM_FORCE_COLDSTART="on"
 
+# We use this testmod in a _Ln1 test; this requires forcing the ROF coupling frequency to same frequency as DATM
+./xmlchange ROF_NCPL='$ATM_NCPL
+
 # Turn off ROF model when used with compsets that have them
 ./xmlchange ROF_MODE='NULL'
 
