@@ -2941,7 +2941,7 @@ module CLMFatesInterfaceMod
       ! these -should- all be in gC/m2/s
       net_carbon_exchange_col(c) = this%fates(ci)%bc_out(s)%npp_site - &
                                    this%fates(ci)%bc_out(s)%grazing_closs_to_atm_si + &
-                                   this%fates(ci)%bc_out(s)%fire_closs_to_atm_sig - &
+                                   this%fates(ci)%bc_out(s)%fire_closs_to_atm_si - &
                                    soilbiogeochem_carbonflux_inst%hr_col(c)
    end do
    call c2g( bounds = bounds_clump, &
