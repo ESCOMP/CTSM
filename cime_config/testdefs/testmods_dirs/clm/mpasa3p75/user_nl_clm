@@ -1,0 +1,6 @@
+! Settings currently required to run at the mpasa3p75 grid
+! urbantv files at that resolution and use a redistribution mapping
+
+stream_fldfilename_urbantv = '/glade/derecho/scratch/bdobbins/ko/tbuildmax.nc'
+stream_meshfile_urbantv = '/glade/derecho/scratch/bdobbins/ko/mesh.nc'
+urbantvmapalgo = 'redist'
