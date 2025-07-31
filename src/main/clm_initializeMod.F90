@@ -378,6 +378,7 @@ contains
     call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
 
+    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
@@ -416,14 +417,19 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
+    call t_stopf('clm_init2_part3')
 
+    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
+    call t_stopf('clm_init2_snow_soil_init')
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
