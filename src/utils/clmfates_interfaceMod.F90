@@ -2938,10 +2938,14 @@ module CLMFatesInterfaceMod
       s = this%f2hmap(ci)%hsites(c)
       ! nbp = npp -fire - graz - soil respiratation
       ! hr_col is updated above this call in CNDriver summaries
+      ! these -should- all be in gC/m2/s
       net_carbon_exchange_col(c) = this%fates(ci)%bc_out(s)%npp_site - &
                                    (this%fates(ci)%bc_out(s)%grazing_closs_to_atm_si + &
                                    this%fates(ci)%bc_out(s)%fire_closs_to_atm_si) * g_per_kg - &
                                    soilbiogeochem_carbonflux_inst%hr_col(c)
+
+      this%fates(ci)%bc_out(s)%grazing_closs_to_atm_si = 0.0_r8 ! zero for the next timestep
+      this%fates(ci)%bc_out(s)%fire_closs_to_atm_si = 0.0_r8
    end do
    call c2g( bounds = bounds_clump, &
          carr = net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc), &
