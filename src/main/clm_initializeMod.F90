@@ -420,14 +420,28 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
+    call t_stopf('clm_init2_part3')
 
+    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
+<<<<<<< HEAD
     call hist_printflds()
+||||||| parent of 1bd240844 (Balance check doesn't take time, so adjust the timers again for part3)
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
+    call t_stopf('clm_init2_part3')
+=======
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
+    call t_stopf('clm_init2_snow_soil_init')
+>>>>>>> 1bd240844 (Balance check doesn't take time, so adjust the timers again for part3)
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
