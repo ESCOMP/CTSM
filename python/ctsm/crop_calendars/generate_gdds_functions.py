@@ -253,8 +253,7 @@ def import_and_process_1yr(
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    utils.log(logger, f"netCDF year {this_year}...")
-    utils.log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    utils.log(logger, f"import_and_process_1yr(): netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -547,39 +546,9 @@ def import_and_process_1yr(
     else:
         hdates_rx = hdates_rx_orig
 
-    utils.log(logger, "   Importing accumulated GDDs...")
-    clm_gdd_var = "GDDACCUM"
-    my_vars = [clm_gdd_var, "GDDHARV"]
-    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
-
-    # TODO: Undo this, replacing with just h2i or h2a
-    patterns += [f"*h2a.{this_year-1}-01*.nc", f"*h2a.{this_year-1}-01*.nc.base"]
-
-    for pat in patterns:
-        pattern = os.path.join(indir, pat)
-        h2_files = glob.glob(pattern)
-        if h2_files:
-            break
-    if not h2_files:
-        utils.error(logger, f"No files found matching patterns: {patterns}")
-    h2_ds = import_ds(
-        h2_files,
-        my_vars=my_vars,
-        my_vegtypes=crops_to_read,
-        chunks=chunks,
-        logger=logger,
-    )
-
-    # Restrict to patches we're including
-    if skipping_patches_for_isel_nan:
-        if not np.array_equal(dates_ds.patch.values, h2_ds.patch.values):
-            utils.error(logger, "dates_ds and h2_ds don't have the same patch list!")
-        h2_incl_ds = h2_ds.isel(patch=incl_patches_for_isel_nan)
-    else:
-        h2_incl_ds = h2_ds
-
-    if not np.any(h2_incl_ds[clm_gdd_var].values != 0):
-        utils.error(logger, f"All {clm_gdd_var} values are zero!")
+    # Import accumulated GDDs
+    utils.log(logger, f"      import_and_process_1yr(): Calling import_accum_gdds()")
+    clm_gdd_var, h2_ds, h2_incl_ds = import_accum_gdds(this_year, indir, logger, chunks, crops_to_read, dates_ds, incl_patches_for_isel_nan, skipping_patches_for_isel_nan)
 
     # Get standard datetime axis for outputs
     n_years = year_n - year_1 + 1
@@ -593,7 +562,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            utils.log(logger, f"      SKIPPING {vegtype_str}")
+            utils.log(logger, f"      import_and_process_1yr(): SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -608,7 +577,7 @@ def import_and_process_1yr(
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        utils.log(logger, f"      {vegtype_str}...")
+        utils.log(logger, f"      import_and_process_1yr(): {vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches
@@ -817,6 +786,45 @@ def import_and_process_1yr(
         mxsowings,
         h1_instantaneous,
     )
+
+def import_accum_gdds(this_year, indir, logger, chunks, crops_to_read, dates_ds, incl_patches_for_isel_nan, skipping_patches_for_isel_nan):
+    """
+    Import accumulated GDDs
+    """
+    utils.log(logger, "   Importing accumulated GDDs...")
+    clm_gdd_var = "GDDACCUM"
+    my_vars = [clm_gdd_var, "GDDHARV"]
+    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
+
+    # TODO: Undo this, replacing with just h2i or h2a
+    patterns += [f"*h2a.{this_year-1}-01*.nc", f"*h2a.{this_year-1}-01*.nc.base"]
+
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
+        h2_files = glob.glob(pattern)
+        if h2_files:
+            break
+    if not h2_files:
+        utils.error(logger, f"No files found matching patterns: {patterns}")
+    h2_ds = import_ds(
+        h2_files,
+        my_vars=my_vars,
+        my_vegtypes=crops_to_read,
+        chunks=chunks,
+        logger=logger,
+    )
+
+    # Restrict to patches we're including
+    if skipping_patches_for_isel_nan:
+        if not np.array_equal(dates_ds.patch.values, h2_ds.patch.values):
+            utils.error(logger, "dates_ds and h2_ds don't have the same patch list!")
+        h2_incl_ds = h2_ds.isel(patch=incl_patches_for_isel_nan)
+    else:
+        h2_incl_ds = h2_ds
+
+    if not np.any(h2_incl_ds[clm_gdd_var].values != 0):
+        utils.error(logger, f"All {clm_gdd_var} values are zero!")
+    return clm_gdd_var,h2_ds,h2_incl_ds
 
 
 def get_multicrop_maps(this_ds, these_vars, crop_fracs_yx, dummy_fill, gdd_units):

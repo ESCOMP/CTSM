@@ -2,27 +2,34 @@
 utility functions
 copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py
 """
+from datetime import datetime
 
 import numpy as np
 import xarray as xr
 
 from ctsm.utils import is_instantaneous
 
+def leading_datetime_string():
+    """
+    Return a datetime string like "YY-mm-dd HH:MM:SS    "
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "    "
+
 
 def log(logger_in, string):
     """
     Simultaneously print INFO messages to console and to log file
     """
-    print(string)
-    logger_in.info(string)
+    print(leading_datetime_string() + string)
+    logger_in.info(leading_datetime_string() + string)
 
 
 def error(logger_in, string):
     """
     Simultaneously print ERROR messages to console and to log file
     """
-    print(string)
-    logger_in.error(string)
+    print(leading_datetime_string() + string)
+    logger_in.error(leading_datetime_string() + string)
     raise RuntimeError(string)
 
 
