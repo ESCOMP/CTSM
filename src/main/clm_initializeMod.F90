@@ -144,6 +144,7 @@ contains
     use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use clm_varctl                    , only : use_cropcal_streams
+    use clm_varctl                    , only : use_noio
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -382,12 +383,14 @@ contains
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
 
-    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
+    call t_startf('balance_check_init')
     call BalanceCheckInit()
+    call t_stopf('balance_check_init')
 
+    call t_startf('clm_init2_part3')
     ! History file variables
-    if (use_cn) then
+    if (use_cn .and. .not. use_noio ) then
        call hist_addfld1d (fname='DAYL',  units='s', &
             avgflag='A', long_name='daylength', &
             ptr_gcell=grc%dayl, default='inactive')
@@ -403,21 +406,23 @@ contains
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
 
-    data2dptr => col%dz(:,-nlevsno+1:0)
-    col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
-    call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+    if ( .not. use_noio )then
+      data2dptr => col%dz(:,-nlevsno+1:0)
+      col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
+      call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
-    call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
-         l2g_scale_type='ice', default='inactive')
+      call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+            l2g_scale_type='ice', default='inactive')
 
-    col%zii(bounds_proc%begc:bounds_proc%endc) = spval
-    call hist_addfld1d (fname='ZII', units='m', &
-         avgflag='A', long_name='convective boundary height', &
-         ptr_col=col%zii, default='inactive')
+      col%zii(bounds_proc%begc:bounds_proc%endc) = spval
+      call hist_addfld1d (fname='ZII', units='m', &
+            avgflag='A', long_name='convective boundary height', &
+            ptr_col=col%zii, default='inactive')
+    end if
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
@@ -428,7 +433,9 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
     call t_stopf('clm_init2_part3')
 
     call t_startf('clm_init2_part4')
