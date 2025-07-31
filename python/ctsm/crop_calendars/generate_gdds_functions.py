@@ -291,6 +291,7 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
+        logger=logger,
     )
     for timestep in dates_ds["time"].values:
         print(timestep)
@@ -562,6 +563,7 @@ def import_and_process_1yr(
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
+        logger=logger,
     )
 
     # Restrict to patches we're including
@@ -587,7 +589,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            utils.log(logger, f"      SKIPPING {vegtype_str}")
+            utils.log(logger, f"      import_and_process_1yr(): SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -602,7 +604,7 @@ def import_and_process_1yr(
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        utils.log(logger, f"      {vegtype_str}...")
+        utils.log(logger, f"      import_and_process_1yr(): {vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches
