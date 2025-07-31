@@ -226,6 +226,7 @@ contains
 
     call t_startf('clm_init2')
 
+    call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells
     call get_proc_bounds(bounds_proc)
     begg = bounds_proc%begg; endg = bounds_proc%endg
@@ -278,12 +279,14 @@ contains
        call CLMFatesGlobals2()
 
     end if
+    call t_stopf('clm_init2_part1')
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
     call decompInit_clumps(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_clumps')
 
+    call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
     call get_proc_bounds(bounds_proc)
 
@@ -305,12 +308,14 @@ contains
        call initGridCells(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
+    call t_stopf('clm_init2_subgrid')
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
+    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -370,15 +375,15 @@ contains
     if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
-    call t_startf('init_orbd')
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-    call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+    call t_stopf('clm_init2_part2')
 
+    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
     call t_startf('balance_check_init')
     call BalanceCheckInit()
@@ -431,17 +436,14 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    if ( .not. use_noio )then
-       call hist_printflds()
-    end if
+    call hist_printflds()
     call t_stopf('clm_init2_part3')
 
+    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
-    call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
-    call t_stopf('init_dyn_subgrid')
 
     ! Initialize fates LUH2 usage
     if (use_fates_luh) then
@@ -557,10 +559,12 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
+    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
 
+       call t_startf('clm_init2_init_interp')
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then
           call endrun(msg='ERROR clm_initializeMod: '//&
@@ -610,8 +614,10 @@ contains
           close(iun)
           write(iulog,'(a)')' Successfully wrote finidat status file '//trim(locfn)
        end if
+       call t_stopf('clm_init2_init_interp')
     end if
 
+    call t_startf('clm_init2_part5')
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
@@ -784,7 +790,6 @@ contains
     deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     ! Write log output for end of initialization
-    call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
        if (nsrest == nsrStartup) then
@@ -799,15 +804,17 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
-    call t_stopf('init_wlog')
+    call t_stopf('clm_init2_part5')
 
     if (water_inst%DoConsistencyCheck()) then
+       call t_startf('tracer_consistency_check')
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
+       call t_stopf('tracer_consistency_check')
     end if
 
     call t_stopf('clm_init2')
