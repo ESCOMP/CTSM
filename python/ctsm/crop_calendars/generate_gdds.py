@@ -223,6 +223,7 @@ def main(
         utils.log(logger, "Done")
 
         if not h2_ds:
+            utils.log(logger, f"generate_gdds main(): Opening h2_ds: {h2_ds_file}")
             h2_ds = xr.open_dataset(h2_ds_file)
 
     ######################################################
