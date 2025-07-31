@@ -224,7 +224,16 @@ contains
     character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
+<<<<<<< HEAD
     call t_startf('clm_init2_part1')
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+    call t_startf('clm_init2')
+
+=======
+    call t_startf('clm_init2')
+
+    call t_startf('clm_init2_part1')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
     ! Get processor bounds for gridcells
     call get_proc_bounds(bounds_proc)
     begg = bounds_proc%begg; endg = bounds_proc%endg
@@ -277,14 +286,20 @@ contains
        call CLMFatesGlobals2()
 
     end if
+<<<<<<< HEAD
     call t_stopf('clm_init2_part1')
     call t_startf('clm_init2_part2')
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+=======
+    call t_stopf('clm_init2_part1')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
     call decompInit_clumps(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_clumps')
 
+    call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
     call get_proc_bounds(bounds_proc)
 
@@ -306,12 +321,14 @@ contains
        call initGridCells(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
+    call t_stopf('clm_init2_subgrid')
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
+    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -379,11 +396,17 @@ contains
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+<<<<<<< HEAD
     call t_stopf('clm_init2_part2')
     call t_startf('clm_init2_part3')
 
     if ( .not. for_testing_bypass_init_after_self_tests() )then
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+=======
+    call t_stopf('clm_init2_part2')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
 
+    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
@@ -431,10 +454,18 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
+<<<<<<< HEAD
     if ( .not. use_noio )then
        call hist_printflds()
     end if
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+    call hist_printflds()
+=======
+    call hist_printflds()
+    call t_stopf('clm_init2_part3')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
 
+    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call init_subgrid_weights_mod(bounds_proc)
@@ -555,6 +586,7 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
+    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
@@ -612,8 +644,13 @@ contains
        call t_stopf('clm_init2_init_interp')
     end if
 
+<<<<<<< HEAD
     if ( .not. for_testing_bypass_init_after_self_tests() )then
 
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+=======
+    call t_startf('clm_init2_part5')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
@@ -793,14 +830,22 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
+<<<<<<< HEAD
+||||||| parent of 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
+    call t_stopf('init_wlog')
+=======
+    call t_stopf('clm_init2_part5')
+>>>>>>> 8914b12ab (Add timers for clm_initialize2 that cover the whole subroutine)
 
     if (water_inst%DoConsistencyCheck()) then
+       call t_startf('tracer_consistency_check')
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
+       call t_stopf('tracer_consistency_check')
     end if
 
     call t_stopf('clm_init2_part3')
