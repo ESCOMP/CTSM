@@ -337,6 +337,7 @@ contains
     ! Run any requested self-tests
     call self_test_driver(bounds_proc)
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
@@ -353,8 +354,9 @@ contains
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
-
+    end if   ! End of bypass
     
+    ! Self test skipping should still do the time manager initialization
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()
@@ -379,6 +381,8 @@ contains
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
     call t_startf('clm_init2_part3')
+
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
@@ -420,28 +424,16 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
-    call t_stopf('clm_init2_part3')
 
-    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-<<<<<<< HEAD
-    call hist_printflds()
-||||||| parent of 1bd240844 (Balance check doesn't take time, so adjust the timers again for part3)
     if ( .not. use_noio )then
        call hist_printflds()
     end if
-    call t_stopf('clm_init2_part3')
-=======
-    if ( .not. use_noio )then
-       call hist_printflds()
-    end if
-    call t_stopf('clm_init2_snow_soil_init')
->>>>>>> 1bd240844 (Balance check doesn't take time, so adjust the timers again for part3)
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
@@ -483,7 +475,6 @@ contains
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
     end if
 
-    if ( .not. for_testing_bypass_init_after_self_tests() )then
     if (use_cn) then
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
@@ -527,7 +518,7 @@ contains
     if (nsrest == nsrContinue ) then
        call htapes_fieldlist()
     end if
-    end if
+    end if ! End of bypass
 
     ! Read restart/initial info
     is_cold_start = .false.
@@ -621,6 +612,8 @@ contains
        call t_stopf('clm_init2_init_interp')
     end if
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
+
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
@@ -700,7 +693,6 @@ contains
        call hist_htapes_build()
     end if
 
-    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Initialize variables that are associated with accumulated fields.
     ! The following is called for both initial and restart runs and must
     ! must be called after the restart file is read
@@ -780,7 +772,7 @@ contains
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
-    end if
+    end if ! end of bypass
     
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated
