@@ -229,7 +229,6 @@ def import_ds(
     rename_lsmlatlon=False,
     chunks=None,
     logger=None,
-    compute=True,
 ):
     """
     Import a dataset that can be spread over multiple files, only including specified variables
@@ -305,10 +304,9 @@ def import_ds(
         if logger:
             utils.log(logger, "import_ds(): Calling mfdataset_preproc()...")
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)
-        if compute:
-            if logger:
-                utils.log(logger, "import_ds(): Calling compute()...")
-            this_ds = this_ds.compute()
+        if logger:
+            utils.log(logger, "import_ds(): Calling compute()...")
+        this_ds = this_ds.compute()
 
     # Warn and/or error about variables that couldn't be imported or derived
     if my_vars:
