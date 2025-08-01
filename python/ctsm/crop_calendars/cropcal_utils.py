@@ -3,11 +3,17 @@ utility functions
 copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py
 """
 from datetime import datetime
+import warnings
+from importlib.util import find_spec
 
 import numpy as np
 import xarray as xr
 
 from ctsm.utils import is_instantaneous
+
+with warnings.catch_warnings():
+    warnings.filterwarnings(action="ignore", category=DeprecationWarning)
+    DASK_UNAVAILABLE = find_spec("dask") is None
 
 def leading_datetime_string():
     """
