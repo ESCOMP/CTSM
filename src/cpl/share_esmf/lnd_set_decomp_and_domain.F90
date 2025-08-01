@@ -202,12 +202,6 @@ contains
           gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
-    if(masterproc) then
-        call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after allocates')
-        call shr_mem_getusage( msize, mrss, prt=.true.)
-        write(iulog,*) 'msize, mrss = ',msize, mrss
-        call shr_sys_flush(iulog)
-     endif
 
     ! Generate a new mesh on the gindex decomposition
     call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
