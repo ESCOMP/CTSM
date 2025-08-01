@@ -198,6 +198,7 @@ contains
     endif
 
     ! Initialize the cdeps data type this%sdat_urbantv
+    call t_startf("str_data_init")
     call shr_strdata_init_from_inline(this%sdat_urbantv,             &
          my_task             = iam,                                  &
          logunit             = iulog,                                &
@@ -222,6 +223,8 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
+    call t_stopf("str_data_init")
+
     call t_stopf("urbantv_init")
 
   end subroutine urbantv_init
