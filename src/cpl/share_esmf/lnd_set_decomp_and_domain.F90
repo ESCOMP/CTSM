@@ -91,7 +91,6 @@ contains
     real(r8) , pointer     :: dataptr1d(:)
     real(r8) :: msize, mrss
     !-------------------------------------------------------------------------------
-
     rc = ESMF_SUCCESS
 
     ! Write diag info
@@ -271,9 +270,7 @@ contains
      endif
 
     ! Deallocate local pointer memory
-    deallocate(gindex_lnd)
-    deallocate(gindex_ocn)
-    deallocate(gindex_ctsm)
+    call from_readmesh_dealloc()
 
     if(masterproc) then
         call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after deallocates')
@@ -281,6 +278,20 @@ contains
         write(iulog,*) 'msize, mrss = ',msize, mrss
         call shr_sys_flush(iulog)
      endif
+
+
+    !===============================================================================
+    ! Internal subroutines for this subroutine
+    contains
+    !===============================================================================
+
+    subroutine from_readmesh_dealloc()
+       deallocate(gindex_lnd)
+       deallocate(gindex_ocn)
+       deallocate(gindex_ctsm)
+    end subroutine from_readmesh_dealloc
+
+    !-------------------------------------------------------------------------------
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
