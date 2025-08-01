@@ -5,7 +5,7 @@
 ./xmlchange ROF_NCPL='$ATM_NCPL'
 
 # Turn off ROF model when used with compsets that have them
-./xmlchange ROF_MODE='NULL'
+./xmlchange RTM_MODE='NULL'
 
 # Turn MEGAN off to run faster
 ./xmlchange CLM_BLDNML_OPTS='--no-megan' --append
