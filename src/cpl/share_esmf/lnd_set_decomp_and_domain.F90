@@ -260,11 +260,23 @@ contains
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
 
     ! Deallocate local pointer memory
-    deallocate(gindex_lnd)
-    deallocate(gindex_ocn)
-    deallocate(gindex_ctsm)
+    call from_readmesh_dealloc()
 
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
+
+
+    !===============================================================================
+    ! Internal subroutines for this subroutine
+    contains
+    !===============================================================================
+
+    subroutine from_readmesh_dealloc()
+       deallocate(gindex_lnd)
+       deallocate(gindex_ocn)
+       deallocate(gindex_ctsm)
+    end subroutine from_readmesh_dealloc
+
+    !-------------------------------------------------------------------------------
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
