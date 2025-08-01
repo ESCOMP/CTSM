@@ -56,6 +56,9 @@ contains
     use decompMod     , only : gindex_global, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
     use clm_varctl    , only : use_soil_moisture_streams
+    use proc_status_vm, only : prt_vm_status
+    use shr_mem_mod   , only : shr_mem_getusage
+    use shr_sys_mod   , only : shr_sys_flush
 
     ! input/output variables
     character(len=*)    , intent(in)    :: driver ! cmeps or lilac
@@ -86,6 +89,7 @@ contains
     real(r8) , pointer     :: lndfrac_glob(:)
     real(r8) , pointer     :: lndfrac_loc_input(:)
     real(r8) , pointer     :: dataptr1d(:)
+    real(r8) :: msize, mrss
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -102,6 +106,13 @@ contains
        end if
        write(iulog,*)
     end if
+
+    if(masterproc) then
+        call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: before allocate')
+        call shr_mem_getusage( msize, mrss, prt=.true.)
+        write(iulog,*) 'msize, mrss = ',msize, mrss
+        call shr_sys_flush(iulog)
+     endif
 
     ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
@@ -191,6 +202,12 @@ contains
           gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
+    if(masterproc) then
+        call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after allocates')
+        call shr_mem_getusage( msize, mrss, prt=.true.)
+        write(iulog,*) 'msize, mrss = ',msize, mrss
+        call shr_sys_flush(iulog)
+     endif
 
     ! Generate a new mesh on the gindex decomposition
     call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
@@ -252,11 +269,24 @@ contains
 
     end if
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
+    if(masterproc) then
+        call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: just before deallocates')
+        call shr_mem_getusage( msize, mrss, prt=.true.)
+        write(iulog,*) 'msize, mrss = ',msize, mrss
+        call shr_sys_flush(iulog)
+     endif
 
     ! Deallocate local pointer memory
     deallocate(gindex_lnd)
     deallocate(gindex_ocn)
     deallocate(gindex_ctsm)
+
+    if(masterproc) then
+        call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after deallocates')
+        call shr_mem_getusage( msize, mrss, prt=.true.)
+        write(iulog,*) 'msize, mrss = ',msize, mrss
+        call shr_sys_flush(iulog)
+     endif
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
