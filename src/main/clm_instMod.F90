@@ -229,6 +229,7 @@ contains
     integer :: dummy_to_make_pgi_happy
     !----------------------------------------------------------------------
 
+    call t_startf('clm_instInit_part1')
     ! Note: h2osno_col and snow_depth_col are initialized as local variables
     ! since they are needed to initialize vertical data structures
 
@@ -286,6 +287,9 @@ contains
        call setSoilLayerClass(bounds)
     endif
 
+    call t_stopf('clm_instInit_part1')
+
+    call t_startf('clm_instInit_part2')
     !-----------------------------------------------
     ! Set cold-start values for snow levels, snow layers and snow interfaces
     !-----------------------------------------------
@@ -338,6 +342,10 @@ contains
 
     call glacier_smb_inst%Init(bounds)
 
+    call t_stopf('clm_instInit_part2')
+
+    call t_startf('clm_instInit_part3')
+
     ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) Without the following assignment, the
     ! assertion in energyflux_inst%Init fails with pgi 14.7 on yellowstone, presumably due
     ! to a compiler bug.
@@ -370,6 +378,10 @@ contains
 
     call surfrad_inst%Init(bounds)
 
+    call t_stopf('clm_instInit_part3')
+
+    call t_startf('clm_instInit_part4')
+
     allocate(dust_emis_inst, source = create_dust_emissions(bounds, NLFilename))
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
@@ -400,6 +412,10 @@ contains
     call fireemis_inst%Init(bounds)
 
     call drydepvel_inst%Init(bounds)
+
+    call t_stopf('clm_instInit_part4')
+
+    call t_startf('clm_instInit_part5')
 
     if_decomp: if (decomp_method /= no_soil_decomp) then
 
@@ -473,6 +489,7 @@ contains
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
     deallocate (exice_init_conc_col)
+    call t_stopf('clm_instInit_part5')
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields
