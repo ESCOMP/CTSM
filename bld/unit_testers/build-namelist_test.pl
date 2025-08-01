@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3285;
+my $ntests = 3393;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 2161;
+   $ntests += 2061;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +323,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
+                         "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist' ndepmapalgo='consd' popdensmapalgo='consf'\"",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -1313,6 +1314,14 @@ my %failtest = (
                                      namelst=>"use_lai_streams=.true.",
                                      phys=>"clm5_0",
                                      },
+     "megan_opts_wo_megan"       =>{ options=>"--envxml_dir . --bgc bgc --no-megan",
+                                     namelst=>"megan_use_gamma_sm=TRUE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
+                                   },
+     "megan_min_wo_megan_use"    =>{ options=>"--envxml_dir . --bgc bgc --megan",
+                                     namelst=>"megan_use_gamma_sm=FALSE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
+                                   },
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
                                      namelst=>"dust_emis_method='Leung_2023', stream_meshfile_zendersoilerod = '/dev/null'",
                                      phys=>"clm6_0",
