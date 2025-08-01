@@ -258,8 +258,10 @@ def import_and_process_1yr(
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
         chunks = {"time": 1}
+        utils.log(logger, "import_and_process_1yr(): Using dask")
     else:
         chunks = None
+        utils.log(logger, "import_and_process_1yr(): NOT using dask")
 
     # Get h1 file (list)
     h1_pattern = os.path.join(indir, "*h1i.*.nc")
@@ -569,6 +571,7 @@ def import_and_process_1yr(
         this_crop_full_patchlist = list(xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
 
         # Get time series for each patch of this type
+        utils.log(logger, f"      import_and_process_1yr(): {vegtype_str} xr_flexsel()...")
         this_crop_ds = xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
         check_gddharv = False
@@ -812,6 +815,7 @@ def import_accum_gdds(this_year, indir, logger, chunks, crops_to_read, dates_ds,
         my_vegtypes=crops_to_read,
         chunks=chunks,
         logger=logger,
+        compute=False,
     )
 
     # Restrict to patches we're including
