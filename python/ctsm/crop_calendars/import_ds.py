@@ -8,7 +8,6 @@ and/or vegetation types and/or timesteps, concatenating by time.
 
 import re
 import warnings
-from importlib.util import find_spec
 import numpy as np
 import xarray as xr
 from ctsm.utils import is_instantaneous
@@ -276,12 +275,11 @@ def import_ds(
     if isinstance(filelist, list) and len(filelist) == 1:
         filelist = filelist[0]
     if isinstance(filelist, list):
-        with warnings.catch_warnings():
-            warnings.filterwarnings(action="ignore", category=DeprecationWarning)
-            dask_unavailable = find_spec("dask") is None
-        if dask_unavailable:
+        if utils.DASK_UNAVAILABLE:
+            log(logger, "dask NOT available")
             this_ds = manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice, logger=logger)
         else:
+            log(logger, "dask available")
             this_ds = xr.open_mfdataset(
                 sorted(filelist),
                 data_vars="minimal",

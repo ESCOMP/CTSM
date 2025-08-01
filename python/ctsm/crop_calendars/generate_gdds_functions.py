@@ -6,7 +6,6 @@ Functions to support generate_gdds.py
 import warnings
 import os
 import glob
-from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
@@ -256,9 +255,11 @@ def import_and_process_1yr(
     log(logger, f"netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
-    if importlib_util.find_spec("dask"):
+    if not utils.DASK_UNAVAILABLE:
+        log(logger, "dask available")
         chunks = {"time": 1}
     else:
+        log(logger, "dask NOT available")
         chunks = None
 
     # Get h1 file (list)
