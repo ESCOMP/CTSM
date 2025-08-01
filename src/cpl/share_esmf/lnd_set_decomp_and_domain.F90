@@ -72,7 +72,7 @@ contains
     ! local variables
     type(ESMF_Mesh)        :: mesh_maskinput
     type(ESMF_Mesh)        :: mesh_lndinput
-    type(ESMF_DistGrid)    :: distgrid_ctsm
+    type(ESMF_DistGrid)    :: distgrid_ctsm   ! This appears to be local but is used later in lnd_import_export
     type(ESMF_Field)       :: field_lnd
     type(ESMF_Field)       :: field_ctsm
     type(ESMF_RouteHandle) :: rhandle_lnd2ctsm
@@ -203,6 +203,7 @@ contains
     end do
 
     ! Generate a new mesh on the gindex decomposition
+    ! NOTE: The distgrid_ctsm will be used later in lnd_import_export, even though it appears to just be local
     call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -298,18 +299,22 @@ contains
        deallocate(gindex_ocn)
        deallocate(gindex_ctsm)
        ! Destroy or release all of the ESMF objects
-       call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, rc=rc)
+       call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, noGarbage=no_esmf_garbage, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+       !--------------------------------------------------------------------------
+       ! NOTE: We can't destroy the distgrid -- because it will be used later
+       ! As such we don't do the following...  EBK 08/01/2025
        !call ESMF_DistGridDestroy( distgrid_ctsm, rc=rc)
        !if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_FieldDestroy( field_lnd, rc=rc)
+       !--------------------------------------------------------------------------
+       call ESMF_FieldDestroy( field_lnd, noGarbage=no_esmf_garbage, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_FieldDestroy( field_ctsm, rc=rc)
+       call ESMF_FieldDestroy( field_ctsm, noGarbage=no_esmf_garbage, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       !call  ESMF_MeshDestroy( mesh_maskinput, rc=rc)
-       !if (chkerr(rc,__LINE__,u_FILE_u)) return
-       !call  ESMF_MeshDestroy( mesh_lndinput, rc=rc)
-       !if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_maskinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_lndinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     end subroutine from_readmesh_dealloc
 
