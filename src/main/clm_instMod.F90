@@ -378,10 +378,6 @@ contains
 
     call surfrad_inst%Init(bounds)
 
-    call t_stopf('clm_instInit_part3')
-
-    call t_startf('clm_instInit_part4')
-
     allocate(dust_emis_inst, source = create_dust_emissions(bounds, NLFilename))
 
     allocate(scf_method, source = CreateAndInitSnowCoverFraction( &
@@ -412,10 +408,6 @@ contains
     call fireemis_inst%Init(bounds)
 
     call drydepvel_inst%Init(bounds)
-
-    call t_stopf('clm_instInit_part4')
-
-    call t_startf('clm_instInit_part5')
 
     if_decomp: if (decomp_method /= no_soil_decomp) then
 
@@ -489,7 +481,7 @@ contains
     deallocate (h2osno_col)
     deallocate (snow_depth_col)
     deallocate (exice_init_conc_col)
-    call t_stopf('clm_instInit_part5')
+    call t_stopf('clm_instInit_part3')
 
     ! ------------------------------------------------------------------------
     ! Initialize accumulated fields
