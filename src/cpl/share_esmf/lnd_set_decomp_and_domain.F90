@@ -269,8 +269,9 @@ contains
         call shr_sys_flush(iulog)
      endif
 
-    ! Deallocate local pointer memory
-    call from_readmesh_dealloc()
+    ! Deallocate local pointer memory including ESMF objects
+    call from_readmesh_dealloc( rc )
+    if (chkerr(rc,__LINE__,u_FILE_u)) return 
 
     if(masterproc) then
         call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after deallocates')
@@ -285,10 +286,29 @@ contains
     contains
     !===============================================================================
 
-    subroutine from_readmesh_dealloc()
+    subroutine from_readmesh_dealloc( rc )
+       use ESMF, only : ESMF_FieldRedistRelease, ESMF_DistGridDestroy, ESMF_FieldDestroy, ESMF_MeshDestroy
+       integer, intent(out) :: rc ! ESMF return code to indicate deallocate was successful
+
+       rc = ESMF_SUCCESS
+
        deallocate(gindex_lnd)
        deallocate(gindex_ocn)
        deallocate(gindex_ctsm)
+       ! Destroy or release all of the ESMF objects
+       call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_DistGridDestroy( distgrid_ctsm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldDestroy( field_lnd, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldDestroy( field_ctsm, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_maskinput, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_lndinput, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
     end subroutine from_readmesh_dealloc
 
     !-------------------------------------------------------------------------------
