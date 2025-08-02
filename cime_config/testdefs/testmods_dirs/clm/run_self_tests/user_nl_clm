@@ -1,4 +1,4 @@
-for_testing_run_ncdiopio_tests = .false.
+for_testing_run_ncdiopio_tests = .true.
 for_testing_run_decomp_init_tests = .true.
 for_testing_exit_after_self_tests = .true.
 
