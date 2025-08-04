@@ -4786,6 +4786,8 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_managed_fire', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'));
 
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
@@ -4918,6 +4920,14 @@ sub setup_logic_fates {
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               }
+           }
+        }
+
+        # Check use_fates_managed_fire mode is running with spitfire on
+        my $var = "use_fates_managed_fire";
+        if ( defined($nl->get_value($var))  ) {
+           if ( $nl->get_value('fates_spitfire_mode') != 0 ) {
+                 $log->fatal_error('fates_spitfire_mode must be non-zero when use_fates_managed_fire is true');
            }
         }
     }
