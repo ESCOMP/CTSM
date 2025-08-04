@@ -3858,6 +3858,15 @@
       <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm60FatesCruRsGs" testmods="clm/FatesColdManagedFire">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart test that turns on FATES managed fire on an f45 grid.</option>
+    </options>
+  </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdST3">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
