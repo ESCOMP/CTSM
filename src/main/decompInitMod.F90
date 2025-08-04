@@ -12,8 +12,7 @@ module decompInitMod
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog
-  use proc_status_vm, only : prt_vm_status
-  use shr_mem_mod  , only : shr_mem_init, shr_mem_getusage
+  use ctsm_memcheck, only : memcheck
   !
   implicit none
   private
@@ -78,13 +77,7 @@ contains
     real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
 
-    if(masterproc) then 
-       call shr_mem_init(prt=.true.) ! initialize memory tracking
-       call prt_vm_status('CTSM: decompInit_lnd: before')
-       call shr_mem_getusage( msize, mrss, prt=.true.)
-       write(iulog,*) 'msize, mrss = ',msize, mrss
-       call shr_sys_flush(iulog)
-    endif
+    call memcheck('decompInit_lnd: before allocate')
 
     lns = lni * lnj
 
@@ -303,15 +296,12 @@ contains
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
-    if(masterproc) then 
-       call prt_vm_status('CTSM: decompInit_lnd: afterwards before deallocate')
-       call shr_mem_getusage( msize, mrss, prt=.true.)
-       write(iulog,*) 'msize, mrss = ',msize, mrss
-       call shr_sys_flush(iulog)
-    endif
+    call memcheck('decompInit_lnd: after allocate before deallocate')
 
     deallocate(clumpcnt)
     deallocate(gdc2glo)
+
+    call memcheck('decompInit_lnd: after allocate after deallocate')
 
     ! Diagnostic output
     if (masterproc) then
@@ -368,9 +358,7 @@ contains
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
-    if(masterproc) then 
-       call prt_vm_status('CTSM: decompInit_clumps: before')
-    endif
+    call memcheck('decompInit_clumps: before alloc')
     !--- assign gridcells to clumps (and thus pes) ---
     call get_proc_bounds(bounds)
     begg = bounds%begg; endg = bounds%endg
@@ -493,12 +481,12 @@ contains
        endif
     enddo
 
-    if(masterproc) then 
-       call prt_vm_status('CTSM: decompInit_clumps: after before deallocate')
-    endif
+    call memcheck('decompInit_clumps: before deallocate')
 
     deallocate(allvecg,allvecl)
     deallocate(lcid)
+
+    call memcheck('decompInit_clumps: after deallocate')
 
     ! Diagnostic output
 
