@@ -504,6 +504,7 @@ module CLMFatesInterfaceMod
         else
            pass_managed_fire = 0
         end if
+        call set_fates_ctrlparms('managed_fire',ival=pass_managed_fire)
 
 
         ! This has no variable on the FATES side yet (RGK)
