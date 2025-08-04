@@ -2,6 +2,7 @@
 *.nc
 # but don't ignore netcdf files here:
 !/python/ctsm/test/testinputs/*.nc
+!/python/ctsm/test/testinputs/**/*.nc
 
 # editor files
 *.swp
@@ -110,3 +111,8 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# Docs build and testing output
+_build*/
+_publish*/
+doc/.coverage

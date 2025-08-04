@@ -11,7 +11,7 @@ module UrbanTimeVarType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type, subgrid_level_landunit
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, FL => fname_len
   use landunit_varcon , only : isturb_MIN, isturb_MAX
   use clm_varcon      , only : spval
   use LandunitType    , only : lun
@@ -126,8 +126,8 @@ contains
     integer            :: model_year_align_urbantv          ! align stream_year_first_urbantv with this model year
     integer            :: nu_nml                            ! unit for namelist file
     integer            :: nml_error                         ! namelist i/o error flag
-    character(len=CL)  :: stream_fldFileName_urbantv        ! urban tv streams filename
-    character(len=CL)  :: stream_meshfile_urbantv           ! urban tv streams filename
+    character(len=FL)  :: stream_fldFileName_urbantv        ! urban tv streams filename
+    character(len=FL)  :: stream_meshfile_urbantv           ! urban tv streams filename
     character(len=CL)  :: urbantvmapalgo = 'nn'             ! mapping alogrithm for urban ac
     character(len=CL)  :: urbantv_tintalgo = 'linear'       ! time interpolation alogrithm
     integer            :: rc                                ! error code
@@ -174,6 +174,7 @@ contains
     call shr_mpi_bcast(stream_year_first_urbantv  , mpicom)
     call shr_mpi_bcast(stream_year_last_urbantv   , mpicom)
     call shr_mpi_bcast(model_year_align_urbantv   , mpicom)
+    call shr_mpi_bcast(urbantvmapalgo             , mpicom)
     call shr_mpi_bcast(stream_fldFileName_urbantv , mpicom)
     call shr_mpi_bcast(stream_meshfile_urbantv    , mpicom)
     call shr_mpi_bcast(urbantv_tintalgo           , mpicom)

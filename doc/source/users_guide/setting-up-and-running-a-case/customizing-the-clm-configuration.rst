@@ -352,13 +352,13 @@ When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets 
     Update the below, as ``queryDefaultNamelist.pl`` no longer exists.
 
 ``CLM_USRDAT_NAME``
-   Provides a way to enter your own datasets into the namelist. The files you create must be named with specific naming conventions outlined in :ref:`creating-your-own-singlepoint-dataset`. To see what the expected names of the files are, use the ``queryDefaultNamelist.pl`` to see what the names will need to be. For example if your ``CLM_USRDAT_NAME`` will be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850, the following will list what your filenames should be:
+   Provides a way to enter your own datasets into the namelist. The files you create must be named with specific naming conventions outlined in :ref:`generic_single_point_runs`. To see what the expected names of the files are, use the ``queryDefaultNamelist.pl`` to see what the names will need to be. For example if your ``CLM_USRDAT_NAME`` will be "1x1_boulderCO", with a "navy" land-mask, constant simulation year range, for 1850, the following will list what your filenames should be:
    ::
 
       > cd $CTSMROOT/bld
       > queryDefaultNamelist.pl -usrname "1x1_boulderCO" -options mask=navy,sim_year=1850,sim_year_range="constant"  -csmdata $CSMDATA
 
-   An example of using ``CLM_USRDAT_NAME`` for a simulation is given in Example :numref:`creating-your-own-singlepoint-dataset`.
+   An example of using ``CLM_USRDAT_NAME`` for a simulation is given in Example :numref:`generic_single_point_runs`.
 
 ``CLM_CO2_TYPE``
    sets the type of input CO2 for either "constant", "diagnostic" or prognostic". If "constant" the value from ``CCSM_CO2_PPMV`` will be used. If "diagnostic" or "prognostic" the values MUST be sent from the atmosphere model.
