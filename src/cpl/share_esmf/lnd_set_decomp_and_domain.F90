@@ -56,7 +56,7 @@ contains
     use decompMod     , only : gindex_global, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
     use clm_varctl    , only : use_soil_moisture_streams
-    use proc_status_vm, only : prt_vm_status
+    use proc_status_vm, only : prt_vm_status, shr_malloc_trim
     use shr_mem_mod   , only : shr_mem_getusage
     use shr_sys_mod   , only : shr_sys_flush
 
@@ -273,6 +273,7 @@ contains
     ! Deallocate local pointer memory including ESMF objects
     call from_readmesh_dealloc( rc )
     if (chkerr(rc,__LINE__,u_FILE_u)) return 
+    call shr_malloc_trim()
 
     if(masterproc) then
         call prt_vm_status('CTSM: lnd_set_decomp_and_domain_from_readmesh: after deallocates')
