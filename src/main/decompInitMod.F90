@@ -301,7 +301,7 @@ contains
     deallocate(clumpcnt)
     deallocate(gdc2glo)
 
-    call memcheck('decompInit_lnd: after allocate after deallocate')
+    call memcheck('decompInit_lnd: after deallocate')
 
     ! Diagnostic output
     if (masterproc) then
