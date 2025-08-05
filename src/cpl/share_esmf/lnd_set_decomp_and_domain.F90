@@ -277,6 +277,7 @@ contains
 
        rc = ESMF_SUCCESS
 
+       deallocate(lndfrac_loc_input)
        deallocate(gindex_lnd)
        deallocate(gindex_ocn)
        deallocate(gindex_ctsm)
