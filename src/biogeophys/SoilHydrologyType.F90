@@ -144,8 +144,8 @@ contains
     allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
     allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
-    allocate(this%qout_col          (begc:endc,nlevgrnd))        ; this%qout_col          (:,:)   = nan
-    allocate(this%qin_col           (begc:endc,nlevgrnd))        ; this%qin_col           (:,:)   = nan
+    allocate(this%qout_col          (begc:endc,nlevsoi))         ; this%qout_col          (:,:)   = nan
+    allocate(this%qin_col           (begc:endc,nlevsoi))         ; this%qin_col           (:,:)   = nan
 
   end subroutine InitAllocate
 
@@ -302,7 +302,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical :: readvar      ! determine if variable is on initial file
-    real(r8), pointer :: ptr2d(:,:)  ! temp. pointers for slicing larger arrays
     !-----------------------------------------------------------------------
 
     call restartvar(ncid=ncid, flag=flag, varname='FROST_TABLE', xtype=ncd_double,  & 
@@ -325,20 +324,6 @@ contains
     if (flag == 'read' .and. .not. readvar) then
        this%zwt_perched_col(bounds%begc:bounds%endc) = col%zi(bounds%begc:bounds%endc,nlevsoi)
     end if
-
-    ptr2d => this%qout_col
-    call restartvar(ncid=ncid, flag=flag, varname='QOUT', xtype=ncd_double,  &
-         dim1name='column', dim2name='levgrnd', switchdim=.true.,  &
-         long_name='flux of water out of soil layer', units='mm h2o/s', fill_value=spval,  &
-         scale_by_thickness=.false., &
-         interpinic_flag='skip', readvar=readvar, data=ptr2d)
-
-    ptr2d => this%qin_col
-    call restartvar(ncid=ncid, flag=flag, varname='QIN', xtype=ncd_double,  &
-         dim1name='column', dim2name='levgrnd', switchdim=.true.,  &
-         long_name='flux of water into soil layer', units='mm h2o/s', fill_value=spval,  &
-         scale_by_thickness=.false., &
-         interpinic_flag='skip', readvar=readvar, data=ptr2d)
 
   end subroutine Restart
 
