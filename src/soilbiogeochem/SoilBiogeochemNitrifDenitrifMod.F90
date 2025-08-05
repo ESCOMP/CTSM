@@ -12,11 +12,11 @@ module SoilBiogeochemNitrifDenitrifMod
   use clm_varpar                      , only : nlevdecomp
   use clm_varcon                      , only : rpi, grav
   use clm_varcon                      , only : d_con_g, d_con_w, secspday
-  use clm_varctl                      , only : use_lch4
+  use clm_varctl                      , only : use_lch4, use_soil_nox
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use SoilStatetype                   , only : soilstate_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
+  use WaterStateBulkType              , only : waterstatebulk_type
   use TemperatureType                 , only : temperature_type
   use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
@@ -47,7 +47,7 @@ module SoilBiogeochemNitrifDenitrifMod
 
   type(params_type), private :: params_inst
 
-  logical, public :: no_frozen_nitrif_denitrif = .false.  ! stop nitrification and denitrification in frozen soils
+  logical, public :: no_frozen_nitrif_denitrif = .true.  ! stop nitrification and denitrification in frozen soils
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -189,6 +189,10 @@ contains
     real(r8) :: organic_max              ! organic matter content (kg/m3) where
                                          ! soil is assumed to act like peat
     character(len=32) :: subname='nitrif_denitrif' ! subroutine name
+
+    real(r8) :: Dr ! relative gas diffusivity in soil compare to air
+    real(r8) :: fno3_co2     ! for denitrification rate
+
     !-----------------------------------------------------------------------
 
     associate(                                                                                                    & 
@@ -243,7 +247,10 @@ contains
          pot_f_nit_vr                  =>    soilbiogeochem_nitrogenflux_inst%pot_f_nit_vr_col                  , & ! Output:  [real(r8) (:,:) ]  (gN/m3/s) potential soil nitrification flux     
 
          pot_f_denit_vr                =>    soilbiogeochem_nitrogenflux_inst%pot_f_denit_vr_col                , & ! Output:  [real(r8) (:,:) ]  (gN/m3/s) potential soil denitrification flux   
-         n2_n2o_ratio_denit_vr         =>    soilbiogeochem_nitrogenflux_inst%n2_n2o_ratio_denit_vr_col           & ! Output:  [real(r8) (:,:) ]  ratio of N2 to N2O production by denitrification [gN/gN]
+         n2_n2o_ratio_denit_vr         =>    soilbiogeochem_nitrogenflux_inst%n2_n2o_ratio_denit_vr_col         , & ! Output:  [real(r8) (:,:) ]  ratio of N2 to N2O production by denitrification [gN/gN]
+                  afps_vr                        =>   soilbiogeochem_nitrogenflux_inst%afps_vr_col               , & !Output:  [real(r8) (:,:) ] portion of soil pore space that is filled with air
+         gross_nmin_vr                   =>    soilbiogeochem_nitrogenflux_inst%gross_nmin_vr_col                , &  ! Input: [real(r8) (:,:)   ] ! to add missing term in nitrification rate
+         nox_n2o_ratio_vr               => soilbiogeochem_nitrogenflux_inst%nox_n2o_ratio_vr_col                 &  !Output:  [real(r8) (:,:) ]  ratio of NOx to N2O production, for soil NOx emissions [gN/gN]
          )
 
       surface_tension_water = params_inst%surface_tension_water
@@ -342,9 +349,10 @@ contains
             ! note that k_nitr_max_perday is converted from 1/day to 1/s
             k_nitr_vr(c,j) = k_nitr_max_perday/secspday * k_nitr_t_vr(c,j) * k_nitr_h2o_vr(c,j) * k_nitr_ph_vr(c,j)
 
-            ! first-order decay of ammonium pool with scalar defined above
+            ! first-order decay of ammonium pool with scalar defined above. It is missing the  N from SOM turn over term but that affects the N plant uptake and decreases carbon cycle substantially 
+            ! pot_f_nit_vr(c,j) = max(0.1_r8 * gross_nmin_vr(c,j) + smin_nh4_vr(c,j) * k_nitr_vr(c,j), 0._r8)
             pot_f_nit_vr(c,j) = max(smin_nh4_vr(c,j) * k_nitr_vr(c,j), 0._r8)
-
+            
             ! limit to oxic fraction of soils
             pot_f_nit_vr(c,j)  = pot_f_nit_vr(c,j) * (1._r8 - anaerobic_frac(c,j))
 
@@ -413,9 +421,24 @@ contains
             wfps_vr(c,j) = max(min(h2osoi_vol(c,j)/watsat(c, j), 1._r8), 0._r8) * 100._r8
             fr_WFPS(c,j) = max(0.1_r8, 0.015_r8 * wfps_vr(c,j) - 0.32_r8)
 
-            ! final ratio expression 
-            n2_n2o_ratio_denit_vr(c,j) = max(0.16_r8*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8_r8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)
+            if (use_soil_nox) then
+            ! final ratio expression  
+            !DAYCENT4.5 EQUATION modified n2_n2o_ratio_denit to be consistent with daycent code
+               fno3_co2 = max(0.16_r8*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8_r8 * ratio_no3_co2(c,j)))
+               n2_n2o_ratio_denit_vr(c,j) = max(0.1_r8,fno3_co2*fr_WFPS(c,j))
 
+               afps_vr(c,j) = 1._r8-max(min(h2osoi_vol(c,j)/watsat(c,j), 1._r8), 0._r8)
+               Dr = 0.209_r8*afps_vr(c,j)**(4._r8/3._r8)
+               
+               nox_n2o_ratio_vr(c,j) = 15.2_r8 + (35.5_r8 * atan(0.68_r8 * rpi * (10.0_r8 * Dr - 1.86_r8))) / rpi
+
+               nox_n2o_ratio_vr(c,j) = max(0._r8, nox_n2o_ratio_vr(c,j))
+               
+            else
+            ! final ratio expression 
+               n2_n2o_ratio_denit_vr(c,j) = max(0.16*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)
+            endif
+            
          end do
 
       end do
