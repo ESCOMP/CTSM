@@ -1029,7 +1029,8 @@ contains
     use clm_time_manager          , only: is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
     use CNSharedParamsMod         , only: use_matrixcn
     use SoilBiogeochemDecompCascadeConType, only: use_soil_matrixcn
-    use SoilNitrogenMovementMod           , only: SoilNitrogenMovement, use_nvmovement
+    use SoilNitrogenMovementMod           , only: SoilNitrogenMovement
+    use clm_varctl, only : use_nvmovement
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  

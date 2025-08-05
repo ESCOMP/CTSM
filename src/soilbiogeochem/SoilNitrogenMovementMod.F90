@@ -30,13 +30,13 @@ module SoilNitrogenMovementMod
   ! PUBLIC MEMBER FUNCTIONS 
   public SoilNitrogenMovement
 
-  ! !!!!!!!  Author note, I currently using a flag to control this leaching module   !!!!!!
-  logical, parameter, public :: use_nvmovement = .TRUE.
- 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+  !------------------------------------------------------------------------
+
   contains
 
-
-  !# main code here
+  !------------------------------------------------------------------------
   subroutine SoilNitrogenMovement(bounds, num_bgc_soilc, filter_bgc_soilc, waterstatebulk_inst, &
              soilstate_inst, soilhydrology_inst, soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
     !

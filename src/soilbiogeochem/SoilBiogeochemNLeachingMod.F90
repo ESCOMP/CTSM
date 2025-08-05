@@ -10,7 +10,7 @@ module SoilBiogeochemNLeachingMod
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use clm_varcon                      , only : dzsoi_decomp, zisoi
-  use clm_varctl                      , only : use_nitrif_denitrif
+  use clm_varctl                      , only : use_nitrif_denitrif, use_nvmovement
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use WaterStateBulkType                  , only : waterstatebulk_type
@@ -83,7 +83,6 @@ contains
     ! !USES:
     use clm_varpar       , only : nlevdecomp, nlevsoi
     use clm_time_manager , only : get_step_size_real
-    use SoilNitrogenMovementMod , only: use_nvmovement
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
