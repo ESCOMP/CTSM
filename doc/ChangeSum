@@ -1,5 +1,30 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.065     erik 07/28/2025 Merge b4b-dev to master
+       ctsm5.3.064   slevis 07/24/2025 Add time dimension to 1d_wt fields in transient runs
+       ctsm5.3.063 samrabin 07/10/2025 Merge b4b-dev to master
+       ctsm5.3.062   slevis 07/09/2025 Put inst. and non-inst. fields on separate hist files
+       ctsm5.3.061   slevis 06/26/2025 Merge b4b-dev to master
+       ctsm5.3.060   slevis 06/24/2025 Preliminary update of ctsm54 defaults (answer changing)
+       ctsm5.3.059     erik 06/23/2025 Bring in various cleanup efforts found in previous testing after the chill changes came in
+       ctsm5.3.058 samrabin 06/16/2025 Fix clm6 compset aliases
+       ctsm5.3.057 glemieux 06/13/2025 Fix PEM test for on-the-fly parameter file generation
+       ctsm5.3.056     erik 06/12/2025 Merge b4b-dev to master
+       ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
+       ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
+       ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
+       ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases
+       ctsm5.3.051     erik 05/28/2025 Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
+       ctsm5.3.050 samrabin 05/29/2025 Fix Linux Podman; prefer Linux Docker; update docs docs.
+       ctsm5.3.049 samrabin 05/27/2025 Switch docs to use Podman
+       ctsm5.3.048 samrabin 05/26/2025 Automatically publish docs to this repo
+       ctsm5.3.047 samrabin 05/26/2025 Merge b4b-dev to master
+       ctsm5.3.046   rgknox 05/26/2025 For FATES set itype to ispval and a few unused variables to nan to help prevent future problems
+       ctsm5.3.045 glemieux 05/20/2025 FATES default parameter update for API 40
+       ctsm5.3.044   slevis 05/14/2025 Introduce time-evolving LEAFCN_TARGET as function of leafcn param
+       ctsm5.3.043   slevis 05/09/2025 Merge b4b-dev
+       ctsm5.3.042 glemieux 05/08/2025 Update FATES tag, tests and address namelist option bug
+       ctsm5.3.041 samrabin 04/25/2025 Merge b4b-dev to master
        ctsm5.3.040 samrabin 04/15/2025 Update ctsm_pylib to 3.13.2
        ctsm5.3.039  afoster 04/14/2025 Create driver data structure for SP mode
        ctsm5.3.038 samrabin 04/10/2025 Merge b4b-dev

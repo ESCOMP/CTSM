@@ -1,0 +1,35 @@
+name: git-fleximod test
+#
+# Test git-fleximod update and cleanliness
+# Based closely on workflow from CESM repo
+#
+on:
+  push:
+    # Run when a change to any is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if no files are changed.
+    branches: ['*']
+  pull_request:
+
+jobs:
+  fleximod-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # oldest supported and latest supported
+        python-version: ["3.7", "3.x"]
+    steps:
+      - id: checkout-CTSM
+        uses: actions/checkout@v4
+      - id: run-fleximod
+        run: |
+          $GITHUB_WORKSPACE/bin/git-fleximod update -o
+          echo
+          echo "Update complete, checking status"
+          echo
+          $GITHUB_WORKSPACE/bin/git-fleximod test
+      - id: check-cleanliness
+        run: |
+          echo
+          echo "Checking if git fleximod matches expected externals"
+          echo
+          git add . && git diff --exit-code && git diff --cached --exit-code

@@ -11,7 +11,7 @@ module FireDataBaseType
   use dshr_strdata_mod , only : shr_strdata_type 
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use spmdMod          , only : masterproc, mpicom, iam
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
@@ -26,23 +26,25 @@ module FireDataBaseType
   type, abstract, extends(fire_method_type) :: fire_base_type
     private
       ! !PRIVATE MEMBER DATA:
-      real(r8), public, pointer :: forc_hdm(:)  ! Human population density
-      type(shr_strdata_type)    :: sdat_hdm     ! Human population density input data stream
-      real(r8), public, pointer :: forc_lnfm(:) ! Lightning frequency
-      type(shr_strdata_type)    :: sdat_lnfm    ! Lightning frequency input data stream
+      real(r8), public, pointer :: forc_hdm(:)  => NULL() ! Human population density
+      type(shr_strdata_type)    :: sdat_hdm               ! Human population density input data stream
+      real(r8), public, pointer :: forc_lnfm(:) => NULL() ! Lightning frequency
+      type(shr_strdata_type)    :: sdat_lnfm              ! Lightning frequency input data stream
       
-      real(r8), public, pointer :: gdp_lf_col(:)   ! col global real gdp data (k US$/capita)
-      real(r8), public, pointer :: peatf_lf_col(:) ! col global peatland fraction data (0-1)
-      integer , public, pointer :: abm_lf_col(:)   ! col global peak month of crop fire emissions
+      real(r8), public, pointer :: gdp_lf_col(:)   => NULL() ! col global real gdp data (k US$/capita)
+      real(r8), public, pointer :: peatf_lf_col(:) => NULL() ! col global peatland fraction data (0-1)
+      integer , public, pointer :: abm_lf_col(:)   => NULL() ! col global peak month of crop fire emissions
       
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
       procedure, public :: BaseFireInit             ! Initialization of Fire
+      procedure, public :: FireInit => BaseFireInit ! Initialization of Fire
+      procedure, public :: BaseFireClean            ! Clean up data and deallocate data
+      procedure, public :: FireClean => BaseFireClean ! Clean up data and deallocate data
       procedure, public :: FireInterp               ! Interpolate fire data
-      procedure(FireReadNML_interface), public, deferred :: &
-           FireReadNML                              ! Read in namelist for Fire
+      procedure, public :: BaseFireReadNML          ! Read in the namelist for fire
+      procedure, public :: ReadFireNML => BaseFireReadNML ! Read in the namelist for fire
       procedure(need_lightning_and_popdens_interface), public, deferred :: &
            need_lightning_and_popdens               ! Returns true if need lightning & popdens
       !
@@ -78,7 +80,7 @@ module FireDataBaseType
 contains
 !==============================================================================
 
-  subroutine FireReadNML_interface( this, NLFilename )
+  subroutine BaseFireReadNML( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for Fire
@@ -87,11 +89,21 @@ contains
     !
     ! !ARGUMENTS:
     class(fire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-  end subroutine FireReadNML_interface
+
+    ! Read the namelists for the fire data and do the preparation needed on them
+    if ( this%need_lightning_and_popdens() ) then
+       call this%hdm_init(bounds, NLFilename)
+       call this%hdm_interp(bounds)
+       call this%lnfm_init(bounds, NLFilename)
+       call this%lnfm_interp(bounds)
+       call this%surfdataread(bounds)
+    end if
+  end subroutine BaseFireReadNML
 
   !================================================================
-  subroutine BaseFireInit( this, bounds, NLFilename )
+  subroutine BaseFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
@@ -101,9 +113,7 @@ contains
     ! !ARGUMENTS:
     class(fire_base_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
-
     if ( this%need_lightning_and_popdens() ) then
        ! Allocate lightning forcing data
        allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
@@ -118,15 +128,35 @@ contains
        allocate(this%peatf_lf_col(bounds%begc:bounds%endc))
        ! Allocates peak month of crop fire emissions
        allocate(this%abm_lf_col(bounds%begc:bounds%endc))
-
-       call this%hdm_init(bounds, NLFilename)
-       call this%hdm_interp(bounds)
-       call this%lnfm_init(bounds, NLFilename)
-       call this%lnfm_interp(bounds)
-       call this%surfdataread(bounds)
     end if
 
   end subroutine BaseFireInit
+
+  !================================================================
+  subroutine BaseFireClean( this )
+   !
+   ! !DESCRIPTION:
+   ! Clean fire data
+   ! !USES:
+   !
+   ! !ARGUMENTS:
+   class(fire_base_type) :: this
+   !-----------------------------------------------------------------------
+
+   if ( this%need_lightning_and_popdens() ) then
+      deallocate( this%forc_lnfm )
+      deallocate( this%forc_hdm )
+      deallocate( this%gdp_lf_col )
+      deallocate( this%peatf_lf_col )
+      deallocate( this%abm_lf_col )
+      this%forc_lnfm => NULL()
+      this%forc_hdm => NULL()
+      this%gdp_lf_col => NULL()
+      this%peatf_lf_col => NULL()
+      this%abm_lf_col => NULL()
+   end if
+
+  end subroutine BaseFireClean
 
   !================================================================
   subroutine FireInterp(this,bounds)
@@ -171,8 +201,8 @@ contains
    integer            :: stream_year_first_popdens     ! first year in pop. dens. stream to use
    integer            :: stream_year_last_popdens      ! last year in pop. dens. stream to use
    integer            :: model_year_align_popdens      ! align stream_year_first_hdm with
-   character(len=CL)  :: stream_fldFileName_popdens    ! population density streams filename
-   character(len=CL)  :: stream_meshfile_popdens       ! population density streams filename
+   character(len=FL)  :: stream_fldFileName_popdens    ! population density streams filename
+   character(len=FL)  :: stream_meshfile_popdens       ! population density streams filename
    character(len=CL)  :: popdensmapalgo                ! mapping alogrithm for population density
    character(len=CL)  :: popdens_tintalgo              ! time interpolation alogrithm for population density
    integer            :: rc
@@ -216,6 +246,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_popdens , mpicom)
    call shr_mpi_bcast(stream_meshfile_popdens    , mpicom)
    call shr_mpi_bcast(popdens_tintalgo           , mpicom)
+   call shr_mpi_bcast(popdensmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)'   ) ' '
@@ -338,8 +369,8 @@ contains
   integer            :: stream_year_first_lightng  ! first year in Lightning stream to use
   integer            :: stream_year_last_lightng   ! last year in Lightning stream to use
   integer            :: model_year_align_lightng   ! align stream_year_first_lnfm with
-  character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
-  character(len=CL)  :: stream_meshfile_lightng    ! lightning stream filename to read
+  character(len=FL)  :: stream_fldFileName_lightng ! lightning stream filename to read
+  character(len=FL)  :: stream_meshfile_lightng    ! lightning stream filename to read
   character(len=CL)  :: lightng_tintalgo           ! stream -> model time interpolation alogrithm
   character(len=CL)  :: lightngmapalgo             ! stream-> model mapping alogrithm
   integer            :: rc
@@ -383,6 +414,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_lightng , mpicom)
    call shr_mpi_bcast(stream_meshfile_lightng    , mpicom)
    call shr_mpi_bcast(lightng_tintalgo           , mpicom)
+   call shr_mpi_bcast(lightngmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)') ' '

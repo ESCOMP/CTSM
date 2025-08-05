@@ -62,7 +62,7 @@ module CNDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNDriverInit(bounds, NLFilename, cnfire_method)
+  subroutine CNDriverInit(bounds, NLFilename)
     !
     ! !DESCRIPTION:
     ! Initialzation of the CN Ecosystem dynamics.
@@ -70,18 +70,15 @@ contains
     ! !USES:
     use CNSharedParamsMod           , only : use_fun
     use CNPhenologyMod              , only : CNPhenologyInit
-    use FireMethodType              , only : fire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds      
     character(len=*)                       , intent(in)    :: NLFilename     ! Namelist filename
-    class(fire_method_type)                , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
     call SoilBiogeochemCompetitionInit(bounds)
     if(use_cn)then
        call CNPhenologyInit(bounds)
-       call cnfire_method%FireInit(bounds, NLFilename)
     end if
   end subroutine CNDriverInit
 
@@ -433,7 +430,7 @@ contains
        end if
        
        call calc_allometry(num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_state_inst)
+            cnveg_carbonflux_inst, cnveg_state_inst, cnveg_nitrogenstate_inst)
        call t_stopf('cnalloc')
     end if
     
@@ -1035,7 +1032,8 @@ contains
     use clm_time_manager          , only: is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
     use CNSharedParamsMod         , only: use_matrixcn
     use SoilBiogeochemDecompCascadeConType, only: use_soil_matrixcn
-    use SoilNitrogenMovementMod           , only: SoilNitrogenMovement, use_nvmovement
+    use SoilNitrogenMovementMod           , only: SoilNitrogenMovement
+    use clm_varctl, only : use_nvmovement
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  

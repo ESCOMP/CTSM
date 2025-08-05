@@ -38,6 +38,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : inst_index, inst_suffix, inst_name
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl             , only : FL => fname_len
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -383,7 +384,7 @@ contains
     integer                 :: shrlogunit            ! original log unit
     integer                 :: n, ni, nj             ! Indices
     character(len=CL)       :: cvalue                ! config data
-    character(len=CL)       :: meshfile_mask         ! filename of mesh file with land mask
+    character(len=FL)       :: meshfile_mask         ! filename of mesh file with land mask
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
     real(r8)                :: scol_lat              ! single-column latitude
@@ -392,7 +393,7 @@ contains
     real(r8)                :: scol_frac             ! single-column frac
     integer                 :: scol_mask             ! single-column mask
     real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
-    character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
+    character(len=FL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
     type(bounds_type)      :: bounds                          ! bounds
     type(ESMF_Field)        :: lfield                         ! Land field read in
     character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
@@ -641,8 +642,10 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call t_startf ('lc_lnd_set_decomp_and_domain_from_readmesh')
        call lnd_set_decomp_and_domain_from_readmesh(driver='cmeps', vm=vm, &
             meshfile_lnd=model_meshfile, meshfile_mask=meshfile_mask, mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+       call t_stopf ('lc_lnd_set_decomp_and_domain_from_readmesh')
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 

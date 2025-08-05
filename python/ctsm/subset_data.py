@@ -65,9 +65,12 @@ from argparse import ArgumentParser
 from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
-from ctsm.args_utils import plon_type, plat_type
+from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
+from ctsm.config_utils import check_lon1_lt_lon2
+from ctsm.longitude import Longitude, detect_lon_type
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -79,6 +82,23 @@ from ctsm.ctsm_logging import (
 DEFAULTS_CONFIG = "tools/site_and_regional/default_data_2000.cfg"
 
 logger = logging.getLogger(__name__)
+
+
+def _add_lon_type_arg(this_parser):
+    lon_type_help_str = (
+        "Whether longitudes are in the [-180, 180] format (centered around the Prime/0th"
+        " Meridian) or the [0, 360] format (centered around the 180th Meridian)."
+        " Choose by specifying the upper limit."
+    )
+    this_parser.add_argument(
+        "--lon-type",
+        help=lon_type_help_str,
+        required=False,
+        default=None,
+        type=int,
+        choices=[180, 360],
+    )
+    return this_parser
 
 
 def get_parser():
@@ -117,8 +137,9 @@ def get_parser():
         dest="plon",
         required=False,
         type=plon_type,
-        default=287.8,
+        default=287.8,  # Must be unambiguous: Either < 0 or > 180
     )
+    pt_parser = _add_lon_type_arg(pt_parser)
     pt_parser.add_argument(
         "--site",
         help="Site name or tag. [default: %(default)s]",
@@ -215,30 +236,23 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--lon1",
-        help=(
-            "Region westernmost longitude. Must be in [0, 360) format: i.e., starting at the"
-            " International Date Line rather than centered on the Prime Meridian. [default:"
-            " %(default)s]"
-        ),
+        help=("Region westernmost longitude. [default: %(default)s]"),
         action="store",
         dest="lon1",
         required=False,
         type=plon_type,
-        default=275.0,
+        default=275.0,  # Must be unambiguous: Either < 0 or > 180
     )
     rg_parser.add_argument(
         "--lon2",
-        help=(
-            "Region easternmost longitude. Must be in [0, 360) format: i.e., starting at the"
-            " International Date Line rather than centered on the Prime Meridian. [default:"
-            " %(default)s]"
-        ),
+        help=("Region easternmost longitude. [default: %(default)s]"),
         action="store",
         dest="lon2",
         required=False,
         type=plon_type,
-        default=330.0,
+        default=330.0,  # Must be unambiguous: Either < 0 or > 180
     )
+    rg_parser = _add_lon_type_arg(rg_parser)
     rg_parser.add_argument(
         "--reg",
         help="Region name or tag. [default: %(default)s]",
@@ -400,6 +414,41 @@ def get_parser():
     return parser
 
 
+def check_surf_year(args):
+    """
+    Check command-line arguments w/r/t --surf-year
+    """
+    if args.surf_year != 2000 and not args.create_surfdata:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is set to something besides the default of 2000
+                \n without the --create-surface option"
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year != 1850 and args.create_landuse:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option is NOT set to 1850 and the --create-landuse option
+                \n is selected which requires it to be 1850 (see
+                https://github.com/ESCOMP/CTSM/issues/2018)
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+    if args.surf_year not in [1850, 2000]:
+        err_msg = textwrap.dedent(
+            """\
+                \n ------------------------------------
+                \n --surf-year option can only be set to 1850 or 2000
+                """
+        )
+        raise argparse.ArgumentError(None, err_msg)
+
+
 def check_args(args):
     """Check the command line arguments"""
     # --------------------------------- #
@@ -412,6 +461,8 @@ def check_args(args):
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
+
+    args = process_args(args)
 
     if not any([args.create_surfdata, args.create_landuse, args.create_datm, args.create_domain]):
         err_msg = textwrap.dedent(
@@ -449,35 +500,9 @@ def check_args(args):
                 """
         )
         raise argparse.ArgumentError(None, err_msg)
-    if args.surf_year != 2000 and not args.create_surfdata:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option is set to something besides the default of 2000
-                \n without the --create-surface option"
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
 
-    if args.surf_year != 1850 and args.create_landuse:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option is NOT set to 1850 and the --create-landuse option
-                \n is selected which requires it to be 1850 (see
-                https://github.com/ESCOMP/CTSM/issues/2018)
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
-
-    if args.surf_year not in [1850, 2000]:
-        err_msg = textwrap.dedent(
-            """\
-                \n ------------------------------------
-                \n --surf-year option can only be set to 1850 or 2000
-                """
-        )
-        raise argparse.ArgumentError(None, err_msg)
+    # Checks related to --surf-year
+    check_surf_year(args)
 
     if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
         err_msg = textwrap.dedent(
@@ -525,6 +550,20 @@ def check_args(args):
         )
         raise NotImplementedError(None, err_msg)
 
+    if hasattr(args, "lon1"):
+        if (args.lon1 is None) != (args.lon2 is None):
+            err_msg = textwrap.dedent(
+                """\
+                        \n ------------------------------------
+                        \nERROR: If providing --lon1, you must also provide --lon2
+                        """
+            )
+            raise argparse.ArgumentError(None, err_msg)
+        if args.lon1 is not None:
+            check_lon1_lt_lon2(args.lon1, args.lon2, args.lon_type)
+
+    return args
+
 
 def setup_user_mods(user_mods_dir, cesmroot):
     """
@@ -559,14 +598,14 @@ def determine_num_pft(crop):
         num_pft (int) : number of pfts for surface dataset
     """
     if crop:
-        num_pft = "78"
+        num_pft = str(MAX_PFT_MANAGEDCROPS)
     else:
-        num_pft = "16"
+        num_pft = str(MAX_PFT_GENERICCROPS)
     logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
 
-def setup_files(args, defaults, cesmroot):
+def setup_files(args, defaults, cesmroot, testing=False):
     """
     Sets up the files and folders needed for this program
     """
@@ -584,64 +623,72 @@ def setup_files(args, defaults, cesmroot):
     else:
         clmforcingindir = args.inputdatadir
 
-    if not os.path.isdir(clmforcingindir):
+    if not testing and not os.path.isdir(clmforcingindir):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
-        abort("inputdata directory does not exist")
+        abort(f"inputdata directory does not exist: {clmforcingindir}")
+
+    file_dict = {"main_dir": clmforcingindir}
 
     # DATM data
-    # TODO Issue #2960: Make datm_type a user option at the command
-    # line. For reference, this option affects three .cfg files:
-    #      tools/site_and_regional/default_data_1850.cfg
-    #      tools/site_and_regional/default_data_2000.cfg
-    #      python/ctsm/test/testinputs/default_data.cfg
-    datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
-    dir_output_datm = "datmdata"
-    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
+    # To find the affected files, from the top level of ctsm, do:
+    #     grep "\[datm\]" $(find . -type f -name "*cfg")
     if args.create_datm:
+        datm_cfg_section = "datm"
+
+        # Issue #3269: Changes in PR #3259 mean that --create-datm won't work with GSWP3
+        settings_to_check_for_gswp3 = ["solartag", "prectag", "tpqwtag"]
+        for setting in settings_to_check_for_gswp3:
+            value = defaults.get(datm_cfg_section, setting)
+            if "gswp3" in value.lower():
+                msg = (
+                    "--create-datm is no longer supported for GSWP3 data; "
+                    "see https://github.com/ESCOMP/CTSM/issues/3269"
+                )
+                raise NotImplementedError(msg)
+
+        dir_output_datm = "datmdata"
+        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_cfg_section, "dir"))
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
         logger.info("dir_input_datm : %s", dir_input_datm)
         logger.info("dir_output_datm: %s", os.path.join(args.out_dir, dir_output_datm))
+        file_dict["datm_tuple"] = DatmFiles(
+            dir_input_datm,
+            dir_output_datm,
+            defaults.get(datm_cfg_section, "domain"),
+            defaults.get(datm_cfg_section, "solardir"),
+            defaults.get(datm_cfg_section, "precdir"),
+            defaults.get(datm_cfg_section, "tpqwdir"),
+            defaults.get(datm_cfg_section, "solartag"),
+            defaults.get(datm_cfg_section, "prectag"),
+            defaults.get(datm_cfg_section, "tpqwtag"),
+            defaults.get(datm_cfg_section, "solarname"),
+            defaults.get(datm_cfg_section, "precname"),
+            defaults.get(datm_cfg_section, "tpqwname"),
+        )
 
     # if the crop flag is on - we need to use a different land use and surface data file
     num_pft = determine_num_pft(args.crop_flag)
 
-    fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
-    fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
-    if args.out_surface:
-        fsurf_out = args.out_surface
-    else:
-        fsurf_out = None
-
-    file_dict = {
-        "main_dir": clmforcingindir,
-        "fdomain_in": defaults.get("domain", "file"),
-        "fsurf_dir": os.path.join(
+    if args.create_domain:
+        file_dict["fdomain_in"] = defaults.get("domain", "file")
+    if args.create_surfdata:
+        file_dict["fsurf_dir"] = os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
-        ),
-        "fluse_dir": os.path.join(
+        )
+        file_dict["fsurf_in"] = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
+        if args.out_surface:
+            fsurf_out = args.out_surface
+        else:
+            fsurf_out = None
+        file_dict["fsurf_out"] = fsurf_out
+    if args.create_landuse:
+        file_dict["fluse_in"] = defaults.get("landuse", "landuse_" + num_pft + "pft")
+        file_dict["fluse_dir"] = os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
-        ),
-        "fsurf_in": fsurf_in,
-        "fsurf_out": fsurf_out,
-        "fluse_in": fluse_in,
-        "datm_tuple": DatmFiles(
-            dir_input_datm,
-            dir_output_datm,
-            defaults.get(datm_type, "domain"),
-            defaults.get(datm_type, "solardir"),
-            defaults.get(datm_type, "precdir"),
-            defaults.get(datm_type, "tpqwdir"),
-            defaults.get(datm_type, "solartag"),
-            defaults.get(datm_type, "prectag"),
-            defaults.get(datm_type, "tpqwtag"),
-            defaults.get(datm_type, "solarname"),
-            defaults.get(datm_type, "precname"),
-            defaults.get(datm_type, "tpqwname"),
-        ),
-    }
+        )
 
     return file_dict
 
@@ -715,15 +762,10 @@ def subset_point(args, file_dict: dict):
     logger.info("Successfully ran script for single point.")
 
 
-def subset_region(args, file_dict: dict):
+def _set_up_regional_case(args):
     """
-    Subsets surface, domain, land use, and/or DATM files for a region
+    Set up regional case
     """
-
-    logger.info("----------------------------------------------------------------------------")
-    logger.info("This script extracts a region from the global CTSM datasets.")
-
-    # --  Create Region Object
     region = RegionalCase(
         lat1=args.lat1,
         lat2=args.lat2,
@@ -739,8 +781,20 @@ def subset_region(args, file_dict: dict):
         out_dir=args.out_dir,
         overwrite=args.overwrite,
     )
-
     logger.debug(region)
+    return region
+
+
+def subset_region(args, file_dict: dict):
+    """
+    Subsets surface, domain, land use, and/or DATM files for a region
+    """
+
+    logger.info("----------------------------------------------------------------------------")
+    logger.info("This script extracts a region from the global CTSM datasets.")
+
+    # --  Create Region Object
+    region = _set_up_regional_case(args)
 
     # --  Create CTSM domain file
     if region.create_domain:
@@ -768,12 +822,42 @@ def subset_region(args, file_dict: dict):
         print("\nFor running this regional case with the created user_mods : ")
         print(
             "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm60BgcCrop",
-            "--run-unsupported --user-mods-dirs ",
+            "--run-unsupported --user-mods-dir ",
             args.user_mods_dir,
             "\n\n",
         )
 
     logger.info("Successfully ran script for a regional case.")
+
+
+def process_args(args):
+    """
+    Process arguments after parsing
+    """
+    # process logging args (i.e. debug and verbose)
+    process_logging_args(args)
+
+    # process longitude args
+    lon_args = [var for var in ["plon", "lon1", "lon2"] if hasattr(args, var)]
+    lon_arg_values = [getattr(args, var) is not None for var in lon_args]
+    if any(lon_arg_values):
+        if args.lon_type is None:
+            if hasattr(args, "plon"):
+                args.lon_type = detect_lon_type(args.plon)
+            else:
+                lon1_type = detect_lon_type(args.lon1)
+                lon2_type = detect_lon_type(args.lon2)
+                if lon1_type != lon2_type:
+                    raise argparse.ArgumentTypeError(
+                        "--lon1 and --lon2 seem to be of different types"
+                    )
+                args.lon_type = lon1_type
+        for var in lon_args:
+            val = getattr(args, var)
+            if val is None:
+                continue
+            setattr(args, var, Longitude(val, args.lon_type))
+    return args
 
 
 def main():
@@ -788,10 +872,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    check_args(args)
     # --------------------------------- #
-    # process logging args (i.e. debug and verbose)
-    process_logging_args(args)
+    args = check_args(args)
 
     # --------------------------------- #
     # parse defaults file
