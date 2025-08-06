@@ -1,0 +1,10 @@
+name: CIRRUS runner test workflow
+
+on: [push, pull_request] # Trigger on push or pull request
+
+jobs:
+  hello-world:
+    runs-on: gh-arc-ctsm-scale-set
+    steps:
+      - name: Print a little message
+        run: echo "Hello, world!"
