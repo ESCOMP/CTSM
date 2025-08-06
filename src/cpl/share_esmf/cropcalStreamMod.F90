@@ -615,7 +615,10 @@ contains
            if ((.not. allow_invalid_swindow_inputs) .and. any(all(swindow_starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell(begp:endp) > 0._r8 .and. is_prognostic_crop(patch%itype(begp:endp)))) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
                write(iulog, *) 'Affected crops:'
-               do ivt = npcropmin, mxpft
+               do ivt = 1, mxpft
+                   if (.not. is_prognostic_crop(ivt)) then
+                       cycle
+                   end if
                    do fp = 1, num_pcropp
                        p = filter_pcropp(fp)
                        if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. all(swindow_starts(p,:) < 1)) then
@@ -808,7 +811,10 @@ contains
          if ((.not. allow_invalid_gdd20_season_inputs) .and. any(gdd20_season_starts(begp:endp) < 1._r8 .and. patch%wtgcell(begp:endp) > 0._r8 .and. is_prognostic_crop(patch%itype(begp:endp)))) then
              write(iulog, *) 'At least one crop in one gridcell has invalid gdd20 season start and/or end date(s). To ignore and fall back to paramfile sowing windows for such crop-gridcells, set allow_invalid_gdd20_season_inputs to .true.'
              write(iulog, *) 'Affected crops:'
-             do ivt = npcropmin, mxpft
+             do ivt = 1, mxpft
+                 if (.not. is_prognostic_crop(ivt)) then
+                     cycle
+                 end if
                  do fp = 1, num_pcropp
                      p = filter_pcropp(fp)
                      if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. gdd20_season_starts(p) < 1._r8) then

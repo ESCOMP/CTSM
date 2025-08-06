@@ -2691,8 +2691,9 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use pftconMod       , only: npcropmin, npcropmax
     use clm_time_manager, only: get_calday
+    use pftconMod, only: is_prognostic_crop
+    use clm_varpar, only: mxpft
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -2713,8 +2714,8 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmax
-       if (pftcon%is_pft_known_to_model(n)) then
+    do n = 1, mxpft
+       if (is_prognostic_crop(n) .and. pftcon%is_pft_known_to_model(n)) then
           minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
           maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
 
