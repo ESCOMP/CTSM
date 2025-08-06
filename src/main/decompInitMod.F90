@@ -794,7 +794,6 @@ contains
     integer              :: gsize
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
-
     ! Get processor bounds
 
     call get_proc_bounds(bounds)
