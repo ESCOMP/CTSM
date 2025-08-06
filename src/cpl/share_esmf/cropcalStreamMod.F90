@@ -22,7 +22,7 @@ module cropcalStreamMod
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
-  use pftconMod        , only : npcropmin, is_prognostic_crop
+  use pftconMod        , only : npcropmin, is_prognostic_crop, get_crop_n_from_veg_type
   use CNPhenologyMod  , only : generate_crop_gdds
   !
   ! !PUBLIC TYPES:
@@ -589,7 +589,7 @@ contains
           ivt = patch%itype(p)
           ! Will skip generic crops
           if (is_prognostic_crop(ivt)) then
-             n = ivt - npcropmin + 1
+             n = get_crop_n_from_veg_type(ivt)
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
              swindow_starts(p,1) = dataptr2d_swindow_start(ig,n)
@@ -671,7 +671,7 @@ contains
           ivt = patch%itype(p)
           ! Will skip generic crops
           if (is_prognostic_crop(ivt)) then
-             n = ivt - npcropmin + 1
+             n = get_crop_n_from_veg_type(ivt)
 
              if (n > ncft) then
                  write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
@@ -722,7 +722,7 @@ contains
          ivt = patch%itype(p)
          ! Will skip generic crops
          if (is_prognostic_crop(ivt)) then
-            n = ivt - npcropmin + 1
+            n = get_crop_n_from_veg_type(ivt)
 
             if (n > ncft) then
                 write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
@@ -792,7 +792,7 @@ contains
         ivt = patch%itype(p)
         ! Will skip generic crops
         if (is_prognostic_crop(ivt)) then
-           n = ivt - npcropmin + 1
+           n = get_crop_n_from_veg_type(ivt)
            ! vegetated pft
            ig = g_to_ig(patch%gridcell(p))
 
