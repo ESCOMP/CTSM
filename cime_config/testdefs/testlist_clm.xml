@@ -592,13 +592,22 @@
       <option name="wallclock">00:50:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/Nvmovement">
+  <test name="ERP_D" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart--clm/Nvmovement">
     <machines>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment">Confirms that use_nvmovement = .true. works with bit-for-bit restarts in IHist</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/Nvmovement--clm/matricnOn">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Confirms that use_nvmovement = .true. works with bit-for-bit restarts</option>
+      <option name="comment">Confirms that use_nvmovement = .true. works with bit-for-bit restarts when matrixcnOn</option>
     </options>
   </test>
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm60Sp" testmods="clm/ExcessIceStreams">
