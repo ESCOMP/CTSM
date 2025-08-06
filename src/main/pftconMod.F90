@@ -2,8 +2,9 @@ module pftconMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module containing vegetation constants and method to
-  ! read and initialize vegetation (PFT) constants.
+  ! Module containing vegetation constants, methods to
+  ! read and initialize vegetation (PFT) constants, and methods to query
+  ! PFT characteristics
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -315,6 +316,8 @@ module pftconMod
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
+
+  public :: is_prognostic_crop
   !-----------------------------------------------------------------------
 
 contains
@@ -1351,19 +1354,19 @@ contains
           else
              call endrun(msg=' ERROR: crop has wrong values'//errMsg(sourcefile, __LINE__))
           end if
-          if ( (i /= noveg) .and. (i < npcropmin) .and. &
+          if ( (i /= noveg) .and. (.not. is_prognostic_crop(i)) .and. &
                abs(this%pconv(i) + this%pprod10(i) + this%pprod100(i) - 1.0_r8) > 1.e-7_r8 )then
              call endrun(msg=' ERROR: pconv+pprod10+pprod100 do NOT sum to one.'//errMsg(sourcefile, __LINE__))
           end if
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
           end if
-          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+          if ((.not. is_prognostic_crop(i)) .and. this%biofuel_harvfrac(i) /= 0._r8) then
              call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
                   errMsg(sourcefile, __LINE__))
           end if
           do k = repr_structure_min, repr_structure_max
-             if (i < npcropmin .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
+             if ((.not. is_prognostic_crop(i)) .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
                 call endrun(msg=' ERROR: repr_structure_harvfrac non-zero for a non-prognostic crop PFT.'//&
                      errMsg(sourcefile, __LINE__))
              end if
@@ -1606,6 +1609,25 @@ contains
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
   end subroutine Clean
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_prognostic_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a prognostic crop. Does not
+    ! include generic crops (those and natural PFTs will return .false.).
+    !
+    ! NOTE(wjs, 2017-02-02) This isn't a completely robust way to check if this is a
+    ! prognostic crop patch (at the very least it should also check if <= npcropmax;
+    ! ideally it should use a prognostic_crop flag that doesn't seem to exist
+    ! currently).
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_prognostic_crop = veg_type >= npcropmin
+
+  end function is_prognostic_crop
 
 end module pftconMod
 
