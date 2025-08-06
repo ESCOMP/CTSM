@@ -3,8 +3,15 @@ name: CIRRUS runner test workflow
 on: [push, pull_request] # Trigger on push or pull request
 
 jobs:
+
   hello-world:
     runs-on: gha-runner-ctsm
     steps:
       - name: Print a little message
         run: echo "Hello, world!"
+
+  list-glade-cesm-input:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: List Glade inputdata
+        run: ls /glade/campaign/cesm/cesmdata/cseg/inputdata
