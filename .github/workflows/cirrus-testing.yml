@@ -4,7 +4,7 @@ on: [push, pull_request] # Trigger on push or pull request
 
 jobs:
   hello-world:
-    runs-on: gh-arc-ctsm-scale-set
+    runs-on: gha-runner-ctsm
     steps:
       - name: Print a little message
         run: echo "Hello, world!"
