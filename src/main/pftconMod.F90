@@ -319,6 +319,7 @@ module pftconMod
 
   public :: is_prognostic_crop
   public :: get_crop_n_from_veg_type
+  public :: get_veg_type_from_crop_n
   !-----------------------------------------------------------------------
 
 contains
@@ -1643,6 +1644,20 @@ contains
     crop_n = veg_type - npcropmin + 1
 
   end function get_crop_n_from_veg_type
+
+  !-----------------------------------------------------------------------
+  elemental integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a return a 1-indexed number indicating where a PFT would be in a list of all simulated
+    ! crops, return vegetation type (ivt)
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: crop_n
+
+    veg_type = npcropmin + crop_n - 1
+
+  end function get_veg_type_from_crop_n
 
 end module pftconMod
 

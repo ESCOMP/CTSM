@@ -22,7 +22,7 @@ module cropcalStreamMod
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
-  use pftconMod        , only : npcropmin, is_prognostic_crop, get_crop_n_from_veg_type
+  use pftconMod        , only : npcropmin, is_prognostic_crop, get_crop_n_from_veg_type, get_veg_type_from_crop_n
   use CNPhenologyMod  , only : generate_crop_gdds
   !
   ! !PUBLIC TYPES:
@@ -144,7 +144,7 @@ contains
     allocate(stream_varnames_gdd20_baseline(ncft))
     allocate(stream_varnames_gdd20_season_enddate(ncft))
     do n = 1,ncft
-       ivt = npcropmin + n - 1
+       ivt = get_veg_type_from_crop_n(n)
        write(stream_varnames_sdate(n),'(a,i0)') "sdate1_",ivt
        write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1_",ivt
        write(stream_varnames_gdd20_baseline(n),'(a,i0)') "gdd20bl_",ivt
