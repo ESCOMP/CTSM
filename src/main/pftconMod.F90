@@ -34,7 +34,6 @@ module pftconMod
   integer, public :: nc3_arctic_grass       ! value for C3 arctic grass
   integer, public :: nc3_nonarctic_grass    ! value for C3 non-arctic grass
   integer, public :: nc4_grass              ! value for C4 grass
-  integer, public :: npcropmin              ! value for first crop
   integer, public :: ntmp_corn              ! value for temperate corn, rain fed (rf)
   integer, public :: nirrig_tmp_corn        ! value for temperate corn, irrigated (ir)
   integer, public :: nswheat                ! value for spring temperate cereal (rf)
@@ -97,9 +96,12 @@ module pftconMod
   integer, public :: nirrig_trp_corn        !value for tropical corn (ir)
   integer, public :: ntrp_soybean           !value for tropical soybean (rf)
   integer, public :: nirrig_trp_soybean     !value for tropical soybean (ir)
-  integer, public :: npcropmax              ! value for last prognostic crop in list
   integer, public :: nc3crop                ! value for generic crop (rf)
   integer, public :: nc3irrig               ! value for irrigated generic crop (ir)
+
+  ! First and last prognostic crops
+  integer :: npcropmin              ! value for first crop
+  integer :: npcropmax              ! value for last prognostic crop in list
 
   ! Number of crop functional types actually used in the model. This includes each CFT for
   ! which is_pft_known_to_model is true. Note that this includes irrigated crops even if
