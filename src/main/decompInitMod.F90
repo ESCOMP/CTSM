@@ -12,6 +12,7 @@ module decompInitMod
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog
+  use perf_mod     , only : t_startf, t_stopf
   !
   implicit none
   private
@@ -73,6 +74,7 @@ contains
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     !------------------------------------------------------------------------------
+    call t_startf('decompInit_lnd')
     ! Set some global scalars: nclumps, numg and lns
     call decompInit_lnd_set_nclumps_numg_lns( )
 
@@ -256,6 +258,7 @@ contains
        write(iulog,*)
     end if
     call shr_sys_flush(iulog)
+    call t_stopf('decompInit_lnd')
 
   !------------------------------------------------------------------------------
   ! Internal subroutines for this subroutine
@@ -468,6 +471,7 @@ contains
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
+    call t_startf('decompInit_clumps')
     !--- assign gridcells to clumps (and thus pes) ---
     call get_proc_bounds(bounds)
     begg = bounds%begg; endg = bounds%endg
@@ -685,6 +689,7 @@ contains
        call shr_sys_flush(iulog)
        call mpi_barrier(mpicom,ier)
     end do
+    call t_stopf('decompInit_clumps')
 
   end subroutine decompInit_clumps
 
@@ -744,6 +749,8 @@ contains
     integer              :: gsize
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
+    call t_startf('decompInit_glcp')
+
     ! Get processor bounds
 
     call get_proc_bounds(bounds)
@@ -968,6 +975,8 @@ contains
     deallocate(start)
     deallocate(start_global)
     if (allocated(index_lndgridcells)) deallocate(index_lndgridcells)
+
+    call t_stopf('decompInit_glcp')
 
   end subroutine decompInit_glcp
 
