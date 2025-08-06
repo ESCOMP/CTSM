@@ -1006,12 +1006,9 @@ sub setup_cmdl_bgc {
      $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
 
-  # Set use_nvmovement and check that it is not true at the same time as use_soil_matrixcn
+  # Set use_nvmovement
   $var = "use_nvmovement";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-  if ( &value_is_true($nl->get_value($var)) && &value_is_true($nl->get_value('use_soil_matrixcn')) ) {
-     $log->fatal_error("$var can only be on with use_soil_matrixcn = .false.");
-  }
 } # end bgc
 
 
