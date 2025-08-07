@@ -1,6 +1,8 @@
 import argparse
 import xarray as xr
 
+PFTNAME_VAR = "pftname"
+
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -14,7 +16,13 @@ def get_arguments():
 
 def print_values(ds, var):
     data = ds[var].values
-    print(f"{var}: {data}")
+    if PFTNAME_VAR in ds[var].coords:
+        print(var + ":")
+        for p, pft_name in enumerate(ds[PFTNAME_VAR].values):
+            pft_name = pft_name.decode().strip()
+            print(f"   {pft_name}: {data[p]}")
+    else:
+        print(f"{var}: {data}")
 
 
 def main():
