@@ -18,9 +18,10 @@ def print_values(ds, var):
     data = ds[var].values
     if PFTNAME_VAR in ds[var].coords:
         print(var + ":")
-        for p, pft_name in enumerate(ds[PFTNAME_VAR].values):
-            pft_name = pft_name.decode().strip()
-            print(f"   {pft_name}: {data[p]}")
+        pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
+        max_name_len = max(len(name) for name in pft_names)
+        for p, pft_name in enumerate(pft_names):
+            print(f"   {pft_name:<{max_name_len}}: {data[p]}")
     else:
         print(f"{var}: {data}")
 
