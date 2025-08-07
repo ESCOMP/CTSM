@@ -414,12 +414,6 @@ Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the 
 If TRUE use clm5 equation for fraction of intercepted precipitation
 </entry>
 
-<entry id="baseflow_scalar" type="real" category="clm_physics"
-       group="soilhydrology_inparm" valid_values="" >
-Scalar multiplier for base flow rate
-(ONLY used if lower_boundary_condition is not aquifer or table)
-</entry>
-
 <entry id="soilwater_movement_method" type="integer" category="clm_physics"
        group="soilwater_movement_inparm" valid_values="0,1" >
 Index of solution method of Richards equation.
@@ -1692,30 +1686,6 @@ The pre-normalized, downscaled longwave is restricted to be in the range
 [lwrad*(1-longwave_downscaling_limit), lwrad*(1+longwave_downscaling_limit)]
 This parameter must be in the range [0,1]
 Only relevant if glcmec_downscale_longwave is .true.
-</entry>
-
-<entry id="precip_repartition_glc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_glc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
 </entry>
 
 <!-- ========================================================================================  -->

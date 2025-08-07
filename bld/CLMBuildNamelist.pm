@@ -1874,11 +1874,6 @@ sub process_namelist_inline_logic {
   #####################################
   setup_logic_canopy($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  ########################################
-  # namelist group: soilhydrology_inparm #
-  ########################################
-  setup_logic_hydrology_params($opts,  $nl_flags, $definition, $defaults, $nl);
-
   #####################################
   # namelist group: irrigation_inparm #
   #####################################
@@ -3327,28 +3322,6 @@ sub setup_logic_supplemental_nitrogen {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_hydrology_params {
-  #
-  # Logic for hydrology parameters
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  my $lower = $nl->get_value( 'lower_boundary_condition'  );
-  my $var   = "baseflow_scalar";
-  if ( $lower == 1 || $lower == 2 ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 $var, 'lower_boundary_condition' => $lower );
-  }
-  my $val   = $nl->get_value( $var );
-  if ( defined($val) ) {
-     if ( $lower != 1 && $lower != 2 ) {
-        $log->fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
-     }
-  }
-}
-
-#-------------------------------------------------------------------------------
-
 sub setup_logic_irrigation_parameters {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4708,18 +4681,6 @@ sub setup_logic_atm_forcing {
       }
    }
 
-   foreach $var ("precip_repartition_glc_all_snow_t",
-                 "precip_repartition_glc_all_rain_t",
-                 "precip_repartition_nonglc_all_snow_t",
-                 "precip_repartition_nonglc_all_rain_t") {
-      if ( &value_is_true($nl->get_value("repartition_rain_snow")) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-      } else {
-         if (defined($nl->get_value($var))) {
-            $log->fatal_error("$var can only be set if repartition_rain_snow is true");
-         }
-      }
-   }
 }
 
 #-------------------------------------------------------------------------------
@@ -5259,7 +5220,7 @@ sub write_output_files {
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
-               soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
+               luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
