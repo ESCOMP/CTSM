@@ -991,6 +991,12 @@ How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
    lnc_opt = true  get from leaf N from CN model
    lnc_opt = false get based on LAI and fixed CN ratio from parameter file
 </entry>
+<entry id="use_nvmovement" type="logical" category="bgc"
+       group="clm_inparm" value=".false.">
+   use_nvmovement = true use soil nitrogen vertical movement
+   use_nvmovement = false do not use soil nitrogen vertical movement
+   use_nvmovement cannot be true while use_soil_matrixcn is true
+</entry>
 
 <entry id="paramfile" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >

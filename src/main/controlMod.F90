@@ -318,7 +318,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac, flush_gdd20
+         use_nguardrail, crop_residue_removal_frac, flush_gdd20, use_nvmovement
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -729,6 +729,7 @@ contains
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nvmovement, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1026,6 +1027,7 @@ contains
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
+    write(iulog,*) '    use_nvmovement = ', use_nvmovement
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_excess_ice = ', use_excess_ice
