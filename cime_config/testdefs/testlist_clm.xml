@@ -4502,6 +4502,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">If we see failures in the interim_restart suite, this SMS test lets us check whether it's because of something interim restart–related (SMS test passes) or not (SMS test fails).</option>
     </options>
   </test>
 
@@ -4512,6 +4513,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">An ERR test is like an ERS test except that after the initial run the short term archive tool is run, which moves model output out of the run directory into the short-term archive directory. Then the restart run is staged from the short term archive directory. This test exercises CLM with MOSART in this context using our clm-default testmod.</option>
     </options>
   </test>
 
@@ -4522,7 +4524,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">As other ERR...default test but with a compset that uses RTM instead of MOSART</option>
+      <option name="comment">As the other ERR...default test above but with a compset that uses RTM instead of MOSART.</option>
     </options>
   </test>
 
@@ -4533,6 +4535,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">As the other ERR...IHistClm60BgcCrop... test above but using the drv-interim_restart testmod instead of clm-default. Per Issue ESCOMP/CTSM#3383, it's possible for the above test to fail but this one to pass. Once both the ERR...clm-default tests pass, this one can probably be removed.</option>
     </options>
   </test>
 
@@ -4543,6 +4546,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Possibly redundant with the ERR...IHistClm60BgcCrop...clm-default test above. However, at one point during development, this test was failing while the ERR tests were all still passing. One difference is that IRT tests use the oldest restart, whereas ERR tests use the median restart.</option>
     </options>
   </test>
 
