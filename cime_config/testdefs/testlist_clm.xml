@@ -14,6 +14,8 @@
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
         subset_data: Tests exercising the subset_data tool and running CTSM with its output
+        decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
+        interim_restart: Tests having to do with interim restart capability.
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -97,6 +99,15 @@
       <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
+  <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple test to make sure adding obscure stream options works</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -171,6 +182,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution for transient</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld10" grid="f09_f09_mt232" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Testing that a initial condition file with an missing urban landunit will be filled with another urban landunit</option>
     </options>
   </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
@@ -1661,15 +1682,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for I1850Clm50BgcCropCru at f19</option>
-    </options>
-  </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN_BNF">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
@@ -4181,6 +4193,53 @@
     </options>
   </test>
 
+  <!-- decomp_init tests -->
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne30pg3 with "Small" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for ne120pg3 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
+    </options>
+  </test>
+
   <test name="LGRAIN2_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -4269,17 +4328,6 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITYINST_Lm61" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
-      <machine name="derecho" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">6:00:00</option>
-      <option name="comment">As RXCROPMATURITY, but ensure that h1 file is instantaneous. Can be removed once instantaneous and other variables are separated onto separate files.</option>
-    </options>
-  </test>
-
   <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -4289,17 +4337,6 @@
     <options>
       <option name="wallclock">00:45:00</option>
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. Unlike the RXCROPMATURITY test, however, it does not generate its own maturity requirements, instead interpolating a pre-existing maturity requirement file. (This allows the "GDD-generating" run to be mostly skipped.) This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
-    </options>
-  </test>
-
-  <test name="RXCROPMATURITYSKIPGENINST_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
-      <machine name="derecho" compiler="intel" category="crop_calendars"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:45:00</option>
-      <option name="comment">As RXCROPMATURITYSKIPGEN, but ensure that h1 file is instantaneous. Can be removed once instantaneous and other variables are separated onto separate files.</option>
     </options>
   </test>
 
@@ -4417,7 +4454,7 @@
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">02:00:00</option>
     </options>
   </test>
 
@@ -4485,6 +4522,60 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ld5" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">If we see failures in the interim_restart suite, this SMS test lets us check whether it's because of something interim restart–related (SMS test passes) or not (SMS test fails).</option>
+    </options>
+  </test>
+
+  <test name="ERR_Ld7" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">An ERR test is like an ERS test except that after the initial run the short term archive tool is run, which moves model output out of the run directory into the short-term archive directory. Then the restart run is staged from the short term archive directory. This test exercises CLM with MOSART in this context using our clm-default testmod.</option>
+    </options>
+  </test>
+
+  <test name="ERR_Ld7" grid="f10_f10_mg37" compset="I2000Clm50BgcCropRtm" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">As the other ERR...default test above but with a compset that uses RTM instead of MOSART.</option>
+    </options>
+  </test>
+
+  <test name="ERR_Ld7" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="drv/interim_restart">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">As the other ERR...IHistClm60BgcCrop... test above but using the drv-interim_restart testmod instead of clm-default. Per Issue ESCOMP/CTSM#3383, it's possible for the above test to fail but this one to pass. Once both the ERR...clm-default tests pass, this one can probably be removed.</option>
+    </options>
+  </test>
+
+  <test name="IRT_Ld11" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="interim_restart"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Possibly redundant with the ERR...IHistClm60BgcCrop...clm-default test above. However, at one point during development, this test was failing while the ERR tests were all still passing. One difference is that IRT tests use the oldest restart, whereas ERR tests use the median restart.</option>
     </options>
   </test>
 

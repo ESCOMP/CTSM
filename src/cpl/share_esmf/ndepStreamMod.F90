@@ -111,6 +111,7 @@ contains
     call shr_mpi_bcast(model_year_align_ndep  , mpicom)
     call shr_mpi_bcast(ndep_varlist           , mpicom)
     call shr_mpi_bcast(ndep_taxmode           , mpicom)
+    call shr_mpi_bcast(ndepmapalgo            , mpicom)
     call shr_mpi_bcast(ndep_tintalgo          , mpicom)
     call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
     call shr_mpi_bcast(stream_meshfile_ndep   , mpicom)
