@@ -1,13 +1,13 @@
 ===============================================================
 Tag name: ctsm5.3.066
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 07 Aug 2025 01:54:17 PM MDT
+Date: Fri 08 Aug 2025 09:19:34 AM MDT
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
 ----------------------------------
 
- Parent PR #3395:
+ PR #3395 making this tag includes:
  #3352 Add Fang Li's abm and popden .ncl scripts to /tools/contrib
  #3395 Add to README.CHECKLIST.master_tags a new reminder:
  "When izumi’s baseline is ready, open read permissions to all"
@@ -32,7 +32,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- Addresses part of #2701
+ Addresses part of #2701 New population dataset for streams files
 
 Testing summary:
 ----------------
@@ -41,7 +41,7 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- OK (testing was redundant given the type of code changes, but I did it anyway)
+    derecho ----- OK (running aux_clm was redundant given the type of code changes)
     izumi ------- OK
 
 Answer changes
