@@ -1236,7 +1236,7 @@ contains
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
     use clm_varctl     , only : cnallocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
-    use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use pftconMod      , only : nbrdlf_dcd_tmp_shrub
 
     !
     ! !ARGUMENTS:
@@ -2727,7 +2727,7 @@ contains
     use clm_varctl        , only : cnallocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
-    use pftconMod         , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use pftconMod         , only : nbrdlf_dcd_tmp_shrub
     use ColumnType        , only : col
 
     !
