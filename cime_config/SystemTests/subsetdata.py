@@ -46,15 +46,19 @@ class SUBSETDATASHARED(SystemTestsCommon):
             "--overwrite",
         ]
 
+        # Run subset_data, if needed.
+        # It's needed during SETUP and/or NLCOMP phases if comparing/generating a baseline because
+        # the namelist comparison will require generating a namelist, and that will fail if we
+        # haven't specified our custom fsurdat and other stuff. By calling self._run_subset_data()
+        # only if the usermods directory doesn't yet exist, we avoid it being called every time the
+        # test class is initialized (which happens, e.g., in RUN phase).
+        # if not os.path.exists(self.usermods_dir):
+        #     self._run_subset_data()
+
     def build_phase(self, sharedlib_only=False, model_only=False):
         """
         Run subset_data and then build the model
         """
-
-        # Import subset_data. Do it here rather than at top because otherwise the import will
-        # be attempted even during RUN phase.
-        # pylint: disable=wrong-import-position,import-outside-toplevel
-        from ctsm.subset_data import main as subset_data
 
         # Run subset_data.
         # build_phase gets called twice:
@@ -64,19 +68,33 @@ class SUBSETDATASHARED(SystemTestsCommon):
         # We could also check for the existence of the subset_data outputs, but that might lead to
         # a situation where the user expects subset_data to be called but it's not. Better to run
         # unnecessarily (e.g., if you fixed some FORTRAN code and just need to rebuild).
+        # In that same vein, yes we did run subset_data during the first time this test case was
+        # initialized (see __init__() above), but we're doing it again here just to be safe.
         if sharedlib_only:
-            sys.argv = self.subset_data_cmd
-            subset_data()
-
-            # Required so that CTSM doesn't fail
-            user_nl_clm_path = os.path.join(self.usermods_dir, "user_nl_clm")
-            with open(user_nl_clm_path, "a", encoding="utf-8") as user_nl_clm:
-                user_nl_clm.write("\ncheck_dynpft_consistency = .false.\n")
-
-            # Apply the user mods
-            self._case.flush(flushall=True)
-            apply_user_mods(self._get_caseroot(), self.usermods_dir)
-            self._case.read_xml()
+            self._run_subset_data()
 
         # Do the build
         self.build_indv(sharedlib_only=sharedlib_only, model_only=model_only)
+
+    def _run_subset_data(self):
+        """
+        Run subset_data
+        """
+        # Import subset_data. Do it here rather than at top because otherwise the import will
+        # be attempted even during RUN phase.
+        # pylint: disable=wrong-import-position,import-outside-toplevel
+        from ctsm.subset_data import main as subset_data
+
+        # Run subset_data
+        sys.argv = self.subset_data_cmd
+        subset_data()
+
+        # Required so that CTSM doesn't fail
+        user_nl_clm_path = os.path.join(self.usermods_dir, "user_nl_clm")
+        with open(user_nl_clm_path, "a", encoding="utf-8") as user_nl_clm:
+            user_nl_clm.write("\ncheck_dynpft_consistency = .false.\n")
+
+        # Apply the user mods
+        self._case.flush(flushall=True)
+        apply_user_mods(self._get_caseroot(), self.usermods_dir)
+        self._case.read_xml()
