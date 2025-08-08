@@ -781,7 +781,7 @@
       <option name="comment">Repeat last ERP_D...decStart test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERI_D_Ld20" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/midDecStart--clm-allowTransientYearJump">
+  <test name="ERI_D_Ld20" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm-default--clm/midDecStart--clm-allowTransientYearJump">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
