@@ -16,6 +16,7 @@ from ctsm.utils import is_instantaneous
 
 MISSING_RX_GDD_VAL = -1
 
+
 def check_and_trim_years(year_1, year_n, ds_in):
     """
     After importing a file, restrict it to years of interest.
