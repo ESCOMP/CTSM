@@ -14,7 +14,7 @@ module InfiltrationExcessRunoffMod
   use clm_varcon       , only : spval
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
-  use DistParamType    , only : distparams
+  use DistParamType    , only : distparams => distributed_parameters
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
   use WaterFluxBulkType       , only : waterfluxbulk_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
@@ -268,6 +268,8 @@ contains
        soilhydrology_inst, soilstate_inst, &
        qinmax_on_unsaturated_area)
     !
+    ! USES
+    use ColumnType     , only : col
     ! !DESCRIPTION:
     ! Compute qinmax using a parameterization based on hksat
     !
@@ -297,7 +299,7 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       qinmax_on_unsaturated_area(c) = minval(10._r8**(-distparams%e_ice(c)*(icefrac(c,1:3)))*hksat(c,1:3))
+       qinmax_on_unsaturated_area(c) = minval(10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(icefrac(c,1:3)))*hksat(c,1:3))
     end do
 
     end associate

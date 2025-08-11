@@ -9,7 +9,7 @@ module SoilWaterMovementMod
   ! created by Jinyun Tang, Mar 12, 2014
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod       , only : shr_sys_flush
-  use DistParamType     , only : distparams
+  use DistParamType     , only : distparams => distributed_parameters
  
   !
   implicit none
@@ -724,7 +724,7 @@ contains
             s1 = min(1._r8, s1)
             s2 = hksat(c,j)*s1**(2._r8*bsw(c,j)+2._r8)
 
-            imped(c,j)=10._r8**(-distparams%e_ice(c)*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
+            imped(c,j)=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
 
             hk(c,j) = imped(c,j)*s1*s2
             dhkdw(c,j) = imped(c,j)*(2._r8*bsw(c,j)+3._r8)*s2* &
@@ -2125,6 +2125,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine IceImpedance(c, icefrac, imped)
     !
+    ! USES
+    use ColumnType     , only : col
     !DESCRIPTION
     ! compute soil suction potential
     !
@@ -2143,7 +2145,7 @@ contains
     character(len=32) :: subname = 'IceImpedance'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    imped = 10._r8**(-distparams%e_ice(c)*icefrac)
+    imped = 10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*icefrac)
 
   end subroutine IceImpedance
 

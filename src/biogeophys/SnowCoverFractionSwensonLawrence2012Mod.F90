@@ -20,7 +20,7 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use fileutils      , only : getavu, relavu, opnfil
   use clm_varcon     , only : rpi
   use ColumnType     , only : column_type
-  use DistParamType  , only : distparams
+  use DistParamType  , only : distparams => distributed_parameters
   use glcBehaviorMod , only : glc_behavior_type
   use landunit_varcon, only : istice
   use paramUtilMod   , only : readNcdioScalar
@@ -66,6 +66,8 @@ contains
        lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno, frac_sno_eff)
     !
+    ! USES
+    use ColumnType     , only : col
     ! !DESCRIPTION:
     ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
     !
@@ -121,7 +123,7 @@ contains
        ! fsca parameterization based on *changes* in swe
        if (h2osno_total(c) == 0._r8) then
           if (newsnow(c) > 0._r8) then
-             frac_sno(c) = tanh(distparams%accum_factor(c) * newsnow(c))
+             frac_sno(c) = tanh(distparams%accum_factor%param_val(col%gridcell(c)) * newsnow(c))
           else
              ! NOTE(wjs, 2019-08-07) This resetting of frac_sno to 0 when h2osno_total is 0
              ! may already be done elsewhere; if it isn't, it possibly *should* be done
@@ -146,7 +148,7 @@ contains
              !
              ! This form is algebraically equivalent, but simpler and less prone to
              ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
-             frac_sno(c) = frac_sno(c) + tanh(distparams%accum_factor(c) * newsnow(c)) * (1._r8 - frac_sno(c))
+             frac_sno(c) = frac_sno(c) + tanh(distparams%accum_factor%param_val(col%gridcell(c)) * newsnow(c)) * (1._r8 - frac_sno(c))
 
           end if
        end if
@@ -430,7 +432,7 @@ contains
           ! value of n_melt.
           this%n_melt(c) = n_melt_glcmec
        else
-          this%n_melt(c) = distparams%n_melt_coef(c) / max(10._r8, col%topo_std(c))
+          this%n_melt(c) = distparams%n_melt_coef%param_val(col%gridcell(c)) / max(10._r8, col%topo_std(c))
        end if
     end do
 

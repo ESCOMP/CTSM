@@ -13,7 +13,7 @@ module SoilHydrologyInitTimeConstMod
   use WaterStateBulkType, only : waterstatebulk_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col                
-  use DistParamType     , only : distparams
+  use DistParamType     , only : distparams => distributed_parameters
   use SoilStateInitTimeConstMod, only: organic_max
   !
   implicit none
@@ -221,7 +221,7 @@ contains
          if (micro_sigma(c) > 1.e-6_r8 .and. (soilhydrology_inst%h2osfcflag /= 0)) then
             d = 0.0_r8
             do p = 1,4
-               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - distparams%pc(c)
+               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - distparams%pc%param_val(col%gridcell(c))
                dfdd = exp(-d**2/(2.0_r8*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0_r8*shr_const_pi))
                d    = d - fd/dfdd
             enddo

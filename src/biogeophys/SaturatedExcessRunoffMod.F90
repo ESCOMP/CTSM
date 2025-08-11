@@ -17,7 +17,7 @@ module SaturatedExcessRunoffMod
   use LandunitType , only : landunit_type
   use landunit_varcon  , only : istcrop
   use ColumnType       , only : column_type
-  use DistParamType    , only : distparams
+  use DistParamType    , only : distparams => distributed_parameters
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use WaterFluxBulkType, only : waterfluxbulk_type
@@ -290,6 +290,8 @@ contains
   subroutine ComputeFsatTopmodel(bounds, num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, soilstate_inst, fsat)
     !
+    ! USES
+    use ColumnType     , only : col
     ! !DESCRIPTION:
     ! Compute fsat using the TOPModel-based parameterization
     !
@@ -324,9 +326,9 @@ contains
        c = filter_hydrologyc(fc)
        if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
           ! use perched water table to determine fsat (if present)
-          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff(c)*zwt_perched(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff%param_val(col%gridcell(c))*zwt_perched(c))
        else
-          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff(c)*zwt(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff%param_val(col%gridcell(c))*zwt(c))
        end if
     end do
 

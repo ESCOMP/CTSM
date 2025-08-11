@@ -238,8 +238,10 @@ contains
             call AssignDistributedParameter(distparams%frac_sat_soil_dsl_init,bounds,dataptr1d,stream_varnames(n))
             call AssignDistributedParameter(distparams%zlnd,bounds,dataptr1d,stream_varnames(n))
             call AssignDistributedParameter(distparams%snw_rds_min,bounds,dataptr1d,stream_varnames(n))
-            call AssignDistributedParameter(distparams%precip_repartition_nonglc_all_rain_t,bounds,dataptr1d,stream_varnames(n))
-            call AssignDistributedParameter(distparams%precip_repartition_nonglc_all_snow_t,bounds,dataptr1d,stream_varnames(n))
+            call AssignDistributedParameter(distparams%precip_repartition_nonglc_all_rain_t_celsius,bounds,dataptr1d,stream_varnames(n))
+            call AssignDistributedParameter(distparams%precip_repartition_nonglc_all_snow_t_celsius,bounds,dataptr1d,stream_varnames(n))
+            call AssignDistributedParameter(distparams%precip_repartition_glc_all_rain_t_celsius,bounds,dataptr1d,stream_varnames(n))
+            call AssignDistributedParameter(distparams%precip_repartition_glc_all_snow_t_celsius,bounds,dataptr1d,stream_varnames(n))
 
          end do
          deallocate(stream_varnames)

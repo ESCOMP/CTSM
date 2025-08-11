@@ -27,7 +27,7 @@ module initVerticalMod
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
-  use DistParamType     , only : distparams
+  use DistParamType     , only : distparams => distributed_parameters
   use glcBehaviorMod    , only : glc_behavior_type
   use abortUtils        , only : endrun    
   use ncdio_pio
@@ -651,12 +651,12 @@ contains
 
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
-       slope0 = distparams%slopemax(c)**(1._r8/distparams%slopebeta(c))
+       slope0 = distparams%slopemax%param_val(col%gridcell(c))**(1._r8/distparams%slopebeta%param_val(col%gridcell(c)))
 
        if (col%is_hillslope_column(c)) then
-          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(distparams%slopebeta(c))
+          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(distparams%slopebeta%param_val(col%gridcell(c)))
        else
-          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(distparams%slopebeta(c))
+          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(distparams%slopebeta%param_val(col%gridcell(c)))
        endif
 
     end do

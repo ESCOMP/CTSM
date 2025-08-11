@@ -399,6 +399,12 @@ module clm_varctl
   integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
+  ! spatially distributed parameters switch
+  !----------------------------------------------------------
+
+  logical, public :: use_distributed_parameters = .false. ! true => use spatially distributed parameter stream data
+
+  !----------------------------------------------------------
   ! prescribed soil moisture streams switch 
   !----------------------------------------------------------
 

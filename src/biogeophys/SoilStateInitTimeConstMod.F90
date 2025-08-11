@@ -10,7 +10,7 @@ module SoilStateInitTimeConstMod
   use LandunitType  , only : lun                
   use ColumnType    , only : col                
   use PatchType     , only : patch                
-  use DistParamType , only : distparams
+  use DistParamType , only : distparams => distributed_parameters
   use abortUtils    , only : endrun
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   !
@@ -548,13 +548,13 @@ contains
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*params_inst%pd
                 ! do not allow watsat_sf to push watsat above 0.93
-                soilstate_inst%watsat_col(c,lev)    = min(distparams%watsat_sf(c) * ( (1._r8 - om_frac) * &
+                soilstate_inst%watsat_col(c,lev)    = min(distparams%watsat_sf%param_val(col%gridcell(c)) * ( (1._r8 - om_frac) * &
                                                       soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac ), 0.93_r8)
                 tkm                                 = (1._r8-om_frac) * (params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/ &
                                                       (sand+clay)+params_inst%tkm_om*om_frac ! W/(m K)
-                soilstate_inst%bsw_col(c,lev)       = distparams%bsw_sf(c) * ( (1._r8-om_frac) * &
+                soilstate_inst%bsw_col(c,lev)       = distparams%bsw_sf%param_val(col%gridcell(c)) * ( (1._r8-om_frac) * &
                                                       (2.91_r8 + 0.159_r8*clay) + om_frac*om_b )
-                soilstate_inst%sucsat_col(c,lev)    = distparams%sucsat_sf(c) * ( (1._r8-om_frac) * &
+                soilstate_inst%sucsat_col(c,lev)    = distparams%sucsat_sf%param_val(col%gridcell(c)) * ( (1._r8-om_frac) * &
                                                       soilstate_inst%sucsat_col(c,lev) + om_sucsat*om_frac ) 
                 soilstate_inst%hksat_min_col(c,lev) = xksat
 
@@ -576,7 +576,7 @@ contains
                 else
                    uncon_hksat = 0._r8
                 end if
-                soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf(c) * ( uncon_frac*uncon_hksat + &
+                soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf%param_val(col%gridcell(c)) * ( uncon_frac*uncon_hksat + &
                                                    (perc_frac*om_frac)*om_hksat )
 
                 soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))           
@@ -650,16 +650,16 @@ contains
              bd = (1._r8-soilstate_inst%watsat_col(c,lev))*params_inst%pd
 
              ! do not allow watsat_sf to push watsat above 0.93
-             soilstate_inst%watsat_col(c,lev) = min(distparams%watsat_sf(c) * ( (1._r8 - om_frac) * &
+             soilstate_inst%watsat_col(c,lev) = min(distparams%watsat_sf%param_val(col%gridcell(c)) * ( (1._r8 - om_frac) * &
                     soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac), 0.93_r8)
 
              tkm = (1._r8-om_frac)*(params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/(sand+clay) + &
                    params_inst%tkm_om * om_frac ! W/(m K)
 
-             soilstate_inst%bsw_col(c,lev)    = distparams%bsw_sf(c) * ( (1._r8-om_frac) * &
+             soilstate_inst%bsw_col(c,lev)    = distparams%bsw_sf%param_val(col%gridcell(c)) * ( (1._r8-om_frac) * &
                    (2.91_r8 + 0.159_r8*clay) + om_frac * om_b_lake )
 
-             soilstate_inst%sucsat_col(c,lev) = distparams%sucsat_sf(c) * ( (1._r8-om_frac) * &
+             soilstate_inst%sucsat_col(c,lev) = distparams%sucsat_sf%param_val(col%gridcell(c)) * ( (1._r8-om_frac) * &
                    soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac )
 
              xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
@@ -683,7 +683,7 @@ contains
                 uncon_hksat = 0._r8
              end if
 
-             soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf(c) * ( uncon_frac*uncon_hksat + &
+             soilstate_inst%hksat_col(c,lev)  = distparams%hksat_sf%param_val(col%gridcell(c)) * ( uncon_frac*uncon_hksat + &
                                        (perc_frac*om_frac)*om_hksat_lake )
              soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))
              soilstate_inst%tksatu_col(c,lev) = soilstate_inst%tkmg_col(c,lev)*0.57_r8**soilstate_inst%watsat_col(c,lev)

@@ -1814,6 +1814,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ##################################
+  # namelist group: distparams_streams  #
+  ##################################
+  setup_logic_distparams_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
   ##########################################
   # namelist group: soil_moisture_streams  #
   ##########################################
@@ -4421,6 +4426,25 @@ sub setup_logic_cropcal_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_distparams_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_distributed_parameters');
+
+  # Add defaults if using any crop calendar input files
+  my $distparams_file = $nl->get_value('stream_fldFileName_distparams') ;
+  my $mesh_file = $nl->get_value('stream_meshfile_distparams') ;
+
+  # User provided an input file but set mesh file to empty
+  if ( !&string_is_undef_or_empty($distparams_file)) {
+    if ( &string_is_undef_or_empty($mesh_file) ) {
+      $log->fatal_error("If providing a spatially distributed parameter file, you must provide stream_meshfile_distparams" );
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_soilwater_movement {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4656,19 +4680,6 @@ sub setup_logic_atm_forcing {
       } else {
          if (defined($nl->get_value($var))) {
             $log->fatal_error("$var can only be set if glcmec_downscale_longwave is true");
-         }
-      }
-   }
-
-   foreach $var ("precip_repartition_glc_all_snow_t",
-                 "precip_repartition_glc_all_rain_t",
-                 "precip_repartition_nonglc_all_snow_t",
-                 "precip_repartition_nonglc_all_rain_t") {
-      if ( &value_is_true($nl->get_value("repartition_rain_snow")) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-      } else {
-         if (defined($nl->get_value($var))) {
-            $log->fatal_error("$var can only be set if repartition_rain_snow is true");
          }
       }
    }
@@ -5207,7 +5218,7 @@ sub write_output_files {
 
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
-               cropcal_streams
+               cropcal_streams distparams_streams
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade

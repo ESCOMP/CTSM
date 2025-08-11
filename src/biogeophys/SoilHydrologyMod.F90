@@ -33,7 +33,7 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch
-  use DistParamType     , only : distparams
+  use DistParamType     , only : distparams => distributed_parameters
 
   !
   ! !PUBLIC TYPES:
@@ -41,7 +41,6 @@ module SoilHydrologyMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
   public :: SetFloodc            ! Apply gridcell flood water flux to non-lake columns
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
@@ -60,7 +59,6 @@ module SoilHydrologyMod
   public :: WithdrawGroundwaterIrrigation   ! Remove groundwater irrigation from unconfined and confined aquifers
 
   !-----------------------------------------------------------------------
-  real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
   integer, private :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
@@ -77,7 +75,7 @@ module SoilHydrologyMod
        __FILE__
 
 contains
-
+  
   !-----------------------------------------------------------------------
   subroutine hillslope_hydrology_ReadNML(NLFilename)
     !
@@ -163,65 +161,6 @@ contains
 
   end subroutine hillslope_hydrology_ReadNML
 
-  !-----------------------------------------------------------------------
-  subroutine soilHydReadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for soil hydrology
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'soilHydReadNML'
-    character(len=*), parameter :: nmlname = 'soilhydrology_inparm'
-    !-----------------------------------------------------------------------
-    namelist /soilhydrology_inparm/ baseflow_scalar
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=soilhydrology_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (baseflow_scalar, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=soilhydrology_inparm)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine soilhydReadNML
-
-
-  
   !-----------------------------------------------------------------------
   subroutine SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, soilstate_inst, waterstatebulk_inst)
@@ -757,7 +696,7 @@ contains
           ! use analytical expression for aquifer specific yield
           rous = watsat(c,nlevsoi) &
                * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
-          rous=max(rous, distparams%aq_sp_yield_min(c))
+          rous=max(rous, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
           !--  water table is below the soil column  --------------------------------------
           if(jwt(c) == nlevsoi) then             
@@ -772,7 +711,7 @@ contains
                    ! use analytical expression for specific yield
                    s_y = watsat(c,j) &
                         * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                   s_y=max(s_y, distparams%aq_sp_yield_min(c))
+                   s_y=max(s_y, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
                    qcharge_layer=min(qcharge_tot,(s_y*(zwt(c) - zi(c,j-1))*1.e3))
                    qcharge_layer=max(qcharge_layer,0._r8)
@@ -787,7 +726,7 @@ contains
                    ! use analytical expression for specific yield
                    s_y = watsat(c,j) &
                         * ( 1. -  (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                   s_y=max(s_y, distparams%aq_sp_yield_min(c))
+                   s_y=max(s_y, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
                    qcharge_layer=max(qcharge_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                    qcharge_layer=min(qcharge_layer,0._r8)
@@ -1054,7 +993,7 @@ contains
           c = filter_hydrologyc(fc)
 
           !  specify maximum drainage rate
-          q_perch_max = distparams%perched_baseflow_scalar(c) * sin(col%topo_slope(c) * (rpi/180._r8))
+          q_perch_max = distparams%perched_baseflow_scalar%param_val(col%gridcell(c)) * sin(col%topo_slope(c) * (rpi/180._r8))
 
           ! if layer containing water table is frozen, compute the following:
           !     frost table, perched water table, and drainage from perched saturated layer
@@ -1087,7 +1026,7 @@ contains
              wtsub = 0._r8
              q_perch = 0._r8
              do k = jwt(c)+1, k_frz
-                imped=10._r8**(-distparams%e_ice(c)*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
+                imped=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
                 q_perch = q_perch + imped*hksat(c,k)*dzmm(c,k)
                 wtsub = wtsub + dzmm(c,k)
              end do
@@ -1163,7 +1102,7 @@ contains
                 wtsub = 0._r8
                 q_perch = 0._r8
                 do k = k_perch, k_frz
-                   imped=10._r8**(-distparams%e_ice(c)*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
+                   imped=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
                    q_perch = q_perch + imped*hksat(c,k)*dzmm(c,k)
                    wtsub = wtsub + dzmm(c,k)
                 end do
@@ -1208,11 +1147,11 @@ contains
              end do
              ! add ice impedance factor to baseflow
              if (use_vichydro) then
-                imped=10._r8**(-distparams%e_ice(c)*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
+                imped=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
                 dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
                 rsub_top_max = dsmax_tmp(c)
              else
-                imped=10._r8**(-distparams%e_ice(c)*(icefracsum/dzsum))
+                imped=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(icefracsum/dzsum))
                 rsub_top_max = 10._r8 * sin((rpi/180.) * col%topo_slope(c))
              end if
 
@@ -1237,7 +1176,7 @@ contains
              ! use analytical expression for aquifer specific yield
              rous = watsat(c,nlevsoi) &
                   * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,nlevsoi))**(-1./bsw(c,nlevsoi)))
-             rous=max(rous, distparams%aq_sp_yield_min(c))
+             rous=max(rous, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
              !--  water table is below the soil column  --------------------------------------
              if(jwt(c) == nlevsoi) then             
@@ -1274,7 +1213,7 @@ contains
                          ! use analytical expression for specific yield
                          s_y = watsat(c,j) &
                               * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                         s_y=max(s_y, distparams%aq_sp_yield_min(c))
+                         s_y=max(s_y, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
                          rsub_top_layer=max(rsub_top_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                          rsub_top_layer=min(rsub_top_layer,0._r8)
@@ -1882,7 +1821,7 @@ contains
              else
                 ! Non-hillslope columns
                 ! specify maximum drainage rate
-                q_perch_max = distparams%perched_baseflow_scalar(c) &
+                q_perch_max = distparams%perched_baseflow_scalar%param_val(col%gridcell(c)) &
                      * sin(col%topo_slope(c) * (rpi/180._r8))
 
                 wtsub = 0._r8
@@ -1929,7 +1868,7 @@ contains
 
              s_y = watsat(c,k) &
                   * ( 1. - (1.+1.e3*zwt_perched(c)/sucsat(c,k))**(-1./bsw(c,k)))
-             s_y=max(s_y,distparams%aq_sp_yield_min(c))
+             s_y=max(s_y,distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
              if (k==k_perch(c)) then
                 drainage_layer=min(drainage_tot,(s_y*(zi(c,k) - zwt_perched(c))*1.e3))
              else
@@ -2168,7 +2107,7 @@ contains
 
              vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
              icefrac(c,j) = min(1._r8,vol_ice/watsat(c,j))
-             ice_imped(c,j)=10._r8**(-distparams%e_ice(c)*icefrac(c,j))
+             ice_imped(c,j)=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*icefrac(c,j))
           end do
        end do
 
@@ -2210,7 +2149,7 @@ contains
             dzsum  = dzsum + dzmm(c,j)
             icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
          end do
-         ice_imped_col(c)=10._r8**(-distparams%e_ice(c)*(icefracsum/dzsum))
+         ice_imped_col(c)=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(icefracsum/dzsum))
       enddo
 
       do fc = 1, num_hydrologyc
@@ -2358,9 +2297,9 @@ contains
             ! Non-hillslope columns
             ! baseflow is power law expression relative to bedrock layer
             if(zwt(c) <= zi(c,nbedrock(c))) then
-               qflx_latflow_out(c) = ice_imped_col(c) * distparams%baseflow_scalar(c) &
+               qflx_latflow_out(c) = ice_imped_col(c) * distparams%baseflow_scalar%param_val(col%gridcell(c)) &
                     * tan(rpi/180._r8*col%topo_slope(c))* &
-                    (zi(c,nbedrock(c)) - zwt(c))**(distparams%n_baseflow(c))
+                    (zi(c,nbedrock(c)) - zwt(c))**(distparams%n_baseflow%param_val(col%gridcell(c)))
             endif
             ! convert flux to volumetric flow
             qflx_latflow_out_vol(c) = 1.e-3_r8*qflx_latflow_out(c)*(grc%area(g)*1.e6_r8*col%wtgcell(c))
@@ -2423,7 +2362,7 @@ contains
                   ! analytical expression for specific yield
                   s_y = watsat(c,j) &
                        * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                  s_y=max(s_y,distparams%aq_sp_yield_min(c))
+                  s_y=max(s_y,distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
                   drainage_layer=min(drainage_tot,(s_y*dz(c,j)*1.e3))
 
@@ -2450,7 +2389,7 @@ contains
                 ! analytical expression for specific yield
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                s_y=max(s_y,distparams%aq_sp_yield_min(c))
+                s_y=max(s_y,distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
                 
                 drainage_layer=max(drainage_tot,-(s_y*(zi(c,j) - zwt(c))*1.e3))
                 drainage_layer=min(drainage_layer,0._r8)
@@ -2789,7 +2728,7 @@ contains
                 ! use analytical expression for specific yield
                 s_y = watsat(c,j) &
                      * ( 1. - (1.+1.e3*zwt(c)/sucsat(c,j))**(-1./bsw(c,j)))
-                s_y=max(s_y, distparams%aq_sp_yield_min(c))
+                s_y=max(s_y, distparams%aq_sp_yield_min%param_val(col%gridcell(c)))
 
                 if (j==jwt(c)+1) then
                    available_water_layer=max(0._r8,(s_y*(zi(c,j) - zwt(c))*1.e3))

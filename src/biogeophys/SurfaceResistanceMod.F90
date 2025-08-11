@@ -12,7 +12,7 @@ module SurfaceResistanceMod
   use shr_const_mod , only : SHR_CONST_TKFRZ
   use clm_varctl    , only : iulog
   use SoilStateType , only : soilstate_type
-  use DistParamType , only : distparams
+  use DistParamType , only : distparams => distributed_parameters
   use WaterStateBulkType, only : waterstatebulk_type 
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type 
   use TemperatureType   , only : temperature_type
@@ -373,9 +373,9 @@ contains
 !      dsl(c) = dzmm(c,1)*max(0.001_r8,(0.8*eff_porosity(c,1) - vwc_liq)) &
 ! try arbitrary scaling (not top layer thickness)
 !            dsl(c) = 15._r8*max(0.001_r8,(0.8*eff_porosity(c,1) - vwc_liq)) &
-            dsl(c) = distparams%d_max(c) * max(0.001_r8, (distparams%frac_sat_soil_dsl_init(c) * eff_por_top - vwc_liq)) &
+            dsl(c) = distparams%d_max%param_val(col%gridcell(c)) * max(0.001_r8, (distparams%frac_sat_soil_dsl_init%param_val(col%gridcell(c)) * eff_por_top - vwc_liq)) &
                  !           /max(0.001_r8,(watsat(c,1)- aird))
-                 / max(0.001_r8, (distparams%frac_sat_soil_dsl_init(c) * watsat(c,1) - aird))
+                 / max(0.001_r8, (distparams%frac_sat_soil_dsl_init%param_val(col%gridcell(c)) * watsat(c,1) - aird))
             
             dsl(c)=max(dsl(c),0._r8)
             dsl(c)=min(dsl(c),200._r8)

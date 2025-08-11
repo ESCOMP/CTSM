@@ -15,7 +15,7 @@ module SurfaceWaterMod
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type, subgrid_level_column
   use ColumnType                  , only : col
-  use DistParamType               , only : distparams
+  use DistParamType               , only : distparams => distributed_parameters
   use NumericsMod                 , only : truncate_small_values
   use InfiltrationExcessRunoffMod , only : infiltration_excess_runoff_type
   use EnergyFluxType              , only : energyflux_type
@@ -446,10 +446,10 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= distparams%pc(c)) then
+          if (frac_h2osfc_nosnow(c) <= distparams%pc%param_val(col%gridcell(c))) then
              frac_infclust=0.0_r8
           else
-             frac_infclust=(frac_h2osfc_nosnow(c)-distparams%pc(c))**distparams%mu(c)
+             frac_infclust=(frac_h2osfc_nosnow(c)-distparams%pc%param_val(col%gridcell(c)))**distparams%mu%param_val(col%gridcell(c))
           endif
        endif
 

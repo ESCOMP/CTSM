@@ -25,7 +25,6 @@ module atm2lndMod
   use landunit_varcon, only : istice
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -266,7 +265,7 @@ contains
 
       end do
 
-      ! adjust hillslope precpitation before repartitioning rain/snow
+      ! adjust hillslope precipitation before repartitioning rain/snow
       if (use_hillslope .and. downscale_hillslope_meteorology) then
          call downscale_hillslope_solar(bounds, atm2lnd_inst, surfalb_inst)
          call downscale_hillslope_precipitation(bounds, topo_inst, atm2lnd_inst, wateratm2lndbulk_inst)
@@ -359,15 +358,16 @@ contains
     if (atm2lnd_inst%params%repartition_rain_snow) then
        do c = bounds%begc, bounds%endc
           if (col%active(c)) then
+             g = col%gridcell(c)
              l = col%landunit(c)
              rain_orig = forc_rain_c(c)
              snow_orig = forc_snow_c(c)
              if (lun%itype(l) == istice) then
-                all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
-                frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
+                all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t%param_val(g)
+                frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope%param_val(g)
              else
-                all_snow_t = atm2lnd_inst%params%precip_repartition_nonglc_all_snow_t
-                frac_rain_slope = atm2lnd_inst%params%precip_repartition_nonglc_frac_rain_slope
+                all_snow_t = atm2lnd_inst%params%precip_repartition_nonglc_all_snow_t%param_val(g)
+                frac_rain_slope = atm2lnd_inst%params%precip_repartition_nonglc_frac_rain_slope%param_val(g)
              end if
              call repartition_rain_snow_one_col(&
                   temperature = forc_t_c(c), &
@@ -387,6 +387,7 @@ contains
                   sens_heat_flux = eflx_sh_precip_conversion(c))
           end if
        end do
+
     end if
 
     end associate

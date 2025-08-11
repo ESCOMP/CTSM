@@ -1699,30 +1699,6 @@ This parameter must be in the range [0,1]
 Only relevant if glcmec_downscale_longwave is .true.
 </entry>
 
-<entry id="precip_repartition_glc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_glc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
 <!-- ========================================================================================  -->
 <!-- Namelist items controlling fields sent to atmosphere                                      -->
 <!-- ========================================================================================  -->
@@ -2058,6 +2034,26 @@ Filename of input stream data for date (day of year) of end of gdd20 accumulatio
 <entry id="stream_meshfile_cropcal" type="char*512" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for crop calendar inputs
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- distparams_streams streams Namelist                                                          -->
+<!-- ========================================================================================  -->
+
+<!-- Distributed parameters -->
+<entry id="use_distributed_parameters" type="logical" category="datasets"
+       group="distparams_streams" valid_values="" >
+Flag to enable spatially distributed parameters
+</entry>
+
+<entry id="stream_fldfilename_distparams" type="char*512(30)" category="datasets"
+       input_pathname="abs" group="distparams_streams" valid_values="" >
+Filename of input stream data for spatially distributed parameters
+</entry>
+
+<entry id="stream_meshfile_distparams" type="char*512" category="datasets"
+       input_pathname="abs" group="distparams_streams" valid_values="" >
+Filename of mesh data for spatially distributed parameters
 </entry>
 
 <!-- ========================================================================================  -->
