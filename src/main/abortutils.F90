@@ -11,12 +11,14 @@ module abortutils
   !-----------------------------------------------------------------------
 
   use shr_kind_mod, only: CX => shr_kind_cx
-  use shr_log_mod, only: shr_log_error
+  use shr_log_mod, only: shr_log_error, errMsg => shr_log_errMsg
+  use shr_sys_mod , only : shr_sys_flush
   implicit none
   private
 
   public :: endrun              ! Abort the model for abnormal termination
   public :: write_point_context ! Write context for the given index, including global index information and more
+  public :: terminate_early_without_error ! Terminate the model without error, but with a message
   ! Some interfaces for self-test work
   public :: endrun_init         ! Set up how endrun will behave (used for self-tests)
   public :: get_last_endrun_msg     ! Return the last endrun message
@@ -41,6 +43,10 @@ contains
   subroutine endrun_init( for_testing_do_not_abort )
      logical , intent(in) :: for_testing_do_not_abort
 #ifdef DEBUG
+      if (save_msg /= 'none') then
+         abort_on_endrun = .true.
+         call endrun( msg='An endrun call happened, but was not handled' )
+      end if
       if ( for_testing_do_not_abort )then
          save_msg = 'none'  ! Reset the saved message
          abort_on_endrun = .false.
@@ -48,7 +54,7 @@ contains
          abort_on_endrun = .true.
       end if
 #else
-      call shr_log_error( 'ENDRUN: ', errmsg(__FILE__, __LINE__) )
+      call shr_log_error( 'ENDRUN: ', errMsg(__FILE__, __LINE__) )
       call endrun( msg='endrun_init called without DEBUG mode, which is not allowed' )
 #endif
   end subroutine endrun_init
@@ -67,10 +73,15 @@ contains
     !-----------------------------------------------------------------------
 
 #ifdef DEBUG
+    if (abort_on_endrun) then
+      call endrun( msg='Do not call get_last_endrun_msg when abort_on_endrun is true' )
+    end if
     if (save_msg == 'none') then
        call shr_log_error( 'An endrun call was expected, but has not been made yet' )
     end if
     get_last_endrun_msg = trim(save_msg)
+    ! Reset endrun_msg to indicate the last error message was handled
+    save_msg = 'none'
 #else
       call shr_log_error( 'ENDRUN: ', errmsg(__FILE__, __LINE__) )
       call endrun( msg='get_last_endrun_msg called without DEBUG mode, which is not allowed' )
@@ -89,6 +100,7 @@ contains
     use shr_abort_mod, only: shr_abort_abort
     use clm_varctl, only: iulog
     use ESMF, only : ESMF_Finalize, ESMF_END_ABORT
+    intrinsic :: exit
     !
     ! !ARGUMENTS:
     ! Generally you want to at least provide msg. The main reason to separate msg from
@@ -101,6 +113,7 @@ contains
     !-----------------------------------------------------------------------
     character(len=CX) :: abort_msg
 
+    call shr_sys_flush(iulog)  ! Flush the I/O buffers always
     if (present (additional_msg)) then
        call shr_log_error( 'ENDRUN: '// trim(additional_msg) )
        write(iulog,*)'ENDRUN: ', trim(additional_msg)
@@ -113,17 +126,20 @@ contains
       if (save_msg /= 'none') then
          abort_msg = 'a previous error was already logged and now a second one is being, done so fully aborting now'
          abort_msg = trim(abort_msg) // ' (Call end_run_init after endrun calls to reset this)'
+         call shr_sys_flush(iulog)  ! Flush the I/O buffers always
          call shr_abort_abort(abort_msg)
       end if
-      ! Just save msg, finalize ESMF and return
+      ! Just save msg and return
+      ! Don't finalize ESMF or exit since the self tests need to evaluate that
       save_msg = trim(msg)
       if (present (additional_msg)) then
          save_msg = trim(msg)//trim(additional_msg)
          call shr_log_error( 'ENDRUN: '// trim(additional_msg) )
+         call shr_sys_flush(iulog)  ! Flush the I/O buffers always
       end if
-      call ESMF_Finalize(endflag=ESMF_END_ABORT)
    else
 #endif
+      call shr_sys_flush(iulog)  ! Flush the I/O buffers always
       call shr_abort_abort(msg)
 #ifdef DEBUG
    end if
@@ -274,5 +290,37 @@ contains
     call shr_sys_flush(iulog)
 
   end subroutine write_point_context
+
+  !-----------------------------------------------------------------------
+  subroutine terminate_early_without_error(msg)
+
+    !-----------------------------------------------------------------------
+    ! !DESCRIPTION:
+    ! Terminate the model early without an error
+    !
+    use clm_varctl, only: iulog
+    use shr_abort_mod, only: shr_abort_abort
+    use ESMF, only : ESMF_Finalize, ESMF_SUCCESS
+    intrinsic :: exit
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in), optional :: msg     ! string to be logged on termination
+    !-----------------------------------------------------------------------
+    integer :: rc ! return code from ESMF_Finalize
+
+    call shr_log_error( 'Finishing early: '// trim(msg) )
+    write(iulog,*) 'Finishing early: '// trim(msg)
+    call shr_sys_flush(iulog)  ! Flush the I/O buffers always
+    call ESMF_Finalize(rc=rc)
+    if ( rc /= ESMF_SUCCESS ) then
+       write(iulog,*) 'ESMF_Finalize returned with error code: ', rc
+       call shr_sys_flush(iulog)  ! Flush the I/O buffers always
+       call shr_abort_abort('ESMF_Finalize failed ', file=sourcefile, line=__LINE__)
+    end if
+    call exit(0)  ! Exit with success code
+
+  end subroutine terminate_early_without_error
+
+  !-----------------------------------------------------------------------
 
 end module abortutils
