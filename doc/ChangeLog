@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.3.067
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri 08 Aug 2025 02:49:25 PM MDT
+One-line Summary: (Mostly) fix interim restarts
+
+Purpose and description of changes
+----------------------------------
+
+Various changes that fix CLM's behavior with `DOUT_S_SAVE_INTERIM_RESTART_FILES=TRUE`.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue ESCOMP/CTSM#3355: config_archive.xml needs fix for st_archive](https://github.com/ESCOMP/CTSM/issues/3355)
+- [Issue ESCOMP/CTSM#3356: CMEPS needs updating to fix st_archive](https://github.com/ESCOMP/CTSM/issues/3356)
+- [Issue ESCOMP/CTSM#3357: CIME needs updating to fix st_archive](https://github.com/ESCOMP/CTSM/issues/3357)
+- [Issue ESCOMP/CTSM#3358: MOSART needs updating to fix st_archive](https://github.com/ESCOMP/CTSM/issues/3358)
+- [Issue ESCOMP/CTSM#3359: Add ERR test to aux_clm](https://github.com/ESCOMP/CTSM/issues/3359)
+- [Issue ESCOMP/CTSM#3310: Unrevert rpointer changes in #3067](https://github.com/ESCOMP/CTSM/issues/3310)
+- [Issue ESCOMP/CTSM#3098: st_archive issues in ctsm5.3.041 with our testing](https://github.com/ESCOMP/CTSM/issues/3098)
+- [Issue ESCOMP/CTSM#3374: CIME needs updating for reliable ERR and IRT tests](https://github.com/ESCOMP/CTSM/issues/3374)
+- [Issue ESCOMP/CTSM#3377: Interim restarts work: MOSART doesn't save last restart?](https://github.com/ESCOMP/CTSM/issues/3377)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+- Adds interim_restart suite with 5 short derecho gnu tests. 3 of those are also in aux_clm; another 1 is in ctsm_sci.
+- 2 of the new aux_clm tests are expected failures; see [Issue ESCOMP/CTSM#3383: Interim restart work: ERR...clm-default tests fail COMPARE_base_rest (missing/wrong files)](https://github.com/ESCOMP/CTSM/issues/3383).
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  interim_restart
+     derecho ---- OK
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated:
+- CIME: cime6.1.107 to cime6.1.111
+- CMEPS: cmeps1.1.2 to cmeps1.1.5
+- MOSART: mosart1.1.10 to mosart1.1.12
+- RTM: rtm1_0_88 to rtm1_0_89
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request ESCOMP/CTSM#3400: ctsm5.3.067: (Mostly) fix interim restarts by samsrabin](https://github.com/ESCOMP/CTSM/pull/3400)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.066
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Fri 08 Aug 2025 09:19:34 AM MDT
