@@ -253,8 +253,7 @@ def import_and_process_1yr(
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    utils.log(logger, f"netCDF year {this_year}...")
-    utils.log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    utils.log(logger, f"import_and_process_1yr(): netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
