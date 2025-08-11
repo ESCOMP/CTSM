@@ -153,7 +153,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan configuration="nwp"          >0</megan>
 
 <!-- Setting to TRUE replicates previous ctsm5.3.063 answers, setting to false turns the soil moisture effect off -->
-<!-- As of ctsm5.3.067 megan_use_gamma_sm is default false -->
+<!-- As of ctsm5.3.068 megan_use_gamma_sm is default false -->
 <megan_use_gamma_sm>.false.</megan_use_gamma_sm>
 <megan_min_gamma_sm>0.0d00</megan_min_gamma_sm>
 
