@@ -90,10 +90,12 @@ contains
           write(iulog,*) 'decompInit_lnd(): Number of gridcell clumps= ',nclumps, &
                ' is less than the number of processes = ', npes
           call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
        end if
     else
        write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
 
     ! allocate and initialize procinfo and clumps
@@ -103,6 +105,7 @@ contains
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error for procinfo%cid'
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     endif
     procinfo%nclumps   = clump_pproc
     procinfo%cid(:)    = -1
@@ -126,6 +129,7 @@ contains
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error for clumps'
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
     clumps(:)%owner     = -1
     clumps(:)%ncells    = 0
@@ -151,6 +155,7 @@ contains
        if (pid < 0 .or. pid > npes-1) then
           write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
           call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
@@ -158,6 +163,7 @@ contains
           if (cid < 1 .or. cid > clump_pproc) then
              write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
              call endrun(msg=errMsg(sourcefile, __LINE__))
+             return
           endif
           procinfo%cid(cid) = n
        endif
@@ -175,11 +181,13 @@ contains
        write(iulog,*) 'decompInit_lnd(): Number of processes exceeds number ', &
             'of land grid cells',npes,numg
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
     if (nclumps > numg) then
        write(iulog,*) 'decompInit_lnd(): Number of clumps exceeds number ', &
             'of land grid cells',nclumps,numg
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
 
     if (float(numg)/float(nclumps) < float(nsegspc)) then
@@ -251,12 +259,14 @@ contains
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
     gdc2glo(:) = 0
     allocate(clumpcnt(nclumps),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
        call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
     end if
 
     ! clumpcnt is the start gdc index of each clump
@@ -482,6 +492,7 @@ contains
           write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
           call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
        endif
     enddo
 
