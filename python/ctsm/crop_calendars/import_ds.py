@@ -245,7 +245,9 @@ def import_ds(
             filetime_sel = utils.safer_timeslice(filetime, time_slice)
             include_this_file = filetime_sel.size
             if include_this_file:
-                utils.log(logger, f"import_ds(): Including filetime : {filetime_sel['time'].values}")
+                utils.log(
+                    logger, f"import_ds(): Including filetime : {filetime_sel['time'].values}"
+                )
                 new_filelist.append(file)
 
             # If you found some matching files, but then you find one that doesn't, stop going

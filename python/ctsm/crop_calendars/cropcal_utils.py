@@ -2,12 +2,14 @@
 utility functions
 copied from klindsay, https://github.com/klindsay28/CESM2_coup_carb_cycle_JAMES/blob/master/utils.py
 """
+
 from datetime import datetime
 
 import numpy as np
 import xarray as xr
 
 from ctsm.utils import is_instantaneous
+
 
 def leading_datetime_string():
     """

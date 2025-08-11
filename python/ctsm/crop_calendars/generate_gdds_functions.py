@@ -1100,7 +1100,9 @@ if CAN_PLOT:
         if land_use_file:
             year_1_lu = year_1 if first_land_use_year is None else first_land_use_year
             year_n_lu = year_n if last_land_use_year is None else last_land_use_year
-            lu_ds = cc.open_lu_ds(land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, logger, ungrid=False)
+            lu_ds = cc.open_lu_ds(
+                land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, logger, ungrid=False
+            )
             lu_years_text = f" (masked by {year_1_lu}-{year_n_lu} area)"
             lu_years_file = f"_mask{year_1_lu}-{year_n_lu}"
         else:
