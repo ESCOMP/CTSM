@@ -33,6 +33,7 @@ contains
     use clm_varctl, only : for_testing_exit_after_self_tests, iulog
     use decompMod, only : bounds_type
     use TestNcdioPio, only : test_ncdio_pio
+    use TestDecompInit, only : test_decomp_init
     use ESMF, only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_Finalize
     use shr_sys_mod, only : shr_sys_flush
     use spmdMod, only : masterproc
@@ -51,6 +52,7 @@ contains
     end if
     if (for_testing_run_decomp_init_tests) then
        ntests = ntests + 1
+       call test_decomp_init()
     end if
     if (for_testing_exit_after_self_tests) then
        ! Print out some messaging if we are exiting after self tests.
