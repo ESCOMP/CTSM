@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.068
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Mon 11 Aug 2025 10:53:58 AM MDT
+Date: Mon 11 Aug 2025 02:27:39 PM MDT
 One-line Summary: Change megan_use_gamma_sm to default false
 
 Purpose and description of changes
@@ -17,13 +17,13 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
-[X] clm6_0
+[ ] clm6_0
 
-[?] clm5_0
+[ ] clm5_0
 
 [ ] ctsm5_0-nwp
 
-[?] clm4_5
+[ ] clm4_5
 
 
 Bugs fixed
@@ -47,8 +47,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -56,9 +56,9 @@ Answer changes
 Changes answers relative to baseline: Yes
 
   Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+    - what code configurations: only tests with MEGAN
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff for MEGAN fields only, otherwise bit-for-bit
 
 Other details
 -------------
