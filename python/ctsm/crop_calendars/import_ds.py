@@ -82,13 +82,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
 
     # Rename "pft" dimension and variables to "patch", if needed
     if "pft" in ds_in.dims:
-        utils.log(logger, 'mfdataset_preproc(): Rename "pft" dimension and variables to "patch"')
-        pattern = re.compile("pft.*1d")
-        matches = [x for x in list(ds_in.keys()) if pattern.search(x) is not None]
-        pft2patch_dict = {"pft": "patch"}
-        for match in matches:
-            pft2patch_dict[match] = match.replace("pft", "patch").replace("patchs", "patches")
-        ds_in = ds_in.rename(pft2patch_dict)
+        ds_in = rename_pft_to_patch(ds_in, logger)
 
     derived_vars = []
     if vars_to_import is not None:
@@ -135,7 +129,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
 
     # Add vegetation type info
     if "patches1d_itype_veg" in list(ds_in):
-        utils.log(logger, f"mfdataset_preproc(): Adding vegetation type info")
+        utils.log(logger, "mfdataset_preproc(): Adding vegetation type info")
         this_pftlist = utils.define_pftlist()
         utils.get_patch_ivts(
             ds_in, this_pftlist
@@ -175,6 +169,20 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
 
     utils.log(logger, "mfdataset_preproc(): End")
 
+    return ds_in
+
+
+def rename_pft_to_patch(ds_in, logger):
+    """
+    Rename "pft" dimension and variables to "patch", if needed
+    """
+    utils.log(logger, 'mfdataset_preproc(): Rename "pft" dimension and variables to "patch"')
+    pattern = re.compile("pft.*1d")
+    matches = [x for x in list(ds_in.keys()) if pattern.search(x) is not None]
+    pft2patch_dict = {"pft": "patch"}
+    for match in matches:
+        pft2patch_dict[match] = match.replace("pft", "patch").replace("patchs", "patches")
+    ds_in = ds_in.rename(pft2patch_dict)
     return ds_in
 
 
