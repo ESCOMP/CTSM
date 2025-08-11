@@ -49,7 +49,7 @@ def check_and_trim_years(year_1, year_n, ds_in):
     return ds_in
 
 
-def open_lu_ds(filename, year_1, year_n, existing_ds, logger, ungrid=True):
+def open_lu_ds(filename, year_1, year_n, existing_ds, *, logger, ungrid=True):
     """
     Open land-use dataset
     """
