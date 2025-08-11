@@ -130,6 +130,7 @@ contains
        if (pid < 0 .or. pid > npes-1) then
           write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
           call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
@@ -137,6 +138,7 @@ contains
           if (cid < 1 .or. cid > clump_pproc) then
              write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
              call endrun(msg=errMsg(sourcefile, __LINE__))
+             return
           endif
           procinfo%cid(cid) = n
        endif
@@ -591,6 +593,7 @@ contains
           write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
           call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
        endif
     enddo
 
