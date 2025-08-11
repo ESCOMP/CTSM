@@ -49,11 +49,12 @@ def check_and_trim_years(year_1, year_n, ds_in):
     return ds_in
 
 
-def open_lu_ds(filename, year_1, year_n, existing_ds, ungrid=True):
+def open_lu_ds(filename, year_1, year_n, existing_ds, *, logger, ungrid=True):
     """
     Open land-use dataset
     """
     # Open and trim to years of interest
+    utils.log(logger, f"open_lu_ds(): Opening this_ds_gridded: {filename}")
     this_ds_gridded = xr.open_dataset(filename).sel(time=slice(year_1, year_n))
 
     # Assign actual lon/lat coordinates
@@ -347,6 +348,7 @@ def import_output(
     gdds_rx_ds=None,
     verbose=False,
     throw_errors=True,
+    logger=None,
 ):
     """
     Import CLM output
@@ -354,7 +356,7 @@ def import_output(
     any_bad = False
 
     # Import
-    this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
+    this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes, logger=logger)
 
     # Trim to years of interest (do not include extra year needed for finishing last growing season)
     if year_1 and year_n:
