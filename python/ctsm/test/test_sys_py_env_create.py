@@ -334,7 +334,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
             raise e
         env_list = get_conda_envs()
         for env_name in self.env_names:
-            assert does_env_exist(env_name, env_list)
+            if not does_env_exist(env_name, env_list):
+                raise AssertionError(f"environment not found: {env_name}")
 
     def test_complete_py_env_create_mamba(self):
         """
@@ -365,7 +366,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
             raise e
         env_list = get_conda_envs()
         for env_name in self.env_names:
-            assert does_env_exist(env_name, env_list)
+            if not does_env_exist(env_name, env_list):
+                raise AssertionError(f"environment not found: {env_name}")
 
 
 if __name__ == "__main__":
