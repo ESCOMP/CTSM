@@ -10,21 +10,73 @@ module abortutils
   ! in conjunction with aborting the model, or at least issuing a warning.
   !-----------------------------------------------------------------------
 
+  use shr_kind_mod, only: CX => shr_kind_cx
+  use shr_log_mod, only: shr_log_error
   implicit none
   private
 
   public :: endrun              ! Abort the model for abnormal termination
   public :: write_point_context ! Write context for the given index, including global index information and more
+  ! Some interfaces for self-test work
+  public :: endrun_init         ! Set up how endrun will behave (used for self-tests)
+  public :: get_last_endrun_msg     ! Return the last endrun message
 
   interface endrun
      module procedure endrun_vanilla
      module procedure endrun_write_point_context
   end interface
 
+  ! These two are to enable self tests to have endrun calls that do not abort
+#ifdef DEBUG
+  logical :: abort_on_endrun = .true. ! Whether to abort the model on endrun; set to .false. for self-tests
+  character(len=CX) :: save_msg = 'none'   ! string to save from last endrun call
+#endif
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine endrun_init( for_testing_do_not_abort )
+     logical , intent(in) :: for_testing_do_not_abort
+#ifdef DEBUG
+      if ( for_testing_do_not_abort )then
+         save_msg = 'none'  ! Reset the saved message
+         abort_on_endrun = .false.
+      else
+         abort_on_endrun = .true.
+      end if
+#else
+      call shr_log_error( 'ENDRUN: ', errmsg(__FILE__, __LINE__) )
+      call endrun( msg='endrun_init called without DEBUG mode, which is not allowed' )
+#endif
+  end subroutine endrun_init
+
+    !-----------------------------------------------------------------------
+  function get_last_endrun_msg()
+    !
+    ! !DESCRIPTION:
+    ! Gives the last message saved from an endrun call that didn't 
+    ! abort due to being in the context of self-tests
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: get_last_endrun_msg  ! function result
+    !-----------------------------------------------------------------------
+
+#ifdef DEBUG
+    if (save_msg == 'none') then
+       call shr_log_error( 'An endrun call was expected, but has not been made yet' )
+    end if
+    get_last_endrun_msg = trim(save_msg)
+#else
+      call shr_log_error( 'ENDRUN: ', errmsg(__FILE__, __LINE__) )
+      call endrun( msg='get_last_endrun_msg called without DEBUG mode, which is not allowed' )
+#endif
+
+  end function get_last_endrun_msg
 
   !-----------------------------------------------------------------------
   subroutine endrun_vanilla(msg, additional_msg)
@@ -33,8 +85,10 @@ contains
     ! !DESCRIPTION:
     ! Abort the model for abnormal termination
     !
-    use shr_sys_mod , only: shr_sys_abort
-    use clm_varctl  , only: iulog
+    use shr_sys_mod, only: shr_sys_abort
+    use shr_abort_mod, only: shr_abort_abort
+    use clm_varctl, only: iulog
+    use ESMF, only : ESMF_Finalize, ESMF_END_ABORT
     !
     ! !ARGUMENTS:
     ! Generally you want to at least provide msg. The main reason to separate msg from
@@ -45,14 +99,35 @@ contains
     character(len=*), intent(in), optional :: msg            ! string to be passed to shr_sys_abort
     character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_sys_abort
     !-----------------------------------------------------------------------
+    character(len=CX) :: abort_msg
 
     if (present (additional_msg)) then
+       call shr_log_error( 'ENDRUN: '// trim(additional_msg) )
        write(iulog,*)'ENDRUN: ', trim(additional_msg)
     else
        write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_sys_abort(msg)
+#ifdef DEBUG
+   if (.not. abort_on_endrun) then
+      if (save_msg /= 'none') then
+         abort_msg = 'a previous error was already logged and now a second one is being, done so fully aborting now'
+         abort_msg = trim(abort_msg) // ' (Call end_run_init after endrun calls to reset this)'
+         call shr_abort_abort(abort_msg)
+      end if
+      ! Just save msg, finalize ESMF and return
+      save_msg = trim(msg)
+      if (present (additional_msg)) then
+         save_msg = trim(msg)//trim(additional_msg)
+         call shr_log_error( 'ENDRUN: '// trim(additional_msg) )
+      end if
+      call ESMF_Finalize(endflag=ESMF_END_ABORT)
+   else
+#endif
+      call shr_abort_abort(msg)
+#ifdef DEBUG
+   end if
+#endif
 
   end subroutine endrun_vanilla
 
@@ -66,6 +141,7 @@ contains
     ! This version also prints additional information about the point causing the error.
     !
     use shr_sys_mod , only: shr_sys_abort
+    use shr_abort_mod, only: shr_abort_abort
     use clm_varctl  , only: iulog
     use decompMod   , only: subgrid_level_unspecified
     !
@@ -95,7 +171,11 @@ contains
        write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_sys_abort(msg)
+    if (abort_on_endrun) then
+       call shr_sys_abort(msg)
+    else
+       call shr_abort_abort(msg)
+    end if
 
   end subroutine endrun_write_point_context
 
