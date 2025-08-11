@@ -160,7 +160,9 @@ function is_version2_ge_version1 {
 # Handle an environment that already exists
 #
 function conda_env_exists {
-   ${condamamba} env list | grep -oE "/$1$" | wc -l
+   # Not using ${condamamba} because, at least as of mamba 2.3.1, it doesn't always show environment
+   # names. See https://github.com/mamba-org/mamba/issues/4045
+   conda env list | grep -oE "/$1$" | wc -l
 }
 function rename_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
