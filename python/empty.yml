@@ -1,0 +1,6 @@
+# An empty file for use in testing py_env_create
+#
+channels:
+  - conda-forge
+  - defaults
+dependencies:
