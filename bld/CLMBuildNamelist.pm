@@ -2255,7 +2255,6 @@ sub setup_logic_params_file {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile',
               'phys'=>$nl_flags->{'phys'},
               'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'distributed_paramfile');
 }
 
 #-------------------------------------------------------------------------------
