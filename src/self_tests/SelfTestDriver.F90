@@ -37,7 +37,6 @@ contains
     use ESMF, only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_Finalize
     use shr_sys_mod, only : shr_sys_flush
     use spmdMod, only : masterproc
-    use abortutils, only : terminate_early_without_error
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
@@ -76,9 +75,7 @@ contains
              write(iulog,*) 'Exiting after running ', ntests, ' self tests.'
           end if
           call shr_sys_flush(iulog)
-          call ESMF_LogWrite(' exiting after running self tests', ESMF_LOGMSG_INFO)
        end if
-       call terminate_early_without_error('Exiting after running self tests')
     end if
 
   end subroutine self_test_driver

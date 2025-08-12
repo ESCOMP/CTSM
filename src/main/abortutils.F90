@@ -18,7 +18,6 @@ module abortutils
 
   public :: endrun              ! Abort the model for abnormal termination
   public :: write_point_context ! Write context for the given index, including global index information and more
-  public :: terminate_early_without_error ! Terminate the model without error, but with a message
   ! Some interfaces for self-test work
   public :: endrun_init         ! Set up how endrun will behave (used for self-tests)
   public :: get_last_endrun_msg     ! Return the last endrun message
@@ -290,36 +289,6 @@ contains
     call shr_sys_flush(iulog)
 
   end subroutine write_point_context
-
-  !-----------------------------------------------------------------------
-  subroutine terminate_early_without_error(msg)
-
-    !-----------------------------------------------------------------------
-    ! !DESCRIPTION:
-    ! Terminate the model early without an error
-    !
-    use clm_varctl, only: iulog
-    use shr_abort_mod, only: shr_abort_abort
-    use ESMF, only : ESMF_Finalize, ESMF_SUCCESS
-    intrinsic :: exit
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in), optional :: msg     ! string to be logged on termination
-    !-----------------------------------------------------------------------
-    integer :: rc ! return code from ESMF_Finalize
-
-    call shr_log_error( 'Finishing early: '// trim(msg) )
-    write(iulog,*) 'Finishing early: '// trim(msg)
-    call shr_sys_flush(iulog)  ! Flush the I/O buffers always
-    call ESMF_Finalize(rc=rc)
-    if ( rc /= ESMF_SUCCESS ) then
-       write(iulog,*) 'ESMF_Finalize returned with error code: ', rc
-       call shr_sys_flush(iulog)  ! Flush the I/O buffers always
-       call shr_abort_abort('ESMF_Finalize failed ', file=sourcefile, line=__LINE__)
-    end if
-    call exit(0)  ! Exit with success code
-
-  end subroutine terminate_early_without_error
 
   !-----------------------------------------------------------------------
 
