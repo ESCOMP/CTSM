@@ -385,7 +385,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <boreal_peatfire_c        fire_method="li2024crujra" >0.28d-4</boreal_peatfire_c>
 <pot_hmn_ign_counts_alpha fire_method="li2024crujra" >0.010d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2024crujra" >0.71d-4</non_boreal_peatfire_c>
-<cropfire_a1              fire_method="li2024crujra" >0.3d00</cropfire_a1>
+<cropfire_a1              fire_method="li2024crujra" >0.32d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2024crujra" >0.33d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2024crujra" >75.d00</lfuel>
 <ufuel                    fire_method="li2024crujra" >825.d00</ufuel>
