@@ -61,6 +61,10 @@ contains
     call test_check_nclumps()
     call write_to_log('test_decompInit_lnd_abort_on_bad_clump_pproc')
     call test_decompInit_lnd_abort_on_bad_clump_pproc()
+    call write_to_log('test_decompInit_lnd_abort_on_too_big_clump_pproc')
+    call test_decompInit_lnd_abort_on_too_big_clump_pproc()
+    call write_to_log('test_decompInit_lnd_abort_when_npes_too_large')
+    call test_decompInit_lnd_abort_when_npes_too_large()
 
     call clean
 
@@ -69,7 +73,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_bad_clump_pproc()
      integer, parameter :: ni = 300, nj = 500
-     integer :: amask(ni*nj) 
+     integer :: amask(ni*nj)
      character(len=CX) :: expected_msg, actual_msg
 
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
@@ -85,6 +89,78 @@ contains
            expected=expected_msg, actual=actual_msg, &
            msg='decompInit_lnd did not abort with clump_pproc=0' )
   end subroutine test_decompInit_lnd_abort_on_bad_clump_pproc
+
+  !-----------------------------------------------------------------------
+  subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc()
+     integer, parameter :: ni = 300, nj = 500
+     integer :: amask(ni*nj)
+     character(len=CX) :: expected_msg, actual_msg
+
+     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+     amask(:) = 1 ! Set all to land
+     clump_pproc = (ni * nj + 1) / npes
+     call write_to_log('decompInit_lnd with clump_pproc too large should abort')
+     call decompInit_lnd( ni, nj, amask )
+     call write_to_log('check expected abort message')
+     expected_msg = 'decompInit_lnd(): Number of clumps exceeds number of land grid cells'
+     actual_msg = get_last_endrun_msg()
+     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     call write_to_log('call assert_equal to check the abort message')
+     call assert_equal( &
+           expected=expected_msg, actual=actual_msg, &
+           msg='decompInit_lnd did not abort with clump_pproc too large' )
+     call assert_equal( numg, ni*nj, msg='numg is not as expected' )
+  end subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc
+
+  !-----------------------------------------------------------------------
+  subroutine test_decompInit_lnd_abort_when_npes_too_large()
+     integer, parameter :: ni = 300, nj = 500
+     integer :: amask(ni*nj)
+     character(len=CX) :: expected_msg, actual_msg
+     integer :: npes_orig
+
+     ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
+     npes_orig = npes
+     npes = ni*nj + 1
+
+     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+     amask(:) = 1 ! Set all to land
+     call write_to_log('decompInit_lnd with npes too large should abort')
+     call decompInit_lnd( ni, nj, amask )
+     call write_to_log('check expected abort message')
+     expected_msg = 'decompInit_lnd(): Number of processes exceeds number of land grid cells'
+     actual_msg = get_last_endrun_msg()
+     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     call write_to_log('call assert_equal to check the abort message')
+     call assert_equal( &
+           expected=expected_msg, actual=actual_msg, &
+           msg='decompInit_lnd did not abort with npes too large' )
+
+     ! NOTE: Return npes to its original value
+     npes = npes_orig
+  end subroutine test_decompInit_lnd_abort_when_npes_too_large
+
+  !-----------------------------------------------------------------------
+  subroutine test_decompInit_lnd_abort_on_too_small_nsegspc()
+     use clm_varctl, only : nsegspc
+     integer, parameter :: ni = 300, nj = 500
+     integer :: amask(ni*nj)
+     character(len=CX) :: expected_msg, actual_msg
+
+     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+     amask(:) = 1 ! Set all to land
+     nsegspc = 0
+     call write_to_log('decompInit_lnd with nsegspc too small should abort')
+     call decompInit_lnd( ni, nj, amask )
+     call write_to_log('check expected abort message')
+     expected_msg = 'decompInit_lnd(): nsegspc must be greater than 0'
+     actual_msg = get_last_endrun_msg()
+     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     call write_to_log('call assert_equal to check the abort message')
+     call assert_equal( &
+           expected=expected_msg, actual=actual_msg, &
+           msg='decompInit_lnd did not abort with too nsegspc too small' )
+  end subroutine test_decompInit_lnd_abort_on_too_small_nsegspc
 
   !-----------------------------------------------------------------------
   subroutine test_check_nclumps()
