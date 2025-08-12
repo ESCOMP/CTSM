@@ -32,10 +32,21 @@ class TestUnitSetParamfile(unittest.TestCase):
     def test_set_paramfile_args_short(self):
         """Test that all arguments can be set correctly with shortnames"""
         output_path = "/path/to/output.nc"
-        sys.argv = ["get_arguments", "-i", PARAMFILE, "-p", "pft1,pft2", "-o", output_path]
+        sys.argv = [
+            "get_arguments",
+            "-i",
+            PARAMFILE,
+            "-p",
+            "pft1,pft2",
+            "-o",
+            output_path,
+            "-v",
+            "var1,var2",
+        ]
         args = sp.get_arguments()
         self.assertEqual(PARAMFILE, args.input)
         self.assertEqual(["pft1", "pft2"], args.pft)
+        self.assertEqual(["var1", "var2"], args.variables)
         self.assertEqual(output_path, args.output)
 
     def test_set_paramfile_args_long(self):
@@ -49,10 +60,13 @@ class TestUnitSetParamfile(unittest.TestCase):
             "pft1,pft2",
             "--output",
             output_path,
+            "--variables",
+            "var1,var2",
         ]
         args = sp.get_arguments()
         self.assertEqual(PARAMFILE, args.input)
         self.assertEqual(["pft1", "pft2"], args.pft)
+        self.assertEqual(["var1", "var2"], args.variables)
         self.assertEqual(output_path, args.output)
 
     def test_set_paramfile_error_missing_input(self):

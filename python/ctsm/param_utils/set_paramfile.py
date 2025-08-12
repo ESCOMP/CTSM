@@ -47,6 +47,14 @@ def get_arguments():
         type=comma_separated_list,
     )
 
+    # TODO: Add -x/--exclude argument for variables you DON'T want to extract
+    parser.add_argument(
+        "-v",
+        "--variables",
+        help="Comma-separated list of variables to extract",
+        type=comma_separated_list,
+    )
+
     args = parser.parse_args()
     check_arguments(args)
 
@@ -62,6 +70,14 @@ def main():
 
     ds_in = open_paramfile(args.input)
     ds_out = ds_in.copy()
+
+    # If any variables specified, drop others
+    if args.variables:
+        vars_to_drop = []
+        for var in ds_in:
+            if var not in args.variables:
+                vars_to_drop.append(var)
+        ds_out = ds_out.drop_vars(vars_to_drop)
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
 
