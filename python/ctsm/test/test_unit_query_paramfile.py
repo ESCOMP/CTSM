@@ -37,8 +37,8 @@ def _setup_pft_parameter_ds():
     return ds, var_name, pft_names_list
 
 
-class TestQueryParamfile(unittest.TestCase):
-    """Tests of query_paramfile"""
+class TestUnitQueryParamfile(unittest.TestCase):
+    """Unit tests of query_paramfile"""
 
     def setUp(self):
         self.orig_argv = sys.argv
