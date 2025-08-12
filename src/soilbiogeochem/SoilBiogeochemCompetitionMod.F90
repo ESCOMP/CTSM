@@ -228,6 +228,7 @@ contains
     real(r8) :: sum_no3_demand(bounds%begc:bounds%endc,1:nlevdecomp)
     real(r8) :: sum_no3_demand_scaled(bounds%begc:bounds%endc,1:nlevdecomp)
     real(r8) :: sum_ndemand_vr(bounds%begc:bounds%endc, 1:nlevdecomp) !total column N demand (gN/m3/s) at a given level
+    real(r8) :: plant_ndemand_vr(bounds%begc:bounds%endc, 1:nlevdecomp)  !plant column N demand (gN/m3/s) at a given level
     real(r8) :: nuptake_prof(bounds%begc:bounds%endc, 1:nlevdecomp)
     real(r8) :: sminn_tot(bounds%begc:bounds%endc)
     integer  :: nlimit(bounds%begc:bounds%endc,0:nlevdecomp)          !flag for N limitation
@@ -322,7 +323,11 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)      
-               sum_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j) + potential_immob_vr(c,j)
+               if (use_fates) then
+               else
+                  plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+               end if
+               sum_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + potential_immob_vr(c,j)
             end do
          end do
 
@@ -337,7 +342,7 @@ contains
                   nlimit(c,j) = 0
                   fpi_vr(c,j) = 1.0_r8
                   actual_immob_vr(c,j) = potential_immob_vr(c,j)
-                  sminn_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+                  sminn_to_plant_vr(c,j) = plant_ndemand_vr(c,j)
                else if ( cnallocate_carbon_only()) then !.or. &
                   ! this code block controls the addition of N to sminn pool
                   ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
@@ -349,7 +354,7 @@ contains
                   nlimit(c,j) = 1
                   fpi_vr(c,j) = 1.0_r8
                   actual_immob_vr(c,j) = potential_immob_vr(c,j)
-                  sminn_to_plant_vr(c,j) =  plant_ndemand(c) * nuptake_prof(c,j)
+                  sminn_to_plant_vr(c,j) = plant_ndemand_vr(c,j)
                   supplement_to_sminn_vr(c,j) = sum_ndemand_vr(c,j) - (sminn_vr(c,j)/dt)
                else
                   ! N availability can not satisfy the sum of immobilization and
@@ -552,8 +557,8 @@ contains
                l = col%landunit(c)
 
                !  first compete for nh4
-               sum_nh4_demand(c,j) = plant_ndemand(c) * nuptake_prof(c,j) + potential_immob_vr(c,j) + pot_f_nit_vr(c,j)
-               sum_nh4_demand_scaled(c,j) = plant_ndemand(c)* nuptake_prof(c,j) * compet_plant_nh4 + &
+               sum_nh4_demand(c,j) = plant_ndemand_vr(c,j) + potential_immob_vr(c,j) + pot_f_nit_vr(c,j)
+               sum_nh4_demand_scaled(c,j) = plant_ndemand_vr(c,j) * compet_plant_nh4 + &
                     potential_immob_vr(c,j)*compet_decomp_nh4 + pot_f_nit_vr(c,j)*compet_nit
 
                if (sum_nh4_demand(c,j)*dt < smin_nh4_vr(c,j)) then
@@ -568,7 +573,7 @@ contains
                   f_nit_vr(c,j) = pot_f_nit_vr(c,j)
                   
                   if ( .not. local_use_fun ) then
-                     smin_nh4_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+                     smin_nh4_to_plant_vr(c,j) = plant_ndemand_vr(c,j)
                   else
                      smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
                   end if
@@ -588,8 +593,8 @@ contains
                           sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
                                                  
                      if ( .not. local_use_fun ) then
-                         smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt)*(plant_ndemand(c)* &
-                          nuptake_prof(c,j)*compet_plant_nh4 / sum_nh4_demand_scaled(c,j)), plant_ndemand(c)*nuptake_prof(c,j))
+                         smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j)/dt) * (plant_ndemand_vr(c,j) * &
+                          compet_plant_nh4 / sum_nh4_demand_scaled(c,j)), plant_ndemand_vr(c,j))
                           
                      else
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
@@ -619,15 +624,15 @@ contains
                end if
               
                if(.not.local_use_fun)then
-                   sum_no3_demand(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j)) + &
+                   sum_no3_demand(c,j) = (plant_ndemand_vr(c,j) - smin_nh4_to_plant_vr(c,j)) + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j)) + pot_f_denit_vr(c,j)
-                   sum_no3_demand_scaled(c,j) = (plant_ndemand(c)*nuptake_prof(c,j) &
+                   sum_no3_demand_scaled(c,j) = (plant_ndemand_vr(c,j) &
                                                  -smin_nh4_to_plant_vr(c,j))*compet_plant_no3 + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))*compet_decomp_no3 + pot_f_denit_vr(c,j)*compet_denit
                else
-                  sum_no3_demand(c,j) = plant_ndemand(c)*nuptake_prof(c,j) + &
+                  sum_no3_demand(c,j) = plant_ndemand_vr(c,j) + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j)) + pot_f_denit_vr(c,j)
-                   sum_no3_demand_scaled(c,j) = (plant_ndemand(c)*nuptake_prof(c,j))*compet_plant_no3 + &
+                   sum_no3_demand_scaled(c,j) = (plant_ndemand_vr(c,j)) * compet_plant_no3 + &
                   (potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))*compet_decomp_no3 + pot_f_denit_vr(c,j)*compet_denit
                endif
 
@@ -642,12 +647,12 @@ contains
                   f_denit_vr(c,j) = pot_f_denit_vr(c,j)
 
                   if(.not.local_use_fun)then
-                     smin_no3_to_plant_vr(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))
+                     smin_no3_to_plant_vr(c,j) = (plant_ndemand_vr(c,j) - smin_nh4_to_plant_vr(c,j))
                   else
                      ! This restricts the N uptake of a single layer to the value determined from the total demands and the 
                      ! hypothetical uptake profile above. Which is a strange thing to do, since that is independent of FUN
                      ! do we need this at all? 
-                     smin_no3_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j)
+                     smin_no3_to_plant_vr(c,j) = plant_ndemand_vr(c,j)
                      ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
                      if ( local_use_fun ) then
                         smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j)/dt - actual_immob_no3_vr(c,j) - f_denit_vr(c,j)
@@ -667,9 +672,9 @@ contains
                         actual_immob_nh4_vr(c,j))*compet_decomp_no3 / sum_no3_demand_scaled(c,j)), &
                                   potential_immob_vr(c,j)-actual_immob_nh4_vr(c,j))
         
-                        smin_no3_to_plant_vr(c,j) = min((smin_no3_vr(c,j)/dt)*((plant_ndemand(c)* &
-                                  nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))*compet_plant_no3 / sum_no3_demand_scaled(c,j)), &
-                                  plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))
+                        smin_no3_to_plant_vr(c,j) = min((smin_no3_vr(c,j)/dt) * ((plant_ndemand_vr(c,j) - &
+                                  smin_nh4_to_plant_vr(c,j)) * compet_plant_no3 / sum_no3_demand_scaled(c,j)), &
+                                  plant_ndemand_vr(c,j) - smin_nh4_to_plant_vr(c,j))
         
                         f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
                                   sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
@@ -681,8 +686,8 @@ contains
                         f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
                         sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
         
-                        smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j)/dt)*((plant_ndemand(c)* &
-                                  nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j))*compet_plant_no3 / sum_no3_demand_scaled(c,j))
+                        smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j)/dt) * ((plant_ndemand_vr(c,j) - &
+                                  smin_nh4_to_plant_vr(c,j)) * compet_plant_no3 / sum_no3_demand_scaled(c,j))
                                   
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
                         smin_no3_to_plant_vr(c,j) = (smin_no3_vr(c,j) / dt) - actual_immob_no3_vr(c,j) - f_denit_vr(c,j)
@@ -737,10 +742,10 @@ contains
                      ! update to new values that satisfy demand
                      actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j) -  actual_immob_no3_vr(c,j)   
                   end if
-                  if ( smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j) < plant_ndemand(c)*nuptake_prof(c,j) ) then
+                  if ( smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j) < plant_ndemand_vr(c,j) ) then
                      supplement_to_sminn_vr(c,j) = supplement_to_sminn_vr(c,j) + &
-                          (plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)) - smin_nh4_to_plant_vr(c,j)  ! use old values
-                     smin_nh4_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)
+                          (plant_ndemand_vr(c,j) - smin_no3_to_plant_vr(c,j)) - smin_nh4_to_plant_vr(c,j)  ! use old values
+                     smin_nh4_to_plant_vr(c,j) = plant_ndemand_vr(c,j) - smin_no3_to_plant_vr(c,j)
                   end if
                   sminn_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)
                end if
