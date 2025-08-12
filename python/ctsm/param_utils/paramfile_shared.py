@@ -14,7 +14,7 @@ def check_pfts_in_paramfile(selected_pfts, ds):
     """
     if PFTNAME_VAR not in ds:
         raise KeyError(f"paramfile missing variable: {PFTNAME_VAR}")
-    pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
+    pft_names = get_pft_names(ds)
     pfts_not_in_file = []
     for pft in selected_pfts:
         if pft not in pft_names:
@@ -22,6 +22,10 @@ def check_pfts_in_paramfile(selected_pfts, ds):
     if pfts_not_in_file:
         raise KeyError(f"PFT(s) not found in parameter file: {', '.join(pfts_not_in_file)}")
 
+    return pft_names
+
+def get_pft_names(ds):
+    pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
     return pft_names
 
 

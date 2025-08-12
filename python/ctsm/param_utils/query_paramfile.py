@@ -3,7 +3,7 @@ import xarray as xr
 from ctsm.args_utils import comma_separated_list
 from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
 from ctsm.param_utils.paramfile_shared import PFTNAME_VAR, check_pfts_in_paramfile
-from ctsm.param_utils.paramfile_shared import get_selected_pft_indices
+from ctsm.param_utils.paramfile_shared import get_selected_pft_indices, get_pft_names
 
 
 def get_arguments():
@@ -78,6 +78,8 @@ def main():
     pft_names = None
     if selected_pfts:
         pft_names = check_pfts_in_paramfile(selected_pfts, ds)
+    elif PFTNAME_VAR in ds.coords:
+        pft_names = get_pft_names(ds)
 
     for var in args.variables:
         if var in ds.variables:
