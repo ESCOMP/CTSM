@@ -7,6 +7,7 @@ import os
 import sys
 import shutil
 import tempfile
+import numpy as np
 import xarray as xr
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
@@ -135,6 +136,60 @@ class TestSysSetParamfile(unittest.TestCase):
                 self.assertTrue(ds_out[var].values == 87)
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
+
+    def test_set_paramfile_extractpfts_changeparam(self):
+        """
+        Test that set_paramfile can (1) copy to a new file with only some requested PFTs and (2)
+        change the values of parameters of those PFTs
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "xl=0.724,0.87",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that included variables/coords match as expected
+        for var in ds_in.variables:
+            if var == "xl":
+                self.assertTrue(np.array_equal(np.array([0.724, 0.87]), ds_out[var].values))
+            elif sp.PFTNAME_VAR in ds_in[var].coords:
+                self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
+    # TODO: Add test with NaN in existing
+
+    # TODO: Add test changing to NaN
+
+    def test_set_paramfile_changeparam_multidim_errors(self):
+        """
+        Test that set_paramfile errors if requesting change of a multi-dimensional parameter. This
+        test will obviously need to be replaced once that functionality is added.
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "mimics_till_decompk_multipliers=dummy",
+        ]
+
+        with self.assertRaises(NotImplementedError):
+            sp.main()
 
 
 if __name__ == "__main__":

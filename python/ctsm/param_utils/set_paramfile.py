@@ -3,6 +3,7 @@ Tool for changing parameters on CTSM paramfile
 """
 
 import os
+import numpy as np
 
 from ctsm.args_utils import comma_separated_list
 from ctsm.netcdf_utils import get_netcdf_format
@@ -58,7 +59,7 @@ def get_arguments():
 
     parser.add_argument(
         "param_changes",
-        help="Parameter changes to apply. E.g.: param1=new_value1 param2=new_value2",
+        help="Parameter changes to apply. E.g.: param1=new_value1 pftparam=pft1_val,pft2_val,...",
         nargs="*",
     )
 
@@ -95,6 +96,12 @@ def main():
     # Apply parameter changes, if any
     for chg in args.param_changes:
         var, new_value = chg.split("=")
+        if ds_out[var].ndim == 1:
+            new_value_list = new_value.split(",")
+            new_value = np.array(new_value_list, dtype=type(ds_out[var].dtype))
+        elif ds_out[var].ndim > 2:
+            # TODO: Add handling of multi-dimensional parameters
+            raise NotImplementedError("Can't yet change multi-dimensional parameters")
         ds_out[var].values = new_value
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
