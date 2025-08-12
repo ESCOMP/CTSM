@@ -12,7 +12,7 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'python')
 sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.query_parameters.query_paramfile import main
+from ctsm.param_utils.query_paramfile import main
 
 if __name__ == "__main__":
     main()
