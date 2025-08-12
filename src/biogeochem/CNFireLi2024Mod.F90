@@ -181,7 +181,7 @@ contains
          defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
          borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
          nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
-         forc_topo_g  => atm2lnd_inst%forc_topo_grc                            , & ! Input:  [real(r8) (:)      ]  atmospheric surface height (m)
+         forc_topo_g  => atm2lnd_inst%forc_topo_grc                            , & ! Input:  [real(r8) (:)      ]  atmospheric surface height, a.k.a. elevation (m)
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
          rswf_min           => pftcon%rswf_min                                 , & ! Input:
@@ -303,7 +303,7 @@ contains
         if( patch%itype(p) > nc4_grass )then
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
-        ! For natural vegetation
+        ! Exclude crops and bare soil
         if (patch%itype(p) <= nc4_grass .and. patch%itype(p) >= ndllf_evr_tmp_tree) then
            lfwt(c) = lfwt(c) + patch%wtgcell(p)
         end if
@@ -621,11 +621,14 @@ contains
                    cnfire_params%ignition_efficiency*(1._r8-fs)*  &
                    (lfwt(c)**0.5)
            end if
+
+           ! Reduce burnability at high elevations
            if(forc_topo_g(g) <= 2500._r8)then  !influence of topography on fires
               topoi = 1._r8
            else
               topoi = 0.004_r8
            end if
+
            nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) * topoi  !fire counts/km2/sec
            Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
            spread_m = fire_m**0.5_r8
