@@ -1,10 +1,12 @@
 """
 Tool for changing parameters on CTSM paramfile
 """
+
 import os
 
 from ctsm.args_utils import comma_separated_list
-from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
+from ctsm.netcdf_utils import get_netcdf_format
+from ctsm.param_utils.paramfile_shared import paramfile_parser_setup, open_paramfile
 
 PFTNAME_VAR = "pftname"
 
@@ -36,14 +38,16 @@ def get_arguments():
     parser, pft_flags = paramfile_parser_setup(
         "Print values of one or more variables from a netCDF file."
     )
+
     parser.add_argument("-o", "--output", required=True, help="Output netCDF file")
+
     parser.add_argument(
         *pft_flags,
         help="Comma-separated list of PFTs whose values you want to change (only applies to PFT-specific variables)",
         type=comma_separated_list,
     )
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     check_arguments(args)
 
     return args
@@ -55,6 +59,11 @@ def main():
     Parses arguments, opens a netCDF file, makes changes, and saves a new netCDF file.
     """
     args = get_arguments()
+
+    ds_in = open_paramfile(args.input)
+    ds_out = ds_in.copy()
+
+    ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
 
 
 if __name__ == "__main__":
