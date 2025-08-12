@@ -43,6 +43,7 @@ def main():
     ds = xr.open_dataset(args.input, decode_timedelta=False)
 
     selected_pfts = None
+    pft_names = None
     if args.pft:
         selected_pfts = [p.strip() for p in args.pft.split(",")]
         pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
