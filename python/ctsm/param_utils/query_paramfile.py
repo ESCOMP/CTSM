@@ -1,5 +1,6 @@
-import argparse
 import xarray as xr
+
+from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
 
 PFTNAME_VAR = "pftname"
 
@@ -16,14 +17,12 @@ def get_arguments():
             - variables: Comma-separated list of variable names to extract
             - pft: Optional comma-separated list of PFT names to print
     """
-    parser = argparse.ArgumentParser(
-        description="Print values of one or more variables from a netCDF file."
+    parser, pft_flags = paramfile_parser_setup(
+        "Print values of one or more variables from a netCDF file."
     )
-    parser.add_argument("-i", "--input", required=True, help="Input netCDF file")
     parser.add_argument("variables", help="Comma-separated list of variable names to extract")
     parser.add_argument(
-        "-p",
-        "--pft",
+        *pft_flags,
         help="Comma-separated list of PFT names to print (only applies to PFT-specific variables)",
     )
     args = parser.parse_args()
