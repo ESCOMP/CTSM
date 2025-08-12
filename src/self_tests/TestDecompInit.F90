@@ -7,6 +7,7 @@ module TestDecompInit
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8, CX => shr_kind_cx
   use Assertions, only : assert_equal
+  use clm_varctl, only : iulog
   use abortutils, only : endrun, endrun_init, get_last_endrun_msg
   use spmdMod, only : masterproc, npes
   use decompInitMod, only : decompInit_lnd, clump_pproc
@@ -56,7 +57,9 @@ contains
 
     call write_to_log('start_test_decomp_init')
 
+    call write_to_log('test_check_nclumps')
     call test_check_nclumps()
+    call write_to_log('test_decompInit_lnd_abort_on_bad_clump_pproc')
     call test_decompInit_lnd_abort_on_bad_clump_pproc()
 
     call clean
@@ -69,10 +72,15 @@ contains
      integer :: amask(ni*nj) 
      character(len=CX) :: expected_msg, actual_msg
 
+     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      clump_pproc = 0
+     call write_to_log('decompInit_lnd with clump_pproc=0 should abort')
      call decompInit_lnd( ni, nj, amask )
-     expected_msg = 'clump_pproc= 0  must be greater than 0'
+     call write_to_log('check expected abort message')
+     expected_msg = 'clump_pproc must be greater than 0'
      actual_msg = get_last_endrun_msg()
+     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     call write_to_log('call assert_equal to check the abort message')
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
            msg='decompInit_lnd did not abort with clump_pproc=0' )
@@ -95,6 +103,7 @@ contains
     ! !DESCRIPTION:
     ! Write a message to the log file, just from the masterproc
     !
+    use shr_sys_mod, only : shr_sys_flush
     ! !ARGUMENTS:
     character(len=*), intent(in) :: msg
     !
@@ -105,6 +114,7 @@ contains
 
     if (masterproc) then
        write(*,'(a)') msg
+       call shr_sys_flush(iulog)  ! Flush the I/O buffers always
     end if
 
   end subroutine write_to_log
