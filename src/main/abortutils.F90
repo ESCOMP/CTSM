@@ -13,6 +13,7 @@ module abortutils
   use shr_kind_mod, only: CX => shr_kind_cx
   use shr_log_mod, only: shr_log_error, errMsg => shr_log_errMsg
   use shr_sys_mod , only : shr_sys_flush
+  use clm_varctl, only: iulog
   implicit none
   private
 
@@ -47,6 +48,7 @@ contains
          call endrun( msg='An endrun call happened, but was not handled' )
       end if
       if ( for_testing_do_not_abort )then
+         write(iulog,*)'Preparing a test that will call endrun'
          save_msg = 'none'  ! Reset the saved message
          abort_on_endrun = .false.
       else
@@ -97,7 +99,6 @@ contains
     !
     use shr_sys_mod, only: shr_sys_abort
     use shr_abort_mod, only: shr_abort_abort
-    use clm_varctl, only: iulog
     use ESMF, only : ESMF_Finalize, ESMF_END_ABORT
     intrinsic :: exit
     !
@@ -157,7 +158,6 @@ contains
     !
     use shr_sys_mod , only: shr_sys_abort
     use shr_abort_mod, only: shr_abort_abort
-    use clm_varctl  , only: iulog
     use decompMod   , only: subgrid_level_unspecified
     !
     ! Arguments:
@@ -204,7 +204,6 @@ contains
     !
     use shr_sys_mod  , only : shr_sys_flush, shr_sys_abort
     use shr_log_mod  , only : errMsg => shr_log_errMsg
-    use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod    , only : get_global_index
     use GridcellType , only : grc
