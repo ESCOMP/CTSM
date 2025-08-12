@@ -44,9 +44,10 @@ def main():
 
     selected_pfts = None
     pft_names = None
+    if PFTNAME_VAR in ds:
+        pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
     if args.pft:
         selected_pfts = [p.strip() for p in args.pft.split(",")]
-        pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
         pfts_not_in_file = []
         for pft in selected_pfts:
             if pft not in pft_names:
