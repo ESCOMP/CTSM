@@ -257,10 +257,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fire_method phys="clm4_5" >li2014qianfrc</fire_method>
 
 <max_rh30_affecting_fuel>90.d00</max_rh30_affecting_fuel>
-<defo_fire_precip_thresh_bet>4.0d00</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt>1.8d00</defo_fire_precip_thresh_bdt>
 <borpeat_fire_soilmoist_denom>0.3d00</borpeat_fire_soilmoist_denom>
 <nonborpeat_fire_precip_denom>1.0d00</nonborpeat_fire_precip_denom>
+
+<defo_fire_precip_thresh_bet>4.0d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bet fire_method="li2024crujra">3.0d00</defo_fire_precip_thresh_bet>
 
 <rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
