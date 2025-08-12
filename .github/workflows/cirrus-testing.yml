@@ -14,4 +14,4 @@ jobs:
     runs-on: gha-runner-ctsm
     steps:
       - name: List Glade inputdata
-        run: sleep 600 && ls /glade/campaign/cesm/cesmdata/cseg/inputdata
+        run: ls /glade/campaign/cesm/cesmdata/cseg/inputdata
