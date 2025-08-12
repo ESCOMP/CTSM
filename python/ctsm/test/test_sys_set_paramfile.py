@@ -82,6 +82,35 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that both are the same kind of netCDF
         self.assertEqual(get_netcdf_format(PARAMFILE), get_netcdf_format(output_path))
 
+    def test_set_paramfile_changeparams_scalar(self):
+        """Test that set_paramfile can copy to a new file with some scalar params changed"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "a_coef=0.87",
+            "bgc_cn_s2=87",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that all variables/coords are equal except the ones we changed, which should be set
+        # to what we asked
+        for var in ds_in.variables:
+            if var == "a_coef":
+                self.assertTrue(ds_in[var].values == 0.13)
+                self.assertTrue(ds_out[var].values == 0.87)
+            elif var == "bgc_cn_s2":
+                self.assertTrue(ds_in[var].values == 11)
+                self.assertTrue(ds_out[var].values == 87)
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

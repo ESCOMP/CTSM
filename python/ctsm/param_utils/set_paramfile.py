@@ -55,6 +55,12 @@ def get_arguments():
         type=comma_separated_list,
     )
 
+    parser.add_argument(
+        "param_changes",
+        help="Parameter changes to apply. E.g.: param1=new_value1 param2=new_value2",
+        nargs="*",
+    )
+
     args = parser.parse_args()
     check_arguments(args)
 
@@ -78,6 +84,11 @@ def main():
             if var not in args.variables:
                 vars_to_drop.append(var)
         ds_out = ds_out.drop_vars(vars_to_drop)
+
+    # Apply parameter changes, if any
+    for chg in args.param_changes:
+        var, new_value = chg.split("=")
+        ds_out[var].values = new_value
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
 
