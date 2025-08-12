@@ -5,6 +5,17 @@ PFTNAME_VAR = "pftname"
 
 
 def get_arguments():
+    """
+    Parse command-line arguments for querying variables from a netCDF file.
+
+    Returns
+    -------
+    argparse.Namespace
+        Parsed arguments with attributes:
+            - input: Path to the netCDF file
+            - variables: Comma-separated list of variable names to extract
+            - pft: Optional comma-separated list of PFT names to print
+    """
     parser = argparse.ArgumentParser(
         description="Print values of one or more variables from a netCDF file."
     )
@@ -20,6 +31,20 @@ def get_arguments():
 
 
 def print_values(ds, var, selected_pfts, pft_names):
+    """
+    Print the values of a variable from the dataset, optionally filtered by PFTs.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The opened netCDF dataset.
+    var : str
+        Variable name to print.
+    selected_pfts : list or None
+        List of selected PFT names to print, or None to print all.
+    pft_names : list or None
+        List of all PFT names in the file.
+    """
     data = ds[var].values
     if PFTNAME_VAR in ds[var].coords:
         print(var + ":")
@@ -36,6 +61,10 @@ def print_values(ds, var, selected_pfts, pft_names):
 
 
 def main():
+    """
+    Main entry point for the script.
+    Parses arguments, opens the netCDF file, and prints requested variable values.
+    """
     args = get_arguments()
 
     variable_names = [v.strip() for v in args.variables.split(",")]
