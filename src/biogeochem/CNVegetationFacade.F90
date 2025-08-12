@@ -96,6 +96,8 @@ module CNVegetationFacade
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use SoilHydrologyType               , only : soilhydrology_type
+  use DryDepVelocity                  , only : drydepvel_type
   !
   implicit none
   private
@@ -127,7 +129,7 @@ module CNVegetationFacade
      type(cn_balance_type)          :: cn_balance_inst
      class(fire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
-
+     type(drydepvel_type)           :: drydepvel_inst   
      ! Control variables
      logical, private :: reseed_dead_plants              ! Flag to indicate if should reseed dead plants when starting up the model
      logical, private :: dribble_crophrv_xsmrpool_2atm = .False. ! Flag to indicate if should harvest xsmrpool to the atmosphere
@@ -962,7 +964,7 @@ contains
        wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
        soil_water_retention_curve, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-       nutrient_competition_method, fireemis_inst)
+       nutrient_competition_method, fireemis_inst, drydepvel_inst)
     !
     ! !DESCRIPTION:
     ! Do the main science for biogeochemistry that needs to be done before hydrology-drainage
@@ -1019,6 +1021,7 @@ contains
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
     type(fireemis_type)                     , intent(inout) :: fireemis_inst
     type(hlm_fates_interface_type)          , intent(inout) :: clm_fates
+    type(drydepvel_type)                    , intent(inout) :: drydepvel_inst  
     !
     ! !LOCAL VARIABLES:
 
@@ -1053,7 +1056,8 @@ contains
          wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
          soil_water_retention_curve, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
-         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
+         nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm,    &
+         drydepvel_inst)
 
     ! fire carbon emissions 
     call CNFireEmisUpdate(bounds, num_bgc_vegp, filter_bgc_vegp, &
@@ -1074,7 +1078,7 @@ contains
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
@@ -1113,6 +1117,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -1135,7 +1140,7 @@ contains
          this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
          c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
-         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
+         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst, soilhydrology_inst)
 
     ! Set controls on very low values in critical state variables 
 
