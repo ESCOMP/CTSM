@@ -52,8 +52,8 @@ class TestUnitQueryParamfile(unittest.TestCase):
         sys.argv = ["get_arguments", "-i", input_path, "-p", "pft1,pft2", "var1,var2"]
         args = qp.get_arguments()
         self.assertEqual(input_path, args.input)
-        self.assertEqual("pft1,pft2", args.pft)
-        self.assertEqual("var1,var2", args.variables)
+        self.assertEqual(["pft1", "pft2"], args.pft)
+        self.assertEqual(["var1", "var2"], args.variables)
 
     def test_query_paramfile_args_long(self):
         """Test that all arguments can be set correctly with longnames"""
@@ -61,8 +61,8 @@ class TestUnitQueryParamfile(unittest.TestCase):
         sys.argv = ["get_arguments", "--input", input_path, "--pft", "pft1,pft2", "var1,var2"]
         args = qp.get_arguments()
         self.assertEqual(input_path, args.input)
-        self.assertEqual("pft1,pft2", args.pft)
-        self.assertEqual("var1,var2", args.variables)
+        self.assertEqual(["pft1", "pft2"], args.pft)
+        self.assertEqual(["var1", "var2"], args.variables)
 
     def test_query_paramfile_print_scalar(self):
         """Test that print_values works with a scalar parameter"""
