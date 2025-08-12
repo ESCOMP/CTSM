@@ -93,8 +93,8 @@ contains
           return
        end if
     else
-       write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       write(iulog,*) 'ERROR: Bad clump_pproc=', clump_pproc, errMsg(sourcefile, __LINE__)
+       call endrun(msg='clump_pproc must be greater than 0')
        return
     end if
 
