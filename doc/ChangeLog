@@ -1,4 +1,77 @@
 ===============================================================
+Tag name: ctsm5.3.069
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Tue Aug 12 09:52:59 MDT 2025
+One-line Summary: Add SystemTests to run subset_data and then CTSM
+
+Purpose and description of changes
+----------------------------------
+
+Adds SUBSETDATAPOINT and SUBSETDATAREGION tests to aux_clm (and new subset_data suite). These run subset_data for either a point or a six-cell region, then run CTSM with the outputs.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves [Issue #1491: Add two new tests that run subset_data and then run a case from it](https://github.com/ESCOMP/CTSM/issues/1491)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+- Adds test SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default
+- Adds test SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default
+- Adds new subset_data suite with those tests in it
+- Those tests are also in aux_clm
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - Unit, black, and pylint checks pass. Two system tests fail due to recent conda and mamba updates on Derecho; these have been fixed on b4b-dev with [Pull Request #3403: Fix py_env_create and tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3403)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3292: ctsm5.3.069: Add SystemTests to run subset_data and then CTSM by samsrabin](https://github.com/ESCOMP/CTSM/pull/3292)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.068
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 11 Aug 2025 02:27:39 PM MDT
