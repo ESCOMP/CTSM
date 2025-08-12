@@ -37,7 +37,7 @@ def get_arguments():
             - pft: Optional list of PFT names whose values you want to change
     """
     parser, pft_flags = paramfile_parser_setup(
-        "Print values of one or more variables from a netCDF file."
+        "Change values of one or more parameters in a CTSM paramfile."
     )
 
     parser.add_argument("-o", "--output", required=True, help="Output netCDF file")

@@ -19,7 +19,7 @@ def get_arguments():
             - pft: Optional list of PFT names to print
     """
     parser, pft_flags = paramfile_parser_setup(
-        "Print values of one or more variables from a netCDF file."
+        "Print values of one or more parameters from a CTSM paramfile."
     )
     parser.add_argument(
         "variables",
