@@ -37,6 +37,7 @@ contains
     use ESMF, only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_Finalize
     use shr_sys_mod, only : shr_sys_flush
     use spmdMod, only : masterproc
+    use abortutils, only : terminate_early_without_error
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
@@ -46,6 +47,12 @@ contains
     integer :: ntests = 0
     !-----------------------------------------------------------------------
 
+    if ( masterproc ) then
+       write(iulog,*) '-------------------------------'
+       write(iulog,*) '----- Starting self tests -----'
+       write(iulog,*) '-------------------------------'
+       call shr_sys_flush(iulog)
+    end if
     if (for_testing_run_ncdiopio_tests) then
        ntests = ntests + 1
        call test_ncdio_pio(bounds)
@@ -54,9 +61,15 @@ contains
        ntests = ntests + 1
        call test_decomp_init()
     end if
+    if ( masterproc ) then
+       write(iulog,*) '-------------------------------'
+       write(iulog,*) '----- Ending self tests -------'
+       write(iulog,*) '-------------------------------'
+       call shr_sys_flush(iulog)
+    end if
     if (for_testing_exit_after_self_tests) then
        ! Print out some messaging if we are exiting after self tests.
-       if ( masterproc ) then 
+       if ( masterproc ) then
           if ( ntests == 0 )then
              write(iulog,*) 'WARNING: You are exiting after self tests were run -- but no self tests were run.'
           else
@@ -65,6 +78,7 @@ contains
           call shr_sys_flush(iulog)
           call ESMF_LogWrite(' exiting after running self tests', ESMF_LOGMSG_INFO)
        end if
+       call terminate_early_without_error('Exiting after running self tests')
     end if
 
   end subroutine self_test_driver
