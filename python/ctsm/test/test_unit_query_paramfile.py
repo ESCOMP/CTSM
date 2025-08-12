@@ -11,6 +11,7 @@ import xarray as xr
 from ctsm import unit_testing
 
 from ctsm.param_utils import query_paramfile as qp
+from ctsm.param_utils.paramfile_shared import PFTNAME_VAR
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -24,14 +25,14 @@ def _setup_pft_parameter_ds():
     pft_dimname = "pft"
     pft_names_list = ["pft0", "pft1"]
     pft_names_da = xr.DataArray(
-        name=qp.PFTNAME_VAR,
+        name=PFTNAME_VAR,
         data=pft_names_list,
         dims=[pft_dimname],
         coords={pft_dimname: pft_names_list},
     )
     var_name = "pft_param"
     pft_param_da = xr.DataArray(
-        data=[1986.0325, 1987.0724], dims=[pft_dimname], coords={qp.PFTNAME_VAR: pft_names_da}
+        data=[1986.0325, 1987.0724], dims=[pft_dimname], coords={PFTNAME_VAR: pft_names_da}
     )
     ds = xr.Dataset(data_vars={var_name: pft_param_da, pft_dimname: pft_names_da})
     return ds, var_name, pft_names_list

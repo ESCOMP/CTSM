@@ -7,8 +7,8 @@ import os
 from ctsm.args_utils import comma_separated_list
 from ctsm.netcdf_utils import get_netcdf_format
 from ctsm.param_utils.paramfile_shared import paramfile_parser_setup, open_paramfile
-
-PFTNAME_VAR = "pftname"
+from ctsm.param_utils.paramfile_shared import check_pfts_in_paramfile, get_selected_pft_indices
+from ctsm.param_utils.paramfile_shared import PFTNAME_VAR
 
 
 def check_arguments(args):
@@ -41,9 +41,10 @@ def get_arguments():
 
     parser.add_argument("-o", "--output", required=True, help="Output netCDF file")
 
+    # TODO: Add --exclude-pfts argument for PFTs you DON'T want to include
     parser.add_argument(
         *pft_flags,
-        help="Comma-separated list of PFTs whose values you want to change (only applies to PFT-specific variables)",
+        help="Comma-separated list of PFTs to include (only applies to PFT-specific variables)",
         type=comma_separated_list,
     )
 
@@ -76,6 +77,12 @@ def main():
 
     ds_in = open_paramfile(args.input)
     ds_out = ds_in.copy()
+
+    # If any PFTs were specified, drop others
+    if args.pft:
+        pft_names = check_pfts_in_paramfile(args.pft, ds_out)
+        indices = get_selected_pft_indices(args.pft, pft_names)
+        ds_out = ds_out.isel({"pft": indices})
 
     # If any variables specified, drop others
     if args.variables:

@@ -2,8 +2,8 @@ import xarray as xr
 
 from ctsm.args_utils import comma_separated_list
 from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
-
-PFTNAME_VAR = "pftname"
+from ctsm.param_utils.paramfile_shared import PFTNAME_VAR, check_pfts_in_paramfile
+from ctsm.param_utils.paramfile_shared import get_selected_pft_indices
 
 
 def get_arguments():
@@ -55,7 +55,7 @@ def print_values(ds, var, selected_pfts, pft_names):
         print(var + ":")
         indices = range(len(pft_names))
         if selected_pfts is not None:
-            indices = [i for i, name in enumerate(pft_names) if name in selected_pfts]
+            indices = get_selected_pft_indices(selected_pfts, pft_names)
             max_name_len = max(len(pft_names[i]) for i in indices) if indices else 0
         else:
             max_name_len = max(len(name) for name in pft_names)
@@ -76,15 +76,8 @@ def main():
 
     selected_pfts = args.pft
     pft_names = None
-    if PFTNAME_VAR in ds:
-        pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
     if selected_pfts:
-        pfts_not_in_file = []
-        for pft in selected_pfts:
-            if pft not in pft_names:
-                pfts_not_in_file += [pft]
-        if pfts_not_in_file:
-            raise KeyError(f"PFT(s) not found in parameter file: {', '.join(pfts_not_in_file)}")
+        pft_names = check_pfts_in_paramfile(selected_pfts, ds)
 
     for var in args.variables:
         if var in ds.variables:

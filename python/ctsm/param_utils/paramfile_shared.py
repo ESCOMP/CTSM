@@ -5,9 +5,34 @@ Functions etc. shared among parameter file utilities
 import argparse
 import xarray as xr
 
+PFTNAME_VAR = "pftname"
+
+
+def check_pfts_in_paramfile(selected_pfts, ds):
+    """
+    Check that given PFTs are in parameter file
+    """
+    if PFTNAME_VAR not in ds:
+        raise KeyError(f"paramfile missing variable: {PFTNAME_VAR}")
+    pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
+    pfts_not_in_file = []
+    for pft in selected_pfts:
+        if pft not in pft_names:
+            pfts_not_in_file += [pft]
+    if pfts_not_in_file:
+        raise KeyError(f"PFT(s) not found in parameter file: {', '.join(pfts_not_in_file)}")
+
+    return pft_names
+
+
+def get_selected_pft_indices(selected_pfts, pft_names):
+    indices = [i for i, name in enumerate(pft_names) if name in selected_pfts]
+    return indices
+
 
 def open_paramfile(file_in):
     return xr.open_dataset(file_in, decode_timedelta=False)
+
 
 def paramfile_parser_setup(description):
     parser = argparse.ArgumentParser(description=description)

@@ -82,6 +82,31 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that both are the same kind of netCDF
         self.assertEqual(get_netcdf_format(PARAMFILE), get_netcdf_format(output_path))
 
+    def test_set_paramfile_extractpfts(self):
+        """Test that set_paramfile can copy to a new file with only some requested PFTs"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            ",".join(pfts_to_include),
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that included variables/coords match
+        for var in ds_in.variables:
+            if sp.PFTNAME_VAR in ds_in[var].coords:
+                self.assertTrue(ds_in[var].isel(pft=[0,1]).equals(ds_out[var]))
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
     def test_set_paramfile_changeparams_scalar(self):
         """Test that set_paramfile can copy to a new file with some scalar params changed"""
         output_path = os.path.join(self.tempdir, "output.nc")
