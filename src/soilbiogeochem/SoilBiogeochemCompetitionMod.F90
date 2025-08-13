@@ -30,6 +30,7 @@ module SoilBiogeochemCompetitionMod
   use TemperatureType                 , only : temperature_type
   use SoilStateType                   , only : soilstate_type
   use CanopyStateType                 , only : CanopyState_type
+  use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   !
   implicit none
   private
@@ -172,10 +173,10 @@ contains
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                          soilbiogeochem_carbonflux_inst,                                           &              
                                          soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst,             &
-                                         soilbiogeochem_nitrogenflux_inst,canopystate_inst)
+                                         soilbiogeochem_nitrogenflux_inst,canopystate_inst, clm_fates)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only, iulog
+    use clm_varctl       , only: use_fates, cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
@@ -207,11 +208,16 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst   
+    type(hlm_fates_interface_type), intent(in) :: clm_fates
 !
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,l,pi,j,k                                          ! indices
     integer  :: fc                                                    ! filter column index
+    integer :: ft  ! FATES functional type index
+    integer :: f  ! loop index for plant competitors
+    integer :: ci, s  ! used for FATES BC (clump index, site index)
+    integer :: n_pcomp  ! number of plant competitors
     logical :: local_use_fun                                          ! local version of use_fun
     real(r8) :: amnf_immob_vr                                         ! actual mineral N flux from immobilization (gN/m3/s)
     real(r8) :: n_deficit_vr                                          ! microbial N deficit, vertically resolved (gN/m3/s)
@@ -320,16 +326,51 @@ contains
             end do
          end do
 
-         do j = 1, nlevdecomp
-            do fc=1,num_bgc_soilc
-               c = filter_bgc_soilc(fc)      
-               if (use_fates) then
-               else
+         num_bgc_soilc: do fc = 1, num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+
+            use_fates: if (use_fates) then
+               ci = bounds%clump_index
+               s = clm_fates%f2hmap(ci)%hsites(c)
+               n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
+
+               ! Overwrite the column level demands, since fates plants are all sharing
+               ! the same space, in units per the same square meter, we just add demand
+               ! to scale up to column
+               plant_ndemand(c) = 0._r8
+
+               ! We fill the vertically resolved array to simplify some jointly used code
+               do j = 1, nlevdecomp
+                  plant_ndemand_vr(c,j) = 0._r8
+
+                  do f = 1, n_pcomp
+                     ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
+
+                     ! [gN/m3/s] = [gC/m3] * [gN/gC/s]
+                     plant_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + &
+                         clm_fates%fates(ci)%bc_out(s)%veg_rootc(f,j) * &
+                         (clm_fates%fates(ci)%bc_pconst%vmax_nh4(ft) + &
+                          clm_fates%fates(ci)%bc_pconst%vmax_no3(ft))
+                  end do
+
+                  ! [gN/m2/s]
+                  plant_ndemand(c) = plant_ndemand(c) + plant_ndemand_vr(c,j) * dzsoi_decomp(j)
+
+               end do
+
+            else  ! not use_fates
+
+               do j = 1, nlevdecomp
                   plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
-               end if
+               end do
+
+            end if use_fates
+
+            do j = 1, nlevdecomp
                sum_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + potential_immob_vr(c,j)
             end do
-         end do
+
+         end do num_bgc_soilc
 
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc

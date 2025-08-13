@@ -478,7 +478,7 @@ contains
                                      cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
                                      soilbiogeochem_carbonflux_inst,&
                                      soilbiogeochem_state_inst,soilbiogeochem_nitrogenstate_inst,              &
-                                     soilbiogeochem_nitrogenflux_inst,canopystate_inst)
+                                     soilbiogeochem_nitrogenflux_inst,canopystate_inst, clm_fates)
      call t_stopf('soilbiogeochemcompetition')
 
     ! distribute the available N between the competing patches  on the basis of 
