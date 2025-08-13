@@ -91,16 +91,22 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
 [submodule "cdeps"]
 path = components/cdeps
-url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.79
+#url = https://github.com/ESCOMP/CDEPS.git
+url = https://github.com/ekluzek/CDEPS.git
+#fxtag = cdeps1.0.79
+#fxtag = add_more_timers
+fxtag = 65f7bb0c88420d58a080f9fcc8afbd945c90211a
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 
 [submodule "share"]
 path = share
-url = https://github.com/ESCOMP/CESM_share
-fxtag = share1.1.9
+#url = https://github.com/ESCOMP/CESM_share
+url = https://github.com/ekluzek/CESM_share
+#fxtag = share1.1.9
+#fxtag = add_jdennis_procstatus_module
+fxtag = 9973692556da54f9562935be43c1d43b0607d24b
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
