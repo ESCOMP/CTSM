@@ -322,7 +322,6 @@ class TestSysSetParamfile(unittest.TestCase):
     def test_set_paramfile_setparams_pft_double_tonan_with_nan(self):
         """Test setting PFT-dimensioned double to NaN using 'nan'"""
         output_path = os.path.join(self.tempdir, "output.nc")
-        this_var = "xl"
         pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
         sys.argv = [
             "set_paramfile",
@@ -332,13 +331,20 @@ class TestSysSetParamfile(unittest.TestCase):
             output_path,
             "-p",
             ",".join(pfts_to_include),
-            f"{this_var}=nan,nan",
+            "xl=nan,nan",
+            "planting_temp=nan,nan",
         ]
+
+        # Check that planting_temp is already nan and xl isn't
+        ds_in = open_paramfile(PARAMFILE, mask_and_scale=True)
+        self.assertTrue(all(np.isnan(ds_in["planting_temp"].isel(pft=[0, 1]))))
+        self.assertTrue(not any(np.isnan(ds_in["xl"].isel(pft=[0, 1]))))
 
         sp.main()
         self.assertTrue(os.path.exists(output_path))
         ds_out = open_paramfile(output_path, mask_and_scale=True)
-        self.assertTrue(all(np.isnan(ds_out[this_var])))
+        self.assertTrue(all(np.isnan(ds_out["xl"])))
+        self.assertTrue(all(np.isnan(ds_out["planting_temp"])))
 
     def test_set_paramfile_setparams_nan_but_no_fillvalue(self):
         """Test that NotImplementedError is given if trying to set NaN but param has no FillValue"""
@@ -388,14 +394,6 @@ class TestSysSetParamfile(unittest.TestCase):
             NotImplementedError, "Not able to set NaN for integer parameters:"
         ):
             sp.main()
-
-    # TODO: Add test changing vector int to NaN using nan
-    # TODO: Add test changing scalar double to NaN using _
-    # TODO: Add test changing scalar int to NaN using _
-    # TODO: Add test changing vector double to NaN using _
-    # TODO: Add test changing vector int to NaN using _
-
-    # TODO: Add test overwriting existing scalar double NaN using nan (lowercase)
 
     # TODO: Test changing param when extracting just one PFT
 
