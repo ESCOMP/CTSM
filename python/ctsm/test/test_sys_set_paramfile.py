@@ -16,6 +16,7 @@ from ctsm import unit_testing
 from ctsm.netcdf_utils import get_netcdf_format
 from ctsm.param_utils import set_paramfile as sp
 from ctsm.param_utils.paramfile_shared import open_paramfile
+from ctsm.param_utils.paramfile_shared import check_pfts_in_paramfile, get_selected_pft_indices
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -463,6 +464,38 @@ class TestSysSetParamfile(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             sp.main()
+
+    def test_set_paramfile_setparams_just_one_pft(self):
+        """Test changing just one PFT's value of something without dropping others"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pft_to_include = "needleleaf_deciduous_boreal_tree"
+        this_var = "rswf_max"
+        new_value = 0.7
+
+        # Ensure it wasn't new_value before
+        ds_in = open_paramfile(PARAMFILE)
+        pft_names = check_pfts_in_paramfile([pft_to_include], ds_in)
+        pft_index = get_selected_pft_indices([pft_to_include], pft_names)[0]
+        self.assertFalse(ds_in[this_var].values[pft_index] == new_value)
+
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            pft_to_include,
+            f"{this_var}={new_value}",
+        ]
+        sp.main()
+
+        ds_out = open_paramfile(output_path)
+        for i, value in enumerate(ds_out[this_var]):
+            if i == pft_index:
+                self.assertTrue(value == new_value)
+            else:
+                self.assertTrue(value == ds_in[this_var].values[i])
 
 
 if __name__ == "__main__":

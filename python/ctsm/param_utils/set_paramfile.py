@@ -147,9 +147,7 @@ def main():
         if np.any(np.char.lower(new_value) == "nan"):
             # TODO: Add code to set integer variables to NaN (this might not be possible)
             if is_integer(ds_in[var].values):
-                raise NotImplementedError(
-                    f"Not able to set NaN for integer parameters: {chg}"
-                )
+                raise NotImplementedError(f"Not able to set NaN for integer parameters: {chg}")
             # TODO: Add code to set integer variables to NaN (this might not be possible)
             if "_FillValue" not in ds_in_masked_scaled[var].encoding:
                 raise NotImplementedError(
@@ -158,12 +156,23 @@ def main():
 
         new_value = new_value.astype(type(ds_out[var].dtype))
 
-        check_correct_ndims(ds_out[var], new_value, throw_error=True)
-
-        # Handle the situation where we're only changing values for some PFTs
-        if PFTNAME_VAR in ds_out[var].coords and args.pft and not args.drop_other_pfts:
+        # Are we acting on just some PFTs? If so, we'll need some stuff.
+        just_some_pfts = PFTNAME_VAR in ds_out[var].coords and args.pft
+        if just_some_pfts:
             pft_names = check_pfts_in_paramfile(args.pft, ds_out)
             indices = get_selected_pft_indices(args.pft, pft_names)
+
+        # Check that correct number of dimensions were given for new values. Special handling needed
+        # if we're just acting on one PFT.
+        if just_some_pfts and len(args.pft) == 1:
+            check_correct_ndims(
+                ds_out[var].isel(pft=indices).squeeze(), new_value, throw_error=True
+            )
+        else:
+            check_correct_ndims(ds_out[var], new_value, throw_error=True)
+
+        # Handle the situation where we're only changing values for some PFTs but keeping the others
+        if just_some_pfts and not args.drop_other_pfts:
             tmp = ds_out[var].values.copy()
             tmp[indices] = new_value
             new_value = tmp
