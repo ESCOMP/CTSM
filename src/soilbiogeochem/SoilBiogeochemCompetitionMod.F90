@@ -208,7 +208,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(canopystate_type)                  , intent(inout) :: canopystate_inst   
-    type(hlm_fates_interface_type), intent(in) :: clm_fates
+    type(hlm_fates_interface_type), intent(inout) :: clm_fates
 !
     !
     ! !LOCAL VARIABLES:
