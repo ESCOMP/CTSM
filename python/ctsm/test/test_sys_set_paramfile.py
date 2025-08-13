@@ -153,9 +153,9 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_in = open_paramfile(PARAMFILE)
         ds_out = open_paramfile(output_path)
 
-        # Check that all variables/coords are equal except the ones we changed, which should be set
-        # to what we asked
         for var in ds_in.variables:
+            # Check that all variables/coords are equal except the ones we changed, which should be
+            # set to what we asked
             if var == "a_coef":
                 self.assertTrue(ds_in[var].values == 0.13)
                 self.assertTrue(ds_out[var].values == 0.87)
@@ -164,6 +164,9 @@ class TestSysSetParamfile(unittest.TestCase):
                 self.assertTrue(ds_out[var].values == 87)
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
+
+            # Check that data type hasn't changed
+            self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
 
     def test_set_paramfile_extractpfts_changeparam(self):
         """
