@@ -340,7 +340,26 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_out = open_paramfile(output_path, mask_and_scale=True)
         self.assertTrue(all(np.isnan(ds_out[this_var])))
 
-    # TODO: Add test changing scalar int to NaN using nan
+    def test_set_paramfile_setparams_nan_but_no_fillvalue(self):
+        """Test that NotImplementedError is given if trying to set NaN but param has no FillValue"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "upplim_destruct_metamorph"
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            f"{this_var}=nan",
+        ]
+
+        with self.assertRaisesRegex(
+            NotImplementedError, "Not able to set NaN if parameter doesn't already have fill value:"
+        ):
+            sp.main()
+
+    # TODO: Add test changing scalar int to NaN using nan (needs a new input file)
+    # TODO: Add test changing vector int to NaN using nan
     # TODO: Add test changing scalar double to NaN using _
     # TODO: Add test changing scalar int to NaN using _
     # TODO: Add test changing vector double to NaN using _

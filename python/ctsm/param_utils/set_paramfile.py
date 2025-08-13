@@ -100,6 +100,8 @@ def main():
     """
     args = get_arguments()
 
+    ds_in_masked_scaled = open_paramfile(args.input, mask_and_scale=True)
+
     ds_in = open_paramfile(args.input)
     ds_out = ds_in.copy()
 
@@ -130,6 +132,17 @@ def main():
             new_value = np.array(new_value_list)
         else:
             new_value = np.array(new_value)
+
+        # TODO: Add code to set something to NaN if variable doesn't already have fill value
+        print(ds_out[var].encoding)
+        if (
+            np.any(np.char.lower(new_value) == "nan")
+            and "_FillValue" not in ds_in_masked_scaled[var].encoding
+        ):
+            raise NotImplementedError(
+                f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
+            )
+
         new_value = new_value.astype(type(ds_out[var].dtype))
 
         check_correct_ndims(ds_out[var], new_value, throw_error=True)
