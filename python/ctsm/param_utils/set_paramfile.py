@@ -160,6 +160,14 @@ def main():
 
         check_correct_ndims(ds_out[var], new_value, throw_error=True)
 
+        # Handle the situation where we're only changing values for some PFTs
+        if PFTNAME_VAR in ds_out[var].coords and args.pft and not args.drop_other_pfts:
+            pft_names = check_pfts_in_paramfile(args.pft, ds_out)
+            indices = get_selected_pft_indices(args.pft, pft_names)
+            tmp = ds_out[var].values.copy()
+            tmp[indices] = new_value
+            new_value = tmp
+
         ds_out[var].values = new_value
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))

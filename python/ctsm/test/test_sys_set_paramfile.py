@@ -247,6 +247,48 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
+    def test_set_paramfile_changeparam_dbl_onlysomepfts(self):
+        """
+        Test that set_paramfile can (1) copy to a new file with only some requested PFTs and (2)
+        change the values of double parameters of those PFTs
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "xl=0.724,0.87",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that included variables/coords match as expected
+        for var in ds_in.variables:
+            if var == "xl":
+                print(ds_in[var].values)
+                print(ds_out[var].values)
+
+                # Changed values (first 2)
+                this_slice = slice(0, 2)
+                expected = np.array([0.724, 0.87])
+                result = ds_out[var].isel(pft=this_slice).values
+                self.assertTrue(np.array_equal(expected, result))
+
+                # Preserved values (everything but the first 2)
+                this_slice = slice(2, None)
+                expected = ds_in["xl"].isel(pft=this_slice)
+                result = ds_out["xl"].isel(pft=this_slice)
+                self.assertTrue(expected.equals(result))
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
     def test_set_paramfile_extractpfts_changeparam_int(self):
         """
         Test that set_paramfile can (1) copy to a new file with only some requested PFTs and (2)
