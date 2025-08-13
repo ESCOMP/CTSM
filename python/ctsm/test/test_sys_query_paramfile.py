@@ -63,7 +63,11 @@ class TestSysQueryParamfile(unittest.TestCase):
         out = f.getvalue()
         self.assertRegex(
             out,
-            r"rswf_min:\n\s+not_vegetated\s*: 0\.25\n\s+needleleaf_evergreen_temperate_tree\s*: 0\.25\n.*",
+            (
+                r"rswf_min:\n"
+                r"\s+not_vegetated\s*: 0\.25\n"
+                r"\s+needleleaf_evergreen_temperate_tree\s*: 0\.25\n.*"
+            ),
         )
 
     def test_query_paramfile_pft_select2(self):
@@ -84,7 +88,11 @@ class TestSysQueryParamfile(unittest.TestCase):
         out = f.getvalue()
         self.assertRegex(
             out,
-            r"rswf_min:\n\s+not_vegetated\s*: 0\.25\n\s+needleleaf_evergreen_temperate_tree\s*: 0\.25\n",
+            (
+                r"rswf_min:\n"
+                r"\s+not_vegetated\s*: 0\.25\n"
+                r"\s+needleleaf_evergreen_temperate_tree\s*: 0\.25\n"
+            ),
         )
 
 

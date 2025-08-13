@@ -9,7 +9,6 @@ import shutil
 import tempfile
 import numpy as np
 import xarray as xr
-from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm import unit_testing
 
@@ -452,7 +451,6 @@ class TestSysSetParamfile(unittest.TestCase):
         test will obviously need to be replaced once that functionality is added.
         """
         output_path = os.path.join(self.tempdir, "output.nc")
-        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
         sys.argv = [
             "set_paramfile",
             "-i",

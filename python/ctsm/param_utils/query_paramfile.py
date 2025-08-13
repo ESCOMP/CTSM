@@ -1,4 +1,6 @@
-import xarray as xr
+"""
+Query parameters in a CTSM paramfile
+"""
 
 from ctsm.args_utils import comma_separated_list
 from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
