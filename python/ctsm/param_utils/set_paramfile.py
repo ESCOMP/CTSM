@@ -23,6 +23,10 @@ def check_arguments(args):
     if os.path.exists(args.output):
         raise FileExistsError(args.output)
 
+    # --drop-other-pfts makes no sense without --pfts
+    if args.drop_other_pfts and not args.pft:
+        raise RuntimeError("--drop-other-pfts makes no sense without -p/--pft")
+
 
 def get_arguments():
     """
@@ -42,11 +46,17 @@ def get_arguments():
 
     parser.add_argument("-o", "--output", required=True, help="Output netCDF file")
 
-    # TODO: Add --exclude-pfts argument for PFTs you DON'T want to include
+    # TODO: Add mutually-exclusive --exclude-pfts argument for PFTs you DON'T want to include
     parser.add_argument(
         *pft_flags,
         help="Comma-separated list of PFTs to include (only applies to PFT-specific variables)",
         type=comma_separated_list,
+    )
+
+    parser.add_argument(
+        "--drop-other-pfts",
+        help=f"Do not include PFTs other than the ones given in {'/'.join(pft_flags)}",
+        action="store_true",
     )
 
     # TODO: Add -x/--exclude argument for variables you DON'T want to extract
@@ -105,8 +115,8 @@ def main():
     ds_in = open_paramfile(args.input)
     ds_out = ds_in.copy()
 
-    # If any PFTs were specified, drop others
-    if args.pft:
+    # If --drop-other-pfts was given, drop PFTs not in args.pft
+    if args.drop_other_pfts:
         pft_names = check_pfts_in_paramfile(args.pft, ds_out)
         indices = get_selected_pft_indices(args.pft, pft_names)
         ds_out = ds_out.isel({"pft": indices})

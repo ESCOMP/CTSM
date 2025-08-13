@@ -95,6 +95,7 @@ class TestSysSetParamfile(unittest.TestCase):
             output_path,
             "-p",
             ",".join(pfts_to_include),
+            "--drop-other-pfts",
         ]
         sp.main()
         self.assertTrue(os.path.exists(output_path))
@@ -229,6 +230,7 @@ class TestSysSetParamfile(unittest.TestCase):
             output_path,
             "-p",
             ",".join(pfts_to_include),
+            "--drop-other-pfts",
             "xl=0.724,0.87",
         ]
         sp.main()
@@ -261,6 +263,7 @@ class TestSysSetParamfile(unittest.TestCase):
             output_path,
             "-p",
             ",".join(pfts_to_include),
+            "--drop-other-pfts",
             f"{this_var}=1986,1987",
         ]
         sp.main()
@@ -331,6 +334,7 @@ class TestSysSetParamfile(unittest.TestCase):
             output_path,
             "-p",
             ",".join(pfts_to_include),
+            "--drop-other-pfts",
             "xl=nan,nan",
             "planting_temp=nan,nan",
         ]

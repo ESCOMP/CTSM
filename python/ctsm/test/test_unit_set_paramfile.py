@@ -153,6 +153,7 @@ class TestUnitSetParamfile(unittest.TestCase):
             PARAMFILE,
             "--pft",
             "pft1,pft2",
+            "--drop-other-pfts",
             "--output",
             output_path,
             "--variables",
@@ -194,6 +195,20 @@ class TestUnitSetParamfile(unittest.TestCase):
             PARAMFILE,
         ]
         with self.assertRaises(FileExistsError):
+            sp.get_arguments()
+
+    def test_set_paramfile_error_dropotherpfts_without_pft(self):
+        """Test that it errors if given --drop-other-pfts without --pft"""
+        output_path = "/path/to/output.nc"
+        sys.argv = [
+            "get_arguments",
+            "--input",
+            PARAMFILE,
+            "--drop-other-pfts",
+            "--output",
+            output_path,
+        ]
+        with self.assertRaises(RuntimeError):
             sp.get_arguments()
 
 
