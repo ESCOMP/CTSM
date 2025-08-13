@@ -1147,7 +1147,7 @@ where :math:`\overrightarrow{S}_{v}` is the solar radiation absorbed by the vege
 
    \Delta T_{v} =\frac{\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -H_{v} -\lambda E_{v} }{\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } +\frac{\partial H_{v} }{\partial T_{v} } +\frac{\partial \lambda E_{v} }{\partial T_{v} } }
 
-where :math:`\Delta T_{v} =T_{v}^{n+1} -T_{v}^{n}` and the subscript "n" indicates the iteration.
+where :math:`\Delta T_{v} =T_{v}^{k+1} -T_{v}^{k}` and the subscript "k" indicates the iteration.
 
 The partial derivatives are
 
@@ -1227,9 +1227,9 @@ The numerical solution for vegetation temperature and the fluxes of momentum, se
 
 #. Latent heat flux from vegetation :math:`\lambda E_{v}` (:eq:`5.101` )
 
-#. If the latent heat flux has changed sign from the latent heat flux computed at the previous iteration (:math:`\lambda E_{v} ^{n+1} \times \lambda E_{v} ^{n} <0`), the latent heat flux is constrained to be 10% of the computed value. The difference between the constrained and computed value (:math:`\Delta _{1} =0.1\lambda E_{v} ^{n+1} -\lambda E_{v} ^{n+1}` ) is added to the sensible heat flux later.
+#. If the latent heat flux has changed sign from the latent heat flux computed at the previous iteration (:math:`\lambda E_{v} ^{k+1} \times \lambda E_{v} ^{k} <0`), the latent heat flux is constrained to be 10% of the computed value. The difference between the constrained and computed value (:math:`\Delta _{1} =0.1\lambda E_{v} ^{k+1} -\lambda E_{v} ^{k+1}` ) is added to the sensible heat flux later.
 
-#. Change in vegetation temperature :math:`\Delta T_{v}` (:eq:`5.129` ) and update the vegetation temperature as :math:`T_{v}^{n+1} =T_{v}^{n} +\Delta T_{v}`. :math:`T_{v}` is constrained to change by no more than 1°K in one iteration. If this limit is exceeded, the energy error is
+#. Change in vegetation temperature :math:`\Delta T_{v}` (:eq:`5.129` ) and update the vegetation temperature as :math:`T_{v}^{k+1} =T_{v}^{k} +\Delta T_{v}`. :math:`T_{v}` is constrained to change by no more than 1°K in one iteration. If this limit is exceeded, the energy error is
 
    .. math::
       :label: 5.138
@@ -1269,7 +1269,7 @@ The error :math:`\lambda \Delta _{3}` is added to the sensible heat flux later.
 
 #. Monin-Obukhov length :math:`L` (:eq:`5.49` )
 
-#. The iteration is stopped after two or more steps if :math:`\tilde{\Delta }T_{v} <0.01` and :math:`\left|\lambda E_{v}^{n+1} -\lambda E_{v}^{n} \right|<0.1` where :math:`\tilde{\Delta }T_{v} =\max \left(\left|T_{v}^{n+1} -T_{v}^{n} \right|,\, \left|T_{v}^{n} -T_{v}^{n-1} \right|\right)`, or after forty iterations have been carried out.
+#. The iteration is stopped after two or more steps if :math:`\tilde{\Delta }T_{v} <0.01` and :math:`\left|\lambda E_{v}^{k+1} -\lambda E_{v}^{k} \right|<0.1` where :math:`\tilde{\Delta }T_{v} =\max \left(\left|T_{v}^{k+1} -T_{v}^{k} \right|,\, \left|T_{v}^{k} -T_{v}^{k-1} \right|\right)`, or after forty iterations have been carried out.
 
 #. Momentum fluxes :math:`\tau _{x}`, :math:`\tau _{y}` (:eq:`5.5`, :eq:`5.6`)
 
