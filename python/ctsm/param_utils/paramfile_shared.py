@@ -24,6 +24,7 @@ def check_pfts_in_paramfile(selected_pfts, ds):
 
     return pft_names
 
+
 def get_pft_names(ds):
     pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
     return pft_names
