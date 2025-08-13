@@ -72,6 +72,46 @@ class TestUnitCheckCorrectNdims(unittest.TestCase):
         self.assertTrue(sp.check_correct_ndims(da, np.array([1, 2])))
 
 
+class TestUnitIsInteger(unittest.TestCase):
+    """Unit tests of is_integer"""
+
+    def test_isinteger_obj_int(self):
+        """Check True if given an object of type int"""
+        self.assertTrue(sp.is_integer(int(1)))
+
+    def test_isinteger_obj_int_np(self):
+        """Check True if given an object of a numpy integer type"""
+        self.assertTrue(sp.is_integer(np.int32(1)))
+
+    def test_isinteger_obj_int_array0d_np(self):
+        """Check True if given an object of a numpy array with integer dtype"""
+        self.assertTrue(sp.is_integer(np.array(1, dtype=np.int32)))
+
+    def test_isinteger_obj_int_0d_xr(self):
+        """Check True if given a numpy scalar integer object via xarray"""
+        da = xr.DataArray(data=1)
+        self.assertTrue(sp.is_integer(da.values))
+
+    def test_isinteger_obj_int_1d_xr(self):
+        """Check True if given a numpy 1-d integer object via xarray"""
+        da = xr.DataArray(data=[1])
+        self.assertTrue(sp.is_integer(da.values))
+        da = xr.DataArray(data=[1, 2])
+        self.assertTrue(sp.is_integer(da.values))
+
+    def test_isinteger_obj_float(self):
+        """Check False if given an object of type float"""
+        self.assertFalse(sp.is_integer(float(3.14)))
+
+    def test_isinteger_obj_float_np(self):
+        """Check False if given an object of a numpy float type"""
+        self.assertFalse(sp.is_integer(np.float32(3.14)))
+
+    def test_isinteger_type_int(self):
+        """Check False if given a type"""
+        self.assertFalse(sp.is_integer(int))
+
+
 class TestUnitSetParamfile(unittest.TestCase):
     """Unit tests of set_paramfile"""
 

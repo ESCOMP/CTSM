@@ -69,6 +69,18 @@ def get_arguments():
     return args
 
 
+def is_integer(obj):
+    """
+    Given an object, return True if it's (a) any type of integer or (b) a numpy array with an
+    integer dtype. Note that this will return False for integer types per se.
+    """
+    if isinstance(obj, np.ndarray):
+        obj_type = obj.dtype
+    else:
+        obj_type = type(obj)
+    return np.issubdtype(obj_type, np.integer)
+
+
 def check_correct_ndims(da, new_value, throw_error=False):
     """
     Check that the new value given for a parameter has the right number of dimensions
