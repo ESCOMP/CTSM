@@ -215,9 +215,9 @@ contains
     integer  :: c,p,l,pi,j,k                                          ! indices
     integer  :: fc                                                    ! filter column index
     integer :: ft  ! FATES functional type index
-    integer :: f  ! loop index for plant competitors
+    integer :: f  ! loop index for FATES plant competitors
+    integer :: n_pcomp  ! number of FATES plant competitors
     integer :: ci, s  ! used for FATES BC (clump index, site index)
-    integer :: n_pcomp  ! number of plant competitors
     logical :: local_use_fun                                          ! local version of use_fun
     real(r8) :: amnf_immob_vr                                         ! actual mineral N flux from immobilization (gN/m3/s)
     real(r8) :: n_deficit_vr                                          ! microbial N deficit, vertically resolved (gN/m3/s)
@@ -227,6 +227,7 @@ contains
     real(r8) :: compet_decomp_nh4                                     ! (unitless) relative competitiveness of immobilizers for NH4
     real(r8) :: compet_denit                                          ! (unitless) relative competitiveness of denitrifiers for NO3
     real(r8) :: compet_nit                                            ! (unitless) relative competitiveness of nitrifiers for NH4
+    real(r8) :: ndemand  ! (gN/m2/s) nitrogen demand per FATES plant competitor f (see local variable f above)
     real(r8) :: fpi_no3_vr(bounds%begc:bounds%endc,1:nlevdecomp)      ! fraction of potential immobilization supplied by no3(no units)
     real(r8) :: fpi_nh4_vr(bounds%begc:bounds%endc,1:nlevdecomp)      ! fraction of potential immobilization supplied by nh4 (no units)
     real(r8) :: sum_nh4_demand(bounds%begc:bounds%endc,1:nlevdecomp)
@@ -326,10 +327,10 @@ contains
             end do
          end do
 
-         num_bgc_soilc: do fc = 1, num_bgc_soilc
+         bgc_soilc_loop: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
-            use_fates: if (use_fates) then
+            fates: if (use_fates) then
                ci = bounds%clump_index
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
@@ -364,13 +365,13 @@ contains
                   plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                end do
 
-            end if use_fates
+            end if fates
 
             do j = 1, nlevdecomp
                sum_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + potential_immob_vr(c,j)
             end do
 
-         end do num_bgc_soilc
+         end do bgc_soilc_loop
 
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
@@ -1036,6 +1037,44 @@ contains
                fpi(c) = 1._r8
             end if
          end do ! end of column loops
+
+         ! Set the FATES N uptake fluxes
+
+         if (use_fates) then
+            do fc=1, num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+               ci = bounds%clump_index
+               s = clm_fates%f2hmap(ci)%hsites(c)
+               n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
+
+               if ( plant_ndemand(c) > tiny(plant_ndemand(c)) ) then
+                  do f = 1, n_pcomp
+                     ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
+
+                     ! [gN/m2/s]
+                     ndemand = 0._r8
+
+                     do j = 1, nlevdecomp
+                        ndemand = ndemand + clm_fates%fates(ci)%bc_out(s)%veg_rootc(f,j) * &
+                            (clm_fates%fates(ci)%bc_pconst%vmax_nh4(ft) + &
+                             clm_fates%fates(ci)%bc_pconst%vmax_no3(ft)) * dzsoi_decomp(j)
+                     end do
+
+                     do j = 1, nlevdecomp
+                        clm_fates%fates(ci)%bc_in(s)%plant_nh4_uptake_flux(f,1) = &
+                            clm_fates%fates(ci)%bc_in(s)%plant_nh4_uptake_flux(f,1) + &
+                            smin_nh4_to_plant_vr(c,j) * dt * dzsoi_decomp(j) * &
+                            (ndemand / plant_ndemand(c))
+
+                        clm_fates%fates(ci)%bc_in(s)%plant_no3_uptake_flux(f,1) = &
+                            clm_fates%fates(ci)%bc_in(s)%plant_no3_uptake_flux(f,1) + &
+                            smin_no3_to_plant_vr(c,j) * dt * dzsoi_decomp(j) * &
+                            (ndemand / plant_ndemand(c))
+                     end do
+                  end do
+               end if
+            end do
+         end if
 
       end if if_nitrif  !end of if_not_use_nitrif_denitrif
 
