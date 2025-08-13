@@ -29,6 +29,7 @@ module lnd_comp_nuopc
   use NUOPC_Model            , only : NUOPC_ModelGet
   use shr_kind_mod           , only : r8 => shr_kind_r8, cl=>shr_kind_cl
   use shr_sys_mod            , only : shr_sys_abort
+  use shr_sys_mod            , only : shr_sys_flush
   use shr_log_mod            , only : shr_log_setLogUnit, shr_log_getLogUnit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
@@ -83,7 +84,7 @@ module lnd_comp_nuopc
   logical                :: rof_prognostic
   logical                :: atm_present
   logical                :: atm_prognostic
-  integer, parameter     :: dbug = 0
+  integer, parameter     :: dbug = 1
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
 
   character(len=CL)      :: orb_mode        ! attribute - orbital mode
@@ -198,7 +199,6 @@ contains
     type(ESMF_VM)     :: vm
     integer           :: lmpicom
     integer           :: ierr
-    integer           :: n
     integer           :: localPet    ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
     integer           :: compid      ! component id
     integer           :: shrlogunit  ! original log unit
@@ -351,6 +351,46 @@ contains
   end subroutine InitializeAdvertise
 
   !===============================================================================
+  subroutine ZeroState( State, flds_scalar_name, rc )
+    type(ESMF_State)               :: State
+    character(len=CL), intent(IN)  :: flds_scalar_name
+    integer          , intent(out) :: rc
+    ! Zero the input state fields
+    integer                 :: fieldCount                     ! Number of fields on export state
+    character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
+    type(ESMF_Field)        :: lfield                         ! Land field read in
+    integer                 :: rank                           ! Rank of field (0D or 2D)
+    real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
+    real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
+    integer                 :: n
+
+    rc = ESMF_SUCCESS
+    call ESMF_StateGet(State, itemCount=fieldCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(lfieldnamelist(fieldCount))
+    call ESMF_StateGet(State, itemNameList=lfieldnamelist, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    do n = 0, fieldCount
+       if (trim(lfieldnamelist(n)) /= flds_scalar_name) then
+          call ESMF_StateGet(State, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_FieldGet(lfield, rank=rank, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          if (rank == 1) then
+             call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             fldptr2d(:,:) = 0._r8
+          else
+             call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             fldptr1d(:) = 0._r8
+          end if
+       end if
+    enddo
+    deallocate(lfieldnamelist)
+  end subroutine ZeroState
+
+  !===============================================================================
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
     ! Realize the list of fields that will be exchanged
@@ -406,12 +446,6 @@ contains
     real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
     character(len=FL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
     type(bounds_type)      :: bounds                          ! bounds
-    type(ESMF_Field)        :: lfield                         ! Land field read in
-    character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
-    integer                 :: fieldCount                     ! Number of fields on export state
-    integer                 :: rank                           ! Rank of field (1D or 2D)
-    real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
-    real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
     logical                 :: isPresent                      ! If attribute is present
     logical                 :: isSet                          ! If attribute is present and also set
     character(len=CL)       :: model_version                  ! Model version
@@ -469,29 +503,9 @@ contains
           ! if single column is not valid - set all export state fields to zero and return
           call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call ESMF_StateGet(exportState, itemCount=fieldCount, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
-          allocate(lfieldnamelist(fieldCount))
-          call ESMF_StateGet(exportState, itemNameList=lfieldnamelist, rc=rc)
-          if (chkerr(rc,__LINE__,u_FILE_u)) return
-          do n = 1, fieldCount
-             if (trim(lfieldnamelist(n)) /= flds_scalar_name) then
-                call ESMF_StateGet(exportState, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-                call ESMF_FieldGet(lfield, rank=rank, rc=rc)
-                if (chkerr(rc,__LINE__,u_FILE_u)) return
-                if (rank == 2) then
-                   call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                   fldptr2d(:,:) = 0._r8
-                else
-                   call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
-                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-                   fldptr1d(:) = 0._r8
-                end if
-             end if
-          enddo
-          deallocate(lfieldnamelist)
+          call ZeroState( exportState, flds_scalar_name, rc )
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
           ! *******************
           ! *** RETURN HERE ***
           ! *******************
@@ -503,12 +517,12 @@ contains
     else
        single_column = .false.
     end if
-    if ( for_testing_exit_after_self_tests) then
+    !if ( for_testing_exit_after_self_tests) then
        ! *******************
        ! *** RETURN HERE ***
        ! *******************
-       RETURN
-    end if
+    !   RETURN
+    !end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -688,13 +702,30 @@ contains
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    if ( for_testing_exit_after_self_tests ) then
+       if ( masterproc ) then
+          write(iulog,'(a)')' calling ZeroState'
+          call shr_sys_flush(iulog)
+       end if
+       call ZeroState( exportState, flds_scalar_name, rc )
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
+
     ! Set scalars in export state
+    if ( masterproc ) then
+       write(iulog,'(a)')' calling State_SetScalar'
+       call shr_sys_flush(iulog)
+    end if
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if ( masterproc ) then
+       write(iulog,'(a)')' after State_SetScalar'
+       call shr_sys_flush(iulog)
+    end if
 
     !--------------------------------
     ! diagnostics
@@ -786,9 +817,6 @@ contains
     !--------------------------------
 
     if (single_column .and. .not. scol_valid) then
-       RETURN
-    end if
-    if (for_testing_exit_after_self_tests) then
        RETURN
     end if
 
@@ -911,16 +939,21 @@ contains
     call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
     call t_stopf ('shr_orb_decl')
 
-    call t_startf ('ctsm_run')
-    ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
-    ! the timestep and is preferred for restart file names
-    call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
-    call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
-    call t_stopf ('ctsm_run')
+    !
+    ! Run for nortmal CTSM -- but not if skipping run for testing
+    !
+    if ( .not. for_testing_exit_after_self_tests ) then
+      call t_startf ('ctsm_run')
+      ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
+      ! the timestep and is preferred for restart file names
+      call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+      call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
+      if (ChkErr(rc,__LINE__,u_FILE_u)) return
+      write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
+      call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
+      call t_stopf ('ctsm_run')
+    end if
 
     !--------------------------------
     ! Pack export state

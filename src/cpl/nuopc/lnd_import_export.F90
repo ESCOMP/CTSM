@@ -782,13 +782,13 @@ contains
     ! output to mediator
     ! -----------------------
 
-    if (send_to_atm) then
     call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), init_spval=.false., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
     ! output to atm
     ! -----------------------
+    if (send_to_atm) then
 
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), &
             init_spval=.true., rc=rc)
