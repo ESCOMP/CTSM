@@ -256,7 +256,9 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_in = open_paramfile(PARAMFILE)
         ds_out = open_paramfile(output_path)
 
-        # Check that it actually differs from our new values
+        # Check that the variable in question is actually an integer to begin with
+        self.assertTrue(sp.is_integer(ds_in[this_var].values))
+        # Also check that it actually differs from our new values
         self.assertTrue(ds_in[this_var].values[0] != 1986)
         self.assertTrue(ds_in[this_var].values[1] != 1987)
 

@@ -2,6 +2,7 @@ import xarray as xr
 
 from ctsm.args_utils import comma_separated_list
 from ctsm.param_utils.paramfile_shared import paramfile_parser_setup
+from ctsm.param_utils.paramfile_shared import open_paramfile
 from ctsm.param_utils.paramfile_shared import PFTNAME_VAR, check_pfts_in_paramfile
 from ctsm.param_utils.paramfile_shared import get_selected_pft_indices, get_pft_names
 
@@ -72,7 +73,7 @@ def main():
     """
     args = get_arguments()
 
-    ds = xr.open_dataset(args.input, decode_timedelta=False)
+    ds = open_paramfile(args.input, mask_and_scale=True)
 
     selected_pfts = args.pft
     pft_names = None

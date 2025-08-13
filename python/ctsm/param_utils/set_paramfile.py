@@ -132,7 +132,7 @@ def main():
         check_correct_ndims(ds_out[var], new_value, throw_error=True)
 
         if is_integer(ds_in[var].values):
-            new_value = int(new_value)
+            new_value = np.astype(np.array(new_value), ds_in[var].dtype)
 
         ds_out[var].values = new_value
 

@@ -34,8 +34,8 @@ def get_selected_pft_indices(selected_pfts, pft_names):
     return indices
 
 
-def open_paramfile(file_in):
-    return xr.open_dataset(file_in, decode_timedelta=False)
+def open_paramfile(file_in, mask_and_scale=False):
+    return xr.open_dataset(file_in, decode_timedelta=False, mask_and_scale=mask_and_scale)
 
 
 def paramfile_parser_setup(description):
