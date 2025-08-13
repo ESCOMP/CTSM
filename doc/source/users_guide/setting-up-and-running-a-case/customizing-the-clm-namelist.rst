@@ -186,7 +186,7 @@ Example: user_nl_clm namelist outputting some files in 1D Vector format
    hist_fincl5 = 'TG'
    hist_fincl6 = 'TG'
    hist_dov2xy = .true., .false., .false., .false.
-   hist_type2d_pertape = ' ', 'GRID', 'COLS', ' '
+   hist_type1d_pertape = ' ', 'GRID', 'COLS', ' '
    hist_nhtfrq = 0, -24, -24, -24
 
 .. warning:: ``LAND`` and ``COLS`` are also options to the pertape averaging, but currently there is a bug with them and they fail to work.
