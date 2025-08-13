@@ -130,6 +130,10 @@ def main():
             new_value = np.array(new_value_list, dtype=type(ds_out[var].dtype))
 
         check_correct_ndims(ds_out[var], new_value, throw_error=True)
+
+        if is_integer(ds_in[var].values):
+            new_value = int(new_value)
+
         ds_out[var].values = new_value
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
