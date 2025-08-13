@@ -69,6 +69,7 @@ module CNPhenologyMod
   public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
   public :: get_swindow
   public :: was_sown_in_this_window
+  public :: PlantDate_to_PlantJday
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -1999,7 +2000,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_prev_calday, get_curr_days_per_year, is_beg_curr_year
+    use clm_time_manager , only : get_prev_calday, get_prev_days_per_year, is_beg_curr_year
     use clm_time_manager , only : get_average_days_per_year
     use clm_time_manager , only : get_prev_date
     use clm_time_manager , only : is_doy_in_interval, is_end_curr_day
@@ -2128,10 +2129,14 @@ contains
          )
 
       ! get time info
-      dayspyr = get_curr_days_per_year()
+      dayspyr = get_prev_days_per_year()
       avg_dayspyr = get_average_days_per_year()
       jday    = get_prev_calday()
       call get_prev_date(kyr, kmo, kda, mcsec)
+
+      if (is_beg_curr_year()) then
+         call UpdateSowingWindows()
+      end if
 
       if (use_fertilizer) then
        ndays_on = 20._r8 ! number of days to fertilize
@@ -2417,7 +2422,7 @@ contains
             end if
 
             ! days past planting may determine harvest
-            idpp = DaysPastPlanting(idop(p), jday)
+            idpp = DaysPastPlanting(idop(p))
 
             ! onset_counter initialized to zero when .not. croplive
             ! offset_counter relevant only at time step of harvest
@@ -2683,6 +2688,53 @@ contains
   end subroutine CropPhase
 
 
+  function PlantDate_to_PlantJday(plantdate) result(jday)
+    !
+    ! !DESCRIPTION:
+    ! Converts a plantdate from parameter file (e.g., mn[NS]Hplantdate) to a jday
+    ! that's actually used in the model (e.g., minplantjday).
+    !
+    ! !USES:
+    use clm_time_manager, only: get_calday, get_prev_date
+    ! !ARGUMENTS
+    integer, intent(in) :: plantdate
+    !
+    ! !LOCAL VARIABLES
+    integer :: kyr, kmo, kda, mcsec
+    !
+    ! Return value
+    integer :: jday
+
+    ! Get year to add to plantdate
+    call get_prev_date(kyr, kmo, kda, mcsec)
+
+    jday = int( get_calday(10000*kyr + plantdate, 0 ) )
+  end function PlantDate_to_PlantJday
+
+
+  subroutine UpdateSowingWindows()
+    !
+    ! !DESCRIPTION:
+    ! Updates sowing windows with dates for this year.
+    !
+    ! !USES:
+    use pftconMod, only: npcropmin, npcropmax
+    !
+    ! !LOCAL VARIABLES
+    integer :: n
+
+    do n = npcropmin, npcropmax
+      if (pftcon%is_pft_known_to_model(n)) then
+         minplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mnNHplantdate(n))
+         maxplantjday(n, inNH) = PlantDate_to_PlantJday(pftcon%mxNHplantdate(n))
+
+         minplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mnSHplantdate(n))
+         maxplantjday(n, inSH) = PlantDate_to_PlantJday(pftcon%mxSHplantdate(n))
+      end if
+   end do
+  end subroutine UpdateSowingWindows
+
+
   !-----------------------------------------------------------------------
   subroutine CropPhenologyInit(bounds)
     !
@@ -2713,15 +2765,7 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmax
-       if (pftcon%is_pft_known_to_model(n)) then
-          minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
-          maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
-
-          minplantjday(n, inSH) = int( get_calday( pftcon%mnSHplantdate(n), 0 ) )
-          maxplantjday(n, inSH) = int( get_calday( pftcon%mxSHplantdate(n), 0 ) )
-       end if
-    end do
+    call UpdateSowingWindows()
 
     ! Figure out what hemisphere each PATCH is in
     do p = bounds%begp, bounds%endp
@@ -2959,33 +3003,27 @@ contains
   end subroutine PlantCrop
 
   !-----------------------------------------------------------------------
-  function DaysPastPlanting(idop, jday_in)
+  function DaysPastPlanting(idop)
     ! !USES:
     use clm_time_manager, only : get_prev_calday, get_curr_days_per_year
+    use clm_varcon      , only : secspday
     !
     ! !ARGUMENTS:
     integer,           intent(in) :: idop ! patch day of planting
-    integer, optional, intent(in) :: jday_in ! julian day of the year
     !
     ! !LOCAL VARIABLES
     integer :: DaysPastPlanting
     integer :: jday
 
-    ! Must use separate jday_in and jday because we can't redefine an intent(in)
-    ! variable, even if it wasn't provided in the function call.
-    if (present(jday_in)) then
-       jday = jday_in
-    else
-       ! Use prev instead of curr to avoid jday=1 in last timestep of year
-       jday = get_prev_calday()
-    end if
+    ! Use prev instead of curr to avoid jday=1 in last timestep of year
+    jday = get_prev_calday()
 
     if (jday >= idop) then
        DaysPastPlanting = jday - idop
     else
-      ! As long as crops have at most a 365-day growing season, using get_curr_days_per_year()
-      ! should give the same result of this function as using get_prev_days_per_year().
-       DaysPastPlanting = jday - idop + get_curr_days_per_year()
+       ! get_curr_days_per_year() or get_prev_days_per_year() would only differ in the last timestep
+       ! of the year, but in that case this line is not reached.
+       DaysPastPlanting = jday - idop + get_curr_days_per_year(offset = -365*int(secspday))
     end if
 
   end function DaysPastPlanting
