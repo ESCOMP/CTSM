@@ -104,7 +104,7 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that included variables/coords match
         for var in ds_in.variables:
             if sp.PFTNAME_VAR in ds_in[var].coords:
-                self.assertTrue(ds_in[var].isel(pft=[0,1]).equals(ds_out[var]))
+                self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
@@ -136,8 +136,8 @@ class TestSysSetParamfile(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Incorrect N dims"):
             sp.main()
 
-    def test_set_paramfile_changeparams_scalar(self):
-        """Test that set_paramfile can copy to a new file with some scalar params changed"""
+    def test_set_paramfile_changeparams_scalar_double(self):
+        """Test that set_paramfile can copy to a new file with some scalar double params changed"""
         output_path = os.path.join(self.tempdir, "output.nc")
         sys.argv = [
             "set_paramfile",
@@ -162,6 +162,40 @@ class TestSysSetParamfile(unittest.TestCase):
             elif var == "bgc_cn_s2":
                 self.assertTrue(ds_in[var].values == 11)
                 self.assertTrue(ds_out[var].values == 87)
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
+            # Check that data type hasn't changed
+            self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
+
+    def test_set_paramfile_changeparams_scalar_int(self):
+        """Test that set_paramfile can copy to a new file with a scalar integer param changed"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "upplim_destruct_metamorph"
+        new_value = 1987
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            f"upplim_destruct_metamorph={new_value}",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that the variable in question is actually an integer to begin with
+        self.assertTrue(sp.is_integer(ds_in[this_var].values))
+        # Also check that it actually differs from our new value
+        self.assertTrue(ds_in[this_var].values != new_value)
+
+        for var in ds_in.variables:
+            # Check that all variables/coords are equal except the one we changed, which should be
+            # set to what we asked
+            if var == this_var:
+                self.assertTrue(ds_out[var].values == new_value)
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
