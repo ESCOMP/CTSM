@@ -202,10 +202,10 @@ class TestSysSetParamfile(unittest.TestCase):
             # Check that data type hasn't changed
             self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
 
-    def test_set_paramfile_extractpfts_changeparam(self):
+    def test_set_paramfile_extractpfts_changeparam_dbl(self):
         """
         Test that set_paramfile can (1) copy to a new file with only some requested PFTs and (2)
-        change the values of parameters of those PFTs
+        change the values of double parameters of those PFTs
         """
         output_path = os.path.join(self.tempdir, "output.nc")
         pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
@@ -228,6 +228,42 @@ class TestSysSetParamfile(unittest.TestCase):
         for var in ds_in.variables:
             if var == "xl":
                 self.assertTrue(np.array_equal(np.array([0.724, 0.87]), ds_out[var].values))
+            elif sp.PFTNAME_VAR in ds_in[var].coords:
+                self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
+            else:
+                self.assertTrue(ds_in[var].equals(ds_out[var]))
+
+    def test_set_paramfile_extractpfts_changeparam_int(self):
+        """
+        Test that set_paramfile can (1) copy to a new file with only some requested PFTs and (2)
+        change the values of integer parameters of those PFTs
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        this_var = "max_NH_planting_date"
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            ",".join(pfts_to_include),
+            f"{this_var}=1986,1987",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        # Check that it actually differs from our new values
+        self.assertTrue(ds_in[this_var].values[0] != 1986)
+        self.assertTrue(ds_in[this_var].values[1] != 1987)
+
+        # Check that included variables/coords match as expected
+        for var in ds_in.variables:
+            if var == this_var:
+                self.assertTrue(np.array_equal(np.array([1986, 1987]), ds_out[var].values))
             elif sp.PFTNAME_VAR in ds_in[var].coords:
                 self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
             else:
