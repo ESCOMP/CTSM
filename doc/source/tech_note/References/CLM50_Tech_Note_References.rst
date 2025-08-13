@@ -549,7 +549,7 @@ Huang, M., and Liang, X. 2006. On the assessment of the impact of reducing param
 
 .. _Hugeliusetal2012:
 
-Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (http://dev1.geo.su.se/bbcc/dev/ncscd/).
+Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (https://essd.copernicus.org/articles/5/3/2013/essd-5-3-2013.html).
 
 .. _Huntetal1988:
 
@@ -1482,7 +1482,7 @@ Vionnet, V., E. Brun, S. Morin, A. Boone, S. Faroux, P. Le Moigne, E. Martin, an
 
 .. _Viovy2011:
 
-Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea.fr/data/p529viov/cruncep/readme.htm. Data available at http://dods.extra.cea.fr/store/p529viov/cruncep/V4\_1901\_2011/].
+Viovy, N. 2011. CRUNCEP dataset. [Description available at https://rda.ucar.edu/datasets/d314003/ Data available at https://rda.ucar.edu/datasets/d314003/dataaccess/].
 
 .. _VitousekHowarth1991:
 
