@@ -342,6 +342,37 @@ class TestSysSetParamfile(unittest.TestCase):
 
     def test_set_paramfile_setparams_nan_but_no_fillvalue(self):
         """Test that NotImplementedError is given if trying to set NaN but param has no FillValue"""
+
+        # Create paramfile with a double variable without fill value
+        input_path = os.path.join(self.tempdir, "input.nc")
+        ds = open_paramfile(PARAMFILE, mask_and_scale=True)
+        new_param_name = "new_param_abc123"
+        ds[new_param_name] = xr.DataArray(data=np.array(3.14))
+        ds[new_param_name].encoding["_FillValue"] = None
+        self.assertTrue(new_param_name in ds)
+        ds.to_netcdf(input_path)
+
+        # Check that it doesn't have fill value
+        ds_in = open_paramfile(input_path, mask_and_scale=True)
+        self.assertFalse("_FillValue" in ds_in[new_param_name].encoding)
+
+        # Call set_paramfile, trying to set it to NaN
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            input_path,
+            "-o",
+            output_path,
+            f"{new_param_name}=nan",
+        ]
+        with self.assertRaisesRegex(
+            NotImplementedError, "Not able to set NaN if parameter doesn't already have fill value:"
+        ):
+            sp.main()
+
+    def test_set_paramfile_setparams_scalar_int_tonan_with_nan(self):
+        """Test that NotImplementedError is given if trying to set NaN for an integer"""
         output_path = os.path.join(self.tempdir, "output.nc")
         this_var = "upplim_destruct_metamorph"
         sys.argv = [
@@ -354,11 +385,10 @@ class TestSysSetParamfile(unittest.TestCase):
         ]
 
         with self.assertRaisesRegex(
-            NotImplementedError, "Not able to set NaN if parameter doesn't already have fill value:"
+            NotImplementedError, "Not able to set NaN for integer parameters:"
         ):
             sp.main()
 
-    # TODO: Add test changing scalar int to NaN using nan (needs a new input file)
     # TODO: Add test changing vector int to NaN using nan
     # TODO: Add test changing scalar double to NaN using _
     # TODO: Add test changing scalar int to NaN using _

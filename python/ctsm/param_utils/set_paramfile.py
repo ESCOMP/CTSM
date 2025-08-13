@@ -133,15 +133,18 @@ def main():
         else:
             new_value = np.array(new_value)
 
-        # TODO: Add code to set something to NaN if variable doesn't already have fill value
-        print(ds_out[var].encoding)
-        if (
-            np.any(np.char.lower(new_value) == "nan")
-            and "_FillValue" not in ds_in_masked_scaled[var].encoding
-        ):
-            raise NotImplementedError(
-                f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
-            )
+        # Some NaN handling isn't yet implemented
+        if np.any(np.char.lower(new_value) == "nan"):
+            # TODO: Add code to set integer variables to NaN (this might not be possible)
+            if is_integer(ds_in[var].values):
+                raise NotImplementedError(
+                    f"Not able to set NaN for integer parameters: {chg}"
+                )
+            # TODO: Add code to set integer variables to NaN (this might not be possible)
+            if "_FillValue" not in ds_in_masked_scaled[var].encoding:
+                raise NotImplementedError(
+                    f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
+                )
 
         new_value = new_value.astype(type(ds_out[var].dtype))
 
