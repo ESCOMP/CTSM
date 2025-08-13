@@ -127,12 +127,12 @@ def main():
 
         if "," in new_value:
             new_value_list = new_value.split(",")
-            new_value = np.array(new_value_list, dtype=type(ds_out[var].dtype))
+            new_value = np.array(new_value_list)
+        else:
+            new_value = np.array(new_value)
+        new_value = new_value.astype(type(ds_out[var].dtype))
 
         check_correct_ndims(ds_out[var], new_value, throw_error=True)
-
-        if is_integer(ds_in[var].values):
-            new_value = np.astype(np.array(new_value), ds_in[var].dtype)
 
         ds_out[var].values = new_value
 
