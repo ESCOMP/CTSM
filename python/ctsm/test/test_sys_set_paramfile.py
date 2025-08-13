@@ -168,6 +168,18 @@ class TestSysSetParamfile(unittest.TestCase):
             # Check that data type hasn't changed
             self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
 
+            # Check that fill value hasn't changed
+            if "_FillValue" in ds_in[var].encoding:
+                fv_in = ds_in[var].encoding["_FillValue"]
+                fv_out = ds_out[var].encoding["_FillValue"]
+                if isinstance(fv_in, bytes):
+                    self.assertTrue(isinstance(fv_out, bytes))
+                    self.assertEqual(fv_in, fv_out)
+                else:
+                    self.assertEqual(np.isnan(fv_in), np.isnan(fv_out))
+                    if not np.isnan(fv_in):
+                        self.assertEqual(fv_in, fv_out)
+
     def test_set_paramfile_changeparams_scalar_int(self):
         """Test that set_paramfile can copy to a new file with a scalar integer param changed"""
         output_path = os.path.join(self.tempdir, "output.nc")
