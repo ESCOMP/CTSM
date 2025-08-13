@@ -1,0 +1,47 @@
+module test_endrun
+
+  ! Tests of abortutils
+
+  use funit
+  use abortutils
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestAbortUtils
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestAbortUtils
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestAbortUtils), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestAbortUtils), intent(inout) :: this
+
+  end subroutine tearDown
+
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+  @Test
+  subroutine endrun_vanilla_aborts(this)
+    ! Test vanilla operation of endrun
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun()
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_vanilla_aborts
+
+end module test_endrun
