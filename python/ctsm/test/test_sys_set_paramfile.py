@@ -108,6 +108,34 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
+    def test_set_paramfile_changeparams_scalar_errors_given_list(self):
+        """Test that set_paramfile errors if given a list for a scalar parameter"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "a_coef=0.87,0.91",
+        ]
+        with self.assertRaisesRegex(RuntimeError, "Incorrect N dims"):
+            sp.main()
+
+    def test_set_paramfile_changeparam_1d_errors_given_scalar(self):
+        """Test that set_paramfile errors if given a scalar for a 1-d parameter"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "xl=0.724",
+        ]
+        with self.assertRaisesRegex(RuntimeError, "Incorrect N dims"):
+            sp.main()
+
     def test_set_paramfile_changeparams_scalar(self):
         """Test that set_paramfile can copy to a new file with some scalar params changed"""
         output_path = os.path.join(self.tempdir, "output.nc")

@@ -5,6 +5,8 @@
 import unittest
 import os
 import sys
+import numpy as np
+import xarray as xr
 
 from ctsm import unit_testing
 
@@ -18,6 +20,56 @@ from ctsm.param_utils import set_paramfile as sp
 PARAMFILE = os.path.join(
     os.path.dirname(__file__), "testinputs", "ctsm5.3.041.Nfix_params.v13.c250221_upplim250.nc"
 )
+
+
+class TestUnitCheckCorrectNdims(unittest.TestCase):
+    """Unit tests of check_correct_ndims"""
+
+    def test_checkcorrectndims_0d_int(self):
+        """Check True when given a standard int for a 0d parameter"""
+        da = xr.DataArray(data=1)
+        self.assertTrue(sp.check_correct_ndims(da, 1))
+
+    def test_checkcorrectndims_0d_int_np(self):
+        """Check True when given a numpy int for a 0d parameter"""
+        da = xr.DataArray(data=1)
+        self.assertTrue(sp.check_correct_ndims(da, np.int32(1)))
+
+    def test_checkcorrectndims_1d_int(self):
+        """Check False when given a standard int for a 0d parameter"""
+        da = xr.DataArray(data=[1, 2])
+        self.assertFalse(sp.check_correct_ndims(da, 1))
+
+    def test_checkcorrectndims_1d_int_np(self):
+        """Check False when given a numpy int for a 0d parameter"""
+        da = xr.DataArray(data=[1, 2])
+        self.assertFalse(sp.check_correct_ndims(da, np.int32(1)))
+
+    def test_checkcorrectndims_0d_list(self):
+        """Check False when given a list for a 0d parameter"""
+        da = xr.DataArray(data=1)
+        self.assertFalse(sp.check_correct_ndims(da, [1, 2]))
+
+    def test_checkcorrectndims_0d_nparray(self):
+        """Check False when given a numpy array for a 0d parameter"""
+        da = xr.DataArray(data=1)
+        self.assertFalse(sp.check_correct_ndims(da, np.array([1, 2])))
+
+    def test_checkcorrectndims_0d_nparray_error(self):
+        """Check for error when given a numpy array for a 0d parameter and requesting throw_error"""
+        da = xr.DataArray(data=1)
+        with self.assertRaisesRegex(RuntimeError, "Incorrect N dims: Expected 0, got 1"):
+            sp.check_correct_ndims(da, np.array([1, 2]), throw_error=True)
+
+    def test_checkcorrectndims_1d_list(self):
+        """Check True when given a list for a 1d parameter"""
+        da = xr.DataArray(data=[1, 2])
+        self.assertTrue(sp.check_correct_ndims(da, [1, 2]))
+
+    def test_checkcorrectndims_1d_nparray(self):
+        """Check True when given a numpy array for a 1d parameter"""
+        da = xr.DataArray(data=[1, 2])
+        self.assertTrue(sp.check_correct_ndims(da, np.array([1, 2])))
 
 
 class TestUnitSetParamfile(unittest.TestCase):

@@ -69,6 +69,18 @@ def get_arguments():
     return args
 
 
+def check_correct_ndims(da, new_value, throw_error=False):
+    """
+    Check that the new value given for a parameter has the right number of dimensions
+    """
+    expected = da.ndim
+    actual = np.array(new_value).ndim
+    is_ndim_correct = expected == actual
+    if throw_error and not is_ndim_correct:
+        raise RuntimeError(f"Incorrect N dims: Expected {expected}, got {actual}")
+    return is_ndim_correct
+
+
 def main():
     """
     Main entry point for the script.
@@ -96,12 +108,16 @@ def main():
     # Apply parameter changes, if any
     for chg in args.param_changes:
         var, new_value = chg.split("=")
-        if ds_out[var].ndim == 1:
+
+        # TODO: Add handling of multi-dimensional parameters
+        if ds_out[var].ndim > 1:
+            raise NotImplementedError("Can't yet change multi-dimensional parameters")
+
+        if "," in new_value:
             new_value_list = new_value.split(",")
             new_value = np.array(new_value_list, dtype=type(ds_out[var].dtype))
-        elif ds_out[var].ndim > 2:
-            # TODO: Add handling of multi-dimensional parameters
-            raise NotImplementedError("Can't yet change multi-dimensional parameters")
+
+        check_correct_ndims(ds_out[var], new_value, throw_error=True)
         ds_out[var].values = new_value
 
     ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
