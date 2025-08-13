@@ -283,9 +283,74 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
-    # TODO: Add test with NaN in existing
+    def test_set_paramfile_setparams_scalar_double_tonan_with_nan(self):
+        """Test setting scalar double to NaN using 'nan'"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "a_coef"
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            f"{this_var}=nan",
+        ]
 
-    # TODO: Add test changing to NaN
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_out = open_paramfile(output_path, mask_and_scale=True)
+        self.assertTrue(np.isnan(ds_out[this_var]))
+
+    def test_set_paramfile_setparams_scalar_double_tonan_with_nancaps(self):
+        """Test setting scalar double to NaN using 'NaN'"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "a_coef"
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            f"{this_var}=NaN",
+        ]
+
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_out = open_paramfile(output_path, mask_and_scale=True)
+        self.assertTrue(np.isnan(ds_out[this_var]))
+
+    def test_set_paramfile_setparams_pft_double_tonan_with_nan(self):
+        """Test setting PFT-dimensioned double to NaN using 'nan'"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "xl"
+        pfts_to_include = ["not_vegetated", "needleleaf_evergreen_temperate_tree"]
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            ",".join(pfts_to_include),
+            f"{this_var}=nan,nan",
+        ]
+
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_out = open_paramfile(output_path, mask_and_scale=True)
+        self.assertTrue(all(np.isnan(ds_out[this_var])))
+
+    # TODO: Add test changing scalar int to NaN using nan
+    # TODO: Add test changing scalar double to NaN using _
+    # TODO: Add test changing scalar int to NaN using _
+    # TODO: Add test changing vector double to NaN using _
+    # TODO: Add test changing vector int to NaN using _
+
+    # TODO: Add test overwriting existing scalar double NaN using nan (lowercase)
+
+    # TODO: Test changing param when extracting just one PFT
+
+    # TODO: Test changing PFT name
 
     def test_set_paramfile_changeparam_multidim_errors(self):
         """
