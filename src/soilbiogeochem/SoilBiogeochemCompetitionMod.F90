@@ -176,7 +176,7 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst, clm_fates)
     !
     ! !USES:
-    use clm_varctl       , only: use_fates, cnallocate_carbon_only, iulog
+    use clm_varctl       , only: fates_parteh_mode, cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
@@ -330,7 +330,7 @@ contains
          bgc_soilc_loop: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
-            fates: if (use_fates) then
+            fates: if (col%is_fates(c)) then
                ci = bounds%clump_index
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
@@ -344,15 +344,17 @@ contains
                do j = 1, nlevdecomp
                   plant_ndemand_vr(c,j) = 0._r8
 
-                  do f = 1, n_pcomp
-                     ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
+                  if (fates_parteh_mode == 2) then
+                     do f = 1, n_pcomp
+                        ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
 
-                     ! [gN/m3/s] = [gC/m3] * [gN/gC/s]
-                     plant_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + &
-                         clm_fates%fates(ci)%bc_out(s)%veg_rootc(f,j) * &
-                         (clm_fates%fates(ci)%bc_pconst%vmax_nh4(ft) + &
-                          clm_fates%fates(ci)%bc_pconst%vmax_no3(ft))
-                  end do
+                        ! [gN/m3/s] = [gC/m3] * [gN/gC/s]
+                        plant_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + &
+                            clm_fates%fates(ci)%bc_out(s)%veg_rootc(f,j) * &
+                            (clm_fates%fates(ci)%bc_pconst%vmax_nh4(ft) + &
+                             clm_fates%fates(ci)%bc_pconst%vmax_no3(ft))
+                     end do
+                  end if
 
                   ! [gN/m2/s]
                   plant_ndemand(c) = plant_ndemand(c) + plant_ndemand_vr(c,j) * dzsoi_decomp(j)
@@ -1040,13 +1042,14 @@ contains
 
          ! Set the FATES N uptake fluxes
 
-         if (use_fates) then
+         if (col%is_fates(c)) then
             do fc=1, num_bgc_soilc
                c = filter_bgc_soilc(fc)
                ci = bounds%clump_index
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
 
+               ! if fates_parteh_mode /= 2 then plant_ndemand = 0 and this if-statement gets skipped
                if ( plant_ndemand(c) > tiny(plant_ndemand(c)) ) then
                   do f = 1, n_pcomp
                      ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
