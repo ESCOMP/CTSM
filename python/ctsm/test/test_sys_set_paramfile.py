@@ -558,6 +558,71 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(value == ds_in[this_var].values[i])
 
+    def test_set_paramfile_setparams_just_one_pft_dropothers_noset(self):
+        """Test dropping all but one PFT without changing any parameters"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pft_to_include = "needleleaf_deciduous_boreal_tree"
+
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            pft_to_include,
+            "--drop-other-pfts",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+
+        # Check that the file is just what you get if you drop all but the one PFT
+        ds_in = open_paramfile(PARAMFILE)
+        ds_in_1pft = sp.drop_other_pfts([pft_to_include], ds_in)
+        ds_out = open_paramfile(output_path)
+        self.assertTrue(ds_in_1pft.equals(ds_out))
+        self.assertEqual(ds_in_1pft.sizes["pft"], 1)
+        self.assertEqual(ds_out.sizes["pft"], 1)
+
+
+    def test_set_paramfile_setparams_just_one_pft_dropothers_doset(self):
+        """Test dropping all but one PFT, changing one parameter"""
+        output_path = os.path.join(self.tempdir, "output.nc")
+        pft_to_include = "needleleaf_deciduous_boreal_tree"
+        this_var = "rswf_max"
+        new_value = 0.7
+
+        # Ensure it wasn't new_value before
+        ds_in = open_paramfile(PARAMFILE)
+        pft_names = check_pfts_in_paramfile([pft_to_include], ds_in)
+        pft_index = get_selected_pft_indices([pft_to_include], pft_names)[0]
+        self.assertFalse(ds_in[this_var].values[pft_index] == new_value)
+
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            pft_to_include,
+            "--drop-other-pfts",
+            f"{this_var}={new_value}",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+
+        # Check that all variables match except for the one we changed
+        ds_out = open_paramfile(output_path)
+        ds_in_1pft = sp.drop_other_pfts([pft_to_include], ds_in)
+        for var in ds_in.variables:
+            da_in = ds_in_1pft[var]
+            da_out = ds_out[var]
+            if var == this_var:
+                self.assertFalse(da_in.equals(da_out))
+            else:
+                self.assertTrue(da_in.equals(da_out))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

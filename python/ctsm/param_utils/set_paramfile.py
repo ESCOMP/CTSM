@@ -103,6 +103,13 @@ def check_correct_ndims(da, new_value, throw_error=False):
     return is_ndim_correct
 
 
+def drop_other_pfts(selected_pfts, ds):
+    pft_names = check_pfts_in_paramfile(selected_pfts, ds)
+    indices = get_selected_pft_indices(selected_pfts, pft_names)
+    ds = ds.isel({"pft": indices})
+    return ds
+
+
 def main():
     """
     Main entry point for the script.
@@ -117,9 +124,7 @@ def main():
 
     # If --drop-other-pfts was given, drop PFTs not in args.pft
     if args.drop_other_pfts:
-        pft_names = check_pfts_in_paramfile(args.pft, ds_out)
-        indices = get_selected_pft_indices(args.pft, pft_names)
-        ds_out = ds_out.isel({"pft": indices})
+        ds_out = drop_other_pfts(args.pft, ds_out)
 
     # If any variables specified, drop others
     if args.variables:
@@ -155,6 +160,11 @@ def main():
         if just_some_pfts:
             pft_names = check_pfts_in_paramfile(args.pft, ds_out)
             indices = get_selected_pft_indices(args.pft, pft_names)
+        else:
+            # pylint is probably wrong with the possibly-used-before-assignment warning, but do this
+            # here just to placate it. Make it an invalid index so we get an error if we try to use
+            # it.
+            indices = -1
 
         # Check that correct number of dimensions were given for new values. Special handling needed
         # if we're just acting on one PFT.
@@ -180,6 +190,10 @@ def main():
                 )
             fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
             new_value[np.isnan(new_value)] = fill_value
+
+        # This can happen if, e.g., you're selecting and changing just one PFT
+        if ds_in[var].values.ndim > 0 and new_value.ndim == 0:
+            new_value = np.atleast_1d(new_value)
 
         ds_out[var].values = new_value
 
