@@ -130,6 +130,23 @@ class TestSysQueryParamfile(unittest.TestCase):
             )
         )
 
+    def test_query_paramfile_no_variables_real(self):
+        """
+        Test that query_paramfile doesn't error when trying to print every variable from a real
+        paramfile. Don't actually check that it matches what we expect; that's done in
+        test_query_paramfile_no_variables_fake.
+        """
+
+        sys.argv = [
+            "query_paramfile",
+            "-i",
+            PARAMFILE,
+        ]
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            qp.main()
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()

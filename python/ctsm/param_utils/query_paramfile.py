@@ -54,7 +54,7 @@ def print_values(ds, var, selected_pfts, pft_names):
         List of all PFT names in the file.
     """
     data = ds[var].values
-    if PFTNAME_VAR in ds[var].coords:
+    if list(ds[var].dims) == ["pft"]:
         print(var + ":")
         indices = range(len(pft_names))
         if selected_pfts is not None:
@@ -64,6 +64,9 @@ def print_values(ds, var, selected_pfts, pft_names):
             max_name_len = max(len(name) for name in pft_names)
         for p in indices:
             print(f"   {pft_names[p]:<{max_name_len}}: {data[p]}")
+    elif ds[var].ndim > 1:
+        print(f"{var}:")
+        print(data)
     else:
         print(f"{var}: {data}")
 
