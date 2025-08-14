@@ -5,6 +5,8 @@ module test_endrun
   use funit
   use abortutils
   use unittestUtils, only : endrun_msg
+  use shr_kind_mod, only : CL => shr_kind_cl
+  use clm_varctl, only : iulog
 
   implicit none
 
@@ -35,13 +37,62 @@ contains
   ! ========================================================================
 
   @Test
-  subroutine endrun_vanilla_aborts(this)
+  subroutine endrun_plain_vanilla_aborts(this)
     ! Test vanilla operation of endrun
     class(TestAbortUtils), intent(inout) :: this
 
     call endrun()
     @assertExceptionRaised(endrun_msg(''))
 
-  end subroutine endrun_vanilla_aborts
+  end subroutine endrun_plain_vanilla_aborts
+
+  @Test
+  subroutine endrun_msg_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with a message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+
+    call endrun( msg = msg)
+    @assertExceptionRaised(endrun_msg(msg))
+
+  end subroutine endrun_msg_vanilla_aborts
+
+  @Test
+  subroutine endrun_addmsg_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with an additional message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+    character(len=CL) :: add_msg = "additional_test_message"
+
+    call endrun(msg=msg, additional_msg=add_msg)
+    @assertExceptionRaised(endrun_msg(msg))
+
+  end subroutine endrun_addmsg_vanilla_aborts
+
+  @Test
+  subroutine endrun_addmsg_pt_context_aborts(this)
+    use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
+    use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
+    use decompMod, only : subgrid_level_cohort
+    use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+    ! Test pt_context operation of endrun with an additional message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+    character(len=CL) :: add_msg = "additional_test_message"
+    integer :: p = 1, l
+    integer, parameter :: nlevel = 6
+    integer :: subgrid_lvl(nlevel) = (/ subgrid_level_lndgrid, subgrid_level_gridcell, &
+         subgrid_level_landunit, subgrid_level_column, subgrid_level_patch, &
+         subgrid_level_cohort /)
+
+    call setup_single_veg_patch(pft_type=1)
+    ! Loop over all the subgrid level types
+    do l = 2, nlevel-1
+       write(iulog,*) 'level = ', l
+       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l), msg=msg, additional_msg=add_msg)
+       @assertExceptionRaised(endrun_msg(msg))
+    end do
+
+  end subroutine endrun_addmsg_pt_context_aborts
 
 end module test_endrun
