@@ -143,17 +143,11 @@ def main():
         else:
             new_value = np.array(new_value)
 
-        # Some NaN handling isn't yet implemented
-        if np.any(np.char.lower(new_value) == "nan"):
-            # TODO: Add code to set integer variables to NaN (this might not be possible)
-            if is_integer(ds_in[var].values):
-                raise NotImplementedError(f"Not able to set NaN for integer parameters: {chg}")
-            # TODO: Add code to add fill value to parameters without it
-            if "_FillValue" not in ds_in_masked_scaled[var].encoding:
-                raise NotImplementedError(
-                    f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
-                )
+        # TODO: Add code to set integer variables to NaN (this might not be possible)
+        if np.any(np.char.lower(new_value) == "nan") and is_integer(ds_in[var].values):
+            raise NotImplementedError(f"Not able to set NaN for integer parameters: {chg}")
 
+        # Convert to the output data type
         new_value = new_value.astype(type(ds_out[var].dtype))
 
         # Are we acting on just some PFTs? If so, we'll need some stuff.
@@ -176,6 +170,16 @@ def main():
             tmp = ds_out[var].values.copy()
             tmp[indices] = new_value
             new_value = tmp
+
+        # Ensure that any NaNs are replaced with the fill value
+        if any(np.isnan(np.atleast_1d(new_value))):
+            # TODO: Add code to add fill value to parameters without it
+            if "_FillValue" not in ds_in_masked_scaled[var].encoding:
+                raise NotImplementedError(
+                    f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
+                )
+            fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
+            new_value[np.isnan(new_value)] = fill_value
 
         ds_out[var].values = new_value
 

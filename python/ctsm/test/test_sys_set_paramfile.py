@@ -328,34 +328,86 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(ds_in[var].equals(ds_out[var]))
 
-    def test_set_paramfile_setparams_scalar_double_tonan_with_nan(self):
-        """Test setting scalar double to NaN using 'nan'"""
+    def test_set_paramfile_fill_value_scalar_double_nan(self):
+        """
+        Test that setting scalar double to fill value writes a literal NaN if that's the _FillValue
+        """
+        # Create paramfile with a double variable with fill value NaN
+        input_path = os.path.join(self.tempdir, "input.nc")
+        ds = open_paramfile(PARAMFILE, mask_and_scale=True)
+        new_param_name = "new_param_abc123"
+        ds[new_param_name] = xr.DataArray(data=np.array(3.14))
+        ds[new_param_name].encoding["_FillValue"] = np.nan
+        self.assertTrue(new_param_name in ds)
+        ds.to_netcdf(input_path)
+
+        # Check that its fill value is NaN
+        ds_in = open_paramfile(input_path, mask_and_scale=True)
+        self.assertTrue("_FillValue" in ds_in[new_param_name].encoding)
+        self.assertTrue(np.isnan(ds_in[new_param_name].encoding["_FillValue"]))
+
+        # Ask to set it to the FillValue
         output_path = os.path.join(self.tempdir, "output.nc")
-        this_var = "a_coef"
         sys.argv = [
             "set_paramfile",
             "-i",
-            PARAMFILE,
+            input_path,
             "-o",
             output_path,
-            f"{this_var}=nan",
+            f"{new_param_name}=nan",
         ]
-
         sp.main()
         self.assertTrue(os.path.exists(output_path))
 
-        # Check that it's NaN after considering the fill value
-        ds_out = open_paramfile(output_path, mask_and_scale=True)
-        self.assertTrue(np.isnan(ds_out[this_var]))
-        fill_value = ds_out[this_var].encoding["_FillValue"]
-
-        # Check that it's literally the fill value
+        # Ensure it wrote a literal NaN
         ds_out = open_paramfile(output_path, mask_and_scale=False)
-        var_value = ds_out[this_var].values
-        if np.isnan(fill_value):
-            self.assertTrue(np.isnan(var_value))
-        else:
-            self.assertEqual(var_value, fill_value)
+        self.assertTrue(np.isnan(ds_out[new_param_name]))
+
+        # Ensure it preserved NaN FillValue
+        ds_out = open_paramfile(output_path, mask_and_scale=True)
+        self.assertTrue(np.isnan(ds_out[new_param_name].encoding["_FillValue"]))
+
+    def test_set_paramfile_fill_value_scalar_double_real(self):
+        """
+        Test that setting scalar double to fill value does NOT write NaN if that's not the
+        _FillValue
+        """
+        # Create paramfile with a double variable with fill value -999.9
+        input_path = os.path.join(self.tempdir, "input.nc")
+        ds = open_paramfile(PARAMFILE, mask_and_scale=True)
+        new_param_name = "new_param_abc123"
+        ds[new_param_name] = xr.DataArray(data=np.array(3.14))
+        fill_value = -999.9
+        ds[new_param_name].encoding["_FillValue"] = fill_value
+        self.assertTrue(new_param_name in ds)
+        ds.to_netcdf(input_path)
+
+        # Check that its fill value is what we asked for
+        ds_in = open_paramfile(input_path, mask_and_scale=True)
+        self.assertTrue("_FillValue" in ds_in[new_param_name].encoding)
+        self.assertEqual(fill_value, ds_in[new_param_name].encoding["_FillValue"])
+
+        # Ask to set it to the FillValue
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            input_path,
+            "-o",
+            output_path,
+            f"{new_param_name}=nan",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+
+        # Ensure it preserved FillValue
+        ds_out = open_paramfile(output_path, mask_and_scale=True)
+        self.assertEqual(fill_value, ds_out[new_param_name].encoding["_FillValue"])
+        self.assertTrue(np.isnan(ds_out[new_param_name].values))
+
+        # Ensure it wrote the FillValue and not a literal NaN
+        ds_out = open_paramfile(output_path, mask_and_scale=False)
+        self.assertEqual(fill_value, ds_out[new_param_name].values)
 
     def test_set_paramfile_setparams_scalar_double_tonan_with_nancaps(self):
         """Test setting scalar double to NaN using 'NaN'"""
