@@ -77,6 +77,10 @@ def main():
 
     ds = open_paramfile(args.input, mask_and_scale=True)
 
+    # If user didn't specify variables, print all
+    if not args.variables:
+        args.variables = ds.variables
+
     selected_pfts = args.pft
     pft_names = None
     if selected_pfts:
