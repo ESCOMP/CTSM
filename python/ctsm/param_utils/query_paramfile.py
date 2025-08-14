@@ -26,8 +26,8 @@ def get_arguments():
     )
     parser.add_argument(
         "variables",
-        help="Comma-separated list of variable names to extract",
-        type=comma_separated_list,
+        help="Names of variables to query",
+        nargs="*",
     )
     parser.add_argument(
         *pft_flags,
