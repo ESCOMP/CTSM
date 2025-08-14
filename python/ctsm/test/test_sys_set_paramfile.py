@@ -343,8 +343,19 @@ class TestSysSetParamfile(unittest.TestCase):
 
         sp.main()
         self.assertTrue(os.path.exists(output_path))
+
+        # Check that it's NaN after considering the fill value
         ds_out = open_paramfile(output_path, mask_and_scale=True)
         self.assertTrue(np.isnan(ds_out[this_var]))
+        fill_value = ds_out[this_var].encoding["_FillValue"]
+
+        # Check that it's literally the fill value
+        ds_out = open_paramfile(output_path, mask_and_scale=False)
+        var_value = ds_out[this_var].values
+        if np.isnan(fill_value):
+            self.assertTrue(np.isnan(var_value))
+        else:
+            self.assertEqual(var_value, fill_value)
 
     def test_set_paramfile_setparams_scalar_double_tonan_with_nancaps(self):
         """Test setting scalar double to NaN using 'NaN'"""
