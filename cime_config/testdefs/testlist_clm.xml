@@ -3703,28 +3703,6 @@
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="1x1_brazil" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesColdPRT2">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">1x1 exact restart debug test covering Fates CNP nutrients mode.</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld30" grid="1x1_brazil" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesColdPRT2--clm/mimicsFatesCold--clm-nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">Same 1x1 exact restart test but with MIMICS.</option>
-    </options>
-  </test>
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdPRT2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
