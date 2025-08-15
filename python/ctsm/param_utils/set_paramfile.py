@@ -200,7 +200,14 @@ def main():
 
         ds_out[var].values = new_value
 
-    ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input))
+    # We don't want to add _FillValue to parameters that didn't already have one. This dict will
+    # track such parameters and be passed to .to_netcdf(..., encoding=encoding)
+    encoding = {}
+    for var in ds_out:
+        if "_FillValue" not in ds_out[var].encoding:
+            encoding[var] = {"_FillValue": None}
+
+    ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input), encoding=encoding)
 
 
 if __name__ == "__main__":
