@@ -517,7 +517,7 @@ class TestSysSetParamfile(unittest.TestCase):
             f"{new_param_name}=nan",
         ]
         with self.assertRaisesRegex(
-            NotImplementedError, "Not able to set NaN if parameter doesn't already have fill value:"
+            NotImplementedError, "Can't set parameter to fill value if it doesn't already have one:"
         ):
             sp.main()
 

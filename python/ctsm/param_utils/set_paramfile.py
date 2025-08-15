@@ -137,7 +137,7 @@ def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
         # TODO: Add code to add fill value to parameters without it
         if "_FillValue" not in ds_in_masked_scaled[var].encoding:
             raise NotImplementedError(
-                f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
+                f"Can't set parameter to fill value if it doesn't already have one: {chg}"
             )
         fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
         new_value[np.isnan(new_value)] = fill_value
