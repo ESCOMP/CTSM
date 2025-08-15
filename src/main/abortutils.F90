@@ -33,7 +33,7 @@ contains
     ! !DESCRIPTION:
     ! Abort the model for abnormal termination
     !
-    use shr_sys_mod , only: shr_sys_abort
+    use shr_abort_mod , only: shr_abort_abort
     use clm_varctl  , only: iulog
     !
     ! !ARGUMENTS:
@@ -42,8 +42,8 @@ contains
     ! volatile stuff in additional_msg, as in:
     !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
     ! and then just assert against msg.
-    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_sys_abort
-    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_sys_abort
+    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_abort
+    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_abort
     !-----------------------------------------------------------------------
 
     if (present (additional_msg)) then
@@ -52,7 +52,7 @@ contains
        write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_sys_abort(msg)
+    call shr_abort_abort(msg)
 
   end subroutine endrun_vanilla
 
@@ -65,7 +65,6 @@ contains
     !
     ! This version also prints additional information about the point causing the error.
     !
-    use shr_sys_mod , only: shr_sys_abort
     use clm_varctl  , only: iulog
     use decompMod   , only: subgrid_level_unspecified
     !
@@ -78,8 +77,8 @@ contains
     ! volatile stuff in additional_msg, as in:
     !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
     ! and then just assert against msg.
-    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_sys_abort
-    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_sys_abort
+    character(len=*), intent(in), optional :: msg            ! string to be passed to shr_abort
+    character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_abort
     !
     ! Local Variables:
     integer :: igrc, ilun, icol 
@@ -101,7 +100,8 @@ contains
     ! Write various information giving context for the given index at the given subgrid
     ! level, including global index information and more.
     !
-    use shr_sys_mod  , only : shr_sys_flush, shr_sys_abort
+    ! NOTE: DO NOT CALL AN ABORT FROM HERE AS THAT WOULD SHORT CIRUIT THE ERROR REPORTING!!
+    !
     use shr_log_mod  , only : errMsg => shr_log_errMsg
     use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
