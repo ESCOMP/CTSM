@@ -14,7 +14,7 @@ from ctsm import unit_testing
 
 from ctsm.netcdf_utils import get_netcdf_format
 from ctsm.param_utils import set_paramfile as sp
-from ctsm.param_utils.paramfile_shared import open_paramfile
+from ctsm.param_utils.paramfile_shared import open_paramfile, are_paramfile_dataarrays_identical
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -24,6 +24,31 @@ from ctsm.param_utils.paramfile_shared import open_paramfile
 PARAMFILE = os.path.join(
     os.path.dirname(__file__), "testinputs", "ctsm5.3.041.Nfix_params.v13.c250221_upplim250.nc"
 )
+
+
+def save_paramfile_with_integer_that_has_fillvalue(tempdir):
+    """
+    Convenience function for creating a parameter file that has an integer parameter with a fill
+    value
+    """
+    input_path = os.path.join(tempdir, "input.nc")
+    new_param_name = "new_param_abc123"
+    fill_value = -999
+
+    # Construct the Dataset
+    data = np.array([1, 2, fill_value, 4, 5], dtype=np.int32)
+    da = xr.DataArray(data)
+    da.encoding["_FillValue"] = fill_value
+    ds = xr.Dataset(data_vars={new_param_name: da})
+
+    # Check it
+    assert new_param_name in ds
+    assert sp.is_integer(ds[new_param_name].values)
+
+    # Save it
+    sp.save_paramfile(ds, input_path)
+
+    return input_path, new_param_name, fill_value
 
 
 class TestUnitCheckCorrectNdims(unittest.TestCase):
@@ -215,6 +240,7 @@ class TestUnitSetParamfile(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             sp.get_arguments()
 
+
 class TestUnitSaveParamfile(unittest.TestCase):
     """Unit tests of save_paramfile"""
 
@@ -225,13 +251,35 @@ class TestUnitSaveParamfile(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
 
-    def test_save_paramfile (self):
+    def test_save_paramfile(self):
         """Test that save_paramfile can save our usual test file to a new file without changes"""
         input_path = PARAMFILE
         ds_in = open_paramfile(input_path)
         sp.save_paramfile(ds_in, self.output_path, nc_format=get_netcdf_format(input_path))
         ds_out = open_paramfile(self.output_path)
         self.assertTrue(ds_out.equals(ds_in))
+        self.assertTrue(set(ds_in.variables) == set(ds_out.variables))
+        for var in ds_in:
+            self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
+
+    def test_save_paramfile_integer_with_fillvalue(self):
+        """Test that save_paramfile can successfully save an integer parameter with a fill value"""
+
+        # Create paramfile with a integer variable with fill value -999
+        input_path, new_param_name, fill_value = save_paramfile_with_integer_that_has_fillvalue(
+            self.tempdir
+        )
+
+        # Read it, checking that its fill value is what we asked for. Note: We need to mask, because
+        # otherwise the fill value won't be read.
+        ds = xr.open_dataset(input_path, mask_and_scale=True)
+        self.assertTrue("_FillValue" in ds[new_param_name].encoding)
+        self.assertEqual(fill_value, ds[new_param_name].encoding["_FillValue"])
+
+        # Check that the saved variable is an integer type. Note: We need to NOT mask, because
+        # masking converts fill values to NaN, which forces conversion to float.
+        ds = xr.open_dataset(input_path, mask_and_scale=False)
+        self.assertTrue(sp.is_integer(ds[new_param_name].values))
 
 
 if __name__ == "__main__":

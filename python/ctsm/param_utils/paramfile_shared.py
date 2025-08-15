@@ -5,7 +5,16 @@ Functions etc. shared among parameter file utilities
 import argparse
 import xarray as xr
 
+from ctsm.netcdf_utils import are_xr_dataarrays_identical
+
 PFTNAME_VAR = "pftname"
+
+
+def are_paramfile_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
+    """
+    Check whether parameter DataArrays are identical enough, ignoring some metadata
+    """
+    return are_xr_dataarrays_identical(da0, da1, keys_to_ignore=["source", "original_shape"])
 
 
 def check_pfts_in_paramfile(selected_pfts, ds):

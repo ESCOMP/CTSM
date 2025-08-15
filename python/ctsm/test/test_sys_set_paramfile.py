@@ -12,9 +12,9 @@ import xarray as xr
 
 from ctsm import unit_testing
 
-from ctsm.netcdf_utils import get_netcdf_format, are_xr_dataarrays_identical
+from ctsm.netcdf_utils import get_netcdf_format
 from ctsm.param_utils import set_paramfile as sp
-from ctsm.param_utils.paramfile_shared import open_paramfile
+from ctsm.param_utils.paramfile_shared import open_paramfile, are_paramfile_dataarrays_identical
 from ctsm.param_utils.paramfile_shared import check_pfts_in_paramfile, get_selected_pft_indices
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
@@ -25,13 +25,6 @@ from ctsm.param_utils.paramfile_shared import check_pfts_in_paramfile, get_selec
 PARAMFILE = os.path.join(
     os.path.dirname(__file__), "testinputs", "ctsm5.3.041.Nfix_params.v13.c250221_upplim250.nc"
 )
-
-
-def are_paramfile_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
-    """
-    Check whether parameter DataArrays are identical enough, ignoring some metadata
-    """
-    return are_xr_dataarrays_identical(da0, da1, keys_to_ignore=["source", "original_shape"])
 
 
 class TestSysSetParamfile(unittest.TestCase):
