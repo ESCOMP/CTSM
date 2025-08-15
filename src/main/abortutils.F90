@@ -89,13 +89,7 @@ contains
        call write_point_context(subgrid_index, subgrid_level)
     end if
 
-    if (present (additional_msg)) then
-       write(iulog,*)'ENDRUN: ', additional_msg
-    else
-       write(iulog,*)'ENDRUN:'
-    end if
-
-    call shr_sys_abort(msg)
+    call endrun_vanilla(msg=msg, additional_msg=additional_msg)
 
   end subroutine endrun_write_point_context
 
@@ -188,10 +182,9 @@ contains
 
     else
        write(iulog,*) 'subgrid_level not supported: ', subgrid_level
-       call shr_sys_abort('subgrid_level not supported '//errmsg(sourcefile, __LINE__))
+       write(iulog,*) errmsg(sourcefile, __LINE__)
+       write(iulog,*) 'Continuing the endrun without writing point context information'
     end if
-
-    call shr_sys_flush(iulog)
 
   end subroutine write_point_context
 
