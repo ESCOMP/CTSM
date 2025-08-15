@@ -129,6 +129,22 @@ def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSI
     ds_out.to_netcdf(output_path, format=nc_format, encoding=encoding)
 
 
+def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
+    """
+    If there are any NaNs in the new parameter value (array), replace them with the fill value
+    """
+    if any(np.isnan(np.atleast_1d(new_value))):
+        # TODO: Add code to add fill value to parameters without it
+        if "_FillValue" not in ds_in_masked_scaled[var].encoding:
+            raise NotImplementedError(
+                f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
+            )
+        fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
+        new_value[np.isnan(new_value)] = fill_value
+
+    return new_value
+
+
 def main():
     """
     Main entry point for the script.
@@ -161,11 +177,8 @@ def main():
         if ds_out[var].ndim > 1:
             raise NotImplementedError("Can't yet change multi-dimensional parameters")
 
-        if "," in new_value:
-            new_value_list = new_value.split(",")
-            new_value = np.array(new_value_list)
-        else:
-            new_value = np.array(new_value)
+        # Split at commas, if any, and convert to numpy array
+        new_value = np.array(new_value.split(",")).squeeze()
 
         # TODO: Add code to set integer variables to NaN (this might not be possible)
         if np.any(np.char.lower(new_value) == "nan") and is_integer(ds_in[var].values):
@@ -176,14 +189,13 @@ def main():
 
         # Are we acting on just some PFTs? If so, we'll need some stuff.
         just_some_pfts = PFTNAME_VAR in ds_out[var].coords and args.pft
+        # pylint is probably wrong with the possibly-used-before-assignment warning, but do this
+        # here just to placate it. Make it an invalid index so we get an error if we try to use
+        # it.
+        indices = -1
         if just_some_pfts:
             pft_names = check_pfts_in_paramfile(args.pft, ds_out)
             indices = get_selected_pft_indices(args.pft, pft_names)
-        else:
-            # pylint is probably wrong with the possibly-used-before-assignment warning, but do this
-            # here just to placate it. Make it an invalid index so we get an error if we try to use
-            # it.
-            indices = -1
 
         # Check that correct number of dimensions were given for new values. Special handling needed
         # if we're just acting on one PFT.
@@ -201,14 +213,7 @@ def main():
             new_value = tmp
 
         # Ensure that any NaNs are replaced with the fill value
-        if any(np.isnan(np.atleast_1d(new_value))):
-            # TODO: Add code to add fill value to parameters without it
-            if "_FillValue" not in ds_in_masked_scaled[var].encoding:
-                raise NotImplementedError(
-                    f"Not able to set NaN if parameter doesn't already have fill value: {chg}"
-                )
-            fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
-            new_value[np.isnan(new_value)] = fill_value
+        new_value = _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value)
 
         # This can happen if, e.g., you're selecting and changing just one PFT
         if ds_in[var].values.ndim > 0 and new_value.ndim == 0:
