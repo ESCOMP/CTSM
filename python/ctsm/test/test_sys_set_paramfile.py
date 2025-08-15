@@ -12,7 +12,7 @@ import xarray as xr
 
 from ctsm import unit_testing
 
-from ctsm.netcdf_utils import get_netcdf_format
+from ctsm.netcdf_utils import get_netcdf_format, are_xr_dataarrays_identical
 from ctsm.param_utils import set_paramfile as sp
 from ctsm.param_utils.paramfile_shared import open_paramfile
 from ctsm.param_utils.paramfile_shared import check_pfts_in_paramfile, get_selected_pft_indices
@@ -83,6 +83,30 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that both are the same kind of netCDF
         self.assertEqual(get_netcdf_format(PARAMFILE), get_netcdf_format(output_path))
 
+    def test_set_paramfile_copy_without_adding_fillvalue(self):
+        """Test that set_paramfile can copy to a new file without adding _FillValue"""
+        input_path = os.path.join(self.tempdir, "input.nc")
+        output_path = os.path.join(self.tempdir, "output.nc")
+        param_name = "param0"
+
+        # Save a test paramfile without _FillValue
+        da = xr.DataArray(data=np.float64([1, 2, 3]))
+        da.encoding["_FillValue"] = None
+        ds = xr.Dataset(data_vars={param_name: da})
+        ds.to_netcdf(input_path, encoding={param_name: {"_FillValue": None}})
+        ds_in = open_paramfile(input_path)
+        self.assertFalse("_FillValue" in ds_in[param_name].encoding)
+        self.assertFalse("_FillValue" in ds_in[param_name].attrs)
+
+        # Use set_paramfile to copy to new file
+        sys.argv = ["set_paramfile", "-i", input_path, "-o", output_path]
+        sp.main()
+
+        # Check that _FillValue wasn't added
+        ds_out = open_paramfile(output_path)
+        self.assertFalse("_FillValue" in ds_out[param_name].encoding)
+        self.assertFalse("_FillValue" in ds_out[param_name].attrs)
+
     def test_set_paramfile_extractpfts(self):
         """Test that set_paramfile can copy to a new file with only some requested PFTs"""
         output_path = os.path.join(self.tempdir, "output.nc")
@@ -104,10 +128,12 @@ class TestSysSetParamfile(unittest.TestCase):
 
         # Check that included variables/coords match
         for var in ds_in.variables:
+            actual = ds_out[var]
             if sp.PFTNAME_VAR in ds_in[var].coords:
-                self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
+                expected = ds_in[var].isel(pft=[0, 1])
             else:
-                self.assertTrue(ds_in[var].equals(ds_out[var]))
+                expected = ds_in[var]
+            self.assertTrue(are_xr_dataarrays_identical(expected, actual))
 
     def test_set_paramfile_changeparams_scalar_errors_given_list(self):
         """Test that set_paramfile errors if given a list for a scalar parameter"""
@@ -164,7 +190,7 @@ class TestSysSetParamfile(unittest.TestCase):
                 self.assertTrue(ds_in[var].values == 11)
                 self.assertTrue(ds_out[var].values == 87)
             else:
-                self.assertTrue(ds_in[var].equals(ds_out[var]))
+                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
 
             # Check that data type hasn't changed
             self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
@@ -285,9 +311,9 @@ class TestSysSetParamfile(unittest.TestCase):
                 this_slice = slice(2, None)
                 expected = ds_in["xl"].isel(pft=this_slice)
                 result = ds_out["xl"].isel(pft=this_slice)
-                self.assertTrue(expected.equals(result))
+                self.assertTrue(are_xr_dataarrays_identical(expected, result))
             else:
-                self.assertTrue(ds_in[var].equals(ds_out[var]))
+                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
 
     def test_set_paramfile_extractpfts_changeparam_int(self):
         """
@@ -324,9 +350,11 @@ class TestSysSetParamfile(unittest.TestCase):
             if var == this_var:
                 self.assertTrue(np.array_equal(np.array([1986, 1987]), ds_out[var].values))
             elif sp.PFTNAME_VAR in ds_in[var].coords:
-                self.assertTrue(ds_in[var].isel(pft=[0, 1]).equals(ds_out[var]))
+                self.assertTrue(
+                    are_xr_dataarrays_identical(ds_in[var].isel(pft=[0, 1]), ds_out[var])
+                )
             else:
-                self.assertTrue(ds_in[var].equals(ds_out[var]))
+                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
 
     def test_set_paramfile_fill_value_scalar_double_nan(self):
         """
@@ -580,10 +608,12 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_in = open_paramfile(PARAMFILE)
         ds_in_1pft = sp.drop_other_pfts([pft_to_include], ds_in)
         ds_out = open_paramfile(output_path)
+        self.assertTrue(set(ds_in_1pft.variables) == set(ds_out.variables))
+        for var in ds_in_1pft:
+            self.assertTrue(are_xr_dataarrays_identical(ds_in_1pft[var], ds_out[var]))
         self.assertTrue(ds_in_1pft.equals(ds_out))
         self.assertEqual(ds_in_1pft.sizes["pft"], 1)
         self.assertEqual(ds_out.sizes["pft"], 1)
-
 
     def test_set_paramfile_setparams_just_one_pft_dropothers_doset(self):
         """Test dropping all but one PFT, changing one parameter"""
@@ -619,9 +649,9 @@ class TestSysSetParamfile(unittest.TestCase):
             da_in = ds_in_1pft[var]
             da_out = ds_out[var]
             if var == this_var:
-                self.assertFalse(da_in.equals(da_out))
+                self.assertFalse(are_xr_dataarrays_identical(da_in, da_out))
             else:
-                self.assertTrue(da_in.equals(da_out))
+                self.assertTrue(are_xr_dataarrays_identical(da_in, da_out))
 
 
 if __name__ == "__main__":
