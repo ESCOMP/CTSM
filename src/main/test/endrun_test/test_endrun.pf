@@ -103,6 +103,28 @@ contains
   end subroutine endrun_addmsg_pt_context_aborts
 
   @Test
+  subroutine endrun_nomsg_pt_context_bad_pt_aborts(this)
+    use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
+    use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
+    use decompMod, only : subgrid_level_cohort
+    ! Test pt_context operation of endrun with an additional message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    integer :: p = 2, l
+    integer, parameter :: nlevel = 6
+    integer :: subgrid_lvl(nlevel) = (/ subgrid_level_lndgrid, subgrid_level_gridcell, &
+         subgrid_level_landunit, subgrid_level_column, subgrid_level_patch, &
+         subgrid_level_cohort /)
+
+    ! Loop over all the subgrid level types
+    ! Skip the first one and the last one which are: lndgrid and cohort
+    do l = 2, nlevel-1
+       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l), msg=msg, additional_msg=add_msg)
+       @assertExceptionRaised(endrun_msg(''))
+    end do
+
+  end subroutine endrun_nomsg_pt_context_bad_pt_aborts
+
+  @Test
   subroutine endrun_pt_context_lndgrid_aborts(this)
     use decompMod, only : subgrid_level_lndgrid
     class(TestAbortUtils), intent(inout) :: this
