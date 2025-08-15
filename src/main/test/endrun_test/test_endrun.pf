@@ -118,7 +118,7 @@ contains
     ! Loop over all the subgrid level types
     ! Skip the first one and the last one which are: lndgrid and cohort
     do l = 2, nlevel-1
-       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l), msg=msg, additional_msg=add_msg)
+       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l))
        @assertExceptionRaised(endrun_msg(''))
     end do
 
