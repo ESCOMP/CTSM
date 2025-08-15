@@ -69,7 +69,10 @@ def get_arguments():
 
     parser.add_argument(
         "param_changes",
-        help="Parameter changes to apply. E.g.: param1=new_value1 pftparam=pft1_val,pft2_val,...",
+        help=(
+            "Parameter changes to apply. Use nan to set to the fill value. E.g.:\n"
+            "   param1=new_value1 pftparam=pft1_val,nan,... param3=nan"
+        ),
         nargs="*",
     )
 

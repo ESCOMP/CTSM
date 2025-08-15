@@ -114,7 +114,9 @@ def paramfile_parser_setup(description):
         (parser, pft_flags) where parser is an ArgumentParser and pft_flags is a list of flags for
         PFT argument.
     """
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        description=description, formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument("-i", "--input", required=True, help="Input netCDF file")
 
     # Flags that can be used for the PFT argument
