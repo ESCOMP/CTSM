@@ -18,11 +18,10 @@ def get_netcdf_format(file_path):
     return netcdf_format
 
 
-def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
+def _is_dataarray_metadata_identical(da0: xr.DataArray, da1: xr.DataArray):
     """
-    Comprehensively check whether two DataArrays are identical
+    Check whether two DataArrays have identical-enough metadata
     """
-    # pylint: disable=too-many-return-statements
 
     # Check data type
     if da0.dtype != da1.dtype:
@@ -45,6 +44,15 @@ def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
     # Check dims
     if da0.dims != da1.dims:
         return False
+
+    return True
+
+
+def _is_dataarray_data_identical(da0: xr.DataArray, da1: xr.DataArray):
+    """
+    Check whether two DataArrays have identical data
+    """
+    # pylint: disable=too-many-return-statements
 
     # Check sizes
     if da0.sizes != da1.sizes:
@@ -74,6 +82,19 @@ def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
         return False
     if not isinstance(da0.data, np.ndarray):
         raise NotImplementedError(f"Add support for comparing two objects of type {da0_data_type}")
+
+    return True
+
+
+def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
+    """
+    Comprehensively check whether two DataArrays are identical
+    """
+    if not _is_dataarray_metadata_identical(da0, da1):
+        return False
+
+    if not _is_dataarray_data_identical(da0, da1):
+        return False
 
     # Fallback to however xarray defines equality, in case we missed something above
     return da0.equals(da1)
