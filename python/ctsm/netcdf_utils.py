@@ -18,7 +18,7 @@ def get_netcdf_format(file_path):
     return netcdf_format
 
 
-def _is_dataarray_metadata_identical(da0: xr.DataArray, da1: xr.DataArray):
+def _is_dataarray_metadata_identical(da0: xr.DataArray, da1: xr.DataArray, keys_to_ignore=None):
     """
     Check whether two DataArrays have identical-enough metadata
     """
@@ -29,7 +29,7 @@ def _is_dataarray_metadata_identical(da0: xr.DataArray, da1: xr.DataArray):
 
     # Check encoding
     if not are_dicts_identical_nansequal(
-        da0.encoding, da1.encoding, keys_to_ignore=["source", "original_shape"]
+        da0.encoding, da1.encoding, keys_to_ignore=keys_to_ignore
     ):
         return False
 
@@ -86,11 +86,11 @@ def _is_dataarray_data_identical(da0: xr.DataArray, da1: xr.DataArray):
     return True
 
 
-def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
+def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray, keys_to_ignore=None):
     """
     Comprehensively check whether two DataArrays are identical
     """
-    if not _is_dataarray_metadata_identical(da0, da1):
+    if not _is_dataarray_metadata_identical(da0, da1, keys_to_ignore=keys_to_ignore):
         return False
 
     if not _is_dataarray_data_identical(da0, da1):

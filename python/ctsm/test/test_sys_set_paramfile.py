@@ -27,6 +27,13 @@ PARAMFILE = os.path.join(
 )
 
 
+def are_paramfile_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
+    """
+    Check whether parameter DataArrays are identical enough, ignoring some metadata
+    """
+    return are_xr_dataarrays_identical(da0, da1, keys_to_ignore=["source", "original_shape"])
+
+
 class TestSysSetParamfile(unittest.TestCase):
     """System tests of set_paramfile"""
 
@@ -133,7 +140,7 @@ class TestSysSetParamfile(unittest.TestCase):
                 expected = ds_in[var].isel(pft=[0, 1])
             else:
                 expected = ds_in[var]
-            self.assertTrue(are_xr_dataarrays_identical(expected, actual))
+            self.assertTrue(are_paramfile_dataarrays_identical(expected, actual))
 
     def test_set_paramfile_changeparams_scalar_errors_given_list(self):
         """Test that set_paramfile errors if given a list for a scalar parameter"""
@@ -190,7 +197,7 @@ class TestSysSetParamfile(unittest.TestCase):
                 self.assertTrue(ds_in[var].values == 11)
                 self.assertTrue(ds_out[var].values == 87)
             else:
-                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
 
             # Check that data type hasn't changed
             self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
@@ -311,9 +318,9 @@ class TestSysSetParamfile(unittest.TestCase):
                 this_slice = slice(2, None)
                 expected = ds_in["xl"].isel(pft=this_slice)
                 result = ds_out["xl"].isel(pft=this_slice)
-                self.assertTrue(are_xr_dataarrays_identical(expected, result))
+                self.assertTrue(are_paramfile_dataarrays_identical(expected, result))
             else:
-                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
 
     def test_set_paramfile_extractpfts_changeparam_int(self):
         """
@@ -351,10 +358,10 @@ class TestSysSetParamfile(unittest.TestCase):
                 self.assertTrue(np.array_equal(np.array([1986, 1987]), ds_out[var].values))
             elif sp.PFTNAME_VAR in ds_in[var].coords:
                 self.assertTrue(
-                    are_xr_dataarrays_identical(ds_in[var].isel(pft=[0, 1]), ds_out[var])
+                    are_paramfile_dataarrays_identical(ds_in[var].isel(pft=[0, 1]), ds_out[var])
                 )
             else:
-                self.assertTrue(are_xr_dataarrays_identical(ds_in[var], ds_out[var]))
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
 
     def test_set_paramfile_fill_value_scalar_double_nan(self):
         """
@@ -610,7 +617,7 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_out = open_paramfile(output_path)
         self.assertTrue(set(ds_in_1pft.variables) == set(ds_out.variables))
         for var in ds_in_1pft:
-            self.assertTrue(are_xr_dataarrays_identical(ds_in_1pft[var], ds_out[var]))
+            self.assertTrue(are_paramfile_dataarrays_identical(ds_in_1pft[var], ds_out[var]))
         self.assertTrue(ds_in_1pft.equals(ds_out))
         self.assertEqual(ds_in_1pft.sizes["pft"], 1)
         self.assertEqual(ds_out.sizes["pft"], 1)
@@ -649,9 +656,9 @@ class TestSysSetParamfile(unittest.TestCase):
             da_in = ds_in_1pft[var]
             da_out = ds_out[var]
             if var == this_var:
-                self.assertFalse(are_xr_dataarrays_identical(da_in, da_out))
+                self.assertFalse(are_paramfile_dataarrays_identical(da_in, da_out))
             else:
-                self.assertTrue(are_xr_dataarrays_identical(da_in, da_out))
+                self.assertTrue(are_paramfile_dataarrays_identical(da_in, da_out))
 
 
 if __name__ == "__main__":
