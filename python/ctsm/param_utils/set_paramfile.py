@@ -4,6 +4,7 @@ Tool for changing parameters on CTSM paramfile
 
 import os
 import numpy as np
+import xarray as xr
 
 from ctsm.args_utils import comma_separated_list
 from ctsm.netcdf_utils import get_netcdf_format
@@ -113,6 +114,21 @@ def drop_other_pfts(selected_pfts, ds):
     return ds
 
 
+def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSIC"):
+    """
+    Save xarray Dataset to paramfile
+    """
+
+    # We don't want to add _FillValue to parameters that didn't already have one. This dict will
+    # track such parameters and be passed to .to_netcdf(..., encoding=encoding)
+    encoding = {}
+    for var in ds_out:
+        if "_FillValue" not in ds_out[var].encoding:
+            encoding[var] = {"_FillValue": None}
+
+    ds_out.to_netcdf(output_path, format=nc_format, encoding=encoding)
+
+
 def main():
     """
     Main entry point for the script.
@@ -200,14 +216,7 @@ def main():
 
         ds_out[var].values = new_value
 
-    # We don't want to add _FillValue to parameters that didn't already have one. This dict will
-    # track such parameters and be passed to .to_netcdf(..., encoding=encoding)
-    encoding = {}
-    for var in ds_out:
-        if "_FillValue" not in ds_out[var].encoding:
-            encoding[var] = {"_FillValue": None}
-
-    ds_out.to_netcdf(args.output, format=get_netcdf_format(args.input), encoding=encoding)
+    save_paramfile(ds_out, args.output, nc_format=get_netcdf_format(args.input))
 
 
 if __name__ == "__main__":

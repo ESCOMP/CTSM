@@ -5,12 +5,16 @@
 import unittest
 import os
 import sys
+import tempfile
+import shutil
 import numpy as np
 import xarray as xr
 
 from ctsm import unit_testing
 
+from ctsm.netcdf_utils import get_netcdf_format
 from ctsm.param_utils import set_paramfile as sp
+from ctsm.param_utils.paramfile_shared import open_paramfile
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -210,6 +214,24 @@ class TestUnitSetParamfile(unittest.TestCase):
         ]
         with self.assertRaises(RuntimeError):
             sp.get_arguments()
+
+class TestUnitSaveParamfile(unittest.TestCase):
+    """Unit tests of save_paramfile"""
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.output_path = os.path.join(self.tempdir, "output.nc")
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir, ignore_errors=True)
+
+    def test_save_paramfile (self):
+        """Test that save_paramfile can save our usual test file to a new file without changes"""
+        input_path = PARAMFILE
+        ds_in = open_paramfile(input_path)
+        sp.save_paramfile(ds_in, self.output_path, nc_format=get_netcdf_format(input_path))
+        ds_out = open_paramfile(self.output_path)
+        self.assertTrue(ds_out.equals(ds_in))
 
 
 if __name__ == "__main__":
