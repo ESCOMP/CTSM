@@ -6,6 +6,8 @@ import numpy as np
 import xarray as xr
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
+from ctsm.utils import are_dicts_identical_nansequal
+
 
 def get_netcdf_format(file_path):
     """
@@ -27,11 +29,13 @@ def are_xr_dataarrays_identical(da0: xr.DataArray, da1: xr.DataArray):
         return False
 
     # Check encoding
-    if da0.encoding != da1.encoding:
+    if not are_dicts_identical_nansequal(
+        da0.encoding, da1.encoding, keys_to_ignore=["source", "original_shape"]
+    ):
         return False
 
     # Check attributes
-    if da0.attrs != da1.attrs:
+    if not are_dicts_identical_nansequal(da0.attrs, da1.attrs):
         return False
 
     # Check name
