@@ -180,9 +180,10 @@ def main():
         # Split at commas, if any, and convert to numpy array
         new_value = np.array(new_value.split(",")).squeeze()
 
-        # TODO: Add code to set integer variables to NaN (this might not be possible)
+        # TODO: Add code to set integer variables to their missing value. This is harder than it
+        # sounds.
         if np.any(np.char.lower(new_value) == "nan") and is_integer(ds_in[var].values):
-            raise NotImplementedError(f"Not able to set NaN for integer parameters: {chg}")
+            raise NotImplementedError(f"Can't set integer parameter to fill value: {chg}")
 
         # Convert to the output data type
         new_value = new_value.astype(type(ds_out[var].dtype))

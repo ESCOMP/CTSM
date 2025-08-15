@@ -528,7 +528,7 @@ class TestSysSetParamfile(unittest.TestCase):
         ]
 
         with self.assertRaisesRegex(
-            NotImplementedError, "Not able to set NaN for integer parameters:"
+            NotImplementedError, "Can't set integer parameter to fill value:"
         ):
             sp.main()
 
