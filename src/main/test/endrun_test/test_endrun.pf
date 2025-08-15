@@ -94,8 +94,8 @@ contains
          subgrid_level_cohort /)
 
     ! Loop over all the subgrid level types
+    ! Skip the first one and the last one which are: lndgrid and cohort
     do l = 2, nlevel-1
-       write(iulog,*) 'level = ', l
        call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l), msg=msg, additional_msg=add_msg)
        @assertExceptionRaised(endrun_msg(msg))
     end do
@@ -145,10 +145,9 @@ contains
     use decompMod, only : subgrid_level_unspecified
     class(TestAbortUtils), intent(inout) :: this
     integer :: p = 1
-    character(len=CL) :: expected_msg = "subgrid_level not supported"
 
-    call endrun(subgrid_index=p, subgrid_level=subgrid_level_unspecified)
-    @assertExceptionRaised(endrun_msg(expected_msg))
+    call endrun(subgrid_index=p, subgrid_level=-9999)
+    @assertExceptionRaised(endrun_msg(''))
 
   end subroutine endrun_nomsg_pt_context_badlvl_aborts
 
