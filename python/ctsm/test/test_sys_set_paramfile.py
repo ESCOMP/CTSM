@@ -655,6 +655,69 @@ class TestSysSetParamfile(unittest.TestCase):
             else:
                 self.assertTrue(are_paramfile_dataarrays_identical(da_in, da_out))
 
+    def test_set_paramfile_int_errors_given_float_point0(self):
+        """
+        Test that set_paramfile errors if given float value ending in .0 for an int field
+        """
+        input_path = os.path.join(self.tempdir, "input.nc")
+        output_path = os.path.join(self.tempdir, "output.nc")
+        param_name = "param0"
+
+        # Save a test paramfile with an int field
+        da = xr.DataArray(data=np.int32(3))
+        ds = xr.Dataset(data_vars={param_name: da})
+        ds.to_netcdf(input_path, encoding={param_name: {"_FillValue": None}})
+        ds_in = open_paramfile(input_path)
+        self.assertTrue(sp.is_integer(ds_in[param_name].values))
+
+        # Try giving it a value ending in .0
+        sys.argv = ["set_paramfile", "-i", input_path, "-o", output_path, f"{param_name}=4.0"]
+        with self.assertRaisesRegex(ValueError, "Invalid assignment to an integer parameter:"):
+            sp.main()
+
+    def test_set_paramfile_int_errors_given_float_point1(self):
+        """
+        Test that set_paramfile errors if given float value NOT ending in .0 for an int field
+        """
+        input_path = os.path.join(self.tempdir, "input.nc")
+        output_path = os.path.join(self.tempdir, "output.nc")
+        param_name = "param0"
+
+        # Save a test paramfile with an int field
+        da = xr.DataArray(data=np.int32(3))
+        ds = xr.Dataset(data_vars={param_name: da})
+        ds.to_netcdf(input_path, encoding={param_name: {"_FillValue": None}})
+        ds_in = open_paramfile(input_path)
+        self.assertTrue(sp.is_integer(ds_in[param_name].values))
+
+        # Try giving it a value ending in .1
+        sys.argv = ["set_paramfile", "-i", input_path, "-o", output_path, f"{param_name}=4.1"]
+        with self.assertRaisesRegex(ValueError, "Invalid assignment to an integer parameter:"):
+            sp.main()
+
+    def test_set_paramfile_double_ok_given_int(self):
+        """
+        Test that set_paramfile works if given int value for a double field
+        """
+        input_path = os.path.join(self.tempdir, "input.nc")
+        output_path = os.path.join(self.tempdir, "output.nc")
+        param_name = "param0"
+
+        # Save a test paramfile with a double field
+        da = xr.DataArray(data=np.float32(3.14))
+        ds = xr.Dataset(data_vars={param_name: da})
+        ds.to_netcdf(input_path, encoding={param_name: {"_FillValue": None}})
+        ds_in = open_paramfile(input_path)
+        self.assertFalse(sp.is_integer(ds_in[param_name].values))
+
+        # Give it an integer
+        sys.argv = ["set_paramfile", "-i", input_path, "-o", output_path, f"{param_name}=4"]
+        sp.main()
+
+        # Check that it's still a double after saving
+        ds_out = open_paramfile(output_path)
+        self.assertFalse(sp.is_integer(ds_out[param_name].values))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
