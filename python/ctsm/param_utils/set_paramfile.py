@@ -164,6 +164,14 @@ def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
     return new_value
 
 
+def _convert_to_output_dtype(ds_out, var, new_value):
+    """
+    Convert new_value from np.ndarray of strings to output data type
+    """
+    new_value = new_value.astype(type(ds_out[var].dtype))
+    return new_value
+
+
 def main():
     """
     Main entry point for the script.
@@ -205,7 +213,7 @@ def main():
             raise NotImplementedError(f"Can't set integer parameter to fill value: {chg}")
 
         # Convert to the output data type
-        new_value = new_value.astype(type(ds_out[var].dtype))
+        new_value = _convert_to_output_dtype(ds_out, var, new_value)
 
         # Are we acting on just some PFTs? If so, we'll need some stuff.
         just_some_pfts = PFTNAME_VAR in ds_out[var].coords and args.pft
