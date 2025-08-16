@@ -108,6 +108,9 @@ def check_correct_ndims(da, new_value, throw_error=False):
 
 
 def drop_other_pfts(selected_pfts, ds):
+    """
+    Drop PFTs other than the selected ones
+    """
     pft_names = check_pfts_in_paramfile(selected_pfts, ds)
     indices = get_selected_pft_indices(selected_pfts, pft_names)
     ds = ds.isel({"pft": indices})

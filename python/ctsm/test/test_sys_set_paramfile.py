@@ -30,6 +30,8 @@ PARAMFILE = os.path.join(
 class TestSysSetParamfile(unittest.TestCase):
     """System tests of set_paramfile"""
 
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         self.orig_argv = sys.argv
         self.tempdir = tempfile.mkdtemp()

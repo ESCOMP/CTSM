@@ -122,7 +122,7 @@ class TestSysQueryParamfile(unittest.TestCase):
         with redirect_stdout(f):
             qp.main()
         out = f.getvalue()
-        self.assertRegex(out, (r"fake1: \[1 2 3\]\n" r"fake2: \[4 5 6\]\n"))
+        self.assertRegex(out, (r"fake1: \[1 2 3\]\nfake2: \[4 5 6\]\n"))
 
     def test_query_paramfile_no_variables_real(self):
         """

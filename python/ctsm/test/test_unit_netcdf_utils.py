@@ -59,6 +59,8 @@ class TestUnitAreXrDataArraysIdentical(unittest.TestCase):
     Unit tests for are_xr_dataarrays_identical
     """
 
+    # pylint: disable=too-many-public-methods
+
     def test_are_xr_dataarrays_identical_data_types_match(self):
         """Should be true if dtypes match"""
         da0 = xr.DataArray(int(1))

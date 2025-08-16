@@ -7,10 +7,11 @@ import glob
 import string
 import re
 import pdb
-import numpy as np
 
 from datetime import date, timedelta
 from getpass import getuser
+
+import numpy as np
 
 from ctsm.git_utils import get_ctsm_git_short_hash
 
