@@ -25,12 +25,16 @@ contains
 
   subroutine setUp(this)
     use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+    use GridcellType , only : grc
     class(TestAbortUtils), intent(inout) :: this
 
     ! Setup a single gridcell with one vegetated patch
     ! So there's only one: gridcell, landunit, column, patch
     ! This isn't needed for some tests, but doesn't hurt to do it
     call setup_single_veg_patch(pft_type=1)
+    ! Set lat and lon for this gridcell, so something is printed in the log
+    grc%londeg(1) = 255.0
+    grc%latdeg(1) = 30.0
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -54,6 +58,26 @@ contains
     @assertExceptionRaised(endrun_msg(''))
 
   end subroutine endrun_plain_vanilla_aborts
+
+  @Test
+  subroutine endrun_nomsg_file_line_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with file and line number input
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun(line=1000, file='test_file.F90')
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_file_line_vanilla_aborts
+
+  @Test
+  subroutine endrun_nomsg_onlyfile_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with only file input
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun(file='test_file.F90')
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_onlyfile_vanilla_aborts
 
   @Test
   subroutine endrun_msg_vanilla_aborts(this)
