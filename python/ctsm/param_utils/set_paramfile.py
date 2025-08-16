@@ -3,6 +3,8 @@ Tool for changing parameters on CTSM paramfile
 """
 
 import os
+import sys
+from datetime import datetime
 import numpy as np
 import xarray as xr
 
@@ -117,6 +119,18 @@ def drop_other_pfts(selected_pfts, ds):
     return ds
 
 
+def _add_cmd_to_history(ds):
+    """
+    Prepends the calling command to the netCDF history
+    """
+    if "history" not in ds.attrs:
+        ds.attrs["history"] = ""
+    cmd_items = [f"'{x}'" if " " in x else x for x in sys.argv]
+    datetime_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ds.attrs["history"] = f"{datetime_str}: {' '.join(cmd_items)}\n{ds.attrs['history']}"
+    return ds
+
+
 def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSIC"):
     """
     Save xarray Dataset to paramfile
@@ -128,6 +142,8 @@ def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSI
     for var in ds_out:
         if "_FillValue" not in ds_out[var].encoding:
             encoding[var] = {"_FillValue": None}
+
+    ds_out = _add_cmd_to_history(ds_out)
 
     ds_out.to_netcdf(output_path, format=nc_format, encoding=encoding)
 
