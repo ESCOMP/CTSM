@@ -117,43 +117,102 @@ contains
     integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     !
     ! Local Variables:
-    integer :: igrc, ilun, icol, ipft
+    integer, parameter :: unset = -9999 ! Unset value for an index
+    integer :: igrc=unset, ilun=unset, icol=unset, ipft=unset   ! Local index for grid-cell, landunit, column, and patch
+    integer :: ggrc=unset, glun=unset, gcol=unset, gpft=unset   ! Global index for grid-cell, landunit, column, and patch
+    integer :: bad_point = .false. ! Flag to indicate if the point is bad (i.e., global index is -1)
     !-----------------------------------------------------------------------
 
     if (subgrid_level == subgrid_level_gridcell) then
 
        igrc = subgrid_index
+       ggrc = get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell, donot_abort_on_badindex=.true.)
+
+    else if (subgrid_level == subgrid_level_landunit) then
+
+       ilun = subgrid_index
+       glun = get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit, donot_abort_on_badindex=.true.)
+       if ( glun /= -1 ) then
+          igrc = lun%gridcell(ilun)
+          ggrc = get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell, donot_abort_on_badindex=.true.)
+       else
+          bad_point = .true.
+       end if
+
+    else if (subgrid_level == subgrid_level_column) then
+
+       icol = subgrid_index
+       gcol = get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column, donot_abort_on_badindex=.true.)
+       if ( gcol /= -1 ) then
+          ilun = col%landunit(icol)
+          igrc = col%gridcell(icol)
+          ggrc = get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell, donot_abort_on_badindex=.true.)
+          glun = get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit, donot_abort_on_badindex=.true.)
+       else
+          bad_point = .true.
+       end if
+
+    else if (subgrid_level == subgrid_level_patch) then
+
+       ipft = subgrid_index
+       gpft = get_global_index(subgrid_index=ipft, subgrid_level=subgrid_level_patch, donot_abort_on_badindex=.true.)
+       if ( gpft /= -1 ) then
+          icol = patch%column(ipft)
+          ilun = patch%landunit(ipft)
+          igrc = patch%gridcell(ipft)
+          ggrc = get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell, donot_abort_on_badindex=.true.)
+          glun = get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit, donot_abort_on_badindex=.true.)
+          gcol = get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column, donot_abort_on_badindex=.true.)
+       else
+          bad_point = .true.
+       end if
+
+    end if
+
+    ! If one of the global indices is -1 then this is a bad point, so flag a bad-point
+    if ( igrc /= unset) then
+      if ( ggrc == -1 ) bad_point = .true.
+    end if
+    if ( ilun /= unset) then
+      if ( glun == -1 ) bad_point = .true.
+    end if
+    if ( icol /= unset) then
+      if ( gcol == -1 ) bad_point = .true.
+    end if
+    if ( ipft /= unset) then
+      if ( gpft == -1 ) bad_point = .true.
+    end if
+
+    if (bad_point) then
+       write(iulog,*) 'A bad input point was given: subgrid_index = ', subgrid_index, &
+            ', subgrid_level = ', subgrid_level
+       write(iulog,*) errmsg(sourcefile, __LINE__)
+       write(iulog,*) 'Continuing the endrun without writing point context information'
+       return
+    end if
+
+    if (subgrid_level == subgrid_level_gridcell) then
+
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  gridcell index = ', igrc
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
 
     else if (subgrid_level == subgrid_level_landunit) then
 
-       ilun = subgrid_index
-       igrc = lun%gridcell(ilun)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  landunit index = ', ilun
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(subgrid_index)
 
     else if (subgrid_level == subgrid_level_column) then
 
-       icol = subgrid_index
-       ilun = col%landunit(icol)
-       igrc = col%gridcell(icol)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  column   index = ', icol
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', gcol
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
@@ -161,19 +220,11 @@ contains
 
     else if (subgrid_level == subgrid_level_patch) then
 
-       ipft = subgrid_index
-       icol = patch%column(ipft)
-       ilun = patch%landunit(ipft)
-       igrc = patch%gridcell(ipft)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  patch    index = ', ipft
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global patch    index = ', &
-            get_global_index(subgrid_index=ipft, subgrid_level=subgrid_level_patch)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global patch    index = ', gpft
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', gcol
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': pft      type         = ', patch%itype(ipft)
@@ -184,6 +235,7 @@ contains
        write(iulog,*) 'subgrid_level not supported: ', subgrid_level
        write(iulog,*) errmsg(sourcefile, __LINE__)
        write(iulog,*) 'Continuing the endrun without writing point context information'
+       return
     end if
 
   end subroutine write_point_context
