@@ -10,6 +10,8 @@ module abortutils
   ! in conjunction with aborting the model, or at least issuing a warning.
   !-----------------------------------------------------------------------
 
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
+
   implicit none
   private
 
@@ -27,7 +29,7 @@ module abortutils
 contains
 
   !-----------------------------------------------------------------------
-  subroutine endrun_vanilla(msg, additional_msg)
+  subroutine endrun_vanilla(msg, additional_msg, line, file)
 
     !-----------------------------------------------------------------------
     ! !DESCRIPTION:
@@ -40,10 +42,12 @@ contains
     ! Generally you want to at least provide msg. The main reason to separate msg from
     ! additional_msg is to supported expected-exception unit testing: you can put
     ! volatile stuff in additional_msg, as in:
-    !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
+    !   call endrun(msg='Informative message', additional_msg=datetime )
     ! and then just assert against msg.
     character(len=*), intent(in), optional :: msg            ! string to be passed to shr_abort
     character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_abort
+    integer , intent(in), optional :: line                   ! Line number for the endrun call
+    character(len=*), intent(in), optional :: file           ! file for the endrun call
     !-----------------------------------------------------------------------
 
     if (present (additional_msg)) then
@@ -52,12 +56,16 @@ contains
        write(iulog,*)'ENDRUN:'
     end if
 
-    call shr_abort_abort(msg)
+    ! Don't pass file and line to shr_abort_abort since the PFUNIT test version doesn't have those options
+    if ( present(file) .and. present(line) ) then
+       write(iulog,*) errMsg(file, line)
+    end if
+    call shr_abort_abort(string=msg)
 
   end subroutine endrun_vanilla
 
   !-----------------------------------------------------------------------
-  subroutine endrun_write_point_context(subgrid_index, subgrid_level, msg, additional_msg)
+  subroutine endrun_write_point_context(subgrid_index, subgrid_level, msg, additional_msg, line, file)
 
     !-----------------------------------------------------------------------
     ! Description:
@@ -71,12 +79,8 @@ contains
     ! Arguments:
     integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
     integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod; subgrid_level_unspecified is allowed here, in which case the additional information will not be printed
-
-    ! Generally you want to at least provide msg. The main reason to separate msg from
-    ! additional_msg is to supported expected-exception unit testing: you can put
-    ! volatile stuff in additional_msg, as in:
-    !   call endrun(msg='Informative message', additional_msg=errmsg(__FILE__, __LINE__))
-    ! and then just assert against msg.
+    integer , intent(in), optional :: line                   ! Line number for the endrun call
+    character(len=*), intent(in), optional :: file           !file for the endrun call
     character(len=*), intent(in), optional :: msg            ! string to be passed to shr_abort
     character(len=*), intent(in), optional :: additional_msg ! string to be printed, but not passed to shr_abort
     !
@@ -88,7 +92,7 @@ contains
        call write_point_context(subgrid_index, subgrid_level)
     end if
 
-    call endrun_vanilla(msg=msg, additional_msg=additional_msg)
+    call endrun_vanilla(msg=msg, additional_msg=additional_msg, line=line, file=file)
 
   end subroutine endrun_write_point_context
 
@@ -102,7 +106,6 @@ contains
     !
     ! NOTE: DO NOT CALL AN ABORT FROM HERE AS THAT WOULD SHORT CIRUIT THE ERROR REPORTING!!
     !
-    use shr_log_mod  , only : errMsg => shr_log_errMsg
     use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod    , only : get_global_index
@@ -169,6 +172,9 @@ contains
 
     end if
 
+    !
+    ! Badpoint should already be determined, but check again in case one of the subsequent
+    ! calls to get_global_index returns -1
     ! If one of the global indices is -1 then this is a bad point, so flag a bad-point
     if ( igrc /= unset) then
       if ( ggrc == -1 ) bad_point = .true.
@@ -186,7 +192,7 @@ contains
     if (bad_point) then
        write(iulog,*) 'A bad input point was given: subgrid_index = ', subgrid_index, &
             ', subgrid_level = ', subgrid_level
-       write(iulog,*) errmsg(sourcefile, __LINE__)
+       write(iulog,*) errMsg(sourcefile, __LINE__)
        write(iulog,*) 'Continuing the endrun without writing point context information'
        return
     end if
@@ -233,7 +239,7 @@ contains
 
     else
        write(iulog,*) 'subgrid_level not supported: ', subgrid_level
-       write(iulog,*) errmsg(sourcefile, __LINE__)
+       write(iulog,*) errMsg(sourcefile, __LINE__)
        write(iulog,*) 'Continuing the endrun without writing point context information'
        return
     end if
