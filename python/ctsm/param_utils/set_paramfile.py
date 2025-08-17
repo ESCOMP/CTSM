@@ -235,12 +235,10 @@ def main():
 
         # Check that correct number of dimensions were given for new values. Special handling needed
         # if we're just acting on one PFT.
+        da_to_check = ds_out[var]
         if just_some_pfts and len(args.pft) == 1:
-            check_correct_ndims(
-                ds_out[var].isel(pft=indices).squeeze(), new_value, throw_error=True
-            )
-        else:
-            check_correct_ndims(ds_out[var], new_value, throw_error=True)
+            da_to_check = da_to_check.isel(pft=indices).squeeze()
+        check_correct_ndims(da_to_check, new_value, throw_error=True)
 
         # Handle the situation where we're only changing values for some PFTs but keeping the others
         if just_some_pfts and not args.drop_other_pfts:
