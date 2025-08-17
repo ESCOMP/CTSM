@@ -11,8 +11,6 @@ import pdb
 from datetime import date, timedelta
 from getpass import getuser
 
-import numpy as np
-
 from ctsm.git_utils import get_ctsm_git_short_hash
 
 logger = logging.getLogger(__name__)
@@ -269,36 +267,3 @@ def find_one_file_matching_pattern(pattern):
             f"Expected 1 but found {n_found} files found matching pattern: " + pattern
         )
     return file_list[0]
-
-
-def are_dicts_identical_nansequal(dict0: dict, dict1: dict, keys_to_ignore=None):
-    """
-    Compare two dictionaries, considering NaNs to be equal
-    """
-    # pylint: disable=too-many-return-statements
-
-    if keys_to_ignore is None:
-        keys_to_ignore = []
-    keys_to_ignore = np.array(keys_to_ignore)
-
-    if len(dict0) != len(dict1):
-        return False
-    for key, value0 in dict0.items():
-        if key in keys_to_ignore:
-            continue
-        if key not in dict1:
-            return False
-        value1 = dict1[key]
-        if isinstance(value0, np.ndarray):
-            if not isinstance(value0, np.ndarray):
-                return False
-            if not np.array_equal(value0, value1, equal_nan=True):
-                return False
-        elif value1 != value0:
-            try:
-                if not (np.isnan(value0) and np.isnan(value1)):
-                    return False
-            except TypeError:
-                return False
-
-    return True
