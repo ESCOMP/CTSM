@@ -208,7 +208,7 @@ contains
     integer, parameter :: unset = -9999 ! Unset value for an index
     integer :: igrc=unset, ilun=unset, icol=unset, ipft=unset   ! Local index for grid-cell, landunit, column, and patch
     integer :: ggrc=unset, glun=unset, gcol=unset, gpft=unset   ! Global index for grid-cell, landunit, column, and patch
-    integer :: bad_point = .false. ! Flag to indicate if the point is bad (i.e., global index is -1)
+    logical :: bad_point = .false. ! Flag to indicate if the point is bad (i.e., global index is -1)
     !-----------------------------------------------------------------------
 
     if (subgrid_level == subgrid_level_gridcell) then
