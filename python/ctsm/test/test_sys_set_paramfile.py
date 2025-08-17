@@ -300,8 +300,6 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that included variables/coords match as expected
         for var in ds_in.variables:
             if var == "xl":
-                print(ds_in[var].values)
-                print(ds_out[var].values)
 
                 # Changed values (first 2)
                 this_slice = slice(0, 2)
