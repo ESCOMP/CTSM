@@ -177,6 +177,15 @@ class TestUnitAreXrDataArraysIdentical(unittest.TestCase):
         da1 = xr.DataArray(np.array(int(2)))
         self.assertFalse(nu.are_xr_dataarrays_identical(da0, da1))
 
+    def test_are_xr_dataarrays_identical_values_ndarrays_differ_nantypeerror(self):
+        """
+        Should be false if values differ, they're both numpy arrays under the hood, and they can't
+        be coerced to a type capable of NaN
+        """
+        da0 = xr.DataArray(np.array(["a", "b", "c"]))
+        da1 = xr.DataArray(np.array(["d", "e", "f"]))
+        self.assertFalse(nu.are_xr_dataarrays_identical(da0, da1))
+
     def test_are_xr_dataarrays_identical_coords_match(self):
         """Should be true if coordinates match"""
         time = pd.date_range("2000-01-01", periods=3)
@@ -256,11 +265,122 @@ class TestUnitAreXrDataArraysIdentical(unittest.TestCase):
 
     # Waiting on dask, sparse, or pint to be in ctsm_pylib:
     # TODO: False if data types don't match
-    # TODO: NotImplementedError if data types match but aren't np.ndarray
+    # TODO: NotImplementedError if data types match but aren't np.array
 
     # Waiting on dask to be in ctsm_pylib:
     # TODO: True if the only difference is chunked or not
     # TODO: True if the only difference is chunk sizes
+
+
+class TestUnitAreDictsIdenticalNansEqual(unittest.TestCase):
+    """
+    Unit tests for _are_dicts_identical_nansequal
+    """
+
+    def test_are_dicts_identical_nansequal_yes_noignore_nonan(self):
+        """
+        Test two identical dicts with no keys being ignored and no nans
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "b": 2}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_yes_ignorestr_nonan(self):
+        """
+        Test two identical dicts with a key being ignored (as str) and no nans
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "b": 3}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1, keys_to_ignore="b"))
+
+    def test_are_dicts_identical_nansequal_yes_ignorelist_nonan(self):
+        """
+        Test two identical dicts with a key being ignored (as list) and no nans
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "b": 3}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1, keys_to_ignore=["b"]))
+
+    def test_are_dicts_identical_nansequal_yes_ignorestr_nan(self):
+        """
+        Test two identical dicts with a key being ignored (as str) and one key with matching nan
+        values
+        """
+        dict0 = {"a": np.nan, "b": 2}
+        dict1 = {"a": np.nan, "b": 3}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1, keys_to_ignore="b"))
+
+    def test_are_dicts_identical_nansequal_no_nonan(self):
+        """
+        Test two different dicts with no nans
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "b": 4}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_nansmatch(self):
+        """
+        Test two different dicts with matching nans
+        """
+        dict0 = {"a": np.nan, "b": 2}
+        dict1 = {"a": np.nan, "b": 4}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_nansdiffer(self):
+        """
+        Test two different dicts that only differ in that one has a nan where another doesn't
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "b": np.nan}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_keysdiffer(self):
+        """
+        Test two different dicts that have different keys
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1, "c": 2}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_lengthsdiffer(self):
+        """
+        Test two different dicts that have different lengths
+        """
+        dict0 = {"a": 1, "b": 2}
+        dict1 = {"a": 1}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_both_nparrays(self):
+        """
+        Test two different dicts that have differing numpy arrays for one value
+        """
+        dict0 = {"a": 1, "b": np.array([1, 2])}
+        dict1 = {"a": 1, "b": np.array([1, 3])}
+        self.assertFalse(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_no_differ_nparrays(self):
+        """
+        Test two dicts where one has a value that's a numpy array and the other doesn't, but they're identical if you coerce them both to numpy arrays
+        """
+        dict0 = {"a": 1, "b": np.array([1, 2])}
+        dict1 = {"a": 1, "b": [1, 2]}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_yes_both_nparrays(self):
+        """
+        Test two different dicts that have identical numpy arrays for one value
+        """
+        dict0 = {"a": 1, "b": np.array([1, 2])}
+        dict1 = {"a": 1, "b": np.array([1, 2])}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
+
+    def test_are_dicts_identical_nansequal_yes_both_nparrays_str(self):
+        """
+        Test two different dicts that have identical numpy arrays of strings for one value
+        """
+        dict0 = {"a": 1, "b": np.array(["1", "2"])}
+        dict1 = {"a": 1, "b": np.array(["1", "2"])}
+        self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
 
 
 if __name__ == "__main__":

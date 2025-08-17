@@ -7,9 +7,21 @@ import xarray as xr
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 
+def _is_dtype_nan_capable(ndarray: np.ndarray):
+    """
+    Given a numpy array, return True if it's capable of taking a NaN
+    """
+    try:
+        np.isnan(ndarray)
+        return True
+    except TypeError:
+        return False
+
+
 def _are_dicts_identical_nansequal(dict0: dict, dict1: dict, keys_to_ignore=None):
     """
-    Compare two dictionaries, considering NaNs to be equal
+    Compare two dictionaries, considering NaNs to be equal. Don't be strict here about types; if
+    they can be coerced to comparable types and then they match, return True.
     """
     # pylint: disable=too-many-return-statements
 
@@ -25,17 +37,15 @@ def _are_dicts_identical_nansequal(dict0: dict, dict1: dict, keys_to_ignore=None
         if key not in dict1:
             return False
         value1 = dict1[key]
-        if isinstance(value0, np.ndarray):
-            if not isinstance(value0, np.ndarray):
-                return False
-            if not np.array_equal(value0, value1, equal_nan=True):
-                return False
-        elif value1 != value0:
-            try:
-                if not (np.isnan(value0) and np.isnan(value1)):
-                    return False
-            except TypeError:
-                return False
+
+        # Coerce to numpy arrays to simplify comparison code
+        value0 = np.array(value0)
+        value1 = np.array(value1)
+
+        # Compare, only asking to check equal NaNs if both are capable of taking NaN values
+        both_are_nan_capable = _is_dtype_nan_capable(value0) and _is_dtype_nan_capable(value1)
+        if not np.array_equal(value0, value1, equal_nan=both_are_nan_capable):
+            return False
 
     return True
 
