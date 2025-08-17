@@ -59,7 +59,9 @@ def _is_dataarray_metadata_identical(da0: xr.DataArray, da1: xr.DataArray, keys_
         return False
 
     # Check encoding
-    if not _are_dicts_identical_nansequal(da0.encoding, da1.encoding, keys_to_ignore=keys_to_ignore):
+    if not _are_dicts_identical_nansequal(
+        da0.encoding, da1.encoding, keys_to_ignore=keys_to_ignore
+    ):
         return False
 
     # Check attributes
