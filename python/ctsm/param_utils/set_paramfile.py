@@ -215,18 +215,18 @@ def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSI
     ds_out.to_netcdf(output_path, format=nc_format, encoding=encoding)
 
 
-def _replace_nans_with_fill(var_encoding, chg, new_value):
+def _replace_nans_with_fill(var_encoding, new_value, *, chg=None):
     """
     Replace NaNs in the new parameter value array with the fill value.
 
     Parameters
     ----------
     var_encoding : dict
-        Encoding of an xarray DataArray
-    chg : str
-        Change string from command line.
+        Encoding of an xarray DataArray.
     new_value : numpy.ndarray
         Array of new values.
+    chg : str, optional (keyword-only)
+        Change string from command line, used for error messages.
 
     Returns
     -------
@@ -236,16 +236,17 @@ def _replace_nans_with_fill(var_encoding, chg, new_value):
     if any(np.isnan(np.atleast_1d(new_value))):
         # TODO: Add code to add fill value to parameters without it
         if "_FillValue" not in var_encoding:
-            raise NotImplementedError(
-                f"Can't set parameter to fill value if it doesn't already have one: {chg}"
-            )
+            msg = "Can't set parameter to fill value if it doesn't already have one"
+            if chg is not None:
+                msg += f": {chg}"
+            raise NotImplementedError(msg)
         fill_value = var_encoding["_FillValue"]
         new_value[np.isnan(new_value)] = fill_value
 
     return new_value
 
 
-def _convert_to_output_dtype(ds_out, var, new_value, chg):
+def _convert_to_output_dtype(ds_out, var, new_value, *, chg=None):
     """
     Convert new_value array to the output variable's data type.
 
@@ -257,8 +258,8 @@ def _convert_to_output_dtype(ds_out, var, new_value, chg):
         Variable name.
     new_value : numpy.ndarray
         Array of new values.
-    chg : str
-        Change string from command line.
+    chg : str, optional (keyword-only)
+        Change string from command line, used for error messages.
 
     Returns
     -------
@@ -271,13 +272,16 @@ def _convert_to_output_dtype(ds_out, var, new_value, chg):
         msg = str(e)
         if "invalid literal for int() with base 10" in msg:
             # Throw a nicer error message including the entire requested change
-            raise ValueError(f"Invalid assignment to an integer parameter: {chg}") from e
+            err_msg = "Invalid assignment to an integer parameter"
+            if chg is not None:
+                err_msg += f": {chg}"
+            raise ValueError(err_msg) from e
         raise e
 
     return new_value
 
 
-def apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding):
+def apply_new_value_to_parameter(args, ds_out, var, new_value, var_encoding, *, chg=None):
     """
     Apply a new value to a parameter in the output dataset, handling PFT selection, dimension
     checks, fill value replacement, and assignment.
@@ -290,12 +294,12 @@ def apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding
         Output dataset to modify.
     var : str
         Name of the variable to change.
-    chg : str
-        Change string from command line (e.g., 'param=new_value').
     new_value : numpy.ndarray
         Array of new values to assign.
     var_encoding : dict
         Encoding dictionary for the variable, used for fill value replacement.
+    chg : str, optional (keyword-only)
+        Change string from command line, used for error messages.
 
     Returns
     -------
@@ -326,7 +330,7 @@ def apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding
         new_value = tmp
 
     # Ensure that any NaNs are replaced with the fill value
-    new_value = _replace_nans_with_fill(var_encoding, chg, new_value)
+    new_value = _replace_nans_with_fill(var_encoding, new_value, chg=chg)
 
     # This can happen if, e.g., you're selecting and changing just one PFT
     if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
@@ -379,13 +383,13 @@ def main():
             raise NotImplementedError(f"Can't set integer parameter to fill value: {chg}")
 
         # Convert to the output data type
-        new_value = _convert_to_output_dtype(ds_out, var, new_value, chg)
+        new_value = _convert_to_output_dtype(ds_out, var, new_value, chg=chg)
 
         # Extract some information
         var_encoding = ds_in_masked_scaled[var].encoding
 
         # Apply new value to parameter
-        ds_out = apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding)
+        ds_out = apply_new_value_to_parameter(args, ds_out, var, new_value, var_encoding, chg=chg)
 
     save_paramfile(ds_out, args.output, nc_format=get_netcdf_format(args.input))
 
