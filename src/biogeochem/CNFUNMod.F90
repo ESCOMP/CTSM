@@ -1271,7 +1271,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !           Calculate appropriate degree of retranslocation
                !-------------------------------------------------------------------------------
       
-               if(leafc(p).gt.0.0_r8.and.litterfall_n_step(p,istp)* fixerfrac>0.0_r8.and. (.not. is_prognostic_crop(ivt(p))))then
+               if (leafc(p) > 0.0_r8 .and. (litterfall_n_step(p,istp) * fixerfrac) > 0.0_r8 .and. (.not. is_prognostic_crop(ivt(p)))) then
                   call fun_retranslocation(p,dt,npp_to_spend,&
                                 litterfall_c_step(p,istp)* fixerfrac,&
                                 litterfall_n_step(p,istp)* fixerfrac,&
