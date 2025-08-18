@@ -332,7 +332,7 @@ def apply_new_value_to_parameter(args, ds_out, var, new_value, var_encoding, *, 
     # Ensure that any NaNs are replaced with the fill value
     new_value = _replace_nans_with_fill(var_encoding, new_value, chg=chg)
 
-    # This can happen if, e.g., you're selecting and changing just one PFT
+    # This can be needed if, e.g., you're selecting and changing just one PFT
     if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
         new_value = np.atleast_1d(new_value)
 
