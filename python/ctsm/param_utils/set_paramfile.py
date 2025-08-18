@@ -277,6 +277,65 @@ def _convert_to_output_dtype(ds_out, var, new_value, chg):
     return new_value
 
 
+def apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding):
+    """
+    Apply a new value to a parameter in the output dataset, handling PFT selection, dimension
+    checks, fill value replacement, and assignment.
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Parsed command-line arguments.
+    ds_out : xarray.Dataset
+        Output dataset to modify.
+    var : str
+        Name of the variable to change.
+    chg : str
+        Change string from command line (e.g., 'param=new_value').
+    new_value : numpy.ndarray
+        Array of new values to assign.
+    var_encoding : dict
+        Encoding dictionary for the variable, used for fill value replacement.
+
+    Returns
+    -------
+    xarray.Dataset
+        Modified output dataset with the new parameter value applied.
+    """
+    # Are we acting on just some PFTs? If so, we'll need some stuff.
+    just_some_pfts = PFTNAME_VAR in ds_out[var].coords and args.pft
+    # pylint is probably wrong with the possibly-used-before-assignment warning, but do this
+    # here just to placate it. Make it an invalid index so we get an error if we try to use
+    # it.
+    indices = -1
+    if just_some_pfts:
+        pft_names = check_pfts_in_paramfile(args.pft, ds_out)
+        indices = get_selected_pft_indices(args.pft, pft_names)
+
+    # Check that correct number of dimensions were given for new values. Special handling needed
+    # if we're just acting on one PFT.
+    da_to_check = ds_out[var]
+    if just_some_pfts and len(args.pft) == 1:
+        da_to_check = da_to_check.isel(pft=indices).squeeze()
+    check_correct_ndims(da_to_check, new_value, throw_error=True)
+
+    # Handle the situation where we're only changing values for some PFTs but keeping the others
+    if just_some_pfts and not args.drop_other_pfts:
+        tmp = ds_out[var].values.copy()
+        tmp[indices] = new_value
+        new_value = tmp
+
+    # Ensure that any NaNs are replaced with the fill value
+    new_value = _replace_nans_with_fill(var_encoding, chg, new_value)
+
+    # This can happen if, e.g., you're selecting and changing just one PFT
+    if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
+        new_value = np.atleast_1d(new_value)
+
+    ds_out[var].values = new_value
+    return ds_out
+
+
 def main():
     """
     Main entry point for set_paramfile.
@@ -322,37 +381,11 @@ def main():
         # Convert to the output data type
         new_value = _convert_to_output_dtype(ds_out, var, new_value, chg)
 
-        # Are we acting on just some PFTs? If so, we'll need some stuff.
-        just_some_pfts = PFTNAME_VAR in ds_out[var].coords and args.pft
-        # pylint is probably wrong with the possibly-used-before-assignment warning, but do this
-        # here just to placate it. Make it an invalid index so we get an error if we try to use
-        # it.
-        indices = -1
-        if just_some_pfts:
-            pft_names = check_pfts_in_paramfile(args.pft, ds_out)
-            indices = get_selected_pft_indices(args.pft, pft_names)
+        # Extract some information
+        var_encoding = ds_in_masked_scaled[var].encoding
 
-        # Check that correct number of dimensions were given for new values. Special handling needed
-        # if we're just acting on one PFT.
-        da_to_check = ds_out[var]
-        if just_some_pfts and len(args.pft) == 1:
-            da_to_check = da_to_check.isel(pft=indices).squeeze()
-        check_correct_ndims(da_to_check, new_value, throw_error=True)
-
-        # Handle the situation where we're only changing values for some PFTs but keeping the others
-        if just_some_pfts and not args.drop_other_pfts:
-            tmp = ds_out[var].values.copy()
-            tmp[indices] = new_value
-            new_value = tmp
-
-        # Ensure that any NaNs are replaced with the fill value
-        new_value = _replace_nans_with_fill(ds_in_masked_scaled[var].encoding, chg, new_value)
-
-        # This can happen if, e.g., you're selecting and changing just one PFT
-        if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
-            new_value = np.atleast_1d(new_value)
-
-        ds_out[var].values = new_value
+        # Apply new value to parameter
+        ds_out = apply_new_value_to_parameter(args, ds_out, var, chg, new_value, var_encoding)
 
     save_paramfile(ds_out, args.output, nc_format=get_netcdf_format(args.input))
 
