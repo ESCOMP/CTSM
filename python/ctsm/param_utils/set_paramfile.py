@@ -1,5 +1,10 @@
 """
-Tool for changing parameters on CTSM paramfile
+Tool for changing parameters on CTSM paramfile.
+
+This script allows users to modify one or more parameters in a CTSM parameter file (netCDF format).
+It supports selecting specific PFTs, dropping other PFTs, and changing parameter values, including
+setting values to fill (missing) values. The script ensures safe file handling and provides
+detailed error checking for argument validity and parameter changes.
 """
 
 import os
@@ -17,7 +22,10 @@ from ctsm.param_utils.paramfile_shared import PFTNAME_VAR
 
 def check_arguments(args):
     """
-    Check arguments to set_paramfile
+    Validate command-line arguments for set_paramfile.
+
+    Checks for existence of input file, prevents overwriting output files,
+    and ensures logical consistency of PFT-related options.
     """
     if not os.path.exists(args.input):
         raise FileNotFoundError(args.input)
@@ -42,6 +50,9 @@ def get_arguments():
             - input: Path to the input netCDF file
             - output: Path to the output netCDF file
             - pft: Optional list of PFT names whose values you want to change
+            - drop_other_pfts: Boolean flag to drop PFTs not specified
+            - variables: Optional list of variables to extract
+            - param_changes: List of parameter changes to apply
     """
     parser, pft_flags = paramfile_parser_setup(
         "Change values of one or more parameters in a CTSM paramfile."
@@ -89,8 +100,17 @@ def get_arguments():
 
 def is_integer(obj):
     """
-    Given an object, return True if it's (a) any type of integer or (b) a numpy array with an
-    integer dtype. Note that this will return False for integer types per se.
+    Determine if an object is an integer or a numpy array of integer dtype.
+
+    Parameters
+    ----------
+    obj : object
+        Object to check.
+
+    Returns
+    -------
+    bool
+        True if obj is an integer or numpy array of integer dtype, False otherwise.
     """
     if isinstance(obj, np.ndarray):
         obj_type = obj.dtype
@@ -101,7 +121,21 @@ def is_integer(obj):
 
 def check_correct_ndims(da, new_value, throw_error=False):
     """
-    Check that the new value given for a parameter has the right number of dimensions
+    Check that the new value for a parameter has the correct number of dimensions.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The parameter DataArray to check against.
+    new_value : array-like
+        The new value to assign.
+    throw_error : bool, optional
+        If True, raise an error on mismatch.
+
+    Returns
+    -------
+    bool
+        True if dimensions match, False otherwise.
     """
     expected = da.ndim
     actual = np.array(new_value).ndim
@@ -113,7 +147,19 @@ def check_correct_ndims(da, new_value, throw_error=False):
 
 def drop_other_pfts(selected_pfts, ds):
     """
-    Drop PFTs other than the selected ones
+    Drop PFTs from the dataset that are not in the selected list.
+
+    Parameters
+    ----------
+    selected_pfts : list of str
+        List of PFT names to retain.
+    ds : xarray.Dataset
+        The parameter file dataset.
+
+    Returns
+    -------
+    xarray.Dataset
+        Dataset containing only the selected PFTs.
     """
     pft_names = check_pfts_in_paramfile(selected_pfts, ds)
     indices = get_selected_pft_indices(selected_pfts, pft_names)
@@ -123,7 +169,17 @@ def drop_other_pfts(selected_pfts, ds):
 
 def _add_cmd_to_history(ds):
     """
-    Prepends the calling command to the netCDF history
+    Prepend the calling command and timestamp to the netCDF history attribute.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Dataset to update.
+
+    Returns
+    -------
+    xarray.Dataset
+        Dataset with updated history attribute.
     """
     if "history" not in ds.attrs:
         ds.attrs["history"] = ""
@@ -135,7 +191,16 @@ def _add_cmd_to_history(ds):
 
 def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSIC"):
     """
-    Save xarray Dataset to paramfile
+    Save an xarray Dataset to a netCDF parameter file.
+
+    Parameters
+    ----------
+    ds_out : xarray.Dataset
+        Dataset to save.
+    output_path : str
+        Path to output netCDF file.
+    nc_format : str, optional
+        NetCDF format to use (default: "NETCDF3_CLASSIC").
     """
 
     # We don't want to add _FillValue to parameters that didn't already have one. This dict will
@@ -152,7 +217,23 @@ def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSI
 
 def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
     """
-    If there are any NaNs in the new parameter value (array), replace them with the fill value
+    Replace NaNs in the new parameter value array with the fill value.
+
+    Parameters
+    ----------
+    ds_in_masked_scaled : xarray.Dataset
+        Masked and scaled input dataset.
+    var : str
+        Variable name being changed.
+    chg : str
+        Change string from command line.
+    new_value : numpy.ndarray
+        Array of new values.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array with NaNs replaced by fill value.
     """
     if any(np.isnan(np.atleast_1d(new_value))):
         # TODO: Add code to add fill value to parameters without it
@@ -168,7 +249,23 @@ def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
 
 def _convert_to_output_dtype(ds_out, var, new_value, chg):
     """
-    Convert new_value from np.ndarray of strings to output data type
+    Convert new_value array to the output variable's data type.
+
+    Parameters
+    ----------
+    ds_out : xarray.Dataset
+        Output dataset.
+    var : str
+        Variable name.
+    new_value : numpy.ndarray
+        Array of new values.
+    chg : str
+        Change string from command line.
+
+    Returns
+    -------
+    numpy.ndarray
+        Array converted to output dtype.
     """
     try:
         new_value = new_value.astype(type(ds_out[var].dtype))
@@ -184,8 +281,10 @@ def _convert_to_output_dtype(ds_out, var, new_value, chg):
 
 def main():
     """
-    Main entry point for the script.
-    Parses arguments, opens a netCDF file, makes changes, and saves a new netCDF file.
+    Main entry point for set_paramfile.
+
+    Parses arguments, opens the input netCDF file, applies requested changes,
+    and saves the modified dataset to a new netCDF file.
     """
     args = get_arguments()
 

@@ -1,5 +1,9 @@
 """
-Query parameters in a CTSM paramfile
+Query parameters in a CTSM paramfile.
+
+This script allows users to print the values of one or more parameters from a CTSM parameter file
+(netCDF format). Users can specify variables and optionally filter output by PFTs. The script
+handles multi-dimensional variables and provides formatted output for PFT-specific parameters.
 """
 
 from ctsm.args_utils import comma_separated_list
@@ -18,7 +22,7 @@ def get_arguments():
     argparse.Namespace
         Parsed arguments with attributes:
             - input: Path to the netCDF file
-            - variables: Comma-separated list of variable names to extract
+            - variables: List of variable names to query
             - pft: Optional list of PFT names to print
     """
     parser, pft_flags = paramfile_parser_setup(
@@ -73,8 +77,10 @@ def print_values(ds, var, selected_pfts, pft_names):
 
 def main():
     """
-    Main entry point for the script.
-    Parses arguments, opens the netCDF file, and prints requested variable values.
+    Main entry point for query_paramfile.
+
+    Parses arguments, opens the netCDF file, and prints requested variable values,
+    optionally filtered by PFTs.
     """
     args = get_arguments()
 
