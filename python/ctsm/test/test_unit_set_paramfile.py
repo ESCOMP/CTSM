@@ -161,15 +161,12 @@ class TestUnitSetParamfile(unittest.TestCase):
             "pft1,pft2",
             "-o",
             output_path,
-            "-v",
-            "var1,var2",
             "param1=new_value1",
             "param2=new_value2",
         ]
         args = sp.get_arguments()
         self.assertEqual(PARAMFILE, args.input)
         self.assertEqual(["pft1", "pft2"], args.pft)
-        self.assertEqual(["var1", "var2"], args.variables)
         self.assertEqual(output_path, args.output)
         self.assertEqual(["param1=new_value1", "param2=new_value2"], args.param_changes)
 
@@ -185,15 +182,12 @@ class TestUnitSetParamfile(unittest.TestCase):
             "--drop-other-pfts",
             "--output",
             output_path,
-            "--variables",
-            "var1,var2",
             "param1=new_value1",
             "param2=new_value2",
         ]
         args = sp.get_arguments()
         self.assertEqual(PARAMFILE, args.input)
         self.assertEqual(["pft1", "pft2"], args.pft)
-        self.assertEqual(["var1", "var2"], args.variables)
         self.assertEqual(output_path, args.output)
         self.assertEqual(["param1=new_value1", "param2=new_value2"], args.param_changes)
 

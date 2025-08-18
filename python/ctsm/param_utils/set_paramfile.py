@@ -51,7 +51,6 @@ def get_arguments():
             - output: Path to the output netCDF file
             - pft: Optional list of PFT names whose values you want to change
             - drop_other_pfts: Boolean flag to drop PFTs not specified
-            - variables: Optional list of variables to extract
             - param_changes: List of parameter changes to apply
     """
     parser, pft_flags = paramfile_parser_setup(
@@ -73,14 +72,6 @@ def get_arguments():
         "--drop-other-pfts",
         help=f"Do not include PFTs other than the ones given in {'/'.join(pft_flags)}",
         action="store_true",
-    )
-
-    # TODO: Add -x/--exclude argument for variables you DON'T want to extract
-    parser.add_argument(
-        "-v",
-        "--variables",
-        help="Comma-separated list of variables to extract",
-        type=comma_separated_list,
     )
 
     parser.add_argument(
@@ -357,14 +348,6 @@ def main():
     # If --drop-other-pfts was given, drop PFTs not in args.pft
     if args.drop_other_pfts:
         ds_out = drop_other_pfts(args.pft, ds_out)
-
-    # If any variables specified, drop others
-    if args.variables:
-        vars_to_drop = []
-        for var in ds_in:
-            if var not in args.variables:
-                vars_to_drop.append(var)
-        ds_out = ds_out.drop_vars(vars_to_drop)
 
     # Apply parameter changes, if any
     for chg in args.param_changes:

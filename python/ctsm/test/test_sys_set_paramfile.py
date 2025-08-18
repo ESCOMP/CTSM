@@ -55,36 +55,6 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that both are the same kind of netCDF
         self.assertEqual(get_netcdf_format(PARAMFILE), get_netcdf_format(output_path))
 
-    def test_set_paramfile_extractvars(self):
-        """Test that set_paramfile can copy to a new file with only some requested variables"""
-        output_path = os.path.join(self.tempdir, "output.nc")
-        vars_to_include = ["a_coef", "bgc_cn_s2"]
-        sys.argv = [
-            "set_paramfile",
-            "-i",
-            PARAMFILE,
-            "-o",
-            output_path,
-            "-v",
-            ",".join(vars_to_include),
-        ]
-        sp.main()
-        self.assertTrue(os.path.exists(output_path))
-        ds_in = open_paramfile(PARAMFILE)
-        ds_out = open_paramfile(output_path)
-
-        # Check that output file variables/coords are what we expect
-        # (use set() so order doesn't matter)
-        expected_var_list = set(vars_to_include + list(ds_in.coords))
-        self.assertEqual(set(ds_out.variables), expected_var_list)
-
-        # Check that included variables/coords match
-        for var in vars_to_include:
-            self.assertEqual(ds_in[var], ds_out[var])
-
-        # Check that both are the same kind of netCDF
-        self.assertEqual(get_netcdf_format(PARAMFILE), get_netcdf_format(output_path))
-
     def test_set_paramfile_copy_without_adding_fillvalue(self):
         """Test that set_paramfile can copy to a new file without adding _FillValue"""
         input_path = os.path.join(self.tempdir, "input.nc")
