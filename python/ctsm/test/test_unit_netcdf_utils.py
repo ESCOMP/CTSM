@@ -21,6 +21,7 @@ import ctsm.netcdf_utils as nu
 from ctsm import unit_testing
 
 # pylint: disable=invalid-name
+# pylint: disable=protected-access
 
 
 class TestUnitGetNetcdfFormat(unittest.TestCase):
@@ -360,7 +361,8 @@ class TestUnitAreDictsIdenticalNansEqual(unittest.TestCase):
 
     def test_are_dicts_identical_nansequal_no_differ_nparrays(self):
         """
-        Test two dicts where one has a value that's a numpy array and the other doesn't, but they're identical if you coerce them both to numpy arrays
+        Test two dicts where one has a value that's a numpy array and the other doesn't, but they're
+        identical if you coerce them both to numpy arrays
         """
         dict0 = {"a": 1, "b": np.array([1, 2])}
         dict1 = {"a": 1, "b": [1, 2]}
