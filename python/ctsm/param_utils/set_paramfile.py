@@ -316,7 +316,7 @@ def main():
 
         # TODO: Add code to set integer variables to their missing value. This is harder than it
         # sounds.
-        if np.any(np.char.lower(new_value) == "nan") and is_integer(ds_in[var].values):
+        if np.any(np.char.lower(new_value) == "nan") and is_integer(ds_out[var].values):
             raise NotImplementedError(f"Can't set integer parameter to fill value: {chg}")
 
         # Convert to the output data type
@@ -349,7 +349,7 @@ def main():
         new_value = _replace_nans_with_fill(ds_in_masked_scaled[var].encoding, chg, new_value)
 
         # This can happen if, e.g., you're selecting and changing just one PFT
-        if ds_in[var].values.ndim > 0 and new_value.ndim == 0:
+        if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
             new_value = np.atleast_1d(new_value)
 
         ds_out[var].values = new_value
