@@ -47,7 +47,9 @@ def get_arguments():
         "Change values of one or more parameters in a CTSM paramfile."
     )
 
-    parser.add_argument("-o", "--output", required=True, help="Output netCDF file")
+    parser.add_argument(
+        "-o", "--output", required=True, help="Output netCDF file. Must not already exist."
+    )
 
     # TODO: Add mutually-exclusive --exclude-pfts argument for PFTs you DON'T want to include
     parser.add_argument(

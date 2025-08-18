@@ -26,7 +26,7 @@ def get_arguments():
     )
     parser.add_argument(
         "variables",
-        help="Names of variables to query",
+        help="Names of variables to query (space-separated)",
         nargs="*",
     )
     parser.add_argument(
