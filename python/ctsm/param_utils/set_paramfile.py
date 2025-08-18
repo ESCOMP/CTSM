@@ -215,16 +215,14 @@ def save_paramfile(ds_out: xr.Dataset, output_path, *, nc_format="NETCDF3_CLASSI
     ds_out.to_netcdf(output_path, format=nc_format, encoding=encoding)
 
 
-def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
+def _replace_nans_with_fill(var_encoding, chg, new_value):
     """
     Replace NaNs in the new parameter value array with the fill value.
 
     Parameters
     ----------
-    ds_in_masked_scaled : xarray.Dataset
-        Masked and scaled input dataset.
-    var : str
-        Variable name being changed.
+    var_encoding : dict
+        Encoding of an xarray DataArray
     chg : str
         Change string from command line.
     new_value : numpy.ndarray
@@ -237,11 +235,11 @@ def _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value):
     """
     if any(np.isnan(np.atleast_1d(new_value))):
         # TODO: Add code to add fill value to parameters without it
-        if "_FillValue" not in ds_in_masked_scaled[var].encoding:
+        if "_FillValue" not in var_encoding:
             raise NotImplementedError(
                 f"Can't set parameter to fill value if it doesn't already have one: {chg}"
             )
-        fill_value = ds_in_masked_scaled[var].encoding["_FillValue"]
+        fill_value = var_encoding["_FillValue"]
         new_value[np.isnan(new_value)] = fill_value
 
     return new_value
@@ -348,7 +346,7 @@ def main():
             new_value = tmp
 
         # Ensure that any NaNs are replaced with the fill value
-        new_value = _replace_nans_with_fill(ds_in_masked_scaled, var, chg, new_value)
+        new_value = _replace_nans_with_fill(ds_in_masked_scaled[var].encoding, chg, new_value)
 
         # This can happen if, e.g., you're selecting and changing just one PFT
         if ds_in[var].values.ndim > 0 and new_value.ndim == 0:
