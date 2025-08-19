@@ -27,6 +27,7 @@ A guide to logging in ctsm python scripts:
   setup_logging_for_tests (this is typically done via unit_testing.setup_for_tests)
 """
 
+import inspect
 import logging
 
 from ctsm.utils import datetime_string
@@ -107,11 +108,17 @@ def output_to_file(file_path, message, log_to_logger=False):
         logger.info(message)
 
 
+def _get_caller_name_for_logging():
+    return inspect.stack()[2][3]
+
+
 def log(logger_in, string):
     """
     Simultaneously print INFO messages to console and to log file
     """
-    msg = datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    msg = (
+        _get_caller_name_for_logging() + datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    )
     print(msg)
     if logger_in:
         logger_in.info(msg)
@@ -121,7 +128,9 @@ def error(logger_in, string, *, error_type=RuntimeError):
     """
     Simultaneously print ERROR messages to console and to log file
     """
-    msg = datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    msg = (
+        _get_caller_name_for_logging() + datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    )
     print(msg)
     if logger_in:
         logger_in.error(msg)
