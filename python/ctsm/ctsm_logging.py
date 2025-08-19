@@ -117,7 +117,7 @@ def log(logger_in, string):
         logger_in.info(msg)
 
 
-def error(logger_in, string):
+def error(logger_in, string, *, error_type=RuntimeError):
     """
     Simultaneously print ERROR messages to console and to log file
     """
@@ -125,4 +125,4 @@ def error(logger_in, string):
     print(msg)
     if logger_in:
         logger_in.error(msg)
-    raise RuntimeError(string)
+    raise error_type(string)
