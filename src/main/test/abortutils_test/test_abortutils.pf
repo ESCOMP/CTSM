@@ -1,4 +1,4 @@
-module test_endrun
+module test_abortutils
 
   ! Tests of abortutils
 
@@ -197,4 +197,4 @@ contains
 
   end subroutine endrun_nomsg_pt_context_badlvl_aborts
 
-end module test_endrun
+end module test_abortutils
