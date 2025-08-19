@@ -1647,10 +1647,9 @@ contains
     ! Given a vegetation type (pft, integer), return whether it's a prognostic crop. Does not
     ! include generic crops (those and natural PFTs will return .false.).
     !
-    ! NOTE(wjs, 2017-02-02) This isn't a completely robust way to check if this is a
-    ! prognostic crop patch (at the very least it should also check if <= npcropmax;
-    ! ideally it should use a prognostic_crop flag that doesn't seem to exist
-    ! currently).
+    ! NOTE: This isn't a completely robust way to check if this is a prognostic crop patch. At the
+    ! very least, it should also check if <= npcropmax. Ideally it would use a new prognostic_crop
+    ! flag on the parameter file iteself.
     !
     ! !ARGUMENTS
     integer, intent(in) :: veg_type
