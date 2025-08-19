@@ -18,9 +18,9 @@ _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
+from ctsm.ctsm_logging import log, error  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
-import ctsm.crop_calendars.cropcal_utils as utils  # pylint: disable=wrong-import-position
 
 # Functions here were written with too many positional arguments. At some point that should be
 # fixed. For now, we'll just disable the warning.
@@ -86,11 +86,11 @@ def main(
                 raise RuntimeError(
                     "only_make_figs True but not all plotting modules are available"
                 ) from exc
-            utils.log(logger, "Not all plotting modules are available; disabling save_figs")
+            log(logger, "Not all plotting modules are available; disabling save_figs")
             save_figs = False
 
     # Print some info
-    utils.log(logger, f"Saving to {output_dir}")
+    log(logger, f"Saving to {output_dir}")
 
     # Parse list of crops to skip
     if "," in skip_crops:
@@ -108,7 +108,7 @@ def main(
         yr_1_import_str = f"{first_season+1}-01-01"
         yr_n_import_str = f"{last_season+2}-01-01"
 
-        utils.log(
+        log(
             logger,
             f"Importing netCDF time steps {yr_1_import_str} through {yr_n_import_str} "
             + "(years are +1 because of CTSM output naming)",
@@ -192,7 +192,7 @@ def main(
                 h1_instantaneous,
             )
 
-            utils.log(logger, f"   Saving pickle file ({pickle_file})...")
+            log(logger, f"   Saving pickle file ({pickle_file})...")
             with open(pickle_file, "wb") as file:
                 pickle.dump(
                     [
@@ -220,10 +220,10 @@ def main(
             [i for i, c in enumerate(gddaccum_yp_list) if not isinstance(c, type(None))]
         ]
 
-        utils.log(logger, "Done")
+        log(logger, "Done")
 
         if not h2_ds:
-            utils.log(logger, f"generate_gdds main(): Opening h2_ds: {h2_ds_file}")
+            log(logger, f"generate_gdds main(): Opening h2_ds: {h2_ds_file}")
             h2_ds = xr.open_dataset(h2_ds_file)
 
     ######################################################
@@ -238,7 +238,7 @@ def main(
             "s", sdates_rx, incl_patches1d_itype_veg, mxsowings, logger
         )
 
-        utils.log(logger, "Getting and gridding mean GDDs...")
+        log(logger, "Getting and gridding mean GDDs...")
         gdd_maps_ds = gddfn.yp_list_to_ds(
             gddaccum_yp_list, h2_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
         )
@@ -249,10 +249,10 @@ def main(
         # Fill NAs with dummy values
         dummy_fill = -1
         gdd_maps_ds = gdd_maps_ds.fillna(dummy_fill)
-        utils.log(logger, "Done getting and gridding means.")
+        log(logger, "Done getting and gridding means.")
 
         # Add dummy variables for crops not actually simulated
-        utils.log(logger, "Adding dummy variables...")
+        log(logger, "Adding dummy variables...")
         # Unnecessary?
         template_ds = xr.open_dataset(sdates_file, decode_times=True)
         all_vars = [v.replace("sdate", "gdd") for v in template_ds if "sdate" in v]
@@ -280,7 +280,7 @@ def main(
 
         for var_index, this_var in enumerate(dummy_vars):
             if this_var in gdd_maps_ds:
-                utils.error(
+                error(
                     logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?"
                 )
             dummy_gridded.name = this_var
@@ -296,14 +296,14 @@ def main(
         gdd_maps_ds = add_lonlat_attrs(gdd_maps_ds)
         gddharv_maps_ds = add_lonlat_attrs(gddharv_maps_ds)
 
-        utils.log(logger, "Done.")
+        log(logger, "Done.")
 
     ######################
     ### Save to netCDF ###
     ######################
 
     if not only_make_figs:
-        utils.log(logger, "Saving...")
+        log(logger, "Saving...")
 
         # Get output file path
         datestr = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -338,7 +338,7 @@ def main(
 
         save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx)
 
-        utils.log(logger, "Done saving.")
+        log(logger, "Done saving.")
 
     ########################################
     ### Save things needed for mapmaking ###
