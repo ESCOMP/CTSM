@@ -13,6 +13,7 @@ from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 from ctsm.crop_calendars.import_ds import import_ds
 from ctsm.utils import is_instantaneous
+from ctsm.ctsm_logging import log
 
 MISSING_RX_GDD_VAL = -1
 
@@ -54,7 +55,7 @@ def open_lu_ds(filename, year_1, year_n, existing_ds, *, logger, ungrid=True):
     Open land-use dataset
     """
     # Open and trim to years of interest
-    utils.log(logger, f"open_lu_ds(): Opening this_ds_gridded: {filename}")
+    log(logger, f"open_lu_ds(): Opening this_ds_gridded: {filename}")
     this_ds_gridded = xr.open_dataset(filename).sel(time=slice(year_1, year_n))
 
     # Assign actual lon/lat coordinates

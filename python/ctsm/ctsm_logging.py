@@ -29,7 +29,13 @@ A guide to logging in ctsm python scripts:
 
 import logging
 
+from ctsm.utils import datetime_string
+
 logger = logging.getLogger(__name__)
+
+# In logfile lines, what should be used as spacing between the leading datetime string and the
+# message text?
+LOG_SPACING_AFTER_DATETIME_STR = " " * 4
 
 
 def setup_logging_pre_config():
@@ -99,3 +105,24 @@ def output_to_file(file_path, message, log_to_logger=False):
         log_file.write(message)
     if log_to_logger:
         logger.info(message)
+
+
+def log(logger_in, string):
+    """
+    Simultaneously print INFO messages to console and to log file
+    """
+    msg = datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    print(msg)
+    if logger_in:
+        logger_in.info(msg)
+
+
+def error(logger_in, string):
+    """
+    Simultaneously print ERROR messages to console and to log file
+    """
+    msg = datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+    print(msg)
+    if logger_in:
+        logger_in.error(msg)
+    raise RuntimeError(string)
