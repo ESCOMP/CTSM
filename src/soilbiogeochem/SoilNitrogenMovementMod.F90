@@ -74,7 +74,7 @@ module SoilNitrogenMovementMod
     real(r8) :: Ldis = 0.1_r8                                     ! dispersion length (m), Jury et al., 1991 
     real(r8) :: pcl1, pcl2, qflx1, qflx2, theta, thetasat, nerror 
     real(r8) :: Dw = 1.7e-9_r8                                    ! Molecular diffusivity of NO3- in water, m2/s 
-    real(r8) :: disp = 1.0_r8                                     ! dissove percentage     
+    real(r8) :: disp = 1.0_r8                                     ! dissolve percentage
     real(r8) :: afunc                                             ! A function in Patankar 1980, figure 5.6
     real(r8) :: pcl                                               ! Peclet number in Patankar 1980, foumula 5.18 
     real(r8) :: dz_node(1:nlevdecomp+1)                           ! difference between nodes
