@@ -70,7 +70,7 @@ module SoilNitrogenMovementMod
     integer  :: year, mon, day, tod 
     integer  :: jtop(bounds%begc:bounds%endc)                     ! top level at each column
     real(r8) :: dtime                                             ! land model time step (sec)
-    real(r8) :: wafc, wafc2                                       ! H2Oliq/(H2Oliq + H2Oice)
+    real(r8) :: wafc, wafc2                                       ! Fraction of water that is liquid by mass
     real(r8) :: Ldis = 0.1_r8                                     ! dispersion length (m), Jury et al., 1991 
     real(r8) :: pcl1, pcl2, qflx1, qflx2, theta, thetasat, nerror 
     real(r8) :: Dw = 1.7e-9_r8                                    ! Molecular diffusivity of NO3- in water, m2/s 
