@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.3.070 glemieux 08/20/2025 Update default FATES parameter file and add managed fire namelist option
+       ctsm5.3.070 glemieux 08/20/2025 Update default FATES parameter file and add FATES managed fire namelist option
        ctsm5.3.069 samrabin 08/12/2025 Add SystemTests to run subset_data and then CTSM
        ctsm5.3.068   slevis 08/11/2025 Change megan_use_gamma_sm to default false
        ctsm5.3.067 samrabin 08/08/2025 (Mostly) fix interim restarts
