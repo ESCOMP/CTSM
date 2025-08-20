@@ -29,6 +29,42 @@
 
 
   <!-- ctsm_sci test suite failures -->
+  <test name="SMS_Ld5.f19_g17.I1850Clm60BgcCrujra.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3311</issue>
+      <comment>Requires finidat with c13/c14 to PASS</comment>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f19_g17.I1850Clm60Bgc.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3311</issue>
+      <comment>Requires finidat with c13/c14 to PASS</comment>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f19_g17.IHistClm60BgcCropCrujra.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3311</issue>
+      <comment>Requires finidat with c13/c14 to PASS</comment>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f19_g17.IHistClm60BgcCrop.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3311</issue>
+      <comment>Requires finidat with c13/c14 to PASS</comment>
+    </phase>
+  </test>
+  <test name="SMS_Lm1.f19_g17.I1850Clm60BgcCropCmip6waccm.derecho_intel.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3311</issue>
+      <comment>Requires finidat with c13/c14 to PASS</comment>
+    </phase>
+  </test>
+
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
     <phase name="RUN">
       <status>FAIL</status>
@@ -62,6 +98,20 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>Works with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc' and fails with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc'.</comment>
+    </phase>
+  </test>
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>Works with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc' and fails with finidat = 'ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc'.</comment>
+    </phase>
+  </test>
   <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
     <phase name="RUN">
       <status>FAIL</status>
@@ -114,9 +164,9 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="RUN">
+    <phase name="SETUP">
       <status>FAIL</status>
-      <issue>#1733</issue>
+      <issue>#1733 and #3180</issue>
     </phase>
   </test>
 
@@ -138,6 +188,17 @@
     </phase>
   </test>
   
+  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>#3182</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3182</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
     <phase name="RUN">
       <status>FAIL</status>
@@ -245,14 +306,14 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld20.f10_f10_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
       <issue>FATES#1089</issue>
@@ -297,6 +358,15 @@
     <phase name="CREATE_NEWCASE">
       <status>FAIL</status>
       <issue>MOSART#91</issue>
+    </phase>
+  </test>
+
+  <!-- decomp_init test list-->
+
+  <test name="SMS_Ln1_PL.mpasa15_mpasa15.I2000Clm45Sp.derecho_intel.clm-run_self_tests">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3316</issue>
     </phase>
   </test>
 

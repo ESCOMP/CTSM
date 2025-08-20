@@ -279,7 +279,9 @@ contains
     end if
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
+    call t_startf('clm_decompInit_clumps')
     call decompInit_clumps(ni, nj, glc_behavior)
+    call t_stopf('clm_decompInit_clumps')
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
     call get_proc_bounds(bounds_proc)
@@ -304,7 +306,9 @@ contains
     !$OMP END PARALLEL DO
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
+    call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
+    call t_stopf('clm_decompInit_glcp')
 
     if (use_hillslope) then
        ! Initialize hillslope properties
