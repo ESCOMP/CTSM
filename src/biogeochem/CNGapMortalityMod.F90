@@ -121,7 +121,7 @@ contains
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
     use clm_varctl       , only: use_cndv, spinup_state
-    use pftconMod        , only: npcropmin
+    use pftconMod        , only: is_prognostic_crop
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds
@@ -348,7 +348,7 @@ contains
             end if !use_matrixcn
          end if
 
-         if (ivt(p) < npcropmin) then
+         if (.not. is_prognostic_crop(ivt(p))) then
             if(.not. use_matrixcn)then
                cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
             else
