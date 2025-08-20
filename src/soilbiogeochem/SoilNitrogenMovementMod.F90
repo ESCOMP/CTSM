@@ -120,7 +120,8 @@ module SoilNitrogenMovementMod
              swliq(c,j) = wafc * h2osoi_vol(c,j) 
              swliq(c,j+1) = wafc2 * h2osoi_vol(c,j+1) 
              if (swliq(c,j) == 0._r8 .or. swliq(c,j+1) == 0._r8) then
-                theta=0._r8; thetasat=1._r8
+                theta = 0._r8
+                thetasat = 1._r8
              else
                 theta = swliq(c,j) + dzsoi_decomp(j)/2 * (swliq(c,j+1) - swliq(c,j))/dz_node(j)
                 thetasat = watsat(c,j) + dzsoi_decomp(j)/2 * (watsat(c,j+1) - watsat(c,j))/dz_node(j)
@@ -146,12 +147,16 @@ module SoilNitrogenMovementMod
           if ( j==0 .or. j==nlevdecomp+1) then
              !atmosphere and bottom layer, no concentration gradient here
              conc_trcr(c,j) = 0._r8
-             a_tri(c,j) = 0._r8;   b_tri(c,j) = 1._r8;   c_tri(c,j) = 0._r8;  
-             r_tri(c,j) = 0._r8  
+             a_tri(c,j) = 0._r8
+             b_tri(c,j) = 1._r8
+             c_tri(c,j) = 0._r8
+             r_tri(c,j) = 0._r8
           elseif (swliq(c,j) == 0._r8 .or. j > col%nbedrock(c)) then
              ! extremely dry condition and layers beneath the bedrock, no aqueous transport of nitrate
              conc_trcr(c,j) = disp * smin_no3_vr(c,j)
-             a_tri(c,j) = 0._r8;   b_tri(c,j) = 1._r8;   c_tri(c,j) = 0._r8;  
+             a_tri(c,j) = 0._r8
+             b_tri(c,j) = 1._r8
+             c_tri(c,j) = 0._r8
              r_tri(c,j) = conc_trcr(c,j)
              swliq(c,j) = 1.0_r8      ! change swliq into 1 to be used in the update session below 
           elseif ( j == 1) then
@@ -169,7 +174,9 @@ module SoilNitrogenMovementMod
              ! Assume the bottom layer concentration is always zero
              ! This method count the loss at this layer as the leaching flux at the bottom
              conc_trcr(c,j) = 0._r8 
-             a_tri(c,j) = 0._r8; c_tri(c,j) = 0._r8; b_tri(c,j) = 1._r8;
+             a_tri(c,j) = 0._r8
+             b_tri(c,j) = 1._r8
+             c_tri(c,j) = 0._r8
              r_tri(c,j) = conc_trcr(c,j)/dtime*swliq(c,j)*dzsoi_decomp(j)
           else
              ! Active layers from second one to bedrock-1,  concentration should be in gN/m3Water
