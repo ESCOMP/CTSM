@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 # In logfile lines, what should be used as spacing between the leading datetime string and the
 # message text?
-LOG_SPACING_AFTER_DATETIME_STR = " " * 4
+LOG_SPACING = " " * 4
 
 
 def setup_logging_pre_config():
@@ -117,7 +117,7 @@ def log(logger_in, string):
     Simultaneously print INFO messages to console and to log file
     """
     msg = (
-        _get_caller_name_for_logging() + datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+        datetime_string() + LOG_SPACING + _get_caller_name_for_logging() + LOG_SPACING + string
     )
     print(msg)
     if logger_in:
@@ -129,7 +129,7 @@ def error(logger_in, string, *, error_type=RuntimeError):
     Simultaneously print ERROR messages to console and to log file
     """
     msg = (
-        _get_caller_name_for_logging() + datetime_string() + LOG_SPACING_AFTER_DATETIME_STR + string
+        datetime_string() + LOG_SPACING + _get_caller_name_for_logging() + LOG_SPACING + string
     )
     print(msg)
     if logger_in:

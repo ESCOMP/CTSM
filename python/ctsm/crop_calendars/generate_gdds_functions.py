@@ -253,7 +253,7 @@ def import_and_process_1yr(
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    log(logger, f"import_and_process_1yr(): netCDF year {this_year}...")
+    log(logger, f"netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -588,7 +588,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            log(logger, f"      import_and_process_1yr(): SKIPPING {vegtype_str}")
+            log(logger, f"SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -603,7 +603,7 @@ def import_and_process_1yr(
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        log(logger, f"      import_and_process_1yr(): {vegtype_str}...")
+        log(logger, f"{vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches

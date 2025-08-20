@@ -55,7 +55,7 @@ def open_lu_ds(filename, year_1, year_n, existing_ds, *, logger, ungrid=True):
     Open land-use dataset
     """
     # Open and trim to years of interest
-    log(logger, f"open_lu_ds(): Opening this_ds_gridded: {filename}")
+    log(logger, f"Opening this_ds_gridded: {filename}")
     this_ds_gridded = xr.open_dataset(filename).sel(time=slice(year_1, year_n))
 
     # Assign actual lon/lat coordinates
