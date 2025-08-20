@@ -51,7 +51,7 @@ module SoilNitrogenMovementMod
     use decompMod         , only : bounds_type
     use clm_varpar        , only : nlevdecomp, nlevgrnd
     use clm_time_manager  , only : get_step_size_real, get_curr_date
-    use clm_varcon        , only : zsoi, zisoi, dzsoi_decomp
+    use clm_varcon        , only : zsoi, zisoi, dzsoi_decomp, mmh2o_to_m3h2o_per_m2
     use ColumnType        , only : col
     use clm_varctl        , only : use_bedrock
     use TridiagonalMod    , only : Tridiagonal
@@ -128,7 +128,7 @@ module SoilNitrogenMovementMod
              end if
              ! here we refer the j as the interface of j + zj/2 
              total_D(c,j) = theta*(Dw * theta**(7/3) * thetasat**(-2))
-             total_D(c,j) = total_D(c,j) + Ldis*0.001*abs(qout(c,j))  
+             total_D(c,j) = total_D(c,j) + Ldis * mmh2o_to_m3h2o_per_m2 * abs(qout(c,j))
           else
              !no gradient for the last layer
              total_D(c,j) = total_D(c,j-1) 
@@ -162,8 +162,8 @@ module SoilNitrogenMovementMod
           elseif ( j == 1) then
              ! topmost soil layer, flux only interacts with the layer below it
              conc_trcr(c,j) = disp * smin_no3_vr(c,j)/swliq(c,j)
-             qflx1 = qin(c,j) * 0.001_r8    ! mmH2O/sec to m3H2O/m2/sec 
-             qflx2 = qout(c,j) * 0.001_r8   
+             qflx1 = qin(c,j) * mmh2o_to_m3h2o_per_m2  ! mm H2O/s to m3 H2O/m2/s
+             qflx2 = qout(c,j) * mmh2o_to_m3h2o_per_m2
              pcl1 = qflx1*dz_node(j)/total_D(c,j)
              pcl2 = qflx2*dz_node(j)/total_D(c,j)
              a_tri(c,j) = 0._r8
@@ -181,8 +181,8 @@ module SoilNitrogenMovementMod
           else
              ! Active layers from second one to bedrock-1,  concentration should be in gN/m3Water
              conc_trcr(c,j) = disp * smin_no3_vr(c,j)/swliq(c,j)
-             qflx1 = qin(c,j) * 0.001_r8    ! mmH2O/sec to m3H2O/m2/sec
-             qflx2 = qout(c,j) * 0.001_r8
+             qflx1 = qin(c,j) * mmh2o_to_m3h2o_per_m2  ! mm H2O/s to m3 H2O/m2/s
+             qflx2 = qout(c,j) * mmh2o_to_m3h2o_per_m2
              pcl1 = qflx1*dz_node(j-1)/total_D(c,j-1)
              pcl2 = qflx2*dz_node(j)/total_D(c,j)
              a_tri(c,j) = -total_D(c,j-1)/dz_node(j-1) * afunc(pcl1) - max(qflx1, 0._r8) 
