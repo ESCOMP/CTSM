@@ -2691,8 +2691,9 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use pftconMod       , only: npcropmin, npcropmax
     use clm_time_manager, only: get_calday
+    use pftconMod, only: is_prognostic_crop
+    use clm_varpar, only: mxpft
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -2713,8 +2714,8 @@ contains
     ! Convert planting dates into julian day
     minplantjday(:,:) = huge(1)
     maxplantjday(:,:) = huge(1)
-    do n = npcropmin, npcropmax
-       if (pftcon%is_pft_known_to_model(n)) then
+    do n = 1, mxpft
+       if (is_prognostic_crop(n) .and. pftcon%is_pft_known_to_model(n)) then
           minplantjday(n, inNH) = int( get_calday( pftcon%mnNHplantdate(n), 0 ) )
           maxplantjday(n, inNH) = int( get_calday( pftcon%mxNHplantdate(n), 0 ) )
 
@@ -3354,7 +3355,7 @@ contains
     ! pools during the phenological offset period.
     !
     ! !USES:
-    use pftconMod        , only : npcropmin
+    use pftconMod        , only : is_prognostic_crop
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use CNSharedParamsMod, only : use_fun
@@ -3530,7 +3531,7 @@ contains
                end if ! use_matrixcn
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
-               if (ivt(p) >= npcropmin) then
+               if (is_prognostic_crop(ivt(p))) then
 
                   ! How many harvests have occurred?
                   h = crop_inst%harvest_count(p)
@@ -4375,7 +4376,7 @@ ptch: do fp = 1,num_soilp
     !
     ! !USES:
     use clm_varpar , only : nlevdecomp
-    use pftconMod  , only : npcropmin
+    use pftconMod  , only : is_prognostic_crop
     use clm_varctl , only : use_grainproduct
     !
     ! !ARGUMENTS:
@@ -4453,7 +4454,7 @@ ptch: do fp = 1,num_soilp
             ! new ones for now (slevis)
             ! also for simplicity I've put "food" into the litter pools
             
-            if (ivt(p) >= npcropmin) then ! add livestemc to litter
+            if (is_prognostic_crop(ivt(p))) then ! add livestemc to litter
                do i = i_litr_min, i_litr_max
                   ! stem litter carbon fluxes
                   phenology_c_to_litr_c(c,j,i) = &
