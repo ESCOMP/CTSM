@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.3.0xx
+Tag name: ctsm5.3.071
 Originator(s): jinmuluo (Jinmu Luo, Cornell University)
-Date: Wed 06 Aug 2025 04:19:47 PM MDT
+Date: Tue 19 Aug 2025 06:19:28 PM MDT
 One-line Summary: New vertical movement scheme for soil nitrate
 
 Purpose and description of changes
@@ -82,12 +82,6 @@ Other details
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/2992
 
-===============================================================
-===============================================================
-Tag name: ctsm5.3.067
-===============================================================
-===============================================================
-Tag name: ctsm5.3.066
 ===============================================================
 ===============================================================
 Tag name: ctsm5.3.065

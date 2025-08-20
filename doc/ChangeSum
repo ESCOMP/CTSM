@@ -1,8 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.3.0xx jinmuluo xx/xx/2025 New vertical movement scheme for soil nitrate
-       ctsm5.3.067            /  /2025 
-       ctsm5.3.066            /  /2025 
+       ctsm5.3.071 jinmuluo xx/xx/2025 New vertical movement scheme for soil nitrate
        ctsm5.3.065     erik 07/28/2025 Merge b4b-dev to master
        ctsm5.3.064   slevis 07/24/2025 Add time dimension to 1d_wt fields in transient runs
        ctsm5.3.063 samrabin 07/10/2025 Merge b4b-dev to master
