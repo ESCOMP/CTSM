@@ -21,7 +21,7 @@ def compute_derived_vars(ds_in, var, logger=None):
     """
     Compute derived variables
     """
-    log(logger, f"compute_derived_vars(): Getting {var}...")
+    log(logger, f"Getting {var}...")
     if (
         var == "HYEARS"
         and "HDATES" in ds_in
@@ -53,7 +53,7 @@ def manual_mfdataset(filelist, my_vars, my_vegtypes, time_slice, logger=None):
     """
     ds_out = None
     for filename in filelist:
-        log(logger, f"manual_mfdataset(): Opening ds_in: {ds_in}")
+        log(logger, f"Opening ds_in: {ds_in}")
         ds_in = xr.open_dataset(filename)
         ds_in = mfdataset_preproc(ds_in, my_vars, my_vegtypes, time_slice)
         if ds_out is None:
@@ -79,7 +79,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
       named like "patch". This can later be reversed, for compatibility with other code, using
       patch2pft().
     """
-    log(logger, "mfdataset_preproc(): Start")
+    log(logger, "Start")
 
     # Rename "pft" dimension and variables to "patch", if needed
     if "pft" in ds_in.dims:
@@ -87,7 +87,7 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
 
     derived_vars = []
     if vars_to_import is not None:
-        log(logger, "mfdataset_preproc(): Getting vars to drop...")
+        log(logger, "Getting vars to drop...")
 
         # Split vars_to_import into variables that are vs. aren't already in ds
         derived_vars = [v for v in vars_to_import if v not in ds_in]
@@ -125,12 +125,12 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
         vars_to_drop = list(np.setdiff1d(varlist, vars_to_import))
 
         # Drop them
-        log(logger, f"mfdataset_preproc(): Dropping variables: {vars_to_drop}")
+        log(logger, f"Dropping variables: {vars_to_drop}")
         ds_in = ds_in.drop_vars(vars_to_drop)
 
     # Add vegetation type info
     if "patches1d_itype_veg" in list(ds_in):
-        log(logger, "mfdataset_preproc(): Adding vegetation type info")
+        log(logger, "Adding vegetation type info")
         this_pftlist = utils.define_pftlist()
         utils.get_patch_ivts(
             ds_in, this_pftlist
@@ -150,25 +150,25 @@ def mfdataset_preproc(ds_in, vars_to_import, vegtypes_to_import, time_slice, log
 
     # Restrict to veg. types of interest, if any
     if vegtypes_to_import is not None:
-        log(logger, f"mfdataset_preproc(): Restricting veg types to: {vegtypes_to_import}")
+        log(logger, f"Restricting veg types to: {vegtypes_to_import}")
         ds_in = xr_flexsel(ds_in, vegtype=vegtypes_to_import)
 
     # Restrict to time slice, if any
     if time_slice:
-        log(logger, f"mfdataset_preproc(): Restricting time slice to: {time_slice}")
+        log(logger, f"Restricting time slice to: {time_slice}")
         ds_in = utils.safer_timeslice(ds_in, time_slice)
 
     # Finish import
-    log(logger, "mfdataset_preproc(): decode_cf()...")
+    log(logger, "decode_cf()...")
     ds_in = xr.decode_cf(ds_in, decode_times=True)
 
     # Compute derived variables
     if derived_vars:
-        log(logger, "mfdataset_preproc(): decode_cf()...")
+        log(logger, "decode_cf()...")
     for var in derived_vars:
         ds_in = compute_derived_vars(ds_in, var, logger)
 
-    log(logger, "mfdataset_preproc(): End")
+    log(logger, "End")
 
     return ds_in
 
@@ -235,7 +235,7 @@ def import_ds(
     - DOES actually read the dataset into memory, but only AFTER dropping unwanted variables and/or
       vegetation types.
     """
-    log(logger, "import_ds(): Start")
+    log(logger, "Start")
 
     filelist, my_vars, my_vegtypes, my_vars_missing_ok = process_inputs(
         filelist, my_vars, my_vegtypes, my_vars_missing_ok
@@ -249,13 +249,13 @@ def import_ds(
     if time_slice:
         new_filelist = []
         for file in sorted(filelist):
-            log(logger, f"import_ds(): Getting filetime from file: {file}")
+            log(logger, f"Getting filetime from file: {file}")
             filetime = xr.open_dataset(file).time
             filetime_sel = utils.safer_timeslice(filetime, time_slice)
             include_this_file = filetime_sel.size
             if include_this_file:
                 log(
-                    logger, f"import_ds(): Including filetime : {filetime_sel['time'].values}"
+                    logger, f"Including filetime : {filetime_sel['time'].values}"
                 )
                 new_filelist.append(file)
 
@@ -295,11 +295,11 @@ def import_ds(
                 chunks=chunks,
             )
     elif isinstance(filelist, str):
-        log(logger, f"import_ds(): Opening this_ds from filelist: {filelist}")
+        log(logger, f"Opening this_ds from filelist: {filelist}")
         this_ds = xr.open_dataset(filelist, chunks=chunks)
-        log(logger, "import_ds(): Calling mfdataset_preproc()...")
+        log(logger, "Calling mfdataset_preproc()...")
         this_ds = mfdataset_preproc(this_ds, my_vars, my_vegtypes, time_slice)
-        log(logger, "import_ds(): Calling compute()...")
+        log(logger, "Calling compute()...")
         this_ds = this_ds.compute()
 
     # Warn and/or error about variables that couldn't be imported or derived
@@ -324,5 +324,5 @@ def import_ds(
         if "lsmlon" in this_ds.dims:
             this_ds = this_ds.rename({"lsmlon": "lon"})
 
-    log(logger, "import_ds(): End")
+    log(logger, "End")
     return this_ds

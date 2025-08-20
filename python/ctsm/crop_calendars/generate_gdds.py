@@ -223,7 +223,7 @@ def main(
         log(logger, "Done")
 
         if not h2_ds:
-            log(logger, f"generate_gdds main(): Opening h2_ds: {h2_ds_file}")
+            log(logger, f"Opening h2_ds: {h2_ds_file}")
             h2_ds = xr.open_dataset(h2_ds_file)
 
     ######################################################
