@@ -85,7 +85,34 @@ contains
     call decompInit_lnd_allocate( ier )
     if (ier /= 0) return
 
+<<<<<<< HEAD
     ! Initialize procinfo and clumps
+||||||| parent of 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
+    !--- set and verify nclumps ---
+    if (clump_pproc > 0) then
+       nclumps = clump_pproc * npes
+       if (nclumps < npes) then
+          write(iulog,*) 'decompInit_lnd(): Number of gridcell clumps= ',nclumps, &
+               ' is less than the number of processes = ', npes
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+          return
+       end if
+    else
+       write(iulog,*) 'ERROR: Bad clump_pproc=', clump_pproc, errMsg(sourcefile, __LINE__)
+       call endrun(msg='clump_pproc must be greater than 0')
+       return
+    end if
+
+    ! allocate and initialize procinfo and clumps
+=======
+    call decompInit_lnd_check_errors()
+
+    call decompInit_lnd_allocate()
+
+    call memcheck('decompInit_lnd: after allocate')
+
+    ! Initialize procinfo and clumps
+>>>>>>> 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
     ! beg and end indices initialized for simple addition of cells later
 
     procinfo%nclumps   = clump_pproc
@@ -128,16 +155,16 @@ contains
     do n = 1,nclumps
        pid = mod(n-1,npes)
        if (pid < 0 .or. pid > npes-1) then
-          write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+          write(iulog,*) 'Round robin pid error: n, pid, npes = ',n,pid,npes
+          call endrun(msg="Round robin pid error", file=sourcefile, line=__LINE__)
           return
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
-             write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-             call endrun(msg=errMsg(sourcefile, __LINE__))
+             write(iulog,*) 'round robin pid error ',n,pid,npes
+             call endrun(msg="round robin pid error", file=sourcefile, line=__LINE__)
              return
           endif
           procinfo%cid(cid) = n
@@ -206,7 +233,33 @@ contains
        end if
     enddo
 
+<<<<<<< HEAD
     ! clumpcnt is the ending gdc index of each clump
+||||||| parent of 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
+    ! Set gindex_global
+
+    allocate(gdc2glo(numg), stat=ier)
+    if (ier /= 0) then
+       write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
+    end if
+    gdc2glo(:) = 0
+    allocate(clumpcnt(nclumps),stat=ier)
+    if (ier /= 0) then
+       write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+       return
+    end if
+
+    ! clumpcnt is the start gdc index of each clump
+=======
+    ! Set gindex_global
+
+    gdc2glo(:) = 0
+
+    ! clumpcnt is the start gdc index of each clump
+>>>>>>> 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
 
     ag = 0
     clumpcnt = 0
@@ -243,11 +296,31 @@ contains
 
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
+<<<<<<< HEAD
+||||||| parent of 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
+    call get_proc_bounds(bounds)
+    allocate(gindex_global(1:bounds%endg))
+=======
+    call get_proc_bounds(bounds)
+>>>>>>> 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
     do n = procinfo%begg,procinfo%endg
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
+<<<<<<< HEAD
     call decompInit_lnd_clean()
+||||||| parent of 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
+    call memcheck('decompInit_lnd: after allocate before deallocate')
+
+    deallocate(clumpcnt)
+    deallocate(gdc2glo)
+
+    call memcheck('decompInit_lnd: after deallocate')
+=======
+    call decompInit_lnd_clean()
+
+    call memcheck('decompInit_lnd: after deallocate')
+>>>>>>> 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
 
     ! Diagnostic output
     if (masterproc) then
@@ -262,6 +335,7 @@ contains
     call shr_sys_flush(iulog)
     call t_stopf('decompInit_lnd')
 
+<<<<<<< HEAD
   !------------------------------------------------------------------------------
   ! Internal subroutines for this subroutine
   contains
@@ -430,6 +504,116 @@ contains
 
       !------------------------------------------------------------------------------
 
+||||||| parent of 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
+=======
+  !------------------------------------------------------------------------------
+  ! Internal subroutines for this subroutine
+  contains
+  !------------------------------------------------------------------------------
+
+      !------------------------------------------------------------------------------
+      subroutine decompInit_lnd_allocate()
+         ! Allocate the temporary and long term variables set here
+
+         !
+         ! Long-term:
+         ! Arrays from decompMod that are allocated here
+         ! This should move to a method in decompMod
+         ! as should the deallocates
+         !
+
+         ! allocate procinfo
+         allocate(procinfo%cid(clump_pproc), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg='allocation error for procinfo%cid', file=sourcefile, line=__LINE__)
+            return
+         endif
+         allocate(clumps(nclumps), stat=ier)
+         if (ier /= 0) then
+            write(iulog,*) 'allocation error for clumps: nclumps=', nclumps
+            call endrun(msg='allocation error for clumps', file=sourcefile, line=__LINE__)
+            return
+         end if
+
+         allocate(gdc2glo(numg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error1 for gdc2glo , etc", file=sourcefile, line=__LINE__)
+            return
+         end if
+         allocate(gindex_global(1:bounds%endg))
+
+         ! Temporary arrays that are just used in decompInit_lnd
+         allocate(lcid(lns))
+         allocate(clumpcnt(nclumps),stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error2 for clumpcnt", file=sourcefile, line=__LINE__)
+            return
+         end if
+
+      end subroutine decompInit_lnd_allocate
+
+      subroutine decompInit_lnd_clean()
+         ! Deallocate the temporary variables used in decompInit_lnd
+         deallocate(clumpcnt)
+         deallocate(gdc2glo)
+         !deallocate(lcid)
+      end subroutine decompInit_lnd_clean
+
+      subroutine decompMod_clean()
+         ! Deallocate the long-term variables created in decompInit_lnd
+         ! This should be moved to decompMod
+
+         deallocate(clumps)
+         deallocate(procinfo%cid)
+         deallocate(gindex_global)
+         nclumps = 0
+      end subroutine decompMod_clean
+
+      subroutine decompInit_lnd_check_errors()
+         ! Do some general error checking on input options
+
+         !--- set and verify nclumps ---
+         if (clump_pproc > 0) then
+            nclumps = clump_pproc * npes
+            if (nclumps < npes) then
+               write(iulog,*) 'Number of gridcell clumps= ',nclumps, &
+                     ' is less than the number of processes = ', npes
+               call endrun(msg="Number of clumps exceeds number of processes", &
+                           file=sourcefile, line=__LINE__)
+               return
+            end if
+         else
+            write(iulog,*) 'ERROR: Bad clump_pproc=', clump_pproc
+            call endrun(msg='clump_pproc must be greater than 0', file=sourcefile, line=__LINE__)
+            return
+         end if
+
+         ! count total land gridcells
+         numg = 0
+         do ln = 1,lns
+            if (amask(ln) == 1) then
+               numg = numg + 1
+            endif
+         enddo
+
+         if (npes > numg) then
+            write(iulog,*) 'Number of processes > gridcells: npes=',npes,' num gridcells = ', numg
+            call endrun(msg="Number of processes exceeds number of land grid cells", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+         if (nclumps > numg) then
+            write(iulog,*) 'Number of clumps > gridcells nclumps = ', &
+                           nclumps, ' num gridcells = ', numg
+            call endrun(msg="Number of clumps exceeds number of land grid cells", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+      end subroutine decompInit_lnd_check_errors
+
+      !------------------------------------------------------------------------------
+
+>>>>>>> 9d236caa0 (Change endrun calls to use new format for file and line, and remove the subname, create new internal subroutines in decompInit_lnd for allocate, clean, and check errors, move the check errors part to the first thing done)
   end subroutine decompInit_lnd
 
   !------------------------------------------------------------------------------
@@ -586,13 +770,14 @@ contains
            clumps(n)%npatches /= allvecg(n,4) .or. &
            clumps(n)%nCohorts /= allvecg(n,5)) then
 
-          write(iulog ,*) 'decompInit_glcp(): allvecg error ncells ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error patches',iam,n,clumps(n)%npatches ,allvecg(n,4)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
+          write(iulog ,*) 'allvecg error: iam,n ',iam,n
+          write(iulog ,*) 'allvecg error ncells,allvecg ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
+          write(iulog ,*) 'allvecg error lunits,allvecg ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
+          write(iulog ,*) 'allvecg error ncols,allvecg  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
+          write(iulog ,*) 'allvecg error patches,allvecg',iam,n,clumps(n)%npatches ,allvecg(n,4)
+          write(iulog ,*) 'allvecg error cohorts,allvecg',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+          call endrun(msg="allvecg error cohorts", file=sourcefile, line=__LINE__)
           return
        endif
     enddo
