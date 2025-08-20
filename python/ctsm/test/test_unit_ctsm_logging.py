@@ -5,7 +5,6 @@
 import unittest
 import io
 from contextlib import redirect_stdout
-from datetime import datetime
 
 from ctsm import unit_testing
 from ctsm.ctsm_logging import log, error
