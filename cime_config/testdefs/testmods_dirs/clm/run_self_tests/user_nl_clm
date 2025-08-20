@@ -1,2 +1,1 @@
 for_testing_run_ncdiopio_tests = .true.
-for_testing_run_decomp_init_tests = .true.
