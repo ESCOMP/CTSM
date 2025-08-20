@@ -108,17 +108,21 @@ def output_to_file(file_path, message, log_to_logger=False):
         logger.info(message)
 
 
-def _get_caller_name_for_logging():
-    return inspect.stack()[2][3]
+def _compose_log_msg(string, frame_record=2):
+    """
+    Prepend the log/error string with reference information
+    """
+    # Get name of the function that called log() or error()
+    caller_name = inspect.stack()[frame_record][3]
+
+    return datetime_string() + LOG_SPACING + caller_name + LOG_SPACING + string
 
 
 def log(logger_in, string):
     """
     Simultaneously print INFO messages to console and to log file
     """
-    msg = (
-        datetime_string() + LOG_SPACING + _get_caller_name_for_logging() + LOG_SPACING + string
-    )
+    msg = _compose_log_msg(string)
     print(msg)
     if logger_in:
         logger_in.info(msg)
@@ -128,9 +132,7 @@ def error(logger_in, string, *, error_type=RuntimeError):
     """
     Simultaneously print ERROR messages to console and to log file
     """
-    msg = (
-        datetime_string() + LOG_SPACING + _get_caller_name_for_logging() + LOG_SPACING + string
-    )
+    msg = _compose_log_msg(string)
     print(msg)
     if logger_in:
         logger_in.error(msg)
