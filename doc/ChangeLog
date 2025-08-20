@@ -45,9 +45,9 @@ Changes to documentation:
 Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
- New tests with Nvmovement testmods, one with matrixcnOn and one with it off
- ERP_D_Ld5.f10_f10_mg37.I1850Clm60BgcCrop.derecho_intel.clm-Nvmovement--clm-matrixcnOn
- ERP_D.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-decStart--clm-Nvmovement
+ New tests with nvmovement testmods, one with matrixcnOn and one with it off
+ ERP_D_Ld5.f10_f10_mg37.I1850Clm60BgcCrop.derecho_intel.clm-nvmovement--clm-matrixcnOn
+ ERP_D.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-decStart--clm-nvmovement
 
 Testing summary:
 ----------------
