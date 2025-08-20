@@ -4165,7 +4165,7 @@
   </test>
 
   <!-- decomp_init tests -->
-  <test name="SMS_D_Ln1" grid="1x1_brazil" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
