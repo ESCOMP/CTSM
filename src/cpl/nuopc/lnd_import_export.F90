@@ -156,8 +156,7 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                              atm_prognostic, atm_present, rc)
+  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
@@ -174,7 +173,6 @@ contains
     logical          , intent(in)  :: cism_evolve
     logical          , intent(in)  :: rof_prognostic
     logical          , intent(in)  :: atm_prognostic
-    logical          , intent(in)  :: atm_present
     integer          , intent(out) :: rc
 
     ! local variables
@@ -212,9 +210,7 @@ contains
 
     ! Need to determine if there is no land for single column before the advertise call is done
 
-    if (.not. atm_present)then
-       send_to_atm = .false.
-    else if (atm_prognostic .or. force_send_to_atm) then
+    if (atm_prognostic .or. force_send_to_atm) then
        send_to_atm = .true.
     else
        send_to_atm = .false.
@@ -257,11 +253,12 @@ contains
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
 
     ! CARMA volumetric soil water from land
+    call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
     if (send_to_atm) then
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_t          )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_tref       )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_qref       )
@@ -342,9 +339,6 @@ contains
 
     call fldlist_add(fldsToLnd_num, fldsToLnd, trim(flds_scalar_name))
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!! new if section !!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( atm_present ) then
-   
     ! from atm
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_z         )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_topo      )
@@ -394,9 +388,6 @@ contains
        call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_co2prog)
        call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_co2diag)
     end if
-
-    end if ! atm_present
-    !!!!!!!!!!!!!!!!!!!!!!!!!!! new if section !!!!!!!!!!!!!!!!!!!!!!!!!!
 
     if (rof_prognostic) then
        ! from river
@@ -782,7 +773,6 @@ contains
     ! output to mediator
     ! -----------------------
 
-    if (send_to_atm) then
     call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), init_spval=.false., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -790,6 +780,7 @@ contains
     ! output to atm
     ! -----------------------
 
+    if (send_to_atm) then
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
