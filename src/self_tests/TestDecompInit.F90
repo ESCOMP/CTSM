@@ -23,6 +23,9 @@ module TestDecompInit
 
   ! Module data used in various tests
 
+  integer, parameter :: ni = 10, nj = 5
+  integer :: amask(ni*nj)
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -72,8 +75,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_bad_clump_pproc()
-     integer, parameter :: ni = 300, nj = 500
-     integer :: amask(ni*nj)
      character(len=CX) :: expected_msg, actual_msg
 
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
@@ -92,8 +93,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc()
-     integer, parameter :: ni = 300, nj = 500
-     integer :: amask(ni*nj)
      character(len=CX) :: expected_msg, actual_msg
 
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
@@ -102,7 +101,7 @@ contains
      call write_to_log('decompInit_lnd with clump_pproc too large should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
-     expected_msg = 'decompInit_lnd(): Number of clumps exceeds number of land grid cells'
+     expected_msg = 'Number of clumps exceeds number of land grid cells'
      actual_msg = get_last_endrun_msg()
      call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
@@ -114,8 +113,6 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_when_npes_too_large()
-     integer, parameter :: ni = 300, nj = 500
-     integer :: amask(ni*nj)
      character(len=CX) :: expected_msg, actual_msg
      integer :: npes_orig
 
@@ -128,7 +125,7 @@ contains
      call write_to_log('decompInit_lnd with npes too large should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
-     expected_msg = 'decompInit_lnd(): Number of processes exceeds number of land grid cells'
+     expected_msg = 'Number of processes exceeds number of land grid cells'
      actual_msg = get_last_endrun_msg()
      call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
@@ -143,8 +140,6 @@ contains
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_too_small_nsegspc()
      use clm_varctl, only : nsegspc
-     integer, parameter :: ni = 300, nj = 500
-     integer :: amask(ni*nj)
      character(len=CX) :: expected_msg, actual_msg
 
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
@@ -153,7 +148,7 @@ contains
      call write_to_log('decompInit_lnd with nsegspc too small should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
-     expected_msg = 'decompInit_lnd(): nsegspc must be greater than 0'
+     expected_msg = 'nsegspc must be greater than 0'
      actual_msg = get_last_endrun_msg()
      call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
