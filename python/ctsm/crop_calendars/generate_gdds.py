@@ -280,9 +280,7 @@ def main(
 
         for var_index, this_var in enumerate(dummy_vars):
             if this_var in gdd_maps_ds:
-                error(
-                    logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?"
-                )
+                error(logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?")
             dummy_gridded.name = this_var
             dummy_gridded.attrs["long_name"] = dummy_longnames[var_index]
             gdd_maps_ds[this_var] = dummy_gridded
