@@ -152,6 +152,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan clm_accelerated_spinup="sasu">0</megan>
 <megan configuration="nwp"          >0</megan>
 
+<!-- The soil moisture effect was added in ctsm5.2.020 with MEGAN2.1 and was hardcoded on. -->
+<!-- As of ctsm5.3.068 megan_use_gamma_sm became default false, which is closer to MEGAN before 2.1. -->
+<!-- Hence we made megan_use_gamma_sm default off for all CLM physics versions. -->
+<megan_use_gamma_sm>.false.</megan_use_gamma_sm>
+<megan_min_gamma_sm>0.0d00</megan_min_gamma_sm>
+
 <!-- Supplmental Nitrogen mode -->
 <suplnitro use_cn=".true." >NONE</suplnitro>
 <suplnitro use_fates=".true." >ALL</suplnitro>
@@ -2472,6 +2478,11 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <do_transient_lakes>.false.</do_transient_lakes>
 <do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+<vars_1dwt_w_time do_transient_pfts=".true.">.true.</vars_1dwt_w_time>
+<vars_1dwt_w_time do_transient_crops=".true.">.true.</vars_1dwt_w_time>
+<vars_1dwt_w_time do_transient_lakes=".true.">.true.</vars_1dwt_w_time>
+<vars_1dwt_w_time do_transient_urban=".true.">.true.</vars_1dwt_w_time>
+<vars_1dwt_w_time>.false.</vars_1dwt_w_time>
 
 <!-- =========================================  -->
 <!-- Defaults for water tracers                 -->
