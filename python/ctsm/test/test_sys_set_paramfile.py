@@ -179,6 +179,52 @@ class TestSysSetParamfile(unittest.TestCase):
                     if not np.isnan(fv_in):
                         self.assertEqual(fv_in, fv_out)
 
+    def test_set_paramfile_changeparams_1d_double(self):
+        """
+        Test that set_paramfile can copy to a new file with a 1-d double param changed (not PFT-
+        dimensioned)
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        this_var = "mimics_fmet"
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            f"{this_var}=0.1,0.2,0.3,0.4",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        for var in ds_in.variables:
+            # Check that all variables/coords are equal except the ones we changed, which should be
+            # set to what we asked
+            if var == this_var:
+                self.assertTrue(
+                    np.array_equal(ds_in[var].values, np.array([0.75, 0.85, 0.013, 40]))
+                )
+                self.assertTrue(np.array_equal(ds_out[var].values, np.array([0.1, 0.2, 0.3, 0.4])))
+            else:
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
+
+            # Check that data type hasn't changed
+            self.assertTrue(ds_in[var].dtype == ds_out[var].dtype)
+
+            # Check that fill value hasn't changed
+            if "_FillValue" in ds_in[var].encoding:
+                fv_in = ds_in[var].encoding["_FillValue"]
+                fv_out = ds_out[var].encoding["_FillValue"]
+                if isinstance(fv_in, bytes):
+                    self.assertTrue(isinstance(fv_out, bytes))
+                    self.assertEqual(fv_in, fv_out)
+                else:
+                    self.assertEqual(np.isnan(fv_in), np.isnan(fv_out))
+                    if not np.isnan(fv_in):
+                        self.assertEqual(fv_in, fv_out)
+
     def test_set_paramfile_changeparams_scalar_int(self):
         """Test that set_paramfile can copy to a new file with a scalar integer param changed"""
         output_path = os.path.join(self.tempdir, "output.nc")

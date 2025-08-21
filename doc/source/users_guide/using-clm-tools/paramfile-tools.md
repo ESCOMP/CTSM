@@ -47,9 +47,14 @@ For more information, do `tools/param_utils/set_paramfile --help`.
 
 ### Example usage
 
-Change a parameter for all PFTs:
+Change a scalar parameter:
 ```bash
 tools/param_utils/set_paramfile -i paramfile.nc -o output.nc jmaxha=51000
+```
+
+Change a one-dimensional parameter (`mimics_fmet` has the `segment` dimension, length 4):
+```bash
+tools/param_utils/set_paramfile -i paramfile.nc -o output.nc mimics_fmet=0.1,0.2,0.3,0.4
 ```
 
 Change a parameter for specific PFTs:
