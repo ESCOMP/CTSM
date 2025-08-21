@@ -1,1 +1,3 @@
+for_testing_bypass_init = .true.
+for_testing_bypass_run = .true.
 for_testing_run_ncdiopio_tests = .true.
