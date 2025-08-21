@@ -9,6 +9,7 @@ module SelfTestDriver
   use clm_varctl, only : for_testing_run_ncdiopio_tests
   use decompMod, only : bounds_type
   use TestNcdioPio, only : test_ncdio_pio
+  use abortutils, only : endrun
 
   implicit none
   private
