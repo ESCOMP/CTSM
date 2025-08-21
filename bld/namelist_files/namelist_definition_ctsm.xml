@@ -1242,6 +1242,22 @@ Whether to use subgrid fluxes for snow
 Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist items for doing specific things for testing                                      -->
+<!-- for_testing section:                                                                      -->
+<!-- ========================================================================================  -->
+
+<entry id="for_testing_bypass_init" type="logical" category="default_settings"
+       group="for_testing_options" >
+For testing whether to bypass the rest of the initiatlization after the self test driver is run
+</entry>
+
+<entry id="for_testing_bypass_run" type="logical" category="default_settings"
+       group="for_testing_options" >
+For testing whether to bypass most of the run phase other than the clock advance
+</entry>
+
+
 <entry id="for_testing_run_ncdiopio_tests" type="logical" category="default_settings"
        group="clm_inparm" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
