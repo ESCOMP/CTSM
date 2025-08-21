@@ -22,3 +22,4 @@ Using CLM tools
    creating-domain-files.rst
    observational-sites-datasets.rst
    cprnc.rst
+   paramfile-tools.md

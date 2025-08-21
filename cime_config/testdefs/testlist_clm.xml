@@ -4495,5 +4495,15 @@
     </options>
   </test>
 
+  <test name="SETPARAMFILE_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrujra" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="clm_pymods"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
 
 </testlist>
