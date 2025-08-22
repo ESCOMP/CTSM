@@ -1,4 +1,4 @@
-module test_endrun
+module test_abortutils
 
   ! Tests of abortutils
 
@@ -28,11 +28,11 @@ contains
     use GridcellType , only : grc
     class(TestAbortUtils), intent(inout) :: this
 
-    ! Setup a single gridcell with one vegetated patch
+    ! NOTE: Setup a single gridcell with one vegetated patch
     ! So there's only one: gridcell, landunit, column, patch
     ! This isn't needed for some tests, but doesn't hurt to do it
     call setup_single_veg_patch(pft_type=1)
-    ! Set lat and lon for this gridcell, so something is printed in the log
+    ! NOTE: Set lat and lon for this gridcell, so something is printed in the log
     grc%londeg(1) = 255.0
     grc%latdeg(1) = 30.0
   end subroutine setUp
@@ -104,10 +104,10 @@ contains
 
   @Test
   subroutine endrun_addmsg_pt_context_aborts(this)
+    ! Test pt_context operation of endrun with an additional message sent in
     use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
     use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod, only : subgrid_level_cohort
-    ! Test pt_context operation of endrun with an additional message sent in
     class(TestAbortUtils), intent(inout) :: this
     character(len=CL) :: msg = "test_message"
     character(len=CL) :: add_msg = "additional_test_message"
@@ -128,10 +128,10 @@ contains
 
   @Test
   subroutine endrun_nomsg_pt_context_bad_pt_aborts(this)
+    ! Test pt_context operation of endrun with an additional message sent in
     use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
     use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod, only : subgrid_level_cohort
-    ! Test pt_context operation of endrun with an additional message sent in
     class(TestAbortUtils), intent(inout) :: this
     integer :: p = 2, l
     integer, parameter :: nlevel = 6
@@ -155,7 +155,7 @@ contains
     character(len=CL) :: msg = "test_message"
     integer :: p = 1
 
-    ! Also test without an additional msg
+    ! NOTE: Also test without an additional msg
     call endrun(subgrid_index=p, subgrid_level=subgrid_level_lndgrid, msg=msg)
     @assertExceptionRaised(endrun_msg(msg))
 
@@ -167,7 +167,7 @@ contains
     class(TestAbortUtils), intent(inout) :: this
     integer :: p = 1
 
-    ! Also test without either msg or additional msg
+    ! NOTE: Also test without either msg or additional msg
     call endrun(subgrid_index=p, subgrid_level=subgrid_level_cohort)
     @assertExceptionRaised(endrun_msg(''))
 
@@ -180,7 +180,7 @@ contains
     integer :: p = 1
     character(len=CL) :: add_msg = "additional_test_message"
 
-    ! Don't use msg but do use additional_msg
+    ! NOTE: Don't use msg but do use additional_msg
     call endrun(subgrid_index=p, subgrid_level=subgrid_level_unspecified, additional_msg=add_msg)
     @assertExceptionRaised(endrun_msg(''))
 
@@ -197,4 +197,4 @@ contains
 
   end subroutine endrun_nomsg_pt_context_badlvl_aborts
 
-end module test_endrun
+end module test_abortutils

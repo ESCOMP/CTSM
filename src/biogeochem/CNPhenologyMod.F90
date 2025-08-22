@@ -3121,7 +3121,9 @@ contains
          tkil = (tbase - 6._r8) - 6._r8 * hdidx(p)
          if (tkil >= tcrown) then
             if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
-               write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
+               if (.not. generate_crop_gdds) then
+                  write (iulog,*)  'crop damaged by cold temperatures at p,c =', p,c
+               end if
             else if (tlai(p) > 0._r8) then
                ! slevis: kill if past phase1 by forcing through harvest
                ! srabin: do this with force_harvest instead of setting
@@ -3130,7 +3132,9 @@ contains
                !         on "maturity." This can occur when generate_crop_gdds
                !         is true.
                force_harvest = .true.
-               write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
+               if (.not. generate_crop_gdds) then
+                  write (iulog,*)  '95% of crop killed by cold temperatures at p,c =', p,c
+               end if
             end if
          end if
       end if

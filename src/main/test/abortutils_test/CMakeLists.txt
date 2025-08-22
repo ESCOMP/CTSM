@@ -1,5 +1,5 @@
 set(pfunit_sources
-  test_endrun.pf)
+  test_abortutils.pf)
 
 add_pfunit_ctest(endrun
   TEST_SOURCES "${pfunit_sources}"

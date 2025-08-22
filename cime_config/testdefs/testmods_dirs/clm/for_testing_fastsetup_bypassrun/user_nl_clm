@@ -1,5 +1,5 @@
-! Exit early and bypass the run phase
-for_testing_exit_after_self_tests = .true.
+! Bypass the run phase
+for_testing_bypass_run = .true.
 
 ! Turn off history, restarts, and output
 hist_empty_htapes = .true.

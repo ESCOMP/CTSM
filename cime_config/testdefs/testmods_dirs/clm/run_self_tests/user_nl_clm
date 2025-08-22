@@ -1,2 +1,5 @@
 for_testing_run_ncdiopio_tests = .true.
 for_testing_run_decomp_init_tests = .true.
+
+! Exit initialization phase after the self tests
+for_testing_bypass_init = .true.
