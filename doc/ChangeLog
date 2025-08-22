@@ -1,4 +1,89 @@
 ===============================================================
+Tag name: ctsm5.3.070
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri 22 Aug 2025 02:29:15 AM MDT
+One-line Summary: Update default FATES parameter file and add FATES managed fire namelist option
+
+Purpose and description of changes
+----------------------------------
+
+This updates the FATES tag and associated default parameter file.  The tag update includes a 
+new managed fire feature which is controlled by a new namelist option.  The majority of
+the parameter file updates are associated with this new feature, although there is also
+a smaller set of minor fixes and removal of depricated parameters.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+  Added a new option, use_fates_managed_fire
+
+Changes to tests or testing:
+  Added a new testmod to test use_fates_managed_fire.
+  Added a unit test associated to make sure SPITFIRE mode is enabled when managed fire option is on.
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - pASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, only for FATES testmods
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: For FATES landuse (LUH2) modes only
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+    
+    Answer changes are confined to FATES landuse only mode due to the
+    parameter file fix with FATES pull request 1412.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.84.0_api.40.0.0 -> sci.1.87.0_api.41.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3372
+https://github.com/NGEET/fates/pull/1444
+https://github.com/NGEET/fates/pull/1419
+https://github.com/NGEET/fates/pull/1412
+https://github.com/NGEET/fates/pull/1360
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.069
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Tue Aug 12 09:52:59 MDT 2025
