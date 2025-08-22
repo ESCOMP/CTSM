@@ -68,6 +68,8 @@ contains
     call test_decompInit_lnd_abort_on_too_big_clump_pproc()
     call write_to_log('test_decompInit_lnd_abort_when_npes_too_large')
     call test_decompInit_lnd_abort_when_npes_too_large()
+    call write_to_log('test_decompInit_lnd_abort_on_too_small_nsegspc')
+    call test_decompInit_lnd_abort_on_too_small_nsegspc()
 
     call clean
 
