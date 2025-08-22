@@ -1,5 +1,8 @@
+! Bypass as much of the init phase as can be done
+! Bypassing the run phase already was inherited from the for_testing_fastsetup_bypassrun testmod
 for_testing_bypass_init = .true.
-for_testing_bypass_run = .true.
+
+! Turn on some of the self tests
 for_testing_run_ncdiopio_tests = .true.
 
 ! Turn off history, restarts, and output
