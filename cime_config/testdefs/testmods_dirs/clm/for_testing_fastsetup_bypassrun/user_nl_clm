@@ -1,3 +1,6 @@
+! Skip the run phase
+for_testing_bypass_run = .true.
+
 ! Turn off history, restarts, and output
 hist_empty_htapes = .true.
 use_noio = .true.
