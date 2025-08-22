@@ -86,7 +86,9 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         self._run_Nyears = int(stop_n)
 
         # Only allow RXCROPMATURITY to be called with test cropMonthOutput
-        if casebaseid.split("-")[-1] != "cropMonthOutput" and not casebaseid.endswith("clm-cropMonthOutput--clm-h2a"):
+        if casebaseid.split("-")[-1] != "cropMonthOutput" and not casebaseid.endswith(
+            "clm-cropMonthOutput--clm-h2a"
+        ):
             error_message = (
                 "Only call RXCROPMATURITY with test cropMonthOutput "
                 + "to avoid potentially huge sets of daily outputs."
