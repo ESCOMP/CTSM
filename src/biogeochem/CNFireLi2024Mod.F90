@@ -522,7 +522,7 @@ contains
         ! avoid abm (crop fire peak month) regridding error from 0.05 degree to lower resolution
         ! The condition could be removed if CLM supports the use of mode in abm inputs regridding
         if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. patch%itype(p)  >  nc4_grass .and.  &
-             kmo == abm_lf(c) .and. cropf_col(c) * col%wtgcell(c) > 0.1_r8 .and. &
+             kmo == abm_lf(c) .and. &
              burndate(p) >= 999 .and. patch%wtcol(p)  >  0._r8 )then ! catch  crop burn time
 
            hdmlf = this%forc_hdm(g)
