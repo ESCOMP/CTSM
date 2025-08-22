@@ -1,4 +1,83 @@
 ===============================================================
+Tag name: ctsm5.3.071
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Aug 22 13:49:25 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3375: Enabling running an initialization test at mpasa3p75](https://github.com/ESCOMP/CTSM/issues/3375)
+- [Issue #3402: py_env_create and a test broken after Derecho updates to conda/mamba](https://github.com/ESCOMP/CTSM/issues/3402)
+- [Issue #3417: Use shr_abort_mod for endrun, and add optional arguments for file and line](https://github.com/ESCOMP/CTSM/issues/3417)
+- [Issue #3420: Don't have endrun abort on bad subgrid_level](https://github.com/ESCOMP/CTSM/issues/3420)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Docs added for new query_paramfile and set_paramfile tools.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New SETPARAMFILE SystemTest, one of which has been added to aux_clm and clm_pymods
+- Adds a test with resolution mpasa3p75_mpasa3p75_mt13 to new uhr_decomp_init suite (of which it's the only member)
+- run_self_tests testmod changed; replaced in some tests by new for_testing_fastsetup_bypassrun testmod.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3403: Fix py_env_create and tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3403)
+- [Pull Request #3390: Make npcropmin/max private to pftconMod by samsrabin](https://github.com/ESCOMP/CTSM/pull/3390)
+- [Pull Request #3418: Endrun work by ekluzek](https://github.com/ESCOMP/CTSM/pull/3418)
+- [Pull Request #3408: Logging improvements for GDD-generation workflow by samsrabin](https://github.com/ESCOMP/CTSM/pull/3408)
+- [Pull Request #3397: New tools: query_paramfile and set_paramfile by samsrabin](https://github.com/ESCOMP/CTSM/pull/3397)
+- [Pull Request #3413: Add a test for Mpasa3p75 by ekluzek](https://github.com/ESCOMP/CTSM/pull/3413)
+- [Pull Request #3431: b4b-dev merge 2025-08-22 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3431)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.070
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Fri 22 Aug 2025 02:29:15 AM MDT
