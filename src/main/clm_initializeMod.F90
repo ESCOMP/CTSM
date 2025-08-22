@@ -30,7 +30,7 @@ module clm_initializeMod
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
   use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
-  use SelfTestDriver        , only : self_test_driver
+  use SelfTestDriver        , only : self_test_driver, for_testing_bypass_init_after_self_tests
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
   !
@@ -67,6 +67,7 @@ contains
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod     , only: crop_repr_pools_init
     use HillslopeHydrologyMod, only: hillslope_properties_init
+    use SelfTestDriver       , only: self_test_readnml
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -103,6 +104,8 @@ contains
     call surfrd_compat_check(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
+
+    call self_test_readnml( NLFilename )
 
     ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
     ! number of patches per column.  We still use numcft from the surface
@@ -186,6 +189,7 @@ contains
     use FATESFireFactoryMod           , only : scalar_lightning
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
+    use SelfTestDriver                , only : for_testing_bypass_init_after_self_tests
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -479,6 +483,7 @@ contains
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
     end if
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     if (use_cn) then
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
@@ -521,6 +526,7 @@ contains
     ! checking to make sure you didn't try to change the history namelist on restart.
     if (nsrest == nsrContinue ) then
        call htapes_fieldlist()
+    end if
     end if
 
     ! Read restart/initial info
@@ -700,6 +706,7 @@ contains
        call hist_htapes_build()
     end if
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Initialize variables that are associated with accumulated fields.
     ! The following is called for both initial and restart runs and must
     ! must be called after the restart file is read
@@ -782,6 +789,7 @@ contains
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
+    end if
     end if
     
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through

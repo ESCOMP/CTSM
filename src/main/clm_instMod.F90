@@ -208,6 +208,7 @@ contains
     use HillslopeHydrologyMod              , only : SetHillslopeSoilThickness
     use initVerticalMod                    , only : setSoilLayerClass
     use DustEmisFactory                    , only : create_dust_emissions
+    use SelfTestDriver                     , only : for_testing_bypass_init_after_self_tests
     !
     ! !ARGUMENTS
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -270,7 +271,9 @@ contains
     call humanindex_inst%Init(bounds)
 
     ! Initialize urban time varying data
-    call urbantv_inst%Init(bounds, NLFilename)
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
+       call urbantv_inst%Init(bounds, NLFilename)
+    end if
 
     ! Initialize vertical data components
 
