@@ -995,7 +995,7 @@ How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
        group="clm_inparm" value=".false.">
    use_nvmovement = true use soil nitrogen vertical movement
    use_nvmovement = false do not use soil nitrogen vertical movement
-   use_nvmovement cannot be true while use_soil_matrixcn is true
+   use_nvmovement cannot be true while use_nitrif_denitrif is false
 </entry>
 
 <entry id="paramfile" type="char*512" category="datasets"
