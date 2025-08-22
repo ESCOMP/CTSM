@@ -74,7 +74,7 @@ module SoilNitrogenMovementMod
     real(r8) :: Ldis = 0.1_r8                                     ! dispersion length (m), Jury et al., 1991 
     real(r8) :: pcl1, pcl2, qflx1, qflx2, theta, thetasat, nerror 
     real(r8) :: Dw = 1.7e-9_r8                                    ! Molecular diffusivity of NO3- in water, m2/s 
-    real(r8) :: disp = 1.0_r8                                     ! dissolve percentage
+    real(r8) :: dissolve_frac = 1.0_r8                            ! dissolve fraction
     real(r8) :: afunc                                             ! A function in Patankar 1980, figure 5.6
     real(r8) :: pcl                                               ! Peclet number in Patankar 1980, foumula 5.18 
     real(r8) :: dz_node(1:nlevdecomp+1)                           ! difference between nodes
@@ -157,7 +157,7 @@ module SoilNitrogenMovementMod
              r_tri(c,j) = 0._r8
           elseif (swliq(c,j) == 0._r8 .or. j > col%nbedrock(c)) then
              ! extremely dry condition and layers beneath the bedrock, no aqueous transport of nitrate
-             conc_trcr(c,j) = disp * smin_no3_vr(c,j)
+             conc_trcr(c,j) = dissolve_frac * smin_no3_vr(c,j)
              a_tri(c,j) = 0._r8
              b_tri(c,j) = 1._r8
              c_tri(c,j) = 0._r8
@@ -165,7 +165,7 @@ module SoilNitrogenMovementMod
              swliq(c,j) = 1.0_r8      ! change swliq into 1 to be used in the update session below 
           elseif ( j == 1) then
              ! topmost soil layer, flux only interacts with the layer below it
-             conc_trcr(c,j) = disp * smin_no3_vr(c,j)/swliq(c,j)
+             conc_trcr(c,j) = dissolve_frac * smin_no3_vr(c,j)/swliq(c,j)
              qflx1 = qin(c,j) * mmh2o_to_m3h2o_per_m2  ! mm H2O/s to m3 H2O/m2/s
              qflx2 = qout(c,j) * mmh2o_to_m3h2o_per_m2
              pcl1 = qflx1*dz_node(j)/total_D(c,j)
@@ -184,7 +184,7 @@ module SoilNitrogenMovementMod
              r_tri(c,j) = conc_trcr(c,j)/dtime*swliq(c,j)*dzsoi_decomp(j)
           else
              ! Active layers from second one to bedrock-1,  concentration should be in gN/m3Water
-             conc_trcr(c,j) = disp * smin_no3_vr(c,j)/swliq(c,j)
+             conc_trcr(c,j) = dissolve_frac * smin_no3_vr(c,j)/swliq(c,j)
              qflx1 = qin(c,j) * mmh2o_to_m3h2o_per_m2  ! mm H2O/s to m3 H2O/m2/s
              qflx2 = qout(c,j) * mmh2o_to_m3h2o_per_m2
              pcl1 = qflx1*dz_node(j-1)/total_D(c,j-1)
@@ -216,7 +216,7 @@ module SoilNitrogenMovementMod
           c = filter_bgc_soilc(fc)
           smin_no3_leached_vr(c,j) = 0._r8
           mass_old(c) = mass_old(c) + smin_no3_vr(c,j)*dzsoi_decomp(j)
-          mass_new(c) = mass_new(c) + (smin_no3_vr(c,j)*(1._r8-disp) + conc_trcr(c,j)*swliq(c,j))*dzsoi_decomp(j) 
+          mass_new(c) = mass_new(c) + (smin_no3_vr(c,j) * (1._r8 - dissolve_frac) + conc_trcr(c,j) * swliq(c,j)) * dzsoi_decomp(j)
        end do 
     end do 
 
@@ -231,7 +231,7 @@ module SoilNitrogenMovementMod
     do j = 1, nlevdecomp 
        do fc = 1, num_bgc_soilc
           c = filter_bgc_soilc(fc)
-          smin_no3_vr(c,j) = smin_no3_vr(c,j) - smin_no3_vr(c,j)*disp + conc_trcr(c,j)*swliq(c,j)
+          smin_no3_vr(c,j) = smin_no3_vr(c,j) - smin_no3_vr(c,j) * dissolve_frac + conc_trcr(c,j) * swliq(c,j)
           ! Return this leaching flux back to smin_no3 pool, and update will be finished in CNNStateUpdate3Mod 
           if( j == col%nbedrock(c) ) then
             smin_no3_vr(c,j) = smin_no3_vr(c,j) + smin_no3_leached_vr(c,j)*dtime
