@@ -503,12 +503,12 @@ contains
     else
        single_column = .false.
     end if
-    if ( for_testing_exit_after_self_tests) then
+    !if ( for_testing_exit_after_self_tests) then
        ! *******************
        ! *** RETURN HERE ***
        ! *******************
-       RETURN
-    end if
+       !RETURN
+    !end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -788,9 +788,9 @@ contains
     if (single_column .and. .not. scol_valid) then
        RETURN
     end if
-    if (for_testing_exit_after_self_tests) then
-       RETURN
-    end if
+    !if (for_testing_exit_after_self_tests) then
+      ! RETURN
+    !end if
 
     !$  call omp_set_num_threads(nthrds)
 
@@ -1022,7 +1022,7 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
     if (.not. scol_valid) return
-    if (for_testing_exit_after_self_tests) return
+    !if (for_testing_exit_after_self_tests) return
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1335,9 +1335,9 @@ contains
     if (single_column .and. .not. scol_valid) then
        RETURN
     end if
-    if (for_testing_exit_after_self_tests) then
-       RETURN
-    end if
+    !if (for_testing_exit_after_self_tests) then
+       !RETURN
+    !end if
     ! The remander of this should be equivalent to the NUOPC internal routine
     ! from NUOPC_ModeBase.F90
 

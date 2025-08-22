@@ -257,11 +257,12 @@ contains
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
 
     ! CARMA volumetric soil water from land
+    call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
     if (send_to_atm) then
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_t          )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_tref       )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_qref       )
@@ -782,7 +783,6 @@ contains
     ! output to mediator
     ! -----------------------
 
-    if (send_to_atm) then
     call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), init_spval=.false., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -790,6 +790,7 @@ contains
     ! output to atm
     ! -----------------------
 
+    if (send_to_atm) then
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), &
             init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
