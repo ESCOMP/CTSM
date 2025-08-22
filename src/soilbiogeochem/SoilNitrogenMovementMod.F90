@@ -80,7 +80,7 @@ module SoilNitrogenMovementMod
     real(r8) :: dz_node(1:nlevdecomp+1)                           ! difference between nodes
     real(r8) :: mass_old(bounds%begc:bounds%endc)                 ! Temporal column mass, g/m2
     real(r8) :: mass_new(bounds%begc:bounds%endc)                 ! Temporal column mass, g/m2
-    real(r8) :: swliq(bounds%begc:bounds%endc,1:nlevdecomp)       ! volumetric liquid soil water [m3/m3], 1 for nonewater 
+    real(r8) :: swliq(bounds%begc:bounds%endc,1:nlevdecomp)       ! volumetric liquid soil water [m3/m3], hardwired to 1 for non-transport layers and layers below bedrock
     real(r8) :: total_D(bounds%begc:bounds%endc,1:nlevdecomp+1)   ! Total diffusivity
     real(r8) :: a_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)     ! "a" vector for tridiagonal matrix
     real(r8) :: b_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)     ! "b" vector for tridiagonal matrix
@@ -89,6 +89,10 @@ module SoilNitrogenMovementMod
     real(r8) :: conc_trcr(bounds%begc:bounds%endc,0:nlevdecomp+1) ! temporary for concentration, g/m3H2O
   
     ! set up the A function, table 5.2 in Patankar 1980 has multiple A function. 
+    ! Notes: According to Table 5.2, here we use the "Power Law" version of the function
+    !        A is a dimensionless coefficient described in equation 5.37 of Patankar (1980)
+    !        The same identical function appears in CLM's SoilBiogeochemLittVertTranspMod.F90 as aaa(pe)
+    !        Patankar (1980) is posted here: https://github.com/ESCOMP/CTSM/pull/2992#discussion_r2294809728
     afunc(pcl) = max(0._r8, ( 1._r8 - 0.1_r8 * abs(pcl) )**5 )
 
     associate(&
