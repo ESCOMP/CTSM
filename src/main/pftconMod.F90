@@ -2,8 +2,9 @@ module pftconMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module containing vegetation constants and method to
-  ! read and initialize vegetation (PFT) constants.
+  ! Module containing vegetation constants, methods to
+  ! read and initialize vegetation (PFT) constants, and methods to query
+  ! PFT characteristics
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
@@ -33,7 +34,6 @@ module pftconMod
   integer, public :: nc3_arctic_grass       ! value for C3 arctic grass
   integer, public :: nc3_nonarctic_grass    ! value for C3 non-arctic grass
   integer, public :: nc4_grass              ! value for C4 grass
-  integer, public :: npcropmin              ! value for first crop
   integer, public :: ntmp_corn              ! value for temperate corn, rain fed (rf)
   integer, public :: nirrig_tmp_corn        ! value for temperate corn, irrigated (ir)
   integer, public :: nswheat                ! value for spring temperate cereal (rf)
@@ -96,15 +96,21 @@ module pftconMod
   integer, public :: nirrig_trp_corn        !value for tropical corn (ir)
   integer, public :: ntrp_soybean           !value for tropical soybean (rf)
   integer, public :: nirrig_trp_soybean     !value for tropical soybean (ir)
-  integer, public :: npcropmax              ! value for last prognostic crop in list
   integer, public :: nc3crop                ! value for generic crop (rf)
   integer, public :: nc3irrig               ! value for irrigated generic crop (ir)
+
+  ! First and last prognostic crops
+  integer :: npcropmin              ! value for first crop
+  integer :: npcropmax              ! value for last prognostic crop in list
 
   ! Number of crop functional types actually used in the model. This includes each CFT for
   ! which is_pft_known_to_model is true. Note that this includes irrigated crops even if
   ! irrigation is turned off in this run: it just excludes crop types that aren't handled
   ! at all, as given by the mergetoclmpft list.
   integer, public :: num_cfts_known_to_model
+
+  ! Number of prognostic crop functional types on the parameter file, even if not actually used
+  integer, public :: num_cfts_possible
 
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
@@ -294,6 +300,7 @@ module pftconMod
      procedure, private :: InitRead
      procedure, private :: set_is_pft_known_to_model   ! Set is_pft_known_to_model based on mergetoclmpft
      procedure, private :: set_num_cfts_known_to_model ! Set the module-level variable, num_cfts_known_to_model
+     procedure, private :: set_num_cfts_possible ! Set the module-level variable, num_cfts_possible
 
   end type pftcon_type
 
@@ -315,6 +322,10 @@ module pftconMod
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
+
+  public :: is_prognostic_crop
+  public :: get_crop_n_from_veg_type
+  public :: get_veg_type_from_crop_n
   !-----------------------------------------------------------------------
 
 contains
@@ -1246,6 +1257,7 @@ contains
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
+    call this%set_num_cfts_possible()
 
     ! Set vegetation family identifier (tree/shrub/grass)
     do m = 0,mxpft 
@@ -1351,19 +1363,19 @@ contains
           else
              call endrun(msg=' ERROR: crop has wrong values'//errMsg(sourcefile, __LINE__))
           end if
-          if ( (i /= noveg) .and. (i < npcropmin) .and. &
+          if ( (i /= noveg) .and. (.not. is_prognostic_crop(i)) .and. &
                abs(this%pconv(i) + this%pprod10(i) + this%pprod100(i) - 1.0_r8) > 1.e-7_r8 )then
              call endrun(msg=' ERROR: pconv+pprod10+pprod100 do NOT sum to one.'//errMsg(sourcefile, __LINE__))
           end if
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
           end if
-          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+          if ((.not. is_prognostic_crop(i)) .and. this%biofuel_harvfrac(i) /= 0._r8) then
              call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
                   errMsg(sourcefile, __LINE__))
           end if
           do k = repr_structure_min, repr_structure_max
-             if (i < npcropmin .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
+             if ((.not. is_prognostic_crop(i)) .and. this%repr_structure_harvfrac(i,k) /= 0._r8) then
                 call endrun(msg=' ERROR: repr_structure_harvfrac non-zero for a non-prognostic crop PFT.'//&
                      errMsg(sourcefile, __LINE__))
              end if
@@ -1437,6 +1449,27 @@ contains
     end do
 
   end subroutine set_num_cfts_known_to_model
+
+  !-----------------------------------------------------------------------
+  subroutine set_num_cfts_possible(this)
+    !
+    ! !DESCRIPTION:
+    ! Set the module-level variable, num_cfts_possible
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(pftcon_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+    integer :: m
+
+    character(len=*), parameter :: subname = 'set_num_cfts_possible'
+    !-----------------------------------------------------------------------
+
+    num_cfts_possible = npcropmax - npcropmin + 1
+
+  end subroutine set_num_cfts_possible
 
   !-----------------------------------------------------------------------
   subroutine Clean(this)
@@ -1606,6 +1639,52 @@ contains
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
   end subroutine Clean
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_prognostic_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a prognostic crop. Does not
+    ! include generic crops (those and natural PFTs will return .false.).
+    !
+    ! NOTE: This isn't a completely robust way to check if this is a prognostic crop patch. At the
+    ! very least, it should also check if <= npcropmax. Ideally it would use a new prognostic_crop
+    ! flag on the parameter file iteself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_prognostic_crop = veg_type >= npcropmin
+
+  end function is_prognostic_crop
+
+  !-----------------------------------------------------------------------
+  elemental integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return a 1-indexed number indicating where it would
+    ! be in a list of all simulated crops.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    crop_n = veg_type - npcropmin + 1
+
+  end function get_crop_n_from_veg_type
+
+  !-----------------------------------------------------------------------
+  elemental integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a return a 1-indexed number indicating where a PFT would be in a list of all simulated
+    ! crops, return vegetation type (ivt)
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: crop_n
+
+    veg_type = npcropmin + crop_n - 1
+
+  end function get_veg_type_from_crop_n
 
 end module pftconMod
 

@@ -7,6 +7,7 @@ module dynFileMod
   !
   ! !USES:
   use shr_log_mod    , only : errMsg => shr_log_errMsg
+  use clm_varctl     , only : fname_len
   use dynTimeInfoMod , only : time_info_type, year_position_type
   use ncdio_pio      , only : file_desc_t, ncd_pio_openfile, ncd_inqdid, ncd_inqdlen, ncd_io
   use abortutils     , only : endrun
@@ -56,7 +57,7 @@ contains
     type(year_position_type) , intent(in) :: year_position
     !
     ! !LOCAL VARIABLES:
-    character(len=256) :: locfn      ! local file name
+    character(len=fname_len) :: locfn  ! local file name
     integer :: ier                   ! error code
     integer :: ntimes                ! number of time samples
     integer :: varid                 ! netcdf variable ID

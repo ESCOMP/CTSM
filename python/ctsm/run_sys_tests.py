@@ -749,6 +749,22 @@ def _check_py_env(test_attributes):
         except ModuleNotFoundError as err:
             raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
 
+    # Check requirements for using set_paramfile Python module, if needed
+    set_paramfile_users = ["SETPARAMFILE"]
+    if any(any(u in t for u in set_paramfile_users) for t in test_attributes):
+        try:
+            import ctsm.param_utils.set_paramfile
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("set_paramfile" + err_msg) from err
+
+    # Check requirements for using subset_data Python module, if needed
+    subset_data_users = ["SUBSETDATAPOINT", "SUBSETDATAREGION"]
+    if any(any(u in t for u in subset_data_users) for t in test_attributes):
+        try:
+            import ctsm.subset_data
+        except ModuleNotFoundError as err:
+            raise ModuleNotFoundError("subset_data" + err_msg) from err
+
     # Check requirements for RXCROPMATURITY, if needed
     if any("RXCROPMATURITY" in t for t in test_attributes):
         try:
