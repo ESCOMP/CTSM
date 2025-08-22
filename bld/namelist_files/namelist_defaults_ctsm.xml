@@ -2504,6 +2504,10 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 
 <init_interp_method>general</init_interp_method>
 
+<!-- Temporary for alpha-ctsm5.4.CMIP7 branch as of tag alpha-ctsm5.4.CMIP7.09.ctsm5.3.068
+     See issue https://github.com/ESCOMP/CTSM/issues/3363 about how to resolve this before finalizing ctsm5.4 -->
+<init_interp_fill_missing_urban_with_HD>.true.</init_interp_fill_missing_urban_with_HD>
+
 <!-- =========================================  -->
 <!-- Defaults for excess ice                    -->
 <!-- =========================================  -->
