@@ -7,7 +7,6 @@ and/or vegetation types and/or timesteps, concatenating by time.
 """
 
 import re
-import warnings
 import numpy as np
 import xarray as xr
 from ctsm.utils import is_instantaneous

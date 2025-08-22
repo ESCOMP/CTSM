@@ -2,10 +2,7 @@
 
 """Unit tests for grid_one_variable.py"""
 
-import tempfile
-import shutil
 import unittest
-import os
 import numpy as np
 import xarray as xr
 
