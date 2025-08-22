@@ -14,6 +14,7 @@
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
+        uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -4164,7 +4165,28 @@
   </test>
 
   <!-- decomp_init tests -->
-  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="izumi" compiler="nag" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">mpi-serial self tests with DEBUG</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ln1" grid="f10_f10_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="gnu" category="decomp_init"/>
+      <machine name="izumi" compiler="nag" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Self tests with DEBUG on for f10</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4173,7 +4195,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4182,7 +4204,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4191,7 +4213,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Small" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4200,13 +4222,22 @@
       <option name="comment">Initialization test for ne120pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
       <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+    <machines>
+      <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:15:00</option>
+      <option name="comment">Initialization test for mpasa3p75 default layout</option>
     </options>
   </test>
 
@@ -4489,6 +4520,16 @@
   <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
     <machines>
       <machine name="derecho" compiler="gnu" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SETPARAMFILE_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrujra" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="clm_pymods"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
