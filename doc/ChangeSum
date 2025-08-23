@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.071 samrabin 08/22/2025 Merge b4b-dev to master
        ctsm5.3.070 glemieux 08/22/2025 Update default FATES parameter file and add FATES managed fire namelist option
        ctsm5.3.069 samrabin 08/12/2025 Add SystemTests to run subset_data and then CTSM
        ctsm5.3.068   slevis 08/11/2025 Change megan_use_gamma_sm to default false
