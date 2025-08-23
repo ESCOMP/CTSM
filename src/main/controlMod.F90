@@ -258,7 +258,8 @@ contains
           use_fates_tree_damage,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
-          fates_history_dimlevel
+          fates_history_dimlevel,                       &
+          use_fates_managed_fire
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -848,6 +849,7 @@ contains
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (use_fates_managed_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -1263,6 +1265,7 @@ contains
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
+       write(iulog, *) '    use_fates_managed_fire= ', use_fates_managed_fire
     end if
   end subroutine control_print
 
