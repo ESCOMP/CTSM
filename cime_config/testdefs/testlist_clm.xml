@@ -4329,6 +4329,17 @@
     </options>
   </test>
 
+  <test name="RXCROPMATURITY_Lm61" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/h2a">
+    <machines>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">6:00:00</option>
+      <option name="comment">This test is a copy of the 10x15 RXCROPMATURITY_Lm61 test but with the h2a testmod added. This allows us to test the GDD-generating Python scripts using time-averaged outputs of certain variables that we prefer instantaneous values of. We could theoretically just have the scripts fail if those outputs aren't instantaneous, but (a) it doesn't make that much of a difference and (b) it would be annoying to have to redo the long GDD-generating runs just for this.</option>
+    </options>
+  </test>
+
   <test name="RXCROPMATURITYSKIPGEN_Ld1097" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
