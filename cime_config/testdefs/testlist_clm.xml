@@ -1457,9 +1457,12 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
+      <!-- Add to the decomp_init testlist so a standard test is run there -->
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">A standard DEBUG exact restart test with threading on and ensuring answers don't change on restarts with a processor count change (ERP)</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
