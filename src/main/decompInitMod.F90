@@ -83,9 +83,15 @@ contains
 
     lns = lni * lnj
 
+    nclumps = -1
+    numg = -1
+
+    ! Do some error checking and also set nclumps and numg
     call decompInit_lnd_check_errors()
 
     call decompInit_lnd_allocate()
+    call get_proc_bounds(bounds)
+    call decompInit_lnd_gindex_global_allocate( bounds )
 
     call memcheck('decompInit_lnd: after allocate')
 
@@ -291,6 +297,10 @@ contains
             call endrun(msg='allocation error for procinfo%cid', file=sourcefile, line=__LINE__)
             return
          endif
+         if ( nclumps < 1 )then
+            call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
          allocate(clumps(nclumps), stat=ier)
          if (ier /= 0) then
             write(iulog,*) 'allocation error for clumps: nclumps=', nclumps
@@ -298,14 +308,21 @@ contains
             return
          end if
 
+         if ( numg < 1 )then
+            call endrun(msg="numg is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
          allocate(gdc2glo(numg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error1 for gdc2glo , etc", file=sourcefile, line=__LINE__)
             return
          end if
-         allocate(gindex_global(1:bounds%endg))
 
          ! Temporary arrays that are just used in decompInit_lnd
+         if ( lns < 1 )then
+            call endrun(msg="lns is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
          allocate(lcid(lns))
          allocate(clumpcnt(nclumps),stat=ier)
          if (ier /= 0) then
@@ -314,6 +331,15 @@ contains
          end if
 
       end subroutine decompInit_lnd_allocate
+
+      subroutine decompInit_lnd_gindex_global_allocate( bounds )
+         type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
+         if ( bounds%endg < 1 )then
+            call endrun(msg="endg is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
+         allocate(gindex_global(1:bounds%endg))
+      end subroutine decompInit_lnd_gindex_global_allocate
 
       subroutine decompInit_lnd_clean()
          ! Deallocate the temporary variables used in decompInit_lnd
