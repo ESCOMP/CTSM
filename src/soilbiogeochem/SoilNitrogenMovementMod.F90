@@ -71,19 +71,19 @@ module SoilNitrogenMovementMod
     integer  :: jtop(bounds%begc:bounds%endc)                     ! top level at each column
     real(r8) :: dtime                                             ! land model time step (sec)
     real(r8) :: wafc, wafc2                                       ! Fraction of water that is liquid by mass
-    real(r8) :: Ldis = 0.1_r8                                     ! dispersion length (m), Jury et al., 1991 
+    real(r8) :: dispersion_length = 0.1_r8                        ! dispersion length (m), Jury et al., 1991
     real(r8) :: theta, thetasat                                   ! soil water and soil water at the saturation level
     real(r8) :: no3_diffusivity_in_water = 1.7e-9_r8              ! Molecular diffusivity of NO3- in water, m2/s
     real(r8) :: dissolve_frac = 1.0_r8                            ! dissolve fraction
-    real(r8) :: afunc                                             ! A function in Patankar 1980, figure 5.6
-    real(r8) :: pcl                                               ! Peclet number in Patankar 1980, foumula 5.18 
-    real(r8) :: pcl_in, pcl_out                                   ! temporary Peclet numbers
+    real(r8) :: flux_component_gridpoint_ahead                    ! A function in Patankar 1980, figure 5.6
+    real(r8) :: peclet_num                                        ! Peclet number in Patankar 1980, foumula 5.18
+    real(r8) :: peclet_num_in, peclet_num_out                     ! temporary Peclet numbers
     real(r8) :: qflx_in, qflx_out                                 ! water fluxes same as qin, qout but in m3 H2O/m2/s
     real(r8) :: dz_node(1:nlevdecomp+1)                           ! difference between nodes
     real(r8) :: mass_old(bounds%begc:bounds%endc)                 ! Temporal column mass, g/m2
     real(r8) :: mass_new(bounds%begc:bounds%endc)                 ! Temporal column mass, g/m2
     real(r8) :: swliq(bounds%begc:bounds%endc,1:nlevdecomp)       ! volumetric liquid soil water [m3/m3], hardwired to 1 for non-transport layers and layers below bedrock
-    real(r8) :: total_D(bounds%begc:bounds%endc,1:nlevdecomp+1)   ! Total diffusivity
+    real(r8) :: total_diffusivity(bounds%begc:bounds%endc,1:nlevdecomp+1)  ! Total diffusivity
     real(r8) :: a_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)     ! "a" vector for tridiagonal matrix
     real(r8) :: b_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)     ! "b" vector for tridiagonal matrix
     real(r8) :: c_tri(bounds%begc:bounds%endc,0:nlevdecomp+1)     ! "c" vector for tridiagonal matrix
@@ -95,7 +95,7 @@ module SoilNitrogenMovementMod
     !        A is a dimensionless coefficient described in equation 5.37 of Patankar (1980)
     !        The same identical function appears in CLM's SoilBiogeochemLittVertTranspMod.F90 as aaa(pe)
     !        Patankar (1980) is posted here: https://github.com/ESCOMP/CTSM/pull/2992#discussion_r2294809728
-    afunc(pcl) = max(0._r8, ( 1._r8 - 0.1_r8 * abs(pcl) )**5 )
+    flux_component_gridpoint_ahead(peclet_num) = max(0._r8, ( 1._r8 - 0.1_r8 * abs(peclet_num) )**5 )
 
     associate(&
          h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col                       , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -133,11 +133,11 @@ module SoilNitrogenMovementMod
                 thetasat = watsat(c,j) + dzsoi_decomp(j)/2 * (watsat(c,j+1) - watsat(c,j))/dz_node(j)
              end if
              ! here we refer the j as the interface of j + zj/2 
-             total_D(c,j) = theta * (no3_diffusivity_in_water * theta**(7/3) * thetasat**(-2))
-             total_D(c,j) = total_D(c,j) + Ldis * mmh2o_to_m3h2o_per_m2 * abs(qout(c,j))
+             total_diffusivity(c,j) = theta * (no3_diffusivity_in_water * theta**(7/3) * thetasat**(-2))
+             total_diffusivity(c,j) = total_diffusivity(c,j) + dispersion_length * mmh2o_to_m3h2o_per_m2 * abs(qout(c,j))
           else
              !no gradient for the last layer
-             total_D(c,j) = total_D(c,j-1) 
+             total_diffusivity(c,j) = total_diffusivity(c,j-1)
           end if
        end do ! Loop for columns 
     end do ! Loop for depths    
@@ -169,10 +169,10 @@ module SoilNitrogenMovementMod
              ! topmost soil layer, flux only interacts with the layer below it
              conc_trcr(c,j) = dissolve_frac * smin_no3_vr(c,j)/swliq(c,j)
              qflx_out = qout(c,j) * mmh2o_to_m3h2o_per_m2
-             pcl_out = qflx_out * dz_node(j) / total_D(c,j)
+             peclet_num_out = qflx_out * dz_node(j) / total_diffusivity(c,j)
              a_tri(c,j) = 0._r8
-             c_tri(c,j) = -total_D(c,j) / dz_node(j) * afunc(pcl_out) - max(-qflx_out, 0._r8)
-             b_tri(c,j) = total_D(c,j) / dz_node(j) * afunc(pcl_out) + max(qflx_out, 0._r8) + swliq(c,j) / dtime * dzsoi_decomp(j)
+             c_tri(c,j) = -total_diffusivity(c,j) / dz_node(j) * flux_component_gridpoint_ahead(peclet_num_out) - max(-qflx_out, 0._r8)
+             b_tri(c,j) = total_diffusivity(c,j) / dz_node(j) * flux_component_gridpoint_ahead(peclet_num_out) + max(qflx_out, 0._r8) + swliq(c,j) / dtime * dzsoi_decomp(j)
              r_tri(c,j) = conc_trcr(c,j)/dtime*swliq(c,j)*dzsoi_decomp(j)
           elseif ( j == col%nbedrock(c)) then
              ! Assume the bottom layer concentration is always zero
@@ -187,12 +187,12 @@ module SoilNitrogenMovementMod
              conc_trcr(c,j) = dissolve_frac * smin_no3_vr(c,j)/swliq(c,j)
              qflx_in = qin(c,j) * mmh2o_to_m3h2o_per_m2  ! mm H2O/s to m3 H2O/m2/s
              qflx_out = qout(c,j) * mmh2o_to_m3h2o_per_m2
-             pcl_in = qflx_in * dz_node(j-1) / total_D(c,j-1)
-             pcl_out = qflx_out * dz_node(j) / total_D(c,j)
-             a_tri(c,j) = -total_D(c,j-1) / dz_node(j-1) * afunc(pcl_in) - max(qflx_in, 0._r8)
-             c_tri(c,j) = -total_D(c,j) / dz_node(j) * afunc(pcl_out) - max(-qflx_out, 0._r8)
-             b_tri(c,j) = total_D(c,j-1) / dz_node(j-1) * afunc(pcl_in) + max(-qflx_in, 0._r8) + &
-                          total_D(c,j) / dz_node(j) * afunc(pcl_out) + max(qflx_out, 0._r8) + swliq(c,j) / dtime * dzsoi_decomp(j)
+             peclet_num_in = qflx_in * dz_node(j-1) / total_diffusivity(c,j-1)
+             peclet_num_out = qflx_out * dz_node(j) / total_diffusivity(c,j)
+             a_tri(c,j) = -total_diffusivity(c,j-1) / dz_node(j-1) * flux_component_gridpoint_ahead(peclet_num_in) - max(qflx_in, 0._r8)
+             c_tri(c,j) = -total_diffusivity(c,j) / dz_node(j) * flux_component_gridpoint_ahead(peclet_num_out) - max(-qflx_out, 0._r8)
+             b_tri(c,j) = total_diffusivity(c,j-1) / dz_node(j-1) * flux_component_gridpoint_ahead(peclet_num_in) + max(-qflx_in, 0._r8) + &
+                          total_diffusivity(c,j) / dz_node(j) * flux_component_gridpoint_ahead(peclet_num_out) + max(qflx_out, 0._r8) + swliq(c,j) / dtime * dzsoi_decomp(j)
              r_tri(c,j) = conc_trcr(c,j)/dtime*swliq(c,j)*dzsoi_decomp(j) 
           end if
        end do ! Loop for columns 
