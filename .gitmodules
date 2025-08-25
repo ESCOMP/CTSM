@@ -84,7 +84,7 @@ fxDONOTUSEurl = https://github.com/NorESMhub/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/NorESMhub/CMEPS.git
-fxtag = cmeps1.0.39_noresm_v4
+fxtag = cmeps1.0.39_noresm_v6
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NorESMhub/CMEPS.git
