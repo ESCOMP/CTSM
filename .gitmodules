@@ -106,7 +106,7 @@ path = share
 url = https://github.com/ekluzek/CESM_share
 #fxtag = share1.1.9
 #fxtag = add_jdennis_procstatus_module
-fxtag = 9973692556da54f9562935be43c1d43b0607d24b
+fxtag = 1a871cad0a90f8a361196f045313cca1919c7cbc
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
