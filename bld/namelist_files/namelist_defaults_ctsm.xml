@@ -2431,6 +2431,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_lch4                                      >.true.</use_lch4>
 <use_nitrif_denitrif soil_decomp_method="None" >.false.</use_nitrif_denitrif>
 <use_nitrif_denitrif                           >.true.</use_nitrif_denitrif>
+<use_nvmovement >.false.</use_nvmovement>
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_electron_transport_model use_fates=".true.">FvCB1980</fates_electron_transport_model>
