@@ -1,13 +1,14 @@
 ===============================================================
 Tag name: ctsm5.3.072
 Originator(s): jinmuluo (Jinmu Luo, Cornell University)
-Date: Mon 25 Aug 2025 11:04:53 AM MDT
+Date: Tue 26 Aug 2025 02:53:26 PM MDT
 One-line Summary: New vertical movement scheme for soil nitrate
 
 Purpose and description of changes
 ----------------------------------
 
- This tag introduces a new vertical movement scheme for soil nitrate but sets its use to .false. by default. Details about the new scheme in the PR #2992.
+ Introducing a vertical movement scheme for soil nitrate but setting its use to .false. by default.
+ Details about the new scheme in the PR #2992.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -56,25 +57,15 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - PASS with all commits up to and including 1cf9859
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi -------
-
-  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
-
-  ctsm_sci
-     derecho ----
+    izumi ------- OK
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: No
 
 Other details
