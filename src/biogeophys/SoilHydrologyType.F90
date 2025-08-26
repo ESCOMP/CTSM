@@ -51,8 +51,8 @@ Module SoilHydrologyType
      real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
      real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
-     real(r8), pointer :: qout_col          (:,:)   ! flux of water out of soil layer [mm h2o/s]
-     real(r8), pointer :: qin_col           (:,:)   ! flux of water into soil layer [mm h2o/s] 
+     real(r8), pointer :: qout_col          (:,:)   ! flux of water out of soil layer [mm H2O/s]
+     real(r8), pointer :: qin_col           (:,:)   ! flux of water into soil layer [mm H2O/s]
 
    contains
 
@@ -197,14 +197,14 @@ contains
          ptr_col=this%zwt_perched_col, l2g_scale_type='veg')
 
     this%qout_col(begc:endc, :) = spval
-    call hist_addfld2d (fname="QOUT", units='mm h2o/s',  type2d='levsoi', &
+    call hist_addfld2d (fname="QOUT", units='mm H2O/s',  type2d='levsoi', &
          avgflag='A', long_name='flux of water out of soil layer', &
-         ptr_col=this%qout_col)
+         ptr_col=this%qout_col, default='inactive')
 
     this%qin_col(begc:endc, :) = spval
-    call hist_addfld2d (fname="QIN", units='mm h2o/s',  type2d='levsoi', &
-         avgflag='A', long_name='flux of water into of soil layer', &
-         ptr_col=this%qin_col)
+    call hist_addfld2d (fname="QIN", units='mm H2O/s',  type2d='levsoi', &
+         avgflag='A', long_name='flux of water into soil layer', &
+         ptr_col=this%qin_col, default='inactive')
 
   end subroutine InitHistory
 
@@ -301,7 +301,6 @@ contains
     character(len=*)  , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 

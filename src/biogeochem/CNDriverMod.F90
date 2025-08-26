@@ -1078,7 +1078,7 @@ contains
        call t_stopf('SoilNitrogenMovementMod')
     end if
  
-    ! Mineral nitrogen dynamics (deposition, fixation, leaching[only if use_nvmoment=.false.])
+    ! Mineral nitrogen dynamics: deposition, fixation. If use_nvmoment  false, also leaching.
     
     call t_startf('SoilBiogeochemNLeaching')
     call SoilBiogeochemNLeaching(bounds, num_bgc_soilc, filter_bgc_soilc, &

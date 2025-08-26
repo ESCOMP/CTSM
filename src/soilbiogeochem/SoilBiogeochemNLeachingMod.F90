@@ -212,7 +212,8 @@ contains
                if (h2osoi_liq(c,j) > 0._r8) then
                   disn_conc = (sf_no3 * smin_no3_vr(c,j) * col%dz(c,j) )/(h2osoi_liq(c,j) )
                end if
-               ! Evaluating the leaching flux in SoilNitrogenMovementMod, if use_nvmovement is true 
+               ! Evaluating the leaching flux in this module, if use_nvmovement is not true
+               ! and in SoilNitrogenMovementMod if use_nvmovement is true
                if (.not. use_nvmovement) then
                   !
                   ! calculate the N leaching flux as a function of the dissolved
@@ -246,7 +247,8 @@ contains
                ! limit the flux to a positive value
                smin_no3_runoff_vr(c,j) = max(smin_no3_runoff_vr(c,j), 0._r8)
 
-               ! Evaluating the leaching flux in SoilNitrogenMovementMod, if use_nvmovement is true 
+               ! Evaluating the leaching flux in this module, if use_nvmovement is not true
+               ! and in SoilNitrogenMovementMod if use_nvmovement is true
                if (.not. use_nvmovement) then
                   ! limit the flux based on current smin_no3 state
                   ! only let at most the assumed soluble fraction

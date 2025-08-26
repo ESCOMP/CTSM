@@ -811,7 +811,8 @@ sub setup_cmdl_fates_mode {
                       "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel",
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                      "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
+                      "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
+		      "use_fates_managed_fire"
                    );
 
        # dis-allow fates specific namelist items with non-fates runs
@@ -1006,11 +1007,11 @@ sub setup_cmdl_bgc {
      $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
 
-  # Set use_nvmovement and check that it is not true at the same time as use_soil_matrixcn
+  # Set use_nvmovement
   $var = "use_nvmovement";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-  if ( &value_is_true($nl->get_value($var)) && &value_is_true($nl->get_value('use_soil_matrixcn')) ) {
-     $log->fatal_error("$var can only be on with use_soil_matrixcn = .false.");
+  if ( &value_is_true($nl->get_value($var)) && !&value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
+     $log->fatal_error("$var cannot be on with use_nitrif_denitrif = .false.");
   }
 } # end bgc
 
@@ -4768,12 +4769,13 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+        my @list  = (  "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
+                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
+		       "use_fates_managed_fire"
                     );
 
         foreach my $var ( @list ) {
@@ -4792,6 +4794,9 @@ sub setup_logic_fates {
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
+                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
 
         my $suplnitro = $nl->get_value('suplnitro');
@@ -4814,7 +4819,7 @@ sub setup_logic_fates {
            }
            # spit-fire can't be on with FATES SP mode is active
            if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
-                 $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
+                 $log->fatal_error("fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true");
            }
 
            # fates landuse can't be on with FATES SP mode is active
@@ -4925,6 +4930,16 @@ sub setup_logic_fates {
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               }
+           }
+        }
+
+        # Check use_fates_managed_fire mode is running with spitfire on
+        my $var = "use_fates_managed_fire";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) ) {
+              if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
+                 $log->fatal_error("fates_spitfire_mode must be non-zero when $var is true");
+	      }
            }
         }
     }
