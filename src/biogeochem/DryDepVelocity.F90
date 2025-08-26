@@ -699,7 +699,7 @@ CONTAINS
                      
                      !crops
                      if (clmveg == nc3crop .or. clmveg == nc3irrig ) ratio_stai_lai = 0.008_r8 
-                     if (clmveg >= npcropmin .and. clmveg <= npcropmax ) ratio_stai_lai = 0.008_r8 
+                     if (is_prognostic_crop(clmveg)) ratio_stai_lai = 0.008_r8
                      
                      crf_drydep(pi)=(exp(-11.6_r8*elai(pi)*ratio_stai_lai)+exp(-0.32_r8*elai(pi)))/2
                   endif !no veg 
