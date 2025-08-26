@@ -361,7 +361,7 @@ contains
 
                end do
 
-            else  ! not use_fates
+            else  ! not is_fates
 
                do j = 1, nlevdecomp
                   plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
@@ -593,6 +593,50 @@ contains
                endif
             end do
          end do
+
+         bgc_soilc_loop: do fc = 1, num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+
+            fates: if (col%is_fates(c)) then
+               ci = bounds%clump_index
+               s = clm_fates%f2hmap(ci)%hsites(c)
+               n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
+
+               ! Overwrite the column level demands, since fates plants are all sharing
+               ! the same space, in units per the same square meter, we just add demand
+               ! to scale up to column
+               plant_ndemand(c) = 0._r8
+
+               ! We fill the vertically resolved array to simplify some jointly used code
+               do j = 1, nlevdecomp
+                  plant_ndemand_vr(c,j) = 0._r8
+
+                  if (fates_parteh_mode == 2) then
+                     do f = 1, n_pcomp
+                        ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
+
+                        ! [gN/m3/s] = [gC/m3] * [gN/gC/s]
+                        plant_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + &
+                            clm_fates%fates(ci)%bc_out(s)%veg_rootc(f,j) * &
+                            (clm_fates%fates(ci)%bc_pconst%vmax_nh4(ft) + &
+                             clm_fates%fates(ci)%bc_pconst%vmax_no3(ft))
+                     end do
+                  end if
+
+                  ! [gN/m2/s]
+                  plant_ndemand(c) = plant_ndemand(c) + plant_ndemand_vr(c,j) * dzsoi_decomp(j)
+
+               end do
+
+            else  ! not is_fates
+
+               do j = 1, nlevdecomp
+                  plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
+               end do
+
+            end if fates
+
+         end do bgc_soilc_loop
 
          ! main column/vertical loop
          do j = 1, nlevdecomp  
