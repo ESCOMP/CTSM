@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.3.072
+Originator(s): jinmuluo (Jinmu Luo, Cornell University)
+Date: Tue 26 Aug 2025 02:53:26 PM MDT
+One-line Summary: New vertical movement scheme for soil nitrate
+
+Purpose and description of changes
+----------------------------------
+
+ Introducing a vertical movement scheme for soil nitrate but setting its use to .false. by default.
+ Details about the new scheme in the PR #2992.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ No corresponding github issue
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ use_nvmovement can be set by user
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ use_nvmovement defaults to .false.
+
+Changes to documentation:
+ Planned for Jinmu's NSF-NCAR visit this Fall
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New tests with nvmovement testmods, one with matrixcnOn and one with it off
+ ERP_D_Ld5.f10_f10_mg37.I1850Clm60BgcCrop.derecho_intel.clm-nvmovement--clm-matrixcnOn
+ ERP_D.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-decStart--clm-nvmovement
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS with all commits up to and including 1cf9859
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2992
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.071
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Aug 22 13:49:25 MDT 2025
