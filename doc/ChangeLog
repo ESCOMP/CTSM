@@ -1,14 +1,14 @@
 ===============================================================
 Tag name: ctsm5.3.073
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue 26 Aug 2025 03:20:16 PM MDT
+Date: Tue 26 Aug 2025 05:42:28 PM MDT
 One-line Summary: Update .gitmodules to cesm3_0_alpha07c
 
 Purpose and description of changes
 ----------------------------------
  Update ccs_config_cesm1.0.48 to ccs_config_cesm1.0.56.
  Update cime6.1.112 to cime6.1.113.
- Changes answers in gnu and nvhpc tests on derecho.
+ Changes answers in gnu and nvhpc tests on derecho (details below).
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -39,12 +39,12 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - 
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho ----- 
-    izumi ------- 
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
@@ -55,11 +55,15 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: gnu and nvhpc on derecho
     - nature of change: roundoff
 
+ Answers change due to the following:
+ ccs_config1.0.49 -- Moves the NVHPC compiler version back a bit on Derecho, which changes answers
+ ccs_config1.0.52 -- Updates the GNU compiler version on Derecho, which changes answers
+
 Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
- ccs_config_cesm1.0.48 --> ccs_config_cesm1.0.56.
- cime6.1.112 --> cime6.1.113.
+ ccs_config_cesm1.0.48 --> ccs_config_cesm1.0.56
+ cime6.1.112 --> cime6.1.113
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/3422
