@@ -231,8 +231,8 @@ contains
     call t_startf('clm_init2')
 
     call t_startf('clm_init2_part1')
-    ! Get processor bounds for gridcells
-    call get_proc_bounds(bounds_proc)
+    ! Get processor bounds for gridcells, just for gridcells
+    call get_proc_bounds(bounds_proc, allow_errors=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until adter decompInit_clumps
     begg = bounds_proc%begg; endg = bounds_proc%endg
 
     ! Initialize glc behavior
@@ -292,7 +292,7 @@ contains
 
     call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
-    call get_proc_bounds(bounds_proc)
+    call get_proc_bounds(bounds_proc)   ! This has to be done after decompInit_clumps is called
 
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells

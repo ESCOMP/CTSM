@@ -90,8 +90,6 @@ contains
     call decompInit_lnd_check_errors()
 
     call decompInit_lnd_allocate()
-    call get_proc_bounds(bounds)
-    call decompInit_lnd_gindex_global_allocate( bounds )
 
     call memcheck('decompInit_lnd: after allocate')
 
@@ -251,9 +249,11 @@ contains
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
+    call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds ) ! This HAS to be done after prcoinfo is finalized
+
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
-    call get_proc_bounds(bounds)
     do n = procinfo%begg,procinfo%endg
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
@@ -361,6 +361,13 @@ contains
       subroutine decompInit_lnd_check_errors()
          ! Do some general error checking on input options
 
+         if (nsegspc < 1) then
+            write(iulog,*) 'nsegspc bad = ',  nsegspc
+            call endrun(msg="Number of segments per clump (nsegspc) is less than 1 and can NOT be", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+
          !--- set and verify nclumps ---
          if (clump_pproc > 0) then
             nclumps = clump_pproc * npes
@@ -448,7 +455,7 @@ contains
     call t_startf('decompInit_clumps')
     call memcheck('decompInit_clumps: before alloc')
     !--- assign gridcells to clumps (and thus pes) ---
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, allow_errors=.true.)
     begg = bounds%begg; endg = bounds%endg
 
     allocate(allvecl(nclumps,5))   ! local  clumps [gcells,lunit,cols,patches,coh]

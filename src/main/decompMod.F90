@@ -266,10 +266,12 @@ contains
        call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( bounds%endCohort <= 0 )then
-       call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
-       return
-    end if
+    ! End Cohort isn't necessarily valid, so don't do this error check
+    !if ( bounds%endCohort <= 0 )then
+    !   write(iulog,*) 'endCohort = ', bounds%endCohort
+    !   call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+    !   return
+    !end if
 
     bounds%level = bounds_level_clump
     bounds%clump_index = n
@@ -277,13 +279,14 @@ contains
   end subroutine get_clump_bounds
 
   !------------------------------------------------------------------------------
-  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
+  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region, allow_errors)
     !
     ! !DESCRIPTION:
     ! Retrieve processor bounds
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(out) :: bounds ! processor bounds bounds
+    logical, intent(in), optional :: allow_errors ! Don't do the normal error checking
 
     ! Normally this routine will abort if it is called from within a threaded region,
     ! because in most cases you should be calling get_clump_bounds in that situation. If
@@ -322,6 +325,20 @@ contains
     bounds%begCohort = 1
     bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
 
+    bounds%level = bounds_level_proc
+    bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
+
+    ! Soem final error checking
+    ! Always check that gridcells are set
+    if ( bounds%endg <= 0 )then
+       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+
+    ! Exit before checking if errors should be allowed
+    if ( present(allow_errors) ) then
+      if ( allow_errors ) return
+    end if
     if ( bounds%endp <= 0 )then
        call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
        return
@@ -334,17 +351,11 @@ contains
        call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( bounds%endg <= 0 )then
-       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
-       return
-    end if
-    if ( bounds%endCohort <= 0 )then
-       call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
-       return
-    end if
-
-    bounds%level = bounds_level_proc
-    bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
+    ! End Cohort isn't necessarily valid, so don't do this error check
+    !if ( bounds%endCohort <= 0 )then
+       !call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+       !return
+    !end if
 
   end subroutine get_proc_bounds
 
