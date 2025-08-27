@@ -33,6 +33,15 @@ Changes for all physics versions:
 ### Heads up
 
 * History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details below and in the PRs [\#2445](https://github.com/ESCOMP/ctsm/pull/2445) [\#117](https://github.com/ESCOMP/MOSART/pull/117) [\#61](https://github.com/ESCOMP/RTM/pull/61) and the correspondng issues.
+* As of ctsm5.3.040, the new ctsm_pylib conda environment is incompatible with our tools from before ctsm5.3.040 and vice versa. If you have a ctsm_pylib conda environment installed from before ctsm5.3.040, keep that under a different name. We suggest the following command for doing this in a local copy of ctsm5.3.040 or later:
+
+./py_env_create -r ctsm_pylib_old
+
+This first renames your existing ctsm_pylib to ctsm_pylib_old and then installs the Python 3.13.2 version as ctsm_pylib. If you are unsure whether you already have ctsm_pylib installed, use the same command regardless, as it will skip the rename step if necessary.
+
+Information about additional py_env_create options — including how to install a fresh copy of the old conda environment — is available as follows:
+
+./py_env_create --help
 
 ##
 
