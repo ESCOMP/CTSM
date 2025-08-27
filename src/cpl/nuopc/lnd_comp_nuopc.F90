@@ -842,9 +842,13 @@ contains
     ! Unpack import state
     !--------------------------------
 
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
+    call t_startf ('lc_lnd_import')
     call import_fields( gcomp, bounds, glc_present, rof_prognostic, &
          atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_import')
+    end if
 
     !--------------------------------
     ! Run model
