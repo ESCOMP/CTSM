@@ -144,7 +144,9 @@ contains
     end if
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=ni, lnj=nj, amask=lndmask_glob)
+    call t_stopf ('decompInit_lnd')
 
     ! Determine ocn decomposition that will be used to create the full mesh
     ! note that the memory for gindex_ocn will be allocated in the following call
@@ -315,7 +317,9 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Determine decomp and ldomain
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=1, lnj=1, amask=(/1/))
+    call t_stopf ('decompInit_lnd')
 
     ! Initialize processor bounds
     call get_proc_bounds(bounds)
