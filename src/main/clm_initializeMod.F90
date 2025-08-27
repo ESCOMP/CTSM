@@ -625,9 +625,9 @@ contains
        call t_stopf('clm_init2_init_interp')
     end if
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     call t_startf('clm_init2_part5')
 
-    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
