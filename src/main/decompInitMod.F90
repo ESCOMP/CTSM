@@ -77,8 +77,6 @@ contains
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
-    call t_startf('decompInit_lnd')
-
     call memcheck('decompInit_lnd: before allocate')
 
     lns = lni * lnj
@@ -276,7 +274,6 @@ contains
        write(iulog,*)
     end if
     call shr_sys_flush(iulog)
-    call t_stopf('decompInit_lnd')
 
   !------------------------------------------------------------------------------
   ! Internal subroutines for this subroutine
