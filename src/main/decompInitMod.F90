@@ -87,9 +87,11 @@ contains
     numg = -1
 
     ! Do some error checking and also set nclumps and numg
-    call decompInit_lnd_check_errors()
+    call decompInit_lnd_check_errors( ier )
+    if (ier /= 0) return
 
-    call decompInit_lnd_allocate()
+    call decompInit_lnd_allocate( ier )
+    if (ier /= 0) return
 
     call memcheck('decompInit_lnd: after allocate')
 
@@ -250,7 +252,8 @@ contains
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
     call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
-    call decompInit_lnd_gindex_global_allocate( bounds ) ! This HAS to be done after prcoinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after prcoinfo is finalized
+    if (ier /= 0) return
 
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
@@ -281,8 +284,9 @@ contains
   !------------------------------------------------------------------------------
 
       !------------------------------------------------------------------------------
-      subroutine decompInit_lnd_allocate()
+      subroutine decompInit_lnd_allocate( ier )
          ! Allocate the temporary and long term variables set here
+         integer, intent(out) :: ier ! error code
 
          !
          ! Long-term:
@@ -303,7 +307,7 @@ contains
          end if
          allocate(clumps(nclumps), stat=ier)
          if (ier /= 0) then
-            write(iulog,*) 'allocation error for clumps: nclumps=', nclumps
+            write(iulog,*) 'allocation error for clumps: nclumps, ier=', nclumps, ier
             call endrun(msg='allocation error for clumps', file=sourcefile, line=__LINE__)
             return
          end if
@@ -332,9 +336,14 @@ contains
 
       end subroutine decompInit_lnd_allocate
 
-      subroutine decompInit_lnd_gindex_global_allocate( bounds )
+      subroutine decompInit_lnd_gindex_global_allocate( bounds, ier )
+         integer, intent(out) :: ier ! error code
+
          type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
+
+         ier = 0
          if ( bounds%endg < 1 )then
+            ier = 1
             call endrun(msg="endg is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
@@ -348,20 +357,13 @@ contains
          !deallocate(lcid)
       end subroutine decompInit_lnd_clean
 
-      subroutine decompMod_clean()
-         ! Deallocate the long-term variables created in decompInit_lnd
-         ! This should be moved to decompMod
-
-         deallocate(clumps)
-         deallocate(procinfo%cid)
-         deallocate(gindex_global)
-         nclumps = 0
-      end subroutine decompMod_clean
-
-      subroutine decompInit_lnd_check_errors()
+      subroutine decompInit_lnd_check_errors( ier )
          ! Do some general error checking on input options
+         integer, intent(out) :: ier ! error code
 
+         ier = 0
          if (nsegspc < 1) then
+            ier = 1
             write(iulog,*) 'nsegspc bad = ',  nsegspc
             call endrun(msg="Number of segments per clump (nsegspc) is less than 1 and can NOT be", &
                         file=sourcefile, line=__LINE__)
@@ -372,6 +374,7 @@ contains
          if (clump_pproc > 0) then
             nclumps = clump_pproc * npes
             if (nclumps < npes) then
+               ier = 1
                write(iulog,*) 'Number of gridcell clumps= ',nclumps, &
                      ' is less than the number of processes = ', npes
                call endrun(msg="Number of clumps exceeds number of processes", &
@@ -379,6 +382,7 @@ contains
                return
             end if
          else
+            ier = 1
             write(iulog,*) 'ERROR: Bad clump_pproc=', clump_pproc
             call endrun(msg='clump_pproc must be greater than 0', file=sourcefile, line=__LINE__)
             return
@@ -393,12 +397,14 @@ contains
          enddo
 
          if (npes > numg) then
+            ier = 1
             write(iulog,*) 'Number of processes > gridcells: npes=',npes,' num gridcells = ', numg
             call endrun(msg="Number of processes exceeds number of land grid cells", &
                         file=sourcefile, line=__LINE__)
             return
          end if
          if (nclumps > numg) then
+            ier = 1
             write(iulog,*) 'Number of clumps > gridcells nclumps = ', &
                            nclumps, ' num gridcells = ', numg
             call endrun(msg="Number of clumps exceeds number of land grid cells", &

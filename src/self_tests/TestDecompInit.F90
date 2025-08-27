@@ -26,6 +26,9 @@ module TestDecompInit
   integer, parameter :: ni = 10, nj = 5
   integer :: amask(ni*nj)
 
+  integer :: default_npes
+  integer :: default_clump_pproc
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -58,6 +61,8 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
+    default_npes = npes
+    default_clump_pproc = clump_pproc
     call write_to_log('start_test_decomp_init')
 
     call write_to_log('test_check_nclumps')
@@ -70,15 +75,27 @@ contains
     call test_decompInit_lnd_abort_when_npes_too_large()
     call write_to_log('test_decompInit_lnd_abort_on_too_small_nsegspc')
     call test_decompInit_lnd_abort_on_too_small_nsegspc()
-
-    call clean
+    call write_to_log('test_decompInit_lnd_check_sizes')
+    call test_decompInit_lnd_check_sizes()
 
   end subroutine test_decomp_init
+
+  !-----------------------------------------------------------------------
+  subroutine setup()
+     use clm_varctl, only : nsegspc
+
+     clump_pproc = default_clump_pproc
+     nsegspc = 20
+     npes = default_npes
+     amask(:) = 1 ! Set all to land
+
+  end subroutine setup
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_bad_clump_pproc()
      character(len=CX) :: expected_msg, actual_msg
 
+     call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      clump_pproc = 0
      call write_to_log('decompInit_lnd with clump_pproc=0 should abort')
@@ -91,12 +108,14 @@ contains
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
            msg='decompInit_lnd did not abort with clump_pproc=0' )
+     call clean()
   end subroutine test_decompInit_lnd_abort_on_bad_clump_pproc
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc()
      character(len=CX) :: expected_msg, actual_msg
 
+     call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
      clump_pproc = (ni * nj + 1) / npes
@@ -110,16 +129,39 @@ contains
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
            msg='decompInit_lnd did not abort with clump_pproc too large' )
-     call assert_equal( numg, ni*nj, msg='numg is not as expected' )
+     call clean()
   end subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc
+
+  !-----------------------------------------------------------------------
+  subroutine test_decompInit_lnd_check_sizes()
+     use decompMod, only : get_proc_bounds
+     type(bounds_type) :: bounds
+
+     integer :: expected_endg, expected_numg
+
+     call setup()
+     expected_numg = ni*nj
+     if ( expected_numg < npes )then
+        call endrun( msg="npes is too large for this test", file=sourcefile, line=__LINE__ )
+     end if
+     if ( modulo( expected_numg, npes ) /= 0 )then
+        call endrun( msg="npes does not evenly divide into numg so this test will not work", file=sourcefile, line=__LINE__ )
+     end if
+     expected_endg = ni*nj / npes
+     amask(:) = 1 ! Set all to land
+     call decompInit_lnd( ni, nj, amask )
+     call get_proc_bounds(bounds, allow_errors=.true.)
+     call assert_equal( bounds%begg, 1, msg='begg is not as expected' )
+     call assert_equal( bounds%endg, expected_endg, msg='endg is not as expected' )
+     call clean()
+  end subroutine test_decompInit_lnd_check_sizes
 
   !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_abort_when_npes_too_large()
      character(len=CX) :: expected_msg, actual_msg
-     integer :: npes_orig
 
+     call setup()
      ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
-     npes_orig = npes
      npes = ni*nj + 1
 
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
@@ -136,7 +178,8 @@ contains
            msg='decompInit_lnd did not abort with npes too large' )
 
      ! NOTE: Return npes to its original value
-     npes = npes_orig
+     npes = default_npes
+     call clean()
   end subroutine test_decompInit_lnd_abort_when_npes_too_large
 
   !-----------------------------------------------------------------------
@@ -144,30 +187,34 @@ contains
      use clm_varctl, only : nsegspc
      character(len=CX) :: expected_msg, actual_msg
 
+     call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
      nsegspc = 0
      call write_to_log('decompInit_lnd with nsegspc too small should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
-     expected_msg = 'nsegspc must be greater than 0'
+     expected_msg = 'Number of segments per clump (nsegspc) is less than 1 and can NOT be'
      actual_msg = get_last_endrun_msg()
      call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
            msg='decompInit_lnd did not abort with too nsegspc too small' )
+     call clean()
   end subroutine test_decompInit_lnd_abort_on_too_small_nsegspc
 
   !-----------------------------------------------------------------------
   subroutine test_check_nclumps()
     integer :: expected_nclumps
 
+    call setup()
     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
     expected_nclumps = npes / clump_pproc
     call assert_equal(expected=expected_nclumps, actual=nclumps, &
          msg='nclumps are not as expected')
     call endrun_init( .false. )
+    call clean()
   end subroutine test_check_nclumps
 
   !-----------------------------------------------------------------------
@@ -186,7 +233,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(*,'(a)') msg
+       write(iulog,'(a)') msg
        call shr_sys_flush(iulog)  ! Flush the I/O buffers always
     end if
 
@@ -196,12 +243,13 @@ contains
   subroutine clean
     !
     ! !DESCRIPTION:
-    ! Do end-of-testing cleanup
+    ! Do end-of-testing cleanup after each test
     !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
+    call decompmod_clean()
 
   end subroutine clean
 
