@@ -352,6 +352,7 @@ contains
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
+    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -690,10 +691,12 @@ contains
     !--------------------------------
     ! Create land export state
     !--------------------------------
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
     call get_proc_bounds(bounds)
     call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! Set scalars in export state
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
@@ -741,6 +744,7 @@ contains
     use clm_instMod , only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
     use decompMod   , only : bounds_type, get_proc_bounds
     use clm_driver  , only : clm_drv
+    use SelfTestDriver, only : for_testing_bypass_init_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -930,9 +934,13 @@ contains
     ! Pack export state
     !--------------------------------
 
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
+    call t_startf ('lc_lnd_export')
     call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_export')
+    end if
 
     !--------------------------------
     ! Advance ctsm time step
