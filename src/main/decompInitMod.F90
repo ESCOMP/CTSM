@@ -88,7 +88,16 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
-    ! allocate and initialize procinfo and clumps
+    ! Do some error checking and also set nclumps and numg
+    call decompInit_lnd_check_errors( ier )
+    if (ier /= 0) return
+
+    call decompInit_lnd_allocate( ier )
+    if (ier /= 0) return
+
+    call memcheck('decompInit_lnd: after allocate')
+
+    ! Initialize procinfo and clumps
     ! beg and end indices initialized for simple addition of cells later
 
     allocate(procinfo%cid(clump_pproc), stat=ier)
@@ -282,9 +291,12 @@ contains
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
+    call get_proc_bounds(bounds)    ! This has to be done after procinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after prcoinfo is finalized
+    if (ier /= 0) return
+
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
-    call get_proc_bounds(bounds)
     allocate(gindex_global(1:bounds%endg))
     do n = procinfo%begg,procinfo%endg
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
