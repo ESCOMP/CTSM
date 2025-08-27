@@ -243,7 +243,8 @@ contains
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
     call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
-    call decompInit_lnd_gindex_global_allocate( bounds ) ! This HAS to be done after prcoinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after prcoinfo is finalized
+    if (ier /= 0) return
 
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
