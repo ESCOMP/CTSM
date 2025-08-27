@@ -56,9 +56,14 @@ contains
     ! independent, though would prevent us from being able to have dependent tests the
     ! way we do here (where reads depend on earlier writes), for better or for worse.
     !
+    ! !USERS:
+    use clm_InstMod, only : glc_behavior
+    use decompInitMod, only : decompInit_clumps, decompInit_glcp
+    use domainMod, only : ldomain
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
+    integer, allocatable :: model_amask(:)
     !-----------------------------------------------------------------------
 
     default_npes = npes
@@ -77,6 +82,16 @@ contains
     call test_decompInit_lnd_abort_on_too_small_nsegspc()
     call write_to_log('test_decompInit_lnd_check_sizes')
     call test_decompInit_lnd_check_sizes()
+
+    !
+    ! Call the decompInit initialization series a last time so that decompMod data can still be used
+    !
+    allocate( model_amask(ldomain%ni*ldomain%nj) )
+    model_amask(:) = 1
+    call decompInit_lnd( ldomain%ni, ldomain%nj, model_amask )
+    call decompInit_clumps(ldomain%ni, ldomain%nj, glc_behavior)
+    call decompInit_glcp(ldomain%ni, ldomain%nj, glc_behavior)
+    deallocate( model_amask )
 
   end subroutine test_decomp_init
 
