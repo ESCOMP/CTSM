@@ -1,14 +1,17 @@
 ===============================================================
 Tag name: ctsm5.3.073
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue 26 Aug 2025 05:42:28 PM MDT
+Date: Thu 28 Aug 2025 01:10:16 PM MDT
 One-line Summary: Update .gitmodules to cesm3_0_alpha07c
 
 Purpose and description of changes
 ----------------------------------
  Update ccs_config_cesm1.0.48 to ccs_config_cesm1.0.56.
  Update cime6.1.112 to cime6.1.113.
- Changes answers in gnu and nvhpc tests on derecho (details below).
+ Answers change in gnu and nvhpc tests on derecho (details below).
+ New bugs found and reported in issues
+ #3453 FAIL MKSURFDATAESMF_...intel NLCOMP
+ #3454 FAIL SUBSETDATA* tests NLCOMP
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -30,7 +33,8 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- Resolves #3411
+ Resolves #3411 Update cime and ccs_config versions to those used in cesm3_0_alpha07c
+ Resolves #3180 nvhpc module setup problem in ctsm5.3.050 with ccs_config1.0.43
 
 Testing summary:
 ----------------
