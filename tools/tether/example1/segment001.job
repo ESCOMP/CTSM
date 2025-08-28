@@ -7,7 +7,8 @@
 #PBS -l select=1:ncpus=1
 # ---------------------------------------------------------
 
-tdir="../"
-$tdir"tether.sh" ./ commands.txt derecho.template
+tdir="/glade/work/djk2120/ctsm_tether/tools/tether/"
+wdir="/glade/work/djk2120/ctsm_tether/tools/tether/example1/"
+$tdir"tether.sh" $wdir commands.txt derecho.template
 
-#TDIR and WDIR would probably be better as absolute paths
+

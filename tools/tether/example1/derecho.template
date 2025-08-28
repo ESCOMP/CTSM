@@ -8,5 +8,5 @@
 #PBS -W depend=afterok:jobid
 # ---------------------------------------------------------
 
-tdir="../"
+tdir="/glade/work/djk2120/ctsm_tether/tools/tether/"
 $tdir"tether.sh" wdir commands template
