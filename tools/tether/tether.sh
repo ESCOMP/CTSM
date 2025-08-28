@@ -26,18 +26,6 @@ header () {
     echo "-----------------------------"
 }
 
-# updates logfile for a given command
-command_log () {
-    echo $line
-    echo "-----------------------------"
-    echo "with stdout:"
-    echo $OUT
-    echo "-----------------------------"
-    echo "and stderr:"
-    cat errFile
-    echo "-----------------------------"
-}
-
 main () {
     wdir=$1
     commands=$2
@@ -47,10 +35,11 @@ main () {
         prep_commands
         header
         while read -r line; do
-            OUT=$(command ${line} 2> errFile) #run command
-            command_log #log output
+	    echo $line #log command
+	    echo "-----------------------------"
+            command ${line} #run command
+	    echo "-----------------------------"
         done< $commands
-        rm errFile
 
 	#read case
 	case=$(<case.txt)

@@ -3,7 +3,6 @@
 #PBS -q develop
 #PBS -l walltime=1:00:00
 #PBS -A P93300041
-#PBS -j oe
 #PBS -k eod
 #PBS -l select=1:ncpus=1
 #PBS -W depend=afterok:jobid
