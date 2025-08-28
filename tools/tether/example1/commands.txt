@@ -1,0 +1,1 @@
+bash part1.sh

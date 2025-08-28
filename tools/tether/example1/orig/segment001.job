@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -N segment001
+#PBS -q develop
+#PBS -l walltime=1:00:00
+#PBS -A P93300041
+#PBS -j oe
+#PBS -k eod
+#PBS -l select=1:ncpus=1
+# ---------------------------------------------------------
+
+tdir="../"
+$tdir"tether.sh" example1 commands.txt derecho.template
