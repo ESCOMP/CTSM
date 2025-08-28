@@ -1,0 +1,30 @@
+# All about the character
+case: I1850Clm50Bgc.CPLHIST.pAD
+hist_dir: /glade/derecho/scratch/djk2120/archive/I1850Clm50Bgc.CPLHIST.pAD/lnd/hist
+cycle_years: 20
+thresholds:
+  TOTECOSYSC: 0.02
+  TOTVEGC: 0.02
+  GPP: 0.02
+  TLAI: 0.02
+  TEC_gridded: 1
+cfs:  
+  TOTECOSYSC: 1e-9
+  TOTVEGC: 1e-9
+  GPP:
+    - 1e-9
+    - 86400
+    - 365
+  TLAI: 1/lasum
+  TEC_gridded: 1
+units:  
+  TOTECOSYSC: PgC/yr
+  TOTVEGC: PgC/yr
+  GPP: PgC/yr
+  TLAI: m2/m2/yr
+  TEC_gridded: gC/m2/yr
+data_vars:
+  - TLAI
+  - GPP
+  - TOTECOSYSC
+  - TOTVEGC
