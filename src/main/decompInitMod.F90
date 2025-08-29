@@ -309,6 +309,7 @@ contains
             return
          end if
 
+         ! Temporary arrays that are just used in decompInit_lnd
          if ( numg < 1 )then
             call endrun(msg="numg is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
@@ -318,8 +319,6 @@ contains
             call endrun(msg="allocation error1 for gdc2glo , etc", file=sourcefile, line=__LINE__)
             return
          end if
-
-         ! Temporary arrays that are just used in decompInit_lnd
          if ( lns < 1 )then
             call endrun(msg="lns is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
