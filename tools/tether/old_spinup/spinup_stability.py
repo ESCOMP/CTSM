@@ -59,6 +59,56 @@ def get_ds(files,freq,dvs):
         ds=ds.isel(time=slice(1,len(ds.time)))
     return ds
 
+def plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,tpct,la,lasum):
+    plt.figure(figsize=[16,12])
+    for j,v in enumerate(xs):
+        plt.subplot(3,3,j+1)
+        if 'gridded' not in v:
+            for i in range(ncycles):
+                plt.plot(range(nyears),xs[v].isel(time=np.arange(nyears)+i*nyears),label='cycle_'+str(i).zfill(3))
+            plt.ylabel(v+' ['+units[v]+']')
+            if j==5:
+                plt.legend()
+            dstr=str(np.round(drifts[v],3))
+            tstr='drift='+dstr+units[v]+'/yr'
+            gl='><'
+            if v in thresholds:
+                tstr+=gl[int(equils[v])]
+                tstr+=str(thresholds[v])
+            else:
+                tstr+=' [not evaluated]'
+        else:
+            x=xs[v]
+            if v in thresholds:
+                thresh=thresholds[v]
+            else:
+                thresh=1
+            diseq=abs(x-x.shift(time=nyears))/nyears>thresh
+            pct=100*(la*diseq).sum(dim=['lat','lon'])/lasum
+            ix=np.arange(len(x.time))>=nyears
+            pct.where(ix).plot()
+            ystr=('abs($\Delta$'+v.split('_')[0]+')>'+
+                  str(thresh)+units[v]+'/yr'+'\n[% landarea]')
+            plt.ylabel(ystr)
+            plt.ylim([0,100])
+            plt.xlabel('')
+            dstr=str(np.round(drifts[v],1))
+            tstr=dstr+'%'
+            if v in equils:
+                tstr+=gl[int(equils[v])]
+                tstr+=str(tpct)
+            else:
+                tstr+=' [not evaluated]'
+        if v in equils:
+            if not equils[v]:
+                tstr='FAILED: '+tstr
+
+        plt.title(tstr)
+    plt.subplots_adjust(hspace=0.2,wspace=0.3)
+    plt.savefig(thiscase+'.png',dpi=300,bbox_inches='tight')
+
+
+
 def main():
 
     config = yaml.safe_load(open("config.yml"))
@@ -87,32 +137,64 @@ def main():
         y1=y2-nyears
         y0=y1-nyears
 
+        #abbrev dict
+        stocks={'TEC':'TOTECOSYSC',
+                'TSC':'TOTSOMC',
+                'TVC':'TOTVEGC'}
+        
         #evaluate global drifts
-        equils={}
         drifts={}
+        xs={}
         for v in cfs:
             cf=cfs[v]
-            if v=='TEC_gridded':
-                x=cf*ds.TOTECOSYSC
+            if 'gridded' in v:
+                vlong=stocks[v.split('_')[0]]
+                x=cf*ds[vlong]
             else:
                 x=cf*(la*ds[v]).sum(dim=['lat','lon'])
-
+            xs[v]=x
             drift=abs(x.isel(time=slice(y1,y2)).mean(dim='time')-
-                      x.isel(time=slice(y0,y1)).mean(dim='time'))/nyears
-                
-            if v=='TEC_gridded':
-                pct=100*(la*(drift>thresholds[v])).sum(dim=['lat','lon'])/lasum
-                pstr=str(np.round(pct.values,1))
+                      x.isel(time=slice(y0,y1)).mean(dim='time'))/nyears                
+            if 'gridded' in v:
+                if v in thresholds:
+                    thresh=thresholds[v]
+                else:
+                    thresh=1
+                pct=100*(la*(drift>thresh)).sum(dim=['lat','lon'])/lasum
                 drifts[v]=pct.values
-                equils[v]=pct.values<3
             else:
                 drifts[v]=drift.values
-                equils[v]=drift.values<thresholds[v]
 
+        equils={}
+        for v in thresholds:
+            if 'gridded' in v:
+                equils[v]=drifts[v]<config['pct_landarea']
+            else:
+                equils[v]=drifts[v]<thresholds[v]
 
-        
-        print(drifts)
-        
+        failed=False
+        fails=[]
+        for v in equils:
+            if 'gridded' in v:
+                print(v,drifts[v],config['pct_landarea'],equils[v])
+            else:
+                print(v,drifts[v],thresholds[v],equils[v])
+            if ~equils[v]:
+                failed=True
+                fails.append(v)
+        if failed:
+            print(("FATAL: Your simulation is not in equilibrium, "+
+                   "8 hours have been deducted from your PTO bank, try again"))
+        else:
+            print("Congratulations! Your simulation is in equilibrium")
+
+        if 'pct_landarea' in config:
+            pct=config['pct_landarea'];
+        else:
+            pct=np.nan
+        plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,
+                    pct,la,lasum)
+    sys.exit(int(failed))
 
 
 
