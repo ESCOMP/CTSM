@@ -829,14 +829,14 @@ contains
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
 
-    ! Get proc bounds
-    call get_proc_bounds(bounds)
-
     !--------------------------------
     ! Unpack import state
     !--------------------------------
 
     if ( .not. for_testing_bypass_init_after_self_tests() ) then
+    ! Get proc bounds for both import and export
+    call get_proc_bounds(bounds)
+
     call t_startf ('lc_lnd_import')
     call import_fields( gcomp, bounds, glc_present, rof_prognostic, &
          atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
