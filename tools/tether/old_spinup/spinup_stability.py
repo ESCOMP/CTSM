@@ -110,8 +110,8 @@ def plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,tpct,l
 
 
 def main():
-
-    config = yaml.safe_load(open("config.yml"))
+    cfile = sys.argv[1]
+    config = yaml.safe_load(open(cfile))
     thiscase = config['case']
     d = config['hist_dir']
     files = sorted(glob.glob(d+'/*.h0.*'))
@@ -194,7 +194,7 @@ def main():
             pct=np.nan
         plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,
                     pct,la,lasum)
-    sys.exit(int(failed))
+    sys.exit(11*int(failed))
 
 
 

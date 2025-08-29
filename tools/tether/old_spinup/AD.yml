@@ -1,6 +1,6 @@
 # detailing the spinup case and stability thresholds
-case: I1850Clm50Bgc.CPLHIST.pAD
-hist_dir: /glade/derecho/scratch/djk2120/archive/I1850Clm50Bgc.CPLHIST.pAD/lnd/hist
+case: I1850Clm50Bgc.CPLHIST.default.AD
+hist_dir: /glade/derecho/scratch/djk2120/archive/I1850Clm50Bgc.CPLHIST.default.AD/lnd/hist
 cycle_years: 20
 pct_landarea: 3
 thresholds:
@@ -9,6 +9,8 @@ thresholds:
   GPP: 0.02
   TLAI: 0.02
   TEC_gridded: 1
+  TVC_gridded: 1
+  TSC_gridded: 1
 cfs:  
   TOTECOSYSC: 1e-9
   TOTSOMC: 1e-9

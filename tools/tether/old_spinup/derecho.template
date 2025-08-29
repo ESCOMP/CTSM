@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -N jobname
+#PBS -q develop
+#PBS -l walltime=2:00:00
+#PBS -A P93300041
+#PBS -k eod
+#PBS -l select=1:ncpus=5
+#PBS -W depend=afterok:jobid
+# ---------------------------------------------------------
+
+source ~/.bashrc
+conda activate ppe-py
+tdir="/glade/work/djk2120/ctsm_tether/tools/tether/"
+$tdir"tether.sh" wdir commands template
