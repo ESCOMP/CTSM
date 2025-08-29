@@ -9,8 +9,9 @@ module TestDecompInit
   use Assertions, only : assert_equal
   use clm_varctl, only : iulog
   use abortutils, only : endrun, endrun_init, get_last_endrun_msg
-  use spmdMod, only : masterproc, npes
-  use decompInitMod, only : decompInit_lnd, clump_pproc
+  use spmdMod, only : masterproc, npes, iam
+  use decompInitMod, only : decompInit_lnd, clump_pproc, decompInit_clumps
+  use clm_InstMod, only : glc_behavior
   use decompMod
 
   implicit none
@@ -57,7 +58,6 @@ contains
     ! way we do here (where reads depend on earlier writes), for better or for worse.
     !
     ! !USERS:
-    use clm_InstMod, only : glc_behavior
     use decompInitMod, only : decompInit_clumps, decompInit_glcp
     use domainMod, only : ldomain
     ! !ARGUMENTS:
@@ -82,16 +82,21 @@ contains
     call test_decompInit_lnd_abort_on_too_small_nsegspc()
     call write_to_log('test_decompInit_lnd_check_sizes')
     call test_decompInit_lnd_check_sizes()
+    call write_to_log('test_decompInit_clump_gcell_info_correct')
+    call test_decompInit_clump_gcell_info_correct()
+    ! Comment out for now -- needs some work
+    !call write_to_log('test_decompMod_get_clump_bounds_correct')
+    !call test_decompMod_get_clump_bounds_correct()
 
     !
     ! Call the decompInit initialization series a last time so that decompMod data can still be used
     !
-    allocate( model_amask(ldomain%ni*ldomain%nj) )
-    model_amask(:) = 1
-    call decompInit_lnd( ldomain%ni, ldomain%nj, model_amask )
-    call decompInit_clumps(ldomain%ni, ldomain%nj, glc_behavior)
-    call decompInit_glcp(ldomain%ni, ldomain%nj, glc_behavior)
-    deallocate( model_amask )
+    !allocate( model_amask(ldomain%ni*ldomain%nj) )
+    !model_amask(:) = 1
+    !call decompInit_lnd( ldomain%ni, ldomain%nj, model_amask )
+    !call decompInit_clumps(ldomain%ni, ldomain%nj, glc_behavior)
+    !call decompInit_glcp(ldomain%ni, ldomain%nj, glc_behavior)
+    !deallocate( model_amask )
 
   end subroutine test_decomp_init
 
@@ -231,6 +236,84 @@ contains
     call endrun_init( .false. )
     call clean()
   end subroutine test_check_nclumps
+
+!-----------------------------------------------------------------------
+  subroutine test_decompMod_get_clump_bounds_correct()
+    ! Some testing for get_clump_bounds
+    use decompMod, only : get_clump_bounds, bounds_type
+    use unittestSimpleSubgridSetupsMod, only :  setup_ncells_single_veg_patch
+    use unittestSubgridMod, only : unittest_subgrid_teardown
+    use pftconMod, only : noveg
+    type(bounds_type) :: bounds
+    integer :: expected_begg, expected_endg, expected_numg, gcell_per_task
+    integer :: iclump
+
+    call setup()
+     ! Now setup a singple grid that's just the full test with every point a single baresoil patch
+     call setup_ncells_single_veg_patch( ncells=ni*nj, pft_type=noveg )
+    clump_pproc = 1  ! Ensure we are just doing this for one clump per proc for now
+    expected_numg = ni*nj
+    if ( expected_numg < npes )then
+       call endrun( msg="npes is too large for this test", file=sourcefile, line=__LINE__ )
+    end if
+    if ( modulo( expected_numg, npes ) /= 0 )then
+       call endrun( msg="npes does not evenly divide into numg so this test will not work", file=sourcefile, line=__LINE__ )
+    end if
+    gcell_per_task = expected_numg / npes
+    expected_begg = gcell_per_task * iam + 1
+    expected_endg = expected_begg + gcell_per_task
+    amask(:) = 1 ! Set all to land
+    call decompInit_lnd( ni, nj, amask )
+    call decompInit_clumps( ni, nj, glc_behavior )
+    iclump = 1 ! Clump is just 1 since there's only one clump per task
+    call get_clump_bounds(iclump, bounds)
+    call assert_equal( bounds%begg, expected_begg, msg='begg is not as expected' )
+    call assert_equal( bounds%endg, expected_endg, msg='endg is not as expected' )
+    ! Other subgrtid level information will be the same -- since there's only one landunit, column, and patch per gridcell
+    call assert_equal( bounds%begl, expected_begg, msg='begl is not as expected' )
+    call assert_equal( bounds%endl, expected_endg, msg='endl is not as expected' )
+    call assert_equal( bounds%begc, expected_begg, msg='begc is not as expected' )
+    call assert_equal( bounds%endc, expected_endg, msg='endc is not as expected' )
+    call assert_equal( bounds%begp, expected_begg, msg='begp is not as expected' )
+    call assert_equal( bounds%endp, expected_endg, msg='endp is not as expected' )
+    call unittest_subgrid_teardown( )
+    call clean()
+  end subroutine test_decompMod_get_clump_bounds_correct
+
+  !-----------------------------------------------------------------------
+  subroutine test_decompInit_clump_gcell_info_correct()
+    ! Some testing for get_clump_bounds
+    use decompMod, only : clumps
+    integer :: expected_gcells, iclump, g, beg_global_index, gcell_per_task
+    integer :: expected_begg, expected_endg
+
+    call setup()
+    expected_gcells = ni*nj
+    if ( expected_gcells < npes )then
+       call endrun( msg="npes is too large for this test", file=sourcefile, line=__LINE__ )
+    end if
+    if ( modulo( expected_gcells, npes ) /= 0 )then
+       call endrun( msg="npes does not evenly divide into gcell so this test will not work", file=sourcefile, line=__LINE__ )
+    end if
+    gcell_per_task = expected_gcells / npes
+    expected_begg = gcell_per_task * iam + 1
+    expected_endg = expected_begg + gcell_per_task
+    amask(:) = 1 ! Set all to land
+    call decompInit_lnd( ni, nj, amask )
+    ! When clump_pproc is one clumps will be the same as PE
+    call assert_equal( nclumps, npes, msg='nclumps should match numper of proces when clump_pproc is 1' )
+    do iclump = 1, nclumps
+       call assert_equal( clumps(iclump)%owner, iclump-1, msg='clumps owner is not correct' )
+       call assert_equal( clumps(iclump)%ncells, gcell_per_task, msg='clumps ncells is not correct' )
+    end do
+    ! Validate gindex_global over the local task
+
+    beg_global_index = gcell_per_task*iam
+    do g = procinfo%begg, procinfo%endg
+       call assert_equal( gindex_global(g), g+beg_global_index, msg='clumps owner is not correct' )
+    end do
+    call clean()
+  end subroutine test_decompInit_clump_gcell_info_correct
 
   !-----------------------------------------------------------------------
   subroutine write_to_log(msg)
