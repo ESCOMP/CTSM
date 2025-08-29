@@ -1267,7 +1267,7 @@ contains
 
        ! This is only relevant to  fates two stream to not break sun fraction calculations
        ! on the second timestep after start from finidat or for hybrid run.
-       if (use_fates .and. .not. use_fates_sp .and. fates_radiation_model == 'twostream') then
+       if (use_fates .and. fates_radiation_model == 'twostream') then
           if (.not. doalb .and. get_nstep() == 1) then
              if (.not. is_cold_start .and. nsrest == nsrStartup) then
                 call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
