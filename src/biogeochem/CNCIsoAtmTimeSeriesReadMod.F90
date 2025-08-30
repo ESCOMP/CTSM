@@ -27,7 +27,7 @@ module CIsoAtmTimeseriesMod
   character(len=256) , public :: atm_c14_filename = ' '       ! file name of C14 input data
   logical            , public :: use_c13_timeseries = .false. ! do we use time-varying atmospheric C13?
   character(len=256) , public :: atm_c13_filename = ' '       ! file name of C13 input data
-  integer, parameter , public :: nsectors_c14 = 3             ! Number of latitude sectors the C14 data has
+  integer, parameter , public :: nsectors_c14 = 4             ! Number of latitude sectors the C14 data has
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
