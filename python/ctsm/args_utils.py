@@ -46,3 +46,12 @@ def plon_type(plon):
             "ERROR: Longitude should be between 0 and 360 or -180 and 180."
         )
     return plon_float
+
+
+def comma_separated_list(value):
+    """
+    Helper function for argparse to split comma-separated strings into a list.
+    """
+    if value is None:
+        return None
+    return [v.strip() for v in value.split(",")]

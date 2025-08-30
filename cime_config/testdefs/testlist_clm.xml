@@ -13,7 +13,9 @@
         rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
         matrixcn: Tests exercising the matrix-CN capability
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
+        subset_data: Tests exercising the subset_data tool and running CTSM with its output
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
+        uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
 -->
 <testlist version="2.0">
@@ -3859,6 +3861,15 @@
       <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdManagedFire">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart test that turns on FATES managed fire on an f45 grid.</option>
+    </options>
+  </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdST3">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
@@ -4141,6 +4152,34 @@
     </options>
   </test>
 
+  <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial" grid="CLM_USRDAT" compset="I2000Clm60BgcCropCrujra" testmods="clm-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="intel" category="subset_data"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Smoke test that first runs the subset_data point tool and then ensures that CTSM does not fail using the just-generated user mods.</option>
+      <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
+    </options>
+  </test>
+
+  <test name="SUBSETDATAREGION_Ld5_D_Mmpi-serial" grid="CLM_USRDAT" compset="I2000Clm60BgcCropCrujra" testmods="clm-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="intel" category="subset_data"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Smoke test that first runs the subset_data regiontool and then ensures that CTSM does not fail using the just-generated user mods.</option>
+      <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
+    </options>
+  </test>
+
   <test name="LILACSMOKE_D_Ld2" grid="f10_f10_mg37" compset="I2000Ctsm50NwpSpAsRs" testmods="clm-lilac">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -4165,7 +4204,28 @@
   </test>
 
   <!-- decomp_init tests -->
-  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="izumi" compiler="nag" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">mpi-serial self tests with DEBUG</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ln1" grid="f10_f10_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+    <machines>
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="gnu" category="decomp_init"/>
+      <machine name="izumi" compiler="nag" category="decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:05:00</option>
+      <option name="comment">Self tests with DEBUG on for f10</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4174,7 +4234,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4183,7 +4243,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4192,7 +4252,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Small" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4201,13 +4261,22 @@
       <option name="comment">Initialization test for ne120pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
       <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+    <machines>
+      <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">0:15:00</option>
+      <option name="comment">Initialization test for mpasa3p75 default layout</option>
     </options>
   </test>
 
@@ -4490,6 +4559,16 @@
   <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
     <machines>
       <machine name="derecho" compiler="gnu" category="crop_calendars"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+
+  <test name="SETPARAMFILE_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrujra" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="clm_pymods"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
