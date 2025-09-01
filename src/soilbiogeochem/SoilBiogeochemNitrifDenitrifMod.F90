@@ -422,11 +422,12 @@ contains
             fr_WFPS(c,j) = max(0.1_r8, 0.015_r8 * wfps_vr(c,j) - 0.32_r8)
 
             if (use_soil_nox) then
-            ! final ratio expression  
-            !DAYCENT4.5 EQUATION modified n2_n2o_ratio_denit to be consistent with daycent code
+               ! final ratio expression
+               !DAYCENT4.5 EQUATION modified n2_n2o_ratio_denit to be consistent with daycent code
+               !Parton et al 2001 Equation 5 https://doi.org/10.1029/2001JD900101
                fno3_co2 = max(0.16_r8*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8_r8 * ratio_no3_co2(c,j)))
                n2_n2o_ratio_denit_vr(c,j) = max(0.1_r8,fno3_co2*fr_WFPS(c,j))
-
+               ! Dr from Zhao et al. (2017) Equation A2 https://doi.org/10.5194/acp-17-9781-2017
                afps_vr(c,j) = 1._r8-max(min(h2osoi_vol(c,j)/watsat(c,j), 1._r8), 0._r8)
                Dr = 0.209_r8*afps_vr(c,j)**(4._r8/3._r8)
                

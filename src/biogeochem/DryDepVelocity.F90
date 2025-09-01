@@ -261,7 +261,9 @@ CONTAINS
     !mvm 11/30/2013
     real(r8) :: rlu_lai      ! constant to calculate rlu over bulk canopy
     real(r8) :: ratio_stai_lai     !ratio of stomata area index to lai [unitless]
-
+    real(r8) :: ks     !factor to adjust SAI for soil canopy reduction [unitless] Yan et al (2005) https://doi.org/10.1029/2004GB002276
+    real(r8) :: kc     !factor to adjust LAI for soil canopy reduction [unitless] Yan et al (2005) https://doi.org/10.1029/2004GB002276
+    
     logical  :: has_dew
     logical  :: has_rain
     real(r8), parameter :: rain_threshold      = 1.e-7_r8  ! of the order of 1cm/day expressed in m/s
@@ -276,7 +278,7 @@ CONTAINS
     real(r8) :: rc    !combined surface resistance
     real(r8) :: cts   !correction to flu rcl and rgs for frost
     real(r8) :: rlux_o3 !to calculate O3 leaf resistance in dew/rain conditions
-
+     
     ! constants
     real(r8), parameter :: slope = 0._r8      ! Used to calculate  rdc in (lower canopy resistance)
     integer, parameter :: wveg_unset = -1     ! Unset Wesley vegetation type
@@ -668,6 +670,10 @@ CONTAINS
                ! CANOPY REDUCTION FACTOR FOR soil NO fluxes
                ! (Probably there may be a cleaner way to code this)
                if ( drydep_list(ispec) == 'NO') then
+                  !factors for canopy reduction
+                  ks=11.6_r8
+                  kc=0.32_r8
+                  
              !no canopy reduction factor (ie zero update) over bare land or elai < 0. 
                   if( clmveg == noveg) then
                      crf_drydep(pi)=1._r8                 
@@ -701,7 +707,7 @@ CONTAINS
                      if (clmveg == nc3crop .or. clmveg == nc3irrig ) ratio_stai_lai = 0.008_r8 
                      if (is_prognostic_crop(clmveg)) ratio_stai_lai = 0.008_r8
                      
-                     crf_drydep(pi)=(exp(-11.6_r8*elai(pi)*ratio_stai_lai)+exp(-0.32_r8*elai(pi)))/2
+                     crf_drydep(pi)=(exp(-ks*elai(pi)*ratio_stai_lai)+exp(-kc*elai(pi)))/2
                   endif !no veg 
                endif ! drydep_list(ispec)
                                        

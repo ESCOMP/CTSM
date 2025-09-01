@@ -760,7 +760,8 @@ contains
                !soil NOx emissions nitrification
                   pot_f_nox_nit_vr(c,j)   = f_n2o_nit_vr(c,j) * nox_n2o_ratio_vr(c,j) 
 
-               ! RAIN PULSES FOR NOX NITRIFICATION
+               ! RAIN PULSES FOR NOX NITRIFICATION   Hudman et al (2012) https://doi.org/10.5194/acp-12-7779-2012 Equation 4
+                  
                !An increase of 0.5% (v/v) in 7 cm of surface soil is equivalent to about 3.5 mm of rainfall, which 
                !is the rainfall amount often reported to cause a pulse
                ! Calculate the change in volumetric soil moisture since previous timestep 
