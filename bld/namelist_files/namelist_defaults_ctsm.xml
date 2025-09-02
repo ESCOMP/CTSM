@@ -152,8 +152,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan clm_accelerated_spinup="sasu">0</megan>
 <megan configuration="nwp"          >0</megan>
 
-<!-- Setting to TRUE replicates previous ctsm5.3.063 answers, setting to false turns the soil moisture effect off -->
-<megan_use_gamma_sm>.true.</megan_use_gamma_sm>
+<!-- The soil moisture effect was added in ctsm5.2.020 with MEGAN2.1 and was hardcoded on. -->
+<!-- As of ctsm5.3.068 megan_use_gamma_sm became default false, which is closer to MEGAN before 2.1. -->
+<!-- Hence we made megan_use_gamma_sm default off for all CLM physics versions. -->
+<megan_use_gamma_sm>.false.</megan_use_gamma_sm>
 <megan_min_gamma_sm>0.0d00</megan_min_gamma_sm>
 
 <!-- Supplmental Nitrogen mode -->
@@ -553,7 +555,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.40.0.0_14pft_c250512.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.41.0.0_14pft_c250813.nc</fates_paramfile>
 
 
 <!-- ================================================================== -->
@@ -1302,14 +1304,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <!-- Corresponding ne30 -->
 <finidat hgrid="ne30np4.pg3" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".true." irrigate=".false."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_ne30_102_pSASU.clm2.r.0081-01-01-00000_64bitoffset.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_ne30_102_pSASU.clm2.r.0081-01-01-00000.nc
 </finidat>
 <!-- Corresponding f19 -->
 <finidat hgrid="1.9x2.5" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
@@ -1721,9 +1723,9 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_4x5_hist_1850_16pfts_c241007.nc</fsurd
 <fsurdat hgrid="360x720cru"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_360x720cru_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="0.9x1.25"    sim_year="1850" >
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"     sim_year="1850" use_crop=".true.">
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1.9x2.5_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="10x15"       sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"         sim_year="1850" use_crop=".true.">
@@ -1739,7 +1741,7 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4_hist_1850_78pfts_c240908.nc</f
 <fsurdat hgrid="ne30np4.pg2" sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg2_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne30np4.pg3" sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne3np4"       sim_year="1850">
@@ -1799,9 +1801,9 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 
 <!-- 78-pft landuse files -->
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000"
- >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_0.9x1.25_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_0.9x1.25_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="1.9x2.5"       sim_year_range="1850-2000" use_crop=".true."
- >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_1.9x2.5_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+ >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_1.9x2.5_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4.ARCTICGRIS.ne30x8" sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne0np4.ARCTICGRIS.ne30x8_SSP2-4.5_1979-2026_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne0np4.ARCTIC.ne30x4" sim_year_range="1850-2000"
@@ -1831,7 +1833,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne16np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne30np4.pg3"   sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne30np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_ne30np4.pg3_hist_1850-2023_78pfts_c250723.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="C96"           sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_C96_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
@@ -2172,15 +2174,16 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
 
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." phys="clm6_0" >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_SSP3CMIP6_hdm_0.5x0.5_simyr1850-2100_c250717.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true."               >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP3-7.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
-</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP3-7.0" phys="clm6_0" >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_SSP3CMIP6_hdm_0.5x0.5_simyr1850-2100_c250717.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP3-7.0"               >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP4-6.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP4-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
@@ -2190,15 +2193,16 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." phys="clm6_0" >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_SSP3CMIP6_hdm_0.5x0.5_simyr1850-2100_c250717.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true."               >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP3-7.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
-</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP3-7.0" phys="clm6_0" >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_SSP3CMIP6_hdm_0.5x0.5_simyr1850-2100_c250717.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP3-7.0"               >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-6.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
@@ -2434,6 +2438,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_electron_transport_model use_fates=".true.">FvCB1980</fates_electron_transport_model>
 <fates_photosynth_acclimation   use_fates=".true.">nonacclimating</fates_photosynth_acclimation>
 <fates_spitfire_mode            use_fates=".true.">0</fates_spitfire_mode>
+<fates_spitfire_mode            use_fates=".true." use_fates_managed_fire=".true." >1</fates_spitfire_mode>
 <fates_harvest_mode             use_fates=".true.">no_harvest</fates_harvest_mode>
 <fates_stomatal_model           use_fates=".true.">ballberry1987</fates_stomatal_model>
 <fates_stomatal_assimilation    use_fates=".true.">net</fates_stomatal_assimilation>
@@ -2442,6 +2447,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_regeneration_model       use_fates=".true.">default</fates_regeneration_model>
 <fates_radiation_model          use_fates=".true.">norman</fates_radiation_model>
 <fates_hydro_solver             use_fates=".true.">2D_Picard</fates_hydro_solver>
+<use_fates_managed_fire         use_fates=".true.">.false.</use_fates_managed_fire>
 <use_fates_planthydro           use_fates=".true.">.false.</use_fates_planthydro>
 <use_fates_tree_damage          use_fates=".true.">.false.</use_fates_tree_damage>
 <use_fates_cohort_age_tracking  use_fates=".true.">.false.</use_fates_cohort_age_tracking>
@@ -2495,6 +2501,10 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <!-- =========================================  -->
 
 <init_interp_method>general</init_interp_method>
+
+<!-- Temporary for alpha-ctsm5.4.CMIP7 branch as of tag alpha-ctsm5.4.CMIP7.09.ctsm5.3.068
+     See issue https://github.com/ESCOMP/CTSM/issues/3363 about how to resolve this before finalizing ctsm5.4 -->
+<init_interp_fill_missing_urban_with_HD>.true.</init_interp_fill_missing_urban_with_HD>
 
 <!-- =========================================  -->
 <!-- Defaults for excess ice                    -->
