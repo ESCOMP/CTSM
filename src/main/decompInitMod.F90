@@ -11,7 +11,7 @@ module decompInitMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
-  use clm_varctl   , onoly : iulog
+  use clm_varctl   , only : iulog
   use ctsm_memcheck, only : memcheck
   use perf_mod     , only : t_startf, t_stopf
   !
