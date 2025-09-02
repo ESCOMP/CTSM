@@ -24,7 +24,9 @@ module TestDecompInit
 
   ! Module data used in various tests
 
-  integer, parameter :: ni = 10, nj = 5
+  ! Make the size of the test grid 384 so that it can be divided by 128 or 48
+  ! for the number of tasks per node on Derecho or Izumi.
+  integer, parameter :: ni = 16, nj = 24
   integer :: amask(ni*nj)
 
   integer :: default_npes
