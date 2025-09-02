@@ -53,6 +53,9 @@ contains
     use clm_varctl , only : nsegspc
     use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
+    ! Temporary testing stuff
+    use Assertions, only : assert_equal
+    ! end temporary testing stuff
     !
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
@@ -73,6 +76,7 @@ contains
     integer, pointer  :: clumpcnt(:)  ! clump index counter
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data
+    integer :: cell_id_offset
     !------------------------------------------------------------------------------
     call t_startf('decompInit_lnd')
     ! Set some global scalars: nclumps, numg and lns
@@ -211,6 +215,30 @@ contains
 
     gdc2glo(:) = 0
 
+    ! Temporary testing for MPI_SCAN, for just the local PE
+    allocate(clumpcnt_mpiscan(iam:iam+clump_pproc))
+    allocate(gindex_global_mpiscan(procinfo%ncells))
+
+    call MPI_SCAN(procinfo%endg, cell_id_offset, 1, MPI_INTEGER, &
+                  MPI_SUM, mpicom, ier)
+    if ( ier /= 0 )then
+        call endrun(msg='Error from MPI_SCAN', file=sourcefile, line=__LINE__)
+    end if
+    cell_id_offset = cell_id_offset - procinfo%endg + 1
+    ! Assume clumps_pproc is 1 for now...
+    !if ( clump_pproc > 1 )then
+        !call endrun(msg='This test assumes clump_pproc is 1', file=sourcefile, line=__LINE__)
+    !end if
+    m = 0
+    do cid = 1, nclumps
+       if (clumps(cid)%owner == iam) then
+         clumpcnt_mpiscan(cid) = cell_id_offset + m
+         ag = clumpcnt_mpiscan(cid)
+         m = m + 1
+       endif
+    enddo
+    ! End temporary testing
+
     ! clumpcnt is the start gdc index of each clump
 
     ag = 0
@@ -251,6 +279,21 @@ contains
     do n = procinfo%begg,procinfo%endg
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
+
+    ! Temporary testing for MPI_SCAN, for just the local PE
+    do cid = 1,nclumps
+       if ( clumps(cid)%owner == iam )then
+           gindex_global_mpiscan(ag) = gdc2glo(clumpcnt_mpiscan(cid))
+           clumpcnt_mpiscan = clumpcnt_mpiscan + 1
+           call assert_equal(clumpcnt(cid), clumpcnt_mpiscan(cid), &
+                msg='decompInit_lnd(): clumpcnt MPI_SCAN error')
+       end if
+    end do
+    call assert_equal(gindex_global, gindex_global_mpiscan, &
+                      msg='decompInit_lnd(): clumpcnt MPI_SCAN error')
+    deallocate(clumpcnt_mpiscan)
+    deallocate(gindex_global_mpiscan)
+    ! End temporary testing
 
     call decompInit_lnd_clean()
 
