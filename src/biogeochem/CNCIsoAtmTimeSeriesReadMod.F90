@@ -5,7 +5,7 @@ module CIsoAtmTimeseriesMod
   !
   ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use clm_time_manager , only : get_curr_date, get_curr_yearfrac
+  use clm_time_manager , only : get_curr_date, get_curr_yearfrac, get_average_days_per_year
   use clm_varcon       , only : c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
   use clm_varctl       , only : iulog
@@ -38,7 +38,7 @@ module CIsoAtmTimeseriesMod
   real(r8), allocatable, private :: atm_delta_c14(:,:)        ! Delta C14 data
   real(r8), allocatable, private :: atm_c13file_time(:)       ! time for C13 data
   real(r8), allocatable, private :: atm_delta_c13(:)          ! Delta C13 data
-  real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
+  real(r8), parameter :: time_axis_offset = 1700.0_r8         ! Offset in years of time on file
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -119,7 +119,7 @@ contains
     integer :: nsec                       ! number of input data sectors
     integer :: t                          ! time index
     logical :: readvar                    ! if variable read or not
-    character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
+    character(len=*), parameter :: vname = 'Delta14co2'  ! Variable name on file
     !-----------------------------------------------------------------------
 
     call getfil(atm_c14_filename, locfn, 0)
@@ -132,7 +132,7 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
 
     call ncd_inqdlen(ncid,dimid,ntim,'time')
-    call ncd_inqdlen(ncid,dimid,nsec,'sector')
+    call ncd_inqdlen(ncid,dimid,nsec,'lat')
     if ( nsec /= nsectors_c14 )then
        call endrun(msg="ERROR: number of sectors on file not what's expected"//errMsg(sourcefile, __LINE__))
     end if
@@ -158,7 +158,10 @@ contains
     call ncd_pio_closefile(ncid)
 
     ! check to make sure that time dimension is well behaved
+    atm_c14file_time(1) = atm_c14file_time(1) / get_average_days_per_year()
     do t = 2, ntim
+       ! Convert time in days to years
+       atm_c14file_time(t) = atm_c14file_time(t) / get_average_days_per_year()
        if ( atm_c14file_time(t) - atm_c14file_time(t-1) <= 0._r8 ) then
           write(iulog, *) 'C14_init_BombSpike: error.  time axis must be monotonically increasing'
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -196,6 +199,8 @@ contains
     ntim_atm_ts = size(atm_c13file_time)
     ind_below = 0
     do nt = 1, ntim_atm_ts
+       ! Convert time in days to years
+       atm_c13file_time(nt) = atm_c13file_time(nt) / get_average_days_per_year()
        if ((dateyear - time_axis_offset) >= atm_c13file_time(nt) ) then
           ind_below = ind_below+1
        endif
@@ -238,7 +243,7 @@ contains
     integer :: ntim                       ! number of input data time samples
     integer :: t                          ! Time index
     logical :: readvar                    ! if variable read or not
-    character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
+    character(len=*), parameter :: vname = 'delta13co2'  ! Variable name on file
     !-----------------------------------------------------------------------
 
     call getfil(atm_c13_filename, locfn, 0)
@@ -304,14 +309,14 @@ contains
 
     call ncd_inqvid( ncid, 'time', varid, vardesc )
     call ncd_getatt( ncid, varid, "units", units )
-    write(t_units_expected,'("years since", I5, "-01-01 0:0:0.0")' ) nint(time_axis_offset)
+    write(t_units_expected,'("days since", I5, "-01-01 00:00:00")' ) nint(time_axis_offset)
     if ( trim(units) /= t_units_expected )then
        call endrun(msg="ERROR: time units on file are NOT what's expected"//errMsg(sourcefile, __LINE__))
     end if
     call ncd_inqvid( ncid, vname, varid, vardesc )
     call ncd_getatt( ncid, varid, "units", units )
-    if ( trim(units) /= "per mil, relative to "//relativeto )then
-       call endrun(msg="ERROR: units on file for "//vname//" are NOT what's expected"//errMsg(sourcefile, __LINE__))
+    if ( trim(units) /= "1" )then
+       call endrun(msg="ERROR: units on file for "//vname//" are NOT what's expected", file=sourcefile, line=__LINE__ )
     end if
   end subroutine check_units
 
