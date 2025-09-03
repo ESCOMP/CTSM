@@ -10,7 +10,8 @@ kill_tether () {
 
 # import a bunch of variables from config file
 #    e.g. $WDIR $PI_COMPSET 
-source <(grep = default.config)
+config=$1
+source <(grep = $1)
 
 
 # create case
@@ -55,5 +56,5 @@ cd $caseroot
 
 # tether commands
 cd $WDIR
-echo "./stabAD.sh" > commands.txt
+echo "./stabAD.sh spinup.config" > commands.txt
 echo $CASE_AD > case.txt

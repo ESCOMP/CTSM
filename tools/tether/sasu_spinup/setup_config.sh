@@ -23,9 +23,14 @@ fi
 
 # cp other files to WDIR
 cp setupAD.sh $WDIR
+cp stabAD.sh $WDIR
+
 
 # configure some various files with sed replacements
 sed -i "s:nldir:"$NLDIR":g" ./namelists/AD/user_nl_clm
+sed "s:TDIR:"$TDIR":g" derecho.template > $WDIR"/derecho.template"
+sed -i "s:project:"$PROJECT":g" $WDIR"/derecho.template"
+
 
 # configure yamls with sed replacements
 HD=$SD"/archive/"$CASE_AD"/lnd/hist"

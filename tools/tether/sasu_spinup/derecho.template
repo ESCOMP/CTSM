@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N jobname
+#PBS -q develop
+#PBS -l walltime=2:00:00
+#PBS -A project
+#PBS -k eod
+#PBS -l select=1:ncpus=5
+#PBS -W depend=afterok:jobid
+# ---------------------------------------------------------
+
+source .bashrc
+conda activate ctsm_pylib
+
+tdir=TDIR
+$tdir"tether.sh" wdir commands template
