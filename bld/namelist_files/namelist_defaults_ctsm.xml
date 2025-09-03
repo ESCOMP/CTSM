@@ -1372,7 +1372,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_esmf/ctsm5.2/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c240223.nc
 </finidat>
 
-<!-- Present day no crop spinup f09/f19 grid with irrigation on -->
+<!-- 1979 no crop spinup f09/f19 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1380,7 +1380,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup f09/f19 grid with irrigation on -->
+<!-- 1979 no crop spinup f09/f19 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1392,6 +1392,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      finidat files for CAM resolutions for being coupled to CAM
 -->
 <!-- clm5_0 and cam7.0 -->
+<!-- 1979 no crop spinup f09 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1399,6 +1400,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
+<!-- 1979 no crop spinup f19 grid with irrigation on -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1406,7 +1408,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1414,7 +1416,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1475,12 +1477,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Repeat above for clm6_0 -->
 <!-- slevis-lmwg, ekluzek 2024/10/11: do_transient_pfts was removed here to bypass a bug that doesn't allow
            do_transient_pfts=.true. when use_init_interp=.false. -->
+<!-- 1979 crop spinup f09 grid with irrigation on -->
 <finidat hgrid="0.9x1.25" maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm6_0" use_init_interp=".true."
 >lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.1979-01-01-00000.nc
 </finidat>
+<!-- 1979 crop spinup ne30 grid with irrigation on -->
 <finidat hgrid="ne30np4.pg3" maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
@@ -1488,7 +1492,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.1979-01-01-00000.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1496,7 +1500,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1526,6 +1530,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      finidat files for CAM resolutions for being coupled to CAM
 -->
 <!-- clm5_0 and cam6.0-->
+<!-- 1979 no crop spinup f09 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1533,6 +1538,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
+<!-- 1979 no crop spinup f19 grid with irrigation on -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1540,7 +1546,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1548,7 +1554,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1591,7 +1597,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Repeat above for clm6_0 -->
 <!-- clm6_0 and cam6.0-->
 
-<!-- Present day no crop spinup ARCTIC grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
@@ -1599,7 +1605,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
+<!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
