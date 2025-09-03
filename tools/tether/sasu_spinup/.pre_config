@@ -1,0 +1,22 @@
+[user]
+USER=ustr
+PROJECT=UNSET
+
+[ctsm tag]
+TAG=tagstr
+
+[key directories]
+SDIR=pwd
+TDIR=UNSET
+WDIR=UNSET
+CDIR=UNSET
+
+[case specifications]
+PI_COMPSET=UNSET
+GRID=UNSET
+NLDIR=nldir  # specify top dir; needs subdirs AD SASU ND
+
+[case names]
+CASE_AD=UNSET
+CASE_SASU=UNSET
+CASE_ND=UNSET
