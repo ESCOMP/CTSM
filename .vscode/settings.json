@@ -1,0 +1,9 @@
+{
+   // Exclude all files from .gitignore from being shown in the VS Code explorer view
+   "explorer.excludeGitIgnore" : true
+
+   // Treat .pf PFunit files as if they are Fortran
+   "files.associations": {
+        "*.pf": "fortran-modern"
+  }
+}
