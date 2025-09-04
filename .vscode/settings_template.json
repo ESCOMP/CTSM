@@ -1,9 +1,11 @@
 {
-   // Exclude all files from .gitignore from being shown in the VS Code explorer view
-   "explorer.excludeGitIgnore" : true
-
-   // Treat .pf PFunit files as if they are Fortran
-   "files.associations": {
-        "*.pf": "fortran-modern"
+  // Exclude all files from .gitignore from being shown in the VS Code explorer view
+  "explorer.excludeGitIgnore": true
+  // Treat .pf PFunit files as if they are Fortran
+  "files.associations": {
+    "*.pf": "fortran-modern"
+    // Path to fortls from the ctsm_pylib conda environment 
+    // Correct the path for you to use
+    "fortran-ls.executablePath": "/glade/work/$USER/conda-envs/ctsm_pylib/bin/fortls",
   }
 }
