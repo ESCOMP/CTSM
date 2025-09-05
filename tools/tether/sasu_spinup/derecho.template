@@ -13,4 +13,4 @@ conda activate npl-2025b
 
 
 tdir=TDIR
-$tdir"tether.sh" wdir commands template
+$tdir"/tether.sh" wdir commands template
