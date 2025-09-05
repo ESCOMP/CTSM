@@ -21,18 +21,30 @@ if [ ! -d $SD ]; then
     exit 1
 fi
 
-# cp other files to WDIR
-cp setupAD.sh $WDIR
-cp stabAD.sh $WDIR
+# cp scripts to WDIR
+cp *AD.sh $WDIR
+cp *SASU.sh $WDIR
+cp *ND.sh $WDIR
 
 
-# configure some various files with sed replacements
-sed -i "s:nldir:"$NLDIR":g" ./namelists/AD/user_nl_clm
+# add a path comment to the namelist files
+#  it probably makes sense to move these to WDIR
+segments=('AD' 'SASU' 'ND')
+cd namelists
+for segment in ${segments[@]}; do
+    cd $segment
+    sed 's:nlpath:'$(pwd)':g' unset_user_nl_clm > user_nl_clm
+    cd ..
+done
+cd ..
+
+
+# configure the PBS template
 sed "s:TDIR:"$TDIR":g" derecho.template > $WDIR"/derecho.template"
 sed -i "s:project:"$PROJECT":g" $WDIR"/derecho.template"
 
 
-# configure yamls with sed replacements
+# configure yamls
 HD=$SD"/archive/"$CASE_AD"/lnd/hist"
 sed 's/CASE_AD/'$CASE_AD'/g' AD.yml > $WDIR"/AD.yml"
 sed -i 's:HIST_AD:'$HD':g' $WDIR"/AD.yml"
@@ -44,5 +56,14 @@ sed 's/CASE_ND/'$CASE_ND'/g' ND.yml > $WDIR"/ND.yml"
 sed -i 's:HIST_ND:'$HD':g' $WDIR"/ND.yml"
 
 
+# create the initial qsub job
+sed '/afterok/d' $WDIR"/derecho.template" > $WDIR"/segment001.job"
+sed -i 's/jobname/segment001/g' $WDIR"/segment001.job"
+sed -i 's:wdir:'$WDIR':g' $WDIR"/segment001.job"
+sed -i 's/commands/commands.txt/g' $WDIR"/segment001.job"
+sed -i 's/template/derecho.template/g' $WDIR"/segment001.job"
 
+
+# create the initial commands.txt
+echo "./setupAD.sh spinup.config" > $WDIR"/commands.txt"
 
