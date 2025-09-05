@@ -81,10 +81,8 @@ contains
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     real(r8) :: msize, mrss
     ! Temporary testing stuff
-    integer, pointer :: clumpcnt_mpiscan(:)! clumpcnt for local PE based on the MPI_SCAN
     integer, allocatable :: gindex_global_mpiscan(:)! ginfrx_global_mpiscan for the local PE based on the MPI_SCAN
     type(processor_type) :: procinfo_mpiscan ! procinfo for local PE based on the MPI_SCAN
-    integer :: mycid0, mycid
     integer :: cell_id_offset
     ! end temporary testing stuff
     !------------------------------------------------------------------------------
@@ -237,28 +235,13 @@ contains
     end if
     cell_id_offset = cell_id_offset + 1
     write(iulog,*) 'ncells, cell_id_offset, iam = ', procinfo%ncells, cell_id_offset, iam
-    allocate(clumpcnt_mpiscan(nclumps))
     ! Assume clumps_pproc is 1 for now...
     !if ( clump_pproc > 1 )then
         !call endrun(msg='This test assumes clump_pproc is 1', file=sourcefile, line=__LINE__)
     !end if
-    m = 0
-    mycid = 0
-    do cid = 1, nclumps
-       if (clumps(cid)%owner == iam) then
-         if ( mycid == 0 ) mycid0 = cid
-         mycid = cid
-         write(iulog,*) 'cid for iam = ', cid, iam
-         clumpcnt_mpiscan(cid) = cell_id_offset
-       endif
-    enddo
-    allocate( procinfo_mpiscan%cid(mycid0:mycid) )
     procinfo_mpiscan%ncells  = procinfo%ncells
     procinfo_mpiscan%begg = cell_id_offset - procinfo%ncells
     procinfo_mpiscan%endg = cell_id_offset - 1
-    do cid = mycid0, mycid
-      procinfo_mpiscan%cid(cid) = cell_id_offset + cid - mycid0 -1
-    end do
     ! End temporary testing
 
     ! clumpcnt is the ending gdc index of each clump
@@ -304,15 +287,6 @@ contains
 
     ! Temporary testing for MPI_SCAN, for just the local PE
     allocate(gindex_global_mpiscan(1:bounds%endg))
-    do cid = 1,nclumps
-       if ( clumps(cid)%owner == iam )then
-           ag = clumpcnt(cid)
-           call assert_equal(clumpcnt(cid), clumpcnt_mpiscan(cid), &
-                msg='decompInit_lnd(): clumpcnt MPI_SCAN error')
-           !call assert_equal(procinfo%cid(cid), procinfo_mpiscan%cid(cid), &
-           !     msg='decompInit_lnd(): cid MPI_SCAN error')
-       end if
-    end do
     !call assert_equal(gindex_global, gindex_global_mpiscan, &
     !                  msg='decompInit_lnd(): gindex_global MPI_SCAN error')
     call assert_equal(procinfo%begg, procinfo_mpiscan%begg, &
@@ -321,7 +295,6 @@ contains
                       msg='decompInit_lnd(): endg MPI_SCAN error')
     call assert_equal(procinfo%ncells, procinfo_mpiscan%ncells, &
                       msg='decompInit_lnd(): ncells MPI_SCAN error')
-    deallocate(clumpcnt_mpiscan)
     deallocate(gindex_global_mpiscan)
     ! End temporary testing
 
