@@ -286,8 +286,9 @@ contains
           procinfo%gj(g) = aj
           call assert_equal( an, procinfo%calc_global_index( g, lni, lnj ), &
                             msg='decompInit_lnd(): calc_global_index is off')
-          call assert_equal( an, get_global_index( g, subgrid_level_gridcell ), &
-                            msg='decompInit_lnd(): get_global_index is off')
+          ! This can't be done yet, as the other indices aren't set yet
+          !call assert_equal( an, get_global_index( g, subgrid_level_gridcell ), &
+          !                  msg='decompInit_lnd(): get_global_index is off')
           call procinfo%calc_globalxy_indices( g, lni, lnj, i, j )
           call assert_equal( (/ ai, aj /), (/ i, j /), &
                              msg='decompInit_lnd(): i, j indices are off')
