@@ -57,7 +57,7 @@ contains
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
     ! Temporary testing stuff
     use Assertions, only : assert_equal
-    use decompMod  , only : processor_type
+    use decompMod  , only : processor_type, get_global_index, subgrid_level_gridcell
     ! end temporary testing stuff
     !
     ! !ARGUMENTS:
@@ -84,6 +84,7 @@ contains
     integer, allocatable :: gindex_global_mpiscan(:)! ginfrx_global_mpiscan for the local PE based on the MPI_SCAN
     type(processor_type) :: procinfo_mpiscan ! procinfo for local PE based on the MPI_SCAN
     integer :: cell_id_offset
+    integer :: i, j, g
     ! end temporary testing stuff
     !------------------------------------------------------------------------------
     call memcheck('decompInit_lnd: before allocate')
@@ -273,6 +274,27 @@ contains
     end do
     end do
 
+    g = 0
+    do aj = 1,lnj
+    do ai = 1,lni
+       an = (aj-1)*lni + ai
+
+       cid = lcid(an)
+       if  ( clumps(cid)%owner == iam ) then
+          g = g + 1
+          procinfo%gi(g) = ai
+          procinfo%gj(g) = aj
+          call assert_equal( an, procinfo%calc_global_index( g, lni, lnj ), &
+                            msg='decompInit_lnd(): calc_global_index is off')
+          call assert_equal( an, get_global_index( g, subgrid_level_gridcell ), &
+                            msg='decompInit_lnd(): get_global_index is off')
+          call procinfo%calc_globalxy_indices( g, lni, lnj, i, j )
+          call assert_equal( (/ ai, aj /), (/ i, j /), &
+                             msg='decompInit_lnd(): i, j indices are off')
+       end if
+    end do
+    end do
+
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
     call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
@@ -287,8 +309,8 @@ contains
 
     ! Temporary testing for MPI_SCAN, for just the local PE
     allocate(gindex_global_mpiscan(1:bounds%endg))
-    !call assert_equal(gindex_global, gindex_global_mpiscan, &
-    !                  msg='decompInit_lnd(): gindex_global MPI_SCAN error')
+    call assert_equal(gindex_global, gindex_global_mpiscan, &
+                      msg='decompInit_lnd(): gindex_global MPI_SCAN error')
     call assert_equal(procinfo%begg, procinfo_mpiscan%begg, &
                       msg='decompInit_lnd(): begg MPI_SCAN error')
     call assert_equal(procinfo%endg, procinfo_mpiscan%endg, &
@@ -368,6 +390,16 @@ contains
             call endrun(msg="allocation error2 for clumpcnt", file=sourcefile, line=__LINE__)
             return
          end if
+         allocate(procinfo%gi(clump_pproc), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg='allocation error for procinfo%gi', file=sourcefile, line=__LINE__)
+            return
+         endif
+         allocate(procinfo%gj(clump_pproc), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg='allocation error for procinfo%gj', file=sourcefile, line=__LINE__)
+            return
+         endif
 
       end subroutine decompInit_lnd_allocate
 
