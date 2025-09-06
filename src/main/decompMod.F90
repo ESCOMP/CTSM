@@ -69,6 +69,8 @@ module decompMod
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
      integer,pointer :: cid(:) => null()  ! clump indices
+     integer,allocatable :: gi(:)    ! global index on the full 2D grid in "x" (longitude for structured)
+     integer,allocatable :: gj(:)    ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -79,6 +81,9 @@ module decompMod
      integer :: begc, endc           ! beginning and ending column index
      integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
+  contains
+     procedure, public :: calc_global_index       ! Get the global index for the input grid index on this processor
+     procedure, public :: calc_globalxy_indices
   end type processor_type
   public processor_type
   type(processor_type),public :: procinfo
@@ -121,6 +126,96 @@ module decompMod
        __FILE__
 
 contains
+
+
+  function calc_global_index( this, g, ni, nj ) result(global_index)
+    ! Returns the full grid global vector index from the gridcell on this processor
+    ! !ARGUMENTS:
+    class(processor_type), intent(in) :: this
+    integer, intent(in) :: g       ! gridcell index on this processor
+    integer, intent(in) :: ni, nj  ! Global 2D size of full grid
+    integer :: global_index        ! function result, full vector index on the full global grid
+
+    if ( .not. allocated(this%gi) )then
+       call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( .not. allocated(this%gj) )then
+       call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (g < this%begg) .or. (g > this%endg) ) then
+       call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (ni < 1) .or. (nj < 1) ) then
+       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+       return
+    end if
+    global_index = (this%gj(g)-1)*ni + this%gi(g)
+    if ( (global_index < 1) .or. (global_index > ni*nj) ) then
+       call shr_sys_abort( 'global_index is out of bounds for this processor', file=sourcefile, line=__LINE__)
+       return
+    end if
+
+  end function calc_global_index
+
+  subroutine calc_ijindices_from_full_global_index( g, ni, nj, i, j )
+     ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
+     integer, intent(in) :: g    ! Input processor global full 2D vector index
+     integer, intent(in) :: ni, nj   ! Size of the full 2D grid
+     integer, intent(out) :: i, j  ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
+
+     if ( (g < 1) .or. (g > ni*nj) ) then
+        call shr_sys_abort( 'Input index g is out of bounds', file=sourcefile, line=__LINE__)
+        return
+     end if
+    if ( (ni < 1) .or. (nj < 1) ) then
+       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+       return
+    end if
+    j = floor( real(g, r8) / real(ni, r8) ) + 1
+    i = g - j*ni
+    if ( (i < 1) .or. (i > ni) ) then
+       call shr_sys_abort( 'Computed global i value out of range', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (j < 1) .or. (j > nj) ) then
+       call shr_sys_abort( 'Computed global j value out of range', file=sourcefile, line=__LINE__)
+       return
+    end if
+  end subroutine calc_ijindices_from_full_global_index
+
+
+  subroutine calc_globalxy_indices( this, g, ni, nj, i, j )
+    ! !ARGUMENTS:
+    class(processor_type), intent(in) :: this
+    integer, intent(in) :: g ! gridcell index on this processor
+    integer, intent(in) :: ni, nj ! Global 2D size of full grid
+    integer, intent(out) :: i, j ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
+
+    integer :: global_index
+
+    if ( .not. allocated(this%gi) )then
+       call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( .not. allocated(this%gj) )then
+       call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (g < this%begg) .or. (g > this%endg) ) then
+       call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (ni < 1) .or. (nj < 1) ) then
+       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+       return
+    end if
+    global_index = this%calc_global_index( g, ni, nj )
+    call calc_ijindices_from_full_global_index( global_index, ni, nj, i, j )
+
+  end subroutine calc_globalxy_indices
 
   !-----------------------------------------------------------------------
   pure function get_beg(bounds, subgrid_level) result(beg_index)
