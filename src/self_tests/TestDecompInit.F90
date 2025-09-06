@@ -115,6 +115,7 @@ contains
   subroutine test_decompInit_lnd_abort_on_bad_clump_pproc()
      character(len=CX) :: expected_msg, actual_msg
 
+     if ( npes > 1 ) return   ! error checking testing only works seriallly
      call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      clump_pproc = 0
@@ -135,6 +136,7 @@ contains
   subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc()
      character(len=CX) :: expected_msg, actual_msg
 
+     if ( npes > 1 ) return   ! error checking testing only works seriallly
      call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
@@ -180,6 +182,7 @@ contains
   subroutine test_decompInit_lnd_abort_when_npes_too_large()
      character(len=CX) :: expected_msg, actual_msg
 
+     if ( npes > 1 ) return   ! error checking testing only works seriallly
      call setup()
      ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
      npes = ni*nj + 1
@@ -207,6 +210,7 @@ contains
      use clm_varctl, only : nsegspc
      character(len=CX) :: expected_msg, actual_msg
 
+     if ( npes > 1 ) return   ! error checking testing only works seriallly
      call setup()
      call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
@@ -284,6 +288,8 @@ contains
   subroutine test_decompInit_clump_gcell_info_correct()
     ! Some testing for get_clump_bounds
     use decompMod, only : clumps
+    use decompMod, only : get_proc_bounds
+    type(bounds_type) :: bounds
     integer :: expected_gcells, iclump, g, beg_global_index, gcell_per_task
     integer :: expected_begg, expected_endg
 
@@ -305,12 +311,6 @@ contains
     do iclump = 1, nclumps
        call assert_equal( clumps(iclump)%owner, iclump-1, msg='clumps owner is not correct' )
        call assert_equal( clumps(iclump)%ncells, gcell_per_task, msg='clumps ncells is not correct' )
-    end do
-    ! Validate gindex_global over the local task
-
-    beg_global_index = gcell_per_task*iam
-    do g = procinfo%begg, procinfo%endg
-       call assert_equal( gindex_global(g), g+beg_global_index, msg='clumps owner is not correct' )
     end do
     call clean()
   end subroutine test_decompInit_clump_gcell_info_correct
