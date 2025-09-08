@@ -1,6 +1,26 @@
 # Tether
 ## a utility to automate the tethering between multi-segment CTSM simulations
 
+## Specific tether examples:
+
+1. example1
+    - a very simple example that runs two one month 4x5 simulations tethered together
+    - this is merely illustrative
+    - not as deeply configurable as sasu_spinup
+
+2. sasu_spinup
+    - runs a standard spinup sequence of AD->SASU->ND
+    - checks for spinup stability periodically, resubmitting until stability, then proceeding to the next segment
+    - I tried to prototype some config files to make this a bit more user friendly and easy to update
+    - It's currently configured to run 2deg CLM60Bgc global, with loose spinup criteria
+
+3. old_spinup
+    - safe to ignore for now
+    - I needed this for stuff I'm doing presently, and can eventually make this more like sasu_spinup if desired
+    
+
+## Generic tether information
+
 ### Basic tether call sequence:
 1. run the commands specified in commands.txt
 2. submit the case segment specified in case.txt
