@@ -69,8 +69,8 @@ module decompMod
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
      integer,pointer :: cid(:) => null()  ! clump indices
-     integer,allocatable :: gi(:)    ! global index on the full 2D grid in "x" (longitude for structured)
-     integer,allocatable :: gj(:)    ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
+     integer,pointer :: gi(:) => null()   ! global index on the full 2D grid in "x" (longitude for structured)
+     integer,pointer :: gj(:) => null()   ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -136,11 +136,11 @@ contains
     integer, intent(in) :: ni, nj  ! Global 2D size of full grid
     integer :: global_index        ! function result, full vector index on the full global grid
 
-    if ( .not. allocated(this%gi) )then
+    if ( .not. associated(this%gi) )then
        call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( .not. allocated(this%gj) )then
+    if ( .not. associated(this%gj) )then
        call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
        return
     end if
@@ -175,7 +175,9 @@ contains
        return
     end if
     j = floor( real(g, r8) / real(ni, r8) ) + 1
-    i = g - j*ni
+    if ( mod(g,ni) == 0 ) j = j - 1
+    i = g - (j-1)*ni
+    write(iulog,*) 'i, j = ', i, j
     if ( (i < 1) .or. (i > ni) ) then
        call shr_sys_abort( 'Computed global i value out of range', file=sourcefile, line=__LINE__)
        return
@@ -196,11 +198,11 @@ contains
 
     integer :: global_index
 
-    if ( .not. allocated(this%gi) )then
+    if ( .not. associated(this%gi) )then
        call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( .not. allocated(this%gj) )then
+    if ( .not. associated(this%gj) )then
        call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
        return
     end if
@@ -744,6 +746,14 @@ contains
     ! Deallocate and set the pointers to null
     if ( allocated(clumps) )then
       deallocate(clumps)
+    end if
+    if ( associated(procinfo%gi) )then
+      deallocate(procinfo%gi)
+      procinfo%gi => null()
+    end if
+    if ( associated(procinfo%gj) )then
+      deallocate(procinfo%gj)
+      procinfo%gj => null()
     end if
     if ( associated(procinfo%cid) )then
       deallocate(procinfo%cid)
