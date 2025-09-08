@@ -9,3 +9,4 @@ steps:
    	- it will be located in a separate directory
         - if you don't like the default names or directories, return to step 1
 	- tinker and repeat as needed
+5) proceed to tether parent directory and qsub segment001.job
