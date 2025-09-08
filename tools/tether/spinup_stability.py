@@ -29,8 +29,12 @@ def parse_cfs(cfs,lasum):
 def check_freq(tmp):
     #infer if history is monthly or annual
     nsecs_per_day=24*60*60*1e9
-    dt=(tmp.time_bounds.isel(time=-1,hist_interval=1)-
-        tmp.time_bounds.isel(time=-1,hist_interval=0))/nsecs_per_day
+    if 'nbnd' in tmp.time_bounds.dims:
+        dt=(tmp.time_bounds.isel(time=-1,nbnd=1)-
+            tmp.time_bounds.isel(time=-1,nbnd=0))/nsecs_per_day
+    else:
+        dt=(tmp.time_bounds.isel(time=-1,hist_interval=1)-
+            tmp.time_bounds.isel(time=-1,hist_interval=0))/nsecs_per_day        
     if dt<40:
         freq='monthly'
     else:
@@ -50,12 +54,12 @@ def get_ds(files,freq,dvs):
         dsets=[]
         for i,fset in enumerate(fsets):
             ds=xr.open_mfdataset(fset,combine='by_coords',preprocess=pp,
-                                 decode_timedelta=False)
+                                 decode_timedelta=False, parallel = False)
             dsets.append((dpm*ds).sum(dim='time')/365)
             ds=xr.concat(dsets,dim='time')
     else:
         ds=xr.open_mfdataset(files,combine='by_coords',preprocess=pp,
-                             decode_timedelta=False)
+                             decode_timedelta=False, parallel = False)
         ds=ds.isel(time=slice(1,len(ds.time)))
     return ds
 
@@ -87,7 +91,7 @@ def plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,tpct,l
             pct=100*(la*diseq).sum(dim=['lat','lon'])/lasum
             ix=np.arange(len(x.time))>=nyears
             pct.where(ix).plot()
-            ystr=('abs($\{Delta}$'+v.split('_')[0]+')>'+
+            ystr=(r'abs($\Delta$'+v.split('_')[0]+')>'+
                   str(thresh)+units[v]+'/yr'+'\n[% landarea]')
             plt.ylabel(ystr)
             plt.ylim([0,100])
@@ -114,9 +118,13 @@ def main():
     config = yaml.safe_load(open(cfile))
     thiscase = config['case']
     d = config['hist_dir']
-    files = sorted(glob.glob(d+'/*.h0.*'))
+    files = sorted(glob.glob(d+'/*.h0*'))
+    print(d)
+    print(len(files))
     if len(files) < 1:
-        failed = True
+        print('no files found')
+        print('matchstr: '+d+'/*.h0*')
+        sys.exit(1)
     else:
         #import config and parse conversion factors
         tmp = xr.open_dataset(files[0],decode_timedelta=True)
@@ -194,7 +202,7 @@ def main():
             pct=np.nan
         plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,
                     pct,la,lasum)
-    sys.exit(11*int(failed))
+        sys.exit(11*int(failed))
 
 
 

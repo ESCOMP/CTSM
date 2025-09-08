@@ -8,9 +8,11 @@
 #PBS -W depend=afterok:jobid
 # ---------------------------------------------------------
 
+#source .bashrc
+#conda activate ctsm_pylib
+
 module load conda
 conda activate npl-2025b
-
 
 tdir=TDIR
 $tdir"/tether.sh" wdir commands template
