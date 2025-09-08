@@ -307,7 +307,11 @@ contains
     amask(:) = 1 ! Set all to land
     call decompInit_lnd( ni, nj, amask )
     ! When clump_pproc is one clumps will be the same as PE
-    call assert_equal( nclumps, npes, msg='nclumps should match numper of proces when clump_pproc is 1' )
+    if ( clump_pproc == 1 ) then
+       call assert_equal( nclumps, npes, msg='nclumps should match number of processors when clump_pproc is 1' )
+    else
+       call assert_equal( nclumps/clump_pproc, npes, msg='nclumps divided by clump_pproc should match number of processors when clump_pproc > 1' )
+    end if
     do iclump = 1, nclumps
        call assert_equal( clumps(iclump)%owner, iclump-1, msg='clumps owner is not correct' )
        call assert_equal( clumps(iclump)%ncells, gcell_per_task, msg='clumps ncells is not correct' )
