@@ -1,0 +1,2 @@
+- make a readme that will appear in the tether WDIR
+- check that you can use sasu in the first created case
