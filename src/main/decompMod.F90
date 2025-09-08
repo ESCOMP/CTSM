@@ -69,6 +69,7 @@ module decompMod
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
      integer,pointer :: cid(:) => null()  ! clump indices
+     integer,pointer :: ggidx(:) => null()   ! global vector index on the full 2D grid
      integer,pointer :: gi(:) => null()   ! global index on the full 2D grid in "x" (longitude for structured)
      integer,pointer :: gj(:) => null()   ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
      integer :: ncells               ! number of gridcells in proc
@@ -82,7 +83,7 @@ module decompMod
      integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   contains
-     procedure, public :: calc_global_index       ! Get the global index for the input grid index on this processor
+     procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
      procedure, public :: calc_globalxy_indices
   end type processor_type
   public processor_type
@@ -128,7 +129,7 @@ module decompMod
 contains
 
 
-  function calc_global_index( this, g, ni, nj ) result(global_index)
+  function calc_global_index_fromij( this, g, ni, nj ) result(global_index)
     ! Returns the full grid global vector index from the gridcell on this processor
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
@@ -152,13 +153,23 @@ contains
        call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
        return
     end if
+    if ( (this%gi(g) < 1) .or. (this%gi(g) > ni) ) then
+       write(iulog,*) 'this%gi(g) = ', this%gi(g)
+       call shr_sys_abort( 'Global gi index is out of bounds', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( (this%gj(g) < 1) .or. (this%gj(g) > ni) ) then
+       write(iulog,*) 'this%gj(g) = ', this%gj(g)
+       call shr_sys_abort( 'Global gj index is out of bounds', file=sourcefile, line=__LINE__)
+       return
+    end if
     global_index = (this%gj(g)-1)*ni + this%gi(g)
     if ( (global_index < 1) .or. (global_index > ni*nj) ) then
        call shr_sys_abort( 'global_index is out of bounds for this processor', file=sourcefile, line=__LINE__)
        return
     end if
 
-  end function calc_global_index
+  end function calc_global_index_fromij
 
   subroutine calc_ijindices_from_full_global_index( g, ni, nj, i, j )
      ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
@@ -167,6 +178,7 @@ contains
      integer, intent(out) :: i, j  ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
 
      if ( (g < 1) .or. (g > ni*nj) ) then
+        write(iulog,*) 'g, ni, nj = ', g, ni, nj
         call shr_sys_abort( 'Input index g is out of bounds', file=sourcefile, line=__LINE__)
         return
      end if
@@ -198,12 +210,8 @@ contains
 
     integer :: global_index
 
-    if ( .not. associated(this%gi) )then
-       call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
-       return
-    end if
-    if ( .not. associated(this%gj) )then
-       call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
+    if ( .not. associated(this%ggidx) )then
+       call shr_sys_abort( 'ggidx is not allocated yet', file=sourcefile, line=__LINE__)
        return
     end if
     if ( (g < this%begg) .or. (g > this%endg) ) then
@@ -214,7 +222,7 @@ contains
        call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
        return
     end if
-    global_index = this%calc_global_index( g, ni, nj )
+    global_index = this%ggidx(g)
     call calc_ijindices_from_full_global_index( global_index, ni, nj, i, j )
 
   end subroutine calc_globalxy_indices
@@ -746,6 +754,10 @@ contains
     ! Deallocate and set the pointers to null
     if ( allocated(clumps) )then
       deallocate(clumps)
+    end if
+    if ( associated(procinfo%ggidx) )then
+      deallocate(procinfo%ggidx)
+      procinfo%ggidx => null()
     end if
     if ( associated(procinfo%gi) )then
       deallocate(procinfo%gi)
