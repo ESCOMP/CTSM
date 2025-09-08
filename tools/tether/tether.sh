@@ -65,7 +65,8 @@ main () {
 	sed -i 's:commands:'$commands':g' $qj
 	sed -i 's:template:'$template':g' $qj
         qsub $qj
-
+    else
+	echo "No commands file found, exiting tether"
     fi
 }
 
