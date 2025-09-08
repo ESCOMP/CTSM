@@ -286,37 +286,30 @@ contains
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
-    ! Set 2D indices on full grid for each gridcell on this processor
-    g = 0
-    do aj = 1,lnj
-    do ai = 1,lni
-       an = (aj-1)*lni + ai
-       cid = lcid(an)
-       if (cid > 0) then
-       if  ( clumps(cid)%owner == iam ) then
-          g = g + 1
-          procinfo%gi(g) = ai
-          procinfo%gj(g) = aj
-          call assert_equal( an, procinfo%calc_global_index( g, lni, lnj ), &
-                            msg='decompInit_lnd(): calc_global_index is off')
-          ! This can't be done yet, as the other indices aren't set yet
-          !call assert_equal( an, get_global_index( g, subgrid_level_gridcell ), &
-          !                  msg='decompInit_lnd(): get_global_index is off')
-          call procinfo%calc_globalxy_indices( g, lni, lnj, i, j )
-          call assert_equal( (/ ai, aj /), (/ i, j /), &
-                             msg='decompInit_lnd(): i, j indices are off')
-       end if
-       end if
-    end do
-    end do
-
     ! Temporary testing for MPI_SCAN, for just the local PE
+    g = 0
+    do ln = 1,lns
+       if (amask(ln) == 1) then
+          cid = lcid(ln)
+          if ( cid > 0 )then
+          if (clumps(cid)%owner == iam) then
+             g = g + 1
+             if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
+                call endrun(msg='g out of bounds for MPI_SCAN test', file=sourcefile, line=__LINE__)
+             end if  
+             procinfo%ggidx(g) = ln
+          end if
+          end if
+       end if
+    end do
+    write(iulog,*) ' iam, ggidx = ', iam, procinfo%ggidx(:)
     allocate(gindex_global_mpiscan(1:bounds%endg))
     do n = procinfo%begg,procinfo%endg
+        write(iulog,*) ' n, lni, lnj, ggidx = ', n, lni, lnj, procinfo%ggidx(n)
         call procinfo%calc_globalxy_indices( n, lni, lnj, i, j )
         procinfo%gi(n) = i
         procinfo%gj(n) = j
-        gindex_global_mpiscan(n) = procinfo%calc_global_index( n, lni, lnj )
+        gindex_global_mpiscan(n-procinfo%begg+1) = procinfo%ggidx(n)
     end do
     call assert_equal(gindex_global, gindex_global_mpiscan, &
                       msg='decompInit_lnd(): gindex_global MPI_SCAN error')
@@ -424,6 +417,12 @@ contains
             return
          end if
          allocate(gindex_global(1:bounds%endg))
+         allocate(procinfo%ggidx(procinfo%begg:procinfo%endg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg='allocation error for procinfo%ggidx', file=sourcefile, line=__LINE__)
+            return
+         endif
+         procinfo%ggidx(:) = -1
          allocate(procinfo%gi(procinfo%begg:procinfo%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg='allocation error for procinfo%gi', file=sourcefile, line=__LINE__)
