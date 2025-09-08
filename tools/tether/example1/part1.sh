@@ -1,19 +1,31 @@
+#!/bin/bash
 
-case="I1850.f45_g37.txd.part1"
-wdir=$(pwd)
+# function to abort tether when handling errors
+kill_tether () {
+    cd $WDIR
+    rm commands.txt
+    exit 1
+}
 
-#configuing the new case
-CIME="/glade/work/djk2120/cesm2.1.5/cime/scripts" #my checkout feel free to replace with yours
-COMPSET=I1850Clm50Sp
-GRID=f45_g37
-PROJECT=P93300041
 
-#creating the case
-$CIME/create_newcase --case $case --compset $COMPSET --res $GRID --project $PROJECT --mach derecho --run-unsupported
+# import a bunch of variables from config file
+#    e.g. $WDIR $PI_COMPSET 
+config=$1
+source <(grep = $1)
 
-#working on the case a little bit
-cd $case
+
+# create case
+caseroot=$WDIR"/"$CASE1
+cd $CDIR
+./create_newcase --case $caseroot --compset $PI_COMPSET --res $GRID --project $PROJECT --mach derecho --run-unsupported
+
+
+# setup case
+cd $caseroot
 ./case.setup
+
+
+# some xml changes
 ./xmlchange STOP_N=1
 ./xmlchange STOP_OPTION=nmonths
 ./xmlchange JOB_PRIORITY=premium
@@ -22,9 +34,9 @@ cd $case
 #build the case (DO NOT SUBMIT!!!)
 ./case.build
 
-#tether will submit the case in case.txt
-cd $wdir
-echo $case > case.txt
 
-#tell tether what to do after this case
-echo "bash part2.sh" > commands.txt
+# tether commands
+cd $WDIR
+echo "./part2.sh example1.config" > commands.txt
+echo $CASE1 > case.txt
+
