@@ -1,4 +1,246 @@
 ===============================================================
+Tag name: ctsm5.3.071
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Aug 22 13:49:25 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [Issue #3375: Enabling running an initialization test at mpasa3p75](https://github.com/ESCOMP/CTSM/issues/3375)
+- [Issue #3402: py_env_create and a test broken after Derecho updates to conda/mamba](https://github.com/ESCOMP/CTSM/issues/3402)
+- [Issue #3417: Use shr_abort_mod for endrun, and add optional arguments for file and line](https://github.com/ESCOMP/CTSM/issues/3417)
+- [Issue #3420: Don't have endrun abort on bad subgrid_level](https://github.com/ESCOMP/CTSM/issues/3420)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Docs added for new query_paramfile and set_paramfile tools.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New SETPARAMFILE SystemTest, one of which has been added to aux_clm and clm_pymods
+- Adds a test with resolution mpasa3p75_mpasa3p75_mt13 to new uhr_decomp_init suite (of which it's the only member)
+- run_self_tests testmod changed; replaced in some tests by new for_testing_fastsetup_bypassrun testmod.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- DIFF
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+- SMS_D_Ln1.f10_f10_mg37.I2000Clm50BgcCropQianRs.derecho_intel.clm-run_self_tests changes answers due to differences in user_nl_clm and shell_commands.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3403: Fix py_env_create and tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3403)
+- [Pull Request #3390: Make npcropmin/max private to pftconMod by samsrabin](https://github.com/ESCOMP/CTSM/pull/3390)
+- [Pull Request #3418: Endrun work by ekluzek](https://github.com/ESCOMP/CTSM/pull/3418)
+- [Pull Request #3408: Logging improvements for GDD-generation workflow by samsrabin](https://github.com/ESCOMP/CTSM/pull/3408)
+- [Pull Request #3397: New tools: query_paramfile and set_paramfile by samsrabin](https://github.com/ESCOMP/CTSM/pull/3397)
+- [Pull Request #3413: Add a test for Mpasa3p75 by ekluzek](https://github.com/ESCOMP/CTSM/pull/3413)
+- [Pull Request #3431: b4b-dev merge 2025-08-22 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3431)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.070
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri 22 Aug 2025 02:29:15 AM MDT
+One-line Summary: Update default FATES parameter file and add FATES managed fire namelist option
+
+Purpose and description of changes
+----------------------------------
+
+This updates the FATES tag and associated default parameter file.  The tag update includes a 
+new managed fire feature which is controlled by a new namelist option.  The majority of
+the parameter file updates are associated with this new feature, although there is also
+a smaller set of minor fixes and removal of depricated parameters.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+  Added a new option, use_fates_managed_fire
+
+Changes to tests or testing:
+  Added a new testmod to test use_fates_managed_fire.
+  Added a unit test associated to make sure SPITFIRE mode is enabled when managed fire option is on.
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - pASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes, only for FATES testmods
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: For FATES landuse (LUH2) modes only
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+    
+    Answer changes are confined to FATES landuse only mode due to the
+    parameter file fix with FATES pull request 1412.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.84.0_api.40.0.0 -> sci.1.87.0_api.41.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3372
+https://github.com/NGEET/fates/pull/1444
+https://github.com/NGEET/fates/pull/1419
+https://github.com/NGEET/fates/pull/1412
+https://github.com/NGEET/fates/pull/1360
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.069
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Tue Aug 12 09:52:59 MDT 2025
+One-line Summary: Add SystemTests to run subset_data and then CTSM
+
+Purpose and description of changes
+----------------------------------
+
+Adds SUBSETDATAPOINT and SUBSETDATAREGION tests to aux_clm (and new subset_data suite). These run subset_data for either a point or a six-cell region, then run CTSM with the outputs.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves [Issue #1491: Add two new tests that run subset_data and then run a case from it](https://github.com/ESCOMP/CTSM/issues/1491)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+- Adds test SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default
+- Adds test SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default
+- Adds new subset_data suite with those tests in it
+- Those tests are also in aux_clm
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - Unit, black, and pylint checks pass. Two system tests fail due to recent conda and mamba updates on Derecho; these have been fixed on b4b-dev with [Pull Request #3403: Fix py_env_create and tests by samsrabin](https://github.com/ESCOMP/CTSM/pull/3403)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [Pull Request #3292: ctsm5.3.069: Add SystemTests to run subset_data and then CTSM by samsrabin](https://github.com/ESCOMP/CTSM/pull/3292)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.068
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 11 Aug 2025 02:27:39 PM MDT
