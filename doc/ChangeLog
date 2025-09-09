@@ -16,8 +16,6 @@ Significant changes to scientifically-supported configurations
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
 
-    [Put an [X] in the box for any configuration with significant answer changes.]
-
 [ ] clm6_0
 
 [ ] clm5_0
@@ -60,8 +58,15 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- DIFF
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+- SMS_D_Ln1.f10_f10_mg37.I2000Clm50BgcCropQianRs.derecho_intel.clm-run_self_tests changes answers due to differences in user_nl_clm and shell_commands.
 
 
 Other details
