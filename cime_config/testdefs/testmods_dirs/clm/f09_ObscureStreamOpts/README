@@ -1,0 +1,6 @@
+This test runs different stream mapalgo and tintalgo  options for various streams to make sure they work.
+
+Tests with it need to be at f09 resolution so that the redist option can be tried
+
+
+NOTE: The none option doesn't seem to work, which likely means it only works with data for a single grid point EBK 7/23/2025
