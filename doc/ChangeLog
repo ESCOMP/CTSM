@@ -1,4 +1,98 @@
 ===============================================================
+Tag name: ctsm5.3.074
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon 08 Sep 2025 06:04:38 PM MDT
+One-line Summary: Update ctsm6 default paramfile and finidat files
+
+Purpose and description of changes
+----------------------------------
+
+ - Copied the new files to /inputdata and rimported them to the svn repository
+ - Updated namelist_defaults_ctsm.xml
+
+ New paramfile /glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata/ctsm60_params_cal115_c250813.nc
+
+ New finidat files in /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/initdata_esmf/ctsm5.4:
+ f19 2000 Bgc ctsm53065_54surfdata_PPEcal115_115_HIST.clm2.r.2000-01-01-00000.nc
+ f19 1850 Bgc ctsm53065_54surfdata_PPEcal115_115_pSASU.clm2.r.0161-01-01-00000.nc
+
+ ne30 1979 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.1979-01-01-00000.nc
+ ne30 2000 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2000-01-01-00000.nc
+ ne30 2010 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2010-01-01-00000.nc
+ ne30 1850 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_pSASU.clm2.r.0161-01-01-00000.nc
+
+ f09 1979 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.1979-01-01-00000.nc
+ f09 2000 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2000-01-01-00000.nc
+ f09 2010 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2010-01-01-00000.nc
+ f09 1850 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_pSASU.clm2.r.0161-01-01-00000.nc
+
+ f09 1850 Sp ctsm5.4_5.3.068_PPEcal115_SP_f09_121_1850.clm2.r.0041-01-01-00000.nc
+ f09 2000 Sp ctsm5.4_5.3.068_PPEcal115_SP_f09_121_HIST.clm2.r.2000-01-01-00000.nc
+ ne30 1850 Sp ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_1850.clm2.r.0041-01-01-00000.nc
+ ne30 2000 Sp ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_HIST.clm2.r.2000-01-01-00000.nc
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Updated default files as listed above
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Same comment
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ bld/unit_testers/build-namelist_test.pl
+ I removed "--mask gx1v7" from a few tests to allow them to pass when the mask has been updated to tx2_3v2
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (expected failures reported in #3050)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ctsm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3460
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.073
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu 28 Aug 2025 01:10:16 PM MDT
