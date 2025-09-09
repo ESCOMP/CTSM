@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.074
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri 05 Sep 2025 06:14:32 PM MDT
+Date: Mon 08 Sep 2025 06:04:38 PM MDT
 One-line Summary: Update ctsm6 default paramfile and finidat files
 
 Purpose and description of changes
@@ -58,10 +58,9 @@ Changes to the datasets (e.g., parameter, surface or initial files):
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
-
+ bld/unit_testers/build-namelist_test.pl
+ I removed "--mask gx1v7" from a few tests to allow them to pass when the mask has been updated to tx2_3v2
 
 Testing summary:
 ----------------
@@ -74,8 +73,8 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
