@@ -7,7 +7,7 @@ module CNGRespMod
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use pftconMod              , only : npcropmin, pftcon
+  use pftconMod              , only : is_prognostic_crop, pftcon
   use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
   use PatchType              , only : patch    
   use CanopyStateType        , only : canopystate_type              
@@ -145,7 +145,7 @@ contains
          respfact_livecroot_storage = 1.0_r8 	
          respfact_livestem_storage = 1.0_r8 	
          
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p)) * respfact_livestem     
 
             cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * &

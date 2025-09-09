@@ -338,6 +338,30 @@
     </phase>
   </test>
 
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default">
+    <phase name="COMPARE_base_no_interp">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>This should be resolved for the 5.4 release.</comment>
+    </phase>
+  </test>
+
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1.f09_t232.I1850Clm60BgcCrop.derecho_intel.clm-default--clm-matrixcnOn_ignore_warnings">
+    <phase name="COMPARE_base_no_interp">
+      <status>FAIL</status>
+      <issue>#3252</issue>
+      <comment>This should be resolved for the 5.4 release.</comment>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld5.f09_g17.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3250</issue>
+      <comment>This should be resolved for the 5.4 release.</comment>
+    </phase>
+  </test>
+
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
   <test name="SMS_Lh3.f10_f10_mg37.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">

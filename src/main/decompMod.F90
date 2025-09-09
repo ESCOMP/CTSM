@@ -361,7 +361,7 @@ contains
   end function get_proc_clumps
 
   !-----------------------------------------------------------------------
-  integer function get_global_index(subgrid_index, subgrid_level)
+  integer function get_global_index(subgrid_index, subgrid_level, donot_abort_on_badindex)
 
     !----------------------------------------------------------------
     ! Description
@@ -373,23 +373,47 @@ contains
     ! Arguments
     integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
     integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined above
+    logical , intent(in), optional :: donot_abort_on_badindex ! Don't abort if given a bad index
     !
     ! Local Variables:
     type(bounds_type) :: bounds_proc   ! processor bounds
     integer           :: beg_index     ! beginning proc index for subgrid_level
+    integer           :: end_index     ! ending proc index for subgrid_level
+    integer           :: index         ! index of the point to get
     integer, pointer  :: gindex(:)
+    logical           :: abort_on_badindex = .true.
     !----------------------------------------------------------------
 
+    if (present(donot_abort_on_badindex)) then
+       abort_on_badindex = .not. donot_abort_on_badindex
+    end if
     call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
     beg_index = get_beg(bounds_proc, subgrid_level)
+    end_index = get_end(bounds_proc, subgrid_level)
     if (beg_index == -1) then
        write(iulog,*) 'get_global_index: subgrid_level not supported: ', subgrid_level
-       call shr_sys_abort('subgrid_level not supported' // &
-            errmsg(sourcefile, __LINE__))
+       if (abort_on_badindex) then
+          call shr_sys_abort('subgrid_level not supported')
+       else
+          get_global_index = -1
+          return
+       end if
     end if
 
     call get_subgrid_level_gindex(subgrid_level=subgrid_level, gindex=gindex)
-    get_global_index = gindex(subgrid_index - beg_index + 1)
+    index = subgrid_index - beg_index + 1
+    if ( (index < beg_index) .or. (index > end_index) ) then
+       if (abort_on_badindex) then
+          write(iulog,*) 'get_global_index: subgrid_index out of bounds: ', &
+               'subgrid_index = ', subgrid_index, ', beg_index = ', beg_index, &
+               ', end_index = ', end_index, ', subgrid_level = ', subgrid_level
+          call shr_sys_abort('subgrid_index out of bounds')
+       else
+          get_global_index = -1
+          return
+       end if
+    end if
+    get_global_index = gindex(index)
 
   end function get_global_index
 
@@ -537,7 +561,7 @@ contains
        gindex => gindex_cohort
     case default
        write(iulog,*) 'get_subgrid_level_gindex: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort()
+       call shr_sys_abort('bad subgrid_level')
     end select
 
   end subroutine get_subgrid_level_gindex
