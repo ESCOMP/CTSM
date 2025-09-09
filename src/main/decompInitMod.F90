@@ -84,7 +84,7 @@ contains
     integer, allocatable :: gindex_global_mpiscan(:)! ginfrx_global_mpiscan for the local PE based on the MPI_SCAN
     type(processor_type) :: procinfo_mpiscan ! procinfo for local PE based on the MPI_SCAN
     integer :: cell_id_offset
-    integer :: i, j, g
+    integer :: i, j, g, lc
     ! end temporary testing stuff
     !------------------------------------------------------------------------------
     call memcheck('decompInit_lnd: before allocate')
@@ -235,10 +235,6 @@ contains
         call endrun(msg='Error from MPI_SCAN', file=sourcefile, line=__LINE__)
     end if
     cell_id_offset = cell_id_offset + 1
-    ! Assume clumps_pproc is 1 for now...
-    !if ( clump_pproc > 1 )then
-        !call endrun(msg='This test assumes clump_pproc is 1', file=sourcefile, line=__LINE__)
-    !end if
     procinfo_mpiscan%ncells  = procinfo%ncells
     procinfo_mpiscan%begg = cell_id_offset - procinfo%ncells
     procinfo_mpiscan%endg = cell_id_offset - 1
@@ -276,39 +272,50 @@ contains
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
     call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
-    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after prcoinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after procinfo is finalized
     if (ier /= 0) return
 
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
+
+    do cid = 1, clump_pproc
+       write(iulog,*) 'iam, cid, clumps(cid)%owner', iam, cid, clumps(cid)%owner
+    end do
     do n = procinfo%begg,procinfo%endg
+       write(iulog,*) ' g, n, gdc2glo, iam = ', n, n-procinfo%begg+1, gdc2glo(n), iam
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
     ! Temporary testing for MPI_SCAN, for just the local PE
     g = procinfo%begg
+    do lc = 1, clump_pproc
     do ln = 1,lns
        if (amask(ln) == 1) then
           cid = lcid(ln)
           if ( cid > 0 )then
           if (clumps(cid)%owner == iam) then
+          if ( procinfo%cid(lc) == cid ) then
+             write(iulog,*) ' cid, clumps(cid)%owner, iam = ', cid, clumps(cid)%owner, iam
              if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
                 write(iulog,*) ' iam, g = ', iam, g
                 call endrun(msg='g out of bounds for MPI_SCAN test', file=sourcefile, line=__LINE__)
              end if  
+             write(iulog,*) ' g, ggidx, iam = ', n, procinfo%ggidx(g), iam
              procinfo%ggidx(g) = ln
              g = g + 1
           end if
           end if
+          end if
        end if
+    end do
     end do
     allocate(gindex_global_mpiscan(1:bounds%endg))
     do n = procinfo%begg,procinfo%endg
-        write(iulog,*) ' n, lni, lnj, ggidx = ', n, lni, lnj, procinfo%ggidx(n)
+        gindex_global_mpiscan(n-procinfo%begg+1) = procinfo%ggidx(n)
+        write(iulog,*) ' n, lni, lnj, ggidx, iam = ', n, lni, lnj, procinfo%ggidx(n), iam
         call procinfo%calc_globalxy_indices( n, lni, lnj, i, j )
         procinfo%gi(n) = i
         procinfo%gj(n) = j
-        gindex_global_mpiscan(n-procinfo%begg+1) = procinfo%ggidx(n)
     end do
     call assert_equal(gindex_global, gindex_global_mpiscan, &
                       msg='decompInit_lnd(): gindex_global MPI_SCAN error')
@@ -391,16 +398,6 @@ contains
             call endrun(msg="allocation error2 for clumpcnt", file=sourcefile, line=__LINE__)
             return
          end if
-         allocate(procinfo%gi(clump_pproc), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%gi', file=sourcefile, line=__LINE__)
-            return
-         endif
-         allocate(procinfo%gj(clump_pproc), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%gj', file=sourcefile, line=__LINE__)
-            return
-         endif
 
       end subroutine decompInit_lnd_allocate
 
