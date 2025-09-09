@@ -1,4 +1,74 @@
 ===============================================================
+Tag name: ctsm5.3.075
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 09 Sep 2025 03:12:17 PM MDT
+One-line Summary: Change default glcmec_downscale_longwave from true to false for clm6
+
+Purpose and description of changes
+----------------------------------
+
+ Why: Adam Herrington, Bill Lipscomb, Gunter Leguy found that turning off the LW downscaling improves the melt and runoff biases.
+
+ How: Change glcmec_downscale_longwave to false for clm6 in namelist_defaults_ctsm.xml.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3467 Turn off LW downscaling over glacier elevation classes by default
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ As explained above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3475
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.074
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon 08 Sep 2025 06:04:38 PM MDT
