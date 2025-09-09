@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = a5f5a3b4d36c7feece59068c6650da5d50c54852  # edge-area-202410: Merge tag 'sci.1.87.0_api.41.0.0' into edge-area-202410
+fxtag = 4d3b7d4fa09141c030fa28ab9687d916aaff6f0c  # edge-area-202410-ts20250909-2: Don't set nlevedgeforest=1 if hlm_use_edge_forest false.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
