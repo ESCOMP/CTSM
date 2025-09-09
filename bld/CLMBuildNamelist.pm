@@ -2763,6 +2763,9 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                    $log->fatal_error("Problem interpreting init_interp_attributes from the namelist_defaults file: $pair");
                 }
              }
+             # Add init_interp_fill_missing_urban_with_HD defaults as a function of sim_year and phys
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'init_interp_fill_missing_urban_with_HD',
+                      'sim_year'=>$settings{'sim_year'}, 'phys'=>$physv->as_string() );
           }
        } else {
          $try = $done
