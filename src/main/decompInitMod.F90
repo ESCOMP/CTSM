@@ -235,7 +235,6 @@ contains
         call endrun(msg='Error from MPI_SCAN', file=sourcefile, line=__LINE__)
     end if
     cell_id_offset = cell_id_offset + 1
-    write(iulog,*) 'ncells, cell_id_offset, iam = ', procinfo%ncells, cell_id_offset, iam
     ! Assume clumps_pproc is 1 for now...
     !if ( clump_pproc > 1 )then
         !call endrun(msg='This test assumes clump_pproc is 1', file=sourcefile, line=__LINE__)
@@ -303,7 +302,6 @@ contains
           end if
        end if
     end do
-    write(iulog,*) ' iam, ggidx = ', iam, procinfo%ggidx(:)
     allocate(gindex_global_mpiscan(1:bounds%endg))
     do n = procinfo%begg,procinfo%endg
         write(iulog,*) ' n, lni, lnj, ggidx = ', n, lni, lnj, procinfo%ggidx(n)

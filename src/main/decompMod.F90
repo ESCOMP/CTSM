@@ -189,7 +189,6 @@ contains
     j = floor( real(g, r8) / real(ni, r8) ) + 1
     if ( mod(g,ni) == 0 ) j = j - 1
     i = g - (j-1)*ni
-    write(iulog,*) 'i, j = ', i, j
     if ( (i < 1) .or. (i > ni) ) then
        call shr_sys_abort( 'Computed global i value out of range', file=sourcefile, line=__LINE__)
        return
