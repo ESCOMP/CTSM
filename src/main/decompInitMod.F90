@@ -287,17 +287,18 @@ contains
     enddo
 
     ! Temporary testing for MPI_SCAN, for just the local PE
-    g = 0
+    g = procinfo%begg
     do ln = 1,lns
        if (amask(ln) == 1) then
           cid = lcid(ln)
           if ( cid > 0 )then
           if (clumps(cid)%owner == iam) then
-             g = g + 1
              if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
+                write(iulog,*) ' iam, g = ', iam, g
                 call endrun(msg='g out of bounds for MPI_SCAN test', file=sourcefile, line=__LINE__)
              end if  
              procinfo%ggidx(g) = ln
+             g = g + 1
           end if
           end if
        end if
