@@ -27,8 +27,8 @@
 #
 [submodule "fates"]
 path = src/fates
-url = https://github.com/NGEET/fates
-fxtag = sci.1.87.0_api.41.0.0
+url = https://github.com/samsrabin/fates
+fxtag = 4d3b7d4fa09141c030fa28ab9687d916aaff6f0c  # edge-area-202410-ts20250909-2: Don't set nlevedgeforest=1 if hlm_use_edge_forest false.
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates

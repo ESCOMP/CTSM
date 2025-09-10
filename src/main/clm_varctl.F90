@@ -333,6 +333,7 @@ module clm_varctl
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
   logical, public            :: use_fates_managed_fire = .false.        ! true => turn on managed fire
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
+  logical, public            :: use_fates_edge_forest = .false.         ! true => turn on edge forest module
   character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   character(len=256), public :: fates_stomatal_model = ''               ! stomatal conductance model, Ball-berry or Medlyn
   character(len=256), public :: fates_stomatal_assimilation = ''        ! net or gross assimilation modes
