@@ -110,3 +110,11 @@
  - and then call:
      - ```qselect -u $USER | head -n 5 | tail -n 3 | xargs qdel```
 
+
+### restarting tether, after a debugging fix
+ - clean house as needed, e.g. you may need to rm -r mycase and rm -r /glade/derecho/scratch/USER/mycase     
+ - edit commands.txt to reference the script you want to start with
+ - edit case.txt to point to the case that will be submitted
+ - remove the afterok line from the last segment0XX.job
+ - qsub segment0XX.job
+
