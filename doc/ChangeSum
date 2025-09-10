@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.073   slevis 08/28/2025 Update .gitmodules to cesm3_0_alpha07c
        ctsm5.3.072 jinmuluo 08/26/2025 New vertical movement scheme for soil nitrate
        ctsm5.3.071 samrabin 08/22/2025 Merge b4b-dev to master
        ctsm5.3.070 glemieux 08/22/2025 Update default FATES parameter file and add FATES managed fire namelist option
