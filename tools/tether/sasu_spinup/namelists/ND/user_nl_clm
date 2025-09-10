@@ -1,0 +1,12 @@
+! ----------------------------------------------------------------------------------
+! ND spinup namelist
+!   copied from /glade/work/djk2120/ctsm_tether/tools/tether/sasu_spinup/namelists/ND/user_nl_clm
+! ----------------------------------------------------------------------------------
+
+ hist_empty_htapes = .true.
+ hist_nhtfrq = -8760
+ hist_mfilt = 10
+
+ hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS','H2OSNO','NFIX'
+ reseed_dead_plants=.false.
+
