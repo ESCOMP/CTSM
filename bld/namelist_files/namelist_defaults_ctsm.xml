@@ -2077,16 +2077,14 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
 
 <!-- crop calendars: default maturity requirement files -->
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm4_5_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm5_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm4_5_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm5_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
-<stream_fldfilename_cultivar_gdds lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
-<!-- These fallbacks must come AFTER the lnd_tuning_mode-specific ones -->
-<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
-<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 
 <!-- crop calendars: default input files -->
 <stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
