@@ -44,7 +44,7 @@ REFDATE=${last_date%-*}
 ./xmlchange GET_REFCASE="True"
 ./xmlchange RUN_REFDIR=$REFDIR
 ./xmlchange RUN_REFDATE=$REFDATE
-
+./xmlchange MOSART_MODE=NULL
 
 # cp in namelist
 namelists=$NLDIR"/ND"
