@@ -99,7 +99,7 @@ CROP = \
 	crop-global-future \
 	crop-global-hist-f09 \
 	crop-global-1850-ne120 \
-	crop-global-present-ne120 \
+	crop-global-present-vrandne120 \
 	crop-global-present-nldas \
 	crop-global-present-ne30 \
 	crop-global-present \
@@ -216,7 +216,7 @@ crop-global-present-ne30 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 4 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-present-ne120 : FORCE
+crop-global-present-vrandne120 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 4 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
@@ -315,7 +315,7 @@ crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f09 \
                                crop-global-SSP2-4.5-hcru \
                                crop-global-SSP2-4.5-ne16 \
                                crop-global-SSP2-4.5-ne30 \
-                               crop-global-SSP2-4.5-ne0np4 \
+                               crop-global-SSP2-4.5-vrandne120 \
                                crop-global-SSP2-4.5-C96 \
                                crop-global-SSP2-4.5-mpasa120
 
@@ -359,7 +359,7 @@ crop-global-SSP2-4.5-ne30 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-SSP2-4.5-ne0np4 : FORCE
+crop-global-SSP2-4.5-vrandne120 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
