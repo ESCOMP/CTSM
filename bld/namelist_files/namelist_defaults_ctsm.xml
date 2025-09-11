@@ -257,10 +257,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <fire_method phys="clm4_5" >li2014qianfrc</fire_method>
 
 <max_rh30_affecting_fuel>90.d00</max_rh30_affecting_fuel>
-<defo_fire_precip_thresh_bet>4.0d00</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt>1.8d00</defo_fire_precip_thresh_bdt>
 <borpeat_fire_soilmoist_denom>0.3d00</borpeat_fire_soilmoist_denom>
 <nonborpeat_fire_precip_denom>1.0d00</nonborpeat_fire_precip_denom>
+
+<defo_fire_precip_thresh_bet>4.0d00</defo_fire_precip_thresh_bet>
+<defo_fire_precip_thresh_bet fire_method="li2024crujra">3.0d00</defo_fire_precip_thresh_bet>
 
 <rh_low                   fire_method="li2014qianfrc" >30.0d00</rh_low>
 <rh_hgh                   fire_method="li2014qianfrc" >80.0d00</rh_hgh>
@@ -360,7 +362,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <rh_hgh                   fire_method="li2024gswpfrc" >80.0d00</rh_hgh>
 <bt_min                   fire_method="li2024gswpfrc" >0.85d00</bt_min>
 <bt_max                   fire_method="li2024gswpfrc" >0.98d00</bt_max>
-<cli_scale                fire_method="li2024gswpfrc" >0.01d00</cli_scale>
+<cli_scale                fire_method="li2024gswpfrc" >0.04d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2024gswpfrc" >0.28d-4</boreal_peatfire_c>
 <pot_hmn_ign_counts_alpha fire_method="li2024gswpfrc" >0.010d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2024gswpfrc" >0.71d-4</non_boreal_peatfire_c>
@@ -379,11 +381,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <rh_hgh                   fire_method="li2024crujra" >85.0d00</rh_hgh>
 <bt_min                   fire_method="li2024crujra" >0.85d00</bt_min>
 <bt_max                   fire_method="li2024crujra" >0.98d00</bt_max>
-<cli_scale                fire_method="li2024crujra" >0.01d00</cli_scale>
+<cli_scale                fire_method="li2024crujra" >0.03d00</cli_scale>
 <boreal_peatfire_c        fire_method="li2024crujra" >0.28d-4</boreal_peatfire_c>
 <pot_hmn_ign_counts_alpha fire_method="li2024crujra" >0.010d00</pot_hmn_ign_counts_alpha>
 <non_boreal_peatfire_c    fire_method="li2024crujra" >0.71d-4</non_boreal_peatfire_c>
-<cropfire_a1              fire_method="li2024crujra" >0.3d00</cropfire_a1>
+<cropfire_a1              fire_method="li2024crujra" >0.34d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2024crujra" >0.33d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2024crujra" >75.d00</lfuel>
 <ufuel                    fire_method="li2024crujra" >825.d00</ufuel>
@@ -547,7 +549,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm5.3.041.Nfix_params.v13.c250221_upplim250.nc</paramfile>
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/clm60_params.ctsm6_li2024.c250822.nc</paramfile>
 <paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c250311.nc</paramfile>
 <paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c250311.nc</paramfile>
 
@@ -2074,19 +2076,28 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_year_last_cropcal_cultivar_gdds   >2000</stream_year_last_cropcal_cultivar_gdds>
 <model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
 
+<!-- crop calendars: default maturity requirement files -->
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm4_5_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm5_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm4_5_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm5_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true." lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+
 <!-- crop calendars: default input files -->
 <stream_fldFileName_swindow_start cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
 <stream_fldFileName_swindow_end cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
-<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_meshfile_cropcal cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
 <stream_fldFileName_swindow_start cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_starts_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_start>
 <stream_fldFileName_swindow_end cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/swindow_ends_ggcmi_crop_calendar_phase3_v1.01.2000-2000.20231005_145103.tweaked_latlons.nc</stream_fldFileName_swindow_end>
-<stream_fldfilename_cultivar_gdds cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".false.">lnd/clm2/cropdata/calendars/processed/20230714_cropcals_pr2_1deg.actually2deg.1980-2009.from_GDDB20.interpd_halfdeg.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
 <stream_fldFileName_gdd20_baseline cropcals_rx_adapt=".true." stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/gdd20bl.copied_from.gdds_20230829_161011.v2.tweaked_latlons.nc</stream_fldFileName_gdd20_baseline>
 <stream_fldFileName_gdd20_season_start stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_start>
 <stream_fldFileName_gdd20_season_end stream_gdd20_seasons=".true.">lnd/clm2/cropdata/calendars/processed/hdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc</stream_fldFileName_gdd20_season_end>
 <stream_meshfile_cropcal cropcals_rx_adapt=".true.">lnd/clm2/cropdata/calendars/processed/360x720_120830_ESMFmesh_c20210507_cdf5.tweaked_latlons.nc</stream_meshfile_cropcal>
+
 
 <!-- lightning streams namelist defaults -->
 
