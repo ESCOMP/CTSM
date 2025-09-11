@@ -31,7 +31,7 @@ module decompInitMod
   integer, public :: clump_pproc ! number of clumps per MPI process
   !
   ! !PRIVATE TYPES:
-  integer, pointer   :: lcid(:)          ! temporary for setting decomposition
+  integer, pointer   :: lcid(:)          ! temporary for setting decomposition, allocated set and used in decompInit_lnd, and used and deallocated in decompInit_clumps  (Can make it allocatable)
   integer            :: nglob_x, nglob_y ! global sizes
   integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
@@ -58,6 +58,7 @@ contains
     ! Temporary testing stuff
     use Assertions, only : assert_equal
     use decompMod  , only : processor_type, get_global_index, subgrid_level_gridcell
+    use decompMod  , only : clump_type
     ! end temporary testing stuff
     !
     ! !ARGUMENTS:
@@ -76,16 +77,24 @@ contains
     integer :: n,m,ng                 ! indices
     integer :: ier                    ! error code
     integer :: begg, endg             ! beg and end gridcells
+    !---------------------------------------------------------------------
+    ! ------ Remove these global arrays when ready ------
     integer, pointer  :: clumpcnt(:)  ! clump index counter
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
+    ! --- Remove to here -----------------
+    !---------------------------------------------------------------------
     type(bounds_type) :: bounds       ! contains subgrid bounds data
-    real(r8) :: msize, mrss
+    !---------------------------------------------------------------------
     ! Temporary testing stuff
+    real(r8) :: msize, mrss
     integer, allocatable :: gindex_global_mpiscan(:)! ginfrx_global_mpiscan for the local PE based on the MPI_SCAN
     type(processor_type) :: procinfo_mpiscan ! procinfo for local PE based on the MPI_SCAN
-    integer :: cell_id_offset
-    integer :: i, j, g, lc
+    type(clump_type), allocatable :: clumps_mpiscan(:) ! procinfo for local PE based on the MPI_SCAN
     ! end temporary testing stuff
+    !---------------------------------------------------------------------
+    integer :: i, j, g, lc, cid_previous    ! Indices
+    integer :: cell_id_offset               ! The offset for the starting gridcell number for this processor
+    integer :: begcid, endcid               ! Beginning and ending cid's for this processor
     !------------------------------------------------------------------------------
     call memcheck('decompInit_lnd: before allocate')
 
@@ -150,8 +159,9 @@ contains
           call endrun(msg="Round robin pid error", file=sourcefile, line=__LINE__)
           return
        endif
-       clumps(n)%owner = pid
+       clumps(n)%owner = pid   ! This line should be able to be removed when clumps is only for the local task
        if (iam == pid) then
+          clumps(n)%owner = pid
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
              write(iulog,*) 'round robin pid error ',n,pid,npes
@@ -193,9 +203,11 @@ contains
           endif
           lcid(ln) = cid
 
+          !---------------------------------------------------------------------
           !--- give gridcell cell to pe that owns cid ---
           !--- this needs to be done to subsequently use function
           !--- get_proc_bounds(begg,endg)
+          ! ---- These lines will be able to be removed -----
           if (iam == clumps(cid)%owner) then
              procinfo%ncells  = procinfo%ncells  + 1
           endif
@@ -205,9 +217,18 @@ contains
           if (iam >= clumps(cid)%owner) then
              procinfo%endg = procinfo%endg + 1
           endif
+          ! --- Remove to here -----------------
+          !---------------------------------------------------------------------
 
+          !--- give gridcell to cid for local processor ---
+          !--- Comment this out when ready ----------------
+          if (iam == clumps(cid)%owner) then
+             !clumps_mpiscan(cid)%ncells  = clumps_mpiscan(cid)%ncells  + 1
+          end if
+          !---------------------------------------------------------------------
           !--- give gridcell to cid ---
           !--- increment the beg and end indices ---
+          ! --- This section will be removed ---
           clumps(cid)%ncells  = clumps(cid)%ncells  + 1
           do m = 1,nclumps
              if ((clumps(m)%owner >  clumps(cid)%owner) .or. &
@@ -220,15 +241,21 @@ contains
                 clumps(m)%endg = clumps(m)%endg + 1
              endif
           enddo
+          ! --- Remove to here -----------------
+          !---------------------------------------------------------------------
 
        end if
     enddo
-
-    ! Set gindex_global
-
-    gdc2glo(:) = 0
-
-    ! Temporary testing for MPI_SCAN, for just the local PE
+    !---------------------------------------------------------------------
+    !
+    ! Do an MPI_SCAN to get the starting index for each processor ----
+    ! [Doing this both simplifies the code, reduces non-scalaable memory
+    ! and reduces execution time for loops that run over all gridcells
+    ! for each processor.]
+    ! (Doing the following few lines of coderemoved about 50 lines of complex code
+    !  as well as loops of size: ni*nj*nclumps, npes*nclumps, and ni*nj
+    !  that was being done on each processor)
+    !---------------------------------------------------------------------
     call MPI_SCAN(procinfo%ncells, cell_id_offset, 1, MPI_INTEGER, &
                   MPI_SUM, mpicom, ier)
     if ( ier /= 0 )then
@@ -238,7 +265,41 @@ contains
     procinfo_mpiscan%ncells  = procinfo%ncells
     procinfo_mpiscan%begg = cell_id_offset - procinfo%ncells
     procinfo_mpiscan%endg = cell_id_offset - 1
+    ! Temporary testing for MPI_SCAN, for just the local PE
+    allocate(procinfo_mpiscan%cid(clump_pproc))
+    procinfo_mpiscan%cid = procinfo%cid
+    cid_previous = 0
+    begcid = minval(procinfo_mpiscan%cid(:))
+    endcid = maxval(procinfo_mpiscan%cid(:))
+    call assert_equal(begcid, procinfo_mpiscan%cid(1), &
+                      msg='decompInit_lnd(): begcid is not the first, MPI_SCAN error')
+    call assert_equal(endcid, procinfo_mpiscan%cid(clump_pproc), &
+                      msg='decompInit_lnd(): endcid is not the last, MPI_SCAN error')
+    allocate(clumps_mpiscan(begcid:endcid))
     ! End temporary testing
+
+    ! ---- Set begg and endg each clump on this processor ----
+    do lc = 1, clump_pproc
+       cid = procinfo_mpiscan%cid(lc)
+       clumps_mpiscan(cid)%ncells = clumps(cid)%ncells     ! This line will be removed
+       write(iulog,*) 'lc, cid, clumps%ncells', lc, cid, clumps(cid)%ncells
+       if ( lc == 1 )then
+          clumps_mpiscan(cid)%begg = procinfo_mpiscan%begg
+       else
+          call assert_equal(cid_previous, procinfo_mpiscan%cid(lc-1), &
+                           msg='decompInit_lnd(): cid_previous MPI_SCAN error')
+          clumps_mpiscan(cid)%begg = clumps_mpiscan(cid_previous)%endg + 1
+       end if
+       clumps_mpiscan(cid)%endg = clumps_mpiscan(cid)%begg + clumps_mpiscan(cid)%ncells - 1
+       cid_previous = cid
+    end do
+
+    !---------------------------------------------------------------------
+    ! ------ Remove the following section when ready ------
+    ! Set gindex_global
+
+    gdc2glo(:) = 0
+
 
     ! clumpcnt is the ending gdc index of each clump
 
@@ -268,6 +329,8 @@ contains
        end if
     end do
     end do
+    ! --- Remove to here -----------------
+    !---------------------------------------------------------------------
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
@@ -278,15 +341,19 @@ contains
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
 
+    !---------------------------------------------------------------------
+    ! -------Remove the following section when ready ---------------------
     do cid = 1, clump_pproc
-       write(iulog,*) 'iam, cid, clumps(cid)%owner', iam, cid, clumps(cid)%owner
+    !   write(iulog,*) 'iam, cid, clumps(cid)%owner', iam, cid, clumps(cid)%owner
     end do
     do n = procinfo%begg,procinfo%endg
-       write(iulog,*) ' g, n, gdc2glo, iam = ', n, n-procinfo%begg+1, gdc2glo(n), iam
+    !   write(iulog,*) ' g, n, gdc2glo, iam = ', n, n-procinfo%begg+1, gdc2glo(n), iam
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
+    ! --- Remove to here -----------------
+    !---------------------------------------------------------------------
 
-    ! Temporary testing for MPI_SCAN, for just the local PE
+    ! Get the global vector index on the full grid for each local processors gridcell
     g = procinfo%begg
     do lc = 1, clump_pproc
     do ln = 1,lns
@@ -295,12 +362,10 @@ contains
           if ( cid > 0 )then
           if (clumps(cid)%owner == iam) then
           if ( procinfo%cid(lc) == cid ) then
-             write(iulog,*) ' cid, clumps(cid)%owner, iam = ', cid, clumps(cid)%owner, iam
              if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
                 write(iulog,*) ' iam, g = ', iam, g
                 call endrun(msg='g out of bounds for MPI_SCAN test', file=sourcefile, line=__LINE__)
              end if  
-             write(iulog,*) ' g, ggidx, iam = ', n, procinfo%ggidx(g), iam
              procinfo%ggidx(g) = ln
              g = g + 1
           end if
@@ -309,14 +374,20 @@ contains
        end if
     end do
     end do
+
+    ! Temporary testing for MPI_SCAN, for just the local PE --- allocate the test array
     allocate(gindex_global_mpiscan(1:bounds%endg))
+    ! End temporary testing
+
+    ! ---- Get the global index for each gridcell and save the i,j incices for ach gridcell on this processor
     do n = procinfo%begg,procinfo%endg
-        gindex_global_mpiscan(n-procinfo%begg+1) = procinfo%ggidx(n)
-        write(iulog,*) ' n, lni, lnj, ggidx, iam = ', n, lni, lnj, procinfo%ggidx(n), iam
+        gindex_global_mpiscan(n-procinfo%begg+1) = procinfo%ggidx(n)    ! Change this to gindex_global when ready
         call procinfo%calc_globalxy_indices( n, lni, lnj, i, j )
         procinfo%gi(n) = i
         procinfo%gj(n) = j
     end do
+
+    ! Temporary testing for MPI_SCAN, for just the local PE
     call assert_equal(gindex_global, gindex_global_mpiscan, &
                       msg='decompInit_lnd(): gindex_global MPI_SCAN error')
     call assert_equal(procinfo%begg, procinfo_mpiscan%begg, &
@@ -325,8 +396,34 @@ contains
                       msg='decompInit_lnd(): endg MPI_SCAN error')
     call assert_equal(procinfo%ncells, procinfo_mpiscan%ncells, &
                       msg='decompInit_lnd(): ncells MPI_SCAN error')
+    do lc = 1, clump_pproc
+       cid = procinfo%cid(lc)
+       call assert_equal(clumps(cid)%begg, clumps_mpiscan(cid)%begg, &
+                         msg='decompInit_lnd(): clumps begg MPI_SCAN error')
+       call assert_equal(clumps(cid)%endg, clumps_mpiscan(cid)%endg, &
+                         msg='decompInit_lnd(): clumps endg MPI_SCAN error')
+    end do
     deallocate(gindex_global_mpiscan)
+    deallocate(clumps_mpiscan)
+
+
+
     ! End temporary testing
+
+    ! General error checking that the decomposition data is setup correctly
+    call assert_equal(clumps(begcid)%begg, procinfo%begg, &
+                      msg='decompInit_lnd(): clumps(begcid) begg does not match procinfo begg')
+    call assert_equal(clumps(endcid)%endg, procinfo%endg, &
+                      msg='decompInit_lnd(): clumps(endcid) endg does not match procinfo endg')
+    call assert_equal(sum(clumps(begcid:endcid)%ncells), procinfo%ncells, &
+                      msg='decompInit_lnd(): sum of clumps ncells does not match procinfo ncells')
+
+    do cid = begcid, endcid
+       call assert_equal( (clumps(cid)%endg-clumps(cid)%begg+1), clumps(cid)%ncells, &
+                         msg='decompInit_lnd(): clumps(cid) endg-begg+1 does not match clumps ncells')
+    end do
+    call assert_equal( (procinfo%endg-procinfo%begg+1), procinfo%ncells, &
+                      msg='decompInit_lnd(): procinfo endg-begg+1 does not match procinfo ncells')
 
     call decompInit_lnd_clean()
 
@@ -371,6 +468,7 @@ contains
             call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
+         ! This will be moved to the other allocate and for a smaller size ----
          allocate(clumps(nclumps), stat=ier)
          if (ier /= 0) then
             write(iulog,*) 'allocation error for clumps: nclumps, ier=', nclumps, ier
@@ -383,6 +481,10 @@ contains
             call endrun(msg="numg is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
+         allocate(lcid(lns))
+
+         !---------------------------------------------------------------------
+         ! ---- Section to remove when ready ----
          allocate(gdc2glo(numg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error1 for gdc2glo , etc", file=sourcefile, line=__LINE__)
@@ -392,12 +494,13 @@ contains
             call endrun(msg="lns is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
-         allocate(lcid(lns))
          allocate(clumpcnt(nclumps),stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error2 for clumpcnt", file=sourcefile, line=__LINE__)
             return
          end if
+         ! --- Remove to here -----------------
+         !---------------------------------------------------------------------
 
       end subroutine decompInit_lnd_allocate
 
@@ -435,7 +538,7 @@ contains
          ! Deallocate the temporary variables used in decompInit_lnd
          deallocate(clumpcnt)
          deallocate(gdc2glo)
-         !deallocate(lcid)
+         !--- NOTE: Can only deallocate after decompInit_clumps ----
       end subroutine decompInit_lnd_clean
 
       subroutine decompInit_lnd_check_errors( ier )
@@ -671,6 +774,29 @@ contains
     deallocate(lcid)
 
     call memcheck('decompInit_clumps: after deallocate')
+
+
+    ! ------ Reset the clump type array for all non-local cid's to -1 to show it can be made smaller
+    do cid = 1, nclumps
+         if (clumps(cid)%owner /= iam) then
+            clumps(cid)%owner     = -1
+            clumps(cid)%ncells    = -1
+            clumps(cid)%nlunits   = -1
+            clumps(cid)%ncols     = -1
+            clumps(cid)%npatches  = -1
+            clumps(cid)%nCohorts  = -1
+            clumps(cid)%begg      = -1
+            clumps(cid)%begl      = -1
+            clumps(cid)%begc      = -1
+            clumps(cid)%begp      = -1
+            clumps(cid)%begCohort = -1
+            clumps(cid)%endg      = -1
+            clumps(cid)%endl      = -1
+            clumps(cid)%endc      = -1
+            clumps(cid)%endp      = -1
+            clumps(cid)%endCohort = -1
+         end if
+    end do
 
     ! Diagnostic output
 
