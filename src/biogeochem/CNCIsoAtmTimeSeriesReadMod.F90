@@ -28,6 +28,8 @@ module CIsoAtmTimeseriesMod
   logical            , public :: use_c13_timeseries = .false. ! do we use time-varying atmospheric C13?
   character(len=256) , public :: atm_c13_filename = ' '       ! file name of C13 input data
   integer, parameter , public :: nsectors_c14 = 4             ! Number of latitude sectors the C14 data has
+  integer, parameter , public :: beg_sector_c14 = nsectors_c14! The starting latitude sector for Northernmost latitude
+  integer, parameter , public :: end_sector_c14 = 1           ! The ending latitude sector for Southernnmost latitude
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -65,6 +67,7 @@ contains
     integer  :: ntim_atm_ts                  ! Number of times on file
     real(r8) :: twt_1, twt_2                 ! weighting fractions for interpolating
     integer  :: l                            ! Loop index of sectors
+    integer  :: sector_step = 1              ! Value to step the sector loop by (only 1 or -1)
     !-----------------------------------------------------------------------
 
     ! get current date
@@ -81,7 +84,8 @@ contains
     end do
 
     ! loop over lat bands to pass all three to photosynthesis
-    do l = 1,nsectors_c14
+    if ( beg_sector_c14 > end_sector_c14 ) sector_step = -1
+    do l = beg_sector_c14, end_sector_c14, sector_step
        ! interpolate between nearest two points in atm c14 timeseries
        if (ind_below .eq. 0 ) then 
           delc14o2_atm(l) = atm_delta_c14(l,1)
