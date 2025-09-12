@@ -275,6 +275,7 @@ contains
                       msg='decompInit_lnd(): begcid is not the first, MPI_SCAN error')
     call assert_equal(endcid, procinfo_mpiscan%cid(clump_pproc), &
                       msg='decompInit_lnd(): endcid is not the last, MPI_SCAN error')
+    write(iulog,*) ' begcid, endcid, procinfo_mpiscan%cid = ', begcid, endcid, procinfo_mpiscan%cid
     allocate(clumps_mpiscan(begcid:endcid))
     ! End temporary testing
 
@@ -415,7 +416,10 @@ contains
                       msg='decompInit_lnd(): clumps(begcid) begg does not match procinfo begg')
     call assert_equal(clumps(endcid)%endg, procinfo%endg, &
                       msg='decompInit_lnd(): clumps(endcid) endg does not match procinfo endg')
-    call assert_equal(sum(clumps(begcid:endcid)%ncells), procinfo%ncells, &
+    write(iulog,*) ' iam, clumps ncells = ', iam, clumps(begcid:endcid)%ncells
+    write(iulog,*) ' iam, sum( clumps ncells ) = ', iam, sum( clumps(procinfo%cid)%ncells )
+    write(iulog,*) ' iam, proc ncells = ', iam, procinfo%ncells
+    call assert_equal(sum(clumps(procinfo%cid)%ncells), procinfo%ncells, &
                       msg='decompInit_lnd(): sum of clumps ncells does not match procinfo ncells')
 
     do cid = begcid, endcid
