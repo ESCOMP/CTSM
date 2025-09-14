@@ -291,7 +291,7 @@ contains
     use decompMod, only : get_proc_bounds
     type(bounds_type) :: bounds
     integer :: expected_gcells, iclump, g, beg_global_index, gcell_per_task
-    integer :: expected_begg, expected_endg
+    integer :: expected_begg, expected_endg, lc
 
     call setup()
     expected_gcells = ni*nj
@@ -312,8 +312,10 @@ contains
     else
        call assert_equal( nclumps/clump_pproc, npes, msg='nclumps divided by clump_pproc should match number of processors when clump_pproc > 1' )
     end if
-    do iclump = 1, nclumps
-       call assert_equal( clumps(iclump)%owner, iclump-1, msg='clumps owner is not correct' )
+    ! Just test over the local clumps
+    do lc = 1, clump_pproc
+       iclump = procinfo%cid(lc)
+       call assert_equal( clumps(iclump)%owner, iam, msg='clumps owner is not correct' )
        call assert_equal( clumps(iclump)%ncells, gcell_per_task, msg='clumps ncells is not correct' )
     end do
     call clean()
