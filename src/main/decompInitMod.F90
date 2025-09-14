@@ -753,6 +753,8 @@ contains
     enddo
 
     do n = 1,nclumps
+       ! Only do the error checking over the local processor
+       if (clumps(n)%owner == iam) then
        if (clumps(n)%ncells   /= allvecg(n,1) .or. &
            clumps(n)%nlunits  /= allvecg(n,2) .or. &
            clumps(n)%ncols    /= allvecg(n,3) .or. &
@@ -768,6 +770,7 @@ contains
 
           call endrun(msg="allvecg error cohorts", file=sourcefile, line=__LINE__)
           return
+       endif
        endif
     enddo
 
