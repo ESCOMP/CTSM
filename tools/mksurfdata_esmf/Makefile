@@ -100,6 +100,11 @@ STANDARD = \
 # and I added here because it spans 1979-2030:
 #   crop-global-SSP2-4.5-vrandne120
 CROP = \
+	crop-global-hist \
+	crop-global-hist-low-res \
+	crop-global-hist-ne16 \
+	crop-global-hist-ne30 \
+	crop-global-hist-mpasa480 \
 	crop-global-hist-1700 \
 	crop-global-1850-ne120 \
 	crop-global-present-vrandne120 \
@@ -275,6 +280,10 @@ crop-global-hist-ne16 : FORCE
 
 crop-global-hist-ne30 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-hist-mpasa480 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 4 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 1x1-numa-present : FORCE
