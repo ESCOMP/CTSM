@@ -1,6 +1,0 @@
-! ----------------------------------------------------------------------------------
-! AD spinup namelist
-!   copied from /glade/work/djk2120/ctsm_tether/tools/tether/sasu_spinup/namelists/AD/user_nl_clm
-! ----------------------------------------------------------------------------------
-
-reseed_dead_plants=.true.

@@ -15,7 +15,7 @@ source <(grep = $config)
 
 
 # run the spinup stability script
-python $TDIR"/spinup_stability.py" AD.yml
+python $SDIR"/spinup_stability.py" AD.yml
 status=$?
 echo "status: "$status
 

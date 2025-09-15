@@ -6,6 +6,7 @@ import sys
 import yaml
 
 def parse_cf(cf,lasum):
+    ''' logic for parsing each conversion factor entry in the yaml file '''
     if type(cf)==str:
         cf=parse_cfstr(cf,lasum)
     elif type(cf)==list:
@@ -16,18 +17,27 @@ def parse_cf(cf,lasum):
     return cf
 
 def parse_cfstr(cf,lasum):
+    '''
+    replaces the str 1/lasum with the actual number 1/lasum, where lasum is the sum of the landarea, typically (ds.area*ds.landfrac).sum(dim=['lat','lon'])
+    '''
     if cf=='1/lasum':
         return 1/lasum
     else:
         return float(cf)
 
 def parse_cfs(cfs,lasum):
+    '''
+    translate the conversion factors inherited from the yaml to a dictionary of conversion factors, with two logic rules, lists are returned as the group product, and strings are converted to float unless they are special reserved phrases (e.g. '1/lasum')
+    '''
     for v in cfs:
         cfs[v]=parse_cf(cfs[v],lasum)
     return cfs                  
 
 def check_freq(tmp):
-    #infer if history is monthly or annual
+    '''infer if the dataset time frequency is monthly or annual'''
+    # there has to be a better way to do this
+    # is there alreay a function for this?
+    # tricky to handle old vs. new clm history files
     nsecs_per_day=24*60*60*1e9
     if 'nbnd' in tmp.time_bounds.dims:
         dt=(tmp.time_bounds.isel(time=-1,nbnd=1)-
@@ -46,17 +56,9 @@ def get_ds(files,freq,dvs):
     def pp(ds):
         return ds[dvs]
     if freq=='monthly':
-        t=xr.DataArray(xr.date_range('1999',freq='MS',periods=12),dims='time')
-        dpm=xr.DataArray(t['time.daysinmonth'].values,dims='time')
-        #splitting files up by year
-        #too slow to have one big open_mfdataset
-        fsets=[files[i:i + 12] for i in range(0, len(files), 12)]
-        dsets=[]
-        for i,fset in enumerate(fsets):
-            ds=xr.open_mfdataset(fset,combine='by_coords',preprocess=pp,
-                                 decode_timedelta=False, parallel = False)
-            dsets.append((dpm*ds).sum(dim='time')/365)
-            ds=xr.concat(dsets,dim='time')
+        # this is really quite slow without dask
+        # I have ideas for this, but will have to come back later
+        raise NotImplementedError
     else:
         ds=xr.open_mfdataset(files,combine='by_coords',preprocess=pp,
                              decode_timedelta=False, parallel = False)
@@ -66,8 +68,9 @@ def get_ds(files,freq,dvs):
 def plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,tpct,la,lasum):
     plt.figure(figsize=[16,12])
     for j,v in enumerate(xs):
-        plt.subplot(3,3,j+1)
+        plt.subplot(3,3,j+1) #hard-coded, should probably revise
         if 'gridded' not in v:
+            # this is one type of plot, for global variables
             for i in range(ncycles):
                 plt.plot(range(nyears),xs[v].isel(time=np.arange(nyears)+i*nyears),label='cycle_'+str(i).zfill(3))
             plt.ylabel(v+' ['+units[v]+']')
@@ -82,6 +85,7 @@ def plot_drifts(xs,thiscase,ncycles,nyears,units,thresholds,drifts,equils,tpct,l
             else:
                 tstr+=' [not evaluated]'
         else:
+            # this is an alternative plot for gridded landarea disequilibrium
             x=xs[v]
             if v in thresholds:
                 thresh=thresholds[v]
@@ -191,6 +195,7 @@ def main():
                 failed=True
                 fails.append(v)
         if failed:
+            # legacy log behavior :)
             print(("FATAL: Your simulation is not in equilibrium, "+
                    "8 hours have been deducted from your PTO bank, try again"))
         else:

@@ -1,12 +1,13 @@
 [user]
 USER=ustr
 PROJECT=UNSET
+PWD=pwd
 
 [ctsm tag]
 TAG=tagstr
 
 [key directories]
-SDIR=pwd
+SDIR=UNSET
 TDIR=UNSET
 WDIR=UNSET
 CDIR=UNSET

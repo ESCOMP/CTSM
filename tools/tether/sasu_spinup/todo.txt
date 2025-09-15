@@ -1,3 +1,3 @@
 - make a readme that will appear in the tether WDIR
-- check that you can use sasu in the first created case
+- check that you can use sasu in the specified codebase, before anything
 - come up with a better default WDIR

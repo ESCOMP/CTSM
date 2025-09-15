@@ -15,7 +15,7 @@ source <(grep = $config)
 
 
 # run the spinup stability script
-python $TDIR"/spinup_stability.py" ND.yml
+python $SDIR"/spinup_stability.py" ND.yml
 status=$?
 echo "status: "$status
 

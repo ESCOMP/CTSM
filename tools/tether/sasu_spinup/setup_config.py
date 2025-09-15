@@ -14,18 +14,19 @@ def get_x(x, lines):
     return xout
 
 
-def get_tdir(pwd):
+def get_tdir(pwd,tool):
     tools = '/tools/'
     if tools in pwd:
         base = pwd.split(tools)[0]
-        tdir = base+tools+'tether'
+        tdir = base+tools+tool
     else:
-        tdir = 'TETHER_DIR_NOT_FOUND'
+        tdir = tool.upper()+'_DIR_NOT_FOUND'
     return tdir
 
 
 def find_cime(pwd,user):
     ''' search upwards from pwd to find ./cime/scripts '''
+    # this is probably way overkill
     go = True
     thisdir = pwd
     while go:
@@ -51,9 +52,10 @@ def find_cime(pwd,user):
 
 def get_defaults(lines):
     user = get_x('USER', lines)
-    pwd = get_x('SDIR', lines)
+    pwd = get_x('PWD', lines)
     tag = get_x('TAG',lines).replace('.','')
-    tdir = get_tdir(pwd)
+    tdir = get_tdir(pwd,'tether')
+    sdir = get_tdir(pwd,'spinup_stability')
     dstr = 'c'+date.today().strftime('%Y%m%d')
     wdir = '/glade/u/home/'+user+'/tethered_sims/'+dstr
     cdir = find_cime(pwd,user)
@@ -66,7 +68,7 @@ def get_defaults(lines):
         if x!='UNSET':
             defaults[v]=x
     
-    dirs = {'TDIR': tdir, 'WDIR': wdir, 'CDIR': cdir}
+    dirs = {'TDIR': tdir, 'SDIR': sdir, 'WDIR': wdir, 'CDIR': cdir}
     for k in dirs:
         defaults[k] = dirs[k]
 
