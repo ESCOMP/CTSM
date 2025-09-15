@@ -1279,7 +1279,6 @@ contains
        endif
 
        if (doalb) then
-          if (masterproc) write(iulog,*) "Step alb: ", get_nstep()
           ! Albedos for non-urban columns
           call t_startf('surfalb')
           call SurfaceAlbedo(bounds_clump,                      &

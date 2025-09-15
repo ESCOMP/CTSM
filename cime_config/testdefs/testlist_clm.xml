@@ -3508,7 +3508,7 @@
   <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhenCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3518,7 +3518,7 @@
   <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" cateogory="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -3528,7 +3528,7 @@
   <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" cateogory="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
