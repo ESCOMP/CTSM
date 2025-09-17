@@ -102,6 +102,9 @@ STANDARD = \
 CROP = \
 	crop-global-hist \
 	crop-global-hist-low-res \
+	crop-global-hist-ne3-1 \
+	crop-global-hist-ne3-2 \
+	crop-global-hist-ne3-3 \
 	crop-global-hist-ne16 \
 	crop-global-hist-ne30 \
 	crop-global-hist-mpasa480 \
@@ -112,10 +115,12 @@ CROP = \
 	crop-global-present-ne30 \
 	crop-global-present \
 	crop-global-present-low-res \
+	crop-global-present-ne3 \
 	crop-global-present-ne16 \
 	crop-global-present-mpasa480 \
 	crop-global-1850 \
 	crop-global-1850-low-res \
+	crop-global-1850-ne3 \
 	crop-global-1850-ne16 \
 	crop-global-1850-ne30 \
 	crop-global-1850-mpasa480 \
@@ -215,7 +220,11 @@ crop-global-present : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-present-low-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 64 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-present-ne3 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-present-ne16 : FORCE
@@ -243,7 +252,11 @@ crop-global-1850 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-1850-low-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 64 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-1850-ne3 : FORCE
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-1850-ne16 : FORCE
@@ -271,7 +284,19 @@ crop-global-hist-1700 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-hist-low-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 128 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-hist-ne3-1: FORCE
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-hist-ne3-2: FORCE
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(BATCHJOBS) $@.sh
+
+crop-global-hist-ne3-3: FORCE
+	$(MKSURFDATA)  --number-of-nodes 1 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-hist-ne16 : FORCE

@@ -30,6 +30,7 @@ valid_scenarios = [
     "crop",
     "crop-global-present",
     "crop-global-present-low-res",
+    "crop-global-present-ne3",
     "crop-global-present-ne16",
     "crop-global-present-ne30",
     "crop-global-present-vrandne120",
@@ -37,12 +38,16 @@ valid_scenarios = [
     "crop-global-present-nldas",
     "crop-global-1850",
     "crop-global-1850-low-res",
+    "crop-global-1850-ne3",
     "crop-global-1850-ne16",
     "crop-global-1850-ne30",
     "crop-global-1850-ne120",
     "crop-global-1850-mpasa480",
     "crop-global-hist",
     "crop-global-hist-low-res",
+    "crop-global-hist-ne3-1",
+    "crop-global-hist-ne3-2",
+    "crop-global-hist-ne3-3",
     "crop-global-hist-ne16",
     "crop-global-hist-ne30",
     "crop-global-hist-1700",
@@ -205,14 +210,16 @@ def main():
         "mpasa120": ["mpasa120"],
         "f10": ["10x15"],
         "f45": ["4x5"],
-        "low_res_no_crop": ["4x5", "10x15"],
+        "low_res": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["ne3np4.pg2", "ne3np4.pg3", "ne3np4", "4x5", "10x15"],
         "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
-        "ne3": ["ne3np4", "ne3np4.pg3"],
+        "ne3": ["ne3np4.pg2", "ne3np4.pg3", "ne3np4"],
+        "ne3_1": ["ne3np4"],
+        "ne3_2": ["ne3np4.pg2"],
+        "ne3_3": ["ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
         "ne120": ["ne120np4.pg3"],
@@ -240,7 +247,7 @@ def main():
         ),
         "global-present-low-res": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
-            "low_res_no_crop",
+            "low_res",
         ),
         "global-present-ultra-hi-res": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
@@ -252,7 +259,7 @@ def main():
         ),
         "global-hist-1850-low-res": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
-            "low_res_no_crop",
+            "low_res",
         ),
         "crop-tropics-present": (
             "--start-year 2000 --end-year 2000                                 --res",
@@ -265,6 +272,10 @@ def main():
         "crop-global-present-low-res": (
             "--start-year 2000 --end-year 2000                                 --res",
             "low_res",
+        ),
+        "crop-global-present-ne3": (
+            "--start-year 2000 --end-year 2000                                 --res",
+            "ne3",
         ),
         "crop-global-present-ne16": (
             "--start-year 2000 --end-year 2000                                 --res",
@@ -294,6 +305,10 @@ def main():
             "--start-year 1850 --end-year 1850                                 --res",
             "low_res",
         ),
+        "crop-global-1850-ne3": (
+            "--start-year 1850 --end-year 1850                                 --res",
+            "ne3",
+        ),
         "crop-global-1850-ne16": (
             "--start-year 1850 --end-year 1850                                 --res",
             "ne16",
@@ -321,6 +336,18 @@ def main():
         "crop-global-hist-low-res": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "low_res",
+        ),
+        "crop-global-hist-ne3-1": (
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
+            "ne3_1",
+        ),
+        "crop-global-hist-ne3-2": (
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
+            "ne3_2",
+        ),
+        "crop-global-hist-ne3-3": (
+            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
+            "ne3_3",
         ),
         "crop-global-hist-ne16": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
