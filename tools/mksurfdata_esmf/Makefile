@@ -92,7 +92,7 @@ STANDARD = \
 	global-potveg \
 	global-present \
 	global-present-low-res \
-	global-hist-1850-f19 \
+	global-hist-1850-1and2deg \
 	global-hist-1850-low-res \
 
 # NOTE slevis 2025/9/10: For CTSM5.4, I removed from CROP:
@@ -178,7 +178,7 @@ global-present-low-res : FORCE
 	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 64 --scenario $@ --jobscript-file $@.sh --walltime 01:00:00
 	$(BATCHJOBS) $@.sh
 
-global-hist-1850-f19 : FORCE
+global-hist-1850-1and2deg : FORCE
 	$(MKSURFDATA)  --number-of-nodes 8 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 global-hist-1850-low-res : FORCE
@@ -271,7 +271,7 @@ crop-global-hist-1700 : FORCE
 	$(BATCHJOBS) $@.sh
 
 crop-global-hist-low-res : FORCE
-	$(MKSURFDATA)  --number-of-nodes 14 --tasks-per-node 32 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
+	$(MKSURFDATA)  --number-of-nodes 1 --tasks-per-node 128 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
 crop-global-hist-ne16 : FORCE

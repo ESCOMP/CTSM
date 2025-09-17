@@ -24,7 +24,7 @@ valid_scenarios = [
     "global-present",
     "global-present-low-res",
     "global-present-ultra-hi-res",
-    "global-hist-1850-f19",
+    "global-hist-1850-1and2deg",
     "global-hist-1850-low-res",
     "crop-tropics-present",
     "crop",
@@ -197,6 +197,7 @@ def main():
         "potveg_res": ["0.9x1.25", "1.9x2.5", "ne16np4.pg3", "ne30np4.pg3"],
         "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa30", "ne30np4.pg3"],
         "1700_res": ["0.9x1.25", "360x720cru"],
+        "1and2deg_no_crop": ["1.9x2.5", "0.9x1.25", "ne30np4.pg3"],
         "f09": ["0.9x1.25"],
         "f19": ["1.9x2.5"],
         "hcru": ["360x720cru"],
@@ -207,8 +208,7 @@ def main():
         "low_res_no_crop": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
-        "standard_res_no_f09": ["360x720cru", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["4x5", "10x15", "ne3np4.pg3", "ne3np4.pg2", "ne3np4"],
+        "low_res": ["ne3np4.pg2", "ne3np4.pg3", "ne3np4", "4x5", "10x15"],
         "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
@@ -246,9 +246,9 @@ def main():
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "ultra_hi_res_no_crop",
         ),
-        "global-hist-1850-f19": (
+        "global-hist-1850-1and2deg": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
-            "f19",
+            "1and2deg_no_crop",
         ),
         "global-hist-1850-low-res": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
@@ -316,7 +316,7 @@ def main():
         ),
         "crop-global-hist": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "standard_res_no_f09",
+            "standard_res",
         ),
         "crop-global-hist-low-res": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
