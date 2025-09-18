@@ -2137,15 +2137,15 @@
       <pes pesize="L" compset="any">
 	<comment>Large mpasaa3p75 PE layout</comment>
 	<ntasks>
-	  <ntasks_atm>-80</ntasks_atm>
-	  <ntasks_lnd>-80</ntasks_lnd>
-	  <ntasks_rof>-80</ntasks_rof>
-	  <ntasks_ice>-80</ntasks_ice>
-	  <ntasks_ocn>-80</ntasks_ocn>
-	  <ntasks_glc>-80</ntasks_glc>
-	  <ntasks_wav>-80</ntasks_wav>
-	  <ntasks_cpl>-80</ntasks_cpl>
-	  <ntasks_lnd>-80</ntasks_lnd>
+	  <ntasks_atm>-300</ntasks_atm>
+	  <ntasks_lnd>-300</ntasks_lnd>
+	  <ntasks_rof>-300</ntasks_rof>
+	  <ntasks_ice>-300</ntasks_ice>
+	  <ntasks_ocn>-300</ntasks_ocn>
+	  <ntasks_glc>-300</ntasks_glc>
+	  <ntasks_wav>-300</ntasks_wav>
+	  <ntasks_cpl>-300</ntasks_cpl>
+	  <ntasks_lnd>-300</ntasks_lnd>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>
@@ -2175,16 +2175,17 @@
     <mach name="derecho">
       <pes pesize="Lhm" compset="any">
 	<comment>Large mpasaa3p75 PE layout with high memory by using only 80 tasks per node</comment>
+        <!-- Use a total of 480 full nodes at 128 tasks per node, but below limit the tasks used to 80 -->
 	<ntasks>
-	  <ntasks_atm>-80</ntasks_atm>
-	  <ntasks_lnd>-80</ntasks_lnd>
-	  <ntasks_rof>-80</ntasks_rof>
-	  <ntasks_ice>-80</ntasks_ice>
-	  <ntasks_ocn>-80</ntasks_ocn>
-	  <ntasks_glc>-80</ntasks_glc>
-	  <ntasks_wav>-80</ntasks_wav>
-	  <ntasks_cpl>-80</ntasks_cpl>
-	  <ntasks_lnd>-80</ntasks_lnd>
+	  <ntasks_atm>-480</ntasks_atm>
+	  <ntasks_lnd>-480</ntasks_lnd>
+	  <ntasks_rof>-480</ntasks_rof>
+	  <ntasks_ice>-480</ntasks_ice>
+	  <ntasks_ocn>-480</ntasks_ocn>
+	  <ntasks_glc>-480</ntasks_glc>
+	  <ntasks_wav>-480</ntasks_wav>
+	  <ntasks_cpl>-480</ntasks_cpl>
+	  <ntasks_lnd>-480</ntasks_lnd>
 	</ntasks>
 	<nthrds>
 	  <nthrds_atm>1</nthrds_atm>
@@ -2206,6 +2207,8 @@
 	  <rootpe_wav>0</rootpe_wav>
 	  <rootpe_cpl>0</rootpe_cpl>
 	</rootpe>
+        <!-- Only use 80 processors on each node -->
+        <MAX_MPITASKS_PER_NODE>80</MAX_MPITASKS_PER_NODE>
       </pes>
     </mach>
   </grid>
