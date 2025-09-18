@@ -583,7 +583,7 @@ contains
        this%rc13_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for canopy air', &
-            ptr_patch=this%rc13_canair_patch, default='inactive')
+            ptr_patch=this%rc13_canair_patch, set_spec=spval, default='inactive')
 
        this%rc13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSUN', units='proportion', &
@@ -600,7 +600,7 @@ contains
        this%rc14_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC14_CANAIR', units='proportion', &
             avgflag='A', long_name='C14/C(12+13) for canopy air', &
-            ptr_patch=this%rc14_canair_patch, default='inactive')
+            ptr_patch=this%rc14_canair_patch, set_spec=spval, default='inactive')
     end if
 
     ! Canopy physiology
@@ -1189,12 +1189,12 @@ contains
             .or. lun%itype(l) == istice &
             .or. lun%itype(l) == istwet) then
           if (use_c13) then
-             this%rc13_canair_patch(p) = 0._r8
+             this%rc13_canair_patch(p) = spval
              this%rc13_psnsun_patch(p) = 0._r8
              this%rc13_psnsha_patch(p) = 0._r8
           end if
           if (use_c14) then
-             this%rc14_canair_patch(p) = 0._r8
+             this%rc14_canair_patch(p) = spval
           end if
        end if
     end do
@@ -1216,13 +1216,13 @@ contains
     if ( use_c13 ) then
        this%alphapsnsun_patch(p) = 0._r8
        this%alphapsnsha_patch(p) = 0._r8
-       this%rc13_canair_patch(p) = 0._r8
+       this%rc13_canair_patch(p) = spval
        this%rc13_psnsun_patch(p) = 0._r8
        this%rc13_psnsha_patch(p) = 0._r8
     endif
 
     if ( use_c14 ) then
-       this%rc14_canair_patch(p) = 0._r8
+       this%rc14_canair_patch(p) = spval
     end if
 
     this%psnsun_patch(p) = 0._r8
