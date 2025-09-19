@@ -1,4 +1,319 @@
 ===============================================================
+Tag name: ctsm5.3.075
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Tue 09 Sep 2025 03:12:17 PM MDT
+One-line Summary: Change default glcmec_downscale_longwave from true to false for clm6
+
+Purpose and description of changes
+----------------------------------
+
+ Why: Adam Herrington, Bill Lipscomb, Gunter Leguy found that turning off the LW downscaling improves the melt and runoff biases.
+
+ How: Change glcmec_downscale_longwave to false for clm6 in namelist_defaults_ctsm.xml.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3467 Turn off LW downscaling over glacier elevation classes by default
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ As explained above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3475
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.074
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon 08 Sep 2025 06:04:38 PM MDT
+One-line Summary: Update ctsm6 default paramfile and finidat files
+
+Purpose and description of changes
+----------------------------------
+
+ - Copied the new files to /inputdata and rimported them to the svn repository
+ - Updated namelist_defaults_ctsm.xml
+
+ New paramfile /glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata/ctsm60_params_cal115_c250813.nc
+
+ New finidat files in /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/initdata_esmf/ctsm5.4:
+ f19 2000 Bgc ctsm53065_54surfdata_PPEcal115_115_HIST.clm2.r.2000-01-01-00000.nc
+ f19 1850 Bgc ctsm53065_54surfdata_PPEcal115_115_pSASU.clm2.r.0161-01-01-00000.nc
+
+ ne30 1979 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.1979-01-01-00000.nc
+ ne30 2000 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2000-01-01-00000.nc
+ ne30 2010 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2010-01-01-00000.nc
+ ne30 1850 BgcCrop ctsm5.4_5.3.068_PPEcal115_116_pSASU.clm2.r.0161-01-01-00000.nc
+
+ f09 1979 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.1979-01-01-00000.nc
+ f09 2000 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2000-01-01-00000.nc
+ f09 2010 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2010-01-01-00000.nc
+ f09 1850 BgcCrop ctsm5.4_5.3.068_PPEcal115f09_118_pSASU.clm2.r.0161-01-01-00000.nc
+
+ f09 1850 Sp ctsm5.4_5.3.068_PPEcal115_SP_f09_121_1850.clm2.r.0041-01-01-00000.nc
+ f09 2000 Sp ctsm5.4_5.3.068_PPEcal115_SP_f09_121_HIST.clm2.r.2000-01-01-00000.nc
+ ne30 1850 Sp ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_1850.clm2.r.0041-01-01-00000.nc
+ ne30 2000 Sp ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_HIST.clm2.r.2000-01-01-00000.nc
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Updated default files as listed above
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Same comment
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ bld/unit_testers/build-namelist_test.pl
+ I removed "--mask gx1v7" from a few tests to allow them to pass when the mask has been updated to tx2_3v2
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (expected failures reported in #3050)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ctsm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3460
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.073
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu 28 Aug 2025 01:10:16 PM MDT
+One-line Summary: Update .gitmodules to cesm3_0_alpha07c
+
+Purpose and description of changes
+----------------------------------
+ Update ccs_config_cesm1.0.48 to ccs_config_cesm1.0.56.
+ Update cime6.1.112 to cime6.1.113.
+ Answers change in gnu and nvhpc tests on derecho (details below).
+ New bugs found and reported in issues
+ #3453 FAIL MKSURFDATAESMF_...intel NLCOMP
+ #3454 FAIL SUBSETDATA* tests NLCOMP
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3411 Update cime and ccs_config versions to those used in cesm3_0_alpha07c
+ Resolves #3180 nvhpc module setup problem in ctsm5.3.050 with ccs_config1.0.43
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what platforms/compilers: gnu and nvhpc on derecho
+    - nature of change: roundoff
+
+ Answers change due to the following:
+ ccs_config1.0.49 -- Moves the NVHPC compiler version back a bit on Derecho, which changes answers
+ ccs_config1.0.52 -- Updates the GNU compiler version on Derecho, which changes answers
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ ccs_config_cesm1.0.48 --> ccs_config_cesm1.0.56
+ cime6.1.112 --> cime6.1.113
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3422
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.072
+Originator(s): jinmuluo (Jinmu Luo, Cornell University)
+Date: Tue 26 Aug 2025 02:53:26 PM MDT
+One-line Summary: New vertical movement scheme for soil nitrate
+
+Purpose and description of changes
+----------------------------------
+
+ Introducing a vertical movement scheme for soil nitrate but setting its use to .false. by default.
+ Details about the new scheme in the PR #2992.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ No corresponding github issue
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ use_nvmovement can be set by user
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ use_nvmovement defaults to .false.
+
+Changes to documentation:
+ Planned for Jinmu's NSF-NCAR visit this Fall
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New tests with nvmovement testmods, one with matrixcnOn and one with it off
+ ERP_D_Ld5.f10_f10_mg37.I1850Clm60BgcCrop.derecho_intel.clm-nvmovement--clm-matrixcnOn
+ ERP_D.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-decStart--clm-nvmovement
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS with all commits up to and including 1cf9859
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/2992
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.071
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Aug 22 13:49:25 MDT 2025
