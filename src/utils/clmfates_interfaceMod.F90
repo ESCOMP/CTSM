@@ -2816,13 +2816,13 @@ module CLMFatesInterfaceMod
       ! If N cycling is on
       if(fates_parteh_mode == prt_cnp_flex_allom_hyp ) then
          
-         !n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
-         !     n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
-         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
+         n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
+              n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
+              this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
          
-         !n_products_inst%hrv_deadstem_to_prod100_grc(g) = &
-         !     n_products_inst%hrv_deadstem_to_prod100_grc(g) + &
-         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
+         n_products_inst%hrv_deadstem_to_prod100_grc(g) = &
+              n_products_inst%hrv_deadstem_to_prod100_grc(g) + &
+              this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
          
       end if
 
