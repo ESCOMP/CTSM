@@ -98,6 +98,12 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="ERP_D_Ld9.f10_f10_mg37.I1850Clm60BgcCrop.izumi_nag.clm-clm60cam7LndTuningModeLDust">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3495</issue>
+    </phase>
+  </test>
   <test name="MKSURFDATAESMF_P128x1.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel">
     <phase name="NLCOMP">
       <status>FAIL</status>
