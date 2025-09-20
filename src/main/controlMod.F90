@@ -498,6 +498,12 @@ contains
              call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
+          if (fates_parteh_mode == 2 .and. suplnitro == suplnAll .and. use_fates_bgc )then
+             write(iulog,*) ' When FATES with fates_parteh_mode == 2 (ie carbon-nitrogen mode),'
+             write(iulog,*) '  you must have supplemental nitrogen turned off.'
+             call endrun(msg=' ERROR: fates_parteh_mode=2 must have suplnitro set to suplnNon.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
           
           if ( use_cn) then
              call endrun(msg=' ERROR: use_cn and use_fates cannot both be set to true.'//&
