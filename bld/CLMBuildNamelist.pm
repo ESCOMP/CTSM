@@ -1687,10 +1687,10 @@ sub process_namelist_inline_logic {
   }
   setup_logic_cnmatrix($opts,  $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
-  setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_c_isotope($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
@@ -3303,7 +3303,7 @@ sub setup_logic_supplemental_nitrogen {
   } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
       # Or... if its fates but not fates-sp
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-		  'suplnitro', 'use_fates'=>$nl_flags->{'use_fates'});
+		  'suplnitro', 'fates_parteh_mode'=>$nl->get_value('fates_parteh_mode'));
   }
   #
   # Error checking for suplnitro
@@ -3321,6 +3321,18 @@ sub setup_logic_supplemental_nitrogen {
       if ( $nl_flags->{'bgc_spinup'} eq "on" && $nl_flags->{'bgc_mode'} ne "fates" ) {
         $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen" );
       }
+    }
+
+    my $parteh_mode = $nl->get_value('fates_parteh_mode');
+    if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+      $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
+                        "and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active. " .
+                        "Change suplnitro back to ALL");
+    }
+    if ( ($parteh_mode == 2) &&  ($suplnitro !~ /NONE/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+      $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to NONE, FATES is on, " .
+                        "and FATES-SP is not active, but fates_parteh_mode is 2, so Nitrogen is active; " .
+                        "change suplnitro back to NONE");
     }
   }
 }
@@ -4786,14 +4798,6 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
-
-        my $suplnitro = $nl->get_value('suplnitro');
-        my $parteh_mode = $nl->get_value('fates_parteh_mode');
-        if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-          $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
-                            "but and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active" .
-                            "Change suplnitro back to ALL");
-        }
 
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well

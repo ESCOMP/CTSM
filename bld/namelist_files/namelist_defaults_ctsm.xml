@@ -156,10 +156,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan_use_gamma_sm>.true.</megan_use_gamma_sm>
 <megan_min_gamma_sm>0.0d00</megan_min_gamma_sm>
 
-<!-- Supplmental Nitrogen mode -->
-<suplnitro use_cn=".true." >NONE</suplnitro>
-<suplnitro use_fates=".true." >ALL</suplnitro>
-
 <!-- Albedo for glaciers -->
 <albice               >0.50,0.30</albice>
 <albice phys="clm4_5" >0.60,0.40</albice>
@@ -2467,6 +2463,9 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_fixed_biogeog        use_fates=".true."                         >.false.</use_fates_fixed_biogeog>
 <fates_history_dimlevel         use_fates=".true.">2,2</fates_history_dimlevel>
 
+<!-- Supplmental Nitrogen mode -->
+<suplnitro >NONE</suplnitro>
+<suplnitro fates_parteh_mode="1" >ALL</suplnitro>
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->
