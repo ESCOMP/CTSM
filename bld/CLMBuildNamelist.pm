@@ -1006,6 +1006,13 @@ sub setup_cmdl_bgc {
   if ( &value_is_true($nl->get_value($var)) && $nl_flags->{'soil_decomp_method'} ne "CENTURYKoven2013" ) {
      $log->fatal_error("$var can only be on with CENTURYKoven2013 soil decomposition");
   }
+
+  # Set use_nvmovement
+  $var = "use_nvmovement";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+  if ( &value_is_true($nl->get_value($var)) && !&value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
+     $log->fatal_error("$var cannot be on with use_nitrif_denitrif = .false.");
+  }
 } # end bgc
 
 
@@ -2757,6 +2764,9 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                    $log->fatal_error("Problem interpreting init_interp_attributes from the namelist_defaults file: $pair");
                 }
              }
+             # Add init_interp_fill_missing_urban_with_HD defaults as a function of sim_year and phys
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'init_interp_fill_missing_urban_with_HD',
+                      'sim_year'=>$settings{'sim_year'}, 'phys'=>$physv->as_string() );
           }
        } else {
          $try = $done
