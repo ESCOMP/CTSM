@@ -42,7 +42,7 @@ module controlMod
   use CNSharedParamsMod                , only: use_fun, use_matrixcn
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
-  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
+  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon, suplnAll
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
@@ -51,6 +51,7 @@ module controlMod
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
   use clm_varctl
+  use PRTGenericMod, only : fates_cn, fates_c_only
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -490,18 +491,18 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon .and. use_fates_bgc )then
-             write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
+          if (fates_parteh_mode == fates_c_only .and. suplnitro == suplnNon .and. use_fates_bgc )then
+             write(iulog,*) ' When fates_parteh_mode == fates_c_only,'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
              write(iulog,*) '  meaningful limitations to nitrogen.'
-             call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=fates_c_only must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
-          if (fates_parteh_mode == 2 .and. suplnitro == suplnAll .and. use_fates_bgc )then
-             write(iulog,*) ' When FATES with fates_parteh_mode == 2 (ie carbon-nitrogen mode),'
+          if (fates_parteh_mode == fates_cn .and. suplnitro == suplnAll .and. use_fates_bgc )then
+             write(iulog,*) ' When fates_parteh_mode == fates_cn,'
              write(iulog,*) '  you must have supplemental nitrogen turned off.'
-             call endrun(msg=' ERROR: fates_parteh_mode=2 must have suplnitro set to suplnNon.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=fates_cn must have suplnitro set to suplnNon.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           

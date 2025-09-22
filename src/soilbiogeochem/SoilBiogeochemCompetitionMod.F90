@@ -176,6 +176,7 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst, clm_fates)
     !
     ! !USES:
+    use PRTGenericMod, only : fates_cn
     use clm_varctl       , only: fates_parteh_mode, cnallocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
@@ -344,7 +345,7 @@ contains
                do j = 1, nlevdecomp
                   plant_ndemand_vr(c,j) = 0._r8
 
-                  if (fates_parteh_mode == 2) then
+                  if (fates_parteh_mode == fates_cn) then
                      do f = 1, n_pcomp
                         ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
 
@@ -611,7 +612,7 @@ contains
                do j = 1, nlevdecomp
                   plant_ndemand_vr(c,j) = 0._r8
 
-                  if (fates_parteh_mode == 2) then
+                  if (fates_parteh_mode == fates_cn) then
                      do f = 1, n_pcomp
                         ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
 
@@ -1093,7 +1094,7 @@ contains
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
 
-               ! if fates_parteh_mode /= 2 then plant_ndemand = 0 and this if-statement gets skipped
+               ! if fates_parteh_mode /= fates_cn then plant_ndemand = 0 and this if-statement gets skipped
                if ( plant_ndemand(c) > tiny(plant_ndemand(c)) ) then
                   do f = 1, n_pcomp
                      ft = clm_fates%fates(ci)%bc_out(s)%ft_index(f)
