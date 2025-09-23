@@ -1260,7 +1260,7 @@ Whether snow on the vegetation canopy affects the radiation/albedo calculations
 
 <entry id="for_testing_bypass_init" type="logical" category="default_settings"
        group="for_testing_options" >
-For testing whether to bypass the rest of the initiatlization after the self test driver is run
+For testing whether to bypass the rest of the initialization after the self test driver is run
 </entry>
 
 <entry id="for_testing_bypass_run" type="logical" category="default_settings"
