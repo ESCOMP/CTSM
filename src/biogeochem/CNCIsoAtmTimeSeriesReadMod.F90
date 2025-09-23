@@ -41,6 +41,8 @@ module CIsoAtmTimeseriesMod
   real(r8), allocatable, private :: atm_c13file_time(:)       ! time for C13 data
   real(r8), allocatable, private :: atm_delta_c13(:)          ! Delta C13 data
   real(r8), parameter :: time_axis_offset = 1700.0_r8         ! Offset in years of time on file
+  real(r8), private :: c13_previous_time_idx = -1             ! Time index for C13 data on previous call
+  real(r8), private :: c14_previous_time_idx = -1             ! Time index for C14 data on previous call
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -82,6 +84,12 @@ contains
           ind_below = ind_below+1
        endif
     end do
+    ! Save the previous time index and write out what index is being used if it changes
+    if ( (masterproc) .and. (c14_previous_time_idx /= ind_below) )then
+       write(iulog,*) ' c14 time index updated to just before current time is = ', ind_below, ' file year = ', &
+                       atm_c14file_time(ind_below), ' current year = ', dateyear
+    end if
+    c14_previous_time_idx = ind_below
 
     ! loop over lat bands to pass all three to photosynthesis
     if ( beg_sector_c14 > end_sector_c14 ) sector_step = -1
@@ -171,6 +179,11 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end do
+    if ( masterproc )then
+       write(iulog,*) ' c14 isotope file number of time samples is = ', ntim
+       write(iulog,*) ' c14 isotope, first year = ', atm_c14file_time(1)
+       write(iulog,*) ' c14 isotope, end year = ', atm_c14file_time(ntim)
+    end if
 
   end subroutine C14_init_BombSpike
 
@@ -205,10 +218,16 @@ contains
     do nt = 1, ntim_atm_ts
        ! Convert time in days to years
        atm_c13file_time(nt) = atm_c13file_time(nt) / get_average_days_per_year()
-       if ((dateyear - time_axis_offset) >= atm_c13file_time(nt) ) then
+       if ( dateyear >= atm_c13file_time(nt) ) then
           ind_below = ind_below+1
        endif
     end do
+    ! Save the previous time index and write out what index is being used if it changes
+    if ( (masterproc) .and. (c13_previous_time_idx /= ind_below) )then
+       write(iulog,*) ' c13 time index updated to just before current time is = ', ind_below, ' file year = ', atm_c13file_time(ind_below), &
+                      ' current year = ', dateyear
+    end if
+    c13_previous_time_idx = ind_below
 
     ! interpolate between nearest two points in atm c13 timeseries
     ! cdknotes. for now and for simplicity, just use the northern hemisphere values (sector 1)
@@ -288,6 +307,12 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end do
+    if ( masterproc )then
+       write(iulog,*) ' c13 isotope file number of time samples is = ', ntim
+       write(iulog,*) ' c13 isotope, first year = ', atm_c13file_time(1)
+       write(iulog,*) ' c13 isotope, end year = ', atm_c13file_time(ntim)
+    end if
+
 
   end subroutine C13_init_TimeSeries
 
