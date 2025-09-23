@@ -80,7 +80,7 @@ contains
     ntim_atm_ts = size(atm_c14file_time)
     ind_below = 0
     do nt = 1, ntim_atm_ts
-       if ((dateyear - time_axis_offset) >= atm_c14file_time(nt) ) then
+       if ( dateyear >= atm_c14file_time(nt) ) then
           ind_below = ind_below+1
        endif
     end do
@@ -169,11 +169,11 @@ contains
     call check_units( ncid, vname, "Modern" )
     call ncd_pio_closefile(ncid)
 
-    ! check to make sure that time dimension is well behaved
-    atm_c14file_time(1) = atm_c14file_time(1) / get_average_days_per_year()
+    ! Change units and check to make sure that time dimension is well behaved
+    atm_c14file_time(1) = time_axis_offset + (atm_c14file_time(1) / get_average_days_per_year())
     do t = 2, ntim
        ! Convert time in days to years
-       atm_c14file_time(t) = atm_c14file_time(t) / get_average_days_per_year()
+       atm_c14file_time(t) = time_axis_offset + (atm_c14file_time(t) / get_average_days_per_year())
        if ( atm_c14file_time(t) - atm_c14file_time(t-1) <= 0._r8 ) then
           write(iulog, *) 'C14_init_BombSpike: error.  time axis must be monotonically increasing'
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -216,8 +216,6 @@ contains
     ntim_atm_ts = size(atm_c13file_time)
     ind_below = 0
     do nt = 1, ntim_atm_ts
-       ! Convert time in days to years
-       atm_c13file_time(nt) = atm_c13file_time(nt) / get_average_days_per_year()
        if ( dateyear >= atm_c13file_time(nt) ) then
           ind_below = ind_below+1
        endif
@@ -300,8 +298,10 @@ contains
     call check_units( ncid, vname, "VPDB" )
     call ncd_pio_closefile(ncid)
 
-    ! check to make sure that time dimension is well behaved
+    ! Change units and check to make sure that time dimension is well behaved
+    atm_c13file_time(1) = time_axis_offset + (atm_c13file_time(1)/get_average_days_per_year())
     do t = 2, ntim
+       atm_c13file_time(t) = time_axis_offset + (atm_c13file_time(t)/get_average_days_per_year())
        if ( atm_c13file_time(t) - atm_c13file_time(t-1) <= 0._r8 ) then
           write(iulog, *) 'C13_init_TimeSeries: error.  time axis must be monotonically increasing'
           call endrun(msg=errMsg(sourcefile, __LINE__))
