@@ -328,10 +328,10 @@ contains
             end do
          end do
 
-         bgc_soilc_loop: do fc = 1, num_bgc_soilc
+         bgc_soilc_loop1: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
-            fates: if (col%is_fates(c)) then
+            fates1: if (col%is_fates(c)) then
                ci = bounds%clump_index
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
@@ -368,13 +368,13 @@ contains
                   plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                end do
 
-            end if fates
+            end if fates1
 
             do j = 1, nlevdecomp
                sum_ndemand_vr(c,j) = plant_ndemand_vr(c,j) + potential_immob_vr(c,j)
             end do
 
-         end do bgc_soilc_loop
+         end do bgc_soilc_loop1
 
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
@@ -595,10 +595,10 @@ contains
             end do
          end do
 
-         bgc_soilc_loop: do fc = 1, num_bgc_soilc
+         bgc_soilc_loop2: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
-            fates: if (col%is_fates(c)) then
+            fates2: if (col%is_fates(c)) then
                ci = bounds%clump_index
                s = clm_fates%f2hmap(ci)%hsites(c)
                n_pcomp = clm_fates%fates(ci)%bc_out(s)%num_plant_comps
@@ -635,9 +635,9 @@ contains
                   plant_ndemand_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
                end do
 
-            end if fates
+            end if fates2
 
-         end do bgc_soilc_loop
+         end do bgc_soilc_loop2
 
          ! main column/vertical loop
          do j = 1, nlevdecomp  
