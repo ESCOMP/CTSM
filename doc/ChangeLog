@@ -1,4 +1,104 @@
 ===============================================================
+Tag name: ctsm5.3.076
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 24 Sep 2025 01:12:39 AM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev into master.
+
+Add dask and fortls to ctsm_pylib. Fortls added for using MS VS Code there's also a .vscode directory added with a sample settings template with some recommend settings to use when using VS Code with CTSM. See the README.md file in .vscode for how to use.
+
+Dask is added to lower memory needs with chunking and also allow CTSM tools to run faster by allowing multiple threads to be used on compute.
+
+Add some more PE layouts for mpasa3p75 and tests for them to the uhr_decomp_init test list.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+
+Fixes #3489
+Fixes #3380
+Fixes #3381
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   You'll need to recreate your ctsm_pylib environment to take advantage of these updates
+
+   ./py_env_create --overwrite --yes
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New ctsm_pylib environment
+
+Changes to documentation: Some updates around dask and mesh-plotter
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  The decomp_init and uhr_decomp_init testlists use clm4_5 physics as a way to get fast test cases
+  This could be changed to use more recent physics
+
+Changes to tests or testing: New tests added to hr_decomp_init testlist
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3492
+#3473
+#3470
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.075
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Tue 09 Sep 2025 03:12:17 PM MDT
