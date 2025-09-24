@@ -37,9 +37,9 @@ Bugs fixed
 
 List of CTSM issues fixed (include CTSM Issue # and description):
 
-Fixes #3489
-Fixes #3380
-Fixes #3381
+Fixes #3489 -- PE layouts for mpasa3p75
+Fixes #3380 -- mesh plotter instructions wrong about dask
+Fixes #3381 -- Add dask to ctsm_pylib
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -93,9 +93,9 @@ Other details
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
-#3492
-#3473
-#3470
+#3492 -- mpasa3p75 PE layouts and tests
+#3473 -- dask and documentation around it
+#3470 -- fortls and .vscode
 
 ===============================================================
 ===============================================================
