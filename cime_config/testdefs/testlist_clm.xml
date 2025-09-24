@@ -1475,9 +1475,12 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
+      <!-- Add to the decomp_init testlist so a standard test is run there -->
+      <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">A standard DEBUG exact restart test with threading on and ensuring answers don't change on restarts with a processor count change (ERP)</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
@@ -4295,6 +4298,24 @@
     <options>
       <option name="wallclock">0:15:00</option>
       <option name="comment">Initialization test for mpasa3p75 default layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PL" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+    <machines>
+      <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">1:00:00</option>
+      <option name="comment">Initialization test for mpasa3p75 "Large" layout</option>
+    </options>
+  </test>
+  <test name="SMS_Ln1_PLhm" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+    <machines>
+      <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+    </machines>
+    <options>
+      <option name="wallclock">1:00:00</option>
+      <option name="comment">Initialization test for mpasa3p75 with "Large" high-memory layout with high memory by only using 80 processors per node</option>
     </options>
   </test>
 
