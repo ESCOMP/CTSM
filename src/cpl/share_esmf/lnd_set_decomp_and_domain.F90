@@ -88,6 +88,7 @@ contains
     real(r8) , pointer     :: dataptr1d(:)
     !-------------------------------------------------------------------------------
 
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: setup')
     rc = ESMF_SUCCESS
 
     ! Write diag info
@@ -106,6 +107,8 @@ contains
     ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
 
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: setup')
+
     ! Read in the land mesh from the file
     call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
@@ -118,10 +121,8 @@ contains
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: Before lnd mesh create in ")
 #endif
-          call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF_MeshCreate')
           mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF_MeshCreate')
 #ifdef DEBUG
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: After lnd mesh create in ")
@@ -147,7 +148,7 @@ contains
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
-    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: final')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call t_startf ('decompInit_lnd')
@@ -196,10 +197,8 @@ contains
           gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
-    call t_stopf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
 
     ! Generate a new mesh on the gindex decomposition
-    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -208,7 +207,6 @@ contains
     ! Set ldomain%lonc, ldomain%latc and ldomain%area
     call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
 
     ! Set ldomain%lfrac
     ! Create fields on the input decomp and ctsm decomp
@@ -217,7 +215,6 @@ contains
     ! Redistribute field_lnd to field_ctsm
 
     ! Determine ldomain%frac using ctsm decomposition
-    call t_startf('lnd_set_decomp_and_domain_from_readmesh: land frac')
     if (trim(driver) == 'cmeps') then
 
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
@@ -257,12 +254,13 @@ contains
        deallocate(lndfrac_glob)
 
     end if
-    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
 
     ! Deallocate local pointer memory
     deallocate(gindex_lnd)
     deallocate(gindex_ocn)
     deallocate(gindex_ctsm)
+
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
