@@ -735,6 +735,11 @@ sub setup_cmdl_resolution {
     $log->verbose_message( "This is NOT a NEON site" );
   }
 
+  #
+  # To determine CMIP era
+  #
+  $nl_flags->{'cmip_era'} = $envxml_ref->{'CLM_CMIP_ERA'};
+
 }
 
 #-------------------------------------------------------------------------------
