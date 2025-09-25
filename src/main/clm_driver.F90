@@ -85,6 +85,7 @@ module clm_driver
   use clm_instMod
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, decomp_method
+  use SelfTestDriver         , only : for_testing_bypass_run_except_clock_advance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -165,6 +166,7 @@ contains
     ! CalcIrrigationNeeded. Simply declaring this variable makes the ICE go away.
     real(r8), allocatable :: dummy1_to_make_pgi_happy(:)
     !-----------------------------------------------------------------------
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     ! Determine processor bounds and clumps for this processor
 
@@ -1576,6 +1578,8 @@ contains
     integer :: fp, fc                  ! filter indices
     !-----------------------------------------------------------------------
 
+    if ( for_testing_bypass_run_except_clock_advance() ) return
+
     associate(                                                             &
          snl                => col%snl                                   , & ! Input:  [integer  (:)   ]  number of snow layers
 
@@ -1657,6 +1661,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c,fc              ! indices
     ! -----------------------------------------------------------------
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     ! Note: lake points are excluded from many of the following
     ! averages. For some fields, this is because the field doesn't
@@ -1751,6 +1756,8 @@ contains
     real(r8):: tsxyav                  ! average ts for diagnostic output
     integer :: status(MPI_STATUS_SIZE) ! mpi status
     !------------------------------------------------------------------------
+
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     call get_proc_global(ng=numg)
 

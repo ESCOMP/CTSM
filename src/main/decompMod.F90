@@ -9,6 +9,7 @@ module decompMod
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   use shr_sys_mod , only : shr_sys_abort ! use shr_sys_abort instead of endrun here to avoid circular dependency
+  use shr_abort_mod , only : shr_abort_abort ! as above
   use clm_varctl  , only : iulog
   !
   ! !PUBLIC TYPES:
@@ -46,6 +47,7 @@ module decompMod
   public :: get_subgrid_level_from_name ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
   public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
   public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
+  public :: decompmod_clean             ! Deallocate memory used by decompMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   !
@@ -66,7 +68,7 @@ module decompMod
   !---global information on each pe
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
-     integer,pointer :: cid(:)       ! clump indices
+     integer,pointer :: cid(:) => null()  ! clump indices
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -223,8 +225,18 @@ contains
 #ifdef _OPENMP
     if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
+       return
     end if
 #endif
+    if ( .not. associated(procinfo%cid) )then
+       call shr_sys_abort( 'procinfo%cid) is NOT allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( n < 1 .or. n > procinfo%nclumps )then
+       write(iulog,*) 'Input clump index out of bounds: n = ', n
+       call shr_sys_abort( 'Input clump is out of bounds', file=sourcefile, line=__LINE__)
+       return
+    end if
 
     cid  = procinfo%cid(n)
     bounds%begp      = clumps(cid)%begp - procinfo%begp + 1
@@ -238,19 +250,44 @@ contains
     bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
 
+
+    if ( bounds%endp <= 0 )then
+       call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endc <= 0 )then
+       call shr_sys_abort( 'bounds%endc is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endl <= 0 )then
+       call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endg <= 0 )then
+       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    ! End Cohort isn't necessarily valid, so don't do this error check
+    !if ( bounds%endCohort <= 0 )then
+    !   write(iulog,*) 'endCohort = ', bounds%endCohort
+    !   call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+    !   return
+    !end if
+
     bounds%level = bounds_level_clump
     bounds%clump_index = n
 
   end subroutine get_clump_bounds
 
   !------------------------------------------------------------------------------
-  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
+  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region, allow_errors)
     !
     ! !DESCRIPTION:
     ! Retrieve processor bounds
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(out) :: bounds ! processor bounds bounds
+    logical, intent(in), optional :: allow_errors ! Don't do the normal error checking
 
     ! Normally this routine will abort if it is called from within a threaded region,
     ! because in most cases you should be calling get_clump_bounds in that situation. If
@@ -274,6 +311,7 @@ contains
 #ifdef _OPENMP
     if ( OMP_GET_NUM_THREADS() > 1 .and. .not. l_allow_call_from_threaded_region )then
        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
+       return
     end if
 #endif
 
@@ -290,6 +328,35 @@ contains
 
     bounds%level = bounds_level_proc
     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
+
+    ! Soem final error checking
+    ! Always check that gridcells are set
+    if ( bounds%endg <= 0 )then
+       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+
+    ! Exit before checking if errors should be allowed
+    if ( present(allow_errors) ) then
+      if ( allow_errors ) return
+    end if
+    if ( bounds%endp <= 0 )then
+       call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endc <= 0 )then
+       call shr_sys_abort( 'bounds%endc is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endl <= 0 )then
+       call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    ! End Cohort isn't necessarily valid, so don't do this error check
+    !if ( bounds%endCohort <= 0 )then
+       !call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+       !return
+    !end if
 
   end subroutine get_proc_bounds
 
@@ -380,7 +447,7 @@ contains
     integer           :: beg_index     ! beginning proc index for subgrid_level
     integer           :: end_index     ! ending proc index for subgrid_level
     integer           :: index         ! index of the point to get
-    integer, pointer  :: gindex(:)
+    integer, pointer  :: gindex(:) => null()
     logical           :: abort_on_badindex = .true.
     !----------------------------------------------------------------
 
@@ -444,7 +511,7 @@ contains
     type(bounds_type) :: bounds_proc   ! processor bounds
     integer           :: beg_index     ! beginning proc index for subgrid_level
     integer           :: i
-    integer , pointer :: gindex(:)
+    integer , pointer :: gindex(:) => null()
     !----------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(subgrid_index) == (/bounds2/)), sourcefile, __LINE__)
@@ -546,6 +613,7 @@ contains
     integer         , pointer    :: gindex(:)
     !----------------------------------------------------------------------
 
+    gindex => null()   ! Make sure gindex is initiatled to null
     select case (subgrid_level)
     case(subgrid_level_lndgrid)
        gindex => gindex_global
@@ -565,5 +633,48 @@ contains
     end select
 
   end subroutine get_subgrid_level_gindex
+
+  !-----------------------------------------------------------------------
+  subroutine decompmod_clean()
+    ! Deallocate the decompMod long-term variables created in decompInit_lnd
+
+    ! Set the total counts to zero
+    nclumps = 0
+    numg = 0
+    numl = 0
+    numc = 0
+    nump = 0
+    numCohort = 0
+
+    ! Deallocate and set the pointers to null
+    if ( allocated(clumps) )then
+      deallocate(clumps)
+    end if
+    if ( associated(procinfo%cid) )then
+      deallocate(procinfo%cid)
+      procinfo%cid => null()
+    end if
+    if ( associated(gindex_global) )then
+      deallocate(gindex_global)
+      gindex_global => null()
+    end if
+    if ( associated(gindex_grc) )then
+      deallocate( gindex_grc )
+      gindex_grc => null()
+    end if
+    if ( associated(gindex_lun) )then
+      deallocate( gindex_lun )
+      gindex_lun => null()
+    end if
+    if ( associated(gindex_col) )then
+      deallocate( gindex_col )
+      gindex_col => null()
+    end if
+    if ( associated(gindex_patch) )then
+      deallocate( gindex_patch )
+      gindex_patch => null()
+    end if
+  end subroutine decompMod_clean
+  !-----------------------------------------------------------------------
 
 end module decompMod
