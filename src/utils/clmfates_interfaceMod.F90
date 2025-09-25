@@ -46,7 +46,7 @@ module CLMFatesInterfaceMod
    use CNProductsMod     , only : cn_products_type
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
-   use PRTGenericMod     , only : prt_cnp_flex_allom_hyp
+   use PRTGenericMod     , only : fates_cn
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_managed_fire
@@ -1422,23 +1422,23 @@ module CLMFatesInterfaceMod
        if ( .not. use_fates_sp ) then
 
           ! (gC/m3/timestep)
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp)*dtime
+          nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
+               nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp)*dtime
 
           ! Used for mass balance checking (gC/m2/s)
-          !nf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
-          !                                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          nf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
+                                             this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
           
-          i_cel_lit = i_met_lit + 1
+          i_cel_lit = i_met_lit + 1  ! slevis note: in mimics i_cel_lit = i_str_lit = i_met_lit + 1
           
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp)*dtime
+          nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
+               nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp)*dtime
 
-          !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
-          !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
-          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
+               sum(this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
 
           if (decomp_method == mimics_decomp) then
              ! Mimics has a structural pool, which is cellulose and lignan
@@ -1448,16 +1448,14 @@ module CLMFatesInterfaceMod
              i_lig_lit = i_cel_lit + 1
           end if
         
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp)*dtime
+          nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
+               nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp)*dtime
           
-          !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
-          !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
-          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
+               sum(this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
 
-          nf_soil%fates_litter_flux = 0._r8
-          
        else
 
           ! In SP mode their is no mass flux between the two 
@@ -2828,15 +2826,15 @@ module CLMFatesInterfaceMod
            this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
 
       ! If N cycling is on
-      if(fates_parteh_mode == prt_cnp_flex_allom_hyp ) then
+      if (fates_parteh_mode == fates_cn) then
          
-         !n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
-         !     n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
-         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
+         n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
+              n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
+              this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod10c
          
-         !n_products_inst%hrv_deadstem_to_prod100_grc(g) = &
-         !     n_products_inst%hrv_deadstem_to_prod100_grc(g) + &
-         !     this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
+         n_products_inst%hrv_deadstem_to_prod100_grc(g) = &
+              n_products_inst%hrv_deadstem_to_prod100_grc(g) + &
+              this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
          
       end if
 
