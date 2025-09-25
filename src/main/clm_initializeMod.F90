@@ -86,8 +86,6 @@ contains
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init1')
-
     ! Initialize run control variables, timestep
 
     if ( masterproc )then
@@ -119,8 +117,6 @@ contains
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
-
-    call t_stopf('clm_init1')
 
   end subroutine initialize1
 
@@ -223,8 +219,6 @@ contains
     real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
-
-    call t_startf('clm_init2')
 
     call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells
@@ -796,8 +790,6 @@ contains
     end if
 
     call t_stopf('clm_init2_part3')
-
-    call t_stopf('clm_init2')
 
   end subroutine initialize2
 
