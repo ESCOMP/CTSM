@@ -95,8 +95,6 @@ contains
     call decompInit_lnd_allocate( ier )
     if (ier /= 0) return
 
-    call memcheck('decompInit_lnd: after allocate')
-
     ! Initialize procinfo and clumps
     ! beg and end indices initialized for simple addition of cells later
 
