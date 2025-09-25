@@ -51,6 +51,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_managed_fire
    use clm_varctl        , only : use_fates_tree_damage
+   use clm_varctl        , only : use_fates_edge_forest
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_daylength_factor
@@ -416,6 +417,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
+     integer                                        :: pass_edge_forest
      integer                                        :: pass_use_potentialveg
      integer                                        :: pass_num_luh_states
      integer                                        :: pass_num_luh_transitions
@@ -473,6 +475,13 @@ module CLMFatesInterfaceMod
            pass_tree_damage = 0
         end if
         call set_fates_ctrlparms('use_tree_damage',ival=pass_tree_damage)
+
+        if (use_fates_edge_forest) then
+           pass_edge_forest = 1
+        else
+           pass_edge_forest = 0
+        end if
+        call set_fates_ctrlparms('use_edge_forest',ival=pass_edge_forest)
         
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less
@@ -3366,6 +3375,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
    use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8
+   use FatesIOVariableKindMod, only : site_edgebin_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -3471,7 +3481,7 @@ module CLMFatesInterfaceMod
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
              site_cdsc_r8, site_cdpf_r8, &
-             site_landuse_r8, site_lulu_r8)
+             site_landuse_r8, site_lulu_r8, site_edgebin_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3725,6 +3735,7 @@ module CLMFatesInterfaceMod
 
    use FatesIODimensionsMod,   only : fates_bounds_type
    use FatesInterfaceTypesMod, only : nlevsclass, nlevage, nlevcoage
+   use FatesInterfaceTypesMod, only : nlevedgeforest
    use FatesInterfaceTypesMod, only : nlevheight
    use FatesInterfaceTypesMod, only : nlevdamage
    use FatesFuelClassesMod,    only : num_fuel_classes
@@ -3765,6 +3776,9 @@ module CLMFatesInterfaceMod
 
    fates%age_class_begin = 1
    fates%age_class_end = nlevage
+
+   fates%edgeforest_class_begin = 1
+   fates%edgeforest_class_end = nlevedgeforest
 
    fates%height_begin = 1
    fates%height_end = nlevheight
