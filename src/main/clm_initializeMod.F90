@@ -280,13 +280,13 @@ contains
 
     end if
     call t_stopf('clm_init2_part1')
+    call t_startf('clm_init2_part2')
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
     call decompInit_clumps(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_clumps')
 
-    call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
     call get_proc_bounds(bounds_proc)
 
@@ -308,14 +308,12 @@ contains
        call initGridCells(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
-    call t_stopf('clm_init2_subgrid')
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
-    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -382,14 +380,11 @@ contains
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
-
     call t_startf('clm_init2_part3')
+
     ! Initialize Balance checking (after time-manager)
-    call t_startf('balance_check_init')
     call BalanceCheckInit()
-    call t_stopf('balance_check_init')
 
-    call t_startf('clm_init2_part3')
     ! History file variables
     if (use_cn .and. .not. use_noio ) then
        call hist_addfld1d (fname='DAYL',  units='s', &
@@ -427,9 +422,7 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
-    call t_stopf('clm_init2_part3')
 
-    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
@@ -437,9 +430,7 @@ contains
 
     ! Print history field info to standard out
     call hist_printflds()
-    call t_stopf('clm_init2_part3')
 
-    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call init_subgrid_weights_mod(bounds_proc)
@@ -559,7 +550,6 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
-    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
@@ -617,7 +607,6 @@ contains
        call t_stopf('clm_init2_init_interp')
     end if
 
-    call t_startf('clm_init2_part5')
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
@@ -667,17 +656,14 @@ contains
 
     ! Initialize nitrogen deposition
     if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
-       call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
-       call t_stopf('init_ndep')
     end if
 
     ! Initialize crop calendars
     if (use_crop) then
-      call t_startf('init_cropcal')
       call cropcal_init(bounds_proc)
       if (use_cropcal_streams) then
         call cropcal_advance( bounds_proc )
@@ -689,7 +675,6 @@ contains
         end do
         !$OMP END PARALLEL DO
       end if
-      call t_stopf('init_cropcal')
     end if
 
     ! Initialize active history fields.
@@ -734,10 +719,8 @@ contains
     
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
-       call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
             water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
-       call t_stopf('init_map2gc')
     end if
 
     ! Initialize sno export state to send to glc
@@ -745,12 +728,10 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
             temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
-       call t_stopf('init_lnd2glc')
     end do
     !$OMP END PARALLEL DO
 
@@ -804,18 +785,17 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
-    call t_stopf('clm_init2_part5')
 
     if (water_inst%DoConsistencyCheck()) then
-       call t_startf('tracer_consistency_check')
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
-       call t_stopf('tracer_consistency_check')
     end if
+
+    call t_stopf('clm_init2_part3')
 
     call t_stopf('clm_init2')
 
