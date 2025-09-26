@@ -75,19 +75,6 @@ contains
     !------------------------------------------------------------------------------
     lns = lni * lnj
 
-    !--- set and verify nclumps ---
-    if (clump_pproc > 0) then
-       nclumps = clump_pproc * npes
-       if (nclumps < npes) then
-          write(iulog,*) 'decompInit_lnd(): Number of gridcell clumps= ',nclumps, &
-               ' is less than the number of processes = ', npes
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
-    else
-       write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-
     ! Do some error checking and also set nclumps and numg
     call decompInit_lnd_check_errors( ier )
     if (ier /= 0) return
@@ -98,11 +85,6 @@ contains
     ! Initialize procinfo and clumps
     ! beg and end indices initialized for simple addition of cells later
 
-    allocate(procinfo%cid(clump_pproc), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error for procinfo%cid'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
     procinfo%nclumps   = clump_pproc
     procinfo%cid(:)    = -1
     procinfo%ncells    = 0
@@ -121,11 +103,6 @@ contains
     procinfo%endp      = 0
     procinfo%endCohort = 0
 
-    allocate(clumps(nclumps), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error for clumps'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
     clumps(:)%owner     = -1
     clumps(:)%ncells    = 0
     clumps(:)%nlunits   = 0
@@ -162,25 +139,6 @@ contains
        endif
     enddo
 
-    ! count total land gridcells
-    numg = 0
-    do ln = 1,lns
-       if (amask(ln) == 1) then
-          numg = numg + 1
-       endif
-    enddo
-
-    if (npes > numg) then
-       write(iulog,*) 'decompInit_lnd(): Number of processes exceeds number ', &
-            'of land grid cells',npes,numg
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-    if (nclumps > numg) then
-       write(iulog,*) 'decompInit_lnd(): Number of clumps exceeds number ', &
-            'of land grid cells',nclumps,numg
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-
     if (float(numg)/float(nclumps) < float(nsegspc)) then
        seglen1 = .true.
        seglen = 1.0_r8
@@ -197,7 +155,6 @@ contains
 
     ! Assign gridcells to clumps (and thus pes) ---
 
-    allocate(lcid(lns))
     lcid(:) = 0
     ng = 0
     do ln = 1,lns
@@ -244,21 +201,7 @@ contains
        end if
     enddo
 
-    ! Set gindex_global
-
-    allocate(gdc2glo(numg), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-    gdc2glo(:) = 0
-    allocate(clumpcnt(nclumps),stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-
-    ! clumpcnt is the start gdc index of each clump
+    ! clumpcnt is the ending gdc index of each clump
 
     ag = 0
     clumpcnt = 0
@@ -295,13 +238,11 @@ contains
 
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
-    allocate(gindex_global(1:bounds%endg))
     do n = procinfo%begg,procinfo%endg
        gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
-    deallocate(clumpcnt)
-    deallocate(gdc2glo)
+    call decompInit_lnd_clean()
 
     ! Diagnostic output
     if (masterproc) then
