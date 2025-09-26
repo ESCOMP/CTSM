@@ -409,7 +409,9 @@ contains
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
+    ! NOTE: Because this is an ESMF called subroutine -- do a timer over it's contents here rather than from the outside calls
     call t_startf ('lc_lnd_init_realize')
+
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
@@ -431,6 +433,9 @@ contains
     read(cvalue,*) scol_lat
     call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! NOTE: Now start the timer
+    !call t_startf ('lc_lnd_init_realize')
 
     ! TODO: there is a problem retrieving scol_spval from the driver - for now
     ! hard-wire scol_spval - this needs to be fixed
@@ -482,6 +487,8 @@ contains
              end if
           enddo
           deallocate(lfieldnamelist)
+          ! Close the timer for the subroutine
+          call t_stopf ('lc_lnd_init_realize')
           ! *******************
           ! *** RETURN HERE ***
           ! *******************
