@@ -156,6 +156,20 @@
     This is typically set by the compset.</desc>
   </entry>
 
+  <entry id="CLM_CMIP_ERA" >
+    <type>char</type>
+    <valid_values>cmip6,cmip7</valid_values>
+    <default_value>cmip7</default_value>
+    <values>
+      <value compset="NOANTHRO" >cmip6</value>
+      <value compset="SSP" >cmip6</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Whether to use CMIP6 or CMIP7 fsurdat/landuse files.
+    As of ctsm5.4 we do not have CMIP7 pft raw datasets for SSPs and NOANTHRO, so default to cmip6 for these. For other compsets default to cmip7. User may modify to a non-default value in env_run.xml.</desc>
+  </entry>
+
   <entry id="LND_SETS_DUST_EMIS_DRV_FLDS">
     <!-- See https://github.com/ESCOMP/CTSM/issues/2713 we plan to phase this out -->
     <type>logical</type>
