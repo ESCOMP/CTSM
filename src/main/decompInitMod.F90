@@ -73,9 +73,10 @@ contains
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     !------------------------------------------------------------------------------
-    lns = lni * lnj
+    ! Set some global scalars: nclumps, numg and lns
+    call decompInit_lnd_set_nclumps_numg_lns( )
 
-    ! Do some error checking and also set nclumps and numg
+    ! Do some error checking
     call decompInit_lnd_check_errors( ier )
     if (ier /= 0) return
 
@@ -275,7 +276,7 @@ contains
          ! Allocate some temporaries used only in decompInit_lnd
          !
          ! NOTE: nclumps, numg, and lns must be set before calling this routine!
-         ! So decompinit_lnd_check_errors must be called first
+         ! So decompInit_lnd_set_nclumps_numg_lns must be called first
 
          ! Allocate the longer term decompMod data
          allocate(procinfo%cid(clump_pproc), stat=ier)
@@ -354,10 +355,29 @@ contains
 
       !------------------------------------------------------------------------------
 
+      subroutine decompInit_lnd_set_nclumps_numg_lns( )
+         ! Set nclumps, numg, and lns
+         ! Because of this -- it HAS to be called before decompInit_lnd_allocate
+
+         ! Set total clumps and total cells over grid
+         nclumps = clump_pproc * npes
+
+         lns = lni * lnj
+
+         ! count total land gridcells
+         numg = 0
+         do ln = 1,lns
+            if (amask(ln) == 1) then
+               numg = numg + 1
+            endif
+         enddo
+
+      end subroutine decompInit_lnd_set_nclumps_numg_lns
+
+      !------------------------------------------------------------------------------
+
       subroutine decompInit_lnd_check_errors( ier )
          ! Do some general error checking on input options
-         ! Also set and verify nclumps and numg
-         ! Because of this -- it HAS to be called before decompInit_lnd_allocate
          integer, intent(out) :: ier ! error code
 
          ier = 0
@@ -371,7 +391,6 @@ contains
 
          !--- set and verify nclumps ---
          if (clump_pproc > 0) then
-            nclumps = clump_pproc * npes
             if (nclumps < npes) then
                ier = 1
                write(iulog,*) 'Number of gridcell clumps= ',nclumps, &
@@ -386,14 +405,6 @@ contains
             call endrun(msg='clump_pproc must be greater than 0', file=sourcefile, line=__LINE__)
             return
          end if
-
-         ! count total land gridcells
-         numg = 0
-         do ln = 1,lns
-            if (amask(ln) == 1) then
-               numg = numg + 1
-            endif
-         enddo
 
          if (npes > numg) then
             ier = 1
