@@ -91,11 +91,8 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
 [submodule "cdeps"]
 path = components/cdeps
-#url = https://github.com/ESCOMP/CDEPS.git
-url = https://github.com/ekluzek/CDEPS.git
-#fxtag = cdeps1.0.79
-#fxtag = add_more_timers
-fxtag = 65f7bb0c88420d58a080f9fcc8afbd945c90211a
+url = https://github.com/ESCOMP/CDEPS.git
+fxtag = cdeps1.0.79
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
