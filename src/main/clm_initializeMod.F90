@@ -87,8 +87,6 @@ contains
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init1')
-
     ! Initialize run control variables, timestep
 
     if ( masterproc )then
@@ -122,8 +120,6 @@ contains
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
-
-    call t_stopf('clm_init1')
 
   end subroutine initialize1
 
@@ -228,8 +224,6 @@ contains
     character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init2')
-
     call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells, just for gridcells
     call get_proc_bounds(bounds_proc, allow_errors=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until adter decompInit_clumps
@@ -284,6 +278,7 @@ contains
 
     end if
     call t_stopf('clm_init2_part1')
+    call t_startf('clm_init2_part2')
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
@@ -389,6 +384,7 @@ contains
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
+    call t_startf('clm_init2_part3')
 
     if ( .not. for_testing_bypass_init_after_self_tests() )then
     call t_startf('clm_init2_part3')
@@ -677,17 +673,14 @@ contains
 
     ! Initialize nitrogen deposition
     if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
-       call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
-       call t_stopf('init_ndep')
     end if
 
     ! Initialize crop calendars
     if (use_crop) then
-      call t_startf('init_cropcal')
       call cropcal_init(bounds_proc)
       if (use_cropcal_streams) then
         call cropcal_advance( bounds_proc )
@@ -699,7 +692,6 @@ contains
         end do
         !$OMP END PARALLEL DO
       end if
-      call t_stopf('init_cropcal')
     end if
 
     ! Initialize active history fields.
@@ -744,10 +736,8 @@ contains
     
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
-       call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
             water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
-       call t_stopf('init_map2gc')
     end if
 
     ! Initialize sno export state to send to glc
@@ -755,12 +745,10 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
             temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
-       call t_stopf('init_lnd2glc')
     end do
     !$OMP END PARALLEL DO
 
@@ -815,7 +803,6 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
-    call t_stopf('clm_init2_part5')
 
     if (water_inst%DoConsistencyCheck()) then
        call t_startf('tracer_consistency_check')
@@ -828,7 +815,7 @@ contains
        call t_stopf('tracer_consistency_check')
     end if
 
-    call t_stopf('clm_init2')
+    call t_stopf('clm_init2_part3')
 
   end subroutine initialize2
 
