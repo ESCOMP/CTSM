@@ -78,18 +78,10 @@ contains
     integer :: ier                    ! error code
     integer :: begg, endg             ! beg and end gridcells
     !---------------------------------------------------------------------
-    ! ------ Remove these global arrays when ready ------
-    !integer, pointer  :: clumpcnt(:)  ! clump index counter
-    !integer, allocatable :: gdc2glo(:)! used to create gindex_global
-    ! --- Remove to here -----------------
-    !---------------------------------------------------------------------
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     !---------------------------------------------------------------------
     ! Temporary testing stuff
     real(r8) :: msize, mrss
-    !integer, allocatable :: gindex_global_mpiscan(:)! ginfrx_global_mpiscan for the local PE based on the MPI_SCAN
-    !type(processor_type) :: procinfo_mpiscan ! procinfo for local PE based on the MPI_SCAN
-    !type(clump_type), allocatable :: clumps_mpiscan(:) ! procinfo for local PE based on the MPI_SCAN
     ! end temporary testing stuff
     !---------------------------------------------------------------------
     integer :: i, j, g, lc, cid_previous    ! Indices
@@ -204,43 +196,11 @@ contains
           if (iam == clumps(cid)%owner) then
              procinfo%ncells  = procinfo%ncells  + 1
           endif
-          !---------------------------------------------------------------------
-          !--- give gridcell cell to pe that owns cid ---
-          !--- this needs to be done to subsequently use function
-          !--- get_proc_bounds(begg,endg)
-          ! ---- These lines will be able to be removed -----
-          !if (iam >  clumps(cid)%owner) then
-          !   procinfo%begg = procinfo%begg + 1
-          !endif
-          !if (iam >= clumps(cid)%owner) then
-          !   procinfo%endg = procinfo%endg + 1
-          !endif
-          ! --- Remove to here -----------------
-          !---------------------------------------------------------------------
 
           !--- give gridcell to cid for local processor ---
-          !--- Comment this out when ready ----------------
           if (iam == clumps(cid)%owner) then
              clumps(cid)%ncells  = clumps(cid)%ncells  + 1
           end if
-          !---------------------------------------------------------------------
-          !--- give gridcell to cid ---
-          !--- increment the beg and end indices ---
-          ! --- This section will be removed ---
-          !clumps(cid)%ncells  = clumps(cid)%ncells  + 1
-          !do m = 1,nclumps
-          !   if ((clumps(m)%owner >  clumps(cid)%owner) .or. &
-          !       (clumps(m)%owner == clumps(cid)%owner .and. m > cid)) then
-          !      clumps(m)%begg = clumps(m)%begg + 1
-          !   endif
- 
-          !   if ((clumps(m)%owner >  clumps(cid)%owner) .or. &
-          !      (clumps(m)%owner == clumps(cid)%owner .and. m >= cid)) then
-          !     clumps(m)%endg = clumps(m)%endg + 1
-          !  endif
-          !nddo
-          ! --- Remove to here -----------------
-          !---------------------------------------------------------------------
 
        end if
     enddo
@@ -250,7 +210,7 @@ contains
     ! [Doing this both simplifies the code, reduces non-scalaable memory
     ! and reduces execution time for loops that run over all gridcells
     ! for each processor.]
-    ! (Doing the following few lines of coderemoved about 50 lines of complex code
+    ! (Doing the following few lines of code removed about 50 lines of complex code
     !  as well as loops of size: ni*nj*nclumps, npes*nclumps, and ni*nj
     !  that was being done on each processor)
     !---------------------------------------------------------------------
@@ -260,27 +220,12 @@ contains
         call endrun(msg='Error from MPI_SCAN', file=sourcefile, line=__LINE__)
     end if
     cell_id_offset = cell_id_offset + 1
-    write(iulog,*) 'cell_id_offset = ', cell_id_offset
     procinfo%begg = cell_id_offset - procinfo%ncells
     procinfo%endg = cell_id_offset - 1
-    write(iulog,*) 'procinfo: ncells, begg, endg  = ', procinfo%ncells, procinfo%begg, procinfo%endg
-    ! Temporary testing for MPI_SCAN, for just the local PE
-    !allocate(procinfo%cid(clump_pproc))
-    !cid_previous = 0
-    !begcid = minval(procinfo%cid(:))
-    !endcid = maxval(procinfo%cid(:))
-    !call assert_equal(begcid, procinfo%cid(1), &
-                      !msg='decompInit_lnd(): begcid is not the first, MPI_SCAN error')
-    !call assert_equal(endcid, procinfo%cid(clump_pproc), &
-                      !msg='decompInit_lnd(): endcid is not the last, MPI_SCAN error')
-    !write(iulog,*) ' begcid, endcid, procinfo%cid = ', begcid, endcid, procinfo%cid
-    ! End temporary testing
-
     ! ---- Set begg and endg each clump on this processor ----
     do lc = 1, clump_pproc
        cid = procinfo%cid(lc)
        clumps(cid)%ncells = clumps(cid)%ncells     ! This line will be removed
-       !write(iulog,*) 'lc, cid, clumps%ncells', lc, cid, clumps(cid)%ncells
        if ( lc == 1 )then
           clumps(cid)%begg = procinfo%begg
        else
@@ -291,47 +236,8 @@ contains
        cid_previous = cid
     end do
 
-    !---------------------------------------------------------------------
-    ! ------ Remove the following section when ready ------
-    ! Set gindex_global
-
-    !gdc2glo(:) = 0
-
-
-    ! clumpcnt is the ending gdc index of each clump
-
-    !g = 0
-    !lumpcnt = 0
-    !g = 1
-    !o pid = 0,npes-1
-    !o cid = 1,nclumps
-    !  if (clumps(cid)%owner == pid) then
-    !    clumpcnt(cid) = ag
-    !    ag = ag + clumps(cid)%ncells
-    !  endif
-    !nddo
-    !nddo
-
-    ! now go through gridcells one at a time and increment clumpcnt
-    ! in order to set gdc2glo
-
-    !o aj = 1,lnj
-    !o ai = 1,lni
-    !  an = (aj-1)*lni + ai
-    !  cid = lcid(an)
-    !  if (cid > 0) then
-    !     ag = clumpcnt(cid)
-    !     gdc2glo(ag) = an
-    !     clumpcnt(cid) = clumpcnt(cid) + 1
-    !  end if
-    !nd do
-    !nd do
-    ! --- Remove to here -----------------
-    !---------------------------------------------------------------------
-
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
-    write(iulog,*) 'begg, endg = ', procinfo%begg, procinfo%endg
     call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
     call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after procinfo is finalized
     if (ier /= 0) return
@@ -339,16 +245,6 @@ contains
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
 
-    !---------------------------------------------------------------------
-    ! -------Remove the following section when ready ---------------------
-    !o cid = 1, clump_pproc
-    !   write(iulog,*) 'iam, cid, clumps(cid)%owner', iam, cid, clumps(cid)%owner
-    !nd do
-    !o n = procinfo%begg,procinfo%endg
-    !   write(iulog,*) ' g, n, gdc2glo, iam = ', n, n-procinfo%begg+1, gdc2glo(n), iam
-    !  gindex_global(n-procinfo%begg+1) = gdc2glo(n)
-    !nddo
-    ! --- Remove to here -----------------
     !---------------------------------------------------------------------
 
     ! Get the global vector index on the full grid for each local processors gridcell
@@ -381,39 +277,15 @@ contains
         procinfo%gj(n) = j
     end do
 
-    ! Temporary testing for MPI_SCAN, for just the local PE
-    !call assert_equal(gindex_global, gindex_global_mpiscan, &
-    !                  msg='decompInit_lnd(): gindex_global MPI_SCAN error')
-    !call assert_equal(procinfo%begg, procinfo_mpiscan%begg, &
-    !                  msg='decompInit_lnd(): begg MPI_SCAN error')
-    !call assert_equal(procinfo%endg, procinfo_mpiscan%endg, &
-    !                  msg='decompInit_lnd(): endg MPI_SCAN error')
-    !call assert_equal(procinfo%ncells, procinfo_mpiscan%ncells, &
-    !                  msg='decompInit_lnd(): ncells MPI_SCAN error')
-    !do lc = 1, clump_pproc
-    !   cid = procinfo%cid(lc)
-    !   call assert_equal(clumps(cid)%begg, clumps_mpiscan(cid)%begg, &
-    !                     msg='decompInit_lnd(): clumps begg MPI_SCAN error')
-    !   call assert_equal(clumps(cid)%endg, clumps_mpiscan(cid)%endg, &
-    !                     msg='decompInit_lnd(): clumps endg MPI_SCAN error')
-    !end do
-    !deallocate(gindex_global_mpiscan)
-    !deallocate(clumps_mpiscan)
-
-
-
-    ! End temporary testing
-
+    !---------------------------------------------------------------------
     ! General error checking that the decomposition data is setup correctly
+    !---------------------------------------------------------------------
     begcid = procinfo%cid(1)
     endcid = procinfo%cid(clump_pproc)
     call assert_equal(clumps(begcid)%begg, procinfo%begg, &
                       msg='decompInit_lnd(): clumps(begcid) begg does not match procinfo begg')
     call assert_equal(clumps(endcid)%endg, procinfo%endg, &
                       msg='decompInit_lnd(): clumps(endcid) endg does not match procinfo endg')
-    !write(iulog,*) ' iam, clumps ncells = ', iam, clumps(begcid:endcid)%ncells
-    !write(iulog,*) ' iam, sum( clumps ncells ) = ', iam, sum( clumps(procinfo%cid)%ncells )
-    !write(iulog,*) ' iam, proc ncells = ', iam, procinfo%ncells
     call assert_equal(sum(clumps(procinfo%cid)%ncells), procinfo%ncells, &
                       msg='decompInit_lnd(): sum of clumps ncells does not match procinfo ncells')
 
@@ -503,20 +375,6 @@ contains
             call endrun(msg="allocation error for lcid", file=sourcefile, line=__LINE__)
             return
          end if
-         !---------------------------------------------------------------------
-         ! ---- Section to remove when ready ----
-         !allocate(gdc2glo(numg), stat=ier)
-         !if (ier /= 0) then
-         !   call endrun(msg="allocation error for gdc2glo", file=sourcefile, line=__LINE__)
-         !   return
-         !end if
-         !allocate(clumpcnt(nclumps),stat=ier)
-         !if (ier /= 0) then
-         !   call endrun(msg="allocation error for clumpcnt", file=sourcefile, line=__LINE__)
-         !   return
-         !end if
-         ! --- Remove to here -----------------
-         !---------------------------------------------------------------------
 
       end subroutine decompInit_lnd_allocate
 
