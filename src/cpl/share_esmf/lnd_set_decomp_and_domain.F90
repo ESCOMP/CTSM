@@ -273,6 +273,7 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return 
 
     call memcheck('lnd_set_decomp_and_domain_from_readmesh: after deallocate')
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
     !===============================================================================
     ! Internal subroutines for this subroutine
@@ -313,7 +314,6 @@ contains
 
     !-------------------------------------------------------------------------------
 
-    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
