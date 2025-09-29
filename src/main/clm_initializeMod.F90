@@ -87,8 +87,6 @@ contains
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init1')
-
     ! Initialize run control variables, timestep
 
     if ( masterproc )then
@@ -123,8 +121,6 @@ contains
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
 
-    call t_stopf('clm_init1')
-
   end subroutine initialize1
 
   !-----------------------------------------------------------------------
@@ -147,6 +143,7 @@ contains
     use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use clm_varctl                    , only : use_cropcal_streams
+    use clm_varctl                    , only : use_noio
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -227,8 +224,7 @@ contains
     character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init2')
-
+    call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells
     call get_proc_bounds(bounds_proc)
     begg = bounds_proc%begg; endg = bounds_proc%endg
@@ -281,6 +277,8 @@ contains
        call CLMFatesGlobals2()
 
     end if
+    call t_stopf('clm_init2_part1')
+    call t_startf('clm_init2_part2')
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
@@ -373,20 +371,20 @@ contains
     if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
-    call t_startf('init_orbd')
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-    call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+    call t_stopf('clm_init2_part2')
+    call t_startf('clm_init2_part3')
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
     ! History file variables
-    if (use_cn) then
+    if (use_cn .and. .not. use_noio ) then
        call hist_addfld1d (fname='DAYL',  units='s', &
             avgflag='A', long_name='daylength', &
             ptr_gcell=grc%dayl, default='inactive')
@@ -402,21 +400,23 @@ contains
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
 
-    data2dptr => col%dz(:,-nlevsno+1:0)
-    col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
-    call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+    if ( .not. use_noio )then
+      data2dptr => col%dz(:,-nlevsno+1:0)
+      col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
+      call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
-    call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
-         l2g_scale_type='ice', default='inactive')
+      call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+            l2g_scale_type='ice', default='inactive')
 
-    col%zii(bounds_proc%begc:bounds_proc%endc) = spval
-    call hist_addfld1d (fname='ZII', units='m', &
-         avgflag='A', long_name='convective boundary height', &
-         ptr_col=col%zii, default='inactive')
+      col%zii(bounds_proc%begc:bounds_proc%endc) = spval
+      call hist_addfld1d (fname='ZII', units='m', &
+            avgflag='A', long_name='convective boundary height', &
+            ptr_col=col%zii, default='inactive')
+    end if
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
@@ -431,10 +431,8 @@ contains
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
-    call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
-    call t_stopf('init_dyn_subgrid')
 
     ! Initialize fates LUH2 usage
     if (use_fates_luh) then
@@ -556,6 +554,7 @@ contains
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
 
+       call t_startf('clm_init2_init_interp')
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then
           call endrun(msg='ERROR clm_initializeMod: '//&
@@ -605,6 +604,7 @@ contains
           close(iun)
           write(iulog,'(a)')' Successfully wrote finidat status file '//trim(locfn)
        end if
+       call t_stopf('clm_init2_init_interp')
     end if
 
     ! If requested, reset dynbal baselines
@@ -656,17 +656,14 @@ contains
 
     ! Initialize nitrogen deposition
     if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
-       call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
-       call t_stopf('init_ndep')
     end if
 
     ! Initialize crop calendars
     if (use_crop) then
-      call t_startf('init_cropcal')
       call cropcal_init(bounds_proc)
       if (use_cropcal_streams) then
         call cropcal_advance( bounds_proc )
@@ -678,7 +675,6 @@ contains
         end do
         !$OMP END PARALLEL DO
       end if
-      call t_stopf('init_cropcal')
     end if
 
     ! Initialize active history fields.
@@ -724,10 +720,8 @@ contains
     
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
-       call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
             water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
-       call t_stopf('init_map2gc')
     end if
 
     ! Initialize sno export state to send to glc
@@ -735,12 +729,10 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
             temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
-       call t_stopf('init_lnd2glc')
     end do
     !$OMP END PARALLEL DO
 
@@ -781,7 +773,6 @@ contains
     deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     ! Write log output for end of initialization
-    call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
        if (nsrest == nsrStartup) then
@@ -796,7 +787,6 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
-    call t_stopf('init_wlog')
 
     if (water_inst%DoConsistencyCheck()) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
@@ -807,7 +797,7 @@ contains
        !$OMP END PARALLEL DO
     end if
 
-    call t_stopf('clm_init2')
+    call t_stopf('clm_init2_part3')
 
   end subroutine initialize2
 
