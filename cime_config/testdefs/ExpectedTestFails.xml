@@ -29,34 +29,6 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="SMS_Ld5.f19_g17.I1850Clm60BgcCrujra.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3311</issue>
-      <comment>Requires finidat with c13/c14 to PASS</comment>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f19_g17.I1850Clm60Bgc.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3311</issue>
-      <comment>Requires finidat with c13/c14 to PASS</comment>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f19_g17.IHistClm60BgcCropCrujra.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3311</issue>
-      <comment>Requires finidat with c13/c14 to PASS</comment>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f19_g17.IHistClm60BgcCrop.derecho_intel.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3311</issue>
-      <comment>Requires finidat with c13/c14 to PASS</comment>
-    </phase>
-  </test>
   <test name="SMS_Lm1.f19_g17.I1850Clm60BgcCropCmip6waccm.derecho_intel.clm-basic">
     <phase name="RUN">
       <status>FAIL</status>
