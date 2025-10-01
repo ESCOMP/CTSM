@@ -157,7 +157,7 @@ contains
 !===============================================================================
 
   subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                              atm_prognostic, atm_present, rc)
+                              atm_prognostic, rc)
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
@@ -174,7 +174,6 @@ contains
     logical          , intent(in)  :: cism_evolve
     logical          , intent(in)  :: rof_prognostic
     logical          , intent(in)  :: atm_prognostic
-    logical          , intent(in)  :: atm_present
     integer          , intent(out) :: rc
 
     ! local variables
@@ -212,9 +211,7 @@ contains
 
     ! Need to determine if there is no land for single column before the advertise call is done
 
-    if (.not. atm_present)then
-       send_to_atm = .false.
-    else if (atm_prognostic .or. force_send_to_atm) then
+    if (atm_prognostic .or. force_send_to_atm) then
        send_to_atm = .true.
     else
        send_to_atm = .false.
@@ -343,9 +340,6 @@ contains
 
     call fldlist_add(fldsToLnd_num, fldsToLnd, trim(flds_scalar_name))
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!! new if section !!!!!!!!!!!!!!!!!!!!!!!!!!
-    if ( atm_present ) then
-   
     ! from atm
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_z         )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_topo      )
@@ -395,9 +389,6 @@ contains
        call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_co2prog)
        call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_co2diag)
     end if
-
-    end if ! atm_present
-    !!!!!!!!!!!!!!!!!!!!!!!!!!! new if section !!!!!!!!!!!!!!!!!!!!!!!!!!
 
     if (rof_prognostic) then
        ! from river
