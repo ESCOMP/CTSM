@@ -314,7 +314,6 @@ contains
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
-    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -386,8 +385,6 @@ contains
     call t_startf('clm_init2_part3')
 
     if ( .not. for_testing_bypass_init_after_self_tests() )then
-
-    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
@@ -439,7 +436,6 @@ contains
        call hist_printflds()
     end if
 
-    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call init_subgrid_weights_mod(bounds_proc)
@@ -560,7 +556,6 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
-    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
