@@ -81,7 +81,6 @@ module lnd_comp_nuopc
 
   logical                :: glc_present
   logical                :: rof_prognostic
-  logical                :: atm_present
   logical                :: atm_prognostic
   integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
@@ -286,11 +285,6 @@ contains
     else
        atm_prognostic = .true.
     end if
-    if (trim(atm_model) == 'satm') then
-       atm_present = .false.
-    else
-       atm_present = .true.
-    end if
     call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=glc_model, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (trim(glc_model) == 'sglc') then
@@ -317,9 +311,6 @@ contains
        write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
        write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
        write(iulog,'(a,L2)')' atm_prognostic                = ',atm_prognostic
-       if (.not. atm_present) then
-          write(iulog,'(a,L2)')' atm_present                  = ',atm_present
-       end if
        write(iulog,'(a,L2)')' rof_prognostic                = ',rof_prognostic
        write(iulog,'(a,L2)')' glc_present                   = ',glc_present
        if (glc_present) then
@@ -339,7 +330,7 @@ contains
 
 
     call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                          atm_prognostic, atm_present, rc)
+                          atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
