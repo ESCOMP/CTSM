@@ -135,6 +135,7 @@ def _main_func():
                 os.path.join(lnd_root, "src", "dyn_subgrid"),
                 os.path.join(lnd_root, "src", "init_interp"),
                 os.path.join(lnd_root, "src", "self_tests"),
+                os.path.join(lnd_root, "src", "unit_test_shr"),
                 os.path.join(lnd_root, "src", "fates"),
                 os.path.join(lnd_root, "src", "fates", "main"),
                 os.path.join(lnd_root, "src", "fates", "biogeophys"),
