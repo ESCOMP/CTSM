@@ -329,8 +329,7 @@ contains
     call control_setNL("lnd_in"//trim(inst_suffix))
 
 
-    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                          atm_prognostic, rc)
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------

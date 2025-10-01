@@ -156,8 +156,7 @@ module lnd_import_export
 contains
 !===============================================================================
 
-  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                              atm_prognostic, rc)
+  subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
@@ -258,8 +257,8 @@ contains
 
     ! export to atm
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
     if (send_to_atm) then
-       call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_t          )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_tref       )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_qref       )

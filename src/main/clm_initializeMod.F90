@@ -285,7 +285,6 @@ contains
     call decompInit_clumps(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_clumps')
 
-    call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
     call get_proc_bounds(bounds_proc)
 
@@ -307,7 +306,6 @@ contains
        call initGridCells(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
-    call t_stopf('clm_init2_subgrid')
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call t_startf('clm_decompInit_glcp')
@@ -796,14 +794,12 @@ contains
     endif
 
     if (water_inst%DoConsistencyCheck()) then
-       call t_startf('tracer_consistency_check')
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
-       call t_stopf('tracer_consistency_check')
     end if
 
     call t_stopf('clm_init2_part3')
