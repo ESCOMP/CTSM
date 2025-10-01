@@ -6,10 +6,10 @@ module SelfTestDriver
   !
   ! See the README file in this directory for a high-level overview of these self-tests.
 
-  use clm_varctl, only : for_testing_run_ncdiopio_tests
   use decompMod, only : bounds_type
   use TestNcdioPio, only : test_ncdio_pio
   use abortutils, only : endrun
+  use clm_varctl, only : iulog
 
   implicit none
   private
@@ -25,6 +25,9 @@ module SelfTestDriver
   ! Private module data
   logical :: for_testing_bypass_init ! For testing bypass the initialization phase after the self-test driver
   logical :: for_testing_bypass_run ! For testing bypass most of the run phase except the time advance
+  logical :: for_testing_run_ncdiopio_tests  ! true => run tests of ncdio_pio
+  logical :: for_testing_run_decomp_init_tests ! true => run tests of decompInit
+  logical, public :: for_testing_exit_after_self_tests ! true => exit after running self tests
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -41,8 +44,6 @@ contains
     ! run if the appropriate flag is set.
     !
     ! !USES:
-    use clm_varctl, only : for_testing_run_ncdiopio_tests, for_testing_run_decomp_init_tests
-    use clm_varctl, only : for_testing_exit_after_self_tests, iulog
     use decompMod, only : bounds_type
     use TestNcdioPio, only : test_ncdio_pio
     use ESMF, only : ESMF_LogWrite, ESMF_LOGMSG_INFO, ESMF_Finalize
@@ -87,7 +88,9 @@ contains
     character(len=*), parameter :: nmlname = 'for_testing_options'
     !-----------------------------------------------------------------------
 
-    namelist /for_testing_options/ for_testing_bypass_init, for_testing_bypass_run
+    namelist /for_testing_options/ for_testing_bypass_init, for_testing_bypass_run, &
+         for_testing_run_ncdiopio_tests, for_testing_run_decomp_init_tests, &
+         for_testing_exit_after_self_tests
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -109,6 +112,9 @@ contains
 
     call shr_mpi_bcast (for_testing_bypass_init, mpicom)
     call shr_mpi_bcast (for_testing_bypass_run, mpicom)
+    call shr_mpi_bcast(for_testing_run_ncdiopio_tests, mpicom)
+    call shr_mpi_bcast(for_testing_run_decomp_init_tests, mpicom)
+    call shr_mpi_bcast(for_testing_exit_after_self_tests, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '

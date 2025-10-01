@@ -39,7 +39,6 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varctl             , only : FL => fname_len
-  use clm_varctl             , only : for_testing_exit_after_self_tests
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -50,6 +49,7 @@ module lnd_comp_nuopc
   use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
   use lnd_comp_shr           , only : mesh, model_meshfile, model_clock
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
+  use SelfTestDriver         , only : for_testing_exit_after_self_tests
 
   implicit none
   private ! except
@@ -353,7 +353,8 @@ contains
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
-    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests
+    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests, &
+                                           for_testing_exit_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -1319,7 +1320,6 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
-    use clm_varctl, only : for_testing_exit_after_self_tests
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"
