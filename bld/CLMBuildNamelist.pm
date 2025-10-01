@@ -5454,7 +5454,7 @@ sub add_default {
                   "            Are defaults provided for this resolution and land mask?" );
         } else {
           $log->fatal_error("No default value found for $var.\n" .
-                      "            Are defaults provided for this resolution and land mask?");
+                      "      Are defaults provided in namelist_defaults for this resolution, land mask, and CLM_CMIP_ERA (set in env_run.xml)?");
         }
       }
       else {
