@@ -314,7 +314,6 @@ contains
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
-    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -387,7 +386,6 @@ contains
     call t_startf('clm_init2_part3')
 
     if ( .not. for_testing_bypass_init_after_self_tests() )then
-    call t_startf('clm_init2_part3')
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
@@ -428,9 +426,7 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
-    call t_stopf('clm_init2_part3')
 
-    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
@@ -440,9 +436,7 @@ contains
     if ( .not. use_noio )then
        call hist_printflds()
     end if
-    call t_stopf('clm_init2_snow_soil_init')
 
-    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call init_subgrid_weights_mod(bounds_proc)
@@ -563,7 +557,6 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
-    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
@@ -622,7 +615,6 @@ contains
     end if
 
     if ( .not. for_testing_bypass_init_after_self_tests() )then
-    call t_startf('clm_init2_part5')
 
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
