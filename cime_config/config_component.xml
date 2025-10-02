@@ -167,7 +167,9 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Whether to use CMIP6 or CMIP7 fsurdat/landuse files.
-    As of ctsm5.4 we do not have CMIP7 pft raw datasets for SSPs and NOANTHRO, so default to cmip6 for these. For other compsets default to cmip7. User may modify to a non-default value in env_run.xml.</desc>
+    As of ctsm5.4 we do not have CMIP7 pft raw datasets for SSPs and NOANTHRO, so default to cmip6 for these. For other compsets default to cmip7. User may modify to a non-default value in env_run.xml. Caveats:
+1) We supply only cmip7 C13/C14 isotope datasets, so these get used regardless.
+2) We supply only cmip6 nitrogen deposition (ndep), so this gets used regardless.</desc>
   </entry>
 
   <entry id="LND_SETS_DUST_EMIS_DRV_FLDS">
