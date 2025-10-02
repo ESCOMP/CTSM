@@ -21,7 +21,6 @@ module lnd_set_decomp_and_domain
   use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
   use perf_mod     , only : t_startf, t_stopf
-  use ctsm_memcheck, only : memcheck
 
   implicit none
   private ! except
@@ -89,6 +88,8 @@ contains
     real(r8) , pointer     :: dataptr1d(:)
     real(r8) :: msize, mrss
     !-------------------------------------------------------------------------------
+
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: setup')
     rc = ESMF_SUCCESS
 
     ! Write diag info
@@ -108,6 +109,8 @@ contains
 
     ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
+
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: setup')
 
     ! Read in the land mesh from the file
     call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
@@ -150,7 +153,7 @@ contains
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
-    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: final')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call t_startf ('decompInit_lnd')
@@ -308,6 +311,8 @@ contains
     end subroutine from_readmesh_dealloc
 
     !-------------------------------------------------------------------------------
+
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 

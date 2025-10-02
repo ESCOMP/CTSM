@@ -6,5 +6,10 @@ for_testing_bypass_init = .true.
 for_testing_run_ncdiopio_tests = .true.
 for_testing_run_decomp_init_tests = .true.
 
+! Turn off history, restarts, and output
+hist_empty_htapes = .true.
+use_noio = .true.
+for_testing_run_decomp_init_tests = .true.
+
 ! Exit initialization phase after the self tests
 for_testing_bypass_init = .true.

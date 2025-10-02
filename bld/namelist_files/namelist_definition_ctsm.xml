@@ -1002,6 +1002,12 @@ How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
    lnc_opt = true  get from leaf N from CN model
    lnc_opt = false get based on LAI and fixed CN ratio from parameter file
 </entry>
+<entry id="use_nvmovement" type="logical" category="bgc"
+       group="clm_inparm" value=".false.">
+   use_nvmovement = true use soil nitrogen vertical movement
+   use_nvmovement = false do not use soil nitrogen vertical movement
+   use_nvmovement cannot be true while use_nitrif_denitrif is false
+</entry>
 
 <entry id="paramfile" type="char*512" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
@@ -1260,7 +1266,7 @@ Whether snow on the vegetation canopy affects the radiation/albedo calculations
 
 <entry id="for_testing_bypass_init" type="logical" category="default_settings"
        group="for_testing_options" >
-For testing whether to bypass the rest of the initiatlization after the self test driver is run
+For testing whether to bypass the rest of the initialization after the self test driver is run
 </entry>
 
 <entry id="for_testing_bypass_run" type="logical" category="default_settings"
@@ -1268,14 +1274,19 @@ For testing whether to bypass the rest of the initiatlization after the self tes
 For testing whether to bypass most of the run phase other than the clock advance
 </entry>
 
+<entry id="for_testing_exit_after_self_tests" type="logical" category="default_settings"
+       group="for_testing_options" >
+Whether to exit early after the initialization self tests are run. This is typically only used in automated tests.
+</entry>
+
 <entry id="for_testing_run_ncdiopio_tests" type="logical" category="default_settings"
-       group="clm_inparm" >
+       group="for_testing_options" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
 </entry>
 
 <entry id="for_testing_run_decomp_init_tests" type="logical" category="default_settings"
-       group="clm_inparm" >
+       group="for_testing_options" >
 Whether to run some tests of decompInit (to get the gridcell to MPI task decomposition) as part of the model run. This is
 typically only used in automated tests.
 </entry>

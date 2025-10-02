@@ -50,6 +50,7 @@ module lnd_comp_nuopc
   use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
   use lnd_comp_shr           , only : mesh, model_meshfile, model_clock
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
+  use SelfTestDriver         , only : for_testing_exit_after_self_tests
 
   implicit none
   private ! except
@@ -362,7 +363,8 @@ contains
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
-    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests
+    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests, &
+                                           for_testing_exit_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -421,6 +423,9 @@ contains
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
+    ! NOTE: Because this is an ESMF called subroutine -- do a timer over it's contents here rather than from the outside calls
+    call t_startf ('lc_lnd_init_realize')
+
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
@@ -442,6 +447,9 @@ contains
     read(cvalue,*) scol_lat
     call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! NOTE: Now start the timer
+    !call t_startf ('lc_lnd_init_realize')
 
     ! TODO: there is a problem retrieving scol_spval from the driver - for now
     ! hard-wire scol_spval - this needs to be fixed
@@ -493,6 +501,8 @@ contains
              end if
           enddo
           deallocate(lfieldnamelist)
+          ! Close the timer for the subroutine
+          call t_stopf ('lc_lnd_init_realize')
           ! *******************
           ! *** RETURN HERE ***
           ! *******************
@@ -647,7 +657,9 @@ contains
          hostname_in=hostname, &
          username_in=username)
 
+    call t_startf('clm_init1')
     call initialize1(dtime=dtime_sync)
+    call t_stopf('clm_init1')
 
     ! ---------------------
     ! Create ctsm decomp and domain info
@@ -681,7 +693,12 @@ contains
     call ESMF_ClockGet(clock, currTime=currtime, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    call t_startf('clm_init2')
     call initialize2(ni, nj, currtime)
+    call t_stopf('clm_init2')
+    if (for_testing_exit_after_self_tests) then
+       RETURN
+    end if
 
     !--------------------------------
     ! Create land export state
@@ -722,6 +739,7 @@ contains
 #endif
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+    call t_stopf ('lc_lnd_init_realize')
 
   end subroutine InitializeRealize
 
@@ -910,14 +928,12 @@ contains
     ! call ESMF_VMBarrier(vm, rc=rc)
     ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call t_startf ('shr_orb_decl')
     ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
     call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
     call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
-    call t_stopf ('shr_orb_decl')
 
     call t_startf ('ctsm_run')
     ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
@@ -946,9 +962,7 @@ contains
     ! Advance ctsm time step
     !--------------------------------
 
-    call t_startf ('lc_ctsm2_adv_timestep')
     call advance_timestep()
-    call t_stopf ('lc_ctsm2_adv_timestep')
 
     ! Check that internal clock is in sync with master clock
     ! Note that the driver clock has not been updated yet - so at this point

@@ -77,21 +77,15 @@ contains
     type(bounds_type) :: bounds       ! contains subgrid bounds data
     real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
-    call memcheck('decompInit_lnd: before allocate')
+    ! Set some global scalars: nclumps, numg and lns
+    call decompInit_lnd_set_nclumps_numg_lns( )
 
-    lns = lni * lnj
-
-    nclumps = -1
-    numg = -1
-
-    ! Do some error checking and also set nclumps and numg
+    ! Do some error checking
     call decompInit_lnd_check_errors( ier )
     if (ier /= 0) return
 
     call decompInit_lnd_allocate( ier )
     if (ier /= 0) return
-
-    call memcheck('decompInit_lnd: after allocate')
 
     ! Initialize procinfo and clumps
     ! beg and end indices initialized for simple addition of cells later
@@ -219,6 +213,7 @@ contains
     gdc2glo(:) = 0
 
     ! clumpcnt is the start gdc index of each clump
+    ! clumpcnt is the ending gdc index of each clump
 
     ag = 0
     clumpcnt = 0
@@ -249,7 +244,7 @@ contains
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
-    call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
+    call get_proc_bounds(bounds)    ! This has to be done after procinfo is finalized
     call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after prcoinfo is finalized
     if (ier /= 0) return
 
@@ -260,8 +255,6 @@ contains
     enddo
 
     call decompInit_lnd_clean()
-
-    call memcheck('decompInit_lnd: after deallocate')
 
     ! Diagnostic output
     if (masterproc) then
@@ -282,22 +275,27 @@ contains
 
       !------------------------------------------------------------------------------
       subroutine decompInit_lnd_allocate( ier )
-         ! Allocate the temporary and long term variables set here
+         ! Allocate the temporary and long term variables set and used in decompInit_lnd
          integer, intent(out) :: ier ! error code
-
          !
-         ! Long-term:
-         ! Arrays from decompMod that are allocated here
-         ! This should move to a method in decompMod
+         ! Long-term allocation:
+         ! Arrays from decompMod are allocated here
+         ! TODO: This should move to a method in decompMod
          ! as should the deallocates
          !
+         ! Temporary allocation:
+         ! Allocate some temporaries used only in decompInit_lnd
+         !
+         ! NOTE: nclumps, numg, and lns must be set before calling this routine!
+         ! So decompInit_lnd_set_nclumps_numg_lns must be called first
 
-         ! allocate procinfo
+         ! Allocate the longer term decompMod data
          allocate(procinfo%cid(clump_pproc), stat=ier)
          if (ier /= 0) then
             call endrun(msg='allocation error for procinfo%cid', file=sourcefile, line=__LINE__)
             return
          endif
+
          if ( nclumps < 1 )then
             call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
@@ -315,7 +313,7 @@ contains
          end if
          allocate(gdc2glo(numg), stat=ier)
          if (ier /= 0) then
-            call endrun(msg="allocation error1 for gdc2glo , etc", file=sourcefile, line=__LINE__)
+            call endrun(msg="allocation error for gdc2glo", file=sourcefile, line=__LINE__)
             return
          end if
 
@@ -324,18 +322,24 @@ contains
             call endrun(msg="lns is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
-         allocate(lcid(lns))
+         allocate(lcid(lns), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for lcid", file=sourcefile, line=__LINE__)
+            return
+         end if
          allocate(clumpcnt(nclumps),stat=ier)
          if (ier /= 0) then
-            call endrun(msg="allocation error2 for clumpcnt", file=sourcefile, line=__LINE__)
+            call endrun(msg="allocation error for clumpcnt", file=sourcefile, line=__LINE__)
             return
          end if
 
       end subroutine decompInit_lnd_allocate
 
-      subroutine decompInit_lnd_gindex_global_allocate( bounds, ier )
-         integer, intent(out) :: ier ! error code
+      !------------------------------------------------------------------------------
 
+      subroutine decompInit_lnd_gindex_global_allocate( bounds, ier )
+         ! Allocate gindex_global which requires that bounds gridcell begg to endg be set first
+         integer, intent(out) :: ier ! error code
          type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
 
          ier = 0
@@ -344,8 +348,14 @@ contains
             call endrun(msg="endg is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
-         allocate(gindex_global(1:bounds%endg))
+         allocate(gindex_global(1:bounds%endg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for gindex_global", file=sourcefile, line=__LINE__)
+            return
+         end if
       end subroutine decompInit_lnd_gindex_global_allocate
+
+      !------------------------------------------------------------------------------
 
       subroutine decompInit_lnd_clean()
          ! Deallocate the temporary variables used in decompInit_lnd
@@ -353,6 +363,29 @@ contains
          deallocate(gdc2glo)
          !deallocate(lcid)
       end subroutine decompInit_lnd_clean
+
+      !------------------------------------------------------------------------------
+
+      subroutine decompInit_lnd_set_nclumps_numg_lns( )
+         ! Set nclumps, numg, and lns
+         ! Because of this -- it HAS to be called before decompInit_lnd_allocate
+
+         ! Set total clumps and total cells over grid
+         nclumps = clump_pproc * npes
+
+         lns = lni * lnj
+
+         ! count total land gridcells
+         numg = 0
+         do ln = 1,lns
+            if (amask(ln) == 1) then
+               numg = numg + 1
+            endif
+         enddo
+
+      end subroutine decompInit_lnd_set_nclumps_numg_lns
+
+      !------------------------------------------------------------------------------
 
       subroutine decompInit_lnd_check_errors( ier )
          ! Do some general error checking on input options
@@ -369,7 +402,6 @@ contains
 
          !--- set and verify nclumps ---
          if (clump_pproc > 0) then
-            nclumps = clump_pproc * npes
             if (nclumps < npes) then
                ier = 1
                write(iulog,*) 'Number of gridcell clumps= ',nclumps, &
@@ -384,14 +416,6 @@ contains
             call endrun(msg='clump_pproc must be greater than 0', file=sourcefile, line=__LINE__)
             return
          end if
-
-         ! count total land gridcells
-         numg = 0
-         do ln = 1,lns
-            if (amask(ln) == 1) then
-               numg = numg + 1
-            endif
-         enddo
 
          if (npes > numg) then
             ier = 1
@@ -740,8 +764,6 @@ contains
     integer              :: gsize
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
-    call t_startf('decompInit_glcp')
-
     ! Get processor bounds
 
     call get_proc_bounds(bounds)

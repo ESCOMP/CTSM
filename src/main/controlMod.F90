@@ -210,8 +210,7 @@ contains
          snow_thermal_cond_method, snow_thermal_cond_glc_method, &
          snow_thermal_cond_lake_method, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
-         for_testing_run_decomp_init_tests, for_testing_exit_after_self_tests, &
+         crop_fsat_equals_zero, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
@@ -320,7 +319,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac, flush_gdd20
+         use_nguardrail, crop_residue_removal_frac, flush_gdd20, use_nvmovement
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -731,6 +730,7 @@ contains
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nvmovement, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -765,12 +765,6 @@ contains
 
     ! Crop saturated excess runoff
     call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    ! Whether to run self tests
-    call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast(for_testing_run_decomp_init_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    call mpi_bcast(for_testing_exit_after_self_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Various flags used for testing infrastructure for having multiple crop reproductive pools
     call mpi_bcast(for_testing_use_second_grain_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1032,6 +1026,7 @@ contains
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
+    write(iulog,*) '    use_nvmovement = ', use_nvmovement
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_excess_ice = ', use_excess_ice
