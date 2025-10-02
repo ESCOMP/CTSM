@@ -574,8 +574,6 @@ contains
     enddo
 
     do n = 1,nclumps
-       ! Only do the error checking over the local processor
-       if (clumps(n)%owner == iam) then
        if (clumps(n)%ncells   /= allvecg(n,1) .or. &
            clumps(n)%nlunits  /= allvecg(n,2) .or. &
            clumps(n)%ncols    /= allvecg(n,3) .or. &
@@ -589,7 +587,6 @@ contains
           write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
           call endrun(msg=errMsg(sourcefile, __LINE__))
-       endif
        endif
     enddo
 
