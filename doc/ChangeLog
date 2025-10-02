@@ -44,44 +44,14 @@ FATES PR 1397 is also required to address similar issues related to radiation
 error diagnostics: https://github.com/NGEET/fates/pull/1397
 
 
-Notes of particular relevance for users
----------------------------------------
-
-No specific notes to users. User experience should not be changed,
-as this targets future coupling more than existing model usage.
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
-
-Changes made to namelist defaults (e.g., changed parameter values): None
-
-Changes to the datasets (e.g., parameter, surface or initial files): None
-
-Changes to documentation: None
-
-Substantial timing or memory changes: None
-(should be more efficient when atm-coupled though)
-
 Notes of particular relevance for developers:
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance): No caveats
-
 Changes to tests or testing:
-New tests (ERI FatesLandTuningMode) have been added and expected
-fails have been added where appropriate.
+* New tests (ERI FatesLandTuningMode) have been added and expected fails have been added where appropriate.
 
 Testing summary:
 ----------------
-
-build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho - NA
-
-python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho - NA
-
-    clm_pymods test suite on derecho -
 
 regular tests (aux_clm):
 
@@ -90,22 +60,18 @@ regular tests (aux_clm):
 
 fates tests:
     derecho ----- OK
+    izumi ----- OK
 
 
 Answer changes
 --------------
 
-No changes have been introduced in non-FATES configurations.
-
-No changes have been introduced in FATES-SP configurations.
-
-For non-SP FATES configurations, some small round-off level changes are introduced
-due to an update in the FATES tag sci.87.2_api.41.0.0
+For non-SP FATES configurations, some small round-off level changes are introduced due to an update in the FATES tag sci.87.2_api.41.0.0.
 
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/CTSM/pull/3051
+* [Pull Request #3051: ctsm5.3.077: Removing non doalb call of wrap_canopy_radiation for fates by rgknox](https://github.com/ESCOMP/CTSM/pull/3051)
 
 
 ===============================================================
