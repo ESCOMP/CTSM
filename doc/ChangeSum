@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.077   rgknox 10/02/2025 Adjustment of timestep albedo filtering with FATES
        ctsm5.3.076     erik 09/24/2025 Merge b4b-dev to master
        ctsm5.3.075   slevis 09/10/2025 Change default glcmec_downscale_longwave from true to false for clm6
        ctsm5.3.074   slevis 09/09/2025 Update ctsm6 default paramfile and finidat files
