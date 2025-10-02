@@ -1,4 +1,115 @@
 ===============================================================
+Tag name: ctsm5.3.077
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY)
+Date: Thu 02 Oct 2025 09:39:48 AM MDT
+One-line Summary: Adjustment of albedo timestep filtering with FATES.
+
+Purpose and description of changes
+----------------------------------
+
+A logical filter is used (doalb) during the main timestep loop to prevent
+calculations of surface albedo when it is unnecessary. This includes when
+coupling with an atmosphere and boundary conditions are available at a different
+frequency as the land-timestep. This set of changes seeks to get FATES using
+this filter (intead of all the time), while also enabling continuity on restarts
+and not breaking existing behavior.
+
+These changes relied heavily on contributions from Matvey Debolskiy and
+consultation from Mariana Vertenstein.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+This set of changes has NO scientifically meaningful changes to answers in any supported
+configuration.
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+Addresses #3043 "Fates gives errsol BalanceCheck error with cam7".
+
+FATES PR 1397 is also required to address similar issues related to radiation
+error diagnostics: https://github.com/NGEET/fates/pull/1397
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+No specific notes to users. User experience should not be changed,
+as this targets future coupling more than existing model usage.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Changes to documentation: None
+
+Substantial timing or memory changes: None
+(should be more efficient when atm-coupled though)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): No caveats
+
+Changes to tests or testing:
+New tests (ERI FatesLandTuningMode) have been added and expected
+fails have been added where appropriate.
+
+Testing summary:
+----------------
+
+build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - NA
+
+python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - NA
+
+    clm_pymods test suite on derecho -
+
+regular tests (aux_clm):
+
+    derecho ----- OK
+    izumi ------- OK
+
+fates tests:
+    derecho ----- OK
+
+
+Answer changes
+--------------
+
+No changes have been introduced in non-FATES configurations.
+
+No changes have been introduced in FATES-SP configurations.
+
+For non-SP FATES configurations, some small round-off level changes are introduced
+due to an update in the FATES tag sci.87.2_api.41.0.0
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/3051
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.076
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 24 Sep 2025 01:12:39 AM MDT
