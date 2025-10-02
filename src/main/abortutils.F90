@@ -10,87 +10,23 @@ module abortutils
   ! in conjunction with aborting the model, or at least issuing a warning.
   !-----------------------------------------------------------------------
 
-  use shr_kind_mod, only: CX => shr_kind_cx
-  use shr_log_mod, only: errMsg => shr_log_errMsg
-  use shr_sys_mod , only : shr_sys_flush
-  use clm_varctl, only: iulog
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
+
   implicit none
   private
 
   public :: endrun              ! Abort the model for abnormal termination
   public :: write_point_context ! Write context for the given index, including global index information and more
-  ! Some interfaces for self-test work
-  public :: endrun_init         ! Set up how endrun will behave (used for self-tests)
-  public :: get_last_endrun_msg     ! Return the last endrun message
 
   interface endrun
      module procedure endrun_vanilla
      module procedure endrun_write_point_context
   end interface
 
-  ! These two are to enable self tests to have endrun calls that do not abort
-#ifdef DEBUG
-  logical :: abort_on_endrun = .true. ! Whether to abort the model on endrun; set to .false. for self-tests
-  character(len=CX) :: save_msg = 'none'   ! string to save from last endrun call
-#endif
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
-
-  !-----------------------------------------------------------------------
-  subroutine endrun_init( for_testing_do_not_abort )
-     logical , intent(in) :: for_testing_do_not_abort
-#ifdef DEBUG
-      if (save_msg /= 'none') then
-         abort_on_endrun = .true.
-         call endrun( msg='An endrun call happened, but was not handled' )
-      end if
-      if ( for_testing_do_not_abort )then
-         write(iulog,*)'Preparing a test that will call endrun'
-         save_msg = 'none'  ! Reset the saved message
-         abort_on_endrun = .false.
-      else
-         abort_on_endrun = .true.
-      end if
-#else
-      call endrun( msg='endrun_init called without DEBUG mode, which is not allowed', &
-                   file=__FILE__, line=__LINE__ )
-#endif
-  end subroutine endrun_init
-
-    !-----------------------------------------------------------------------
-  function get_last_endrun_msg()
-    !
-    ! !DESCRIPTION:
-    ! Gives the last message saved from an endrun call that didn't 
-    ! abort due to being in the context of self-tests
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    character(len=:), allocatable :: get_last_endrun_msg  ! function result
-    !-----------------------------------------------------------------------
-
-#ifdef DEBUG
-    if (abort_on_endrun) then
-      call endrun( msg='Do not call get_last_endrun_msg when abort_on_endrun is true', &
-                   file=sourcefile, line=__LINE__ )
-    end if
-    if (save_msg == 'none') then
-       write(iulog,*) 'An endrun call was expected, but has not been made yet', &
-                      errMsg( sourcefile, __LINE__ )
-    end if
-    get_last_endrun_msg = trim(save_msg)
-    ! Reset endrun_msg to indicate the last error message was handled
-    save_msg = 'none'
-#else
-      call endrun( msg='get_last_endrun_msg called without DEBUG mode, which is not allowed', &
-                   file=sourcefile, line=__LINE__ )
-#endif
-
-  end function get_last_endrun_msg
 
   !-----------------------------------------------------------------------
   subroutine endrun_vanilla(msg, additional_msg, line, file)
@@ -100,6 +36,7 @@ contains
     ! Abort the model for abnormal termination
     !
     use shr_abort_mod , only: shr_abort_abort
+    use clm_varctl  , only: iulog
     !
     ! !ARGUMENTS:
     ! Generally you want to at least provide msg. The main reason to separate msg from
@@ -112,42 +49,18 @@ contains
     integer , intent(in), optional :: line                   ! Line number for the endrun call
     character(len=*), intent(in), optional :: file           ! file for the endrun call
     !-----------------------------------------------------------------------
-    character(len=CX) :: abort_msg
 
-    call shr_sys_flush(iulog)  ! Flush the I/O buffers always
     if (present (additional_msg)) then
-       write(iulog,*)'ENDRUN: '// trim(additional_msg)
+       write(iulog,*)'ENDRUN: ', trim(additional_msg)
     else
-       write(iulog,*)'ENDRUN: '
+       write(iulog,*)'ENDRUN:'
     end if
 
-#ifdef DEBUG
-   if (.not. abort_on_endrun) then
-      if (save_msg /= 'none') then
-         abort_msg = 'a previous error was already logged and now a second one is being, done so fully aborting now'
-         abort_msg = trim(abort_msg) // ' (Call end_run_init after endrun calls to reset this)'
-         call shr_sys_flush(iulog)  ! Flush the I/O buffers always
-         call shr_abort_abort(abort_msg)
-      end if
-      ! Just save msg and return
-      ! Don't finalize ESMF or exit since the self tests need to evaluate that
-      save_msg = trim(msg)
-      if (present (additional_msg)) then
-         save_msg = trim(msg)//trim(additional_msg)
-         write(iulog,*) 'ENDRUN: '// trim(additional_msg)
-         call shr_sys_flush(iulog)  ! Flush the I/O buffers always
-      end if
-   else
-#endif
-      ! Don't pass file and line to shr_abort_abort since the PFUNIT test version doesn't have those options
-      if ( present(file) .and. present(line) ) then
-         write(iulog,*) errMsg(file, line)
-      end if
-      call shr_sys_flush(iulog)  ! Flush the I/O buffers always
-      call shr_abort_abort(string=msg)
-#ifdef DEBUG
-   end if
-#endif
+    ! Don't pass file and line to shr_abort_abort since the PFUNIT test version doesn't have those options
+    if ( present(file) .and. present(line) ) then
+       write(iulog,*) errMsg(file, line)
+    end if
+    call shr_abort_abort(string=msg)
 
   end subroutine endrun_vanilla
 
@@ -160,6 +73,7 @@ contains
     !
     ! This version also prints additional information about the point causing the error.
     !
+    use clm_varctl  , only: iulog
     use decompMod   , only: subgrid_level_unspecified
     !
     ! Arguments:
@@ -192,6 +106,7 @@ contains
     !
     ! NOTE: DO NOT CALL AN ABORT FROM HERE AS THAT WOULD SHORT CIRUIT THE ERROR REPORTING!!
     !
+    use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod    , only : get_global_index
     use GridcellType , only : grc
@@ -330,7 +245,5 @@ contains
     end if
 
   end subroutine write_point_context
-
-  !-----------------------------------------------------------------------
 
 end module abortutils

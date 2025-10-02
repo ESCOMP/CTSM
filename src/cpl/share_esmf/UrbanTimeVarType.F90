@@ -16,7 +16,6 @@ module UrbanTimeVarType
   use clm_varcon      , only : spval
   use LandunitType    , only : lun
   use GridcellType    , only : grc
-  use perf_mod        , only : t_startf, t_stopf
   !
   implicit none
   private
@@ -144,8 +143,6 @@ contains
          stream_meshfile_urbantv, &
          urbantv_tintalgo
 
-    call t_startf("urbantv_init")
-
     ! Default values for namelist
     stream_year_first_urbantv  = 1       ! first year in stream to use
     stream_year_last_urbantv   = 1       ! last  year in stream to use
@@ -198,7 +195,6 @@ contains
     endif
 
     ! Initialize the cdeps data type this%sdat_urbantv
-    call t_startf("str_data_init")
     call shr_strdata_init_from_inline(this%sdat_urbantv,             &
          my_task             = iam,                                  &
          logunit             = iulog,                                &
@@ -223,9 +219,6 @@ contains
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
-    call t_stopf("str_data_init")
-
-    call t_stopf("urbantv_init")
 
   end subroutine urbantv_init
 

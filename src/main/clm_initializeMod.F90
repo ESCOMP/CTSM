@@ -285,9 +285,8 @@ contains
     call decompInit_clumps(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_clumps')
 
-    call t_startf('clm_init2_subgrid')
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
-    call get_proc_bounds(bounds_proc)   ! This has to be done after decompInit_clumps is called
+    call get_proc_bounds(bounds_proc)
 
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells
@@ -307,14 +306,12 @@ contains
        call initGridCells(bounds_clump, glc_behavior)
     end do
     !$OMP END PARALLEL DO
-    call t_stopf('clm_init2_subgrid')
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
 
-    call t_startf('clm_init2_part2')
     if (use_hillslope) then
        ! Initialize hillslope properties
        call InitHillslope(bounds_proc, hillslope_file)
@@ -426,9 +423,7 @@ contains
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
-    call t_stopf('clm_init2_part3')
 
-    call t_startf('clm_init2_snow_soil_init')
     call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
@@ -439,7 +434,6 @@ contains
        call hist_printflds()
     end if
 
-    call t_startf('clm_init2_part4')
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call init_subgrid_weights_mod(bounds_proc)
@@ -560,7 +554,6 @@ contains
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
-    call t_stopf('clm_init2_part4')
 
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
@@ -801,14 +794,12 @@ contains
     endif
 
     if (water_inst%DoConsistencyCheck()) then
-       call t_startf('tracer_consistency_check')
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
           call get_clump_bounds(nc, bounds_clump)
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
-       call t_stopf('tracer_consistency_check')
     end if
 
     call t_stopf('clm_init2_part3')

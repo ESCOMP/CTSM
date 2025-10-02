@@ -39,7 +39,6 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varctl             , only : FL => fname_len
-  use clm_varctl             , only : for_testing_exit_after_self_tests
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
   use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
@@ -330,8 +329,7 @@ contains
     call control_setNL("lnd_in"//trim(inst_suffix))
 
 
-    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, &
-                          atm_prognostic, rc)
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -1321,7 +1319,6 @@ contains
   end subroutine clm_orbital_update
 
   subroutine CheckImport(gcomp, rc)
-    use clm_varctl, only : for_testing_exit_after_self_tests
     type(ESMF_GridComp) :: gcomp
     integer, intent(out) :: rc
     character(len=*) , parameter :: subname = "("//__FILE__//":CheckImport)"

@@ -12,14 +12,12 @@ module decompInitMod
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog
-  use ctsm_memcheck, only : memcheck
-  use perf_mod     , only : t_startf, t_stopf
   !
   implicit none
   private
   !
   ! !PUBLIC TYPES:
-  !b
+  !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
   public :: decompInit_clumps ! initializes atm grid decomposition into clumps
@@ -36,7 +34,6 @@ module decompInitMod
   integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
-   real(r8) :: msize, mrss ! memory usage variables
 
 #include <mpif.h>         ! mpi library include file
   !------------------------------------------------------------------------------
@@ -75,7 +72,6 @@ contains
     integer, pointer  :: clumpcnt(:)  ! clump index counter
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data
-    real(r8) :: msize, mrss
     !------------------------------------------------------------------------------
     ! Set some global scalars: nclumps, numg and lns
     call decompInit_lnd_set_nclumps_numg_lns( )
@@ -130,17 +126,15 @@ contains
     do n = 1,nclumps
        pid = mod(n-1,npes)
        if (pid < 0 .or. pid > npes-1) then
-          write(iulog,*) 'Round robin pid error: n, pid, npes = ',n,pid,npes
-          call endrun(msg="Round robin pid error", file=sourcefile, line=__LINE__)
-          return
+          write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
        clumps(n)%owner = pid
        if (iam == pid) then
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
-             write(iulog,*) 'round robin pid error ',n,pid,npes
-             call endrun(msg="round robin pid error", file=sourcefile, line=__LINE__)
-             return
+             write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
+             call endrun(msg=errMsg(sourcefile, __LINE__))
           endif
           procinfo%cid(cid) = n
        endif
@@ -208,11 +202,6 @@ contains
        end if
     enddo
 
-    ! Set gindex_global
-
-    gdc2glo(:) = 0
-
-    ! clumpcnt is the start gdc index of each clump
     ! clumpcnt is the ending gdc index of each clump
 
     ag = 0
@@ -479,10 +468,8 @@ contains
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
-    call t_startf('decompInit_clumps')
-    call memcheck('decompInit_clumps: before alloc')
     !--- assign gridcells to clumps (and thus pes) ---
-    call get_proc_bounds(bounds, allow_errors=.true.)
+    call get_proc_bounds(bounds)
     begg = bounds%begg; endg = bounds%endg
 
     allocate(allvecl(nclumps,5))   ! local  clumps [gcells,lunit,cols,patches,coh]
@@ -593,24 +580,18 @@ contains
            clumps(n)%npatches /= allvecg(n,4) .or. &
            clumps(n)%nCohorts /= allvecg(n,5)) then
 
-          write(iulog ,*) 'allvecg error: iam,n ',iam,n
-          write(iulog ,*) 'allvecg error ncells,allvecg ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
-          write(iulog ,*) 'allvecg error lunits,allvecg ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
-          write(iulog ,*) 'allvecg error ncols,allvecg  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
-          write(iulog ,*) 'allvecg error patches,allvecg',iam,n,clumps(n)%npatches ,allvecg(n,4)
-          write(iulog ,*) 'allvecg error cohorts,allvecg',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
+          write(iulog ,*) 'decompInit_glcp(): allvecg error ncells ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
+          write(iulog ,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
+          write(iulog ,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
+          write(iulog ,*) 'decompInit_glcp(): allvecg error patches',iam,n,clumps(n)%npatches ,allvecg(n,4)
+          write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
-          call endrun(msg="allvecg error cohorts", file=sourcefile, line=__LINE__)
-          return
+          call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     enddo
 
-    call memcheck('decompInit_clumps: before deallocate')
-
     deallocate(allvecg,allvecl)
     deallocate(lcid)
-
-    call memcheck('decompInit_clumps: after deallocate')
 
     ! Diagnostic output
 
@@ -704,7 +685,6 @@ contains
        call shr_sys_flush(iulog)
        call mpi_barrier(mpicom,ier)
     end do
-    call t_stopf('decompInit_clumps')
 
   end subroutine decompInit_clumps
 
@@ -988,8 +968,6 @@ contains
     deallocate(start)
     deallocate(start_global)
     if (allocated(index_lndgridcells)) deallocate(index_lndgridcells)
-
-    call t_stopf('decompInit_glcp')
 
   end subroutine decompInit_glcp
 

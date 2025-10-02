@@ -29,7 +29,6 @@ module initVerticalMod
   use ColumnType        , only : col                
   use glcBehaviorMod    , only : glc_behavior_type
   use abortUtils        , only : endrun    
-  use perf_mod          , only : t_startf, t_stopf
   use ncdio_pio
   !
   ! !PUBLIC TYPES:
@@ -190,7 +189,6 @@ contains
     integer               :: jmin_bedrock
     character(len=*), parameter :: subname = 'initVertical'
     !------------------------------------------------------------------------
-    call t_startf('initVertical')
 
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
@@ -670,8 +668,6 @@ contains
     end do
 
     call ncd_pio_closefile(ncid)
-
-    call t_stopf('initVertical')
 
   end subroutine initVertical
 

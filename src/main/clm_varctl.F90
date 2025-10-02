@@ -52,12 +52,6 @@ module clm_varctl
   ! true => run tests of ncdio_pio
   logical, public :: for_testing_run_ncdiopio_tests = .false.
 
-  ! true => run tests of decompInit
-  logical, public :: for_testing_run_decomp_init_tests = .false.
-
-  ! true => exit after the self-tests run
-  logical, public :: for_testing_exit_after_self_tests = .false.
-
   ! true => allocate memory for and use a second grain pool. This is meant only for
   ! software testing of infrastructure to support the AgSys crop model integration. This
   ! option can be dropped once AgSys is integrated and we have tests of it.
