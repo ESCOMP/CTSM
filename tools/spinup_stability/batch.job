@@ -1,0 +1,13 @@
+#!/bin/bash
+#PBS -N spinup_stability
+#PBS -q develop
+#PBS -l walltime=1:00:00
+#PBS -A P93300041
+#PBS -k eod
+#PBS -l select=1:ncpus=5
+# ---------------------------------------------------------
+
+module load conda
+conda activate npl-2025b
+
+python spinup_stability.py default.yml
