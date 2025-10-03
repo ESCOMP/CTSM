@@ -50,4 +50,34 @@ contains
 
   end subroutine test_decompInit_lnd_abort_on_bad_clump_pproc 
 
+  @Test
+  subroutine test_decompInit_lnd_abort_when_npes_too_large(this)
+     class(TestDecompInitErrors), intent(inout) :: this
+     character(len=:), allocatable :: expected_msg
+
+     ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
+     npes = ni*nj + 1
+
+     amask(:) = 1 ! Set all to land
+     call decompInit_lnd( ni, nj, amask )
+     expected_msg = endrun_msg( &
+         'Number of processes exceeds number of land grid cells')
+     @assertExceptionRaised(expected_msg)
+  end subroutine test_decompInit_lnd_abort_when_npes_too_large
+
+  !-----------------------------------------------------------------------
+  @Test
+  subroutine test_decompInit_lnd_abort_on_too_small_nsegspc(this)
+     use clm_varctl, only : nsegspc
+     class(TestDecompInitErrors), intent(inout) :: this
+     character(len=:), allocatable :: expected_msg
+
+     amask(:) = 1 ! Set all to land
+     nsegspc = 0
+     call decompInit_lnd( ni, nj, amask )
+     expected_msg = endrun_msg( &
+         'Number of segments per clump (nsegspc) is less than 1 and can NOT be')
+     @assertExceptionRaised(expected_msg)
+  end subroutine test_decompInit_lnd_abort_on_too_small_nsegspc
+
 end module test_decomp_init_errors

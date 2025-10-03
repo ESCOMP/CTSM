@@ -78,19 +78,14 @@ contains
 
     call write_to_log('test_check_nclumps')
     call test_check_nclumps()
-    call write_to_log('test_decompInit_lnd_abort_when_npes_too_large')
-    !call test_decompInit_lnd_abort_when_npes_too_large()
-    !call write_to_log('test_decompInit_lnd_abort_on_too_small_nsegspc')
-    !call test_decompInit_lnd_abort_on_too_small_nsegspc()
     call write_to_log('test_decompInit_lnd_check_sizes')
     call test_decompInit_lnd_check_sizes()
     call write_to_log('test_decompInit_clump_gcell_info_correct')
     call test_decompInit_clump_gcell_info_correct()
-    ! Comment out for now -- needs some work
-    !call write_to_log('test_decompMod_get_clump_bounds_correct')
-    !call test_decompMod_get_clump_bounds_correct()
 
     !
+    ! THIS DESCRIBES WHAT WOULD NEED TO BE DONE TO CONTINUE A SIMULATION AFTER THIS:
+    ! SINCE THE CODE EXITS AFTER THE SELF TESTS THIS IS NOT NEEDED:
     ! Call the decompInit initialization series a last time so that decompMod data can still be used
     !
     !allocate( model_amask(ldomain%ni*ldomain%nj) )
@@ -99,6 +94,7 @@ contains
     !call decompInit_clumps(ldomain%ni, ldomain%nj, glc_behavior)
     !call decompInit_glcp(ldomain%ni, ldomain%nj, glc_behavior)
     !deallocate( model_amask )
+    ! END DESCRIBE:
 
   end subroutine test_decomp_init
 
@@ -138,65 +134,13 @@ contains
   end subroutine test_decompInit_lnd_check_sizes
 
   !-----------------------------------------------------------------------
-  subroutine test_decompInit_lnd_abort_when_npes_too_large()
-     character(len=CX) :: expected_msg, actual_msg
-
-     if ( npes > 1 ) return   ! error checking testing only works seriallly
-     call setup()
-     ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
-     npes = ni*nj + 1
-
-     !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
-     amask(:) = 1 ! Set all to land
-     call write_to_log('decompInit_lnd with npes too large should abort')
-     call decompInit_lnd( ni, nj, amask )
-     call write_to_log('check expected abort message')
-     expected_msg = 'Number of processes exceeds number of land grid cells'
-     !actual_msg = get_last_endrun_msg()
-     !call endrun_init( .false. )   ! Turn back on to abort on the assert
-     call write_to_log('call assert_equal to check the abort message')
-     call assert_equal( &
-           expected=expected_msg, actual=actual_msg, &
-           msg='decompInit_lnd did not abort with npes too large' )
-
-     ! NOTE: Return npes to its original value
-     npes = default_npes
-     call clean()
-  end subroutine test_decompInit_lnd_abort_when_npes_too_large
-
-  !-----------------------------------------------------------------------
-  subroutine test_decompInit_lnd_abort_on_too_small_nsegspc()
-     use clm_varctl, only : nsegspc
-     character(len=CX) :: expected_msg, actual_msg
-
-     if ( npes > 1 ) return   ! error checking testing only works seriallly
-     call setup()
-     !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
-     amask(:) = 1 ! Set all to land
-     nsegspc = 0
-     call write_to_log('decompInit_lnd with nsegspc too small should abort')
-     call decompInit_lnd( ni, nj, amask )
-     call write_to_log('check expected abort message')
-     expected_msg = 'Number of segments per clump (nsegspc) is less than 1 and can NOT be'
-     !actual_msg = get_last_endrun_msg()
-     !call endrun_init( .false. )   ! Turn back on to abort on the assert
-     call write_to_log('call assert_equal to check the abort message')
-     call assert_equal( &
-           expected=expected_msg, actual=actual_msg, &
-           msg='decompInit_lnd did not abort with too nsegspc too small' )
-     call clean()
-  end subroutine test_decompInit_lnd_abort_on_too_small_nsegspc
-
-  !-----------------------------------------------------------------------
   subroutine test_check_nclumps()
     integer :: expected_nclumps
 
     call setup()
-    !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
     expected_nclumps = npes / clump_pproc
     call assert_equal(expected=expected_nclumps, actual=nclumps, &
          msg='nclumps are not as expected')
-    !call endrun_init( .false. )
     call clean()
   end subroutine test_check_nclumps
 
