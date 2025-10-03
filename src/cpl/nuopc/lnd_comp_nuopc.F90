@@ -49,6 +49,7 @@ module lnd_comp_nuopc
   use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
   use lnd_comp_shr           , only : mesh, model_meshfile, model_clock
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
+  use SelfTestDriver         , only : for_testing_exit_after_self_tests
 
   implicit none
   private ! except
@@ -351,6 +352,8 @@ contains
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
+    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests, &
+                                           for_testing_exit_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -500,6 +503,12 @@ contains
     else
        single_column = .false.
     end if
+    !if ( for_testing_exit_after_self_tests) then
+       ! *******************
+       ! *** RETURN HERE ***
+       ! *******************
+       !RETURN
+    !end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -676,14 +685,19 @@ contains
     call t_startf('clm_init2')
     call initialize2(ni, nj, currtime)
     call t_stopf('clm_init2')
+    if (for_testing_exit_after_self_tests) then
+       RETURN
+    end if
 
     !--------------------------------
     ! Create land export state
     !--------------------------------
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
     call get_proc_bounds(bounds)
     call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    end if
 
     ! Set scalars in export state
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
@@ -731,6 +745,7 @@ contains
     use clm_instMod , only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
     use decompMod   , only : bounds_type, get_proc_bounds
     use clm_driver  , only : clm_drv
+    use SelfTestDriver, only : for_testing_bypass_init_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -786,6 +801,9 @@ contains
     if (single_column .and. .not. scol_valid) then
        RETURN
     end if
+    !if (for_testing_exit_after_self_tests) then
+      ! RETURN
+    !end if
 
     !$  call omp_set_num_threads(nthrds)
 
@@ -818,16 +836,20 @@ contains
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
 
-    ! Get proc bounds
-    call get_proc_bounds(bounds)
-
     !--------------------------------
     ! Unpack import state
     !--------------------------------
 
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
+    ! Get proc bounds for both import and export
+    call get_proc_bounds(bounds)
+
+    call t_startf ('lc_lnd_import')
     call import_fields( gcomp, bounds, glc_present, rof_prognostic, &
          atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_import')
+    end if
 
     !--------------------------------
     ! Run model
@@ -917,9 +939,13 @@ contains
     ! Pack export state
     !--------------------------------
 
+    if ( .not. for_testing_bypass_init_after_self_tests() ) then
+    call t_startf ('lc_lnd_export')
     call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call t_stopf ('lc_lnd_export')
+    end if
 
     !--------------------------------
     ! Advance ctsm time step
@@ -1009,6 +1035,7 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
     if (.not. scol_valid) return
+    !if (for_testing_exit_after_self_tests) return
 
     ! query the Component for its clocks
     call NUOPC_ModelGet(gcomp, driverClock=dclock, modelClock=mclock, rc=rc)
@@ -1320,6 +1347,9 @@ contains
     if (single_column .and. .not. scol_valid) then
        RETURN
     end if
+    !if (for_testing_exit_after_self_tests) then
+       !RETURN
+    !end if
     ! The remander of this should be equivalent to the NUOPC internal routine
     ! from NUOPC_ModeBase.F90
 
