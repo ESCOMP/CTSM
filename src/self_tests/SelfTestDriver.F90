@@ -58,6 +58,11 @@ contains
     integer :: ntests = 0
     !-----------------------------------------------------------------------
 
+    ! Just return if no tests are asked for...
+    if (.not. for_testing_run_ncdiopio_tests .and .not. for_testing_run_decomp_init_tests) then
+       RETURN
+    end if
+
     if ( masterproc ) then
        write(iulog,*) '-------------------------------'
        write(iulog,*) '----- Starting self tests -----'
@@ -84,7 +89,7 @@ contains
           if ( ntests == 0 )then
              write(iulog,*) 'WARNING: You are exiting after self tests were run -- but no self tests were run.'
           else
-             write(iulog,*) 'Exiting after running ', ntests, ' self tests.'
+             write(iulog,*) 'Exiting after running ', ntests, ' suite of self tests.'
           end if
           call shr_sys_flush(iulog)
        end if
