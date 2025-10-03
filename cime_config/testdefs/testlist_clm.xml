@@ -4668,5 +4668,15 @@
     </options>
   </test>
 
+  <test name="ERI_Ld41" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment"> Placeholder failing test for mosart hybrid history issue which appears for tests longer than Ld33</option>
+    </options>
+  </test>
+
 
 </testlist>
