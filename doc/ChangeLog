@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.078
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Thu 02 Oct 2025 05:19:57 PM MDT
+Date: Fri 03 Oct 2025 09:31:06 AM MDT
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
@@ -30,7 +30,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
-Fixes #3494 ERI_Ld90 tests fail with mosart.h0a having diffs
+Makes visible #3494 ERI_Ld90 tests fail with mosart.h0a having diffs
 Fixes #3387 Bring in more timers for initialization
 Some work in #3448 Improve design and error checking in decompMod and decomInitMod
 Fixes #3508 Add decompMod_clean method
