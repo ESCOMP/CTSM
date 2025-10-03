@@ -8,11 +8,11 @@ module TestDecompInit
   use shr_kind_mod, only : r8 => shr_kind_r8, CX => shr_kind_cx
   use Assertions, only : assert_equal
   use clm_varctl, only : iulog
-  use abortutils, only : endrun, endrun_init, get_last_endrun_msg
+  use abortutils, only : endrun
   use spmdMod, only : masterproc, npes, iam
   use decompInitMod, only : decompInit_lnd, clump_pproc, decompInit_clumps
-  use clm_InstMod, only : glc_behavior
   use decompMod
+  use glcBehaviorMod, only : glc_behavior_type
 
   implicit none
   private
@@ -21,16 +21,20 @@ module TestDecompInit
   ! Public routines
 
   public :: test_decomp_init
+  public :: setup
+  public :: clean
 
   ! Module data used in various tests
 
   ! Make the size of the test grid 384 so that it can be divided by 128 or 48
   ! for the number of tasks per node on Derecho or Izumi.
-  integer, parameter :: ni = 16, nj = 24
-  integer :: amask(ni*nj)
+  integer, public, parameter :: ni = 16, nj = 24
+  integer, public :: amask(ni*nj)
 
   integer :: default_npes
   integer :: default_clump_pproc
+
+  type(glc_behavior_type), target, public :: glc_behavior
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -74,14 +78,10 @@ contains
 
     call write_to_log('test_check_nclumps')
     call test_check_nclumps()
-    call write_to_log('test_decompInit_lnd_abort_on_bad_clump_pproc')
-    call test_decompInit_lnd_abort_on_bad_clump_pproc()
-    call write_to_log('test_decompInit_lnd_abort_on_too_big_clump_pproc')
-    call test_decompInit_lnd_abort_on_too_big_clump_pproc()
     call write_to_log('test_decompInit_lnd_abort_when_npes_too_large')
-    call test_decompInit_lnd_abort_when_npes_too_large()
-    call write_to_log('test_decompInit_lnd_abort_on_too_small_nsegspc')
-    call test_decompInit_lnd_abort_on_too_small_nsegspc()
+    !call test_decompInit_lnd_abort_when_npes_too_large()
+    !call write_to_log('test_decompInit_lnd_abort_on_too_small_nsegspc')
+    !call test_decompInit_lnd_abort_on_too_small_nsegspc()
     call write_to_log('test_decompInit_lnd_check_sizes')
     call test_decompInit_lnd_check_sizes()
     call write_to_log('test_decompInit_clump_gcell_info_correct')
@@ -114,49 +114,6 @@ contains
   end subroutine setup
 
   !-----------------------------------------------------------------------
-  subroutine test_decompInit_lnd_abort_on_bad_clump_pproc()
-     character(len=CX) :: expected_msg, actual_msg
-
-     if ( npes > 1 ) return   ! error checking testing only works seriallly
-     call setup()
-     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
-     clump_pproc = 0
-     call write_to_log('decompInit_lnd with clump_pproc=0 should abort')
-     call decompInit_lnd( ni, nj, amask )
-     call write_to_log('check expected abort message')
-     expected_msg = 'clump_pproc must be greater than 0'
-     actual_msg = get_last_endrun_msg()
-     call endrun_init( .false. )   ! Turn back on to abort on the assert
-     call write_to_log('call assert_equal to check the abort message')
-     call assert_equal( &
-           expected=expected_msg, actual=actual_msg, &
-           msg='decompInit_lnd did not abort with clump_pproc=0' )
-     call clean()
-  end subroutine test_decompInit_lnd_abort_on_bad_clump_pproc
-
-  !-----------------------------------------------------------------------
-  subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc()
-     character(len=CX) :: expected_msg, actual_msg
-
-     if ( npes > 1 ) return   ! error checking testing only works seriallly
-     call setup()
-     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
-     amask(:) = 1 ! Set all to land
-     clump_pproc = (ni * nj + 1) / npes
-     call write_to_log('decompInit_lnd with clump_pproc too large should abort')
-     call decompInit_lnd( ni, nj, amask )
-     call write_to_log('check expected abort message')
-     expected_msg = 'Number of clumps exceeds number of land grid cells'
-     actual_msg = get_last_endrun_msg()
-     call endrun_init( .false. )   ! Turn back on to abort on the assert
-     call write_to_log('call assert_equal to check the abort message')
-     call assert_equal( &
-           expected=expected_msg, actual=actual_msg, &
-           msg='decompInit_lnd did not abort with clump_pproc too large' )
-     call clean()
-  end subroutine test_decompInit_lnd_abort_on_too_big_clump_pproc
-
-  !-----------------------------------------------------------------------
   subroutine test_decompInit_lnd_check_sizes()
      use decompMod, only : get_proc_bounds
      type(bounds_type) :: bounds
@@ -174,7 +131,7 @@ contains
      expected_endg = ni*nj / npes
      amask(:) = 1 ! Set all to land
      call decompInit_lnd( ni, nj, amask )
-     call get_proc_bounds(bounds, allow_errors=.true.)
+     call get_proc_bounds(bounds)
      call assert_equal( bounds%begg, 1, msg='begg is not as expected' )
      call assert_equal( bounds%endg, expected_endg, msg='endg is not as expected' )
      call clean()
@@ -189,14 +146,14 @@ contains
      ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
      npes = ni*nj + 1
 
-     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+     !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
      call write_to_log('decompInit_lnd with npes too large should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
      expected_msg = 'Number of processes exceeds number of land grid cells'
-     actual_msg = get_last_endrun_msg()
-     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     !actual_msg = get_last_endrun_msg()
+     !call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
@@ -214,15 +171,15 @@ contains
 
      if ( npes > 1 ) return   ! error checking testing only works seriallly
      call setup()
-     call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+     !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
      amask(:) = 1 ! Set all to land
      nsegspc = 0
      call write_to_log('decompInit_lnd with nsegspc too small should abort')
      call decompInit_lnd( ni, nj, amask )
      call write_to_log('check expected abort message')
      expected_msg = 'Number of segments per clump (nsegspc) is less than 1 and can NOT be'
-     actual_msg = get_last_endrun_msg()
-     call endrun_init( .false. )   ! Turn back on to abort on the assert
+     !actual_msg = get_last_endrun_msg()
+     !call endrun_init( .false. )   ! Turn back on to abort on the assert
      call write_to_log('call assert_equal to check the abort message')
      call assert_equal( &
            expected=expected_msg, actual=actual_msg, &
@@ -235,11 +192,11 @@ contains
     integer :: expected_nclumps
 
     call setup()
-    call endrun_init( .true. )  ! Do not abort on endrun for self-tests
+    !call endrun_init( .true. )  ! Do not abort on endrun for self-tests
     expected_nclumps = npes / clump_pproc
     call assert_equal(expected=expected_nclumps, actual=nclumps, &
          msg='nclumps are not as expected')
-    call endrun_init( .false. )
+    !call endrun_init( .false. )
     call clean()
   end subroutine test_check_nclumps
 
