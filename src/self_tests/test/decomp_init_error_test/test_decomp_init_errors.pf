@@ -55,7 +55,6 @@ contains
      class(TestDecompInitErrors), intent(inout) :: this
      character(len=:), allocatable :: expected_msg
 
-     ! NOTE: This is arbitrarily modifying the NPES value -- so it MUST be reset set the END!
      npes = ni*nj + 1
 
      amask(:) = 1 ! Set all to land
@@ -65,7 +64,6 @@ contains
      @assertExceptionRaised(expected_msg)
   end subroutine test_decompInit_lnd_abort_when_npes_too_large
 
-  !-----------------------------------------------------------------------
   @Test
   subroutine test_decompInit_lnd_abort_on_too_small_nsegspc(this)
      use clm_varctl, only : nsegspc
