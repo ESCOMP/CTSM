@@ -3,6 +3,9 @@
 
 set(genf90_files
   Assertions.F90.in
+)
+list(APPEND clm_sources
+  TestDecompInit.F90
   )
 
 process_genf90_source_list("${genf90_files}" ${CMAKE_CURRENT_BINARY_DIR} clm_genf90_sources)

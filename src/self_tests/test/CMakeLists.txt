@@ -1,1 +1,2 @@
 add_subdirectory(assertions_test)
+add_subdirectory(decomp_init_error_test)
