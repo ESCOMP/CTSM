@@ -133,6 +133,45 @@ where :math:`{WS}_{tot\_soil}` (kgH\ :sub:`2`\ O m\ :sup:`-2`) is the total mass
 
    NF_{leached} =\min \left(NF_{leached} ,\frac{NS_{sminn} sf}{\Delta t} \right).
 
+Alternative way of evaluating the Leaching Losses of Nitrogen
+--------------------------------------------------------------
+
+The previous leaching mechanism is not designed for describing the vertical transport of :math:`{NO}_{3}^{-}` in soil, an alternative way to evaluate the vertical convective, diffusive, and dispersive of dissolved :math:`{NO}_{3}^{-}` in soil is provided in (:ref:`Luo et al. 2025 <Luoetal2025>`). 
+To obtain the vertical profile of soil mineral N after vertical movement of each timestep, the vertical transport equation is summarized in :eq:`22.20`.
+
+.. math::
+   :label: 22.20
+
+   \frac{\partial NS_{sminn}}{\partial t} = \frac{\partial J}{\partial z} + S
+
+where :math:`NS_{sminn} (gN m^{-3})` is the soil :math:`{NO}_{3}^{-}` concentration in each layer, :math:`J (gN m^{-2} s^{-1})` is the different vertical transport terms (:math:`J_{convective}, J_{diffusive}, J_{dispersive}`) between two soil layers, and :math:`S` is the sources or sinks fluxes.
+Different transport terms are explained below 
+
+.. math::
+   :label: 22.21
+
+   J_{convective} = sf \frac{SN_{sminn}q_{out}}{\theta} 
+
+where :math:`q_{out} (mH_{2}Os^{-1})` is the darcy flow of water, :math:`\theta (m^3H_{2}O m^{-3}soil)` is the soil water content.
+
+.. math::
+   :label: 22.22
+
+   J_{diffusive} = -D_{aq} \frac{\theta^{7/3}}{\phi^{2}} \frac{\partial SN_{sminn}}{ \partial z}
+
+where :math:`\partial SN_{sminn}/ \partial z` is the concentration gradient, :math:`D_{aq}` is the nitrate aqueous diffusion coefficient which is taken as :math:`1.7*10^{-9} m^{2}s^{-1}`, and :math:`\phi (m^3m^{-3})` is soil porosity.
+
+.. math::
+   :label: 22.23
+
+   J_{dispersive} = -D_{dis} \frac{\theta^{7/3}}{\phi^{2}} \frac{\partial SN_{sminn}}{ \partial z}
+
+where :math:`D_{dis}` is the dispersion coefficient, which equal to :math:`L_{dis} q_{out} \theta ^{-1}`, for simplicity reasons, :math:`L_{dis}` is taken as 0.1 meter.
+
+Finally, the classical convective-diffusion algorithm described in (:ref:`Patankar.2018 <Patankaretal2018>`) is used to discrete and solve the :math:`{NO}_{3}^{-}` vertical transport :eq:`22.20` in soils. 
+The advantage of this leaching mechanism is the soil :math:`{NO}_{3}^{-}` is able to move vertically (both upward or downward) with soil water movement, the mass of :math:`{NO}_{3}^{-}` reaches bedrock layer is finally taken as the  :math:`NF_{leached}`.
+
+
 Losses of Nitrogen Due to Fire
 -----------------------------------
 
