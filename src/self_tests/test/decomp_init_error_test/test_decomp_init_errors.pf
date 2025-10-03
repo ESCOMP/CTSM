@@ -1,0 +1,53 @@
+module test_decomp_init_errors
+
+  ! Tests of decompInitMod error handling
+
+  use funit
+  use shr_kind_mod, only : r8 => shr_kind_r8, CX => shr_kind_cx
+  use unittestUtils, only : endrun_msg
+  use clm_varctl, only : iulog
+  use spmdMod, only : masterproc, npes, iam
+  use decompInitMod, only : decompInit_lnd, clump_pproc
+  use TestDecompInit, only : ni, nj, amask
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDecompInitErrors
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestDecompInitErrors
+
+contains
+
+  subroutine setUp(this)
+    use TestDecompInit, only : DecompInitTestSetup => setup
+    class(TestDecompInitErrors), intent(inout) :: this
+
+    call DecompInitTestSetup()
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    use TestDecompInit, only : clean
+    class(TestDecompInitErrors), intent(inout) :: this
+
+    call clean()
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_decompInit_lnd_abort_on_bad_clump_pproc(this)
+     class(TestDecompInitErrors), intent(inout) :: this
+     character(len=:), allocatable :: expected_msg
+
+     clump_pproc = 0
+     call decompInit_lnd( ni, nj, amask )
+     expected_msg = endrun_msg( &
+         'clump_pproc must be greater than 0')
+     @assertExceptionRaised(expected_msg)
+
+  end subroutine test_decompInit_lnd_abort_on_bad_clump_pproc 
+
+end module test_decomp_init_errors
