@@ -22,6 +22,7 @@ list(APPEND clm_sources
   SparseMatrixMultiplyMod.F90
   IssueFixedMetadataHandler.F90
   NumericsMod.F90
+  spmdMod.F90
   )
 
 sourcelist_to_parent(clm_sources)
