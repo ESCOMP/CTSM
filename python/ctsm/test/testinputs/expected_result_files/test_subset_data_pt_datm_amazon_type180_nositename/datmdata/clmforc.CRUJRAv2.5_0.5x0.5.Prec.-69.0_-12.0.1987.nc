@@ -1,0 +1,1 @@
+../../test_subset_data_pt_datm_amazon_type180/datmdata//clmforc.CRUJRAv2.5_0.5x0.5.Prec.TMP.1987.nc

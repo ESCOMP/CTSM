@@ -45,6 +45,8 @@ add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
 list ( APPEND drv_sources_needed
   ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
   ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_expr_parser_mod.F90
+  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_fire_emis_mod.F90
   )
 
 # Add CLM source directories
