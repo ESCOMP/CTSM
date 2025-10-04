@@ -29,9 +29,9 @@
 path = src/fates
 #url = https://github.com/NGEET/fates
 url = https://github.com/ekluzek/fates
-#fxtag = sci.1.87.0_api.41.0.0
+#fxtag = sci.1.87.2_api.41.0.0
 #fxtag = add_file_to_cmake_unittest_list
-fxtag = 8d15e89d332e56946028179db28c533d862e2959
+fxtag = fa4016d1b59ffdb509a7833da113a88872a8a56c
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
