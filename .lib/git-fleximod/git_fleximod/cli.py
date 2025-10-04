@@ -1,38 +1,50 @@
 from pathlib import Path
-import argparse
+import argparse, os, sys
 from git_fleximod import utils
 
-__version__ = "0.9.3"
+__version__ = "1.0.2"
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        # First print the default help message
+        super().print_help(file)
+
+        # Then append the contents of README.md
+        candidate_paths = [
+            Path(sys.prefix) / "share" / "git_fleximod" / "README.md",
+            Path(__file__).resolve().parent.parent / "README.md",  # fallback for dev
+        ]
+        for path in candidate_paths:
+            if os.path.exists(path):
+                with open(path) as f:
+                    print( f.read(), file=file)
+                    return
+        print( "README.md not found.", file=file)
 
 def find_root_dir(filename=".gitmodules"):
     """ finds the highest directory in tree
     which contains a file called filename """
-    try:
-        root = utils.execute_subprocess(["git","rev-parse", "--show-toplevel"],
-                                        output_to_caller=True ).rstrip()
-    except:
-        d = Path.cwd()
-        root = Path(d.root)
-        dirlist = []
-        dl = d
-        while dl != root:
-            dirlist.append(dl)
-            dl = dl.parent
-        dirlist.append(root)
-        dirlist.reverse()
+    d = Path.cwd()
+    root = Path(d.root)
+    dirlist = []
+    dl = d
+    while dl != root:
+        dirlist.append(dl)
+        dl = dl.parent
+    dirlist.append(root)
+    dirlist.reverse()
 
-        for dl in dirlist:
-            attempt = dl / filename
-            if attempt.is_file():
-                return str(dl)
-        return None
-    return Path(root)
+    for dl in dirlist:
+        attempt = dl / filename
+        if attempt.is_file():
+            return str(dl)
+    return None
 
 def get_parser():
     description = """
     %(prog)s manages checking out groups of gitsubmodules with additional support for Earth System Models
     """
-    parser = argparse.ArgumentParser(
+    parser = CustomArgumentParser(
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
