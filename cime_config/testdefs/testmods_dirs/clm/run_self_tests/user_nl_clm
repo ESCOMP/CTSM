@@ -1,9 +1,14 @@
+! Bypass as much of the init phase as can be done
+! Bypassing the run phase already was inherited from the for_testing_fastsetup_bypassrun testmod
+for_testing_bypass_init = .true.
+
+! Turn on some of the self tests
 for_testing_run_ncdiopio_tests = .true.
-for_testing_run_decomp_init_tests = .true.
-for_testing_exit_after_self_tests = .true.
 
 ! Turn off history, restarts, and output
 hist_empty_htapes = .true.
 use_noio = .true.
-urban_hac = 'OFF'
-toosmall_urban =  98.0d00  ! Minimize urban in gridcells
+for_testing_run_decomp_init_tests = .true.
+
+! Exit initialization phase after the self tests
+for_testing_bypass_init = .true.

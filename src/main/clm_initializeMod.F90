@@ -30,7 +30,7 @@ module clm_initializeMod
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
   use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
-  use SelfTestDriver        , only : self_test_driver
+  use SelfTestDriver        , only : self_test_driver, for_testing_bypass_init_after_self_tests
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
   !
@@ -67,6 +67,7 @@ contains
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod     , only: crop_repr_pools_init
     use HillslopeHydrologyMod, only: hillslope_properties_init
+    use SelfTestDriver       , only: self_test_readnml
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -86,8 +87,6 @@ contains
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init1')
-
     ! Initialize run control variables, timestep
 
     if ( masterproc )then
@@ -104,6 +103,8 @@ contains
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
 
+    call self_test_readnml( NLFilename )
+
     ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
     ! number of patches per column.  We still use numcft from the surface
     ! file though...
@@ -119,8 +120,6 @@ contains
     call dynSubgridControl_init(NLFilename)
     call crop_repr_pools_init()
     call hillslope_properties_init(NLFilename)
-
-    call t_stopf('clm_init1')
 
   end subroutine initialize1
 
@@ -144,6 +143,7 @@ contains
     use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use clm_varctl                    , only : use_cropcal_streams
+    use clm_varctl                    , only : use_noio
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -185,6 +185,7 @@ contains
     use FATESFireFactoryMod           , only : scalar_lightning
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
+    use SelfTestDriver                , only : for_testing_bypass_init_after_self_tests
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -223,8 +224,7 @@ contains
     character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
-    call t_startf('clm_init2')
-
+    call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells
     call get_proc_bounds(bounds_proc)
     begg = bounds_proc%begg; endg = bounds_proc%endg
@@ -277,6 +277,8 @@ contains
        call CLMFatesGlobals2()
 
     end if
+    call t_stopf('clm_init2_part1')
+    call t_startf('clm_init2_part2')
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call t_startf('clm_decompInit_clumps')
@@ -335,6 +337,7 @@ contains
     ! Run any requested self-tests
     call self_test_driver(bounds_proc)
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
@@ -351,8 +354,9 @@ contains
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
-
+    end if   ! End of bypass
     
+    ! Self test skipping should still do the time manager initialization
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()
@@ -369,20 +373,21 @@ contains
     if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
-    call t_startf('init_orbd')
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-    call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
+    call t_stopf('clm_init2_part2')
+    call t_startf('clm_init2_part3')
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
     ! History file variables
-    if (use_cn) then
+    if (use_cn .and. .not. use_noio ) then
        call hist_addfld1d (fname='DAYL',  units='s', &
             avgflag='A', long_name='daylength', &
             ptr_gcell=grc%dayl, default='inactive')
@@ -398,21 +403,23 @@ contains
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
 
-    data2dptr => col%dz(:,-nlevsno+1:0)
-    col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
-    call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+    if ( .not. use_noio )then
+      data2dptr => col%dz(:,-nlevsno+1:0)
+      col%dz(bounds_proc%begc:bounds_proc%endc,:) = spval
+      call hist_addfld2d (fname='SNO_Z', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
-    call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
-         avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
-         l2g_scale_type='ice', default='inactive')
+      call hist_addfld2d (fname='SNO_Z_ICE', units='m', type2d='levsno',  &
+            avgflag='A', long_name='Snow layer thicknesses (ice landunits only)', &
+            ptr_col=data2dptr, no_snow_behavior=no_snow_normal, &
+            l2g_scale_type='ice', default='inactive')
 
-    col%zii(bounds_proc%begc:bounds_proc%endc) = spval
-    call hist_addfld1d (fname='ZII', units='m', &
-         avgflag='A', long_name='convective boundary height', &
-         ptr_col=col%zii, default='inactive')
+      col%zii(bounds_proc%begc:bounds_proc%endc) = spval
+      call hist_addfld1d (fname='ZII', units='m', &
+            avgflag='A', long_name='convective boundary height', &
+            ptr_col=col%zii, default='inactive')
+    end if
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
@@ -423,14 +430,14 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
-    call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
-    call t_stopf('init_dyn_subgrid')
 
     ! Initialize fates LUH2 usage
     if (use_fates_luh) then
@@ -510,6 +517,7 @@ contains
     if (nsrest == nsrContinue ) then
        call htapes_fieldlist()
     end if
+    end if ! End of bypass
 
     ! Read restart/initial info
     is_cold_start = .false.
@@ -550,6 +558,7 @@ contains
     ! If appropriate, create interpolated initial conditions
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
 
+       call t_startf('clm_init2_init_interp')
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then
           call endrun(msg='ERROR clm_initializeMod: '//&
@@ -599,7 +608,10 @@ contains
           close(iun)
           write(iulog,'(a)')' Successfully wrote finidat status file '//trim(locfn)
        end if
+       call t_stopf('clm_init2_init_interp')
     end if
+
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
 
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
@@ -650,17 +662,14 @@ contains
 
     ! Initialize nitrogen deposition
     if (use_cn ) then !.or. use_fates_bgc) then (ndep with fates will be added soon RGK)
-       call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
           call ndep_init(bounds_proc, NLFilename)
           call ndep_interp(bounds_proc, atm2lnd_inst)
        end if
-       call t_stopf('init_ndep')
     end if
 
     ! Initialize crop calendars
     if (use_crop) then
-      call t_startf('init_cropcal')
       call cropcal_init(bounds_proc)
       if (use_cropcal_streams) then
         call cropcal_advance( bounds_proc )
@@ -672,7 +681,6 @@ contains
         end do
         !$OMP END PARALLEL DO
       end if
-      call t_stopf('init_cropcal')
     end if
 
     ! Initialize active history fields.
@@ -717,10 +725,8 @@ contains
     
     ! Determine gridcell averaged properties to send to atm
     if (nsrest == nsrStartup) then
-       call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
             water_inst, surfalb_inst, energyflux_inst, lnd2atm_inst)
-       call t_stopf('init_map2gc')
     end if
 
     ! Initialize sno export state to send to glc
@@ -728,12 +734,10 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
-       call t_startf('init_lnd2glc')
        call lnd2glc_inst%update_lnd2glc(bounds_clump,       &
             filter(nc)%num_do_smb_c, filter(nc)%do_smb_c,   &
             temperature_inst, water_inst%waterfluxbulk_inst, topo_inst, &
             init=.true.)
-       call t_stopf('init_lnd2glc')
     end do
     !$OMP END PARALLEL DO
 
@@ -767,13 +771,13 @@ contains
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
+    end if ! end of bypass
     
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated
     deallocate(topo_glc_mec, fert_cft, irrig_method)
 
     ! Write log output for end of initialization
-    call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
        if (nsrest == nsrStartup) then
@@ -788,7 +792,6 @@ contains
        write(iulog,'(72a1)') ("*",i=1,60)
        write(iulog,*)
     endif
-    call t_stopf('init_wlog')
 
     if (water_inst%DoConsistencyCheck()) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
@@ -799,7 +802,7 @@ contains
        !$OMP END PARALLEL DO
     end if
 
-    call t_stopf('clm_init2')
+    call t_stopf('clm_init2_part3')
 
   end subroutine initialize2
 

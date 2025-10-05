@@ -750,6 +750,17 @@ ignitions.
 (Only relevant if FATES is on)
 </entry>
 
+<entry id="use_fates_managed_fire" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Enable FATES managed fire mode.  Requires that fates_spitfire_mode is on (in any mode).
+This mode allows the FATES model to conduct fuel-load reduction through managed burns.
+The boundary conditions in which a managed fire is allowed is set via the FATES parameter
+file.  The burned area fraction of a managed burn is defined through the FATES parameter
+file as well.  This mode works in conjunction with the SPITFIRE module to determine
+whether a wildfire or managed fire takes place on a given patch.
+(Only relevant if FATES is on)
+</entry>
+
 <entry id="use_fates_fixed_biogeog" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on fixed biogeography mode
@@ -990,6 +1001,12 @@ Toggle to turn on the plant hydraulic stress model
 How LUNA and Photosynthesis (if needed) will get Leaf nitrogen content
    lnc_opt = true  get from leaf N from CN model
    lnc_opt = false get based on LAI and fixed CN ratio from parameter file
+</entry>
+<entry id="use_nvmovement" type="logical" category="bgc"
+       group="clm_inparm" value=".false.">
+   use_nvmovement = true use soil nitrogen vertical movement
+   use_nvmovement = false do not use soil nitrogen vertical movement
+   use_nvmovement cannot be true while use_nitrif_denitrif is false
 </entry>
 
 <entry id="paramfile" type="char*512" category="datasets"
@@ -1242,19 +1259,34 @@ Whether to use subgrid fluxes for snow
 Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist items for doing specific things for testing                                      -->
+<!-- for_testing section:                                                                      -->
+<!-- ========================================================================================  -->
+
+<entry id="for_testing_bypass_init" type="logical" category="default_settings"
+       group="for_testing_options" >
+For testing whether to bypass the rest of the initialization after the self test driver is run
+</entry>
+
+<entry id="for_testing_bypass_run" type="logical" category="default_settings"
+       group="for_testing_options" >
+For testing whether to bypass most of the run phase other than the clock advance
+</entry>
+
 <entry id="for_testing_exit_after_self_tests" type="logical" category="default_settings"
-       group="clm_inparm" >
+       group="for_testing_options" >
 Whether to exit early after the initialization self tests are run. This is typically only used in automated tests.
 </entry>
 
 <entry id="for_testing_run_ncdiopio_tests" type="logical" category="default_settings"
-       group="clm_inparm" >
+       group="for_testing_options" >
 Whether to run some tests of ncdio_pio as part of the model run. This is
 typically only used in automated tests.
 </entry>
 
 <entry id="for_testing_run_decomp_init_tests" type="logical" category="default_settings"
-       group="clm_inparm" >
+       group="for_testing_options" >
 Whether to run some tests of decompInit (to get the gridcell to MPI task decomposition) as part of the model run. This is
 typically only used in automated tests.
 </entry>

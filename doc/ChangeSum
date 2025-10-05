@@ -1,5 +1,18 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.3.078   slevis 10/03/2025 Merge b4b-dev to master
+       ctsm5.3.077   rgknox 10/02/2025 Adjustment of timestep albedo filtering with FATES
+       ctsm5.3.076     erik 09/24/2025 Merge b4b-dev to master
+       ctsm5.3.075   slevis 09/10/2025 Change default glcmec_downscale_longwave from true to false for clm6
+       ctsm5.3.074   slevis 09/09/2025 Update ctsm6 default paramfile and finidat files
+       ctsm5.3.073   slevis 08/28/2025 Update .gitmodules to cesm3_0_alpha07c
+       ctsm5.3.072 jinmuluo 08/26/2025 New vertical movement scheme for soil nitrate
+       ctsm5.3.071 samrabin 08/22/2025 Merge b4b-dev to master
+       ctsm5.3.070 glemieux 08/22/2025 Update default FATES parameter file and add FATES managed fire namelist option
+       ctsm5.3.069 samrabin 08/12/2025 Add SystemTests to run subset_data and then CTSM
+       ctsm5.3.068   slevis 08/11/2025 Change megan_use_gamma_sm to default false
+       ctsm5.3.067 samrabin 08/08/2025 (Mostly) fix interim restarts
+       ctsm5.3.066   slevis 08/08/2025 Merge b4b-dev to master
        ctsm5.3.065     erik 07/28/2025 Merge b4b-dev to master
        ctsm5.3.064   slevis 07/24/2025 Add time dimension to 1d_wt fields in transient runs
        ctsm5.3.063 samrabin 07/10/2025 Merge b4b-dev to master

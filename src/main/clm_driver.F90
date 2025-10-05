@@ -13,8 +13,8 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_cropcal_streams
+  use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -85,6 +85,7 @@ module clm_driver
   use clm_instMod
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   use SoilBiogeochemDecompCascadeConType , only : no_soil_decomp, decomp_method
+  use SelfTestDriver         , only : for_testing_bypass_run_except_clock_advance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -165,6 +166,7 @@ contains
     ! CalcIrrigationNeeded. Simply declaring this variable makes the ICE go away.
     real(r8), allocatable :: dummy1_to_make_pgi_happy(:)
     !-----------------------------------------------------------------------
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     ! Determine processor bounds and clumps for this processor
 
@@ -1157,7 +1159,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
           call t_stopf('EcosysDynPostDrainage')
        end if
 
@@ -1264,23 +1266,23 @@ contains
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
+
+       ! This is only relevant to  fates two stream to not break sun fraction calculations
+       ! on the second timestep after start from finidat or for hybrid run.
+       ! The first clause is to maintain b4b with base, but is not necessary.
        
-       if (.not.doalb) then
-
-
-          if(use_fates) then
-             ! During branch runs and non continue_run restarts, the doalb flag
-             ! does not trigger correctly for fates runs (and non-fates?), and thus
-             ! the zenith angles are not calculated and ready when radiation scattering
-             ! needs to occur.
+       if (use_fates .and. .not.doalb ) then
+          if ( (is_cold_start .and. get_nstep() == 1) .or. & 
+              ((fates_radiation_model == 'twostream') .and. (get_nstep()== 1) .and. (.not.use_fates_sp) &
+                .and. (.not.is_cold_start) .and. (nsrest == nsrStartup)) ) then
              call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
              call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
                   water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
                   surfalb_inst)
-          end if
-          
-       else
+          endif
+       endif
 
+       if (doalb) then
           ! Albedos for non-urban columns
           call t_startf('surfalb')
           call SurfaceAlbedo(bounds_clump,                      &
@@ -1576,6 +1578,8 @@ contains
     integer :: fp, fc                  ! filter indices
     !-----------------------------------------------------------------------
 
+    if ( for_testing_bypass_run_except_clock_advance() ) return
+
     associate(                                                             &
          snl                => col%snl                                   , & ! Input:  [integer  (:)   ]  number of snow layers
 
@@ -1657,6 +1661,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c,fc              ! indices
     ! -----------------------------------------------------------------
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     ! Note: lake points are excluded from many of the following
     ! averages. For some fields, this is because the field doesn't
@@ -1751,6 +1756,8 @@ contains
     real(r8):: tsxyav                  ! average ts for diagnostic output
     integer :: status(MPI_STATUS_SIZE) ! mpi status
     !------------------------------------------------------------------------
+
+    if ( for_testing_bypass_run_except_clock_advance() ) return
 
     call get_proc_global(ng=numg)
 
