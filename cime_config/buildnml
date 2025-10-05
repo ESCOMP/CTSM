@@ -106,7 +106,6 @@ def buildnml(case, caseroot, compname):
         "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
         "clm5_0_ERA5": "clm5_0_GSWP3v1",
         "clm5_0_CRUJRA2024": "clm5_0_GSWP3v1",
-        "clm5_0_TRENDY25": "clm5_0_GSWP3v1",        
         "clm6_0_1PT": "clm6_0_GSWP3v1",
         "clm6_0_QIAN": "clm6_0_GSWP3v1",
         "clm6_0_NLDAS2": "clm6_0_GSWP3v1",
