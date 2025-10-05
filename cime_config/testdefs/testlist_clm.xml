@@ -4433,16 +4433,16 @@
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">01:50:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERI_D_Ld11" grid="ne30pg3_ne30pg3_mtn14" compset="I1850Clm60FatesNocompSpinup" testmods="clm/FatesColdSpinup">
+  <test name="ERI_D_Ld11" grid="ne30pg3_ne30pg3_mtn14" compset="I1850Clm60FatesNocompSpinup" testmods="clm/FatesColdSpinupAD">
     <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">01:50:00</option>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
