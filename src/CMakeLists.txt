@@ -102,13 +102,10 @@ declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(clm ${clm_sources})
 add_library(fates ${fates_sources})
 declare_generated_dependencies(clm "${clm_genf90_sources}")
-# Add explicit dependencies to lower level libraries, and list them one by one
+# Add explicit dependencies to lower level libraries, for each library
 add_dependencies(csm_share esmf)
-add_dependencies(clm fates)
-add_dependencies(clm csm_share)
-add_dependencies(clm esmf)
-add_dependencies(fates csm_share)
-add_dependencies(fates esmf)
+add_dependencies(clm fates csm_share esmf)
+add_dependencies(fates csm_share esmf)
 
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CLM_ROOT}/share/include)
