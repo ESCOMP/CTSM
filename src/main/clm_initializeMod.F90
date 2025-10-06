@@ -357,9 +357,8 @@ contains
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
     end if   ! End of bypass
-
     
-    ! Self test skipping should still do the timee manager initialization
+    ! Self test skipping should still do the time manager initialization
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()

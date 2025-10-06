@@ -50,6 +50,7 @@ module lnd_comp_nuopc
   use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
   use lnd_comp_shr           , only : mesh, model_meshfile, model_clock
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
+  use SelfTestDriver         , only : for_testing_exit_after_self_tests
 
   implicit none
   private ! except
@@ -362,7 +363,8 @@ contains
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
-    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests
+    use SelfTestDriver            , only : for_testing_bypass_init_after_self_tests, &
+                                           for_testing_exit_after_self_tests
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -694,6 +696,9 @@ contains
     call t_startf('clm_init2')
     call initialize2(ni, nj, currtime)
     call t_stopf('clm_init2')
+    if (for_testing_exit_after_self_tests) then
+       RETURN
+    end if
 
     !--------------------------------
     ! Create land export state

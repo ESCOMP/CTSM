@@ -3508,6 +3508,36 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhenCamLndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">No comment at this time</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCamLndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:10:00</option>
+      <option name="comment">No comment at this time</option>
+    </options>
+  </test>
+  <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCamLndTuningMode">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">No comment at this time</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
@@ -4665,6 +4695,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Possibly redundant with the ERR...IHistClm60BgcCrop...clm-default test above. However, at one point during development, this test was failing while the ERR tests were all still passing. One difference is that IRT tests use the oldest restart, whereas ERR tests use the median restart.</option>
+    </options>
+  </test>
+
+  <test name="ERI_Ld41" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment"> Placeholder failing test for mosart hybrid history issue which appears for tests longer than Ld33</option>
     </options>
   </test>
 
