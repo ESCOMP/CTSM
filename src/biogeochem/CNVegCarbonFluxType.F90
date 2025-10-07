@@ -27,7 +27,7 @@ module CNVegCarbonFluxType
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
-  use pftconMod                          , only : npcropmin, pftcon
+  use pftconMod                          , only : is_prognostic_crop, pftcon
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max, repr_structure_min, repr_structure_max
   use CropReprPoolsMod                   , only : get_repr_hist_fname, get_repr_rest_fname, get_repr_longname
   use LandunitType                       , only : lun                
@@ -4921,7 +4921,7 @@ contains
                this%livestem_mr_patch(p) + &
                this%livecroot_mr_patch(p)
        end if
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%mr_patch(p) = &
                   this%mr_patch(p) + &
@@ -4939,7 +4939,7 @@ contains
             this%cpool_deadstem_gr_patch(p)  + &
             this%cpool_livecroot_gr_patch(p) + &
             this%cpool_deadcroot_gr_patch(p)
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%current_gr_patch(p) = this%current_gr_patch(p) + &
                   this%cpool_reproductive_gr_patch(p,k)
@@ -4955,7 +4955,7 @@ contains
             this%transfer_deadstem_gr_patch(p)  + &
             this%transfer_livecroot_gr_patch(p) + &
             this%transfer_deadcroot_gr_patch(p)
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%transfer_gr_patch(p) = this%transfer_gr_patch(p) + &
                   this%transfer_reproductive_gr_patch(p,k)
@@ -4971,7 +4971,7 @@ contains
             this%cpool_livecroot_storage_gr_patch(p) + &
             this%cpool_deadcroot_storage_gr_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%storage_gr_patch(p) = this%storage_gr_patch(p) + &
                   this%cpool_reproductive_storage_gr_patch(p,k)
@@ -4985,7 +4985,7 @@ contains
             this%storage_gr_patch(p)
 
        ! autotrophic respiration (AR) adn 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
                this%gr_patch(p)
@@ -5045,7 +5045,7 @@ contains
             this%cpool_to_deadstemc_patch(p)              + &
             this%deadstemc_xfer_to_deadstemc_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%agnpp_patch(p) =      &
                   this%agnpp_patch(p) + &
@@ -5139,7 +5139,7 @@ contains
             this%gru_livecrootc_to_litter_patch(p)            + &
             this%gru_deadcrootc_to_litter_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           this%litfall_patch(p) =      &
                this%litfall_patch(p) + &
                this%livestemc_to_litter_patch(p)

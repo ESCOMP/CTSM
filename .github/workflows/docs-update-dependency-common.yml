@@ -1,0 +1,77 @@
+name: Jobs shared by docs workflows that run when a dependency is updated
+
+on:
+  workflow_call:
+    inputs:
+      # Conda is always needed for both jobs in this workflow. Here,
+      # we set default values for the variables in case the calling
+      # workflow doesn't provide them.
+      conda_env_file:
+        required: false
+        type: string
+        default: "python/conda_env_ctsm_py.yml"
+      conda_env_name:
+        required: false
+        type: string
+        default: "ctsm_pylib"
+    secrets: {}
+
+jobs:
+  compare-docbuilder-vs-ctsmpylib:
+    name: Are both methods identical?
+
+    # Don't run on forks, because test_container_eq_ctsm_pylib.sh uses
+    # build_docs_to_publish, which will look for branch(es) that forks
+    # may not have
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ${{ inputs.conda_env_name }}
+          environment-file: ${{ inputs.conda_env_file }}
+          channels: conda-forge
+          auto-activate-base: false
+
+      - name: Compare docs built with container vs. ctsm_pylib
+        run: |
+          cd doc/test/
+          ./test_container_eq_ctsm_pylib.sh
+
+  makefile-method:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ${{ inputs.conda_env_name }}
+          environment-file: ${{ inputs.conda_env_file }}
+          channels: conda-forge
+          auto-activate-base: false
+
+      - name: Check that Makefile method works
+        run: |
+          cd doc/test/
+          conda run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh
