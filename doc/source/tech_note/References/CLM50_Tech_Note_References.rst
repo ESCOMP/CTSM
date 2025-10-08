@@ -1054,7 +1054,7 @@ Parton, W.J. et al. 2001. Generalized model for NOx and N2O emissions from soils
 
 .. _Patankaretal2018:
 
-Patankar S. Numerical heat transfer and fluid flow[M]. CRC press, 2018.
+Patankar S., 2018. Numerical heat transfer and fluid flow[M]. CRC press., Boca Raton, section 5.2, 80-95 pp
 
 .. _Paterson1994:
 
