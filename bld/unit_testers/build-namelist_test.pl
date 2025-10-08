@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"", CLM_CMIP_ERA=>"cmip7" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -261,7 +261,7 @@ print "==================================================\n";
 my $options = "-co2_ppmv 250 ";
    $options .= " -res 10x15 -ssp_rcp SSP2-4.5 -envxml_dir .";
 
-   &make_env_run();
+   &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
       $cfiles->checkfilesexist( "default", $mode );
@@ -611,6 +611,16 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+     "cmip7_w_issp"              =>{ options=>"-envxml_dir . -ssp_rcp SSP4-6.0",
+                                     namelst=>"",
+                                     CLM_CMIP_ERA=>"cmip7",
+                                     phys=>"clm6_0",
+                                   },
+     "cmip6_w_i2000"             =>{ options=>"-envxml_dir . -use_case 2000_control",
+                                     namelst=>"",
+                                     CLM_CMIP_ERA=>"cmip6",
+                                     phys=>"clm6_0",
+                                   },
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold -envxml_dir .",
                                      namelst=>"finidat='$finidat'",
                                      phys=>"clm5_0",
@@ -1361,7 +1371,7 @@ foreach my $key ( keys(%failtest) ) {
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
    my %settings;
-   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS") {
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS", "CLM_CMIP_ERA") {
       if ( defined($failtest{$key}{$xmlvar}) ) {
          $settings{$xmlvar} = $failtest{$key}{$xmlvar};
       }
@@ -1611,7 +1621,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
       $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
-      &make_env_run();
+      &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
          if ( $failusecase eq $usecase ) {
@@ -1832,15 +1842,21 @@ foreach my $res ( @glc_res ) {
       my $startymd = undef;
       if ( ($usecase eq "1850_control") || ($usecase eq "20thC_transient") ) {
          $startymd = 18500101;
+         &make_env_run();
       } elsif ( $usecase eq "2000_control") {
          $startymd = 20000101;
+         &make_env_run();
       } elsif ( $usecase eq "2010_control") {
          $startymd = 20100101;
+         &make_env_run();
+      } elsif ( $usecase eq "1850-2100_SSP2-4.5_transient") {
+         $startymd = 20150101;
+         &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
       } else {
          $startymd = 20150101;
+         &make_env_run();
       }
       $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
-      &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );
@@ -1877,11 +1893,11 @@ foreach my $res ( @tran_res ) {
 }
 # Transient ssp_rcp scenarios that work
 my @tran_res = ( "4x5", "0.9x1.25", "1.9x2.5", "10x15", "360x720cru", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
+my $startymd = 20150101;
+&make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
 foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
-   my $startymd = 20150101;
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
-      &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );

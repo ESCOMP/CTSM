@@ -1816,7 +1816,7 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_0.9x1.25_hist_1850_78pfts_c240908.nc</
 <fsurdat hgrid="1.9x2.5"     sim_year="1850" use_crop=".true." cmip_era="cmip7">
 lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1.9x2.5_hist_1850_78pfts_c250723.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"     sim_year="1850" use_crop=".true." cmip_era="cmip6">
--lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1.9x2.5_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="10x15"       sim_year="1850" >
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_10x15_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="4x5"         sim_year="1850" use_crop=".true.">
