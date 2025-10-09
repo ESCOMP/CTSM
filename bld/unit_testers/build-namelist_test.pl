@@ -1156,7 +1156,7 @@ my %failtest = (
                                      namelst=>"use_fates_lupft=.true.",
                                      phys=>"clm4_5",
                                    },
-     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
