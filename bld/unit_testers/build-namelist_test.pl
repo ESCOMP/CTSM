@@ -570,6 +570,8 @@ $mode = "-phys $phys";
 foreach my $options (
                       "--res 0.9x1.25 --bgc sp  --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=18501223/'",
                       "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
+                      "--res 1.9x2.5 --bgc bgc --use_case 1850_control --namelist '&a start_ymd=18500101/'",
+                      "--res 1.9x2.5 --bgc bgc --use_case 20thC_transient --namelist '&a start_ymd=18500101/'",
                      ) {
    my $file = $startfile;
    &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
@@ -629,14 +631,9 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
-     "cmip7_w_issp"              =>{ options=>"-envxml_dir . -ssp_rcp SSP4-6.0",
+     "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
                                      namelst=>"",
                                      CLM_CMIP_ERA=>"cmip7",
-                                     phys=>"clm6_0",
-                                   },
-     "cmip6_w_i2000"             =>{ options=>"-envxml_dir . -use_case 2000_control",
-                                     namelst=>"",
-                                     CLM_CMIP_ERA=>"cmip6",
                                      phys=>"clm6_0",
                                    },
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold -envxml_dir .",
