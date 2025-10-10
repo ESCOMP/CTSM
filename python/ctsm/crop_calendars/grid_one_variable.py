@@ -161,7 +161,7 @@ def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
     # Get DataArrays needed for gridding
     thisvar_da, vt_da, spatial_unit, ixy_da, jxy_da = get_ixy_jxy_das(this_ds, var)
 
-    if not fill_value and "_FillValue" in thisvar_da.attrs:
+    if fill_value is None and "_FillValue" in thisvar_da.attrs:
         fill_value = thisvar_da.attrs["_FillValue"]
 
     # Renumber vt_da to work as indices on new ivt dimension, if needed.
