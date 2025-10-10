@@ -607,7 +607,7 @@ def import_and_process_1yr(
             log(logger, f"      SKIPPING {vegtype_str}")
             continue
 
-        vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
+        vegtype_int = utils.vegtype_str2int(vegtype_str)
         this_crop_full_patchlist = list(xr_flexsel(h2_ds, vegtype=vegtype_str).patch.values)
 
         # Get time series for each patch of this type
@@ -1166,7 +1166,7 @@ if CAN_PLOT:
                 raise RuntimeError(f"If mapping {vegtype_str}, you must provide land use dataset")
             else:
                 vegtypes_str = [x for x in incl_vegtypes_str if vegtype_str.lower() in x]
-            vegtypes_int = [utils.vegtype_str2int(x)[0] for x in vegtypes_str]
+            vegtypes_int = [utils.vegtype_str2int(x) for x in vegtypes_str]
 
             # Crop fraction map (for masking and weighting)
             if lu_ds:

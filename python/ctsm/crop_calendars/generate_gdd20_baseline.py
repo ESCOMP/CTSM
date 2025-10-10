@@ -182,7 +182,7 @@ def _get_gddn_for_cft(cft_str, variable):
 
 
 def _get_output_varname(cft_str):
-    cft_int = utils.vegtype_str2int(cft_str)[0]
+    cft_int = utils.vegtype_str2int(cft_str)
     return f"gdd20bl_{cft_int}"
 
 
@@ -275,7 +275,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     # Process all crops
     encoding_dict = {}
     for cft_str in MGDCROP_LIST:
-        cft_int = utils.vegtype_str2int(cft_str)[0]
+        cft_int = utils.vegtype_str2int(cft_str)
         print(f"{cft_str} ({cft_int})")
 
         # Which GDDN history variable does this crop use? E.g., GDD0, GDD10

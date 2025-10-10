@@ -265,6 +265,7 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
     convert_to_ndarray = not isinstance(vegtype_str, np.ndarray)
     if convert_to_ndarray:
         vegtype_str = np.array(vegtype_str)
+    was_0d = vegtype_str.ndim == 0
     vegtype_str = np.atleast_1d(vegtype_str)
 
     if isinstance(vegtype_mainlist, xr.Dataset):
@@ -290,6 +291,10 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
         indices[np.where(vegtype_str == vegtype_str_2)] = vegtype_mainlist.index(vegtype_str_2)
     if convert_to_ndarray:
         indices = [int(x) for x in indices]
+
+    if was_0d:
+        indices = indices[0]
+
     return indices
 
 

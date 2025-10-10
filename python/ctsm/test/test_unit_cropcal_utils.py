@@ -20,13 +20,14 @@ class TestCropCalUtils(unittest.TestCase):
 
     def test_vegtype_str2int_1string(self):
         """
-        Tests vegtype_str2int() for a single string
+        Tests vegtype_str2int() for a single string. Result should be an int.
         """
-        ccu.vegtype_str2int("crop_1", vegtype_mainlist=self.vegtype_mainlist)
+        result = ccu.vegtype_str2int("crop_1", vegtype_mainlist=self.vegtype_mainlist)
+        self.assertEqual(result, 0)
 
     def test_vegtype_str2int_2strings(self):
         """
-        Tests vegtype_str2int() for two strings
+        Tests vegtype_str2int() for two strings. result should be a list of ints.
         """
         result = ccu.vegtype_str2int(["crop_1", "crop_3"], vegtype_mainlist=self.vegtype_mainlist)
         self.assertListEqual(result, [0, 2])
