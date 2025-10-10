@@ -238,19 +238,13 @@ def generate_gdd20_baseline(input_files, output_file, author, variable, year_arg
     input_files.sort()
 
     # Process time slice
-    # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01.
-    # It would be more robust, accounting for upcoming behavior (where timestamp for a year is the
-    # middle of that year), to do slice("YEAR1-01-03", "YEARN-01-02"), but that's not compatible
-    # with ctsm_pylib as of the version using python 3.7.9. See safer_timeslice() in cropcal_utils.
     first_year = year_args[0]
     last_year = year_args[1]
-    if first_year is not None:
-        date_1 = f"{first_year+1}-01-01"
-    else:
+    date_1 = f"{first_year}-01-01"
+    date_n = f"{last_year}-12-31"
+    if first_year is None:
         date_1 = "0000-01-01"
-    if last_year is not None:
-        date_n = f"{last_year+1}-01-01"
-    else:
+    if last_year is None:
         date_n = "9999-12-31"
     time_slice = slice(date_1, date_n)
 
