@@ -2159,13 +2159,13 @@ contains
 
                ! determine latitute sector for radiocarbon bomb spike inputs
                if ( grc%latdeg(g) >= 30._r8 ) then
-                  sector_c14 = 1
-               else if ( grc%latdeg(g) >= 0._r8 ) then
-                  sector_c14 = 2
-               else if ( grc%latdeg(g) >= -30._r8 ) then
-                  sector_c14 = 3
-               else
                   sector_c14 = 4
+               else if ( grc%latdeg(g) >= 0._r8 ) then
+                  sector_c14 = 3
+               else if ( grc%latdeg(g) >= -30._r8 ) then
+                  sector_c14 = 2
+               else
+                  sector_c14 = 1
                endif
 
                rc14_canair(p) = rc14_atm(sector_c14)
