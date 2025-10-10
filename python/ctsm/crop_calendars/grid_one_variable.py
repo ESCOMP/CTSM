@@ -87,6 +87,10 @@ def create_filled_array(this_ds, fill_value, thisvar_da, new_dims):
     """
     Create a Numpy array to be filled with gridded data
     """
+
+    if fill_value is None:
+        fill_value = np.nan
+
     dim_size_list = []
     for dim in new_dims:
         if dim == "ivt_str":
@@ -97,10 +101,7 @@ def create_filled_array(this_ds, fill_value, thisvar_da, new_dims):
             dim_size = this_ds.sizes[dim]
         dim_size_list = dim_size_list + [dim_size]
     thisvar_gridded = np.empty(dim_size_list)
-    if fill_value:
-        thisvar_gridded[:] = fill_value
-    else:
-        thisvar_gridded[:] = np.nan
+    thisvar_gridded[:] = fill_value
     return thisvar_gridded
 
 
