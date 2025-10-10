@@ -58,6 +58,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : fates_harvest_mode
+   use clm_varctl        , only : fates_lu_transition_logic
    use clm_varctl        , only : fates_stomatal_model
    use clm_varctl        , only : fates_stomatal_assimilation
    use clm_varctl        , only : fates_leafresp_model
@@ -405,7 +406,6 @@ module CLMFatesInterfaceMod
        
      integer                                        :: pass_vertsoilc
      integer                                        :: pass_ch4
-     integer                                        :: pass_spitfire
      integer                                        :: pass_ed_st3
      integer                                        :: pass_num_lu_harvest_cats
      integer                                        :: pass_lu_harvest
@@ -663,6 +663,7 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
         call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
+        call set_fates_ctrlparms('fates_lu_transition_logic',ival=fates_lu_transition_logic)
 
         if ( use_fates_potentialveg ) then
            pass_use_potentialveg = 1

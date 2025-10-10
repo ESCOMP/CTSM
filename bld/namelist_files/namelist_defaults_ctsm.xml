@@ -2522,6 +2522,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_spitfire_mode            use_fates=".true.">0</fates_spitfire_mode>
 <fates_spitfire_mode            use_fates=".true." use_fates_managed_fire=".true." >1</fates_spitfire_mode>
 <fates_harvest_mode             use_fates=".true.">no_harvest</fates_harvest_mode>
+<fates_lu_transition_logic      use_fates=".true.">0</fates_lu_transition_logic>
 <fates_stomatal_model           use_fates=".true.">ballberry1987</fates_stomatal_model>
 <fates_stomatal_assimilation    use_fates=".true.">net</fates_stomatal_assimilation>
 <fates_leafresp_model           use_fates=".true.">ryan1991</fates_leafresp_model>
@@ -2545,6 +2546,15 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_luh                  use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_luh>
 <use_fates_luh                  use_fates=".true." use_fates_potentialveg=".true.">.true.</use_fates_luh>
 <use_fates_luh                  use_fates=".true."                                >.false.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="1"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="2"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="3"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="4"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="5"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="6"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="7"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="8"   >.true.</use_fates_luh>
+<use_fates_luh                  use_fates=".true." fates_lu_transition_logic="9"   >.true.</use_fates_luh>
 <fates_parteh_mode              use_fates=".true.">1</fates_parteh_mode>
 <fates_seeddisp_cadence         use_fates=".true.">0</fates_seeddisp_cadence>
 <use_fates_nocomp               use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_nocomp>
