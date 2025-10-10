@@ -228,7 +228,6 @@ contains
     c13_previous_time_idx = ind_below
 
     ! interpolate between nearest two points in atm c13 timeseries
-    ! cdknotes. for now and for simplicity, just use the northern hemisphere values (sector 1)
     if (ind_below .eq. 0 ) then 
        delc13o2_atm = atm_delta_c13(1)
     elseif (ind_below .eq. ntim_atm_ts ) then
