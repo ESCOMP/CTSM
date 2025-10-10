@@ -265,6 +265,7 @@ def vegtype_str2int(vegtype_str, vegtype_mainlist=None):
     convert_to_ndarray = not isinstance(vegtype_str, np.ndarray)
     if convert_to_ndarray:
         vegtype_str = np.array(vegtype_str)
+    vegtype_str = np.atleast_1d(vegtype_str)
 
     if isinstance(vegtype_mainlist, xr.Dataset):
         vegtype_mainlist = vegtype_mainlist.vegtype_str.values
