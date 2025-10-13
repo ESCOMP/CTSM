@@ -257,7 +257,6 @@ contains
           use_fates_tree_damage,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
-          fates_history_dimlevel,                       &
           use_fates_managed_fire,                       &
           fates_lu_transition_logic,                    &
           fates_history_dimlevel
