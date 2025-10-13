@@ -29,6 +29,13 @@
 
 
   <!-- ctsm_sci test suite failures -->
+  <test name="ERP_D_Ld3_PS.f09_g17.I2000Clm50Sp.derecho_intel.clm-prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3529</issue>
+      <comment>We will generate new fsurdat files with the new raw lai file to resolve this issue.</comment>
+    </phase>
+  </test>
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
     <phase name="RUN">
       <status>FAIL</status>
