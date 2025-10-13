@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3394;
+my $ntests = 3396;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1864,7 +1864,7 @@ foreach my $res ( @glc_res ) {
       } elsif ( $usecase eq "2010_control") {
          $startymd = 20100101;
          &make_env_run();
-      } elsif ( $usecase eq "1850-2100_SSP2-4.5_transient") {
+      } elsif ( $usecase =~ "2100_SSP") {
          $startymd = 20150101;
          &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
       } else {
