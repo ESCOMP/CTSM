@@ -735,6 +735,14 @@ sub setup_cmdl_resolution {
     $log->verbose_message( "This is NOT a NEON site" );
   }
 
+  #
+  # To determine CMIP era
+  # TODO slevis: Ideally this line would occupy a new subroutine, e.g.
+  #              subr. process_envxml_flags that would get called from
+  #              process_namelist_user_input. This would allow other such
+  #              XML variables to be set in the same place in the future (issue #3547).
+  $nl_flags->{'cmip_era'} = $envxml_ref->{'CLM_CMIP_ERA'};
+
 }
 
 #-------------------------------------------------------------------------------
@@ -2514,11 +2522,13 @@ sub setup_logic_demand {
     # For landuse.timeseries try with crop on first eise try with exact settings
     # Logic for this is identical for fsurdat
     if ( $item eq "flanduse_timeseries" ) {
+       $settings{'cmip_era'} = $nl_flags->{'cmip_era'};
        $settings{'use_crop'} = ".true.";
        $settings{'nofail'}   = 1;
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
     if ( $item eq "flanduse_timeseries" ) {
+       $settings{'cmip_era'} = $nl_flags->{'cmip_era'};
        $settings{'nofail'}   = 0;
        $settings{'use_crop'} = $nl_flags->{'use_crop'};
        if ( ! defined($nl->get_value( $item )) ) {
@@ -2568,6 +2578,7 @@ sub setup_logic_surface_dataset {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
                  'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
+                 'cmip_era'=>$nl_flags->{'cmip_era'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'use_crop'=>".true.", 'use_fates'=>$nl_flags->{'use_fates'}, 'nofail'=>1);
   }
@@ -2581,6 +2592,7 @@ sub setup_logic_surface_dataset {
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'use_fates'=>$nl_flags->{'use_fates'},
                  'neon'=>$nl_flags->{'neon'}, 'neonsite'=>$nl_flags->{'neonsite'},
+                 'cmip_era'=>$nl_flags->{'cmip_era'},
                  'use_crop'=>$nl_flags->{'use_crop'} );
   }
   #
@@ -5445,7 +5457,7 @@ sub add_default {
                   "            Are defaults provided for this resolution and land mask?" );
         } else {
           $log->fatal_error("No default value found for $var.\n" .
-                      "            Are defaults provided for this resolution and land mask?");
+                      "      Are defaults provided in namelist_defaults for this resolution, land mask, and CLM_CMIP_ERA (set in env_run.xml)?");
         }
       }
       else {
