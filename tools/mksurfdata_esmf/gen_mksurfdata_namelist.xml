@@ -10,7 +10,7 @@
 
   <mksrf_flai>
     <entry>
-      <data_filename>lnd/clm2/rawdata/CTSM54RawData/globalctsm53histMKSRFDeg025_250417/mksrf_landuse_ctsm53_pftlai_CLIM.c250417.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM54RawData/CLM6_LUH3_HIST_CMIP7/mksrf_pftlai_clm6_histLUH3_2005_c251012.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_flai>
@@ -21,7 +21,7 @@
 
   <mksrf_fsoicol>
     <entry>
-      <data_filename>lnd/clm2/rawdata/CTSM54RawData/globalctsm53histMKSRFDeg025_250417/mksrf_landuse_ctsm53_soilcolor_CLIM.c250417.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM54RawData/CLM6_LUH3_HIST_CMIP7/mksrf_soilcolor_clm6_histLUH3_2005_c251012.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fsoicol>
