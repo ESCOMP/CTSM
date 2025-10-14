@@ -167,10 +167,13 @@
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Whether to use CMIP6 or CMIP7 fsurdat/landuse files.
-    As of ctsm5.4 we do not have CMIP7 pft raw datasets for SSPs and NOANTHRO, so default to cmip6 for these. For other compsets default to cmip7. User may modify to a non-default value in env_run.xml. Caveats:
-1) We supply only cmip7 C13/C14 isotope datasets, so these get used regardless.
-2) We supply only cmip7 population density with ctsm6 in non-SSP cases, because the fire model is calibrated to that; conversely, for pre-ctsm6 and for SSP we supply only cmip6 population density.
-3) We supply only cmip6 nitrogen deposition (ndep), so this gets used regardless.</desc>
+    As of ctsm5.4 we do not have CMIP7 PFT raw datasets for SSPs and NOANTHRO, so default to CMIP6 for these. For other compsets default to CMIP7. User may modify to a non-default value in env_run.xml.
+Caveats:
+1) We supply only CMIP7 C13/C14 isotope datasets, so these get used regardless.
+2) We supply only CMIP7 population density with ctsm6 in non-SSP cases, because the fire model is calibrated to that; conversely, for pre-ctsm6 and for SSP we supply only CMIP6 population density.
+3) We supply only CMIP6 nitrogen deposition (ndep), so this gets used regardless.
+4) For DATM we supply only CMIP6 aerosols.
+5) For DATM we supply only CMIP6 CO2</desc>
   </entry>
 
   <entry id="LND_SETS_DUST_EMIS_DRV_FLDS">

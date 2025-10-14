@@ -567,6 +567,7 @@ print "==============================================================\n";
 $phys = "clm5_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
+# Four tests that require CLM_CMIP_ERA set to cmip6
 foreach my $options (
                       "--res 0.9x1.25 --bgc sp  --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=18501223/'",
                       "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",

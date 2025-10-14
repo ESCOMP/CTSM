@@ -737,7 +737,10 @@ sub setup_cmdl_resolution {
 
   #
   # To determine CMIP era
-  #
+  # TODO slevis: Ideally this line would occupy a new subroutine, e.g.
+  #              subr. process_envxml_flags that would get called from
+  #              process_namelist_user_input. This would allow other such
+  #              XML variables to be set in the same place in the future (issue #3547).
   $nl_flags->{'cmip_era'} = $envxml_ref->{'CLM_CMIP_ERA'};
 
 }
