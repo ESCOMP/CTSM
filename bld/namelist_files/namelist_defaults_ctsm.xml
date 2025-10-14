@@ -115,11 +115,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_c14>.false.</use_c14>
 <use_c13_timeseries>.false.</use_c13_timeseries>
 <use_c14_bombspike>.false.</use_c14_bombspike>
+<!-- Turn timeseries on if Carbon isotopes are on -->
+<use_c13_timeseries use_c13=".true.">.true.</use_c13_timeseries>
+<use_c14_bombspike use_c14=".true.">.true.</use_c14_bombspike>
 
-<use_c13 phys="clm6_0" bgc_mode="bgc" >.true.</use_c13>
-<use_c14 phys="clm6_0" bgc_mode="bgc" >.true.</use_c14>
-<use_c13_timeseries phys="clm6_0" bgc_mode="bgc" >.true.</use_c13_timeseries>
-<use_c14_bombspike phys="clm6_0" bgc_mode="bgc" >.true.</use_c14_bombspike>
+<!-- Turn Carbon isotopes on for clm6_0 physics with BGC on with CRUJRA or CAM7 forcing and for historical period-->
+<use_c13 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_CRUJRA2024" ssp_rcp="hist">.true.</use_c13>
+<use_c14 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_CRUJRA2024" ssp_rcp="hist">.true.</use_c14>
+<use_c13 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_cam7.0" ssp_rcp="hist">.true.</use_c13>
+<use_c14 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_cam7.0" ssp_rcp="hist">.true.</use_c14>
 
 <!-- Carbon isotope concentration files -->
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c190528.nc</atm_c13_filename>
