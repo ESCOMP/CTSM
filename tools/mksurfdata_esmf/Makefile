@@ -99,6 +99,7 @@ STANDARD = \
 #   crop-global-future
 # and I added here because it spans 1979-2030:
 #   crop-global-SSP2-4.5-vrandne120
+# and I split ne3 into ne3-1, ne3-2, ne3-3 for historical because the combined ne3 job took >12 hours in the queue
 CROP = \
 	crop-global-hist \
 	crop-global-hist-low-res \
