@@ -145,7 +145,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Irrigation default (Note, the use-cases also set this) -->
 <irrigate                                                             >.false.</irrigate>
 <irrigate               use_cndv=".false."  sim_year_range="1850-2100">.true.</irrigate>
+<irrigate phys="clm6_0" use_cndv=".false."  sim_year_range="1850-2000">.true.</irrigate>
 <irrigate phys="clm4_5" use_cndv=".false."  sim_year_range="1850-2100">.false.</irrigate>
+<irrigate phys="clm4_5" use_cndv=".false."  sim_year_range="1850-2000">.false.</irrigate>
 
 <!-- Saturation excess runoff for crops  -->
 <crop_fsat_equals_zero>.false.</crop_fsat_equals_zero>
