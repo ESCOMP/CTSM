@@ -3740,8 +3740,12 @@ sub setup_logic_c_isotope {
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14', 'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13', 
+              'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'},
+              'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, ssp_rcp=>$nl_flags->{'ssp_rcp'} );
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14', 
+              'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'},
+              'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, ssp_rcp=>$nl_flags->{'ssp_rcp'} );
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
