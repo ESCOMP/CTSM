@@ -125,7 +125,7 @@ contains
        c14_cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, fpg_col)
     !
     ! !USES:
-    use pftconMod             , only : pftcon, npcropmin
+    use pftconMod             , only : pftcon, is_prognostic_crop
     use clm_varctl            , only : use_c13, use_c14
     use CNVegStateType        , only : cnveg_state_type
     use CropType              , only : crop_type
@@ -281,7 +281,7 @@ contains
          cndw = deadwdcn(ivt(p))
          fcur = fcur2(ivt(p))
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
            if (croplive(p).and.(.not.shr_infnan_isnan(aleaf(p)))) then
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
@@ -357,7 +357,7 @@ contains
             cpool_to_deadcrootc(p)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage(p) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
             cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
             cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
@@ -387,7 +387,7 @@ contains
             npool_to_deadcrootn(p)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
             npool_to_deadcrootn_storage(p) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cng = graincn(ivt(p))
             npool_to_livestemn(p)          = (nlc * f3 * f4 / cnlw) * fcur
             npool_to_livestemn_storage(p)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
@@ -420,7 +420,7 @@ contains
             gresp_storage = gresp_storage + cpool_to_livecrootc_storage(p)
             gresp_storage = gresp_storage + cpool_to_deadcrootc_storage(p)
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
             do k = 1, nrepr
                gresp_storage = gresp_storage + cpool_to_reproductivec_storage(p,k)
@@ -505,7 +505,7 @@ contains
     ! - livestemn_to_retransn
     !
     ! !USES:
-    use pftconMod              , only : npcropmin, pftcon
+    use pftconMod              , only : is_prognostic_crop, pftcon
     use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
     use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
     use clm_time_manager       , only : get_step_size_real

@@ -11,8 +11,8 @@ please check the python/ctsm/mesh_plotter.py file.
 ----------------------------------------------------------------
 Instructions for running using conda python environments:
 
-../../py_env_create --dask
-conda activate ctsm_py_wdask
+../../py_env_create
+conda activate ctsm_pylib
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|

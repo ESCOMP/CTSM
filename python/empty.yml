@@ -1,0 +1,7 @@
+# An empty file for use in testing py_env_create with mamba, which needs some YML structure
+# (as opposed to conda, which can use a truly empty file)
+#
+channels:
+  - conda-forge
+  - defaults
+dependencies:

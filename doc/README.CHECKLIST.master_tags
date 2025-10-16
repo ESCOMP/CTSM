@@ -86,6 +86,7 @@ if you did step 7 above using git commands that require this step)
 
 ---- NOTES ----
 
-(3) -- Always test on your fork with a feature-branch so that we can change tag order if needed. Put 
+(3a) -- When izumi’s baseline is ready, manually open read permissions to all.
+(3b) -- Always test on your fork with a feature-branch so that we can change tag order if needed. Put 
 baselines in the next tag name, as we can easily change afterwards if needed.
 

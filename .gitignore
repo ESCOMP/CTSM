@@ -7,7 +7,11 @@
 # editor files
 *.swp
 *~
+
+# MS VS Code
 .vscode/
+# but don't ignore the main .vscode directory here:
+!/.vscode
 
 # vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
 # Swap

@@ -24,7 +24,6 @@ the tools on -- that needs to be fixed.
 - We need to tell the user how long to expect the conda environment to load, and give them options if the conda load is taking too
 long
 - Conda environments need to build robustly even for users who don't have ctsm_pylib loaded in their conda environment
-- Currently dask will NOT be something we require for any of the main CTSM tools
 - Currently we won't use conda-lock
 - We specify the black version exactly so that black will function identically for all users
 - We specify the pylint version exactly because pylint is finicky with version and we need it to work identically for all developers

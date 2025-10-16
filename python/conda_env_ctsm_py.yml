@@ -5,6 +5,7 @@ channels:
   - defaults
 dependencies:
   - python=3.13.2
+  - dask=2025.7.0
   - xarray=2025.1.2
   - tqdm=4.67.1
   - scipy=1.15.2
@@ -17,6 +18,10 @@ dependencies:
   - cartopy=0.24.0
   - matplotlib=3.10.1
   - pip=25.0.1
+
+  # For VS code
+  # fortls used in FORTRAN-IntelliSense extension, add path to fortls below to the VS setting fort-ls.executablePath
+  - fortls=3.2.2
 
   # For building docs
   - pip:

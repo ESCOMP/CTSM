@@ -22,7 +22,8 @@ module cropcalStreamMod
   use clm_varpar       , only : mxsowings
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
-  use pftconMod        , only : npcropmin
+  use pftconMod        , only : is_prognostic_crop, get_crop_n_from_veg_type, get_veg_type_from_crop_n
+  use pftconMod        , only : num_cfts_possible
   use CNPhenologyMod  , only : generate_crop_gdds
   !
   ! !PUBLIC TYPES:
@@ -46,7 +47,6 @@ module cropcalStreamMod
   character(len=CS), allocatable :: stream_varnames_cultivar_gdds(:)
   character(len=CS), allocatable :: stream_varnames_gdd20_baseline(:)
   character(len=CS), allocatable :: stream_varnames_gdd20_season_enddate(:) ! start uses stream_varnames_sdate
-  integer                     :: ncft               ! Number of crop functional types (excl. generic crops)
   logical                     :: allow_invalid_swindow_inputs ! Fall back on paramfile sowing windows in cases of invalid values in stream_fldFileName_swindow_start and _end?
   character(len=FL)       :: stream_fldFileName_swindow_start ! sowing window start stream filename to read
   character(len=FL)       :: stream_fldFileName_swindow_end   ! sowing window end stream filename to read
@@ -138,13 +138,12 @@ contains
     stream_fldFileName_gdd20_season_start = ''
     stream_fldFileName_gdd20_season_end = ''
     ! Will need modification to work with mxsowings > 1
-    ncft = mxpft - npcropmin + 1 ! Ignores generic crops
-    allocate(stream_varnames_sdate(ncft))
-    allocate(stream_varnames_cultivar_gdds(ncft))
-    allocate(stream_varnames_gdd20_baseline(ncft))
-    allocate(stream_varnames_gdd20_season_enddate(ncft))
-    do n = 1,ncft
-       ivt = npcropmin + n - 1
+    allocate(stream_varnames_sdate(num_cfts_possible))
+    allocate(stream_varnames_cultivar_gdds(num_cfts_possible))
+    allocate(stream_varnames_gdd20_baseline(num_cfts_possible))
+    allocate(stream_varnames_gdd20_season_enddate(num_cfts_possible))
+    do n = 1,num_cfts_possible
+       ivt = get_veg_type_from_crop_n(n)
        write(stream_varnames_sdate(n),'(a,i0)') "sdate1_",ivt
        write(stream_varnames_cultivar_gdds(n),'(a,i0)') "gdd1_",ivt
        write(stream_varnames_gdd20_baseline(n),'(a,i0)') "gdd20bl_",ivt
@@ -201,7 +200,7 @@ contains
        write(iulog,'(a,l1)') '  allow_invalid_gdd20_season_inputs = ',allow_invalid_gdd20_season_inputs
        write(iulog,'(a,a)' ) '  stream_fldFileName_gdd20_season_start  = ',stream_fldFileName_gdd20_season_start
        write(iulog,'(a,a)' ) '  stream_fldFileName_gdd20_season_end    = ',stream_fldFileName_gdd20_season_end
-       do n = 1,ncft
+       do n = 1,num_cfts_possible
           write(iulog,'(a,a)' ) '  stream_varnames_sdate  = ',trim(stream_varnames_sdate(n))
           write(iulog,'(a,a)' ) '  stream_varnames_cultivar_gdds  = ',trim(stream_varnames_cultivar_gdds(n))
           write(iulog,'(a,a)' ) '  stream_varnames_gdd20_season_enddate  = ',trim(stream_varnames_gdd20_season_enddate(n))
@@ -550,13 +549,13 @@ contains
     dayspyr = get_curr_days_per_year()
 
     ! Read prescribed sowing window start dates from input files
-    allocate(dataptr2d_swindow_start(begg:endg, ncft))
+    allocate(dataptr2d_swindow_start(begg:endg, num_cfts_possible))
     dataptr2d_swindow_start(begg:endg,:) = -1._r8
-    allocate(dataptr2d_swindow_end  (begg:endg, ncft))
+    allocate(dataptr2d_swindow_end  (begg:endg, num_cfts_possible))
     dataptr2d_swindow_end(begg:endg,:) = -1._r8
     if (use_cropcal_rx_swindows) then
        ! Starting with npcropmin will skip generic crops
-       do n = 1, ncft
+       do n = 1, num_cfts_possible
           call dshr_fldbun_getFldPtr(sdat_cropcal_swindow_start%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
                fldptr1=dataptr1d_swindow_start,  rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -588,8 +587,8 @@ contains
           p = filter_pcropp(fp)
           ivt = patch%itype(p)
           ! Will skip generic crops
-          if (ivt >= npcropmin) then
-             n = ivt - npcropmin + 1
+          if (is_prognostic_crop(ivt)) then
+             n = get_crop_n_from_veg_type(ivt)
              ! vegetated pft
              ig = g_to_ig(patch%gridcell(p))
              swindow_starts(p,1) = dataptr2d_swindow_start(ig,n)
@@ -612,10 +611,13 @@ contains
        ! Handle invalid sowing window values
        if (any(swindow_starts(begp:endp,:) < 1 .or. swindow_ends(begp:endp,:) < 1)) then
            ! Fail if not allowing fallback to paramfile sowing windows
-           if ((.not. allow_invalid_swindow_inputs) .and. any(all(swindow_starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell(begp:endp) > 0._r8 .and. patch%itype(begp:endp) >= npcropmin)) then
+           if ((.not. allow_invalid_swindow_inputs) .and. any(all(swindow_starts(begp:endp,:) < 1, dim=2) .and. patch%wtgcell(begp:endp) > 0._r8 .and. is_prognostic_crop(patch%itype(begp:endp)))) then
                write(iulog, *) 'At least one crop in one gridcell has invalid prescribed sowing window start date(s). To ignore and fall back to paramfile sowing windows, set allow_invalid_swindow_inputs to .true.'
                write(iulog, *) 'Affected crops:'
-               do ivt = npcropmin, mxpft
+               do ivt = 1, mxpft
+                   if (.not. is_prognostic_crop(ivt)) then
+                       cycle
+                   end if
                    do fp = 1, num_pcropp
                        p = filter_pcropp(fp)
                        if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. all(swindow_starts(p,:) < 1)) then
@@ -637,11 +639,11 @@ contains
     deallocate(dataptr2d_swindow_start)
     deallocate(dataptr2d_swindow_end)
    
-    allocate(dataptr2d_cultivar_gdds(begg:endg, ncft))
+    allocate(dataptr2d_cultivar_gdds(begg:endg, num_cfts_possible))
     if (use_cropcal_rx_cultivar_gdds) then
        ! Read prescribed cultivar GDDs from input files
        ! Starting with npcropmin will skip generic crops
-       do n = 1, ncft
+       do n = 1, num_cfts_possible
           call dshr_fldbun_getFldPtr(sdat_cropcal_cultivar_gdds%pstrm(1)%fldbun_model, trim(stream_varnames_cultivar_gdds(n)), &
                fldptr1=dataptr1d_cultivar_gdds,  rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -667,11 +669,11 @@ contains
 
           ivt = patch%itype(p)
           ! Will skip generic crops
-          if (ivt >= npcropmin) then
-             n = ivt - npcropmin + 1
+          if (is_prognostic_crop(ivt)) then
+             n = get_crop_n_from_veg_type(ivt)
 
-             if (n > ncft) then
-                 write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
+             if (n > num_cfts_possible) then
+                 write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',num_cfts_possible,')'
                  call ESMF_Finalize(endflag=ESMF_END_ABORT)
              end if
 
@@ -694,11 +696,11 @@ contains
 
    deallocate(dataptr2d_cultivar_gdds)
 
-   allocate(dataptr2d_gdd20_baseline(begg:endg, ncft))
+   allocate(dataptr2d_gdd20_baseline(begg:endg, num_cfts_possible))
    if (adapt_cropcal_rx_cultivar_gdds) then
       ! Read GDD20 baselines from input files
       ! Starting with npcropmin will skip generic crops
-      do n = 1, ncft
+      do n = 1, num_cfts_possible
          call dshr_fldbun_getFldPtr(sdat_cropcal_gdd20_baseline%pstrm(1)%fldbun_model, trim(stream_varnames_gdd20_baseline(n)), &
               fldptr1=dataptr1d_gdd20_baseline,  rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -718,11 +720,11 @@ contains
 
          ivt = patch%itype(p)
          ! Will skip generic crops
-         if (ivt >= npcropmin) then
-            n = ivt - npcropmin + 1
+         if (is_prognostic_crop(ivt)) then
+            n = get_crop_n_from_veg_type(ivt)
 
-            if (n > ncft) then
-                write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',ncft,')'
+            if (n > num_cfts_possible) then
+                write(iulog,'(a,i0,a,i0,a)') 'n (',n,') > ncft (',num_cfts_possible,')'
                 call ESMF_Finalize(endflag=ESMF_END_ABORT)
             end if
 
@@ -747,13 +749,13 @@ contains
 
 
   ! Read prescribed gdd20 season start dates from input files
-  allocate(dataptr2d_gdd20_season_start(begg:endg, ncft))
+  allocate(dataptr2d_gdd20_season_start(begg:endg, num_cfts_possible))
   dataptr2d_gdd20_season_start(begg:endg,:) = -1._r8
-  allocate(dataptr2d_gdd20_season_end  (begg:endg, ncft))
+  allocate(dataptr2d_gdd20_season_end  (begg:endg, num_cfts_possible))
   dataptr2d_gdd20_season_end(begg:endg,:) = -1._r8
   if (stream_gdd20_seasons) then
      ! Starting with npcropmin will skip generic crops
-     do n = 1, ncft
+     do n = 1, num_cfts_possible
         call dshr_fldbun_getFldPtr(sdat_cropcal_gdd20_season_start%pstrm(1)%fldbun_model, trim(stream_varnames_sdate(n)), &
              fldptr1=dataptr1d_gdd20_season_start,  rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
@@ -788,8 +790,8 @@ contains
         p = filter_pcropp(fp)
         ivt = patch%itype(p)
         ! Will skip generic crops
-        if (ivt >= npcropmin) then
-           n = ivt - npcropmin + 1
+        if (is_prognostic_crop(ivt)) then
+           n = get_crop_n_from_veg_type(ivt)
            ! vegetated pft
            ig = g_to_ig(patch%gridcell(p))
 
@@ -805,10 +807,13 @@ contains
      if (any(gdd20_season_starts(begp:endp) < 1._r8 .or. gdd20_season_ends(begp:endp) < 1._r8)) then
          ! Fail if not allowing fallback to paramfile sowing windows. Only need to check for
          ! values < 1 because values outside [1, 366] are set to -1 above.
-         if ((.not. allow_invalid_gdd20_season_inputs) .and. any(gdd20_season_starts(begp:endp) < 1._r8 .and. patch%wtgcell(begp:endp) > 0._r8 .and. patch%itype(begp:endp) >= npcropmin)) then
+         if ((.not. allow_invalid_gdd20_season_inputs) .and. any(gdd20_season_starts(begp:endp) < 1._r8 .and. patch%wtgcell(begp:endp) > 0._r8 .and. is_prognostic_crop(patch%itype(begp:endp)))) then
              write(iulog, *) 'At least one crop in one gridcell has invalid gdd20 season start and/or end date(s). To ignore and fall back to paramfile sowing windows for such crop-gridcells, set allow_invalid_gdd20_season_inputs to .true.'
              write(iulog, *) 'Affected crops:'
-             do ivt = npcropmin, mxpft
+             do ivt = 1, mxpft
+                 if (.not. is_prognostic_crop(ivt)) then
+                     cycle
+                 end if
                  do fp = 1, num_pcropp
                      p = filter_pcropp(fp)
                      if (ivt == patch%itype(p) .and. patch%wtgcell(p) > 0._r8 .and. gdd20_season_starts(p) < 1._r8) then

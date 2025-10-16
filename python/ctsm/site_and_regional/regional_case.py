@@ -160,6 +160,20 @@ class RegionalCase(BaseCase):
         f_out = f_in.isel({y_dim: yind, x_dim: xind})
         return f_out
 
+    def _get_lon_strings(self):
+        """
+        Get the string versions of the region's longitudes
+        """
+        if isinstance(self.lon1, Longitude):
+            lon1_str = self.lon1.get_str(self.lon1.lon_type())
+        else:
+            lon1_str = str(self.lon1)
+        if isinstance(self.lon2, Longitude):
+            lon2_str = self.lon2.get_str(self.lon2.lon_type())
+        else:
+            lon2_str = str(self.lon2)
+        return lon1_str, lon2_str
+
     def create_tag(self):
         """
         Create a tag for a region which is either the region name
@@ -169,9 +183,8 @@ class RegionalCase(BaseCase):
         if self.reg_name:
             self.tag = self.reg_name
         else:
-            self.tag = "{}-{}_{}-{}".format(
-                str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2)
-            )
+            lon1_str, lon2_str = self._get_lon_strings()
+            self.tag = "{}-{}_{}-{}".format(lon1_str, lon2_str, str(self.lat1), str(self.lat2))
 
     def check_region_bounds(self):
         """
@@ -179,10 +192,11 @@ class RegionalCase(BaseCase):
         """
         # If you're calling this, lat/lon bounds need to have been provided
         if any(x is None for x in [self.lon1, self.lon2, self.lat1, self.lat2]):
+            lon1_str, lon2_str = self._get_lon_strings()
             raise argparse.ArgumentTypeError(
                 "Latitude and longitude bounds must be provided and not None.\n"
-                + f"   lon1: {self.lon1}\n"
-                + f"   lon2: {self.lon2}\n"
+                + f"   lon1: {lon1_str}\n"
+                + f"   lon2: {lon2_str}\n"
                 + f"   lat1: {self.lat1}\n"
                 + f"   lat2: {self.lat2}"
             )

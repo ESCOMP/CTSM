@@ -30,14 +30,11 @@ jobs:
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
       contents: read
-      packages: write
-      attestations: write
-      id-token: write
 
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       # Ensure that the repository part of IMAGE_NAME is lowercase. This is needed because Docker requires image names to be entirely lowercase. Note that the *image name* part, set as IMAGE_BASENAME in the env block above, is *not* converted. This will cause the check-version job to fail if the IMAGE_BASENAME contains capitals. We don't want to silently fix that here; rather, we require the user to specify a lowercase IMAGE_BASENAME.
       - name: Get image name with lowercase repo

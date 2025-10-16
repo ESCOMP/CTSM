@@ -141,6 +141,7 @@ tools/contrib ----------------- Miscellansous useful scripts for pre and post pr
                                 as well as case management of CTSM. These scripts are
                                 contributed by users and may not be as well tested or
                                 supported as other tools.
+.vscode ----------------------- Suggested settings for using MS Visual Studio code with CTSM.
 
 
 =============================================================================================

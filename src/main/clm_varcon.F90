@@ -127,6 +127,7 @@ module clm_varcon
   real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
   real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
   real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
+  real(r8), public, parameter :: mmh2o_to_m3h2o_per_m2 = 1.0e-3_r8  ! coefficient to convert mm H2O to m3 H2O/m2
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
