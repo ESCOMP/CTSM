@@ -1,4 +1,312 @@
 ===============================================================
+Tag name: ctsm5.3.079
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Oct  6 21:41:11 MDT 2025
+One-line Summary: Update submodules to match versions in cesm3_0_alpha07e
+
+Purpose and description of changes
+----------------------------------
+
+Update submodules to match versions in cesm3_0_alpha07e, plus:
+- Update CMEPS further
+- Update git-fleximod
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[X] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Compsets without stub glacier model
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): Larger than roundoff, at least
+
+
+Other details
+-------------
+
+List any git submodules updated:
+- ccs_config: ccs_config_cesm1.0.56 to ccs_config_cesm1.0.61
+- CDEPS: cdeps1.0.79 to cdeps1.0.81
+- CIME: cime6.1.113 to cime6.1.128
+- CISM: cismwrap_2_2_006 to cismwrap_2_2_010
+- CMEPS: cmeps1.1.5 to cmeps1.1.20
+
+Pull Requests that document the changes:
+- [ESCOMP/CTSM Pull Request #3523: ctsm5.3.079: Update submodules to match versions in cesm3_0_alpha07e (+ CMEPS)](https://github.com/ESCOMP/CTSM/pull/3523)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.078
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 03 Oct 2025 09:31:06 AM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+ PR #3516 by Matvey: Add failing test as reminder for mosart history issue
+ PR #3511 by Erik: Decompinit timer updates
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Makes visible #3494 ERI_Ld90 tests fail with mosart.h0a having diffs
+Fixes #3387 Bring in more timers for initialization
+Some work in #3448 Improve design and error checking in decompMod and decomInitMod
+Fixes #3508 Add decompMod_clean method
+Fixes #3509 Internal subroutines for decompInit_lnd
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ New failing test added as reminder for mosart history issue
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3517
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.077
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY)
+Date: Thu 02 Oct 2025 09:39:48 AM MDT
+One-line Summary: Adjustment of albedo timestep filtering with FATES.
+
+Purpose and description of changes
+----------------------------------
+
+A logical filter is used (doalb) during the main timestep loop to prevent
+calculations of surface albedo when it is unnecessary. This includes when
+coupling with an atmosphere and boundary conditions are available at a different
+frequency as the land-timestep. This set of changes seeks to get FATES using
+this filter (intead of all the time), while also enabling continuity on restarts
+and not breaking existing behavior.
+
+These changes relied heavily on contributions from Matvey Debolskiy and
+consultation from Mariana Vertenstein.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+This set of changes has NO scientifically meaningful changes to answers in any supported
+configuration.
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+Addresses #3043 "Fates gives errsol BalanceCheck error with cam7".
+
+FATES PR 1397 is also required to address similar issues related to radiation
+error diagnostics: https://github.com/NGEET/fates/pull/1397
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+* New tests (ERI FatesLandTuningMode) have been added and expected fails have been added where appropriate.
+
+Testing summary:
+----------------
+
+regular tests (aux_clm):
+
+    derecho ----- OK
+    izumi ------- OK
+
+fates tests:
+    derecho ----- OK
+    izumi ----- OK
+
+
+Answer changes
+--------------
+
+For non-SP FATES configurations, some small round-off level changes are introduced due to an update in the FATES tag sci.87.2_api.41.0.0.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+* [Pull Request #3051: ctsm5.3.077: Removing non doalb call of wrap_canopy_radiation for fates by rgknox](https://github.com/ESCOMP/CTSM/pull/3051)
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.076
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 24 Sep 2025 01:12:39 AM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev into master.
+
+Add dask and fortls to ctsm_pylib. Fortls added for using MS VS Code there's also a .vscode directory added with a sample settings template with some recommend settings to use when using VS Code with CTSM. See the README.md file in .vscode for how to use.
+
+Dask is added to lower memory needs with chunking and also allow CTSM tools to run faster by allowing multiple threads to be used on compute.
+
+Add some more PE layouts for mpasa3p75 and tests for them to the uhr_decomp_init test list.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+
+Fixes #3489 -- PE layouts for mpasa3p75
+Fixes #3380 -- mesh plotter instructions wrong about dask
+Fixes #3381 -- Add dask to ctsm_pylib
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   You'll need to recreate your ctsm_pylib environment to take advantage of these updates
+
+   ./py_env_create --overwrite --yes
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New ctsm_pylib environment
+
+Changes to documentation: Some updates around dask and mesh-plotter
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  The decomp_init and uhr_decomp_init testlists use clm4_5 physics as a way to get fast test cases
+  This could be changed to use more recent physics
+
+Changes to tests or testing: New tests added to hr_decomp_init testlist
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3492 -- mpasa3p75 PE layouts and tests
+#3473 -- dask and documentation around it
+#3470 -- fortls and .vscode
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.075
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Tue 09 Sep 2025 03:12:17 PM MDT

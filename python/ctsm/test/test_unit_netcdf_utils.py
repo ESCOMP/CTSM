@@ -264,11 +264,9 @@ class TestUnitAreXrDataArraysIdentical(unittest.TestCase):
         da1 = xr.DataArray(data=[1, 1])
         self.assertFalse(nu.are_xr_dataarrays_identical(da0, da1))
 
-    # Waiting on dask, sparse, or pint to be in ctsm_pylib:
+    # Enabled now that dask is in ctsm_pylib:
     # TODO: False if data types don't match
     # TODO: NotImplementedError if data types match but aren't np.array
-
-    # Waiting on dask to be in ctsm_pylib:
     # TODO: True if the only difference is chunked or not
     # TODO: True if the only difference is chunk sizes
 
