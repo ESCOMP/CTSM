@@ -1,4 +1,68 @@
 ===============================================================
+Tag name: ctsm5.3.080
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Oct 16 13:41:08 MDT 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master. Includes these PRs:
+- [ESCOMP/CTSM Pull Request #3193: resolve issue #103: Example 1.7 typo by linniahawkins](https://github.com/ESCOMP/CTSM/pull/3193)
+- [ESCOMP/CTSM Pull Request #3518: Update of the leaching doc by jinmuluo](https://github.com/ESCOMP/CTSM/pull/3518)
+- [ESCOMP/CTSM Pull Request #3548: Finishing adding RC14_CANAIR history output by ekluzek](https://github.com/ESCOMP/CTSM/pull/3548)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed in the included PRs:
+- [ESCOMP/CTSM Issue #103: Example 1.7 typo](https://github.com/ESCOMP/CTSM/issues/103)
+- [ESCOMP/CTSM Issue #3488: Add RC14_CANAIR as optional to history output so that C14 time series data can be verified](https://github.com/ESCOMP/CTSM/issues/3488)
+- [ESCOMP/CTSM Issue #3490: Change history averaging of RC13_CANAIR and RC14_CANAIR so that zero's aren't averaged in](https://github.com/ESCOMP/CTSM/issues/3490)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+- Updated leaching documentation
+- Typo fix
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #3553: b4b-dev merge 2025-10-16 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3553)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.079
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Mon Oct  6 21:41:11 MDT 2025
