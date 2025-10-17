@@ -58,7 +58,7 @@ valid_scenarios = [
     "crop-global-SSP2-4.5-f19",
     "crop-global-SSP2-4.5-f10",
     "crop-global-SSP2-4.5-f45",
-    "crop-global-SSP2-4.5-vrandne120",
+    "crop-global-hist-vrandne120",
     "crop-global-SSP2-4.5-ne3",
     "crop-global-SSP2-4.5-ne16",
     "crop-global-SSP2-4.5-ne30",
@@ -389,8 +389,8 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f45",
         ),
-        "crop-global-SSP2-4.5-vrandne120": (
-            "--start-year 1979 --end-year 2030 --ssp-rcp SSP2-4.5 --res",
+        "crop-global-hist-vrandne120": (
+            "--start-year 1979 --end-year 2023 --res",
             "vr_and_ne120",
         ),
         "crop-global-SSP2-4.5-ne3": (

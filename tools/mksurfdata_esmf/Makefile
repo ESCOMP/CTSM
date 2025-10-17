@@ -97,8 +97,8 @@ STANDARD = \
 
 # NOTE slevis 2025/9/10: For CTSM5.4, I removed from CROP:
 #   crop-global-future
-# and I added here because it spans 1979-2030:
-#   crop-global-SSP2-4.5-vrandne120
+# and I added here because it spans 1979-2023:
+#   crop-global-hist-vrandne120
 # and I split ne3 into ne3-1, ne3-2, ne3-3 for historical because the combined ne3 job took >12 hours in the queue
 CROP = \
 	crop-global-hist \
@@ -125,7 +125,7 @@ CROP = \
 	crop-global-1850-ne16 \
 	crop-global-1850-ne30 \
 	crop-global-1850-mpasa480 \
-	crop-global-SSP2-4.5-vrandne120 \
+	crop-global-hist-vrandne120 \
 
 # Build the executable if it doesn't exist and any target depends on it
 $(MKSURFDATA_EXE):
@@ -350,8 +350,8 @@ crop-global-future : crop-global-SSP1-1.9-f09 \
 crop-global-SSP2-4.5-low-res : crop-global-SSP2-4.5-f10 \
                                crop-global-SSP2-4.5-f45 \
                                crop-global-SSP2-4.5-ne3
-# NOTE slevis 2025/9/10: For CTSM5.4, I moved to CROP because it spans 1979-2030:
-#   crop-global-SSP2-4.5-vrandne120
+# NOTE slevis 2025/9/10: For CTSM5.4, I moved to CROP because it spans 1979-2023:
+#   crop-global-hist-vrandne120
 crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f09 \
                                crop-global-SSP2-4.5-f19 \
                                crop-global-SSP2-4.5-hcru \
@@ -400,7 +400,7 @@ crop-global-SSP2-4.5-ne30 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 9 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
-crop-global-SSP2-4.5-vrandne120 : FORCE
+crop-global-hist-vrandne120 : FORCE
 	$(MKSURFDATA)  --number-of-nodes 2 --scenario $@ --jobscript-file $@.sh --walltime 12:00:00
 	$(BATCHJOBS) $@.sh
 
