@@ -122,7 +122,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_c14_bombspike phys="clm6_0" bgc_mode="bgc" >.true.</use_c14_bombspike>
 
 <!-- Carbon isotope concentration files -->
-<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c190528.nc</atm_c13_filename>
+<atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/rawdata_copies/delta13co2_input4MIPs_atmosphericState_C4MIP_ImperialCollege-3-0_gm_1700-2023.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP119_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP126_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP245_1850-2100_yearly_c181209.nc</atm_c13_filename>
@@ -130,7 +130,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP534os_1850-2100_yearly_c181209.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP5-8.5" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP5B_1850-2100_yearly_c181209.nc</atm_c13_filename>
 
-<atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C14_CMIP6_3x1_global_1850-2015_yearly_v2.0_c190528.nc</atm_c14_filename>
+<atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="hist"     >lnd/clm2/isotopes/rawdata_copies/delta14co2_input4MIPs_atmosphericState_C4MIP_ImperialCollege-3-0_gz_1700-2023.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP1-1.9" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP119_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP1-2.6" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP126_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
 <atm_c14_filename use_c14=".true." use_c14_bombspike =".true." ssp_rcp="SSP2-4.5" >lnd/clm2/isotopes/atm_delta_C14_CMIP6_SSP245_3x1_global_1850-2100_yearly_c181209.nc</atm_c14_filename>
