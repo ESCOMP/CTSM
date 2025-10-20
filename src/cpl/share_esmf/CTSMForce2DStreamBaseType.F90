@@ -1,5 +1,6 @@
 module CTSMForce2DStreamBaseType
 
+#include "shr_assert.h"
 
   use ESMF, only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
   use dshr_strdata_mod , only : shr_strdata_type 
@@ -8,6 +9,7 @@ module CTSMForce2DStreamBaseType
   use spmdMod , only : masterproc, mpicom, iam
   use abortutils , only : endrun
   use decompMod , only : bounds_type
+  use clm_varctl, only : FL => fname_len
 
   implicit none
   private
@@ -15,6 +17,8 @@ module CTSMForce2DStreamBaseType
   type, abstract, public :: ctsm_force_2DStream_base_type
      private
      type(shr_strdata_type), private :: sdat  ! Stream data type
+     character(len=FL) :: stream_filename ! The stream data filename (also in sdat)
+     character(len=CL) :: stream_name ! The stream name (also in sdat)
   contains
 
       ! PUBLIC METHODS
@@ -79,6 +83,8 @@ module CTSMForce2DStreamBaseType
          ! Uses:
          use lnd_comp_shr , only : mesh, model_clock
          use dshr_strdata_mod , only : shr_strdata_init_from_inline
+         use decompMod , only : bounds_level_proc
+         use shr_log_mod , only : errMsg => shr_log_errMsg
          ! Arguments:
          class(ctsm_force_2DStream_base_type), intent(inout) :: this 
          type(bounds_type), intent(in) :: bounds
@@ -98,6 +104,14 @@ module CTSMForce2DStreamBaseType
          integer, parameter :: offset = 0 ! time offset in seconds of stream data
          integer :: rc ! error return code
 
+         ! Some error checking...
+         SHR_ASSERT( bounds%level == bounds_level_proc, "InitBase should have a processor bounds, so we can do some checking"//errMsg( sourcefile, __LINE__) )
+         SHR_ASSERT( bounds%begg == 1, "Make sure the starting bounds index is 1 so we know the mapping to gridcells is correct"//errMsg( sourcefile, __LINE__) )
+         if ( len(fldfilename) >= FL )then
+            call endrun( 'stream field filename is too long:'//trim(fldfilename), file=sourcefile, line=__LINE__ )
+         end if
+         this%stream_filename = fldfilename
+         this%stream_name = name
          call shr_strdata_init_from_inline(this%sdat, &
                my_task             = iam, &
                logunit             = iulog, &
@@ -137,10 +151,28 @@ module CTSMForce2DStreamBaseType
 
       subroutine Advance(this)
          ! Uses:
+         use clm_time_manager , only : get_curr_date
+         use dshr_strdata_mod , only : shr_strdata_advance
          import :: ctsm_force_2DStream_base_type
          !
          ! Arguments:
-         class(ctsm_force_2DStream_base_type), intent(in) :: this
+         class(ctsm_force_2DStream_base_type), intent(inout) :: this
+         ! !LOCAL VARIABLES:
+         integer :: year    ! year (0, ...) for nstep+1
+         integer :: mon     ! month (1, ..., 12) for nstep+1
+         integer :: day     ! day of month (1, ..., 31) for nstep+1
+         integer :: sec     ! seconds into current date for nstep+1
+         integer :: mcdate  ! Current model date (yyyymmdd)
+         integer :: rc      ! Error return code
+
+         ! Advance sdat stream
+         call get_curr_date(year, mon, day, sec)
+         mcdate = year*10000 + mon*100 + day
+         call shr_strdata_advance(this%sdat, ymd=mcdate, tod=sec, logunit=iulog, istr='CTSMForce2DStreamBase', rc=rc)
+         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+            write(iulog,*) ' Streams advance failing for ', trim(this.stream_name), ' stream file = ', trim(this.stream_filename)
+            call endrun( 'CTSM forcing Streams advance failing', file=sourcefile, line=__LINE__ )
+         end if
       end subroutine Advance
 
 end module CTSMForce2DStreamBaseType
