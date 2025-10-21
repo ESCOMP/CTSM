@@ -1,0 +1,7 @@
+! Turn off history, restarts, and output
+hist_empty_htapes = .true.
+use_noio = .true.
+
+! Turn off urban options, and only do urban in gridcells that are majority urban
+urban_hac = 'OFF'
+toosmall_urban =  98.0d00  ! Minimize urban in gridcells

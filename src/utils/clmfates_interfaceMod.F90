@@ -49,6 +49,7 @@ module CLMFatesInterfaceMod
    use PRTGenericMod     , only : prt_cnp_flex_allom_hyp
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
+   use clm_varctl        , only : use_fates_managed_fire
    use clm_varctl        , only : use_fates_tree_damage
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
@@ -429,6 +430,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_hydro_solver
      integer                                        :: pass_radiation_model
      integer                                        :: pass_electron_transport_model
+     integer                                        :: pass_managed_fire
 
      call t_startf('fates_globals2')
 
@@ -490,11 +492,21 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('phosphorus_spec',ival=0)
 
 
+        ! Pass spitfire mode values
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
+
+        ! Pass managed fire mode value
+        if (use_fates_managed_fire) then
+           pass_managed_fire = 1
+        else
+           pass_managed_fire = 0
+        end if
+        call set_fates_ctrlparms('use_managed_fire',ival=pass_managed_fire)
+
 
         ! This has no variable on the FATES side yet (RGK)
         !call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
@@ -2359,11 +2371,11 @@ module CLMFatesInterfaceMod
 
      call t_startf('fates_wrapsunfrac')
 
-      associate( forc_solad => atm2lnd_inst%forc_solad_not_downscaled_grc, &
-                 forc_solai => atm2lnd_inst%forc_solai_grc, &
-                 fsun       => canopystate_inst%fsun_patch, &
-                 laisun     => canopystate_inst%laisun_patch, &
-                 laisha     => canopystate_inst%laisha_patch )
+     associate( forc_solad_g => atm2lnd_inst%forc_solad_not_downscaled_grc, &
+                forc_solai_g => atm2lnd_inst%forc_solai_grc, &
+                fsun       => canopystate_inst%fsun_patch, &
+                laisun     => canopystate_inst%laisun_patch, &
+                laisha     => canopystate_inst%laisha_patch )
 
         ! -------------------------------------------------------------------------------
         ! Convert input BC's
@@ -2375,8 +2387,8 @@ module CLMFatesInterfaceMod
            g = col%gridcell(c)
 
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad(g,:)
-              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai(g,:)
+              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad_g(g,:)
+              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai_g(g,:)
            end do
         end do
 
