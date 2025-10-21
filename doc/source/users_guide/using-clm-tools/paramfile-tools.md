@@ -57,9 +57,14 @@ Change a one-dimensional parameter (`mimics_fmet` has the `segment` dimension, l
 tools/param_utils/set_paramfile -i paramfile.nc -o output.nc mimics_fmet=0.1,0.2,0.3,0.4
 ```
 
+Change a one-dimensional parameter to be all one value (`mxmat` has the `pft` dimension, length 79):
+```bash
+tools/param_utils/set_paramfile -i paramfile.nc -o output.nc mxmat=360
+```
+
 Change a parameter for specific PFTs:
 ```bash
-tools/param_utils/set_paramfile -i paramfile.nc -o output.nc -p needleleaf_evergreen_temperate_tree,c4_grass medlynintercept=99.9,100.1 medlynslope=2.99,1.99
+tools/param_utils/set_paramfile -i paramfile.nc -o output.nc -p needleleaf_evergreen_temperate_tree,c4_grass medlynintercept=99.9,100.1 medlynslope=2.99,1.99 mxmat=199
 ```
 
 Set a parameter to the fill value:
