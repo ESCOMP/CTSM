@@ -210,7 +210,7 @@ contains
          snow_thermal_cond_method, snow_thermal_cond_glc_method, &
          snow_thermal_cond_lake_method, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
+         crop_fsat_equals_zero, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
@@ -765,9 +765,6 @@ contains
 
     ! Crop saturated excess runoff
     call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
-
-    ! Whether to run tests of ncdio_pio
-    call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Various flags used for testing infrastructure for having multiple crop reproductive pools
     call mpi_bcast(for_testing_use_second_grain_pool, 1, MPI_LOGICAL, 0, mpicom, ier)
