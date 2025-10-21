@@ -18,9 +18,9 @@ module AtmCarbonIsotopeStreamType
       procedure, public :: Init => C13Init
       procedure, public :: C13Interp 
       procedure, public :: Interp => C13Interp 
-      procedure, public :: C13Clean
-      procedure, public :: Clean => C13Clean 
-      !final :: C13Clean
+      procedure, public :: C13ClassClean
+      procedure, public :: Clean => C13ClassClean
+      final :: C13TypeClean
       ! Private methods
       procedure, private :: C13InitAllocate
 
@@ -36,9 +36,9 @@ module AtmCarbonIsotopeStreamType
       procedure, public :: Init => C14Init
       procedure, public :: C14Interp 
       procedure, public :: Interp => C14Interp 
-      procedure, public :: C14Clean
-      procedure, public :: Clean => C14Clean 
-      !final :: C14Clean
+      procedure, public :: C14ClassClean
+      procedure, public :: Clean => C14ClassClean
+      final :: C14TypeClean
       ! Private methods
       procedure, private :: C14InitAllocate
 
@@ -80,12 +80,20 @@ module AtmCarbonIsotopeStreamType
          allocate( this%atm_delta_c13( bounds%begg : bounds%endg ) ); this%atm_delta_c13 = nan
     end subroutine C13InitAllocate
 
-    subroutine C13Clean( this )
+    subroutine C13ClassClean( this )
          class(atm_delta_c13_stream_type), intent(inout) :: this 
 
-         deallocate( this%atm_delta_c13 )
+         call C13TypeClean( this )
 
-    end subroutine C13Clean
+    end subroutine C13ClassClean
+
+    subroutine C13TypeClean( this )
+         type(atm_delta_c13_stream_type), intent(inout) :: this 
+
+         deallocate( this%atm_delta_c13 )
+         call this%CleanBase()
+
+    end subroutine C13TypeClean
 
     subroutine C13Interp( this, bounds )
          class(atm_delta_c13_stream_type), intent(inout) :: this 
@@ -131,11 +139,20 @@ module AtmCarbonIsotopeStreamType
          type(bounds_type), intent(in) :: bounds
     end subroutine C14Interp
 
-    subroutine C14Clean( this )
+    subroutine C14ClassClean( this )
          class(atm_delta_c14_stream_type), intent(inout) :: this 
 
-         deallocate( this%atm_delta_c14 )
+         call C14TypeClean( this )
 
-    end subroutine C14Clean
+    end subroutine C14ClassClean
+
+
+    subroutine C14TypeClean( this )
+         type(atm_delta_c14_stream_type), intent(inout) :: this 
+
+         deallocate( this%atm_delta_c14 )
+         call this%CleanBase()
+
+    end subroutine C14TypeClean
 
 end module AtmCarbonIsotopeStreamType
