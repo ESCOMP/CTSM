@@ -97,9 +97,9 @@ STANDARD = \
 
 # NOTE slevis 2025/9/10: For CTSM5.4, I removed from CROP:
 #   crop-global-future
-# and I added here because it spans 1979-2023:
+# Here I added this because it spans 1979-2023. When CMIP7 future scenarios become available, this will span 1979-2030:
 #   crop-global-hist-vrandne120
-# and I split ne3 into ne3-1, ne3-2, ne3-3 for historical because the combined ne3 job took >12 hours in the queue
+# Also I split ne3 into ne3-1, ne3-2, ne3-3 for historical because the combined ne3 job took >12 hours in the queue
 CROP = \
 	crop-global-hist \
 	crop-global-hist-low-res \
@@ -336,7 +336,11 @@ crop-global-hist-mpasa480 : FORCE
 
 #
 # Crop with future scenarios
-#
+# NOTE 2025/10/21: Time periods extending beyond 2023 combine CMIP7 data
+#                  for the historical period and CMIP6 data beyond 2023.
+#                  This introduces a discontinuity in 2024.
+# TODO: Add crop-global-future back when the CMIP7 data become available.
+#       See other corresponding crop-global-future comment elsewhere in this Makefile.
 
 crop-global-future : crop-global-SSP1-1.9-f09 \
                      crop-global-SSP1-2.6-f09 \
@@ -352,6 +356,7 @@ crop-global-SSP2-4.5-low-res : crop-global-SSP2-4.5-f10 \
                                crop-global-SSP2-4.5-ne3
 # NOTE slevis 2025/9/10: For CTSM5.4, I moved to CROP because it spans 1979-2023:
 #   crop-global-hist-vrandne120
+# When CMIP7 future scenario data become available, this will span 1979-2030.
 crop-global-SSP2-4.5         : crop-global-SSP2-4.5-f09 \
                                crop-global-SSP2-4.5-f19 \
                                crop-global-SSP2-4.5-hcru \

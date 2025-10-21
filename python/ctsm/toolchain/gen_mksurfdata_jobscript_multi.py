@@ -389,6 +389,10 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f45",
         ),
+        # NOTE 2025/10/21: When CMIP7 future scenarios become available,
+        # change 2023 to 2030 for a so-called "midpoint" future scenario.
+        # This future-proofs these cases, so that as time moves on, these
+        # simulations will still include the most recent historical year.
         "crop-global-hist-vrandne120": (
             "--start-year 1979 --end-year 2023 --res",
             "vr_and_ne120",
