@@ -60,15 +60,17 @@ module CTSMForce2DStreamBaseType
        import :: ctsm_force_2DStream_base_type
        !
        ! Arguments:
-       class(ctsm_force_2DStream_base_type), intent(in) :: this
+       class(ctsm_force_2DStream_base_type), intent(inout) :: this
      end subroutine Clean_interface 
 
-     subroutine Interp_interface(this)
+     subroutine Interp_interface(this, bounds)
        ! Uses:
+       use decompMod , only : bounds_type
        import :: ctsm_force_2DStream_base_type
        !
        ! Arguments:
-       class(ctsm_force_2DStream_base_type), intent(in) :: this
+       class(ctsm_force_2DStream_base_type), intent(inout) :: this
+       type(bounds_type), intent(in) :: bounds
      end subroutine Interp_interface
 
   end interface
