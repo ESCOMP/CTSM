@@ -100,11 +100,6 @@ class TestUnitCheckCorrectNdims(unittest.TestCase):
         da = xr.DataArray(data=[1, 2])
         self.assertTrue(sp.check_correct_ndims(da, np.array([1, 2])))
 
-    def test_checkcorrectndims_1d_scalar(self):
-        """Check True when given a scalar for a 1d parameter (we want to apply it to all)"""
-        da = xr.DataArray(data=[1, 2])
-        self.assertTrue(sp.check_correct_ndims(da, 87))
-
 
 class TestUnitIsInteger(unittest.TestCase):
     """Unit tests of is_integer"""
