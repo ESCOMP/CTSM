@@ -4,7 +4,7 @@ module CIsoAtmTimeseriesMod
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
   ! !USES:
-  use shr_kind_mod     , only : r8 => shr_kind_r8
+  use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use clm_time_manager , only : get_curr_date, get_curr_yearfrac
   use clm_varcon       , only : c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
@@ -12,6 +12,8 @@ module CIsoAtmTimeseriesMod
   use abortutils       , only : endrun
   use spmdMod          , only : masterproc
   use shr_log_mod      , only : errMsg => shr_log_errMsg
+  use AtmCarbonIsotopeStreamType, only : atm_delta_c13_stream_type, atm_delta_c14_stream_type
+  use decompMod        , only : bounds_type
   !
   implicit none
   private
@@ -33,12 +35,32 @@ module CIsoAtmTimeseriesMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
 
+  type(atm_delta_c13_stream_type), private :: atm_c13_stream  ! Atmospheric C13 stream object
+  type(atm_delta_c14_stream_type), private :: atm_c14_stream  ! Atmospheric C14 stream object
+
   ! !PRIVATE TYPES:
   real(r8), allocatable, private :: atm_c14file_time(:)       ! time for C14 data
   real(r8), allocatable, private :: atm_delta_c14(:,:)        ! Delta C14 data
   real(r8), allocatable, private :: atm_c13file_time(:)       ! time for C13 data
   real(r8), allocatable, private :: atm_delta_c13(:)          ! Delta C13 data
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
+
+  ! Private data for the control namelist:
+  character(len=CL), private :: stream_fldfilename_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_4x1_global_1700-2023_yearly_v3.0_c251013.nc'
+  character(len=CL), private :: stream_meshfile_atm_c14 = '/glade/campaignA/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/mesh_4x1_global_c20251013.nc'
+  character(len=CL), private :: stream_fldfilename_atm_c13 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc'
+  integer, private :: stream_year_first_atm_c14 = 1850
+  integer, private :: stream_year_last_atm_c14 = 2023
+  integer, private :: stream_model_year_align_atm_c14 = 1850
+  integer, private :: stream_year_first_atm_c13 = 1850
+  integer, private :: stream_year_last_atm_c13 = 2023
+  integer, private :: stream_model_year_align_atm_c13 = 1850
+  character(len=CL), private :: stream_mapalgo_atm_c14 = 'nn'
+  character(len=CL), private :: stream_tintalgo_atm_c14 = 'linear'
+  character(len=CL), private :: stream_taxmode_atm_c14 = 'extend'
+  character(len=CL), private :: stream_mapalgo_atm_c13 = 'nn'
+  character(len=CL), private :: stream_tintalgo_atm_c13 = 'linear'
+  character(len=CL), private :: stream_taxmode_atm_c13 = 'extend'
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -109,6 +131,7 @@ contains
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
     use fileutils   , only : getfil
+    use decompMod   , only : get_proc_bounds
     !
     ! !LOCAL VARIABLES:
     implicit none
@@ -119,6 +142,7 @@ contains
     integer :: nsec                       ! number of input data sectors
     integer :: t                          ! time index
     logical :: readvar                    ! if variable read or not
+    type(bounds_type) :: bounds_proc
     character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
@@ -164,6 +188,20 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end do
+
+    ! Streams method
+    call get_proc_bounds( bounds_proc )
+    call atm_c14_stream%Init( bounds_proc, &
+        fldfilename=stream_fldfilename_atm_c14, &
+        meshfile= stream_meshfile_atm_c14, &
+        mapalgo=stream_mapalgo_atm_c14, &
+        tintalgo=stream_tintalgo_atm_c14, &
+        taxmode=stream_taxmode_atm_c14, &
+        year_first=stream_year_first_atm_c14, &
+        year_last=stream_year_last_atm_c14, &
+        model_year_align=stream_model_year_align_atm_c14 )
+    call atm_c13_stream%Advance( )
+    call atm_c13_stream%Interp( bounds_proc )
 
   end subroutine C14_init_BombSpike
 
@@ -229,6 +267,7 @@ contains
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
     use fileutils   , only : getfil
+    use decompMod   , only : get_proc_bounds
     !
     ! !LOCAL VARIABLES:
     implicit none
@@ -238,6 +277,7 @@ contains
     integer :: ntim                       ! number of input data time samples
     integer :: t                          ! Time index
     logical :: readvar                    ! if variable read or not
+    type(bounds_type) :: bounds_proc
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
@@ -279,6 +319,20 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        endif
     end do
+
+    ! Streams method
+    call get_proc_bounds( bounds_proc )
+    call atm_c13_stream%Init( bounds_proc, &
+        fldfilename=stream_fldfilename_atm_c13, &
+        meshfile= 'none', &
+        mapalgo=stream_mapalgo_atm_c13, &
+        tintalgo=stream_tintalgo_atm_c13, &
+        taxmode=stream_taxmode_atm_c13, &
+        year_first=stream_year_first_atm_c13, &
+        year_last=stream_year_last_atm_c13, &
+        model_year_align=stream_model_year_align_atm_c13 )
+    call atm_c13_stream%Advance( )
+    call atm_c13_stream%Interp( bounds_proc )
 
   end subroutine C13_init_TimeSeries
 
