@@ -1,4 +1,98 @@
 ===============================================================
+Tag name: ctsm5.3.081
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed 22 Oct 2025 11:53:21 AM MDT
+One-line Summary: Change defaults for when Carbon isotopes are turned on, and turn on irrigate for Sp/Bgc cases for clm6_0 historical transient cases
+
+Purpose and description of changes
+----------------------------------
+
+Only turn C13/C14 for clm6_0 and BGC, and also require the DATM forcing to be CRUJRA2024 or CAM7 and for the historical period. So for example SSP compsets won't have C13/C14 on, single point compsets won't, or for using older forcing (like CAM6, or GSWP3v1, Qian, or CRUv7). Also whenever use_c13 or use_c14 is on turn on the corresponding time series file.
+
+Also change default for irrigate to on for historical SP/BGC cases.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3527 -- irrigation settings for control vs historical cases
+   Fixes #3551 -- Turn on relevent Carbon isotope time-series when use_c13/c14 is on
+   Some work on #3346 -- CMIP7 Carbon isotope data
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This just changes the defaults for when Carbon isotopes are turned on, to make it less often
+   Users can still turn it on by hand for the cases that they want.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Carbon isotope timeseries files are turned on whenever use_c13/use_c14 is turned on so it uses
+   the historical
+   Turn irrigate on for clm6_0 historical
+   Carbon isotopes only turned on by default for clm6_0 when CRUJRA2024 or CAM7 forcing is used
+   and only for historical cases and not SSP's
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: HistClm60Sp/HistClm60Bgc or 
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Carbon Isotopes -- are diagnostic and only change fields on history files
+      Irrigate turned on for HistClm60Bgc/HistClm60Sp compsets will change answers 
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3549
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.080
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Thu Oct 16 13:41:08 MDT 2025
