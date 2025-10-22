@@ -58,7 +58,7 @@ valid_scenarios = [
     "crop-global-SSP2-4.5-f19",
     "crop-global-SSP2-4.5-f10",
     "crop-global-SSP2-4.5-f45",
-    "crop-global-SSP2-4.5-vrandne120",
+    "crop-global-hist-vrandne120",
     "crop-global-SSP2-4.5-ne3",
     "crop-global-SSP2-4.5-ne16",
     "crop-global-SSP2-4.5-ne30",
@@ -389,8 +389,12 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f45",
         ),
-        "crop-global-SSP2-4.5-vrandne120": (
-            "--start-year 1979 --end-year 2030 --ssp-rcp SSP2-4.5 --res",
+        # NOTE 2025/10/21: When CMIP7 future scenarios become available,
+        # change 2023 to 2030 for a so-called "midpoint" future scenario.
+        # This future-proofs these cases, so that as time moves on, these
+        # simulations will still include the most recent historical year.
+        "crop-global-hist-vrandne120": (
+            "--start-year 1979 --end-year 2023 --res",
             "vr_and_ne120",
         ),
         "crop-global-SSP2-4.5-ne3": (
