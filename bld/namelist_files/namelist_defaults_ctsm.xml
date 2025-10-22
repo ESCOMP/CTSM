@@ -120,10 +120,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_c14_bombspike use_c14=".true.">.true.</use_c14_bombspike>
 
 <!-- Turn Carbon isotopes on for clm6_0 physics with BGC on with CRUJRA or CAM7 forcing and for historical period-->
-<!-- NOTE: Have Carbon isotopes off for older physics and it can only be on in BGC mode -->
-<!--       Have it turned on for CRUJRA2024 and CAM7 forcing because that is the default clm6_0 physics default -->
-<!--       It's turned off for other forcing options though as we haven't run simulations with those configurations -->
-<!--       It's also only turned on for Historical periods and NOT furture sceaarios because we don't have data for CMIP7 future sceanrios -->
+<!-- NOTE: Have Carbon isotopes off for older physics as those earlier versions were run that way. 
+       They can only be on for BGC compsets (NOT SP or FATES).
+       
+       Also, we configured the defaults the following ways:
+       - On only for CRUJRA2024 or CAM7 forcing because that is how the CESM3.0 clm6_0 simulations were run
+       - In contrast to above, it's turned off for other forcing options as we haven't run simulations with those configurations
+      - It's also only turned on for Historical periods and NOT future scenarios because we don't have CMIP7 data for them -->
 <use_c13 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_CRUJRA2024" ssp_rcp="hist">.true.</use_c13>
 <use_c14 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_CRUJRA2024" ssp_rcp="hist">.true.</use_c14>
 <use_c13 phys="clm6_0" bgc_mode="bgc" lnd_tuning_mode="clm6_0_cam7.0" ssp_rcp="hist">.true.</use_c13>
