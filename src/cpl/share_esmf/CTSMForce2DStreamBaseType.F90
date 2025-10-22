@@ -16,7 +16,7 @@ module CTSMForce2DStreamBaseType
 
   type, abstract, public :: ctsm_force_2DStream_base_type
      private
-     type(shr_strdata_type), private :: sdat  ! Stream data type
+     type(shr_strdata_type), public :: sdat  ! Stream data type
      character(len=FL) :: stream_filename ! The stream data filename (also in sdat)
      character(len=CL) :: stream_name ! The stream name (also in sdat)
   contains
@@ -33,7 +33,7 @@ module CTSMForce2DStreamBaseType
 
   abstract interface
 
-     subroutine Init_interface( this, bounds, varnames, fldfilename, meshfile, mapalgo, tintalgo, taxmode, name, &
+     subroutine Init_interface( this, bounds, fldfilename, meshfile, mapalgo, tintalgo, taxmode, &
                            year_first, year_last, model_year_align )
          ! Uses:
          use decompMod , only : bounds_type
@@ -42,14 +42,12 @@ module CTSMForce2DStreamBaseType
          ! Arguments:
          class(ctsm_force_2DStream_base_type), intent(inout) :: this 
          type(bounds_type), intent(in) :: bounds
-         character(*), intent(in) :: varnames(:) ! variable names to read from stream file
          character(*), intent(in) :: fldfilename ! stream data filename (full pathname) (single file)
          ! NOTE: fldfilename could be expanded to an array if needed, but currently we only have one file
          character(*), intent(in) :: meshfile ! full pathname to stream mesh file (none for global data)
          character(*), intent(in) :: mapalgo ! stream mesh -> model mesh mapping type
          character(*), intent(in) :: tintalgo ! time interpolation algorithm
          character(*), intent(in) :: taxMode ! time axis mode
-         character(*), intent(in) :: name ! name of stream
          integer, intent(in) :: year_first ! first year to use
          integer, intent(in) :: year_last ! last  year to use
          integer, intent(in) :: model_year_align ! align yearFirst with this model year
