@@ -18,6 +18,12 @@ module Assertions
 
   interface assert_equal
      !TYPE double,int,logical
+     module procedure assert_equal_0d_{TYPE}
+
+     !TYPE text
+     module procedure assert_equal_0d_{TYPE}
+
+     !TYPE double,int,logical
      module procedure assert_equal_1d_{TYPE}
 
      !TYPE double,int,logical
@@ -29,6 +35,8 @@ module Assertions
 
   interface vals_are_equal
      !TYPE double,int,logical
+     module procedure vals_are_equal_{TYPE}
+     !TYPE text
      module procedure vals_are_equal_{TYPE}
   end interface vals_are_equal
 
@@ -74,6 +82,60 @@ contains
     end do
 
   end subroutine assert_equal_1d_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE double,int,logical
+  subroutine assert_equal_0d_{TYPE}(expected, actual, msg, abs_tol)
+    !
+    ! !DESCRIPTION:
+    ! Assert scalar values are equal
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, intent(in) :: expected
+    {VTYPE}, intent(in) :: actual
+    character(len=*), intent(in) :: msg
+
+    ! absolute tolerance; if not specified, require exact equality; ignored for logicals
+    real(r8), intent(in), optional :: abs_tol
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+
+    character(len=*), parameter :: subname = 'assert_equal_0d_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    if (.not. vals_are_equal(actual, expected, abs_tol)) then
+       write(iulog,*) 'ERROR in assert_equal: ', msg
+       write(iulog,*) 'Actual  : ', actual
+       write(iulog,*) 'Expected: ', expected
+       call endrun('ERROR in assert_equal')
+    end if
+
+  end subroutine assert_equal_0d_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE text
+  subroutine assert_equal_0d_{TYPE}(expected, actual, msg)
+    !
+    ! !DESCRIPTION:
+    ! Assert scalar values are equal
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, intent(in) :: expected
+    {VTYPE}, intent(in) :: actual
+    character(len=*), intent(in) :: msg
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if (.not. vals_are_equal(actual, expected)) then
+       write(iulog,*) 'ERROR in assert_equal: ', msg
+       write(iulog,*) 'Actual  : ', actual
+       write(iulog,*) 'Expected: ', expected
+       call endrun('ERROR in assert_equal')
+    end if
+
+  end subroutine assert_equal_0d_{TYPE}
 
   !-----------------------------------------------------------------------
   !TYPE double,int,logical
@@ -195,6 +257,25 @@ contains
 
     vals_equal = (abs(actual - expected) <= abs_tol_loc)
 #endif
+
+  end function vals_are_equal_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE text
+  function vals_are_equal_{TYPE}(actual, expected) result(vals_equal)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if actual is the same as expected, false otherwise
+    !
+    ! !ARGUMENTS:
+    logical :: vals_equal  ! function result
+    {VTYPE}, intent(in) :: actual
+    {VTYPE}, intent(in) :: expected
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    vals_equal = actual == expected
 
   end function vals_are_equal_{TYPE}
 

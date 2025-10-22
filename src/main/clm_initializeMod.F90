@@ -30,7 +30,7 @@ module clm_initializeMod
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
   use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
-  use SelfTestDriver        , only : self_test_driver
+  use SelfTestDriver        , only : self_test_driver, for_testing_bypass_init_after_self_tests
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
   !
@@ -67,6 +67,7 @@ contains
     use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     use CropReprPoolsMod     , only: crop_repr_pools_init
     use HillslopeHydrologyMod, only: hillslope_properties_init
+    use SelfTestDriver       , only: self_test_readnml
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -101,6 +102,8 @@ contains
     call surfrd_compat_check(fsurdat)
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numpft, actual_numcft)
     call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
+
+    call self_test_readnml( NLFilename )
 
     ! If fates is on, we override actual_maxsoil_patches. FATES dictates the
     ! number of patches per column.  We still use numcft from the surface
@@ -182,6 +185,7 @@ contains
     use FATESFireFactoryMod           , only : scalar_lightning
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
+    use SelfTestDriver                , only : for_testing_bypass_init_after_self_tests
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -333,6 +337,7 @@ contains
     ! Run any requested self-tests
     call self_test_driver(bounds_proc)
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking, pct_urban_max is kept through the end of the run
@@ -349,8 +354,9 @@ contains
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
     call readParameters(photosyns_inst)
-
+    end if   ! End of bypass
     
+    ! Self test skipping should still do the time manager initialization
     ! Initialize time manager
     if (nsrest == nsrStartup) then
        call timemgr_init()
@@ -376,6 +382,7 @@ contains
     call t_stopf('clm_init2_part2')
     call t_startf('clm_init2_part3')
 
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
@@ -423,7 +430,9 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
@@ -508,6 +517,7 @@ contains
     if (nsrest == nsrContinue ) then
        call htapes_fieldlist()
     end if
+    end if ! End of bypass
 
     ! Read restart/initial info
     is_cold_start = .false.
@@ -600,6 +610,8 @@ contains
        end if
        call t_stopf('clm_init2_init_interp')
     end if
+
+    if ( .not. for_testing_bypass_init_after_self_tests() )then
 
     ! If requested, reset dynbal baselines
     ! This needs to happen after reading the restart file (including after reading the
@@ -759,6 +771,7 @@ contains
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
     end if
+    end if ! end of bypass
     
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
     ! initialize2 because it is used to initialize other variables; now it can be deallocated
