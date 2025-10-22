@@ -33,6 +33,10 @@ concurrency:
 jobs:
 
   build-and-deploy:
+
+    # Only run on upstream repository
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
