@@ -10,7 +10,7 @@ module AtmCarbonIsotopeStreamType
   implicit none
   private
 
-  character(len=*), parameter :: varname_c13 = 'atm_delta_c13'
+  character(len=*), parameter :: varname_c13 = 'delta13co2_in_air'
   type, public, extends(ctsm_force_2DStream_base_type) :: atm_delta_c13_stream_type
      private
      real(r8), allocatable :: atm_delta_c13(:) ! delta C13 data array
@@ -29,7 +29,7 @@ module AtmCarbonIsotopeStreamType
 
   end type atm_delta_c13_stream_type
 
-  character(len=*), parameter :: varname_c14 = 'atm_delta_c14'
+  character(len=*), parameter :: varname_c14 = 'Delta14co2_in_air'
   type, public, extends(ctsm_force_2DStream_base_type) :: atm_delta_c14_stream_type
      private
      real(r8), allocatable :: atm_delta_c14(:) ! delta c14 data array
