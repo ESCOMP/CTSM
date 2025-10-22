@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.3.081
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed 22 Oct 2025 11:53:21 AM MDT
+Date: Wed 22 Oct 2025 05:31:52 PM MDT
 One-line Summary: Change defaults for when Carbon isotopes are turned on, and turn on irrigate for Sp/Bgc cases for clm6_0 historical transient cases
 
 Purpose and description of changes
@@ -57,30 +57,33 @@ Testing summary: regular
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK (differences in namelists are all as expected)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: HistClm60 compsets and tests with the ciso testmod
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: HistClm60Sp/HistClm60Bgc or 
+    - what code configurations: HistClm60Sp/HistClm60Bgc now with irriage on
+         cases with use_c13/use_c14 now have c13/c14 isotope timeseries files on
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Carbon Isotopes -- are diagnostic and only change fields on history files
+           Cases that now have C13/C14 isotopes on now use timeseries files rather
+           than the default pre-industrial so change answers for C13/C14 fields 
       Irrigate turned on for HistClm60Bgc/HistClm60Sp compsets will change answers 
 
 Other details
