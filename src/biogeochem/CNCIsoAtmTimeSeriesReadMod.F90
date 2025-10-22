@@ -47,7 +47,7 @@ module CIsoAtmTimeseriesMod
 
   ! Private data for the control namelist:
   character(len=CL), private :: stream_fldfilename_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_4x1_global_1700-2023_yearly_v3.0_c251013.nc'
-  character(len=CL), private :: stream_meshfile_atm_c14 = '/glade/campaignA/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/mesh_4x1_global_c20251013.nc'
+  character(len=CL), private :: stream_meshfile_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/mesh_4x1_global_c20251013.nc'
   character(len=CL), private :: stream_fldfilename_atm_c13 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc'
   integer, private :: stream_year_first_atm_c14 = 1850
   integer, private :: stream_year_last_atm_c14 = 2023
@@ -193,15 +193,16 @@ contains
     call get_proc_bounds( bounds_proc )
     call atm_c14_stream%Init( bounds_proc, &
         fldfilename=stream_fldfilename_atm_c14, &
-        meshfile= stream_meshfile_atm_c14, &
+        !meshfile= stream_meshfile_atm_c14, &
+        meshfile= 'none', &
         mapalgo=stream_mapalgo_atm_c14, &
         tintalgo=stream_tintalgo_atm_c14, &
         taxmode=stream_taxmode_atm_c14, &
         year_first=stream_year_first_atm_c14, &
         year_last=stream_year_last_atm_c14, &
         model_year_align=stream_model_year_align_atm_c14 )
-    call atm_c13_stream%Advance( )
-    call atm_c13_stream%Interp( bounds_proc )
+    call atm_c14_stream%Advance( )
+    call atm_c14_stream%Interp( bounds_proc )
 
   end subroutine C14_init_BombSpike
 
