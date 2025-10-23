@@ -2269,7 +2269,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
 
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_hdm_0.5x0.5_simyr1850-2025_c251013.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
@@ -2287,7 +2287,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 
-<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." >lnd/clm2/firedata/clmforc.Li_2025_CMIP7_hdm_0.5x0.5_simyr1850-2025_c251013.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
