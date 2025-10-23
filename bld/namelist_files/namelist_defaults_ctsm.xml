@@ -533,7 +533,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile phys="clm6_0">lnd/clm2/paramdata/ctsm60_params.c250311.nc</paramfile>
-<paramfile phys="clm6_0" use_fates=".true.">lnd/clm2/paramdata/ctsm60_params.250923_v26j.nc</paramfile>
+<paramfile phys="clm6_0" use_fates=".true.">lnd/clm2/paramdata/ctsm60_params.5.3.045_noresm_v14.c250923.nc</paramfile>
 <paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c250311.nc</paramfile>
 <paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c250311.nc</paramfile>
 
@@ -542,8 +542,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 
 <!-- <fates_paramfile>lnd/clm2/paramdata/fates_params_api.36.1.0_14pft_c241003.nc</fates_paramfile> -->
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.40.0.0_14pft_c250923_noresm_v26i.nc</fates_paramfile>
-
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.40.0.0_noresm_v9_14pft_c251017.nc</fates_paramfile>
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
 <!-- ================================================================== -->
