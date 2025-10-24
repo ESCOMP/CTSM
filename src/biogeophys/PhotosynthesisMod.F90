@@ -1,4 +1,4 @@
-module  PhotosynthesisMod
+module PhotosynthesisMod
 
 #include "shr_assert.h"
 
@@ -21,7 +21,6 @@ module  PhotosynthesisMod
   use decompMod           , only : bounds_type, subgrid_level_patch
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
-  use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
   use CNVegnitrogenstateType, only : cnveg_nitrogenstate_type
@@ -2063,12 +2062,15 @@ contains
   end subroutine Photosynthesis
 
   !------------------------------------------------------------------------------
-  subroutine PhotosynthesisTotal (fn, filterp, &
+  subroutine PhotosynthesisTotal (bounds, fn, filterp, &
        atm2lnd_inst, canopystate_inst, photosyns_inst)
     !
     ! Determine total photosynthesis
     !
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries 
+    use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
     ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                             ! size of pft filter
     integer                , intent(in)    :: filterp(fn)                    ! patch filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -2078,8 +2080,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: f,fp,p,l,g               ! indices
 
-    real(r8) :: rc14_atm(nsectors_c14), rc13_atm
-    integer :: sector_c14
     !-----------------------------------------------------------------------
 
     associate(                                             &
@@ -2116,15 +2116,15 @@ contains
 
       if ( use_c14 ) then
          if (use_c14_bombspike) then
-            call C14BombSpike(rc14_atm)
+            call C14BombSpike(bounds)
          else
-            rc14_atm(:) = c14ratio
+            rc14_atm_grc(:) = c14ratio
          end if
       end if
 
       if ( use_c13 ) then
          if (use_c13_timeseries) then
-            call C13TimeSeries(rc13_atm)
+            call C13TimeSeries(bounds)
          end if
       end if
 
@@ -2142,7 +2142,7 @@ contains
          if (use_cn) then
             if ( use_c13 ) then
                if (use_c13_timeseries) then
-                  rc13_canair(p) = rc13_atm
+                  rc13_canair(p) = rc13_atm_grc(g)
                else
                   rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
                endif
@@ -2157,19 +2157,10 @@ contains
             endif
             if ( use_c14 ) then
 
-               ! determine latitute sector for radiocarbon bomb spike inputs
-               if ( grc%latdeg(g) .ge. 30._r8 ) then
-                  sector_c14 = 1
-               else if ( grc%latdeg(g) .ge. -30._r8 ) then            
-                  sector_c14 = 2
-               else
-                  sector_c14 = 3
-               endif
+               rc14_canair(p) = rc14_atm_grc(g)
 
-               rc14_canair(p) = rc14_atm(sector_c14)
-
-               c14_psnsun(p) = rc14_atm(sector_c14) * psnsun(p)
-               c14_psnsha(p) = rc14_atm(sector_c14) * psnsha(p)
+               c14_psnsun(p) = rc14_atm_grc(g) * psnsun(p)
+               c14_psnsha(p) = rc14_atm_grc(g) * psnsha(p)
             endif
          end if
 
