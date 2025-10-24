@@ -1,4 +1,70 @@
 ===============================================================
+Tag name: ctsm5.3.082
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri 24 Oct 2025 11:17:41 AM MDT
+One-line Summary: Update to CMIP7 population density file for non-SSP cases
+
+Purpose and description of changes
+----------------------------------
+
+ Update two lines in namelist_defaults_ctsm.xml.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3545 Update to official CMIP7 pop. density data
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Updated pop. density file for non-SSP cases.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Updated pop. density file for non-SSP cases.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: non-SSP
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff/same climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3563
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.081
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed 22 Oct 2025 05:31:52 PM MDT
