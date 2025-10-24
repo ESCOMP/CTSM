@@ -1645,7 +1645,7 @@ bioms:   do f = 1, fn
 
          ! Determine total photosynthesis
          
-         call PhotosynthesisTotal(fn, filterp, &
+         call PhotosynthesisTotal(bounds, fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate water use efficiency

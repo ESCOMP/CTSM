@@ -12,6 +12,7 @@ module CIsoAtmTimeseriesMod
   use abortutils       , only : endrun
   use spmdMod          , only : masterproc
   use shr_log_mod      , only : errMsg => shr_log_errMsg
+  use decompMod        , only : bounds_type
   !
   implicit none
   private
@@ -27,40 +28,46 @@ module CIsoAtmTimeseriesMod
   character(len=256) , public :: atm_c14_filename = ' '       ! file name of C14 input data
   logical            , public :: use_c13_timeseries = .false. ! do we use time-varying atmospheric C13?
   character(len=256) , public :: atm_c13_filename = ' '       ! file name of C13 input data
-  integer, parameter , public :: nsectors_c14 = 3             ! Number of latitude sectors the C14 data has
 
+  real(r8), allocatable, public :: rc14_atm_grc(:)       ! Ratio of C14 C12 data on gridcell
+  real(r8), allocatable, public :: rc13_atm_grc(:)       ! Ratio of C13 C12 data on gridcell
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
 
   ! !PRIVATE TYPES:
+  integer, parameter   , private :: nsectors_c14 = 3          ! Number of latitude sectors the C14 data has
   real(r8), allocatable, private :: atm_c14file_time(:)       ! time for C14 data
-  real(r8), allocatable, private :: atm_delta_c14(:,:)        ! Delta C14 data
+  real(r8), allocatable, private :: atm_delta_c14(:,:)        ! Delta C14 data (time,nsectors)
+  real(r8), allocatable, private :: atm_delta_c14_grc(:)      ! Delta C14 data on gridcell
   real(r8), allocatable, private :: atm_c13file_time(:)       ! time for C13 data
-  real(r8), allocatable, private :: atm_delta_c13(:)          ! Delta C13 data
+  real(r8), allocatable, private :: atm_delta_c13(:)          ! Delta C13 data (time)
+  real(r8), allocatable, private :: atm_delta_c13_grc(:)      ! Delta C13 data on gridcell
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
 
   character(len=*), parameter, private :: sourcefile = &
-       __FILE__
+  __FILE__
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine C14BombSpike( rc14_atm )
+  subroutine C14BombSpike( bounds )
     !
     ! !DESCRIPTION:
     ! for transient simulation, read in an atmospheric timeseries file to impose bomb spike
     !
+    use GridcellType , only : grc
     ! !ARGUMENTS:
     implicit none
-    real(r8), intent(out) :: rc14_atm(nsectors_c14)  ! Ratio of C14 to C12
+    type(bounds_type), intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: yr, mon, day, tod            ! year, month, day, time-of-day
     real(r8) :: dateyear                     ! Date converted to year
     real(r8) :: delc14o2_atm(nsectors_c14)   ! C14 delta units
-    integer  :: fp, p, nt                    ! Indices
+    real(r8) :: rc14_atm(nsectors_c14)       ! C14 ratio C14 C12units
+    integer  :: fp, p, nt, g                 ! Indices
     integer  :: ind_below                    ! Time index below current time
     integer  :: ntim_atm_ts                  ! Number of times on file
     real(r8) :: twt_1, twt_2                 ! weighting fractions for interpolating
@@ -97,11 +104,26 @@ contains
        ! change delta units to ratio
        rc14_atm(l) = (delc14o2_atm(l) * 1.e-3_r8 + 1._r8) * c14ratio
     end do
+    !
+    ! Now map to the gridcell from the sectors
+    !
+    do g = bounds%begg, bounds%endg
+       ! determine latitute sector for radiocarbon bomb spike inputs
+       if ( grc%latdeg(g) >= 30._r8 ) then
+          l = 1
+       else if ( grc%latdeg(g) >= -30._r8 ) then
+          l = 2
+       else
+          l = 3
+       endif
+       atm_delta_c14_grc(g) = delc14o2_atm(l)
+       rc14_atm_grc(g) = rc14_atm(l)
+    end do
     
   end subroutine C14BombSpike
 
   !-----------------------------------------------------------------------
-  subroutine C14_init_BombSpike()
+  subroutine C14_init_BombSpike( bounds )
     !
     ! !DESCRIPTION:
     ! read netcdf file containing a timeseries of atmospheric delta C14 values; save in module-level array 
@@ -109,9 +131,12 @@ contains
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
     use fileutils   , only : getfil
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+    implicit none
+    ! Arguments:
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    implicit none
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
     integer :: dimid,varid                ! input netCDF id's
@@ -142,6 +167,12 @@ contains
     allocate(atm_delta_c14(nsectors_c14,ntim))
     atm_delta_c14(:,:) = 0.0_r8
 
+    ! Allocate the gridcell arrays
+    allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
+    allocate(rc14_atm_grc(bounds%begg:bounds%endg))
+    atm_delta_c14_grc(:) = nan
+    rc14_atm_grc(:) = nan
+
     call ncd_io(ncid=ncid, varname='time', flag='read', data=atm_c14file_time, &
                 readvar=readvar)
     if ( .not. readvar ) then
@@ -169,20 +200,22 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine C13TimeSeries( rc13_atm )
+  subroutine C13TimeSeries( bounds )
     !
     ! !DESCRIPTION:
     ! for transient pulse simulation, impose a time-varying atm boundary condition
     !
+    use GridcellType , only : grc
     ! !ARGUMENTS:
     implicit none
-    real(r8), intent(out) :: rc13_atm    ! Ratio of C13 to C12
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
+    real(r8) :: rc13_atm                   ! Ratio of C13 to C12
     integer  :: yr, mon, day, tod          ! year, month, day, time-of-day
     real(r8) :: dateyear                   ! date translated to year
     real(r8) :: delc13o2_atm               ! Delta C13
-    integer  :: fp, p, nt                  ! Indices
+    integer  :: fp, p, nt, g               ! Indices
     integer  :: ind_below                  ! Index of time in file before current time
     integer  :: ntim_atm_ts                ! Number of times on file
     real(r8) :: twt_1, twt_2               ! weighting fractions for interpolating
@@ -218,10 +251,18 @@ contains
 
     rc13_atm = (delc13o2_atm * 1.e-3_r8 + 1._r8) * SHR_CONST_PDB
 
+    !
+    ! Copy to the gridcell arrays
+    !
+    do g = bounds%begg, bounds%endg
+       atm_delta_c13_grc(g) = delc13o2_atm
+       rc13_atm_grc(g) = rc13_atm
+    end do
+
   end subroutine C13TimeSeries
 
   !-----------------------------------------------------------------------
-  subroutine C13_init_TimeSeries()
+  subroutine C13_init_TimeSeries( bounds )
     !
     ! !DESCRIPTION:
     ! read netcdf file containing a timeseries of atmospheric delta C13 values; save in module-level array 
@@ -229,9 +270,12 @@ contains
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
     use fileutils   , only : getfil
-    !
-    ! !LOCAL VARIABLES:
+    use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     implicit none
+    !
+    ! Arguments:
+    type(bounds_type), intent(in) :: bounds
+    ! !LOCAL VARIABLES:
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
     integer :: dimid,varid                ! input netCDF id's
@@ -255,6 +299,12 @@ contains
     !! allocate arrays based on size of netcdf timeseries
     allocate(atm_c13file_time(ntim))
     allocate(atm_delta_c13(ntim))
+
+    ! Allocate the gridcell arrays
+    allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
+    allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
+    atm_delta_c13_grc(:) = nan
+    rc13_atm_grc(:) = nan
 
     call ncd_io(ncid=ncid, varname='time', flag='read', data=atm_c13file_time, &
                 readvar=readvar)
