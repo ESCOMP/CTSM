@@ -2067,7 +2067,7 @@ contains
     !
     ! Determine total photosynthesis
     !
-    use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries 
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries
     use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
