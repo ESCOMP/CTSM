@@ -144,7 +144,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
-   
+   use clm_varctl            , only : fates_paramfile
    use FatesParametersInterface, only : fates_param_reader_type
    use FatesParametersInterface, only : fates_parameters_type
 
@@ -319,7 +319,6 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_masterproc
      integer                                        :: pass_use_luh2
      logical                                        :: verbose_output
-     type(fates_param_reader_ctsm_impl)             :: var_reader
      
      call t_startf('fates_globals1')
 
@@ -380,8 +379,21 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,var_reader)
 
+     use shr_file_mod, only : shr_file_getUnit
+     !------------------------------------------------------------------------
+
+     ! It is FATES' job to open and close the file
+     ! This step is simply to provide a unit number to use
+     paramfile_unit = shr_file_getunit()
+
+     !call opnfil (locfn, iun, form)
+     !call getfil(fates_paramfile, locfn, 0)
+     
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,fates_paramfile,fates_paramfile_unit)
+
+     call shr_file_freeUnit(paramfile_unit)
+     
      maxsoil_patches = fates_maxPatchesPerSite
      
      call t_stopf('fates_globals1')
