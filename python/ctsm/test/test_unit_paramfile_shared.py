@@ -44,6 +44,13 @@ class TestUnitGetSelectedPftIndices(unittest.TestCase):
         )
         self.assertListEqual(result, [1, 0])
 
+    def test_get_selected_pft_indices_missing_valueerror(self):
+        """Check get_selected_pft_indices() given selected pft NOT in the list"""
+        selected_pfts = ["wheat"]
+        pft_names = ["rice", "irrigated_rice"]
+        with self.assertRaises(ValueError):
+            ps.get_selected_pft_indices(selected_pfts=selected_pfts, pft_names=pft_names)
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
