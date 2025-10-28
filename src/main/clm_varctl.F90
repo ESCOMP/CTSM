@@ -585,13 +585,13 @@ contains
 
   end subroutine clm_varctl_set
 
-  ! Set module carbon_only flag
+  ! Set module carbon_only flag (applies to both CN and FATES)
   subroutine allocate_carbon_only_set(carbon_only_in)
     logical, intent(in) :: carbon_only_in
     carbon_only = carbon_only_in
   end subroutine allocate_carbon_only_set
 
-  ! Get module carbon_only flag
+  ! Get module carbon_only flag (applies to both CN and FATES)
   logical function Allocate_Carbon_only()
     allocate_carbon_only = carbon_only
   end function Allocate_Carbon_only
