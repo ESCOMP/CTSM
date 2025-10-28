@@ -80,7 +80,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_lch4
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
-   use clm_varctl        , only : CNAllocate_Carbon_only
+   use clm_varctl        , only : Allocate_Carbon_only
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -1332,7 +1332,7 @@ module CLMFatesInterfaceMod
 
       end do
 
-      if(CNAllocate_Carbon_only())then
+      if(Allocate_Carbon_only())then
          nitr_suppl = .true.
       else
          nitr_suppl = .false.
