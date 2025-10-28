@@ -2067,7 +2067,7 @@ contains
     !
     ! Determine total photosynthesis
     !
-    use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
     use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2114,19 +2114,10 @@ contains
          fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
          )
 
-      if ( use_c14 ) then
-         if (use_c14_bombspike) then
-            call C14BombSpike(bounds)
-         else
-            rc14_atm_grc(:) = c14ratio
-         end if
-      end if
-
-      if ( use_c13 ) then
-         if (use_c13_timeseries) then
-            call C13TimeSeries(bounds)
-         end if
-      end if
+      ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
+      ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
+      if ( use_c14 ) call C14BombSpike(bounds)
+      if ( use_c13 ) call C13TimeSeries(bounds, atm2lnd_inst)
 
       do f = 1, fn
          p = filterp(f)
@@ -2141,11 +2132,7 @@ contains
 
          if (use_cn) then
             if ( use_c13 ) then
-               if (use_c13_timeseries) then
-                  rc13_canair(p) = rc13_atm_grc(g)
-               else
-                  rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
-               endif
+               rc13_canair(p) = rc13_atm_grc(g)
                rc13_psnsun(p) = rc13_canair(p)/alphapsnsun(p)
                rc13_psnsha(p) = rc13_canair(p)/alphapsnsha(p)
                c13_psnsun(p)  = psnsun(p) * (rc13_psnsun(p)/(1._r8+rc13_psnsun(p)))
