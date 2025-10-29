@@ -27,9 +27,8 @@
 #
 [submodule "fates"]
 path = src/fates
-url = https://github.com/rgknox/fates
-#fxtag = cnp-l2fr-conly     # This is the branch being pointed to, the hash used on the branch is below
-fxtag = 8c5a24ce880ac117dffa7f5b87427a57250af8ed
+url = https://github.com/NGEET/fates
+fxtag = sci.1.88.0_api.41.0.0
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates
