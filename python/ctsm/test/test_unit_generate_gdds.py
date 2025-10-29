@@ -27,6 +27,7 @@ class TestGenerateGddsArgs(unittest.TestCase):
         self._input_dir = os.path.join("dummy", "path", "to", "inputdir")
         self._sdates_file = os.path.join("dummy", "path", "to", "sdates")
         self._hdates_file = os.path.join("dummy", "path", "to", "hdates")
+        self._paramfile = os.path.join("dummy", "path", "to", "paramfile")
 
     def test_generate_gdds_args_reqd_shortnames(self):
         """Basic test with all required inputs, short arg names"""
@@ -41,6 +42,8 @@ class TestGenerateGddsArgs(unittest.TestCase):
             self._sdates_file,
             "-hd",
             self._hdates_file,
+            "--paramfile",
+            self._paramfile,
         ]
         gg._parse_args(args)
 
@@ -56,6 +59,8 @@ class TestGenerateGddsArgs(unittest.TestCase):
             self._sdates_file,
             "-hd",
             self._hdates_file,
+            "--paramfile",
+            self._paramfile,
         ]
         gg._parse_args(args)
 
@@ -72,6 +77,25 @@ class TestGenerateGddsArgs(unittest.TestCase):
             self._sdates_file,
             "--hdates-file",
             self._hdates_file,
+            "--paramfile",
+            self._paramfile,
+        ]
+        gg._parse_args(args)
+
+    def test_generate_gdds_args_mxmat_from_hdatefile(self):
+        """Test with option to get max season length from hdates file"""
+        args = [
+            "--input-dir",
+            self._input_dir,
+            "--first-season",
+            "1986",
+            "--last-season",
+            "1987",
+            "--sdates-file",
+            self._sdates_file,
+            "--hdates-file",
+            self._hdates_file,
+            "--max-season-length-from-hdates-file",
         ]
         gg._parse_args(args)
 

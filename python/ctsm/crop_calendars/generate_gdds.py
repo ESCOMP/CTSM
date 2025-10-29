@@ -26,11 +26,6 @@ import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=w
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
 
-# Global constants
-PARAMFILE = (
-    "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata/ctsm51_params.c211112.nc"
-)
-
 
 def main(
     *,
@@ -51,6 +46,7 @@ def main(
     skip_crops=None,
     logger=None,
     no_pickle=None,
+    paramfile=None,
 ):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
@@ -147,7 +143,7 @@ def main(
         hdates_rx = hdates_file
 
         if not max_season_length_from_hdates_file:
-            mxmats = cc.import_max_gs_length(PARAMFILE)
+            mxmats = cc.import_max_gs_length(paramfile)
         else:
             mxmats = None
 
@@ -398,6 +394,27 @@ def _parse_args(argv):
         )
     )
 
+    # Required but mutually exclusive
+    max_growing_season_length_group = parser.add_mutually_exclusive_group(required=True)
+    max_growing_season_length_group.add_argument(
+        "--paramfile",
+        help=(
+            "Path to parameter file with maximum growing season lengths (mxmat)."
+            " Mutually exclusive with --max-season-length-from-hdates-file."
+        ),
+    )
+    max_growing_season_length_group.add_argument(
+        "--max-season-length-from-hdates-file",
+        help=(
+            "Rather than limiting growing season length based on mxmat values from a CLM parameter"
+            " file, use the season lengths from --hdates-file. Not recommended unless you use the"
+            "results of this script in a run with sufficiently long mxmat values!"
+            " Mutually exclusive with --paramfile."
+        ),
+        action="store_true",
+        default=False,
+    )
+
     # Required
     parser.add_argument(
         "-i",
@@ -470,12 +487,6 @@ def _parse_args(argv):
         type=int,
     )
     parser.add_argument(
-        "--max-season-length-from-hdates-file",
-        help="Limit mean growing season length based on CLM CFT parameter mxmat.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--skip-crops",
         help="Skip processing of these crops. Comma- or space-separated list.",
         type=str,
@@ -519,4 +530,5 @@ if __name__ == "__main__":
         max_season_length_from_hdates_file=args.max_season_length_from_hdates_file,
         skip_crops=args.skip_crops,
         no_pickle=args.no_pickle,
+        paramfile=args.paramfile,
     )
