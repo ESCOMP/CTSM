@@ -84,3 +84,8 @@ class TestCreateFilledArray(unittest.TestCase):
         result = g1v.create_filled_array(self.this_ds, fill_value, thisvar_da_dummy, new_dims)
 
         self.assertTrue(np.all(result == fill_value))
+
+
+if __name__ == "__main__":
+    unit_testing.setup_for_tests()
+    unittest.main()
