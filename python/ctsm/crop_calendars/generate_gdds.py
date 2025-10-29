@@ -390,11 +390,13 @@ def main(
         )
 
 
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        description=(
+            "A script to generate maturity requirements for CLM crops in units of growing degree-"
+            "days (GDDs)."
+        )
+    )
 
     # Required
     parser.add_argument(
@@ -487,9 +489,17 @@ if __name__ == "__main__":
     )
 
     # Get arguments
-    args = parser.parse_args(sys.argv[1:])
-    for k, v in sorted(vars(args).items()):
+    args_parsed = parser.parse_args(argv)
+    for k, v in sorted(vars(args_parsed).items()):
         print(f"{k}: {v}")
+    return args_parsed
+
+
+if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    args = _parse_args(sys.argv[1:])
 
     # Call main()
     main(
