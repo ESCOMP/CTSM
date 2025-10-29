@@ -47,7 +47,7 @@ def main(
     land_use_file=None,
     first_land_use_year=None,
     last_land_use_year=None,
-    unlimited_season_length=False,
+    max_season_length_from_hdates_file=False,
     skip_crops=None,
     logger=None,
     no_pickle=None,
@@ -58,7 +58,7 @@ def main(
             output_dir = input_dir
         else:
             output_dir = os.path.join(input_dir, "generate_gdds")
-            if not unlimited_season_length:
+            if not max_season_length_from_hdates_file:
                 output_dir += ".mxmat"
             output_dir += "." + dt.datetime.now().strftime("%Y-%m-%d-%H%M%S")
     if not os.path.exists(output_dir):
@@ -146,7 +146,7 @@ def main(
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
-        if not unlimited_season_length:
+        if not max_season_length_from_hdates_file:
             mxmats = cc.import_max_gs_length(PARAMFILE_DIR, MY_CLM_VER, MY_CLM_SUBVER)
         else:
             mxmats = None
@@ -470,7 +470,7 @@ def _parse_args(argv):
         type=int,
     )
     parser.add_argument(
-        "--unlimited-season-length",
+        "--max-season-length-from-hdates-file",
         help="Limit mean growing season length based on CLM CFT parameter mxmat.",
         action="store_true",
         default=False,
@@ -516,7 +516,7 @@ if __name__ == "__main__":
         land_use_file=args.land_use_file,
         first_land_use_year=args.first_land_use_year,
         last_land_use_year=args.last_land_use_year,
-        unlimited_season_length=args.unlimited_season_length,
+        max_season_length_from_hdates_file=args.max_season_length_from_hdates_file,
         skip_crops=args.skip_crops,
         no_pickle=args.no_pickle,
     )
