@@ -27,14 +27,18 @@ import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=w
 # pylint: disable=too-many-positional-arguments
 
 
-def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile):
+def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile, cushion):
     """
     Import maximum growing season lengths from paramfile, if doing so.
     """
-    if not max_season_length_from_hdates_file:
-        mxmats = cc.import_max_gs_length(paramfile)
-    else:
-        mxmats = None
+    if max_season_length_from_hdates_file:
+        return None
+
+    mxmats = cc.import_max_gs_length(paramfile)
+
+    if cushion:
+        mxmats = cc.cushion_gs_length(mxmats, cushion)
+
     return mxmats
 
 
@@ -58,6 +62,7 @@ def main(
     logger=None,
     no_pickle=None,
     paramfile=None,
+    max_season_length_cushion=None,
 ):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
@@ -153,7 +158,9 @@ def main(
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
-        mxmats = _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile)
+        mxmats = _get_max_growing_season_lengths(
+            max_season_length_from_hdates_file, paramfile, max_season_length_cushion
+        )
 
         h1_instantaneous = None
         for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
@@ -506,11 +513,31 @@ def _parse_args(argv):
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--max-season-length-cushion",
+        help=(
+            "How much to reduce the maximum growing season length (mxmat) for each crop in the"
+            " parameter file. This might be useful for helping avoid high rates of immature"
+            " harvests for gridcells where the observed harvest date is longer than mxmat."
+            " Incompatible with --max-season-length-from-hdates-file."
+        ),
+        default=0,
+        type=int,
+    )
 
     # Get arguments
     args_parsed = parser.parse_args(argv)
     for k, v in sorted(vars(args_parsed).items()):
         print(f"{k}: {v}")
+
+    # Check arguments
+    if args_parsed.max_season_length_from_hdates_file and args_parsed.max_season_length_cushion:
+        raise argparse.ArgumentError(
+            None,
+            "--max-season-length-from-hdates-file is incompatible with --max-season-length-cushion"
+            " ≠ 0.",
+        )
+
     return args_parsed
 
 
@@ -539,4 +566,5 @@ if __name__ == "__main__":
         skip_crops=args.skip_crops,
         no_pickle=args.no_pickle,
         paramfile=args.paramfile,
+        max_season_length_cushion=args.max_season_length_cushion,
     )

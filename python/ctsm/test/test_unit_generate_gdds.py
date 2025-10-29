@@ -6,6 +6,7 @@ Unit tests for generate_gdds.py
 
 import unittest
 import os
+import argparse
 
 import numpy as np
 
@@ -101,6 +102,66 @@ class TestGenerateGddsArgs(unittest.TestCase):
         ]
         gg._parse_args(args)
 
+    def test_generate_gdds_args_error_with_paramfile_and_nomxmat(self):
+        """Should error if both --paramfile and --max-season-length-from-hdates-file are given"""
+        args = [
+            "--input-dir",
+            self._input_dir,
+            "--first-season",
+            "1986",
+            "--last-season",
+            "1987",
+            "--sdates-file",
+            self._sdates_file,
+            "--hdates-file",
+            self._hdates_file,
+            "--max-season-length-from-hdates-file",
+            "--paramfile",
+            self._paramfile,
+        ]
+        with self.assertRaises(SystemExit):
+            gg._parse_args(args)
+
+    def test_generate_gdds_args_error_with_nomxmat_and_cushion(self):
+        """Should error if both --max-season-length-cushion and --max-season-length-from-hdates-file
+        are given"""
+        args = [
+            "--input-dir",
+            self._input_dir,
+            "--first-season",
+            "1986",
+            "--last-season",
+            "1987",
+            "--sdates-file",
+            self._sdates_file,
+            "--hdates-file",
+            self._hdates_file,
+            "--max-season-length-from-hdates-file",
+            "--max-season-length-cushion",
+            "14",
+        ]
+        with self.assertRaises(argparse.ArgumentError):
+            gg._parse_args(args)
+
+    def test_generate_gdds_args_ok_with_nomxmat_and_cushion0(self):
+        """As test_generate_gdds_args_error_with_nomxmat_and_cushion, but cushion 0 is ok"""
+        args = [
+            "--input-dir",
+            self._input_dir,
+            "--first-season",
+            "1986",
+            "--last-season",
+            "1987",
+            "--sdates-file",
+            self._sdates_file,
+            "--hdates-file",
+            self._hdates_file,
+            "--max-season-length-from-hdates-file",
+            "--max-season-length-cushion",
+            "0",
+        ]
+        gg._parse_args(args)
+
 
 class TestGetMaxGsLengths(unittest.TestCase):
     """Tests get_max_growing_season_lengths()"""
@@ -116,33 +177,55 @@ class TestGetMaxGsLengths(unittest.TestCase):
         # Default arguments
         self.no_mxmats = False
         self.paramfile = self._paramfile_60
+        self.cushion = 0
 
     def test_generate_gdds_get_mxmats_ctsm51(self):
         """Test importing from a ctsm51 paramfile (no fail)"""
         paramfile = self._paramfile_51
-        gg._get_max_growing_season_lengths(self.no_mxmats, paramfile)
+        gg._get_max_growing_season_lengths(self.no_mxmats, paramfile, self.cushion)
 
     def test_generate_gdds_get_mxmats_ctsm60(self):
         """Test importing from a ctsm60 paramfile (no fail)"""
         paramfile = self._paramfile_60
-        gg._get_max_growing_season_lengths(self.no_mxmats, paramfile)
+        gg._get_max_growing_season_lengths(self.no_mxmats, paramfile, self.cushion)
 
     def test_generate_gdds_get_mxmats_none(self):
         """Test not importing from a paramfile (should return None)"""
         max_season_length_from_hdates_file = True
         paramfile = None
-        result = gg._get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile)
+        result = gg._get_max_growing_season_lengths(
+            max_season_length_from_hdates_file, paramfile, self.cushion
+        )
         self.assertIsNone(result)
 
     def test_generate_gdds_get_mxmats_values(self):
-        """Check values"""
-        mxmats = gg._get_max_growing_season_lengths(self.no_mxmats, self.paramfile)
+        """Check values with no cushion"""
+        mxmats = gg._get_max_growing_season_lengths(self.no_mxmats, self.paramfile, self.cushion)
 
         # Check values
         self.assertTrue(np.isinf(mxmats["needleleaf_evergreen_temperate_tree"]))
         self.assertEqual(mxmats["temperate_corn"], 165)
         self.assertEqual(mxmats["miscanthus"], 210)
-        
+
+    def test_generate_gdds_get_mxmats_cushion14(self):
+        """As test_generate_gdds_get_mxmats_values, but cushion 14"""
+        cushion = 14
+        mxmats = gg._get_max_growing_season_lengths(self.no_mxmats, self.paramfile, cushion)
+
+        # Check values
+        self.assertTrue(np.isinf(mxmats["needleleaf_evergreen_temperate_tree"]))
+        self.assertEqual(mxmats["temperate_corn"], 165 - cushion)
+        self.assertEqual(mxmats["miscanthus"], 210 - cushion)
+
+    def test_generate_gdds_get_mxmats_cushionneg14(self):
+        """As test_generate_gdds_get_mxmats_values, but cushion -14"""
+        cushion = -14
+        mxmats = gg._get_max_growing_season_lengths(self.no_mxmats, self.paramfile, cushion)
+
+        # Check values
+        self.assertTrue(np.isinf(mxmats["needleleaf_evergreen_temperate_tree"]))
+        self.assertEqual(mxmats["temperate_corn"], 165 - cushion)
+        self.assertEqual(mxmats["miscanthus"], 210 - cushion)
 
 
 if __name__ == "__main__":
