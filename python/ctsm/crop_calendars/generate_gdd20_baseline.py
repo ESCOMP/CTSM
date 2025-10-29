@@ -217,6 +217,22 @@ def setup_output_dataset(input_files, author, variable, year_args, ds_in):
     return ds_out
 
 
+def _get_time_slice(year_args):
+    """
+    Based on years from input arguments, return a time slice for selecting from dataset
+    """
+    first_year = year_args[0]
+    last_year = year_args[1]
+    date_1 = f"{first_year}-01-01"
+    date_n = f"{last_year}-12-31"
+    if first_year is None:
+        date_1 = "0000-01-01"
+    if last_year is None:
+        date_n = "9999-12-31"
+    time_slice = slice(date_1, date_n)
+    return time_slice
+
+
 def generate_gdd20_baseline(input_files, output_file, author, variable, year_args):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
@@ -238,15 +254,7 @@ def generate_gdd20_baseline(input_files, output_file, author, variable, year_arg
     input_files.sort()
 
     # Process time slice
-    first_year = year_args[0]
-    last_year = year_args[1]
-    date_1 = f"{first_year}-01-01"
-    date_n = f"{last_year}-12-31"
-    if first_year is None:
-        date_1 = "0000-01-01"
-    if last_year is None:
-        date_n = "9999-12-31"
-    time_slice = slice(date_1, date_n)
+    time_slice = _get_time_slice(year_args)
 
     # Import history files and ensure they have lat/lon dims
     ds_in = import_ds(input_files, my_vars=var_list_in + GRIDDING_VAR_LIST, time_slice=time_slice)
