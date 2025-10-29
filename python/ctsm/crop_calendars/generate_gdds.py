@@ -27,9 +27,9 @@ import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=w
 # pylint: disable=too-many-positional-arguments
 
 # Global constants
-PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
-MY_CLM_VER = 51
-MY_CLM_SUBVER = "c211112"
+PARAMFILE = (
+    "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata/ctsm51_params.c211112.nc"
+)
 
 
 def main(
@@ -147,7 +147,7 @@ def main(
         hdates_rx = hdates_file
 
         if not max_season_length_from_hdates_file:
-            mxmats = cc.import_max_gs_length(PARAMFILE_DIR, MY_CLM_VER, MY_CLM_SUBVER)
+            mxmats = cc.import_max_gs_length(PARAMFILE)
         else:
             mxmats = None
 

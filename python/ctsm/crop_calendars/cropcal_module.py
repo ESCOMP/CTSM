@@ -2,8 +2,6 @@
 Helper functions for various crop calendar stuff
 """
 
-import os
-import glob
 import numpy as np
 import xarray as xr
 
@@ -203,16 +201,12 @@ def get_gs_len_da(this_da):
     return this_da
 
 
-def import_max_gs_length(paramfile_dir, my_clm_ver, my_clm_subver):
+def import_max_gs_length(paramfile):
     """
     Import maximum growing season length
     """
     # Get parameter file
-    pattern = os.path.join(paramfile_dir, f"*{my_clm_ver}_params.{my_clm_subver}.nc")
-    paramfile = glob.glob(pattern)
-    if len(paramfile) != 1:
-        raise RuntimeError(f"Expected to find 1 match of {pattern}; found {len(paramfile)}")
-    paramfile_ds = xr.open_dataset(paramfile[0])
+    paramfile_ds = xr.open_dataset(paramfile)
 
     # Import max growing season length (stored in netCDF as nanoseconds!)
     paramfile_mxmats = paramfile_ds["mxmat"].values / np.timedelta64(1, "D")
