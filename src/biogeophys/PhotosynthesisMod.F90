@@ -2084,7 +2084,6 @@ contains
 
     associate(                                             &
          forc_pco2   => atm2lnd_inst%forc_pco2_grc       , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)
-         forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc     , & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)
          forc_po2    => atm2lnd_inst%forc_po2_grc        , & ! Input:  [real(r8) (:) ]  partial pressure o2 (Pa)
 
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
