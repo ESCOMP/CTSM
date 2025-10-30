@@ -299,6 +299,7 @@ contains
        atm_delta_c13_grc(g) = delc13o2_atm
 
        ! Currently when C13 is fixed, it's dependent on CO2 levels and changes with pressure
+       ! NOTE: This duplicates code in lnd_import_export.F90
        if ( .not. use_c13_timeseries )then
           rc13_atm_grc(g) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
           atm_delta_c13_grc(g) = (rc13_atm_grc(g) / SHR_CONST_PDB - 1.0_r8)*1000.0_r8
