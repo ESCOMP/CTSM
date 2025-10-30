@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Unit tests for generate_gdds.py
+Unit tests for generate_gdds.py and generate_gdds_functions.py
 """
 
 import unittest
@@ -9,9 +9,11 @@ import os
 import argparse
 
 import numpy as np
+import xarray as xr
 
 from ctsm import unit_testing
 from ctsm.crop_calendars import generate_gdds as gg
+from ctsm.crop_calendars import generate_gdds_functions as gf
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -226,6 +228,101 @@ class TestGetMaxGsLengths(unittest.TestCase):
         self.assertTrue(np.isinf(mxmats["needleleaf_evergreen_temperate_tree"]))
         self.assertEqual(mxmats["temperate_corn"], 165 - cushion)
         self.assertEqual(mxmats["miscanthus"], 210 - cushion)
+
+
+class TestCheckGridMatch(unittest.TestCase):
+    """Tests check_grid_match()"""
+
+    def test_check_grid_match_true_npnp(self):
+        """Test check_grid_match() with two matching numpy arrays"""
+        np0 = np.array([0, 1, 2, np.pi])
+        match, max_abs_diff = gf.check_grid_match(np0, np0)
+        self.assertTrue(match)
+        self.assertEqual(max_abs_diff, 0.0)
+
+    def test_check_grid_match_true_dada(self):
+        """Test check_grid_match() with two matching DataArrays"""
+        np0 = np.array([0, 1, 2, np.pi])
+        da0 = xr.DataArray(data=np0)
+        match, max_abs_diff = gf.check_grid_match(da0, da0)
+        self.assertTrue(match)
+        self.assertEqual(max_abs_diff, 0.0)
+
+    def test_check_grid_match_false_npnp(self):
+        """Test check_grid_match() with two non-matching numpy arrays"""
+        np0 = np.array([0, 1, 2, np.pi])
+        np1 = np0.copy()
+        diff = 2 * gf.GRID_TOL_DEG
+        np1[0] = np0[0] + diff
+        match, max_abs_diff = gf.check_grid_match(np0, np1)
+        self.assertFalse(match)
+        self.assertEqual(max_abs_diff, diff)
+
+    def test_check_grid_match_false_dada(self):
+        """Test check_grid_match() with two non-matching DataArrays"""
+        np0 = np.array([0, 1, 2, np.pi])
+        np1 = np0.copy()
+        diff = 2 * gf.GRID_TOL_DEG
+        np1[0] = np0[0] + diff
+        da0 = xr.DataArray(data=np0)
+        da1 = xr.DataArray(data=np1)
+        match, max_abs_diff = gf.check_grid_match(da0, da1)
+        self.assertFalse(match)
+        self.assertEqual(max_abs_diff, diff)
+
+    def test_check_grid_match_falseneg_npnp(self):
+        """As test_check_grid_match_false_npnp, but with diff in negative direction"""
+        np0 = np.array([0, 1, 2, np.pi])
+        np1 = np0.copy()
+        diff = -2 * gf.GRID_TOL_DEG
+        np1[0] = np0[0] + diff
+        match, max_abs_diff = gf.check_grid_match(np0, np1)
+        self.assertFalse(match)
+        self.assertEqual(max_abs_diff, abs(diff))
+
+    def test_check_grid_match_matchnans_true_npnp(self):
+        """Test check_grid_match() with two numpy arrays that have nans and match"""
+        np0 = np.array([np.nan, 1, 2, np.pi])
+        with self.assertWarnsRegex(RuntimeWarning, r"NaN\(s\) in grid"):
+            match, max_abs_diff = gf.check_grid_match(np0, np0)
+        self.assertTrue(match)
+        self.assertEqual(max_abs_diff, 0.0)
+
+    def test_check_grid_match_matchnans_true_dada(self):
+        """Test check_grid_match() with two DataArrays that have nans and match"""
+        np0 = np.array([np.nan, 1, 2, np.pi])
+        da0 = xr.DataArray(data=np0)
+        with self.assertWarnsRegex(RuntimeWarning, r"NaN\(s\) in grid"):
+            match, max_abs_diff = gf.check_grid_match(da0, da0)
+        self.assertTrue(match)
+        self.assertEqual(max_abs_diff, 0.0)
+
+    def test_check_grid_match_matchnans_false_npnp(self):
+        """Test check_grid_match() with two numpy arrays with nans that DON'T match"""
+        np0 = np.array([np.nan, 1, 2, np.pi])
+        np1 = np.array([np.nan, 1, np.nan, np.pi])
+        with self.assertWarnsRegex(RuntimeWarning, r"NaN\(s\) in grid don't match"):
+            match, max_abs_diff = gf.check_grid_match(np0, np1)
+        self.assertFalse(match)
+        self.assertIsNone(max_abs_diff)
+
+    def test_check_grid_match_matchnans_falseshape_npnp(self):
+        """Test check_grid_match() with two numpy arrays that have different shapes"""
+        np0 = np.array([0, 1, 2, np.pi])
+        np1 = np.array([0, 1, 2, np.pi, 4])
+        match, max_abs_diff = gf.check_grid_match(np0, np1)
+        self.assertFalse(match)
+        self.assertIsNone(max_abs_diff)
+
+    def test_check_grid_match_matchnans_falseshape_dada(self):
+        """Test check_grid_match() with two DataArrays that have different shapes"""
+        np0 = np.array([0, 1, 2, np.pi])
+        np1 = np.array([0, 1, 2, np.pi, 4])
+        da0 = xr.DataArray(data=np0)
+        da1 = xr.DataArray(data=np1)
+        match, max_abs_diff = gf.check_grid_match(da0, da1)
+        self.assertFalse(match)
+        self.assertIsNone(max_abs_diff)
 
 
 if __name__ == "__main__":
