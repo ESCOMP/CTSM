@@ -27,6 +27,17 @@ import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=w
 # pylint: disable=too-many-positional-arguments
 
 
+def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile):
+    """
+    Import maximum growing season lengths from paramfile, if doing so.
+    """
+    if not max_season_length_from_hdates_file:
+        mxmats = cc.import_max_gs_length(paramfile)
+    else:
+        mxmats = None
+    return mxmats
+
+
 def main(
     *,
     input_dir=None,
@@ -142,10 +153,7 @@ def main(
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
-        if not max_season_length_from_hdates_file:
-            mxmats = cc.import_max_gs_length(paramfile)
-        else:
-            mxmats = None
+        mxmats = _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile)
 
         h1_instantaneous = None
         for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
