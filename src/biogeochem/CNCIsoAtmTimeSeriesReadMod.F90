@@ -1,7 +1,5 @@
 module CIsoAtmTimeseriesMod
 
-#include "shr_assert.h"
-
   !-----------------------------------------------------------------------
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
@@ -122,16 +120,6 @@ contains
     ! Now map to the gridcell from the sectors
     !
 
-    SHR_ASSERT_FL( allocated(atm_delta_c14_grc), sourcefile, __LINE__)
-    SHR_ASSERT_FL( allocated(rc14_atm_grc), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(atm_delta_c14_grc, 1) == bounds%begg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(rc14_atm_grc, 1) == bounds%begg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(atm_delta_c14_grc, 1) == bounds%endg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(rc14_atm_grc, 1) == bounds%endg ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(rc14_atm, 1) == 1 ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(delc14o2_atm, 1) == 1 ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(rc14_atm, 1) == nsectors_c14 ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(delc14o2_atm, 1) == nsectors_c14 ), sourcefile, __LINE__)
     do g = bounds%begg, bounds%endg
        ! determine latitute sector for radiocarbon bomb spike inputs
        if ( grc%latdeg(g) >= 30._r8 ) then
@@ -297,10 +285,6 @@ contains
     ! change delta units to ratio, put on patch loop
 
     rc13_atm = (delc13o2_atm * 1.e-3_r8 + 1._r8) * SHR_CONST_PDB
-    !if ( .not. use_c13_timeseries )then
-       !write(iulog,*) 'rc13_atm, c13ratio, epsilon(c13ratio) = ', rc13_atm, c13ratio, epsilon(c13ratio)
-       !SHR_ASSERT_FL( abs(rc13_atm - c13ratio) < epsilon(c13ratio), sourcefile, __LINE__)
-    !end if
 
     !
     ! Copy to the gridcell arrays
@@ -313,13 +297,11 @@ contains
        )
        rc13_atm_grc(g) = rc13_atm
        atm_delta_c13_grc(g) = delc13o2_atm
+
+       ! Currently when C13 is fixed, it's dependent on CO2 levels and changes with pressure
        if ( .not. use_c13_timeseries )then
           rc13_atm_grc(g) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
           atm_delta_c13_grc(g) = (rc13_atm_grc(g) / SHR_CONST_PDB - 1.0_r8)*1000.0_r8
-          !write(iulog,*) 'c13ratio, pc13o2 = ', c13ratio, forc_pc13o2(g)
-          !write(iulog,*) 'rc13_atm_grc, c13o2/(co2 - c13o2), epsilon(c13ratio) = ', rc13_atm_grc(g), &
-                         !(forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))), epsilon(c13ratio)
-          SHR_ASSERT_FL( (abs(rc13_atm_grc(g) - (forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g)) )) <= epsilon(c13ratio)*10._r8 ), sourcefile, __LINE__)
        end if
        end associate
     end do
