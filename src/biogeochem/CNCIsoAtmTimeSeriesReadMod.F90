@@ -121,6 +121,17 @@ contains
     !
     ! Now map to the gridcell from the sectors
     !
+
+    SHR_ASSERT_FL( allocated(atm_delta_c14_grc), sourcefile, __LINE__)
+    SHR_ASSERT_FL( allocated(rc14_atm_grc), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(atm_delta_c14_grc, 1) == bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(rc14_atm_grc, 1) == bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(atm_delta_c14_grc, 1) == bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(rc14_atm_grc, 1) == bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(rc14_atm, 1) == 1 ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(delc14o2_atm, 1) == 1 ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(rc14_atm, 1) == nsectors_c14 ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(delc14o2_atm, 1) == nsectors_c14 ), sourcefile, __LINE__)
     do g = bounds%begg, bounds%endg
        ! determine latitute sector for radiocarbon bomb spike inputs
        if ( grc%latdeg(g) >= 30._r8 ) then
@@ -279,14 +290,17 @@ contains
     ! When not using a time series file -- use the constant value
     !
     else
-       delc13o2_atm = preind_atm_del13c
        rc13_atm = c13ratio
+       delc13o2_atm = (rc13_atm/SHR_CONST_PDB - 1.0_r8)*1000.0_r8
     end if
 
     ! change delta units to ratio, put on patch loop
 
     rc13_atm = (delc13o2_atm * 1.e-3_r8 + 1._r8) * SHR_CONST_PDB
-    !SHR_ASSERT_FL( abs(rc13_atm - c13ratio) < epsilon(c13ratio), sourcefile, __LINE__)
+    !if ( .not. use_c13_timeseries )then
+       !write(iulog,*) 'rc13_atm, c13ratio, epsilon(c13ratio) = ', rc13_atm, c13ratio, epsilon(c13ratio)
+       !SHR_ASSERT_FL( abs(rc13_atm - c13ratio) < epsilon(c13ratio), sourcefile, __LINE__)
+    !end if
 
     !
     ! Copy to the gridcell arrays
@@ -297,9 +311,16 @@ contains
          forc_pco2   => atm2lnd_inst%forc_pco2_grc   , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)
          forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)
        )
-       atm_delta_c13_grc(g) = delc13o2_atm
        rc13_atm_grc(g) = rc13_atm
-       !SHR_ASSERT_FL( (rc13_atm == (forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g)) )), sourcefile, __LINE__)
+       atm_delta_c13_grc(g) = delc13o2_atm
+       if ( .not. use_c13_timeseries )then
+          rc13_atm_grc(g) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
+          atm_delta_c13_grc(g) = (rc13_atm_grc(g) / SHR_CONST_PDB - 1.0_r8)*1000.0_r8
+          !write(iulog,*) 'c13ratio, pc13o2 = ', c13ratio, forc_pc13o2(g)
+          !write(iulog,*) 'rc13_atm_grc, c13o2/(co2 - c13o2), epsilon(c13ratio) = ', rc13_atm_grc(g), &
+                         !(forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))), epsilon(c13ratio)
+          SHR_ASSERT_FL( (abs(rc13_atm_grc(g) - (forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g)) )) <= epsilon(c13ratio)*10._r8 ), sourcefile, __LINE__)
+       end if
        end associate
     end do
 
