@@ -778,6 +778,46 @@ class TestSysSetParamfile(unittest.TestCase):
         ds_out = open_paramfile(output_path)
         self.assertFalse(sp.is_integer(ds_out[param_name].values))
 
+    def test_set_paramfile_pft_order(self):
+        """
+        Test that set_paramfile gives the same result regardless of the order you specify the PFTs
+        """
+
+        # First order
+        pfts_to_include = ["rice", "irrigated_rice"]
+        output0_path = os.path.join(self.tempdir, "output0.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output0_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "mxmat=100,200",
+        ]
+        sp.main()
+
+        # Reverse order
+        pfts_to_include.reverse()
+        output1_path = os.path.join(self.tempdir, "output1.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output1_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "mxmat=200,100",
+        ]
+        sp.main()
+
+        # These files should be identical
+        ds0 = open_paramfile(output0_path)
+        ds1 = open_paramfile(output1_path)
+        self.assertTrue(ds0.equals(ds1))
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
