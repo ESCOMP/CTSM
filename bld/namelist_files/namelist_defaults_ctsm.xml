@@ -1353,49 +1353,49 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="tx2_3v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_SP_f09_121_1850.clm2.r.0041-01-01-00000.nc
+         phys="clm6_0"
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_f09_127_1850.clm2.r.0102-01-01-00000.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"  maxpft="17"  mask="tx2_3v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101"  sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_1850.clm2.r.0041-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_ne30_126_1850.clm2.r.0102-01-01-00000.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="tx2_3v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101"  sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_SP_f09_121_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_f09_127_HIST.clm2.r.2000-01-01-00000.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"  maxpft="17"  mask="tx2_3v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101"  sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_SP_ne30_120_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_ne30_126_HIST.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 <!-- CTSM6_0 - use clm6_0_CRUJRA2024 BgcCrop at f09 for all clm6_0 options -->
 <finidat hgrid="0.9x1.25" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115f09_118_pSASU.clm2.r.0161-01-01-00000.nc
+         phys="clm6_0"
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <!-- Corresponding ne30 -->
 <finidat hgrid="ne30np4.pg3" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_116_pSASU.clm2.r.0161-01-01-00000.nc
+         phys="clm6_0"
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 <!-- Corresponding f19 -->
 <finidat hgrid="1.9x2.5" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm53065_54surfdata_PPEcal115_115_pSASU.clm2.r.0161-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f19_125_pSASU.clm2.r.0161-01-01-00000.nc
 </finidat>
 
 <!--
@@ -1424,13 +1424,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".false."
->lnd/clm2/initdata_esmf/ctsm5.3/clmi.f19_interp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/clmi.f19_twiceinterp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c251030.nc
 </finidat>
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/clmi.f19_interp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c240223.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/clmi.f19_twiceinterp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c251030.nc
 </finidat>
 <!-- NB: This f19 2000 finidat comes from a spin-up with use_crop=".false." -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
@@ -1524,14 +1524,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2000-01-01-00000.nc
+         phys="clm6_0"
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2000-01-01-00000.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
-         phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2000-01-01-00000.nc
+         phys="clm6_0"
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 <!-- Repeat for 2010 -->
@@ -1539,13 +1539,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20100101" sim_year="2010" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.2010-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2010-01-01-00000.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20100101" sim_year="2010" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.2010-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2010-01-01-00000.nc
 </finidat>
 
 <!-- clm5_0 and cam7.0 -->
@@ -1573,14 +1573,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115f09_118_HIST.clm2.r.1979-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.1979-01-01-00000.nc
 </finidat>
 <!-- 1979 crop spinup ne30 grid -->
 <finidat hgrid="ne30np4.pg3" maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4_5.3.068_PPEcal115_116_HIST.clm2.r.1979-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.1979-01-01-00000.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
