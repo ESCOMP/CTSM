@@ -1,4 +1,90 @@
 ===============================================================
+Tag name: ctsm5.3.084
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 31 Oct 2025 01:12:26 PM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Bring changes on b4b-dev to master
+
+- Fix FUNIT testing on Mac's
+- Some fixes to set_paramfile
+- Don't auto build documentation on personal forks, only on ESCOMP
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #3571 -- set_paramfile ordering of PFT's from user doesn't have to match paramfile order
+  Fixes #3559 -- Correct Ndims error
+  Fixes #3369 -- Docs build and deploy only runs on ESCOMP not personal forks
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+   Some changes to set_paramfile documentation
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  -- #3577 unit testing on Mac
+  -- #3572 set_paramfile ordering
+  -- #3560 Fix Ndim error in set_paramfile
+  -- #3557 doc/build/run/deploy only on ESCOMP
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.083
 Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
 Date: Wed 29 Oct 2025 03:35:50 PM MDT
