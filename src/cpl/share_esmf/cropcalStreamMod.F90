@@ -480,6 +480,7 @@ contains
        do g = begg,endg
           ig = ig+1
           g_to_ig(g) = ig
+          SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
        end do
     end if
 
