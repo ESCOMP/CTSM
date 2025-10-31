@@ -1256,7 +1256,7 @@ contains
     use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl     , only : cnallocate_carbon_only
+    use clm_varctl     , only : allocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub
 
@@ -1641,7 +1641,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then                                                                   
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)  
@@ -2727,7 +2727,7 @@ contains
     use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl        , only : cnallocate_carbon_only
+    use clm_varctl        , only : allocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
     use pftconMod         , only : nbrdlf_dcd_tmp_shrub
@@ -3244,7 +3244,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)
