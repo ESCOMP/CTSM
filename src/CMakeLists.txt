@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 list(APPEND CMAKE_MODULE_PATH ${CIME_CMAKE_MODULE_DIRECTORY})
 include(CIME_initial_setup)
@@ -93,7 +93,7 @@ add_library(csm_share ${share_sources} ${drv_sources_needed})
 declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(clm ${clm_sources})
 declare_generated_dependencies(clm "${clm_genf90_sources}")
-add_dependencies(clm csm_share esmf)
+add_dependencies(clm csm_share ESMF)
 
 # We need to look for header files here, in order to pick up shr_assert.h
 include_directories(${CLM_ROOT}/share/include)
