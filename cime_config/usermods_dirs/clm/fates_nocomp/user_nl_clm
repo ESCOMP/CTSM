@@ -1,2 +1,6 @@
 ! Turn FATES-NOCOMP mode on
 use_fates_nocomp = .true.
+use_fates_fixed_biogeog = .true.
+! Add FCO2 always to the variable list
+
+hist_fincl1 += 'FCO2'
