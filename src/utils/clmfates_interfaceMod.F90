@@ -2944,8 +2944,6 @@ module CLMFatesInterfaceMod
                                    this%fates(ci)%bc_out(s)%fire_closs_to_atm_si) * g_per_kg - &
                                    soilbiogeochem_carbonflux_inst%hr_col(c)
 
-      this%fates(ci)%bc_out(s)%grazing_closs_to_atm_si = 0.0_r8 ! zero for the next timestep
-      this%fates(ci)%bc_out(s)%fire_closs_to_atm_si = 0.0_r8
    end do
    call c2g( bounds = bounds_clump, &
          carr = net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc), &
