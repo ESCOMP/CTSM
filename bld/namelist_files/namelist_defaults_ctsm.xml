@@ -703,6 +703,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <generate_crop_gdds                                        >.false.</generate_crop_gdds>
 <use_mxmat                                                 >.true.</use_mxmat>
+<suppress_gddmaturity_warning                              >.false.</suppress_gddmaturity_warning>
 
 <!-- use additional stress deciduous onset trigger    -->
 <constrain_stress_deciduous_onset               >.true.</constrain_stress_deciduous_onset>

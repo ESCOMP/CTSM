@@ -146,6 +146,7 @@ module CNPhenologyMod
   real(r8)         :: min_gddmaturity = 1._r8     ! Weird things can happen if gddmaturity is tiny
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
+  logical,  private :: suppress_gddmaturity_warning = .false. ! If true, suppress warning when using min_gddmaturity
 
   ! For use with adapt_cropcal_rx_cultivar_gdds .true.
   real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
@@ -200,7 +201,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           use_mxmat
+                           use_mxmat, suppress_gddmaturity_warning
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -226,6 +227,7 @@ contains
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
     call shr_mpi_bcast (use_mxmat,                   mpicom)
+    call shr_mpi_bcast (suppress_gddmaturity_warning, mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2936,7 +2938,7 @@ contains
 
       if (gddmaturity(p) < min_gddmaturity) then
          if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
-             if (did_rx_gdds) then
+             if (did_rx_gdds .and. .not. suppress_gddmaturity_warning) then
                  write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
              end if
              gddmaturity(p) = min_gddmaturity
