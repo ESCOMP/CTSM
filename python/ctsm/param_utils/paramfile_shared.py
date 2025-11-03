@@ -85,7 +85,9 @@ def get_selected_pft_indices(selected_pfts, pft_names):
     list of int
         Indices of selected PFTs.
     """
-    indices = [i for i, name in enumerate(pft_names) if name in selected_pfts]
+    if isinstance(selected_pfts, str):
+        selected_pfts = [selected_pfts]
+    indices = [pft_names.index(pft) for pft in selected_pfts]
     return indices
 
 

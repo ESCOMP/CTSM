@@ -486,11 +486,11 @@ contains
           ! Also do this for FATES see below
           call SatellitePhenologyInit(bounds_proc)
        end if
-       if ( use_c14 .and. use_c14_bombspike ) then
-          call C14_init_BombSpike()
+       if ( use_c14 ) then
+          call C14_init_BombSpike( bounds_proc )
        end if
-       if ( use_c13 .and. use_c13_timeseries ) then
-          call C13_init_TimeSeries()
+       if ( use_c13 ) then
+          call C13_init_TimeSeries( bounds_proc )
        end if
 
     else ! FATES OR Satellite phenology
