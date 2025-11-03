@@ -1,7 +1,5 @@
 module CIsoAtmTimeseriesMod
 
-#include "shr_assert.h"
-
   !-----------------------------------------------------------------------
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
@@ -156,10 +154,6 @@ contains
     end do
 
     call atm_c14_stream%Interp( bounds)
-
-    ! Make sure the difference between the streams and the old method is within reasonable bounds
-    call shr_assert_all( abs( atm_delta_c14_grc - atm_c14_stream%atm_delta_c14 ) < 1.0e-2_r8, &
-         'C14BombSpike: difference between streams and old method too large', file=sourcefile, line=__LINE__)
 
   end subroutine C14BombSpike
 
@@ -349,10 +343,6 @@ contains
     end do
 
     call atm_c13_stream%Interp( bounds)
-
-    ! Make sure the difference between the streams and the old method is within reasonable bounds
-    call shr_assert_all( abs( atm_delta_c13_grc - atm_c13_stream%atm_delta_c13 ) < 1.0e-2_r8, &
-         'C13TimeSeries: difference between streams and old method too large', file=sourcefile, line=__LINE__)
 
   end subroutine C13TimeSeries
 
