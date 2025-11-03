@@ -13,7 +13,7 @@ module AtmCarbonIsotopeStreamType
   character(len=*), parameter :: varname_c13 = 'delta13co2_in_air'
   type, public, extends(ctsm_force_2DStream_base_type) :: atm_delta_c13_stream_type
      private
-     real(r8), allocatable :: atm_delta_c13(:) ! delta C13 data array
+     real(r8), public, allocatable :: atm_delta_c13(:) ! delta C13 data array
   contains
 
       ! Public Methods
@@ -32,7 +32,7 @@ module AtmCarbonIsotopeStreamType
   character(len=*), parameter :: varname_c14 = 'Delta14co2_in_air'
   type, public, extends(ctsm_force_2DStream_base_type) :: atm_delta_c14_stream_type
      private
-     real(r8), allocatable :: atm_delta_c14(:) ! delta c14 data array
+     real(r8), public, allocatable :: atm_delta_c14(:) ! delta c14 data array
   contains
 
       ! Public Methods
