@@ -30,8 +30,8 @@ module CIsoAtmTimeseriesMod
   logical            , public :: use_c13_timeseries = .false. ! do we use time-varying atmospheric C13?
   character(len=256) , public :: atm_c13_filename = ' '       ! file name of C13 input data
 
-  real(r8), allocatable, public :: rc14_atm_grc(:)       ! Ratio of C14 C12 data on gridcell
-  real(r8), allocatable, public :: rc13_atm_grc(:)       ! Ratio of C13 C12 data on gridcell
+  real(r8), allocatable, public, protected :: rc14_atm_grc(:)       ! Ratio of C14 C12 data on gridcell
+  real(r8), allocatable, public, protected :: rc13_atm_grc(:)       ! Ratio of C13 C12 data on gridcell
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
