@@ -11,6 +11,7 @@ project(clm_tests Fortran C)
 
 include(CIME_utils)
 
+set(SRCROOT "${CIMEROOT}/..")
 set(CLM_ROOT "..")
 
 # find needed external packages
@@ -38,15 +39,15 @@ link_libraries(${ESMF_INTERFACE_LINK_LIBRARIES})
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
-add_subdirectory(${CLM_ROOT}/share/src csm_share)
-add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
+add_subdirectory(${SRCROOT}/share/src csm_share)
+add_subdirectory(${SRCROOT}/share/unit_test_stubs/util csm_share_stubs)
 
 # Add files needed from CMEPS
 list ( APPEND drv_sources_needed
-  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
-  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
-  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_expr_parser_mod.F90
-  ${CLM_ROOT}/components/cmeps/cesm/nuopc_cap_share/shr_fire_emis_mod.F90
+  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
+  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
+  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_expr_parser_mod.F90
+  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_fire_emis_mod.F90
   )
 
 # Add CLM source directories
@@ -96,7 +97,7 @@ declare_generated_dependencies(clm "${clm_genf90_sources}")
 add_dependencies(clm csm_share ESMF)
 
 # We need to look for header files here, in order to pick up shr_assert.h
-include_directories(${CLM_ROOT}/share/include)
+include_directories(${SRCROOT}/share/include)
 
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
