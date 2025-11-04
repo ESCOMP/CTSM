@@ -63,29 +63,16 @@ add_subdirectory(${CLM_ROOT}/src/self_tests clm_self_tests)
 add_subdirectory(unit_test_stubs)
 add_subdirectory(unit_test_shr)
 
-# Remove some things from share_sources
-#
-# TODO: this should be moved into a general-purpose function in Sourcelist_utils.
-# Then each removal could be replaced with a single call, like:
-# remove_source_file(${share_sources} "shr_mpi_mod.F90")
-foreach (sourcefile ${share_sources})
-  # Remove shr_mpi_mod from share_sources.
-  # This is needed because we want to use the mock shr_mpi_mod in place of the real one
-  string(REGEX MATCH "shr_mpi_mod.F90" match_found ${sourcefile})
-  if(match_found)
-    list(REMOVE_ITEM share_sources ${sourcefile})
-  endif()
+# Remove shr_mpi_mod from share_sources. This is needed because we want to use the mock
+# shr_mpi_mod in place of the real one.
+remove_source_file("shr_mpi_mod.F90" share_sources)
 
-  # Remove shr_pio_mod from share_sources. This is needed to avoid an explicit dependency
-  # on PIO. This removal is needed on some systems but not on others: the unit test build
-  # works without this removal on a Mac with a pre-built PIO library, but failed (with
-  # error message, "Cannot open module file 'pio.mod'") on a Mac without a pre-built PIO
-  # (where ESMF was built with its internal PIO).
-  string(REGEX MATCH "shr_pio_mod.F90" match_found ${sourcefile})
-  if(match_found)
-    list(REMOVE_ITEM share_sources ${sourcefile})
-  endif()
-endforeach()
+# Remove shr_pio_mod from share_sources. This is needed to avoid an explicit dependency on
+# PIO. This removal is needed on some systems but not on others: the unit test build works
+# without this removal on a Mac with a pre-built PIO library, but failed (with error
+# message, "Cannot open module file 'pio.mod'") on a Mac without a pre-built PIO (where
+# ESMF was built with its internal PIO).
+remove_source_file("shr_pio_mod.F90" share_sources)
 
 # Build libraries containing stuff needed for the unit tests.
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
