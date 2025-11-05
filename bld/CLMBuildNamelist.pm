@@ -3772,13 +3772,13 @@ sub setup_logic_c_isotope {
          }
          $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
          $atm_c14_filename = $nl->get_value('atm_c14_filename');
-         #if ( defined($stream_fldfilename_atm_c14) && defined($atm_c14_filename) ) {
-           #$log->fatal_error("Both stream_fldfilename_atm_c14 and atm_c14_filename set, only one should be set");
-         #}
+         if ( defined($stream_fldfilename_atm_c14) && defined($atm_c14_filename) ) {
+           $log->fatal_error("Both stream_fldfilename_atm_c14 and atm_c14_filename set, only one should be set");
+         }
       }
     } else {
       if ( defined($use_c14_bombspike) ||
-  #        defined($stream_fldfilename_atm_c14) ||
+           defined($stream_fldfilename_atm_c14) ||
            defined($atm_c14_filename) ) {
         $log->fatal_error("use_c14 is FALSE and use_c14_bombspike, stream_fldfilename_atm_c14 or atm_c14_filename set");
       }
@@ -3796,15 +3796,15 @@ sub setup_logic_c_isotope {
                     'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
                     'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
          }
-  #      $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
+         $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
          $atm_c13_filename = $nl->get_value('atm_c13_filename');
-         #if ( defined($stream_fldfilename_atm_c13) && defined($atm_c13_filename) ) {
-           #$log->fatal_error("Both stream_fldfilename_atm_c13 and atm_c13_filename set, only one should be set");
-         #}
+         if ( defined($stream_fldfilename_atm_c13) && defined($atm_c13_filename) ) {
+           $log->fatal_error("Both stream_fldfilename_atm_c13 and atm_c13_filename set, only one should be set");
+         }
       }
     } else {
       if ( defined($nl->get_value('use_c13_timeseries')) ||
-  #        defined($nl->get_value('stream_fldfilename_atm_c13')) ||
+           defined($nl->get_value('stream_fldfilename_atm_c13')) ||
            defined($nl->get_value('atm_c13_filename')) ) {
         $log->fatal_error("use_c13 is FALSE and use_c13_timeseries, stream_fldfilename_atm_c13 or atm_c13_filename set");
       }
@@ -3814,10 +3814,10 @@ sub setup_logic_c_isotope {
          &value_is_true($use_c14) ||
          &value_is_true($nl->get_value('use_c14_bombspike')) ||
          defined($nl->get_value('atm_c14_filename'))  ||
-  #      defined($nl->get_value('stream_fldfilename_atm_c14'))  ||
+         defined($nl->get_value('stream_fldfilename_atm_c14'))  ||
          &value_is_true($nl->get_value('use_c13_timeseries')) ||
-         defined($nl->get_value('atm_c13_filename')) ) {
-  #      defined($nl->get_value('stream_fldfilename_atm_c13'))  ||
+         defined($nl->get_value('atm_c13_filename')) ||
+         defined($nl->get_value('stream_fldfilename_atm_c13')) ) {
            $log->fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
   }
