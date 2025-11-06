@@ -174,9 +174,11 @@ contains
     ! Check C14 stream namelist inputs
     !
     if ( use_c14_bombspike ) then
-       if ( trim(atm_c14_filename) == '' .and. trim(stream_fldfilename_atm_c14) == '' ) then
-          call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are blank", file=sourcefile, line=__LINE__)
-       end if
+       ! This is actually allowed, if you want to use the constant method
+       ! TODO: Remove this commented code
+       !if ( trim(atm_c14_filename) == '' .and. trim(stream_fldfilename_atm_c14) == '' ) then
+       !   call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are blank", file=sourcefile, line=__LINE__)
+       !end if
        if ( trim(atm_c14_filename) /= '' .and. trim(stream_fldfilename_atm_c14) /= '' ) then
           call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are set", file=sourcefile, line=__LINE__)
        end if
@@ -185,9 +187,11 @@ contains
     ! Check C13 stream namelist inputs
     !
     if ( use_c13_timeseries ) then
-       if ( trim(atm_c13_filename) == '' .and. trim(stream_fldfilename_atm_c13) == '' ) then
-          call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are blank", file=sourcefile, line=__LINE__)
-       end if
+       ! This is actually allowed, if you want to use the constant method
+       ! TODO: Remove this commented code
+       !if ( trim(atm_c13_filename) == '' .and. trim(stream_fldfilename_atm_c13) == '' ) then
+          !call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are blank", file=sourcefile, line=__LINE__)
+       !end if
        if ( trim(atm_c13_filename) /= '' .and. trim(stream_fldfilename_atm_c13) /= '' ) then
           call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are set", file=sourcefile, line=__LINE__)
        end if
@@ -296,6 +300,7 @@ contains
     !-----------------------------------------------------------------------
     integer :: g   ! Indices
 
+    call atm_c14_stream%Advance( )
     call atm_c14_stream%Interp( bounds)
 
     do g = bounds%begg, bounds%endg
@@ -331,6 +336,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Allocate the gridcell arrays
+    ! TODO: This should be below within the use_c14_bombspike if block
     allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
     allocate(rc14_atm_grc(bounds%begg:bounds%endg))
     atm_delta_c14_grc(:) = nan
@@ -558,6 +564,7 @@ contains
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    ! TODO: This should be below within the use_c13_timeseries if block
     ! Allocate the gridcell arrays
     allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
     allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
