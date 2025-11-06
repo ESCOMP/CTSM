@@ -153,7 +153,6 @@ module CTSMForce2DStreamBaseType
          ! Uses:
          use clm_time_manager , only : get_curr_date
          use dshr_strdata_mod , only : shr_strdata_advance
-         import :: ctsm_force_2DStream_base_type
          !
          ! Arguments:
          class(ctsm_force_2DStream_base_type), intent(inout) :: this
@@ -170,7 +169,7 @@ module CTSMForce2DStreamBaseType
          mcdate = year*10000 + mon*100 + day
          call shr_strdata_advance(this%sdat, ymd=mcdate, tod=sec, logunit=iulog, istr='CTSMForce2DStreamBase', rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
-            write(iulog,*) ' Streams advance failing for ', trim(this.stream_name), ' stream file = ', trim(this.stream_filename)
+            write(iulog,*) ' Streams advance failing for ', trim(this%stream_name), ' stream file = ', trim(this%stream_filename)
             call endrun( 'CTSM forcing Streams advance failing', file=sourcefile, line=__LINE__ )
          end if
       end subroutine Advance
