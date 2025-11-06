@@ -53,6 +53,9 @@ module CIsoAtmTimeseriesMod
   real(r8), allocatable, private :: atm_delta_c13_grc(:)      ! Delta C13 data on gridcell
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
 
+  logical, private :: use_c13_streams = .false.  ! By default read in the CMIP6 file format for C13
+  logical, private :: use_c14_streams = .false.  ! By default read in the CMIP6 file format for C14
+
   ! Private data for the control namelist:
   character(len=CL), private :: stream_fldfilename_atm_c14 = ' '
   character(len=CL), private :: stream_fldfilename_atm_c13 = ' '
@@ -129,6 +132,14 @@ contains
 
    ! Do some error checking of input namelist items
    call CIsoCheckNMLInputs()
+
+   ! Decide if C14/C13 streams are going to be used or the old method
+   if ( trim(stream_fldfilename_atm_c13) /= '' ) then
+      use_c13_streams = .true.
+   end if
+   if ( trim(stream_fldfilename_atm_c14) /= '' ) then
+      use_c14_streams = .true.
+   end if
 
   end subroutine CIsoAtmReadNML
 
@@ -212,6 +223,10 @@ contains
     !
     if ( use_c14_bombspike )then
 
+       if ( use_c14_streams )then
+          call C14Streams( bounds )
+          RETURN
+       end if
        ! get current date
        call get_curr_date(yr, mon, day, tod)
        dateyear = real(yr) + get_curr_yearfrac()
@@ -266,9 +281,29 @@ contains
        rc14_atm_grc(g) = rc14_atm(l)
     end do
 
+  end subroutine C14BombSpike
+
+  !-----------------------------------------------------------------------
+  subroutine C14Streams( bounds )
+    ! Description:
+    !
+    ! Use the streams method to read in atmospheric C14 bomb spike data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    integer :: g   ! Indices
+
     call atm_c14_stream%Interp( bounds)
 
-  end subroutine C14BombSpike
+    do g = bounds%begg, bounds%endg
+       atm_delta_c14_grc(g) = atm_c14_stream%atm_delta_c14(g)
+       rc14_atm_grc(g) = (atm_delta_c14_grc(g) * 1.e-3_r8 + 1._r8) * c14ratio
+    end do
+
+  end subroutine C14Streams
 
   !-----------------------------------------------------------------------
   subroutine C14_init_BombSpike( bounds )
@@ -295,10 +330,20 @@ contains
     character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    ! Allocate the gridcell arrays
+    allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
+    allocate(rc14_atm_grc(bounds%begg:bounds%endg))
+    atm_delta_c14_grc(:) = nan
+    rc14_atm_grc(:) = nan
     !
     !  If the bombspike timeseries file is being used, read the file in
     !
     if ( use_c14_bombspike )then
+
+       if ( use_c14_streams )then
+          call C14StreamsInit( bounds )
+          RETURN
+       end if
 
        call getfil(atm_c14_filename, locfn, 0)
 
@@ -343,12 +388,20 @@ contains
        end do
     end if
 
-    ! Allocate the gridcell arrays
-    allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
-    allocate(rc14_atm_grc(bounds%begg:bounds%endg))
-    atm_delta_c14_grc(:) = nan
-    rc14_atm_grc(:) = nan
+  end subroutine C14_init_BombSpike
 
+
+  !-----------------------------------------------------------------------
+  subroutine C14StreamsInit( bounds )
+    ! Description:
+    !
+    ! Initialize the streams method to read in atmospheric C14 bomb spike data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
 
     ! Streams method
     call atm_c14_stream%Init( bounds, &
@@ -363,8 +416,7 @@ contains
     call atm_c14_stream%Advance( )
     call atm_c14_stream%Interp( bounds )
 
-  end subroutine C14_init_BombSpike
-
+  end subroutine C14StreamsInit
 
   !-----------------------------------------------------------------------
   subroutine C13TimeSeries( bounds, atm2lnd_inst )
@@ -396,6 +448,10 @@ contains
     !
     if ( use_c13_timeseries )then
 
+        if ( use_c13_streams )then
+           call C13Streams( bounds )
+           RETURN
+        end if
         ! get current date
         call get_curr_date(yr, mon, day, tod)
         dateyear = real(yr) + get_curr_yearfrac()
@@ -455,9 +511,28 @@ contains
        end associate
     end do
 
+  end subroutine C13TimeSeries
+
+  !-----------------------------------------------------------------------
+  subroutine C13Streams( bounds )
+    ! Description:
+    !
+    ! Use the streams method to read in atmospheric C13 data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g   ! Indices
+
     call atm_c13_stream%Interp( bounds)
 
-  end subroutine C13TimeSeries
+    do g = bounds%begg, bounds%endg
+       atm_delta_c13_grc(g) = atm_c13_stream%atm_delta_c13(g)
+       rc13_atm_grc(g) = (atm_delta_c13_grc(g) * 1.e-3_r8 + 1._r8) * SHR_CONST_PDB
+    end do
+
+  end subroutine C13Streams
 
   !-----------------------------------------------------------------------
   subroutine C13_init_TimeSeries( bounds )
@@ -482,10 +557,21 @@ contains
     logical :: readvar                    ! if variable read or not
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
+
+    ! Allocate the gridcell arrays
+    allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
+    allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
+    atm_delta_c13_grc(:) = nan
+    rc13_atm_grc(:) = nan
     !
     !  If the timeseries file is being used, read the file in
     !
     if ( use_c13_timeseries )then
+
+       if ( use_c13_streams )then
+         call C13StreamsInit( bounds )
+         RETURN
+       end if
 
        call getfil(atm_c13_filename, locfn, 0)
 
@@ -528,11 +614,19 @@ contains
        end do
     end if
 
-    ! Allocate the gridcell arrays
-    allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
-    allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
-    atm_delta_c13_grc(:) = nan
-    rc13_atm_grc(:) = nan
+  end subroutine C13_init_TimeSeries
+
+  !-----------------------------------------------------------------------
+  subroutine C13StreamsInit( bounds )
+    ! Description:
+    !
+    ! Initialize the streams method to read in atmospheric C13 data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
 
     ! Streams method
     call atm_c13_stream%Init( bounds, &
@@ -545,9 +639,9 @@ contains
         year_last=stream_year_last_atm_c13, &
         model_year_align=stream_model_year_align_atm_c13 )
     call atm_c13_stream%Advance( )
-    call atm_c13_stream%Interp( bounds)
+    call atm_c13_stream%Interp( bounds )
 
-  end subroutine C13_init_TimeSeries
+  end subroutine C13StreamsInit
 
   !-----------------------------------------------------------------------
   subroutine check_units( ncid, vname, relativeto )
