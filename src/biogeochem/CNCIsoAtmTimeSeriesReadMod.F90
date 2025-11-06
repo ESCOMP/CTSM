@@ -19,6 +19,7 @@ module CIsoAtmTimeseriesMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CIsoAtmReadNML         ! Read namelist for atmospheric C14/C13 isotope time series
   public:: C14BombSpike           ! Time series for C14 data
   public:: C14_init_BombSpike     ! Initialize C14 data series and read data in
   public:: C13Timeseries          ! Time series for C13 data
@@ -50,8 +51,8 @@ module CIsoAtmTimeseriesMod
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
 
   ! Private data for the control namelist:
-  character(len=CL), private :: stream_fldfilename_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_4x1_global_1700-2023_yearly_v3.0_c251013.nc'
-  character(len=CL), private :: stream_fldfilename_atm_c13 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc'
+  character(len=CL), private :: stream_fldfilename_atm_c14
+  character(len=CL), private :: stream_fldfilename_atm_c13
   integer, private :: stream_year_first_atm_c14 = 1850
   integer, private :: stream_year_last_atm_c14 = 2023
   integer, private :: stream_model_year_align_atm_c14 = 1850
@@ -70,6 +71,60 @@ module CIsoAtmTimeseriesMod
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoAtmReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read in the namelist for atmospheric C14/C13 isotope time series
+    !
+    ! Uses:
+    use shr_nl_mod , only : shr_nl_find_group_name
+    use spmdMod    , only : masterproc, mpicom
+    use shr_mpi_mod, only : shr_mpi_bcast
+
+    ! Arguments:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename to read
+
+    ! !LOCAL VARIABLES:
+    integer :: ierr  ! error code
+    integer :: unitn ! unit for namelist file
+    character(len=*), parameter :: nml_name = 'carbon_isotope_streams'    ! MUST agree with name in namelist and read
+
+    namelist /carbon_isotope_streams/ stream_fldfilename_atm_c14, &
+             stream_fldfilename_atm_c13, stream_year_first_atm_c14, &
+             stream_year_last_atm_c14, stream_model_year_align_atm_c14, &
+             stream_year_first_atm_c13, stream_year_last_atm_c13, &
+             stream_model_year_align_atm_c13
+
+   ! Read in the namelist on the main task
+   if (masterproc) then
+      open( newunit=unitn, file=trim(NLFilename), status='old', iostat=ierr )
+      write(iulog,*) 'Read in '//nml_name//'  namelist'
+      call shr_nl_find_group_name(unitn, nml_name, status=ierr)
+      if (ierr == 0) then
+         read(unitn, nml=carbon_isotope_streams, iostat=ierr)
+         if (ierr /= 0) then
+            call endrun(msg="ERROR reading "//nml_name//"namelist", file=sourcefile, line=__LINE__)
+            return
+         end if
+      else
+         call endrun(msg="ERROR could NOT find "//nml_name//"namelist", file=sourcefile, line=__LINE__)
+         return
+      end if
+      close( unitn )
+   end if
+   ! Broadcast namelist values to all tasks
+   call shr_mpi_bcast( stream_fldfilename_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_year_first_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_year_last_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_model_year_align_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_fldfilename_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_year_first_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_year_last_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_model_year_align_atm_c13, mpicom )
+
+  end subroutine
 
   !-----------------------------------------------------------------------
   subroutine C14BombSpike( bounds )
