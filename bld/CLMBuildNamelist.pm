@@ -5363,6 +5363,9 @@ sub write_output_files {
   push @groups, "clm_canopy_inparm";
   push @groups, "prigentroughness";
   push @groups, "zendersoilerod";
+  if ( &value_is_true($nl_flags->{'use_cn'}) ) {
+    push @groups, "carbon_isotope_streams";
+  }
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
