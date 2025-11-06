@@ -1,5 +1,7 @@
 module CIsoAtmTimeseriesMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
@@ -8,7 +10,7 @@ module CIsoAtmTimeseriesMod
   use clm_time_manager , only : get_curr_date, get_curr_yearfrac
   use clm_varcon       , only : c13ratio, c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, use_c13, use_c14
   use abortutils       , only : endrun
   use spmdMod          , only : masterproc
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -36,6 +38,7 @@ module CIsoAtmTimeseriesMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
+  private:: CIsoCheckNMLInputs  ! Check that the namelist inputs are valid
 
   type(atm_delta_c13_stream_type), private :: atm_c13_stream  ! Atmospheric C13 stream object
   type(atm_delta_c14_stream_type), private :: atm_c14_stream  ! Atmospheric C14 stream object
@@ -51,8 +54,8 @@ module CIsoAtmTimeseriesMod
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
 
   ! Private data for the control namelist:
-  character(len=CL), private :: stream_fldfilename_atm_c14
-  character(len=CL), private :: stream_fldfilename_atm_c13
+  character(len=CL), private :: stream_fldfilename_atm_c14 = ' '
+  character(len=CL), private :: stream_fldfilename_atm_c13 = ' '
   integer, private :: stream_year_first_atm_c14 = 1850
   integer, private :: stream_year_last_atm_c14 = 2023
   integer, private :: stream_model_year_align_atm_c14 = 1850
@@ -124,7 +127,62 @@ contains
    call shr_mpi_bcast( stream_year_last_atm_c13, mpicom )
    call shr_mpi_bcast( stream_model_year_align_atm_c13, mpicom )
 
-  end subroutine
+   ! Do some error checking of input namelist items
+   call CIsoCheckNMLInputs()
+
+  end subroutine CIsoAtmReadNML
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoCheckNMLInputs()
+    !
+    ! !DESCRIPTION:
+    ! Check that the namelist inputs are valid
+    !
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    ! When carbon isotopes are off nothing should be set
+    if ( .not. use_c13 )then
+       call shr_assert( .not. use_c13_timeseries, &
+            msg="ERROR: use_c13 is false but use_c13_timeseries is true", file=sourcefile, line=__LINE__)
+       call shr_assert( trim(atm_c13_filename) == '', &
+            msg="ERROR: use_c13 is false but atm_c13_filename is set", file=sourcefile, line=__LINE__)
+       call shr_assert( trim(stream_fldfilename_atm_c13) == '', &
+            msg="ERROR: use_c13 is false but stream_fldfilename_atm_c13 is set", file=sourcefile, line=__LINE__)
+    end if
+    if ( .not. use_c14 )then
+       call shr_assert( .not. use_c14_bombspike, &
+            msg="ERROR: use_c14 is false but use_c14_bombspike is true", file=sourcefile, line=__LINE__)
+       call shr_assert( trim(atm_c14_filename) == '', &
+            msg="ERROR: use_c14 is false but atm_c14_filename is set", file=sourcefile, line=__LINE__)
+       call shr_assert( trim(stream_fldfilename_atm_c14) == '', &
+            msg="ERROR: use_c14 is false but stream_fldfilename_atm_c14 is set", file=sourcefile, line=__LINE__)
+    end if
+
+    !
+    ! Check C14 stream namelist inputs
+    !
+    if ( use_c14_bombspike ) then
+       if ( trim(atm_c14_filename) == '' .and. trim(stream_fldfilename_atm_c14) == '' ) then
+          call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are blank", file=sourcefile, line=__LINE__)
+       end if
+       if ( trim(atm_c14_filename) /= '' .and. trim(stream_fldfilename_atm_c14) /= '' ) then
+          call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are set", file=sourcefile, line=__LINE__)
+       end if
+    end if
+    !
+    ! Check C13 stream namelist inputs
+    !
+    if ( use_c13_timeseries ) then
+       if ( trim(atm_c13_filename) == '' .and. trim(stream_fldfilename_atm_c13) == '' ) then
+          call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are blank", file=sourcefile, line=__LINE__)
+       end if
+       if ( trim(atm_c13_filename) /= '' .and. trim(stream_fldfilename_atm_c13) /= '' ) then
+          call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are set", file=sourcefile, line=__LINE__)
+       end if
+    end if
+
+  end subroutine CIsoCheckNMLInputs
 
   !-----------------------------------------------------------------------
   subroutine C14BombSpike( bounds )
