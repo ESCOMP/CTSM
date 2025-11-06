@@ -238,7 +238,6 @@ Caveats:
       <value compset="^SSP370[CE]?_" >1850-2100_SSP3-7.0_transient</value>
       <value compset="^SSP534[CE]?_" >1850-2100_SSP5-3.4_transient</value>
       <value compset="^SSP245[CE]?_" >1850-2100_SSP2-4.5_transient</value>
-      <value compset="^HIST" grid="ne0np4" >1850-2100_SSP2-4.5_transient</value>
       <value compset="^SSP119[CE]?_" >1850-2100_SSP1-1.9_transient</value>
       <value compset="^SSP434[CE]?_" >1850-2100_SSP4-3.4_transient</value>
       <value compset="^SSP460[CE]?_" >1850-2100_SSP4-6.0_transient</value>
