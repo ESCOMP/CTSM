@@ -785,6 +785,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4"    >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm6_0_cam7.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne120np4.pg3">.true.</use_init_interp>
 
 <!-- 2013 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm6_0_cam7.0"
@@ -1218,8 +1220,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
 >hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
-<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm6_0_cam7.0"
->hgrid=ne120np4.pg3 maxpft=79 mask=tx0.1v3 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." phys="clm6_0"
+>hgrid=ne120np4.pg3 maxpft=17 mask=tx0.1v3 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
 
@@ -1506,7 +1508,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
 </finidat>
 
-<!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
+<!-- 1979 no crop and present day crop spinup at 1/4-degree for high resolution with irrigation on -->
+<finidat hgrid="ne120np4.pg3" maxpft="17"  mask="tx0.1v3" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm6_0_cam7.0"
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
+</finidat>
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="2000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
