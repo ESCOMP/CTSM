@@ -502,7 +502,7 @@ contains
        if_fates: if(use_fates)then
           do c = bounds%begc,bounds%endc
              if(col%is_fates(c))then
-               do ft = surfpft_lb,surfpft_ub
+                do ft = surfpft_lb,surfpft_ub
                    p = ft + col%patchi(c)
                    g = patch%gridcell(p)
                    if (patch%is_fates(p)) then
