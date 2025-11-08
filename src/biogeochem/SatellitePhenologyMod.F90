@@ -502,15 +502,31 @@ contains
        if_fates: if(use_fates)then
           do c = bounds%begc,bounds%endc
              if(col%is_fates(c))then
-                do ft = surfpft_lb,surfpft_ub
+               do ft = surfpft_lb,surfpft_ub
                    p = ft + col%patchi(c)
                    g = patch%gridcell(p)
-                   mlai2t(p,k) = mlai(g,ft)
-                   msai2t(p,k) = msai(g,ft)
-                   mhvt2t(p,k) = mhgtt(g,ft)
-                   mhvb2t(p,k) = mhgtb(g,ft)
+                   if (patch%is_fates(p)) then
+                     mlai2t(p,k) = mlai(g,ft)
+                     msai2t(p,k) = msai(g,ft)
+                     mhvt2t(p,k) = mhgtt(g,ft)
+                     mhvb2t(p,k) = mhgtb(g,ft)
+                   else
+                      ! Just in case if somehow a non-fates patch is on a fates column
+                      mlai2t(p,k) = 0._r8
+                      msai2t(p,k) = 0._r8
+                      mhvt2t(p,k) = 0._r8
+                      mhvb2t(p,k) = 0._r8
+                   endif
                 end do
-             end if
+             else
+                ! There are non-fates columns when you run with fates
+                ! gnu does not catch nans as fpes, so this is needed
+                ! to make intel happy.
+                mlai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                msai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvt2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvb2t(col%patchi(c):col%patchf(c),k) = 0._r8
+             endif
           end do
        else          
           do p = bounds%begp,bounds%endp
