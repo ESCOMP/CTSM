@@ -41,6 +41,7 @@ module CIsoAtmTimeseriesMod
 
   ! Private subroutines only made public for unit testing
   public:: CIsoCheckNMLInputs  ! Check that the namelist inputs are valid
+  public:: CIsoSetNMLInputs    ! Set the namelist inputs for unit testing
   public:: CIsoSetControl      ! Set the control variables for Carbon Isotopes
   public:: CIsoLogControl      ! Write out the control settings to the logfile
 
@@ -289,6 +290,37 @@ contains
     end if
 
   end subroutine CIsoCheckNMLInputs
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoSetNMLInputs( stream_fldfilename_atm_c13_in, stream_fldfilename_atm_c14_in, &
+                               use_c13_streams_in, use_c14_streams_in )
+    !
+    ! !DESCRIPTION:
+    ! Set the namelist inputs for unit testing
+    !
+    ! Arguments:
+      character(len=*), intent(in), optional :: stream_fldfilename_atm_c13_in
+      character(len=*), intent(in), optional :: stream_fldfilename_atm_c14_in
+      logical, intent(in), optional :: use_c13_streams_in
+      logical, intent(in), optional :: use_c14_streams_in
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+       if ( present(stream_fldfilename_atm_c13_in) ) then
+          stream_fldfilename_atm_c13 = stream_fldfilename_atm_c13_in
+       end if
+       if ( present(stream_fldfilename_atm_c14_in) ) then
+          stream_fldfilename_atm_c14 = stream_fldfilename_atm_c14_in
+       end if
+       if ( present(use_c13_streams_in) ) then
+          use_c13_streams = use_c13_streams_in
+       end if
+       if ( present(use_c14_streams_in) ) then
+          use_c14_streams = use_c14_streams_in
+       end if
+
+  end subroutine CIsoSetNMLInputs
+
 
   !-----------------------------------------------------------------------
   subroutine C14BombSpike( bounds )

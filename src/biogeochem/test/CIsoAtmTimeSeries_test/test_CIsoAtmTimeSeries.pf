@@ -38,6 +38,7 @@ contains
 
   @Test
   subroutine check_both_timeseries_on(this)
+    ! Check that it works when both timeseries are on without using streams
     class(TestCIsoAtmTimeSeries), intent(inout) :: this
 
     call CIsoCheckNMLInputs()
@@ -45,5 +46,56 @@ contains
     call CIsoLogControl()
 
   end subroutine check_both_timeseries_on
+
+  @Test
+  subroutine check_both_timeseries_streams_on(this)
+    ! Check that it works when both timeseries are on and using streams
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    atm_c13_filename = ''
+    atm_c14_filename = ''
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = '/dev/null', &
+                           stream_fldfilename_atm_c14_in = '/dev/null' )
+    call CIsoCheckNMLInputs()
+    call CIsoSetControl()
+    call CIsoLogControl()
+
+  end subroutine check_both_timeseries_streams_on
+
+  @Test
+  subroutine check_both_timeseries_off(this)
+    ! Check that it works when both timeseries are off
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    atm_c13_filename = ''
+    atm_c14_filename = ''
+    use_c13_timeseries = .false.
+    use_c14_bombspike = .false.
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = '/dev/null', &
+                           stream_fldfilename_atm_c14_in = '/dev/null' )
+    call CIsoCheckNMLInputs()
+    call CIsoSetControl()
+    call CIsoLogControl()
+
+  end subroutine check_both_timeseries_off
+
+  @Test
+  subroutine check_ciso_off(this)
+    ! Check that it works when both carbon isotopes are off
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    atm_c13_filename = ''
+    atm_c14_filename = ''
+    use_c13_timeseries = .false.
+    use_c14_bombspike = .false.
+    use_c13 = .false.
+    use_c14 = .false.
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = '/dev/null', &
+                           stream_fldfilename_atm_c14_in = '/dev/null' )
+    call CIsoCheckNMLInputs()
+    call CIsoSetControl()
+    call CIsoLogControl()
+
+  end subroutine check_ciso_off
 
 end module test_CIsoAtmTimeSeries
