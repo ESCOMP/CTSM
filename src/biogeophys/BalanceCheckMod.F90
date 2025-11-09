@@ -701,9 +701,8 @@ contains
                    write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux_col(indexc)*dtime
               end if
               
-              write(iulog,*) 'CTSM should have stopped! Commented out for testing purposes.'
-              !   write(iulog,*)'CTSM is stopping'
-              !   call endrun(subgrid_index=indexc, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
+              write(iulog,*)'CTSM is stopping'
+              call endrun(subgrid_index=indexc, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
          end if
        
        end if
@@ -787,9 +786,8 @@ contains
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
-!             write(iulog,*)'CTSM is stopping'
-!             call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
-             write(iulog,*)'CTSM should have stopped! Commented out for testing purposes.'
+             write(iulog,*)'CTSM is stopping'
+             call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
           end if
 
        end if
