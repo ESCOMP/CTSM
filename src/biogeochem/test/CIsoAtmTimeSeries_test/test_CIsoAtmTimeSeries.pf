@@ -16,6 +16,8 @@ module test_CIsoAtmTimeSeries
      procedure :: tearDown
   end type TestCIsoAtmTimeSeries
 
+  character(len=100) :: expected_msg
+
 contains
 
   subroutine setUp(this)
@@ -97,5 +99,173 @@ contains
     call CIsoLogControl()
 
   end subroutine check_ciso_off
+
+  @Test
+  subroutine abort_if_both_c13_plain_and_stream_timeseries_files_set(this)
+    ! Check that it aborts if both the plain and stream C13 timeseries files are set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    @assertTrue(use_c13)
+    @assertTrue(use_c13_timeseries)
+    atm_c13_filename = 'plain_c13_timeseries_file'
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = 'stream_c13_timeseries_file' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c13_timeseries is TRUE but both stream_fldfilename_atm_c13 and atm_c13_filename are set"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_both_c13_plain_and_stream_timeseries_files_set
+
+  @Test
+  subroutine abort_if_both_c14_plain_and_stream_timeseries_files_set(this)
+    ! Check that it aborts if both the plain and stream C14 timeseries files are set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    @assertTrue(use_c14)
+    @assertTrue(use_c14_bombspike)
+    atm_c14_filename = 'plain_c14_timeseries_file'
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = 'stream_c14_timeseries_file' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c14_bombspike is TRUE but both stream_fldfilename_atm_c14 and atm_c14_filename are set"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_both_c14_plain_and_stream_timeseries_files_set
+
+  @Test
+  subroutine abort_if_both_c13_plain_and_stream_timeseries_files_blank(this)
+    ! Check that it aborts if both the plain and stream C13 timeseries files are blank
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    @assertTrue(use_c13)
+    @assertTrue(use_c13_timeseries)
+    atm_c13_filename = ' '
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c13_timeseries is TRUE but neither stream_fldfilename_atm_c13 nor atm_c13_filename are set"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_both_c13_plain_and_stream_timeseries_files_blank
+
+  @Test
+  subroutine abort_if_both_c14_plain_and_stream_timeseries_files_blank(this)
+    ! Check that it aborts if both the plain and stream C14 timeseries files are blank
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+    @assertTrue(use_c14)
+    @assertTrue(use_c14_bombspike)
+    atm_c14_filename = ' '
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = ' ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c14_bombspike is TRUE but neither stream_fldfilename_atm_c14 nor atm_c14_filename are set"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_both_c14_plain_and_stream_timeseries_files_blank
+
+  @Test
+  subroutine abort_if_c13_timeseries_off_and_plain_timeseries_file_set(this)
+    ! Check that it aborts if c13 timeseries off, but the plain timeseries file is set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    @assertTrue(use_c13)
+    use_c13_timeseries = .false.
+    @assertFalse(use_c13_timeseries)
+    atm_c13_filename = 'plain_c13_timeseries_file'
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c13_timeseries is false but either stream_fldfilename_atm_c13 or atm_c13_filename is set and should NOT be"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_c13_timeseries_off_and_plain_timeseries_file_set
+
+  @Test
+  subroutine abort_if_c13_timeseries_off_and_stream_timeseries_file_set(this)
+    ! Check that it aborts if c13 timeseries off, but the streamplain timeseries file is set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    @assertTrue(use_c13)
+    use_c13_timeseries = .false.
+    @assertFalse(use_c13_timeseries)
+    atm_c13_filename = ' '
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = 'stream_c13_filename ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c13_timeseries is false but either stream_fldfilename_atm_c13 or atm_c13_filename is set and should NOT be"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_c13_timeseries_off_and_stream_timeseries_file_set
+
+  @Test
+  subroutine abort_if_c14_bombspike_off_and_plain_timeseries_file_set(this)
+    ! Check that it aborts if c14 timeseries off, but the pain timeseries file is set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+    integer :: i
+
+    ! This should be true whether C14 is on or off
+    do i = 1, 2
+       if ( i == 1 ) then
+          @assertTrue(use_c14)
+       else
+          use_c14 = .false.
+       end if
+       use_c14_bombspike = .false.
+       atm_c14_filename = 'plain_c14_timeseries_file'
+       call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = ' ' )
+       call CIsoCheckNMLInputs()
+       expected_msg = "ABORTED: use_c14_bombspike is false but either stream_fldfilename_atm_c14 or atm_c14_filename is set and should NOT be"
+       @assertExceptionRaised(expected_msg)
+    end do
+
+  end subroutine abort_if_c14_bombspike_off_and_plain_timeseries_file_set
+
+  @Test
+  subroutine abort_if_c14_bombspike_off_and_stream_timeseries_file_set(this)
+    ! Check that it aborts if c14 timeseries off, but the stream timeseries file is set
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+    integer :: i
+
+    ! This should be true whether C14 is on or off
+    do i = 1, 2
+       if ( i == 1 ) then
+          @assertTrue(use_c14)
+       else
+          use_c14 = .false.
+       end if
+       use_c14_bombspike = .false.
+       atm_c14_filename = ' '
+       call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = 'stream_c14_filename' )
+       call CIsoCheckNMLInputs()
+       expected_msg = "ABORTED: use_c14_bombspike is false but either stream_fldfilename_atm_c14 or atm_c14_filename is set and should NOT be"
+       @assertExceptionRaised(expected_msg)
+    end do
+
+  end subroutine abort_if_c14_bombspike_off_and_stream_timeseries_file_set
+
+  @Test
+  subroutine abort_if_c13_off_but_c13_timeseries_on(this)
+    ! Check that it aborts if c13 is off, but the c13 timeseries is on
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    use_c13 = .false.
+    use_c13_timeseries = .true.
+    atm_c13_filename = ' '
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c13 is false but use_c13_timeseries is TRUE (use_c13_timeseries can only be TRUE if use_c13 is TRUE)"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_c13_off_but_c13_timeseries_on
+
+  @Test
+  subroutine abort_if_c14_off_but_c14_bombspike_on(this)
+    ! Check that it aborts if c14 is off, but the c14 bombspike is on
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    use_c14 = .false.
+    @assertFalse(use_c14)
+    use_c14_bombspike = .true.
+    atm_c14_filename = ' '
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = ' ' )
+    call CIsoCheckNMLInputs()
+    expected_msg = "ABORTED: use_c14 is false but use_c14_bombspike is TRUE (use_c14_bombspike can only be TRUE if use_c14 is TRUE)"
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine abort_if_c14_off_but_c14_bombspike_on
 
 end module test_CIsoAtmTimeSeries
