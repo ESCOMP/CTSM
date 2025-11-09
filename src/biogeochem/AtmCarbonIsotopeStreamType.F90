@@ -4,8 +4,6 @@ module AtmCarbonIsotopeStreamType
   use abortutils , only : endrun
   use decompMod , only : bounds_type
   use CTSMForce2DStreamBaseType, only : ctsm_force_2DStream_base_type
-  use dshr_methods_mod , only : dshr_fldbun_getfldptr
-  use ESMF, only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
 
   implicit none
   private
@@ -111,10 +109,7 @@ module AtmCarbonIsotopeStreamType
          integer :: rc ! error return code
 
          ! Get pointer for stream data that is time and spatially interpolated to model time and grid
-         call dshr_fldbun_getFldPtr(this%sdat%pstrm(1)%fldbun_model, fldname=varname_c13, fldptr1=dataptr1d, rc=rc)
-         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=sourcefile)) then
-            call endrun( 'Error getting field pointer for '//varname_c13//' from stream data', file=sourcefile, line=__LINE__ )
-         end if
+         call this%GetPtr1D( varname_c13, dataptr1d )
 
          do g = bounds%begg, bounds%endg
             this%atm_delta_c13(g) = dataptr1d(g)
@@ -164,10 +159,7 @@ module AtmCarbonIsotopeStreamType
          integer :: rc ! error return code
 
          ! Get pointer for stream data that is time and spatially interpolated to model time and grid
-         call dshr_fldbun_getFldPtr(this%sdat%pstrm(1)%fldbun_model, fldname=varname_c14, fldptr1=dataptr1d, rc=rc)
-         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=sourcefile)) then
-            call endrun( 'Error getting field pointer for '//varname_c14//' from stream data', file=sourcefile, line=__LINE__ )
-         end if
+         call this%GetPtr1D( varname_c14, dataptr1d )
 
          do g = bounds%begg, bounds%endg
             this%atm_delta_c14(g) = dataptr1d(g)
