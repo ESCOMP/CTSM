@@ -130,18 +130,103 @@ contains
    call shr_mpi_bcast( stream_year_last_atm_c13, mpicom )
    call shr_mpi_bcast( stream_model_year_align_atm_c13, mpicom )
 
-   ! Do some error checking of input namelist items
+   ! Do some error checking of input namelist items, set control flags, and write to the log
    call CIsoCheckNMLInputs()
 
-   ! Decide if C14/C13 streams are going to be used or the old method
-   if ( trim(stream_fldfilename_atm_c13) /= '' ) then
-      use_c13_streams = .true.
-   end if
-   if ( trim(stream_fldfilename_atm_c14) /= '' ) then
-      use_c14_streams = .true.
-   end if
+   call CIsoSetControl()
+   call CIsoLogControl()
 
   end subroutine CIsoAtmReadNML
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoSetControl()
+   ! Set control settings based on the namelist inputs
+   ! Also do some assert checks to make sure other settings are as expected
+   !
+   if ( use_c13_timeseries )then
+      ! Decide if C14/C13 streams are going to be used or the old method
+      if ( len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+         use_c13_streams = .true.
+      else
+         call shr_assert( len_trim(atm_c13_filename) /= 0 , &
+            msg="ERROR: use_c13_timeseries is true but atm_c13_filename is blank", file=sourcefile, line=__LINE__)
+         call shr_assert( .not. use_c13_streams , &
+            msg="ERROR: stream_fldfilename_atm_c13 is blank but use_c13_streams is not TRUE", file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( .not. use_c13_streams , &
+            msg="ERROR: use_c13_timeseries is false, but use_c13_streams is TRUE", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c13_filename) == 0 , &
+            msg="ERROR: use_c13_timeseries is false but atm_c13_filename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0 , &
+            msg="ERROR: use_c13_timeseries is false but stream_fldfilename_atm_c13 is NOT blank", file=sourcefile, line=__LINE__)
+   end if
+   if ( use_c14_bombspike )then
+      if ( len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+         use_c14_streams = .true.
+      else
+         call shr_assert( len_trim(atm_c14_filename) /= 0 , &
+            msg="ERROR: use_c14_bombspike is true but atm_c14_filename is blank", file=sourcefile, line=__LINE__)
+         call shr_assert( .not. use_c14_streams , &
+            msg="ERROR: stream_fldfilename_atm_c14 is blank but use_c14_streams is not TRUE", &
+            file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( .not. use_c14_streams , &
+            msg="ERROR: use_c14_bombspike is false, but use_c14_streams is TRUE", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c14_filename) == 0, &
+            msg="ERROR: use_c14_bombspike is false but atm_c14_filename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0 , &
+            msg="ERROR: use_c14_bombspike is false but stream_fldfilename_atm_c14 is NOT blank", &
+            file=sourcefile, line=__LINE__)
+   end if
+
+  end subroutine CIsoSetControl
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoLogControl()
+   ! Log namelist and control settings to output to display what behavior will be
+   !
+   if ( use_c13_timeseries )then
+      if ( use_c13_streams ) then
+         call shr_assert( len_trim(stream_fldfilename_atm_c13) /= 0 , &
+            msg="use_c13_streams is TRUE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+         write(iulog,*) 'C13 atmospheric data will be read in using the streams method from file: '// &
+                        trim(stream_fldfilename_atm_c13)
+      else if ( len_trim(atm_c13_filename) /= 0 ) then
+         write(iulog,*) 'C13 atmospheric data will be read in using the CMIP6 time series method from file: '// &
+                        trim(atm_c13_filename)
+      else
+         call endrun(msg="use_c13_timeseries is true but use_c13_streams=FALSE and atm_c13_filename is blank", &
+                     file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0 , &
+            msg="use_c13_timeseries is FALSE but stream_fldfilename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c13_filename) == 0 , &
+            msg="use_c13_timeseries is FALSE but stream_fldfilename is NOT blank", file=sourcefile, line=__LINE__)
+      write(iulog,*) 'C13 atmospheric data will be the global constant pre-industrial level'
+   end if
+   if ( use_c14_bombspike )then
+     if ( use_c14_streams ) then
+         write(iulog,*) 'C14 atmospheric data will be read in using the streams method from file: '// &
+                        trim(stream_fldfilename_atm_c14)
+      else if ( len_trim(atm_c14_filename) /= 0 ) then
+         write(iulog,*) 'C14 atmospheric data will be read in using the CMIP6 time series method from file: '// &
+                        trim(atm_c14_filename)
+      else
+         call endrun(msg="use_c14_bombspike is true but use_c14_streams=FALSE and atm_c14_filename is blank", &
+                     file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0 , &
+            msg="use_c14_timeseries is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c14_filename) == 0 , &
+            msg="use_c14_timeseries is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+      write(iulog,*) 'C14 atmospheric data will be global constant pre-industrial level'
+   end if
+
+  end subroutine CIsoLogControl
 
   !-----------------------------------------------------------------------
   subroutine CIsoCheckNMLInputs()
@@ -156,17 +241,17 @@ contains
     if ( .not. use_c13 )then
        call shr_assert( .not. use_c13_timeseries, &
             msg="ERROR: use_c13 is false but use_c13_timeseries is true", file=sourcefile, line=__LINE__)
-       call shr_assert( trim(atm_c13_filename) == '', &
+       call shr_assert( len_trim(atm_c13_filename) == 0, &
             msg="ERROR: use_c13 is false but atm_c13_filename is set", file=sourcefile, line=__LINE__)
-       call shr_assert( trim(stream_fldfilename_atm_c13) == '', &
+       call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0, &
             msg="ERROR: use_c13 is false but stream_fldfilename_atm_c13 is set", file=sourcefile, line=__LINE__)
     end if
     if ( .not. use_c14 )then
        call shr_assert( .not. use_c14_bombspike, &
             msg="ERROR: use_c14 is false but use_c14_bombspike is true", file=sourcefile, line=__LINE__)
-       call shr_assert( trim(atm_c14_filename) == '', &
+       call shr_assert( len_trim(atm_c14_filename) == 0, &
             msg="ERROR: use_c14 is false but atm_c14_filename is set", file=sourcefile, line=__LINE__)
-       call shr_assert( trim(stream_fldfilename_atm_c14) == '', &
+       call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0, &
             msg="ERROR: use_c14 is false but stream_fldfilename_atm_c14 is set", file=sourcefile, line=__LINE__)
     end if
 
@@ -174,26 +259,28 @@ contains
     ! Check C14 stream namelist inputs
     !
     if ( use_c14_bombspike ) then
-       ! This is actually allowed, if you want to use the constant method
-       ! TODO: Remove this commented code
-       !if ( trim(atm_c14_filename) == '' .and. trim(stream_fldfilename_atm_c14) == '' ) then
-       !   call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are blank", file=sourcefile, line=__LINE__)
-       !end if
-       if ( trim(atm_c14_filename) /= '' .and. trim(stream_fldfilename_atm_c14) /= '' ) then
-          call endrun(msg="use_c14_bombspike is true but both stream_fldfilename_atm_c14 and stream_fldfilename_atm_c14 are set", file=sourcefile, line=__LINE__)
+       if ( len_trim(atm_c14_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+          call endrun(msg="use_c14_bombspike TRUE but both stream_fldfilename_atm_c14/stream_fldfilename_atm_c14 are set", &
+                      file=sourcefile, line=__LINE__)
+       end if
+    else
+       if ( len_trim(atm_c14_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+          call endrun(msg="use_c14_bombspike TRUE but stream_fldfilename_atm_c14/stream_fldfilename_atm_c14 are set", &
+                      file=sourcefile, line=__LINE__)
        end if
     end if
     !
     ! Check C13 stream namelist inputs
     !
     if ( use_c13_timeseries ) then
-       ! This is actually allowed, if you want to use the constant method
-       ! TODO: Remove this commented code
-       !if ( trim(atm_c13_filename) == '' .and. trim(stream_fldfilename_atm_c13) == '' ) then
-          !call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are blank", file=sourcefile, line=__LINE__)
-       !end if
-       if ( trim(atm_c13_filename) /= '' .and. trim(stream_fldfilename_atm_c13) /= '' ) then
-          call endrun(msg="use_c13_bombspike is true but both stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 are set", file=sourcefile, line=__LINE__)
+       if ( len_trim(atm_c13_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+          call endrun(msg="use_c13_bombspike TRUE but stream_fldfilename_atm_c13/stream_fldfilename_atm_c13 aren't blank", &
+                     file=sourcefile, line=__LINE__)
+       end if
+    else
+       if ( len_trim(atm_c13_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+         call endrun(msg="use_c13_bombspike is false but stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 aren't blank", &
+                     file=sourcefile, line=__LINE__)
        end if
     end if
 
@@ -347,16 +434,21 @@ contains
     if ( use_c14_bombspike )then
 
        if ( use_c14_streams )then
+          write(iulog,*) 'Read in atmospheric C14 data from streams'
           call C14StreamsInit( bounds )
           RETURN
        end if
-
-       call getfil(atm_c14_filename, locfn, 0)
+       if ( .not. use_c14_streams .and. len_trim(atm_c14_filename) == 0 )then
+          write(iulog,*) 'Use constant preindustrial atmospheric C14 data'
+          RETURN
+       end if
 
        if ( masterproc ) then
           write(iulog, *) 'C14_init_BombSpike: preparing to open file:'
           write(iulog, *) trim(locfn)
        endif
+
+       call getfil(atm_c14_filename, locfn, 0)
 
        call ncd_pio_openfile (ncid, trim(locfn), 0)
 
@@ -409,6 +501,10 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
+    if ( masterproc ) then
+       write(iulog, *) 'C14StreamsInit: Initializing C14 streams with file:'
+       write(iulog, *) trim(stream_fldfilename_atm_c14)
+    end if
     ! Streams method
     call atm_c14_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c14, &
@@ -456,6 +552,10 @@ contains
 
         if ( use_c13_streams )then
            call C13Streams( bounds )
+           RETURN
+        end if
+        if ( .not. use_c13_streams .and. len_trim(atm_c13_filename) == 0 )then
+           write(iulog,*) 'Use constant preindustrial atmospheric C13 data'
            RETURN
         end if
         ! get current date
@@ -635,6 +735,10 @@ contains
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
 
+    if ( masterproc ) then
+       write(iulog, *) 'C13StreamsInit: Initializing C13 streams with file:'
+       write(iulog, *) trim(stream_fldfilename_atm_c13)
+    end if
     ! Streams method
     call atm_c13_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c13, &
