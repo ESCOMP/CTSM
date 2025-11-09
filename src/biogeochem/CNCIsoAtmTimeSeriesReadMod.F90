@@ -270,7 +270,7 @@ contains
        end if
     else
        if ( len_trim(atm_c14_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
-          call endrun(msg="use_c14_bombspike TRUE but stream_fldfilename_atm_c14/stream_fldfilename_atm_c14 are set", &
+          call endrun(msg="use_c14_bombspike false but stream_fldfilename_atm_c14 or stream_fldfilename_atm_c14 is set", &
                       file=sourcefile, line=__LINE__)
        end if
     end if
@@ -279,12 +279,12 @@ contains
     !
     if ( use_c13_timeseries ) then
        if ( len_trim(atm_c13_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
-          call endrun(msg="use_c13_bombspike TRUE but stream_fldfilename_atm_c13/stream_fldfilename_atm_c13 aren't blank", &
+          call endrun(msg="use_c13_timeseries TRUE but stream_fldfilename_atm_c13/stream_fldfilename_atm_c13 are set", &
                      file=sourcefile, line=__LINE__)
        end if
     else
        if ( len_trim(atm_c13_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
-         call endrun(msg="use_c13_bombspike is false but stream_fldfilename_atm_c13 and stream_fldfilename_atm_c13 aren't blank", &
+         call endrun(msg="use_c13_timeseries is false but stream_fldfilename_atm_c13 or stream_fldfilename_atm_c13 are set", &
                      file=sourcefile, line=__LINE__)
        end if
     end if
