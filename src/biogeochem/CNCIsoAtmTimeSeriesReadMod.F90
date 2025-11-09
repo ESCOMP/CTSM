@@ -38,7 +38,11 @@ module CIsoAtmTimeseriesMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
-  private:: CIsoCheckNMLInputs  ! Check that the namelist inputs are valid
+
+  ! Private subroutines only made public for unit testing
+  public:: CIsoCheckNMLInputs  ! Check that the namelist inputs are valid
+  public:: CIsoSetControl      ! Set the control variables for Carbon Isotopes
+  public:: CIsoLogControl      ! Write out the control settings to the logfile
 
   type(atm_delta_c13_stream_type), private :: atm_c13_stream  ! Atmospheric C13 stream object
   type(atm_delta_c14_stream_type), private :: atm_c14_stream  ! Atmospheric C14 stream object
