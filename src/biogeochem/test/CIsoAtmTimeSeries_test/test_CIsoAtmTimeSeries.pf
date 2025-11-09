@@ -1,0 +1,49 @@
+module test_CIsoAtmTimeSeries
+
+  ! Tests of CNCIsoAtmTimeSeriesReadMod
+
+  use funit
+  use CIsoAtmTimeSeriesReadMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use clm_varctl, only : use_c13, use_c14, use_c13_timeseries, use_c14_bombspike
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCIsoAtmTimeSeries
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestCIsoAtmTimeSeries
+
+contains
+
+  subroutine setUp(this)
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    use_c13 = .true.
+    use_c14 = .true.
+    use_c13_timeseries = .true.
+    use_c14_bombspike = .true.
+    ! Set these filenames to /dev/null as it's a file guaranteed to exist on Linnix systems
+    atm_c13_filename = '/dev/null'
+    atm_c14_filename = '/dev/null'
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+  end subroutine tearDown
+
+  @Test
+  subroutine check_both_timeseries_on(this)
+    class(TestCIsoAtmTimeSeries), intent(inout) :: this
+
+    call CIsoCheckNMLInputs()
+    call CIsoSetControl()
+    call CIsoLogControl()
+
+  end subroutine check_both_timeseries_on
+
+end module test_CIsoAtmTimeSeries
