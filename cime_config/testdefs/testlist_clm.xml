@@ -949,6 +949,15 @@
       <option name="comment">Low res SE grid test with Crujra while Gswp is still the default, also nofireemis for SP</option>
     </options>
   </test>
+  <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="IHistClm60SpCrujraRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">ne3pg2 test with IHist compset, also nofireemis for SP</option>
+    </options>
+  </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
