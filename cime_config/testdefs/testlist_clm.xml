@@ -4399,6 +4399,7 @@
   <test name="FUNITCTSM_P1x1" grid="f10_f10_mg37" compset="I2000Clm50Sp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
