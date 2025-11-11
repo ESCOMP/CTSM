@@ -17,6 +17,7 @@ module SatellitePhenologyMod
   use perf_mod     , only : t_startf, t_stopf
   use spmdMod      , only : masterproc, mpicom, iam
   use laiStreamMod , only : lai_init, lai_advance, lai_interp
+  use clm_varctl   , only : use_fates
   use ncdio_pio
   !
   ! !PUBLIC TYPES:
@@ -170,7 +171,7 @@ contains
     use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
     use CanopyStateType         , only : canopystate_type
     use PatchType               , only : patch
-    use clm_varctl              , only : use_fates
+
     
     !
     ! !ARGUMENTS:
@@ -415,7 +416,9 @@ contains
     use clm_time_manager , only : get_nstep
     use CanopyStateType  , only : canopystate_type
     use PatchType        , only : patch
+    use ColumnType       , only : col
     use clm_varcon       , only : grlnd
+    use clm_varpar       , only : surfpft_lb,surfpft_ub
     use netcdf
     !
     ! !ARGUMENTS:
@@ -428,6 +431,7 @@ contains
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
     integer :: g,n,k,l,m,p,ni,nj,ns       ! indices
+    integer :: c,ft                       ! indices
     integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
@@ -485,25 +489,56 @@ contains
        ! Assign lai/sai/hgtt/hgtb to the top [maxsoil_patches] patches
        ! as determined in subroutine surfrd
 
-       do p = bounds%begp,bounds%endp
-          g =patch%gridcell(p)
-          if (patch%itype(p) /= noveg) then     ! vegetated pft
-             do l = 0, maxveg
-                if (l == patch%itype(p)) then
-                   mlai2t(p,k) = mlai(g,l)
-                   msai2t(p,k) = msai(g,l)
-                   mhvt2t(p,k) = mhgtt(g,l)
-                   mhvb2t(p,k) = mhgtb(g,l)
-                end if
-             end do
-          else                        ! non-vegetated pft
-             mlai2t(p,k) = 0._r8
-             msai2t(p,k) = 0._r8
-             mhvt2t(p,k) = 0._r8
-             mhvb2t(p,k) = 0._r8
-          end if
-       end do   ! end of loop over patches
-
+       if_fates: if(use_fates)then
+          do c = bounds%begc,bounds%endc
+             if(col%is_fates(c))then
+                do ft = surfpft_lb,surfpft_ub
+                   p = ft + col%patchi(c)
+                   g = patch%gridcell(p)
+                   if (patch%is_fates(p)) then
+                     mlai2t(p,k) = mlai(g,ft)
+                     msai2t(p,k) = msai(g,ft)
+                     mhvt2t(p,k) = mhgtt(g,ft)
+                     mhvb2t(p,k) = mhgtb(g,ft)
+                   else
+                      ! Just in case if somehow a non-fates patch is on a fates column
+                      mlai2t(p,k) = 0._r8
+                      msai2t(p,k) = 0._r8
+                      mhvt2t(p,k) = 0._r8
+                      mhvb2t(p,k) = 0._r8
+                   endif
+                end do
+             else
+                ! There are non-fates columns when you run with fates
+                ! gnu does not catch nans as fpes, so this is needed
+                ! to make intel happy.
+                mlai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                msai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvt2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvb2t(col%patchi(c):col%patchf(c),k) = 0._r8
+             endif
+          end do
+       else          
+          do p = bounds%begp,bounds%endp
+             g = patch%gridcell(p)
+             if (patch%itype(p) /= noveg ) then     ! vegetated pft
+                do l = 0, maxveg
+                   if (l == patch%itype(p)) then
+                      mlai2t(p,k) = mlai(g,l)
+                      msai2t(p,k) = msai(g,l)
+                      mhvt2t(p,k) = mhgtt(g,l)
+                      mhvb2t(p,k) = mhgtb(g,l)
+                   end if
+                end do
+             else                        ! non-vegetated pft
+                mlai2t(p,k) = 0._r8
+                msai2t(p,k) = 0._r8
+                mhvt2t(p,k) = 0._r8
+                mhvb2t(p,k) = 0._r8
+             end if
+          end do   ! end of loop over patches
+       end if if_fates
+    
     end do   ! end of loop over months
 
     call ncd_pio_closefile(ncid)

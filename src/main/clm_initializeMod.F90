@@ -467,10 +467,9 @@ contains
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
-       if (n_drydep > 0) then
-          ! Must do this also when drydeposition is used so that estimates of monthly
-          ! differences in LAI can be computed
-          ! Also do this for FATES see below
+       if (n_drydep > 0 .and. (.not. use_fates)) then
+          ! Fates no longer need satephen for dry deposition
+          ! Only FATES-SP is getting it in esle below
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -482,11 +481,9 @@ contains
 
     else ! FATES OR Satellite phenology
 
-       ! For FATES-SP or FATES-NOCOMP Initialize SP
-       ! Also for FATES with Dry-Deposition on as well (see above)
-       ! For now don't allow for dry-deposition with full fates
-       ! because of issues in #1044 EBK Jun/17/2022
-       if( use_fates_sp .or. (.not. use_fates )) then
+       ! For FATES-SP 
+       ! Drydep with fates no longer needs LAI to be read.
+       if( use_fates_sp .or. (.not. use_fates) ) then
           if (masterproc) then
              write(iulog,'(a)')'Initializing Satellite Phenology'
           end if

@@ -18,6 +18,7 @@ module clm_driver
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
+  use shr_infnan_mod         , only : nan => shr_infnan_nan, assignment(=)
   use clm_varorb             , only : obliqr
   use spmdMod                , only : masterproc, mpicom
   use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
@@ -727,16 +728,30 @@ contains
        ! bugs.
        allocate(downreg_patch(bounds_clump%begp:bounds_clump%endp))
        allocate(leafn_patch(bounds_clump%begp:bounds_clump%endp))
-       downreg_patch = bgc_vegetation_inst%get_downreg_patch(bounds_clump)
-       leafn_patch = bgc_vegetation_inst%get_leafn_patch(bounds_clump)
-
        allocate(froot_carbon(bounds_clump%begp:bounds_clump%endp))
        allocate(croot_carbon(bounds_clump%begp:bounds_clump%endp))
-       froot_carbon = bgc_vegetation_inst%get_froot_carbon_patch( &
-            bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
-       croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
-            bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
 
+       ! The get functions for these four patch arrays are relevant only
+       ! for native cn vegetation. More importantly, they utilize patch%itype(p)
+       ! which is invalid for fates patches and cannot be accessed without failure
+       ! These arrays must be passed as arguments, so we clearly fill them here
+       ! with unusuable special values when fates is active, and meaningful values
+       ! when fates is not active.
+
+       if(use_fates)then
+          downreg_patch(:) = nan
+          leafn_patch(:) = nan
+          froot_carbon(:) = nan
+          croot_carbon(:) = nan
+       else
+          downreg_patch = bgc_vegetation_inst%get_downreg_patch(bounds_clump)
+          leafn_patch = bgc_vegetation_inst%get_leafn_patch(bounds_clump)
+          froot_carbon = bgc_vegetation_inst%get_froot_carbon_patch( &
+               bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
+          croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
+               bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
+       end if
+          
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             clm_fates,nc,                                                                   &

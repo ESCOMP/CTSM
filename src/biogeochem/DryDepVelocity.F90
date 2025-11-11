@@ -337,29 +337,38 @@ CONTAINS
             solar_flux = forc_solad(c,1)
             lat        = grc%latdeg(g)
             lon        = grc%londeg(g)
-            clmveg     = patch%itype(pi)
+            
             soilw      = h2osoi_vol(c,1)
 
             !map CLM veg type into Wesely veg type
             wesveg = wveg_unset
-            if (clmveg == noveg                               ) wesveg = 8
-            if (clmveg == ndllf_evr_tmp_tree                  ) wesveg = 5
-            if (clmveg == ndllf_evr_brl_tree                  ) wesveg = 5
-            if (clmveg == ndllf_dcd_brl_tree                  ) wesveg = 5
-            if (clmveg == nbrdlf_evr_trp_tree                 ) wesveg = 4
-            if (clmveg == nbrdlf_evr_tmp_tree                 ) wesveg = 4
-            if (clmveg == nbrdlf_dcd_trp_tree                 ) wesveg = 4
-            if (clmveg == nbrdlf_dcd_tmp_tree                 ) wesveg = 4
-            if (clmveg == nbrdlf_dcd_brl_tree                 ) wesveg = 4
-            if (clmveg == nbrdlf_evr_shrub                    ) wesveg = 11
-            if (clmveg == nbrdlf_dcd_tmp_shrub                ) wesveg = 11
-            if (clmveg == nbrdlf_dcd_brl_shrub                ) wesveg = 11
-            if (clmveg == nc3_arctic_grass                    ) wesveg = 3
-            if (clmveg == nc3_nonarctic_grass                 ) wesveg = 3
-            if (clmveg == nc4_grass                           ) wesveg = 3
-            if (clmveg == nc3crop                             ) wesveg = 2
-            if (clmveg == nc3irrig                            ) wesveg = 2
-            if (clmveg >= npcropmin .and. clmveg <= npcropmax ) wesveg = 2
+            clmveg     = patch%itype(pi) ! this will be spval if fates is on.
+            if(use_fates)then
+               if(patch%is_fates(pi))then
+                  wesveg = wesley_veg_index(pi)
+               else
+                  wesveg = 8 !make bare ground for non-fates patches. Some of these are overwritten below.
+               endif
+            else
+               if (clmveg == noveg                               ) wesveg = 8
+               if (clmveg == ndllf_evr_tmp_tree                  ) wesveg = 5
+               if (clmveg == ndllf_evr_brl_tree                  ) wesveg = 5
+               if (clmveg == ndllf_dcd_brl_tree                  ) wesveg = 5
+               if (clmveg == nbrdlf_evr_trp_tree                 ) wesveg = 4
+               if (clmveg == nbrdlf_evr_tmp_tree                 ) wesveg = 4
+               if (clmveg == nbrdlf_dcd_trp_tree                 ) wesveg = 4
+               if (clmveg == nbrdlf_dcd_tmp_tree                 ) wesveg = 4
+               if (clmveg == nbrdlf_dcd_brl_tree                 ) wesveg = 4
+               if (clmveg == nbrdlf_evr_shrub                    ) wesveg = 11
+               if (clmveg == nbrdlf_dcd_tmp_shrub                ) wesveg = 11
+               if (clmveg == nbrdlf_dcd_brl_shrub                ) wesveg = 11
+               if (clmveg == nc3_arctic_grass                    ) wesveg = 3
+               if (clmveg == nc3_nonarctic_grass                 ) wesveg = 3
+               if (clmveg == nc4_grass                           ) wesveg = 3
+               if (clmveg == nc3crop                             ) wesveg = 2
+               if (clmveg == nc3irrig                            ) wesveg = 2
+               if (clmveg >= npcropmin .and. clmveg <= npcropmax ) wesveg = 2
+            endif
             if (wesveg == wveg_unset )then
                write(iulog,*) 'clmveg = ', clmveg, 'lun%itype = ', lun%itype(l)
                call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &
@@ -367,13 +376,6 @@ CONTAINS
                     errMsg(sourcefile, __LINE__))
             end if
             
-             if(use_fates)then
-                if(patch%is_fates(pi))then
-                   wesveg = wesley_veg_index(pi)
-                else
-                   wesveg = 8 !make bare ground for non-fates patches. Some of these are overwritten below.
-                endif
-             endif   
 
              if(wesveg<0 .or. wesveg>11 )then
                 call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &
