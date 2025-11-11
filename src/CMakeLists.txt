@@ -3,16 +3,16 @@ cmake_minimum_required(VERSION 3.10)
 list(APPEND CMAKE_MODULE_PATH ${CIME_CMAKE_MODULE_DIRECTORY})
 include(CIME_initial_setup)
 
-#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../tools/mksurfdata_esmf/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../share/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../components/cmeps/cmake")
+set(SRCROOT "${CIMEROOT}/..")
+set(CLM_ROOT "..")
+
+list(APPEND CMAKE_MODULE_PATH "${SRCROOT}/share/cmake")
+list(APPEND CMAKE_MODULE_PATH "${SRCROOT}/components/cmeps/cmake")
 
 project(clm_tests Fortran C)
 
 include(CIME_utils)
 
-set(SRCROOT "${CIMEROOT}/..")
-set(CLM_ROOT "..")
 
 # find needed external packages
 # NetCDF is required -- because PIO and NetCDF are required by the standard default ESMF libraries
