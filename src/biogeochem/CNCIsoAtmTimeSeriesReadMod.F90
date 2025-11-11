@@ -153,12 +153,14 @@ contains
       if ( len_trim(stream_fldfilename_atm_c13) /= 0 ) then
          use_c13_streams = .true.
       else
+         use_c13_streams = .false.
          call shr_assert( len_trim(atm_c13_filename) /= 0 , &
             msg="ERROR: use_c13_timeseries is true but atm_c13_filename is blank", file=sourcefile, line=__LINE__)
          call shr_assert( .not. use_c13_streams , &
             msg="ERROR: stream_fldfilename_atm_c13 is blank but use_c13_streams is not TRUE", file=sourcefile, line=__LINE__)
       end if
    else
+      use_c13_streams = .false.
       call shr_assert( .not. use_c13_streams , &
             msg="ERROR: use_c13_timeseries is false, but use_c13_streams is TRUE", file=sourcefile, line=__LINE__)
       call shr_assert( len_trim(atm_c13_filename) == 0 , &
@@ -170,6 +172,7 @@ contains
       if ( len_trim(stream_fldfilename_atm_c14) /= 0 ) then
          use_c14_streams = .true.
       else
+         use_c14_streams = .false.
          call shr_assert( len_trim(atm_c14_filename) /= 0 , &
             msg="ERROR: use_c14_bombspike is true but atm_c14_filename is blank", file=sourcefile, line=__LINE__)
          call shr_assert( .not. use_c14_streams , &
@@ -177,6 +180,7 @@ contains
             file=sourcefile, line=__LINE__)
       end if
    else
+      use_c14_streams = .false.
       call shr_assert( .not. use_c14_streams , &
             msg="ERROR: use_c14_bombspike is false, but use_c14_streams is TRUE", file=sourcefile, line=__LINE__)
       call shr_assert( len_trim(atm_c14_filename) == 0, &
@@ -225,9 +229,9 @@ contains
       end if
    else
       call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0 , &
-            msg="use_c14_timeseries is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+            msg="use_c14_bombspike is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
       call shr_assert( len_trim(atm_c14_filename) == 0 , &
-            msg="use_c14_timeseries is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+            msg="use_c14_bombspike is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
       write(iulog,*) 'C14 atmospheric data will be global constant pre-industrial level'
    end if
 
@@ -244,20 +248,19 @@ contains
     !-----------------------------------------------------------------------
     ! When carbon isotopes are off nothing should be set
     if ( .not. use_c13 )then
-       call shr_assert( .not. use_c13_timeseries, &
-            msg="ERROR: use_c13 is false but use_c13_timeseries is true", file=sourcefile, line=__LINE__)
-       call shr_assert( len_trim(atm_c13_filename) == 0, &
-            msg="ERROR: use_c13 is false but atm_c13_filename is set", file=sourcefile, line=__LINE__)
-       call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0, &
-            msg="ERROR: use_c13 is false but stream_fldfilename_atm_c13 is set", file=sourcefile, line=__LINE__)
+       if ( use_c13_timeseries ) then
+          call endrun( msg="use_c13 is false but use_c13_timeseries is TRUE " // &
+                           "(use_c13_timeseries can only be TRUE if use_c13 is TRUE)", file=sourcefile, line=__LINE__)
+          return
+       end if
     end if
     if ( .not. use_c14 )then
-       call shr_assert( .not. use_c14_bombspike, &
-            msg="ERROR: use_c14 is false but use_c14_bombspike is true", file=sourcefile, line=__LINE__)
-       call shr_assert( len_trim(atm_c14_filename) == 0, &
-            msg="ERROR: use_c14 is false but atm_c14_filename is set", file=sourcefile, line=__LINE__)
-       call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0, &
-            msg="ERROR: use_c14 is false but stream_fldfilename_atm_c14 is set", file=sourcefile, line=__LINE__)
+       if ( use_c14_bombspike ) then
+          call endrun( msg="use_c14 is false but use_c14_bombspike is TRUE " // &
+                           "(use_c14_bombspike can only be TRUE if use_c14 is TRUE)", &
+                           file=sourcefile, line=__LINE__)
+          return
+       end if
     end if
 
     !
@@ -265,13 +268,20 @@ contains
     !
     if ( use_c14_bombspike ) then
        if ( len_trim(atm_c14_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
-          call endrun(msg="use_c14_bombspike TRUE but both stream_fldfilename_atm_c14/stream_fldfilename_atm_c14 are set", &
+          call endrun(msg="use_c14_bombspike TRUE but both atm_c14_filename AND stream_fldfilename_atm_c14 are set and only one should be", &
                       file=sourcefile, line=__LINE__)
+          return
+       end if
+       if ( len_trim(atm_c14_filename) == 0 .and. len_trim(stream_fldfilename_atm_c14) == 0 ) then
+          call endrun(msg="use_c14_bombspike TRUE but neither atm_c14_filename nor stream_fldfilename_atm_c14 are set and one or the other needs to be", &
+                      file=sourcefile, line=__LINE__)
+          return
        end if
     else
        if ( len_trim(atm_c14_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
-          call endrun(msg="use_c14_bombspike false but stream_fldfilename_atm_c14 or stream_fldfilename_atm_c14 is set", &
+          call endrun(msg="use_c14_bombspike false but either atm_c14_filename or stream_fldfilename_atm_c14 is set and neither should be", &
                       file=sourcefile, line=__LINE__)
+          return
        end if
     end if
     !
@@ -279,13 +289,20 @@ contains
     !
     if ( use_c13_timeseries ) then
        if ( len_trim(atm_c13_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
-          call endrun(msg="use_c13_timeseries TRUE but stream_fldfilename_atm_c13/stream_fldfilename_atm_c13 are set", &
+          call endrun(msg="use_c13_timeseries TRUE but both atm_c13_filename AND stream_fldfilename_atm_c13 are set and only one should be", &
                      file=sourcefile, line=__LINE__)
+          return
+       end if
+       if ( len_trim(atm_c13_filename) == 0 .and. len_trim(stream_fldfilename_atm_c13) == 0 ) then
+          call endrun(msg="use_c13_timeseries TRUE but neither atm_c13_filename nor stream_fldfilename_atm_c13 are set and one or the other needs to be", &
+                      file=sourcefile, line=__LINE__)
+          return
        end if
     else
        if ( len_trim(atm_c13_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
-         call endrun(msg="use_c13_timeseries is false but stream_fldfilename_atm_c13 or stream_fldfilename_atm_c13 are set", &
+         call endrun(msg="use_c13_timeseries is false but either atm_c13_filename or stream_fldfilename_atm_c13 are set and neither should be", &
                      file=sourcefile, line=__LINE__)
+          return
        end if
     end if
 
