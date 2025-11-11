@@ -16,7 +16,7 @@ module test_CIsoAtmTimeSeries
      procedure :: tearDown
   end type TestCIsoAtmTimeSeries
 
-  character(len=100) :: expected_msg
+  character(len=200) :: expected_msg
 
 contains
 
@@ -73,8 +73,8 @@ contains
     atm_c14_filename = ''
     use_c13_timeseries = .false.
     use_c14_bombspike = .false.
-    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = '/dev/null', &
-                           stream_fldfilename_atm_c14_in = '/dev/null' )
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ', &
+                           stream_fldfilename_atm_c14_in = ' ' )
     call CIsoCheckNMLInputs()
     call CIsoSetControl()
     call CIsoLogControl()
@@ -92,8 +92,8 @@ contains
     use_c14_bombspike = .false.
     use_c13 = .false.
     use_c14 = .false.
-    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = '/dev/null', &
-                           stream_fldfilename_atm_c14_in = '/dev/null' )
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ', &
+                           stream_fldfilename_atm_c14_in = ' ' )
     call CIsoCheckNMLInputs()
     call CIsoSetControl()
     call CIsoLogControl()
@@ -108,9 +108,12 @@ contains
     @assertTrue(use_c13)
     @assertTrue(use_c13_timeseries)
     atm_c13_filename = 'plain_c13_timeseries_file'
-    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = 'stream_c13_timeseries_file' )
+    @assertTrue(use_c14)
+    @assertTrue(use_c14_bombspike)
+    @assertTrue(len_trim(atm_c14_filename) /= 0)
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = 'stream_c13_timeseries_file', stream_fldfilename_atm_c14_in = ' ')
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c13_timeseries is TRUE but both stream_fldfilename_atm_c13 and atm_c13_filename are set"
+    expected_msg = "ABORTED: use_c13_timeseries TRUE but both atm_c13_filename AND stream_fldfilename_atm_c13 are set and only one should be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_both_c13_plain_and_stream_timeseries_files_set
@@ -125,7 +128,7 @@ contains
     atm_c14_filename = 'plain_c14_timeseries_file'
     call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = 'stream_c14_timeseries_file' )
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c14_bombspike is TRUE but both stream_fldfilename_atm_c14 and atm_c14_filename are set"
+    expected_msg = "ABORTED: use_c14_bombspike TRUE but both atm_c14_filename AND stream_fldfilename_atm_c14 are set and only one should be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_both_c14_plain_and_stream_timeseries_files_set
@@ -138,9 +141,12 @@ contains
     @assertTrue(use_c13)
     @assertTrue(use_c13_timeseries)
     atm_c13_filename = ' '
-    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ' )
+    @assertTrue(use_c14)
+    @assertTrue(use_c14_bombspike)
+    @assertTrue(len_trim(atm_c14_filename) /= 0)
+    call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ', stream_fldfilename_atm_c14_in = ' ')
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c13_timeseries is TRUE but neither stream_fldfilename_atm_c13 nor atm_c13_filename are set"
+    expected_msg = "ABORTED: use_c13_timeseries TRUE but neither atm_c13_filename nor stream_fldfilename_atm_c13 are set and one or the other needs to be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_both_c13_plain_and_stream_timeseries_files_blank
@@ -154,7 +160,7 @@ contains
     atm_c14_filename = ' '
     call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = ' ' )
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c14_bombspike is TRUE but neither stream_fldfilename_atm_c14 nor atm_c14_filename are set"
+    expected_msg = "ABORTED: use_c14_bombspike TRUE but neither atm_c14_filename nor stream_fldfilename_atm_c14 are set and one or the other needs to be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_both_c14_plain_and_stream_timeseries_files_blank
@@ -170,7 +176,7 @@ contains
     atm_c13_filename = 'plain_c13_timeseries_file'
     call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = ' ' )
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c13_timeseries is false but either stream_fldfilename_atm_c13 or atm_c13_filename is set and should NOT be"
+    expected_msg = "ABORTED: use_c13_timeseries is false but either atm_c13_filename or stream_fldfilename_atm_c13 are set and neither should be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_c13_timeseries_off_and_plain_timeseries_file_set
@@ -186,7 +192,7 @@ contains
     atm_c13_filename = ' '
     call CIsoSetNMLInputs( stream_fldfilename_atm_c13_in = 'stream_c13_filename ' )
     call CIsoCheckNMLInputs()
-    expected_msg = "ABORTED: use_c13_timeseries is false but either stream_fldfilename_atm_c13 or atm_c13_filename is set and should NOT be"
+    expected_msg = "ABORTED: use_c13_timeseries is false but either atm_c13_filename or stream_fldfilename_atm_c13 are set and neither should be"
     @assertExceptionRaised(expected_msg)
 
   end subroutine abort_if_c13_timeseries_off_and_stream_timeseries_file_set
@@ -208,7 +214,7 @@ contains
        atm_c14_filename = 'plain_c14_timeseries_file'
        call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = ' ' )
        call CIsoCheckNMLInputs()
-       expected_msg = "ABORTED: use_c14_bombspike is false but either stream_fldfilename_atm_c14 or atm_c14_filename is set and should NOT be"
+       expected_msg = "ABORTED: use_c14_bombspike false but either atm_c14_filename or stream_fldfilename_atm_c14 is set and neither should be"
        @assertExceptionRaised(expected_msg)
     end do
 
@@ -231,7 +237,7 @@ contains
        atm_c14_filename = ' '
        call CIsoSetNMLInputs( stream_fldfilename_atm_c14_in = 'stream_c14_filename' )
        call CIsoCheckNMLInputs()
-       expected_msg = "ABORTED: use_c14_bombspike is false but either stream_fldfilename_atm_c14 or atm_c14_filename is set and should NOT be"
+       expected_msg = "ABORTED: use_c14_bombspike false but either atm_c14_filename or stream_fldfilename_atm_c14 is set and neither should be"
        @assertExceptionRaised(expected_msg)
     end do
 
