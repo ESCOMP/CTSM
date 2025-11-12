@@ -195,6 +195,25 @@
       <option name="comment">Testing that a initial condition file with an missing urban landunit will be filled with another urban landunit</option>
     </options>
   </test>
+
+  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Testing a few years with CMIP6 carbon isotopes</option>
+    </options>
+  </test>
+  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Testing a few years with CMIP7 carbon isotopes</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
