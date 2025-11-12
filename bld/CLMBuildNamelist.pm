@@ -812,7 +812,7 @@ sub setup_cmdl_fates_mode {
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		      "use_fates_managed_fire"
+                      "use_fates_managed_fire"
                    );
 
        # dis-allow fates specific namelist items with non-fates runs
@@ -1027,6 +1027,23 @@ sub setup_cmdl_fire_light_res {
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
   }
+
+  # we have to process defaults for fates fire modes before and not in setup_logc_fates, however, they should not be defined for use_cn or other bgc
+  if ( &value_is_true($nl->get_value('use_fates')) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_managed_fire',
+                 'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
+                 'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'), 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+     # Check use_fates_managed_fire mode is running with spitfire on
+     if ( defined($nl->get_value('use_fates_managed_fire'))  ) {
+        if ( &value_is_true($nl->get_value('use_fates_managed_fire')) ) {
+           if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
+              $log->fatal_error("fates_spitfire_mode must be non-zero when use_fates_managed_fire is true");
+           }
+        }
+     }
+  }
+
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
@@ -4781,8 +4798,7 @@ sub setup_logic_fates {
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		       "use_fates_managed_fire"
+                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model"
                     );
 
         foreach my $var ( @list ) {
@@ -4802,9 +4818,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
-                    'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'),
-                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+
 
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
@@ -4937,16 +4951,6 @@ sub setup_logic_fates {
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               }
-           }
-        }
-
-        # Check use_fates_managed_fire mode is running with spitfire on
-        my $var = "use_fates_managed_fire";
-        if ( defined($nl->get_value($var))  ) {
-           if ( &value_is_true($nl->get_value($var)) ) {
-              if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
-                 $log->fatal_error("fates_spitfire_mode must be non-zero when $var is true");
-	      }
            }
         }
     }
