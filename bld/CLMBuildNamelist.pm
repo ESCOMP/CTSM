@@ -3762,6 +3762,7 @@ sub setup_logic_c_isotope {
     my $atm_c14_filename = $nl->get_value('atm_c14_filename');
     if ( &value_is_true($use_c14) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'use_c14'=>$use_c14 );
+      $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
       if ( &value_is_true($use_c14_bombspike) ) {
          if ( defined($stream_fldfilename_atm_c14) ) {
             setup_logic_c14_streams($opts, $nl_flags, $definition, $defaults, $nl);
