@@ -1,5 +1,17 @@
 module CTSMForce2DStreamBaseType
 
+!
+! Description:
+!
+! Base module to handle 2D streams in CTSM. Specific streams extend this object
+! for the details needed to handle a specific stream file.
+!
+! Having this base type allows the ESMF specific streams implementation to be isolated
+! from the CTSM code. This allows the streams code this is based on to change in one place.
+! It also makes it easier to unit-test extensions of this type as they become pretty standard
+! CTSM code and there is a unit-tester stub for this code.
+!
+
 #include "shr_assert.h"
 
   use ESMF, only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
@@ -14,6 +26,9 @@ module CTSMForce2DStreamBaseType
   implicit none
   private
 
+  !-----------------------------------------------------------------------
+  ! Base 2D streams type
+  !-----------------------------------------------------------------------
   type, abstract, public :: ctsm_force_2DStream_base_type
      private
      type(shr_strdata_type) :: sdat  ! Stream data type
@@ -21,21 +36,32 @@ module CTSMForce2DStreamBaseType
      character(len=CL) :: stream_name ! The stream name (also in sdat)
   contains
 
-      ! PUBLIC METHODS
-      procedure(Init_interface) , public, deferred :: Init
-      procedure, public, non_overridable :: InitBase ! Initialize and read data in the streams, , store the g_to_ig index array
-      procedure(Clean_interface), public, deferred :: Clean  ! Clean and deallocate the object class method
-      procedure, public, non_overridable :: CleanBase ! Clean method for the base type
-      procedure, public, non_overridable :: Advance   ! Advance the streams data to the current model date
-      procedure, public :: GetPtr1D  ! Get pointer to the 1D data array
-      procedure(Interp_interface), public, deferred :: Interp  ! method in extensions to turn stream data into output data
+     ! PUBLIC METHODS
+     procedure(Init_interface) , public, deferred :: Init ! Initiale the extended type
+     procedure, public, non_overridable :: InitBase ! Initialize and read data in the streams
+     procedure(Clean_interface), public, deferred :: Clean  ! Clean and deallocate the object class method
+     procedure, public, non_overridable :: CleanBase ! Clean method for the base type
+     procedure, public, non_overridable :: Advance   ! Advance the streams data to the current model date
+     procedure, public :: GetPtr1D  ! Get pointer to the 1D data array
+     procedure(Interp_interface), public, deferred :: Interp  ! method in extensions to turn stream data into CTSM  data
 
   end type ctsm_force_2DStream_base_type
+  !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  ! Interfaces that will be deferred to the extended type
+  !-----------------------------------------------------------------------
   abstract interface
+
+     !-----------------------------------------------------------------------
 
      subroutine Init_interface( this, bounds, fldfilename, meshfile, mapalgo, tintalgo, taxmode, &
                            year_first, year_last, model_year_align )
+         ! Description:
+         !
+         ! Initialize the specific stream type that extends the base type
+         ! Normally the extended type will call the InitBase as well as doing other initialization needed
+         !
          ! Uses:
          use decompMod , only : bounds_type
          import :: ctsm_force_2DStream_base_type
@@ -54,7 +80,12 @@ module CTSMForce2DStreamBaseType
          integer, intent(in) :: model_year_align ! align yearFirst with this model year
      end subroutine Init_interface
 
+     !-----------------------------------------------------------------------
+
      subroutine Clean_interface(this)
+       ! Description:
+       ! Clean up any memory allocated in the specific stream type that extends the base type
+       ! Normally the extended type will call the CleanBase method as well as other things needed.
        ! Uses:
        import :: ctsm_force_2DStream_base_type
        !
@@ -62,7 +93,13 @@ module CTSMForce2DStreamBaseType
        class(ctsm_force_2DStream_base_type), intent(inout) :: this
      end subroutine Clean_interface 
 
+     !-----------------------------------------------------------------------
+
      subroutine Interp_interface(this, bounds)
+       ! Description:
+       ! Get the current time data from the streams and put it into the data of the extension.
+       ! What this looks like may vary with the streams extension, but in general it will use
+       ! The GetPtr1D method to get the streams data.
        ! Uses:
        use decompMod , only : bounds_type
        import :: ctsm_force_2DStream_base_type
@@ -73,14 +110,24 @@ module CTSMForce2DStreamBaseType
      end subroutine Interp_interface
 
   end interface
+  !-----------------------------------------------------------------------
 
-    character(len=*), parameter, private :: sourcefile = &
-       __FILE__
+  character(len=*), parameter, private :: sourcefile = &
+     __FILE__
 
-   contains
+  !-----------------------------------------------------------------------
+  contains
+  !-----------------------------------------------------------------------
 
-      subroutine InitBase( this, bounds, varnames, fldfilename, meshfile, mapalgo, tintalgo, taxmode, name, &
-                           year_first, year_last, model_year_align )
+     !-----------------------------------------------------------------------
+
+     subroutine InitBase( this, bounds, varnames, fldfilename, meshfile, mapalgo, tintalgo, taxmode, name, &
+                          year_first, year_last, model_year_align )
+         !
+         ! Description:
+         !
+         ! Initialization of the base type. Extended types will normally call this as part of their initialization.
+         !
          ! Uses:
          use lnd_comp_shr , only : mesh, model_clock
          use dshr_strdata_mod , only : shr_strdata_init_from_inline
@@ -138,9 +185,16 @@ module CTSMForce2DStreamBaseType
             write(iulog,*) ' Streams initialization failing for ', trim(name), ' stream file = ', trim(fldfilename)
             call endrun( 'CTSM forcing Streams initialization failing', file=sourcefile, line=__LINE__ )
          end if
-      end subroutine InitBase
+     end subroutine InitBase
 
-      subroutine CleanBase( this )
+     !-----------------------------------------------------------------------
+
+     subroutine CleanBase( this )
+         ! Description:
+         ! Clean up any memory in the base type as needed.
+         ! Normally types that extend this base type will call this as part of their clean operation
+         !
+         ! Arguments:
          class(ctsm_force_2DStream_base_type) , intent(inout) :: this 
 
          integer :: ierr ! error code
@@ -148,9 +202,16 @@ module CTSMForce2DStreamBaseType
          ! Currently no data to deallocate other than the stream data type
          ! The stream data type doesn't have a clean method right now
          ! So doing a few things manually here
-      end subroutine CleanBase
+     end subroutine CleanBase
 
-      subroutine Advance(this)
+     !-----------------------------------------------------------------------
+
+     subroutine Advance(this)
+         !
+         ! Description:
+         !
+         ! Advance the stream to the current time-step
+         !
          ! Uses:
          use clm_time_manager , only : get_curr_date
          use dshr_strdata_mod , only : shr_strdata_advance
@@ -173,10 +234,18 @@ module CTSMForce2DStreamBaseType
             write(iulog,*) ' Streams advance failing for ', trim(this%stream_name), ' stream file = ', trim(this%stream_filename)
             call endrun( 'CTSM forcing Streams advance failing', file=sourcefile, line=__LINE__ )
          end if
-      end subroutine Advance
+     end subroutine Advance
 
-      subroutine GetPtr1D(this, fldname, dataptr1d)
+     !-----------------------------------------------------------------------
+
+     subroutine GetPtr1D(this, fldname, dataptr1d)
+         !
+         ! Description:
+         !
          ! Get the pointer to the 1D data array for the given field name
+         ! Normally stream extensions will use this in the Interp method to 
+         ! save the stream data locally.
+         !
          ! Uses:
          use dshr_methods_mod , only : dshr_fldbun_getfldptr
          ! Arguments:
@@ -193,7 +262,8 @@ module CTSMForce2DStreamBaseType
             call endrun( 'Error getting field pointer for '//trim(fldname)//' from stream data', file=sourcefile, line=__LINE__ )
          end if
 
-      end subroutine GetPtr1D
+     end subroutine GetPtr1D
 
+     !-----------------------------------------------------------------------
 
 end module CTSMForce2DStreamBaseType
