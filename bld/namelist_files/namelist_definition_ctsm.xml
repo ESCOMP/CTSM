@@ -1821,7 +1821,7 @@ First year to loop over for atmospheric C14 isotope delta data
 Last year to loop over for data atmospheric C14 isotope delta data
 </entry>
 
-<entry id="model_year_align_atm_c14" type="integer" category="datasets"
+<entry id="stream_model_year_align_atm_c14" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
 Simulation year that aligns with stream_year_first_atm_c14 value
 </entry>
@@ -1841,7 +1841,7 @@ First year to loop over for atmospheric C13 isotope delta data
 Last year to loop over for data atmospheric C13 isotope delta data
 </entry>
 
-<entry id="model_year_align_atm_c13" type="integer" category="datasets"
+<entry id="stream_model_year_align_atm_c13" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
 Simulation year that aligns with stream_year_first_atm_c13 value
 </entry>
