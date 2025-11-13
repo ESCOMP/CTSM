@@ -1018,11 +1018,14 @@ sub setup_cmdl_fire_light_res {
   my $val = $opts->{$var};
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-  }
-  # fates_spitfire_mode default has to get a default here and not in setup_logic_fates
-  if ( ! defined($nl->get_value('fates_spitfire_mode'))){
-      add_default($opts, $nl_flags->{'inputdata_rootdir'},  $definition, $defaults, $nl,'fates_spitfire_mode',
-                  'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'});
+  } else {
+     if ( &value_is_true($nl->get_value('use_fates')) ) {
+     # fates_spitfire_mode default has to get a default here and not in setup_logic_fates
+        if ( ! defined($nl->get_value('fates_spitfire_mode'))){
+            add_default($opts, $nl_flags->{'inputdata_rootdir'},  $definition, $defaults, $nl,'fates_spitfire_mode',
+                       'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'});
+        }
+     }
   }
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
