@@ -1,5 +1,6 @@
 module PrigentRoughnessStreamType
 
+#include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -151,6 +152,7 @@ contains
                ig = 0
                do g = bounds%begg,bounds%endg
                   ig = ig+1
+                  SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
                   this%prigent_rghn(g) = dataptr1d(ig)
                end do
 
