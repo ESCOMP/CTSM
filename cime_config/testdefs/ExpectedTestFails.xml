@@ -303,4 +303,19 @@
   <!--NORESM tests that fail-->
 
 
+  <test name="ERS.f09_f09_mtn14.I2000Clm60Bgc.betzy_intel.clm-lnd2rof_tracers">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>NorESMhub/MOSART#13</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld5.5x5_amazon.I2000Clm60FatesRs.betzy_intel.clm-FatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>NorESMhub/CTSM#163</issue>
+    </phase>
+  </test>
+
+
 </expectedFails>

@@ -4509,7 +4509,7 @@
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:10:00</option>
       <option name="comment">""</option>
     </options>
   </test>
