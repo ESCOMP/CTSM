@@ -9,6 +9,7 @@ import glob
 from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
+import cftime
 
 from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
@@ -295,7 +296,6 @@ def import_and_process_1yr(
     gddharv_yp_list,
     skip_patches_for_isel_nan_last_year,
     last_year_active_patch_indices_list,
-    incorrectly_daily,
     incl_vegtypes_str_in,
     h2_ds_file,
     mxmats,
@@ -334,20 +334,11 @@ def import_and_process_1yr(
         logger=logger,
         time_slice=h1_time_slice,
     )
-    for timestep in dates_ds["time"].values:
-        print(timestep)
 
-    if dates_ds.dims["time"] > 1:
-        if dates_ds.dims["time"] == 365:
-            if not incorrectly_daily:
-                log(
-                    logger,
-                    "   ℹ️ You saved SDATES and HDATES daily, but you only needed annual. Fixing.",
-                )
-            incorrectly_daily = True
-            dates_ds = dates_ds.isel(time=-1)
-    else:
-        dates_ds = dates_ds.isel(time=0)
+    # Expect only one timestep for annual h1 after time-slicing
+    nt = dates_ds.sizes["time"]
+    assert nt == 1, f"Expected 1 timestep in time_slice {h1_time_slice} of {h1_filelist}; got {nt}"
+    dates_ds = dates_ds.isel(time=0)
 
     # Make sure NaN masks match
     sdates_all_nan = (
@@ -408,37 +399,19 @@ def import_and_process_1yr(
     if np.sum(~np.isnan(dates_incl_ds.SDATES.values)) == 0:
         error(logger, "All SDATES are NaN after ignoring those patches!")
 
-    # Some patches can have -1 sowing date?? Hopefully just an artifact of me incorrectly saving
-    # SDATES/HDATES daily.
+    # Some patches can have -1 sowing date??
     mxsowings = dates_ds.dims["mxsowings"]
-    mxsowings_dim = dates_ds.SDATES.dims.index("mxsowings")
     skip_patches_for_isel_sdatelt1 = np.where(dates_incl_ds.SDATES.values < 1)[1]
     skipping_patches_for_isel_sdatelt1 = len(skip_patches_for_isel_sdatelt1) > 0
     if skipping_patches_for_isel_sdatelt1:
         unique_hdates = np.unique(
             dates_incl_ds.HDATES.isel(mxharvests=0, patch=skip_patches_for_isel_sdatelt1).values
         )
-        if incorrectly_daily and list(unique_hdates) == [364]:
-            log(
-                logger,
-                f"   ❗ {len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1, but this"
-                + "might have just been because of incorrectly daily outputs. Setting them to 365.",
-            )
-            new_sdates_ar = dates_incl_ds.SDATES.values
-            if mxsowings_dim != 0:
-                error(logger, "Code this up")
-            new_sdates_ar[0, skip_patches_for_isel_sdatelt1] = 365
-            dates_incl_ds["SDATES"] = xr.DataArray(
-                data=new_sdates_ar,
-                coords=dates_incl_ds["SDATES"].coords,
-                attrs=dates_incl_ds["SDATES"].attrs,
-            )
-        else:
-            error(
-                logger,
-                f"{len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1. "
-                + f"Unique affected hdates: {unique_hdates}",
-            )
+        error(
+            logger,
+            f"{len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1. "
+            + f"Unique affected hdates: {unique_hdates}",
+        )
 
     # Some patches can have -1 harvest date?? Hopefully just an artifact of me incorrectly saving
     # SDATES/HDATES daily. Can also happen if patch wasn't active last year
@@ -484,30 +457,13 @@ def import_and_process_1yr(
         unique_sdates = np.unique(
             dates_incl_ds.SDATES.isel(patch=skip_patches_for_isel_hdatelt1).values
         )
-        if incorrectly_daily and list(unique_sdates) == [1]:
-            log(
-                logger,
-                f"   ❗ {len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1??? Seems like "
-                + "this might have just been because of incorrectly daily outputs; setting them to "
-                + "365.",
-            )
-            new_hdates_ar = dates_incl_ds.HDATES.values
-            if mxharvests_dim != 0:
-                error(logger, "Code this up")
-            new_hdates_ar[0, skip_patches_for_isel_hdatelt1] = 365
-            dates_incl_ds["HDATES"] = xr.DataArray(
-                data=new_hdates_ar,
-                coords=dates_incl_ds["HDATES"].coords,
-                attrs=dates_incl_ds["HDATES"].attrs,
-            )
-        else:
-            error(
-                logger,
-                f"{len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1. Possible causes:\n"
-                + "* Not using constant crop areas (e.g., flanduse_timeseries from "
-                + "make_lu_for_gddgen.py)\n   * Not skipping the first 2 years of output\n"
-                + f"Unique affected sdates: {unique_sdates}",
-            )
+        error(
+            logger,
+            f"{len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1. Possible causes:\n"
+            + "* Not using constant crop areas (e.g., flanduse_timeseries from "
+            + "make_lu_for_gddgen.py)\n   * Not skipping the first 2 years of output\n"
+            + f"Unique affected sdates: {unique_sdates}",
+        )
 
     # Make sure there was only one harvest per year
     n_extra_harv = np.sum(
@@ -622,6 +578,13 @@ def import_and_process_1yr(
         logger=logger,
         time_slice=h2_time_slice,
     )
+    # Expect 365 days (366 for leap years)
+    nt = h2_ds.sizes["time"]
+    dt0 = h2_ds["time"].isel(time=0).values[0]
+    ndays_expected = 366 if cftime.is_leap_year(dt0.year, dt0.calendar) else 365
+    assert (
+        nt == ndays_expected
+    ), f"Expected {ndays_expected} timesteps in time {h1_time_slice} of {h1_filelist}; got {nt}"
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
@@ -740,44 +703,20 @@ def import_and_process_1yr(
                 this_year_active_patch_indices[x] for x in where_gs_lastyr
             ]
             if not np.array_equal(last_year_active_patch_indices, this_year_active_patch_indices):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ This year's active patch indices differ from last year's. "
-                        + "Allowing because this might just be an artifact of incorrectly daily "
-                        + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "This year's active patch indices differ from last year's.")
+                error(logger, "This year's active patch indices differ from last year's.")
             # Make sure we're not about to overwrite any existing values.
             if np.any(
                 ~np.isnan(
                     gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected non-NaN for last season's GDD accumulation. "
-                        + "Allowing because this might just be an artifact of incorrectly daily "
-                        + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected non-NaN for last season's GDD accumulation")
+                error(logger, "Unexpected non-NaN for last season's GDD accumulation")
             if save_figs and np.any(
                 ~np.isnan(
                     gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected non-NaN for last season's GDDHARV. Allowing "
-                        + "because this might just be an artifact of incorrectly daily outputs, "
-                        + "BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected non-NaN for last season's GDDHARV")
+                error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
             gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
                 gddaccum_atharv_p[where_gs_lastyr]
@@ -792,15 +731,7 @@ def import_and_process_1yr(
                     gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected NaN for last season's GDD accumulation. Allowing "
-                        + "because this might just be an artifact of incorrectly daily outputs, "
-                        + "BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected NaN for last season's GDD accumulation.")
+                error(logger, "Unexpected NaN for last season's GDD accumulation.")
             if (
                 save_figs
                 and check_gddharv
@@ -812,15 +743,7 @@ def import_and_process_1yr(
                     )
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected NaN for last season's GDDHARV. Allowing because "
-                        + "this might just be an artifact of incorrectly daily outputs, BUT "
-                        + "RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected NaN for last season's GDDHARV.")
+                error(logger, "Unexpected NaN for last season's GDDHARV.")
         gddaccum_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddaccum
         if save_figs:
             gddharv_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddharv
@@ -835,19 +758,11 @@ def import_and_process_1yr(
             )
             nanmask_output_gdds_lastyr = np.isnan(gddaccum_yp_list[var][year_index - 1, :])
             if not np.array_equal(nanmask_output_gdds_lastyr, nanmask_output_sdates):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ NaN masks differ between this year's sdates and 'filled-out' "
-                        + "GDDs from last year. Allowing because this might just be an artifact of "
-                        + "incorrectly daily outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(
-                        logger,
-                        "NaN masks differ between this year's sdates and 'filled-out' GDDs from "
-                        + "last year",
-                    )
+                error(
+                    logger,
+                    "NaN masks differ between this year's sdates and 'filled-out' GDDs from "
+                    + "last year",
+                )
         last_year_active_patch_indices_list[var] = this_year_active_patch_indices
 
     skip_patches_for_isel_nan_last_year = skip_patches_for_isel_nan
@@ -864,7 +779,6 @@ def import_and_process_1yr(
         gddharv_yp_list,
         skip_patches_for_isel_nan_last_year,
         last_year_active_patch_indices_list,
-        incorrectly_daily,
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
