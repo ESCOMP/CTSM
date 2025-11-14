@@ -230,6 +230,49 @@ class TestGetMaxGsLengths(unittest.TestCase):
         self.assertEqual(mxmats["miscanthus"], 210 - cushion)
 
 
+class TestGetTimeSliceList(unittest.TestCase):
+    """Tests for _get_time_slice_list()"""
+
+    def test_generate_gdds_get_time_slice_list(self):
+        """Test that _get_time_slice_list works with two different years"""
+        season_list = [1986, 1987]
+        result = gg._get_time_slice_list(season_list[0], season_list[-1])
+        expected = [
+            slice("1987-01-01", "1987-12-31"),
+            slice("1988-01-01", "1988-12-31"),
+            slice("1989-01-01", "1989-12-31"),
+        ]
+        assert result == expected
+
+    def test_generate_gdds_get_time_slice_list_1yr(self):
+        """Test that _get_time_slice_list works with the same year"""
+        result = gg._get_time_slice_list(1987, 1987)
+        expected = [
+            slice("1988-01-01", "1988-12-31"),
+            slice("1989-01-01", "1989-12-31"),
+        ]
+        assert result == expected
+
+    def test_generate_gdds_get_time_slice_list_valueerror(self):
+        """Test that _get_time_slice_list raises ValueError if last < first"""
+        with self.assertRaisesRegex(ValueError, "first_season.* > last_season"):
+            gg._get_time_slice_list(1987, 1986)
+
+    def test_generate_gdds_get_time_slice_list_typeerror_first(self):
+        """Test that _get_time_slice_list raises TypeError if not given integer first season"""
+        with self.assertRaisesRegex(
+            TypeError, r"_get_time_slice_list\(\) arguments must be integers"
+        ):
+            gg._get_time_slice_list(1986.3, 1987)
+
+    def test_generate_gdds_get_time_slice_list_typeerror_last(self):
+        """Test that _get_time_slice_list raises TypeError if not given integer last season"""
+        with self.assertRaisesRegex(
+            TypeError, r"_get_time_slice_list\(\) arguments must be integers"
+        ):
+            gg._get_time_slice_list(1986, None)
+
+
 class TestCheckGridMatch(unittest.TestCase):
     """Tests check_grid_match()"""
 

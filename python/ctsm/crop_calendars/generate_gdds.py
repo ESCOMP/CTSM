@@ -42,6 +42,43 @@ def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfil
     return mxmats
 
 
+def _get_time_slice_list(first_season, last_season):
+    """
+    Given the requested first and last seasons, get the list of time slices that the script should
+    look for. The assumptions here, as in import_and_process_1yr and as instructed in the docs, are
+    that the user (a) is saving instantaneous annual files and (b) started on Jan. 1.
+    """
+
+    # Input checks
+    if not all(isinstance(i, int) for i in [first_season, last_season]):
+        raise TypeError("_get_time_slice_list() arguments must be integers")
+    if first_season > last_season:
+        raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
+
+    # Saving at the end of a year receive the timestamp of the END of the year's final timestep,
+    # which means it will actually be 00:00 of Jan. 1 of the next year.
+    first_history_yr = first_season + 1
+
+    # Same deal for the last history timestep, but we have to read an extra year in that case,
+    # because in some places the last growing season won't complete until the year after it was
+    # planted.
+    last_history_yr = last_season + 2
+
+    slice_list = []
+    # last_history_yr + 1 because range() will iterate up to but not including the second value.
+    for history_yr in range(first_history_yr, last_history_yr + 1):
+        slice_start = f"{history_yr}-01-01"
+        # Stop could probably be the same as start, since there should just be one value saved per
+        # year and that should get the Jan. 1 timestamp.
+        slice_stop = f"{history_yr}-12-31"
+        slice_list.append(slice(slice_start, slice_stop))
+
+    # We should be reading one more than the total number of years in [first_season, last_season].
+    assert len(slice_list) == last_season - first_season + 2
+
+    return slice_list
+
+
 def main(
     *,
     input_dir=None,
