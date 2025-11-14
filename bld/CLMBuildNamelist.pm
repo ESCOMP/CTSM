@@ -1030,10 +1030,14 @@ sub setup_cmdl_fire_light_res {
 
   # we have to process defaults for fates fire modes before and not in setup_logc_fates, however, they should not be defined for use_cn or other bgc
   if ( &value_is_true($nl->get_value('use_fates')) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_managed_fire',
+     if ( ! defined($nl->get_value('use_fates_managed_fire')) ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_managed_fire',
                  'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
+     }
+     if ( ! defined($nl->get_value('fates_spitfire_mode')) ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
                  'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'), 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+     }
      # Check use_fates_managed_fire mode is running with spitfire on
      if ( defined($nl->get_value('use_fates_managed_fire'))  ) {
         if ( &value_is_true($nl->get_value('use_fates_managed_fire')) ) {
