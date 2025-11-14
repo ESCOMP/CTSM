@@ -871,17 +871,13 @@ def import_and_process_1yr(
     )
 
 
-def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
+def find_inst_hist_files(indir, *, h, logger=None):
     """
-    Find all the instantaneous history files for a given tape number, optionally looking just for
-    one year in filename.
+    Find all the instantaneous history files for a given tape number.
 
     Args:
         indir: Directory to search for history files
         h: History tape number (must be an integer, e.g., 1 for h1, 2 for h2)
-        this_year: Optional year to filter files by. If provided, only files with dates starting
-                   with "{this_year}-01" will be returned. If None, all files matching the
-                   history tape number will be returned.
         logger: Optional logger for error messages. If None, errors are raised without logging.
 
     Returns:
@@ -891,26 +887,22 @@ def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
         TypeError: If h is not an integer
         FileNotFoundError: If no files matching the patterns are found
         RuntimeError: If files from multiple case names are found (indicates mixed output from
-                     different simulations, which is pathological)
+                     different simulations)
 
     Notes:
         - Searches for files matching patterns: "*h{h}i.*.nc" or "*h{h}i.*.nc.base"
-        - When this_year is specified, searches for: "*h{h}i.{this_year}-01*.nc" or
-          "*h{h}i.{this_year}-01*.nc.base"
         - Prefers .nc files over .nc.base files (searches .nc pattern first)
         - All returned files must be from the same case name (extracted from filename before
           ".clm2.h#i.")
     """
-    if this_year is None:
-        patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
-    else:
-        if not isinstance(h, int):
-            err_msg = f"h ({h}) must be an integer, not {type(h)}"
-            err_type = TypeError
-            if logger:
-                error(logger, err_msg, error_type=err_type)
-            raise err_type(err_msg)
-        patterns = [f"*h{h}i.{this_year}-01*.nc", f"*h{h}i.{this_year}-01*.nc.base"]
+    if not isinstance(h, int):
+        err_msg = f"h ({h}) must be an integer, not {type(h)}"
+        err_type = TypeError
+        if logger:
+            error(logger, err_msg, error_type=err_type)
+        raise err_type(err_msg)
+
+    patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
     for pat in patterns:
         pattern = os.path.join(indir, pat)
         file_list = glob.glob(pattern)
