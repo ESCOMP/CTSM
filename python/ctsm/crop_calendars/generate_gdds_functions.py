@@ -321,13 +321,7 @@ def import_and_process_1yr(
         chunks = None
 
     # Get h1 file (list)
-    h1_pattern = os.path.join(indir, "*h1i.*.nc")
-    h1_filelist = glob.glob(h1_pattern)
-    if not h1_filelist:
-        h1_pattern = os.path.join(indir, "*h1i.*.nc.base")
-        h1_filelist = glob.glob(h1_pattern)
-        if not h1_filelist:
-            error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
+    h1_filelist = find_inst_hist_files(indir, h=1, this_year=None, logger=logger)
 
     # Get list of crops to include
     if skip_crops is not None:
@@ -631,14 +625,7 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
-    for pat in patterns:
-        pattern = os.path.join(indir, pat)
-        h2_files = glob.glob(pattern)
-        if h2_files:
-            break
-    if not h2_files:
-        error(logger, f"No files found matching patterns: {patterns}")
+    h2_files = find_inst_hist_files(indir, h=2, this_year=this_year - 1, logger=logger)
     h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
@@ -894,6 +881,77 @@ def import_and_process_1yr(
         mxsowings,
         h1_instantaneous,
     )
+
+
+def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
+    """
+    Find all the instantaneous history files for a given tape number, optionally looking just for
+    one year in filename.
+
+    Args:
+        indir: Directory to search for history files
+        h: History tape number (must be an integer, e.g., 1 for h1, 2 for h2)
+        this_year: Optional year to filter files by. If provided, only files with dates starting
+                   with "{this_year}-01" will be returned. If None, all files matching the
+                   history tape number will be returned.
+        logger: Optional logger for error messages. If None, errors are raised without logging.
+
+    Returns:
+        List of file paths matching the search criteria
+
+    Raises:
+        TypeError: If h is not an integer
+        FileNotFoundError: If no files matching the patterns are found
+        RuntimeError: If files from multiple case names are found (indicates mixed output from
+                     different simulations, which is pathological)
+
+    Notes:
+        - Searches for files matching patterns: "*h{h}i.*.nc" or "*h{h}i.*.nc.base"
+        - When this_year is specified, searches for: "*h{h}i.{this_year}-01*.nc" or
+          "*h{h}i.{this_year}-01*.nc.base"
+        - Prefers .nc files over .nc.base files (searches .nc pattern first)
+        - All returned files must be from the same case name (extracted from filename before
+          ".clm2.h#i.")
+    """
+    if this_year is None:
+        patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
+    else:
+        if not isinstance(h, int):
+            err_msg = f"h ({h}) must be an integer, not {type(h)}"
+            err_type = TypeError
+            if logger:
+                error(logger, err_msg, error_type=err_type)
+            raise err_type(err_msg)
+        patterns = [f"*h{h}i.{this_year}-01*.nc", f"*h{h}i.{this_year}-01*.nc.base"]
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
+        file_list = glob.glob(pattern)
+        if file_list:
+            break
+    if not file_list:
+        err_msg = f"No files found matching patterns: {patterns}"
+        err_type = FileNotFoundError
+        if logger:
+            error(logger, err_msg, error_type=err_type)
+        raise err_type(err_msg)
+
+    # Error if files found from multiple cases
+    case_names = set()
+    for file in file_list:
+        basename = os.path.basename(file)
+        # Extract case name (everything before .clm2.h#i.)
+        parts = basename.split(".clm2.")
+        if len(parts) > 1:
+            case_name = parts[0]
+            case_names.add(case_name)
+    if len(case_names) > 1:
+        err_msg = f"Found files from multiple case names: {sorted(case_names)}"
+        err_type = RuntimeError
+        if logger:
+            error(logger, err_msg, error_type=err_type)
+        raise err_type(err_msg)
+
+    return file_list
 
 
 def get_multicrop_maps(this_ds, these_vars, crop_fracs_yx, dummy_fill, gdd_units):

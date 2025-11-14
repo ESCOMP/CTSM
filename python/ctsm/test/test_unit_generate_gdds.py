@@ -7,6 +7,9 @@ Unit tests for generate_gdds.py and generate_gdds_functions.py
 import unittest
 import os
 import argparse
+import tempfile
+import shutil
+import logging
 
 import numpy as np
 import xarray as xr
@@ -125,8 +128,10 @@ class TestGenerateGddsArgs(unittest.TestCase):
             gg._parse_args(args)
 
     def test_generate_gdds_args_error_with_nomxmat_and_cushion(self):
-        """Should error if both --max-season-length-cushion and --max-season-length-from-hdates-file
-        are given"""
+        """
+        Should error if both --max-season-length-cushion and --max-season-length-from-hdates-file
+        are given
+        """
         args = [
             "--input-dir",
             self._input_dir,
@@ -366,6 +371,190 @@ class TestCheckGridMatch(unittest.TestCase):
         match, max_abs_diff = gf.check_grid_match(da0, da1)
         self.assertFalse(match)
         self.assertIsNone(max_abs_diff)
+
+
+class TestFindInstHistFiles(unittest.TestCase):
+    """Tests of find_inst_hist_files()"""
+
+    def setUp(self):
+        """
+        Set up and change to temporary directory
+        """
+        self.prev_dir = os.getcwd()
+        self.temp_dir = tempfile.mkdtemp()
+        os.chdir(self.temp_dir)
+
+    def tearDown(self):
+        """
+        Delete temporary directory
+        """
+        os.chdir(self.prev_dir)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _create_test_file(self, filename):
+        """Helper to create an empty test file"""
+        filepath = os.path.join(self.temp_dir, filename)
+        with open(filepath, "a", encoding="utf-8"):
+            pass
+        return filepath
+
+    def test_find_inst_hist_files_h1_no_year(self):
+        """Test finding h1 files without specifying year"""
+        # Create test files
+        file1 = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        file2 = self._create_test_file("test.clm2.h1i.2000-02-01-00000.nc")
+        file3 = self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
+
+        # Should find all h1i files
+        self.assertEqual(len(result), 3)
+        self.assertIn(file1, result)
+        self.assertIn(file2, result)
+        self.assertIn(file3, result)
+
+    def test_find_inst_hist_files_h2_no_year(self):
+        """Test finding h2 files without specifying year"""
+        # Create test files
+        file1 = self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+        file2 = self._create_test_file("test.clm2.h2i.2001-01-01-00000.nc")
+        # Create h1 file that should not be found
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=2, this_year=None)
+
+        # Should find only h2i files
+        self.assertEqual(len(result), 2)
+        self.assertIn(file1, result)
+        self.assertIn(file2, result)
+
+    def test_find_inst_hist_files_with_year(self):
+        """Test finding files for a specific year"""
+        # Create test files
+        file_2000 = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        file_2001 = self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc")
+        file_2002 = self._create_test_file("test.clm2.h1i.2002-01-01-00000.nc")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2001)
+
+        # Should find only 2001 file
+        self.assertEqual(len(result), 1)
+        self.assertIn(file_2001, result)
+        self.assertNotIn(file_2000, result)
+        self.assertNotIn(file_2002, result)
+
+    def test_find_inst_hist_files_base_extension(self):
+        """Test finding files with .nc.base extension"""
+        # Create test files with .nc.base extension
+        file1 = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc.base")
+        file2 = self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc.base")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
+
+        # Should find .nc.base files
+        self.assertEqual(len(result), 2)
+        self.assertIn(file1, result)
+        self.assertIn(file2, result)
+
+    def test_find_inst_hist_files_prefer_nc_over_base(self):
+        """Test that .nc files are preferred over .nc.base files"""
+        # Create both .nc and .nc.base files
+        file_nc = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
+
+        # Should find .nc files first (pattern order preference)
+        self.assertIn(file_nc, result)
+        # .nc.base should only be found if no .nc files exist
+
+    def test_find_inst_hist_files_multiple_months_same_year(self):
+        """Test finding multiple files from the same year"""
+        # Create multiple files from 2000
+        file1 = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        file2 = self._create_test_file("test.clm2.h1i.2000-01-15-00000.nc")
+        file3 = self._create_test_file("test.clm2.h1i.2000-01-31-00000.nc")
+        # Create file from different year
+        self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc")
+
+        result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2000)
+
+        # Should find all January 2000 files
+        self.assertEqual(len(result), 3)
+        self.assertIn(file1, result)
+        self.assertIn(file2, result)
+        self.assertIn(file3, result)
+
+    def test_find_inst_hist_files_no_files_found(self):
+        """Test error when no matching files are found"""
+        # Create a non-matching file
+        self._create_test_file("test.clm2.h0.2000-01-01-00000.nc")
+
+        # Should raise a FileNotFoundError error
+        with self.assertRaises(FileNotFoundError):
+            gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
+
+    def test_find_inst_hist_files_different_case_names(self):
+        """Test that RuntimeError is raised when files from different case names are found"""
+        # Create files with different case names
+        self._create_test_file("case1.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("case2.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("longcasename.clm2.h1i.2000-01-01-00000.nc")
+
+        # Should raise RuntimeError due to multiple case names
+        with self.assertRaises(RuntimeError):
+            gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2000)
+
+    def test_find_inst_hist_files_different_case_names_with_logger(self):
+        """
+        Test that RuntimeError is raised when files from different case names are found, with logger
+        """
+        # Create a logger
+        logger = logging.getLogger("test_logger_case_names")
+        logger.setLevel(logging.DEBUG)
+
+        # Create files with different case names
+        self._create_test_file("case1.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("case2.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("longcasename.clm2.h1i.2000-01-01-00000.nc")
+
+        # Should raise RuntimeError due to multiple case names, even with logger
+        with self.assertRaises(RuntimeError):
+            gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2000, logger=logger)
+
+    def test_find_inst_hist_files_no_files_found_with_logger(self):
+        """Test error when no matching files are found, with logger"""
+        # Create a logger
+        logger = logging.getLogger("test_logger_no_files")
+        logger.setLevel(logging.DEBUG)
+
+        # Create a non-matching file
+        self._create_test_file("test.clm2.h0.2000-01-01-00000.nc")
+
+        # Should raise a FileNotFoundError even with logger
+        with self.assertRaises(FileNotFoundError):
+            gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None, logger=logger)
+
+    def test_find_inst_hist_files_h_str_with_logger(self):
+        """Test that TypeError is raised when h is a string, with logger"""
+        # Create a logger
+        logger = logging.getLogger("test_logger_h_str")
+        logger.setLevel(logging.DEBUG)
+
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+
+        with self.assertRaises(TypeError):
+            gf.find_inst_hist_files(self.temp_dir, h="1", this_year=2000, logger=logger)
+
+    def test_find_inst_hist_files_h_float_with_logger(self):
+        """Test that TypeError is raised when h is a float, with logger"""
+        # Create a logger
+        logger = logging.getLogger("test_logger_h_float")
+        logger.setLevel(logging.DEBUG)
+
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+
+        with self.assertRaises(TypeError):
+            gf.find_inst_hist_files(self.temp_dir, h=1.0, this_year=2000, logger=logger)
 
 
 if __name__ == "__main__":
