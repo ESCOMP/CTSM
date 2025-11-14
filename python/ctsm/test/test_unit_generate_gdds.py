@@ -10,9 +10,11 @@ import argparse
 import tempfile
 import shutil
 import logging
+import re
 
 import numpy as np
 import xarray as xr
+from cftime import DatetimeNoLeap
 
 from ctsm import unit_testing
 from ctsm.crop_calendars import generate_gdds as gg
@@ -555,6 +557,188 @@ class TestFindInstHistFiles(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             gf.find_inst_hist_files(self.temp_dir, h=1.0, this_year=2000, logger=logger)
+
+
+class TestGetFileLists(unittest.TestCase):
+    """Tests of _get_file_lists()"""
+
+    def setUp(self):
+        """
+        Set up and change to temporary directory
+        """
+        self.prev_dir = os.getcwd()
+        self.temp_dir = tempfile.mkdtemp()
+        os.chdir(self.temp_dir)
+
+    def tearDown(self):
+        """
+        Delete temporary directory
+        """
+        os.chdir(self.prev_dir)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _create_test_file(self, filename):
+        """Helper to create an empty test file with time coordinate"""
+        filepath = os.path.join(self.temp_dir, filename)
+
+        # Extract date from filename using regex (format: *.h#i.YYYY-MM-DD-*.nc)
+        match = re.search(r"(\d{4})-(\d{2})-(\d{2})", filename)
+        if match:
+            year, month, day = match.groups()
+            time_val = DatetimeNoLeap(int(year), int(month), int(day), has_year_zero=True)
+        else:
+            raise ValueError(f"Could not extract date from filename: {filename}")
+
+        # Create a simple dataset with time coordinate
+        time = xr.DataArray([time_val], dims=["time"], name="time")
+        ds = xr.Dataset({"time": time})
+        ds.to_netcdf(filepath)
+
+        return filepath
+
+    def test_get_file_lists_single_year(self):
+        """Test _get_file_lists with a single year of data"""
+        # Create h1 and h2 files for 2000
+        h1_file = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        h2_file = self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+
+        time_slice_list = [slice("2000-01-01", "2000-12-31")]
+
+        h1_file_lists, h2_file_lists = gg._get_file_lists(
+            self.temp_dir, time_slice_list, logger=None
+        )
+
+        # Should have one list for each time slice
+        self.assertEqual(len(h1_file_lists), 1)
+        self.assertEqual(len(h2_file_lists), 1)
+
+        # Check contents of file lists
+        # pylint: disable=unsubscriptable-object
+        self.assertEqual(len(h1_file_lists[0]), 1)
+        self.assertEqual(len(h2_file_lists[0]), 1)
+        self.assertEqual(h1_file_lists[0], [h1_file])
+        self.assertEqual(h2_file_lists[0], [h2_file])
+
+    def test_get_file_lists_multiple_years(self):
+        """Test _get_file_lists with multiple years of data"""
+        # Create h1 and h2 files for 2000-2002
+        h1_files = []
+        h2_files = []
+        for year in [2000, 2001, 2002]:
+            h1_files.append(self._create_test_file(f"test.clm2.h1i.{year}-01-01-00000.nc"))
+            h2_files.append(self._create_test_file(f"test.clm2.h2i.{year}-01-01-00000.nc"))
+
+        time_slice_list = [
+            slice("2000-01-01", "2000-12-31"),
+            slice("2001-01-01", "2001-12-31"),
+            slice("2002-01-01", "2002-12-31"),
+        ]
+
+        h1_file_lists, h2_file_lists = gg._get_file_lists(
+            self.temp_dir, time_slice_list, logger=None
+        )
+
+        # Should have one list for each time slice
+        self.assertEqual(len(h1_file_lists), 3)
+        self.assertEqual(len(h2_file_lists), 3)
+
+        # Check contents of file lists
+        # pylint: disable=unsubscriptable-object
+        for i in range(3):
+            self.assertEqual(len(h1_file_lists[i]), 1)
+            self.assertEqual(len(h2_file_lists[i]), 1)
+            self.assertEqual(h1_file_lists[i], [h1_files[i]])
+            self.assertEqual(h2_file_lists[i], [h2_files[i]])
+
+    def test_get_file_lists_multiple_files_per_slice(self):
+        """Test _get_file_lists when multiple files fall within a time slice"""
+        # Create multiple h1 and h2 files for 2000
+        h1_files = []
+        h2_files = []
+        for month in ["01", "06", "12"]:
+            h1_files.append(self._create_test_file(f"test.clm2.h1i.2000-{month}-01-00000.nc"))
+            h2_files.append(self._create_test_file(f"test.clm2.h2i.2000-{month}-01-00000.nc"))
+
+        time_slice_list = [slice("2000-01-01", "2000-12-31")]
+
+        h1_file_lists, h2_file_lists = gg._get_file_lists(
+            self.temp_dir, time_slice_list, logger=None
+        )
+
+        # Should have one list for the time slice
+        self.assertEqual(len(h1_file_lists), 1)
+        self.assertEqual(len(h2_file_lists), 1)
+
+        # Check contents of file lists (should be sorted)
+        # pylint: disable=unsubscriptable-object
+        self.assertEqual(len(h1_file_lists[0]), 3)
+        self.assertEqual(len(h2_file_lists[0]), 3)
+        self.assertEqual(h1_file_lists[0], sorted(h1_files))
+        self.assertEqual(h2_file_lists[0], sorted(h2_files))
+
+    def test_get_file_lists_no_h1_files(self):
+        """Test _get_file_lists when h1 files are missing"""
+        # Create only h2 files
+        self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+
+        time_slice_list = [slice("2000-01-01", "2000-12-31")]
+
+        # Should raise FileNotFoundError when h1 files are not found
+        with self.assertRaises(FileNotFoundError):
+            gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
+
+    def test_get_file_lists_no_h2_files(self):
+        """Test _get_file_lists when h2 files are missing"""
+        # Create only h1 files
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+
+        time_slice_list = [slice("2000-01-01", "2000-12-31")]
+
+        # Should raise FileNotFoundError when h2 files are not found
+        with self.assertRaises(FileNotFoundError):
+            gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
+
+    def test_get_file_lists_h1_outside_time_slice(self):
+        """Test _get_file_lists when h1 files exist but have no timesteps in the slice"""
+        # Create h1 files for 2000 and h2 files for 2001
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("test.clm2.h2i.2001-01-01-00000.nc")
+
+        # Request time slice for 2001 (h1 files exist but are outside the slice)
+        time_slice_list = [slice("2001-01-01", "2001-12-31")]
+
+        # Should raise FileNotFoundError when h1 files have no timesteps in slice
+        with self.assertRaisesRegex(FileNotFoundError, "h1"):
+            gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
+
+    def test_get_file_lists_h2_outside_time_slice(self):
+        """Test _get_file_lists when h2 files exist but have no timesteps in the slice"""
+        # Create h1 files for 2001 and h2 files for 2000
+        self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc")
+        self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+
+        # Request time slice for 2001 (h2 files exist but are outside the slice)
+        time_slice_list = [slice("2001-01-01", "2001-12-31")]
+
+        # Should raise FileNotFoundError when h2 files have no timesteps in slice
+        with self.assertRaisesRegex(FileNotFoundError, "h2"):
+            gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
+
+    def test_get_file_lists_partial_overlap(self):
+        """Test _get_file_lists when some time slices have files and others don't"""
+        # Create h1 and h2 files for 2000 only
+        self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+
+        # Request time slices for 2000 and 2001
+        time_slice_list = [
+            slice("2000-01-01", "2000-12-31"),
+            slice("2001-01-01", "2001-12-31"),
+        ]
+
+        # Should raise FileNotFoundError when second time slice has no files
+        with self.assertRaises(FileNotFoundError):
+            gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
 
 if __name__ == "__main__":

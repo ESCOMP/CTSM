@@ -10,7 +10,6 @@ from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import is_instantaneous
 from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
@@ -290,7 +289,6 @@ def import_and_process_1yr(
     year_1,
     year_n,
     year_index,
-    this_year,
     sdates_rx,
     hdates_rx,
     gddaccum_yp_list,
@@ -298,7 +296,6 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_last_year,
     last_year_active_patch_indices_list,
     incorrectly_daily,
-    indir,
     incl_vegtypes_str_in,
     h2_ds_file,
     mxmats,
@@ -306,13 +303,13 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
-    h1_instantaneous,
+    h1_filelist,
+    h2_filelist,
 ):
     """
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    log(logger, f"netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -320,28 +317,17 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h1 file (list)
-    h1_filelist = find_inst_hist_files(indir, h=1, this_year=None, logger=logger)
-
     # Get list of crops to include
     if skip_crops is not None:
         crops_to_read = [c for c in utils.define_mgdcrop_list_withgrasses() if c not in skip_crops]
     else:
         crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
-    # Are h1 files instantaneous?
-    if h1_instantaneous is None:
-        h1_instantaneous = is_instantaneous(xr.open_dataset(h1_filelist[0])["time"])
-
-    if h1_instantaneous:
-        slice_year = this_year
-    else:
-        slice_year = this_year - 1
+    # Read h1 file(s)
     dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
-        time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
         logger=logger,
     )
@@ -625,9 +611,8 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    h2_files = find_inst_hist_files(indir, h=2, this_year=this_year - 1, logger=logger)
     h2_ds = import_ds(
-        h2_files,
+        h2_filelist,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
@@ -879,7 +864,6 @@ def import_and_process_1yr(
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
-        h1_instantaneous,
     )
 
 
