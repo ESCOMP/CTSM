@@ -4,6 +4,7 @@ Generate maturity requirements (GDD) from outputs of a GDD-generating run
 
 import os
 import sys
+
 import pickle
 import datetime as dt
 import argparse
@@ -238,12 +239,20 @@ def main(
         )
 
         # Get lists of history timesteps and files to read
+        log(logger, "Getting lists of history timesteps and files to read")
         h1_time_slices, h2_time_slices = _get_time_slice_lists(first_season, last_season)
         h1_file_lists, h2_file_lists = _get_file_lists(
             input_dir, (h1_time_slices, h2_time_slices), logger
         )
+        history_yr_range = _get_history_yr_range(first_season, last_season)
+        # Check
+        log(logger, "Checking h1 files")
+        gddfn.check_file_lists(history_yr_range, h1_file_lists, h1_time_slices, "annual", logger)
+        log(logger, "Checking h2 files")
+        gddfn.check_file_lists(history_yr_range, h2_file_lists, h2_time_slices, "daily", logger)
+        log(logger, "Done")
 
-        for y, history_yr in enumerate(_get_history_yr_range(first_season, last_season)):
+        for y, history_yr in enumerate(history_yr_range):
             # If resuming from a pickled file, we continue until we reach a year that hasn't yet
             # been processed.
             if history_yr <= pickle_season:
@@ -284,6 +293,7 @@ def main(
                 skip_crops,
                 outdir_figs,
                 logger,
+                history_yr,
                 h1_file_list,
                 h2_file_list,
                 h1_time_slice,

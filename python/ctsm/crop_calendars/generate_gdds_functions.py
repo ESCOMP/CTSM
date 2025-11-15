@@ -5,11 +5,13 @@ Functions to support generate_gdds.py
 # pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
+import sys
 import glob
+from datetime import timedelta
 from importlib import util as importlib_util
+
 import numpy as np
 import xarray as xr
-import cftime
 
 from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
@@ -55,6 +57,72 @@ try:
 except ModuleNotFoundError:
     print("Will NOT produce harvest requirement map figure files.")
     CAN_PLOT = False
+
+
+def gen_inst_daily_year(year, cal_type):
+    """
+    For a given history year, return the timesteps we expect to see for daily instantaneous files
+    """
+
+    # Generate list of datetimes
+    start_date = cal_type(year, 1, 2)  # Jan. 2 of given year
+    end_date = cal_type(year + 1, 1, 1)  # Jan. 1 of next year
+    date_list = [start_date]
+    d = start_date
+    while d < end_date:
+        d += timedelta(days=1)
+        date_list.append(d)
+
+    # Convert to DataArray
+    date_da = xr.DataArray(data=date_list, dims=["time"], coords={"time": date_list})
+
+    return date_da
+
+
+def check_file_lists(history_yr_range, h_file_lists, time_slice_list, freq, logger):
+    """
+    For each history year, check that the corresponding list of files has the requested time steps.
+    Could theoretically make this faster by starting with checks of the first and last history
+    years, but it's really fast already.
+    """
+    for history_yr, h_file_list, time_slice in zip(
+        list(history_yr_range), h_file_lists, time_slice_list
+    ):
+        # Get time across all included files
+        time_da = None
+        for h_file in h_file_list:
+            ds = xr.open_dataset(h_file).sel(time=time_slice)
+            if time_da is None:
+                time_da = ds["time"]
+            else:
+                time_da = xr.concat([time_da, ds["time"]], dim="time")
+
+        # Check whether the time variable exactly matches what we would expect based on frequency.
+        _check_time_da(freq, history_yr, time_da, logger)
+
+
+def _check_time_da(freq, history_yr, time_da, logger):
+    """
+    Check whether a given time variable exactly matches what we would expect based on frequency.
+    """
+    # Create the expected DataArray
+    cal_type = type(np.atleast_1d(time_da.values)[0])
+    if freq == "annual":
+        date_list = [cal_type(history_yr, 1, 1)]
+        time_da_exp = xr.DataArray(data=date_list, dims=["time"], coords={"time": date_list})
+    elif freq == "daily":
+        time_da_exp = gen_inst_daily_year(history_yr, cal_type)
+    else:
+        msg = f"What should the time DataArray look like for freq '{freq}'?"
+        error(logger, msg, error_type=NotImplementedError)
+        sys.exit()  # Because pylint doesn't know the script stops on error()
+
+    # Compare actual vs. expected
+    if not time_da.equals(time_da_exp):
+        log(logger, f"expected: {time_da_exp}")
+        log(logger, f"actual: {time_da}")
+        msg = "Unexpected time data after slicing; see logs above."
+        error(logger, msg, error_type=AssertionError)
 
 
 def check_grid_match(grid0, grid1, tol=GRID_TOL_DEG):
@@ -303,6 +371,7 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
+    history_yr,
     h1_filelist,
     h2_filelist,
     h1_time_slice,
@@ -335,9 +404,10 @@ def import_and_process_1yr(
         time_slice=h1_time_slice,
     )
 
-    # Expect only one timestep for annual h1 after time-slicing
-    nt = dates_ds.sizes["time"]
-    assert nt == 1, f"Expected 1 timestep in time_slice {h1_time_slice} of {h1_filelist}; got {nt}"
+    # Check included timesteps
+    _check_time_da("annual", history_yr, dates_ds["time"], logger)
+
+    # Should now just be one timestep, so select it to remove dimension.
     dates_ds = dates_ds.isel(time=0)
 
     # Make sure NaN masks match
@@ -563,7 +633,7 @@ def import_and_process_1yr(
                 logger,
                 f"      Limited {vegtype_str} growing season length to {mxmat}. Longest was "
                 + f"{int(np.max(gs_len_rx_da.values))}, now "
-                + f"{int(np.max(get_gs_len_da(hdates_rx[var] - sdates_rx[var]).values))}."
+                + f"{int(np.max(get_gs_len_da(hdates_rx[var] - sdates_rx[var]).values))}.",
             )
     else:
         hdates_rx = hdates_rx_orig
@@ -579,13 +649,9 @@ def import_and_process_1yr(
         logger=logger,
         time_slice=h2_time_slice,
     )
-    # Expect 365 days (366 for leap years)
-    nt = h2_ds.sizes["time"]
-    dt0 = np.atleast_1d(h2_ds["time"].isel(time=0).values)[0]
-    ndays_expected = 366 if cftime.is_leap_year(dt0.year, dt0.calendar) else 365
-    assert (
-        nt == ndays_expected
-    ), f"Expected {ndays_expected} timesteps in time {h2_time_slice} of {h2_filelist}; got {nt}"
+
+    # Check included timesteps
+    _check_time_da("daily", history_yr, h2_ds["time"], logger)
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:

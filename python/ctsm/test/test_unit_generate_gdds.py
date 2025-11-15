@@ -14,7 +14,7 @@ import re
 
 import numpy as np
 import xarray as xr
-from cftime import DatetimeNoLeap
+from cftime import DatetimeNoLeap, DatetimeAllLeap
 
 from ctsm import unit_testing
 from ctsm.crop_calendars import generate_gdds as gg
@@ -807,6 +807,283 @@ class TestGetFileLists(unittest.TestCase):
         # Should raise FileNotFoundError when second time slice has no files
         with self.assertRaisesRegex(FileNotFoundError, "No h1 timesteps found in"):
             gg._get_file_lists(self.temp_dir, time_slice_lists_list, logger=None)
+
+
+class TestGenInstDailyYear(unittest.TestCase):
+    """Tests of gen_inst_daily_year()"""
+
+    def test_gen_inst_daily_year_noleap(self):
+        """Test gen_inst_daily_year with DatetimeNoLeap calendar"""
+        result = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+
+        # Should have 365 timesteps (Jan 2 through Jan 1 of next year, inclusive)
+        self.assertEqual(len(result), 365)
+
+        # Check first and last dates
+        self.assertEqual(result.values[0], DatetimeNoLeap(2000, 1, 2, has_year_zero=True))
+        self.assertEqual(result.values[-1], DatetimeNoLeap(2001, 1, 1, has_year_zero=True))
+
+        # Verify no Feb 29
+        dates_str = [str(d) for d in result.values]
+        self.assertNotIn("2000-02-29", dates_str)
+
+    def test_gen_inst_daily_year_leap(self):
+        """Test gen_inst_daily_year with a leap year"""
+        cal_type = DatetimeAllLeap
+        year = 2004
+        result = gf.gen_inst_daily_year(year, cal_type)
+
+        # Should have 366 timesteps (Jan 2 through Jan 1 of next year, inclusive, with leap day)
+        self.assertEqual(len(result), 366)
+
+        # Check first and last dates
+        self.assertEqual(result.values[0], cal_type(year, 1, 2, has_year_zero=True))
+        self.assertEqual(result.values[-1], cal_type(year + 1, 1, 1, has_year_zero=True))
+
+        # Verify Feb 29 is there
+        dates_str = [str(d) for d in result.values]
+        self.assertIn(f"{year}-02-29 00:00:00", dates_str)
+
+    def test_gen_inst_daily_year_consecutive_days(self):
+        """Test that gen_inst_daily_year produces consecutive days"""
+        result = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+
+        # Check that each day is exactly one day after the previous
+        for i in range(1, len(result)):
+            diff = result.values[i] - result.values[i - 1]
+            self.assertEqual(diff.days, 1)
+
+    def test_gen_inst_daily_year_different_year(self):
+        """Test gen_inst_daily_year with a different year"""
+        result = gf.gen_inst_daily_year(1987, DatetimeNoLeap)
+
+        # Should still have 365 timesteps
+        self.assertEqual(len(result), 365)
+
+        # Check first and last dates
+        self.assertEqual(result.values[0], DatetimeNoLeap(1987, 1, 2, has_year_zero=True))
+        self.assertEqual(result.values[-1], DatetimeNoLeap(1988, 1, 1, has_year_zero=True))
+
+
+class TestCheckTimeDa(unittest.TestCase):
+    """Tests of _check_time_da()"""
+
+    def test_check_time_da_annual_correct(self):
+        """Test _check_time_da with correct annual data"""
+        time_val = DatetimeNoLeap(2000, 1, 1, has_year_zero=True)
+        time_da = xr.DataArray([time_val], dims=["time"], coords={"time": [time_val]})
+
+        # Should not raise an error
+        gf._check_time_da("annual", 2000, time_da, logger=None)
+
+    def test_check_time_da_annual_incorrect(self):
+        """Test _check_time_da with incorrect annual data"""
+        # Wrong date (Jan 2 instead of Jan 1)
+        time_val = DatetimeNoLeap(2000, 1, 2, has_year_zero=True)
+        time_da = xr.DataArray([time_val], dims=["time"], coords={"time": [time_val]})
+
+        # Should raise AssertionError (via error())
+        with self.assertRaises(AssertionError):
+            gf._check_time_da("annual", 2000, time_da, logger=None)
+
+    def test_check_time_da_daily_correct(self):
+        """Test _check_time_da with correct daily data"""
+        time_da = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+
+        # Should not raise an error
+        gf._check_time_da("daily", 2000, time_da, logger=None)
+
+    def test_check_time_da_daily_correct_leap(self):
+        """As test_check_time_da_daily_correct, but for a leap year"""
+        time_da = gf.gen_inst_daily_year(2000, DatetimeAllLeap)
+
+        # Should not raise an error
+        gf._check_time_da("daily", 2000, time_da, logger=None)
+
+    def test_check_time_da_daily_missing_day(self):
+        """Test _check_time_da with daily data missing a day"""
+        time_da = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+        # Remove one day from the middle (day 100)
+        time_da_missing = xr.concat(
+            [time_da.isel(time=slice(0, 100)), time_da.isel(time=slice(101, None))],
+            dim="time",
+        )
+
+        # Should raise AssertionError (via error())
+        with self.assertRaises(AssertionError):
+            gf._check_time_da("daily", 2000, time_da_missing, logger=None)
+
+    def test_check_time_da_daily_extra_day(self):
+        """Test _check_time_da with daily data having an extra day"""
+        time_da = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+        # Add an extra day
+        extra_day = DatetimeNoLeap(2001, 1, 3, has_year_zero=True)
+        time_da = xr.concat(
+            [time_da, xr.DataArray([extra_day], dims=["time"], coords={"time": [extra_day]})],
+            dim="time",
+        )
+
+        # Should raise AssertionError (via error())
+        with self.assertRaises(AssertionError):
+            gf._check_time_da("daily", 2000, time_da, logger=None)
+
+    def test_check_time_da_unknown_freq(self):
+        """Test _check_time_da with unknown frequency"""
+        time_val = DatetimeNoLeap(2000, 1, 1, has_year_zero=True)
+        time_da = xr.DataArray([time_val], dims=["time"], coords={"time": [time_val]})
+
+        # Should raise NotImplementedError for unknown frequency
+        with self.assertRaises(NotImplementedError):
+            gf._check_time_da("monthly", 2000, time_da, logger=None)
+
+
+class TestCheckFileLists(unittest.TestCase):
+    """Tests of check_file_lists()"""
+
+    def setUp(self):
+        """Set up and change to temporary directory"""
+        self.prev_dir = os.getcwd()
+        self.temp_dir = tempfile.mkdtemp()
+        os.chdir(self.temp_dir)
+
+    def tearDown(self):
+        """Delete temporary directory"""
+        os.chdir(self.prev_dir)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _create_test_file_with_time(self, filename, time_values):
+        """Helper to create a test file with specific time values"""
+        filepath = os.path.join(self.temp_dir, filename)
+        time = xr.DataArray(time_values, dims=["time"], name="time")
+        ds = xr.Dataset({"time": time})
+        ds.to_netcdf(filepath)
+        return filepath
+
+    def test_check_file_lists_annual_correct(self):
+        """Test check_file_lists with correct annual data"""
+        # Create files with correct annual timesteps
+        file1 = self._create_test_file_with_time(
+            "test.h1i.2000.nc", [DatetimeNoLeap(2000, 1, 1, has_year_zero=True)]
+        )
+        file2 = self._create_test_file_with_time(
+            "test.h1i.2001.nc", [DatetimeNoLeap(2001, 1, 1, has_year_zero=True)]
+        )
+
+        history_yr_range = range(2000, 2002)
+        h_file_lists = [[file1], [file2]]
+        time_slice_list = [
+            slice("2000-01-01", "2000-01-01"),
+            slice("2001-01-01", "2001-01-01"),
+        ]
+
+        # Should not raise an error
+        gf.check_file_lists(history_yr_range, h_file_lists, time_slice_list, "annual", logger=None)
+
+    def test_check_file_lists_annual_correct_extrafile(self):
+        """Test check_file_lists with correct annual data but an extra file"""
+        # Create files with correct annual timesteps
+        file1 = self._create_test_file_with_time(
+            "test.h1i.2000.nc", [DatetimeNoLeap(2000, 1, 1, has_year_zero=True)]
+        )
+        file2 = self._create_test_file_with_time(
+            "test.h1i.2001.nc", [DatetimeNoLeap(2001, 1, 1, has_year_zero=True)]
+        )
+        file3 = self._create_test_file_with_time(
+            "test.h1i.2002.nc", [DatetimeNoLeap(2002, 1, 1, has_year_zero=True)]
+        )
+
+        history_yr_range = range(2000, 2002)
+        h_file_lists = [[file1], [file2], [file3]]
+        time_slice_list = [
+            slice("2000-01-01", "2000-01-01"),
+            slice("2001-01-01", "2001-01-01"),
+        ]
+
+        # Should not raise an error
+        gf.check_file_lists(history_yr_range, h_file_lists, time_slice_list, "annual", logger=None)
+
+    def test_check_file_lists_annual_incorrect(self):
+        """Test check_file_lists with incorrect annual data (wrong day)"""
+        # Create file with wrong date (Jan 2 instead of Jan 1)
+        file1 = self._create_test_file_with_time(
+            "test.h1i.2000.nc",
+            [DatetimeNoLeap(2000, 1, 2, has_year_zero=True)],  # Wrong day
+        )
+
+        history_yr_range = range(2000, 2001)
+        h_file_lists = [[file1]]
+        # Use a slice that will include Jan 2
+        time_slice_list = [slice("2000-01-01", "2000-01-02")]
+
+        # Should raise AssertionError (has Jan 2 instead of Jan 1)
+        with self.assertRaises(AssertionError):
+            gf.check_file_lists(
+                history_yr_range, h_file_lists, time_slice_list, "annual", logger=None
+            )
+
+    def test_check_file_lists_daily_correct(self):
+        """Test check_file_lists with correct daily data"""
+        # Create file with correct daily timesteps
+        time_da = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+        file1 = self._create_test_file_with_time("test.h2i.2000.nc", time_da.values)
+
+        history_yr_range = range(2000, 2001)
+        h_file_lists = [[file1]]
+        time_slice_list = [slice("2000-01-02", "2001-01-01")]
+
+        # Should not raise an error
+        gf.check_file_lists(history_yr_range, h_file_lists, time_slice_list, "daily", logger=None)
+
+    def test_check_file_lists_daily_correct_leap(self):
+        """As test_check_file_lists_daily_correct but with a leap day"""
+        # Create file with correct daily timesteps
+        time_da = gf.gen_inst_daily_year(2000, DatetimeAllLeap)
+        file1 = self._create_test_file_with_time("test.h2i.2000.nc", time_da.values)
+
+        history_yr_range = range(2000, 2001)
+        h_file_lists = [[file1]]
+        time_slice_list = [slice("2000-01-02", "2001-01-01")]
+
+        # Should not raise an error
+        gf.check_file_lists(history_yr_range, h_file_lists, time_slice_list, "daily", logger=None)
+
+    def test_check_file_lists_daily_missing_day(self):
+        """Test check_file_lists with daily data missing a day"""
+        # Create file with incomplete daily timesteps
+        time_da = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+        # Remove one day from the middle
+        time_da_incomplete = xr.concat(
+            [time_da.isel(time=slice(0, 100)), time_da.isel(time=slice(101, None))],
+            dim="time",
+        )
+        file1 = self._create_test_file_with_time("test.h2i.2000.nc", time_da_incomplete.values)
+
+        history_yr_range = range(2000, 2001)
+        h_file_lists = [[file1]]
+        time_slice_list = [slice("2000-01-02", "2001-01-01")]
+
+        # Should raise AssertionError
+        with self.assertRaises(AssertionError):
+            gf.check_file_lists(
+                history_yr_range, h_file_lists, time_slice_list, "daily", logger=None
+            )
+
+    def test_check_file_lists_multiple_files_per_year(self):
+        """Test check_file_lists with multiple files per year"""
+        # Create two files that together have all daily timesteps for 2000
+        time_da_full = gf.gen_inst_daily_year(2000, DatetimeNoLeap)
+        time_da_first_half = time_da_full.isel(time=slice(0, 182))
+        time_da_second_half = time_da_full.isel(time=slice(182, None))
+
+        file1 = self._create_test_file_with_time("test.h2i.2000a.nc", time_da_first_half.values)
+        file2 = self._create_test_file_with_time("test.h2i.2000b.nc", time_da_second_half.values)
+
+        history_yr_range = range(2000, 2001)
+        h_file_lists = [[file1, file2]]
+        time_slice_list = [slice("2000-01-02", "2001-01-01")]
+
+        # Should not raise an error
+        gf.check_file_lists(history_yr_range, h_file_lists, time_slice_list, "daily", logger=None)
 
 
 if __name__ == "__main__":
