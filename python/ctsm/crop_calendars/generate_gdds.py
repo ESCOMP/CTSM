@@ -30,6 +30,9 @@ from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-posi
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
 
+# Mapping of history tape number to output frequency
+H_FREQ_DICT = {1: "annual", 2: "daily"}
+
 
 def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile, cushion):
     """
@@ -46,19 +49,31 @@ def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfil
     return mxmats
 
 
-def _get_history_yr_range(first_season, last_season):
+def _get_history_yr_range(first_season, last_season, freq):
     """
-    Get a range object that can be used for looping over all years we need to process timestamps
-    from.
+    Get range objects that can be used for looping over all years we need to process timestamps
+    from. Different handling for annual vs. daily history files. Assumption is that all history
+    files are instantanous.
     """
-    # Saving at the end of a year receive the timestamp of the END of the year's final timestep,
-    # which means it will actually be 00:00 of Jan. 1 of the next year.
-    first_history_yr = first_season + 1
 
-    # Same deal for the last history timestep, but we have to read an extra year in that case,
-    # because in some places the last growing season won't complete until the year after it was
-    # planted.
-    last_history_yr = last_season + 2
+    if freq == "annual":
+        # Saving at the end of a year gives the timestamp of the END of the year's final timestep,
+        # which means it will actually be 00:00 of Jan. 1 of the next year.
+        first_history_yr = first_season + 1
+        last_history_yr = last_season + 1
+    elif freq == "daily":
+        # Saving at the end of a day/beginning of the next day (i.e., 00:00:00) means that the year
+        # will be correct for all but the Dec. 31 save, which will receive a timestamp of Jan. 1
+        # 00:00:00. That will be handled in _get_time_slice_lists(), so we don't need to account for
+        # it here.
+        first_history_yr = first_season
+        last_history_yr = last_season
+    else:
+        raise NotImplementedError(f"Not sure how to handle freq '{freq}'")
+
+    # For the last season, we have to read an extra year, because in some places the last growing
+    # season won't complete until the year after it was planted.
+    last_history_yr += 1
 
     # last_history_yr + 1 because range() will iterate up to but not including the second value.
     history_yr_range = range(first_history_yr, last_history_yr + 1)
@@ -70,7 +85,7 @@ def _get_time_slice_lists(first_season, last_season):
     """
     Given the requested first and last seasons, get the list of time slices that the script should
     look for. The assumption here, as in _get_file_lists() and as instructed in the docs, is
-    that the user is saving instantaneous files.
+    that the user is saving instantaneous tapes.
     """
 
     # Input checks
@@ -79,10 +94,15 @@ def _get_time_slice_lists(first_season, last_season):
     if first_season > last_season:
         raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
 
-    slice_lists_list = [None, None]
-    for i, h in enumerate([1, 2]):
+    # Initialize list with None for each history tape. Could avoid by starting with empty list and
+    # doing .append(), but pylint gets confused by that for some reason.
+    slice_lists_list = [None for x in range(len(H_FREQ_DICT))]
+
+    # Get time slice for each required history year in each history tape.
+    for i, h in enumerate(list(H_FREQ_DICT.keys())):
         slice_list = []
-        for history_yr in _get_history_yr_range(first_season, last_season):
+        freq = H_FREQ_DICT[h]
+        for history_yr in _get_history_yr_range(first_season, last_season, freq):
             if h == 1:
                 # Annual timesteps
                 slice_start = f"{history_yr}-01-01"
@@ -98,7 +118,10 @@ def _get_time_slice_lists(first_season, last_season):
 
         # We should be reading one more than the total number of years in
         # [first_season, last_season].
-        assert len(slice_list) == last_season - first_season + 2
+        ns_exp = last_season - first_season + 2
+        ns_actual = len(slice_list)
+        msg = f"Expected {ns_exp} time slices in list for h{h}; got {ns_actual}"
+        assert ns_exp == ns_actual, msg
 
         # Save
         slice_lists_list[i] = slice_list
@@ -244,26 +267,29 @@ def main(
         h1_file_lists, h2_file_lists = _get_file_lists(
             input_dir, (h1_time_slices, h2_time_slices), logger
         )
-        history_yr_range = _get_history_yr_range(first_season, last_season)
+        history_yr_range_h1 = _get_history_yr_range(first_season, last_season, "annual")
+        history_yr_range_h2 = _get_history_yr_range(first_season, last_season, "daily")
         # Check
+        assert len(history_yr_range_h1) == len(history_yr_range_h2)
         log(logger, "Checking h1 files")
-        gddfn.check_file_lists(history_yr_range, h1_file_lists, h1_time_slices, "annual", logger)
+        gddfn.check_file_lists(history_yr_range_h1, h1_file_lists, h1_time_slices, "annual", logger)
         log(logger, "Checking h2 files")
-        gddfn.check_file_lists(history_yr_range, h2_file_lists, h2_time_slices, "daily", logger)
+        gddfn.check_file_lists(history_yr_range_h2, h2_file_lists, h2_time_slices, "daily", logger)
         log(logger, "Done")
 
-        for y, history_yr in enumerate(history_yr_range):
+        for y, history_yr_h1 in enumerate(history_yr_range_h1):
             # If resuming from a pickled file, we continue until we reach a year that hasn't yet
             # been processed.
-            if history_yr <= pickle_season:
+            if history_yr_h1 <= pickle_season:
                 continue
-            log(logger, f"History year {history_yr}...")
+            log(logger, f"History year {history_yr_h1}...")
 
             # Get time slice and files to read for this year
             h1_time_slice = h1_time_slices[y]  # pylint: disable=unsubscriptable-object
             h2_time_slice = h2_time_slices[y]  # pylint: disable=unsubscriptable-object
             h1_file_list = h1_file_lists[y]  # pylint: disable=unsubscriptable-object
             h2_file_list = h2_file_lists[y]  # pylint: disable=unsubscriptable-object
+            history_yr_h2 = list(history_yr_range_h2)[y]
 
             (
                 h2_ds,
@@ -293,7 +319,8 @@ def main(
                 skip_crops,
                 outdir_figs,
                 logger,
-                history_yr,
+                history_yr_h1,
+                history_yr_h2,
                 h1_file_list,
                 h2_file_list,
                 h1_time_slice,
@@ -306,7 +333,7 @@ def main(
                     [
                         first_season,
                         last_season,
-                        history_yr,
+                        history_yr_h1,
                         gddaccum_yp_list,
                         gddharv_yp_list,
                         skip_patches_for_isel_nan_lastyear,

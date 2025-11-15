@@ -371,7 +371,8 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
-    history_yr,
+    history_yr_h1,
+    history_yr_h2,
     h1_filelist,
     h2_filelist,
     h1_time_slice,
@@ -405,7 +406,7 @@ def import_and_process_1yr(
     )
 
     # Check included timesteps
-    _check_time_da("annual", history_yr, dates_ds["time"], logger)
+    _check_time_da("annual", history_yr_h1, dates_ds["time"], logger)
 
     # Should now just be one timestep, so select it to remove dimension.
     dates_ds = dates_ds.isel(time=0)
@@ -651,7 +652,7 @@ def import_and_process_1yr(
     )
 
     # Check included timesteps
-    _check_time_da("daily", history_yr, h2_ds["time"], logger)
+    _check_time_da("daily", history_yr_h2, h2_ds["time"], logger)
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
