@@ -400,7 +400,7 @@ def import_and_process_1yr(
         error(logger, "All SDATES are NaN after ignoring those patches!")
 
     # Some patches can have -1 sowing date??
-    mxsowings = dates_ds.dims["mxsowings"]
+    mxsowings = dates_ds.sizes["mxsowings"]
     skip_patches_for_isel_sdatelt1 = np.where(dates_incl_ds.SDATES.values < 1)[1]
     skipping_patches_for_isel_sdatelt1 = len(skip_patches_for_isel_sdatelt1) > 0
     if skipping_patches_for_isel_sdatelt1:
@@ -415,7 +415,7 @@ def import_and_process_1yr(
 
     # Some patches can have -1 harvest date?? Hopefully just an artifact of me incorrectly saving
     # SDATES/HDATES daily. Can also happen if patch wasn't active last year
-    mxharvests = dates_ds.dims["mxharvests"]
+    mxharvests = dates_ds.sizes["mxharvests"]
     mxharvests_dim = dates_ds.HDATES.dims.index("mxharvests")
     # If a patch was inactive last year but was either (a) harvested the last time it was active or
     # (b) was never active, it will have -1 as its harvest date this year. Such instances are okay.

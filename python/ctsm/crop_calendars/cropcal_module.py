@@ -208,7 +208,7 @@ def import_max_gs_length(paramfile):
     Import maximum growing season length
     """
     # Get parameter file
-    paramfile_ds = xr.open_dataset(paramfile)
+    paramfile_ds = xr.open_dataset(paramfile, decode_timedelta=True)
 
     # Import max growing season length (stored in netCDF as nanoseconds!)
     paramfile_mxmats = paramfile_ds["mxmat"].values / np.timedelta64(1, "D")
