@@ -519,7 +519,7 @@ def import_and_process_1yr(
 
     # Limit growing season to CLM max growing season length, if needed
     if mxmats and (imported_sdates or imported_hdates):
-        print("   Limiting growing season length...")
+        log(logger, "   Limiting growing season length...")
         hdates_rx = hdates_rx_orig.copy()
         for var in hdates_rx_orig:
             if var == "time_bounds":
@@ -537,14 +537,14 @@ def import_and_process_1yr(
 
             mxmat = mxmats[vegtype_str]
             if np.isinf(mxmat):
-                print(f"      Not limiting {vegtype_str}: No mxmat value")
+                log(logger, f"      Not limiting {vegtype_str}: No mxmat value")
                 continue
 
             # Get "prescribed" growing season length
             gs_len_rx_da = get_gs_len_da(hdates_rx_orig[var] - sdates_rx[var])
             not_ok = gs_len_rx_da.values > mxmat
             if not np.any(not_ok):
-                print(f"      Not limiting {vegtype_str}: No rx season > {mxmat} days")
+                log(logger, f"      Not limiting {vegtype_str}: No rx season > {mxmat} days")
                 continue
 
             hdates_limited = hdates_rx_orig[var].copy().values
@@ -559,7 +559,8 @@ def import_and_process_1yr(
                 coords=hdates_rx_orig[var].coords,
                 attrs=hdates_rx_orig[var].attrs,
             )
-            print(
+            log(
+                logger,
                 f"      Limited {vegtype_str} growing season length to {mxmat}. Longest was "
                 + f"{int(np.max(gs_len_rx_da.values))}, now "
                 + f"{int(np.max(get_gs_len_da(hdates_rx[var] - sdates_rx[var]).values))}."
@@ -580,11 +581,11 @@ def import_and_process_1yr(
     )
     # Expect 365 days (366 for leap years)
     nt = h2_ds.sizes["time"]
-    dt0 = h2_ds["time"].isel(time=0).values[0]
+    dt0 = np.atleast_1d(h2_ds["time"].isel(time=0).values)[0]
     ndays_expected = 366 if cftime.is_leap_year(dt0.year, dt0.calendar) else 365
     assert (
         nt == ndays_expected
-    ), f"Expected {ndays_expected} timesteps in time {h1_time_slice} of {h1_filelist}; got {nt}"
+    ), f"Expected {ndays_expected} timesteps in time {h2_time_slice} of {h2_filelist}; got {nt}"
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
@@ -758,11 +759,19 @@ def import_and_process_1yr(
             )
             nanmask_output_gdds_lastyr = np.isnan(gddaccum_yp_list[var][year_index - 1, :])
             if not np.array_equal(nanmask_output_gdds_lastyr, nanmask_output_sdates):
-                error(
-                    logger,
-                    "NaN masks differ between this year's sdates and 'filled-out' GDDs from "
-                    + "last year",
+                n_lastyr_where_not_sdates = np.sum(
+                    nanmask_output_gdds_lastyr & ~nanmask_output_sdates
                 )
+                n_sdates_where_not_lastyr = np.sum(
+                    ~nanmask_output_gdds_lastyr & nanmask_output_sdates
+                )
+                msg = (
+                    "NaN masks differ between this year's sdates and 'filled-out' GDDs from last"
+                    f" year. {n_lastyr_where_not_sdates} NaN last year after filling out where not"
+                    f" NaN in sdates; {n_sdates_where_not_lastyr} vice versa. Out of size"
+                    f" {n_lastyr_where_not_sdates.size}."
+                )
+                error(logger, msg)
         last_year_active_patch_indices_list[var] = this_year_active_patch_indices
 
     skip_patches_for_isel_nan_last_year = skip_patches_for_isel_nan
