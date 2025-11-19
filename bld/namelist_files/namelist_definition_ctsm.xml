@@ -1844,6 +1844,11 @@ Time interpolation mode for atmospheric C14 delta data to determine how to handl
 Filename of input stream data for atmospheric C14 isotope delta data
 </entry>
 
+<entry id="stream_meshfile_atm_c14" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream mesh for atmospheric C14 isotope delta data
+</entry>
+
 <entry id="stream_year_first_atm_c13" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
 First year to loop over for atmospheric C13 isotope delta data
