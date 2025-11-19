@@ -108,7 +108,9 @@ contains
              stream_fldfilename_atm_c13, stream_year_first_atm_c14, &
              stream_year_last_atm_c14, stream_model_year_align_atm_c14, &
              stream_year_first_atm_c13, stream_year_last_atm_c13, &
-             stream_model_year_align_atm_c13
+             stream_model_year_align_atm_c13, stream_tintalgo_atm_c14, &
+             stream_taxmode_atm_c14, stream_tintalgo_atm_c13, &
+             stream_taxmode_atm_c13
 
    ! Read in the namelist on the main task
    if (masterproc) then
@@ -132,10 +134,14 @@ contains
    call shr_mpi_bcast( stream_year_first_atm_c14, mpicom )
    call shr_mpi_bcast( stream_year_last_atm_c14, mpicom )
    call shr_mpi_bcast( stream_model_year_align_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_tintalgo_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_taxmode_atm_c14, mpicom )
    call shr_mpi_bcast( stream_fldfilename_atm_c13, mpicom )
    call shr_mpi_bcast( stream_year_first_atm_c13, mpicom )
    call shr_mpi_bcast( stream_year_last_atm_c13, mpicom )
    call shr_mpi_bcast( stream_model_year_align_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_tintalgo_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_taxmode_atm_c13, mpicom )
 
    ! Do some error checking of input namelist items, set control flags, and write to the log
    call CIsoCheckNMLInputs()

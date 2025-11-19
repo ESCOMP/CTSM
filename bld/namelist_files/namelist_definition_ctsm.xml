@@ -1818,12 +1818,25 @@ First year to loop over for atmospheric C14 isotope delta data
 
 <entry id="stream_year_last_atm_c14" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
-Last year to loop over for data atmospheric C14 isotope delta data
+Last year to loop over for atmospheric C14 isotope delta data
 </entry>
 
 <entry id="stream_model_year_align_atm_c14" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
 Simulation year that aligns with stream_year_first_atm_c14 value
+</entry>
+
+<entry id="stream_tintalgo_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for atmospheric C14 delta data
+</entry>
+
+<entry id="stream_taxmode_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="cycle,extend,limit" >
+Time interpolation mode for atmospheric C14 delta data to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
 </entry>
 
 <entry id="stream_fldfilename_atm_c14" type="char*512" category="datasets"
@@ -1844,6 +1857,19 @@ Last year to loop over for data atmospheric C13 isotope delta data
 <entry id="stream_model_year_align_atm_c13" type="integer" category="datasets"
        group="carbon_isotope_streams" valid_values="" >
 Simulation year that aligns with stream_year_first_atm_c13 value
+</entry>
+
+<entry id="stream_tintalgo_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for atmospheric C13 delta data
+</entry>
+
+<entry id="stream_taxmode_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="cycle,extend,limit" >
+Time interpolation mode for atmospheric C13 delta data to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
 </entry>
 
 <entry id="stream_fldfilename_atm_c13" type="char*512" category="datasets"
