@@ -88,6 +88,7 @@ module AtmCarbonIsotopeStreamType
                              mapalgo=mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c13, &
                              year_first=year_first, year_last=year_last, model_year_align=model_year_align )
          call this%C13InitAllocate( bounds )
+         call this%Advance( )
          call this%Check1DPtrSize( bounds )
 
     end subroutine C13Init
@@ -173,6 +174,7 @@ module AtmCarbonIsotopeStreamType
                              mapalgo=mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c14, &
                              year_first=year_first, year_last=year_last, model_year_align=model_year_align )
          call this%C14InitAllocate( bounds )
+         call this%Advance( )
          call this%Check1DPtrSize( bounds )
 
     end subroutine C14Init
