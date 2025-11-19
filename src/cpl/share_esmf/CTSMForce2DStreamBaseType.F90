@@ -15,7 +15,7 @@ module CTSMForce2DStreamBaseType
 #include "shr_assert.h"
 
   use ESMF, only : ESMF_LogFoundError, ESMF_LOGERR_PASSTHRU
-  use dshr_strdata_mod , only : shr_strdata_type 
+  use dshr_strdata_mod , only : shr_strdata_type
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use clm_varctl , only : iulog
   use spmdMod , only : masterproc, mpicom, iam
@@ -43,6 +43,7 @@ module CTSMForce2DStreamBaseType
      procedure, public, non_overridable :: CleanBase ! Clean method for the base type
      procedure, public, non_overridable :: Advance   ! Advance the streams data to the current model date
      procedure, public :: GetPtr1D  ! Get pointer to the 1D data array
+     procedure, public :: Check1DPtrSize  ! Check that the data pointers are the expected size
      procedure(Interp_interface), public, deferred :: Interp  ! method in extensions to turn stream data into CTSM  data
 
   end type ctsm_force_2DStream_base_type
@@ -67,7 +68,7 @@ module CTSMForce2DStreamBaseType
          import :: ctsm_force_2DStream_base_type
 
          ! Arguments:
-         class(ctsm_force_2DStream_base_type), intent(inout) :: this 
+         class(ctsm_force_2DStream_base_type), intent(inout) :: this
          type(bounds_type), intent(in) :: bounds
          character(*), intent(in) :: fldfilename ! stream data filename (full pathname) (single file)
          ! NOTE: fldfilename could be expanded to an array if needed, but currently we only have one file
@@ -91,7 +92,7 @@ module CTSMForce2DStreamBaseType
        !
        ! Arguments:
        class(ctsm_force_2DStream_base_type), intent(inout) :: this
-     end subroutine Clean_interface 
+     end subroutine Clean_interface
 
      !-----------------------------------------------------------------------
 
@@ -134,7 +135,7 @@ module CTSMForce2DStreamBaseType
          use decompMod , only : bounds_level_proc
          use shr_log_mod , only : errMsg => shr_log_errMsg
          ! Arguments:
-         class(ctsm_force_2DStream_base_type), intent(inout) :: this 
+         class(ctsm_force_2DStream_base_type), intent(inout) :: this
          type(bounds_type), intent(in) :: bounds
          character(*), intent(in) :: varnames(:) ! variable names to read from stream file
          character(*), intent(in) :: fldfilename ! stream data filename (full pathname) (single file)
@@ -185,7 +186,50 @@ module CTSMForce2DStreamBaseType
             write(iulog,*) ' Streams initialization failing for ', trim(name), ' stream file = ', trim(fldfilename)
             call endrun( 'CTSM forcing Streams initialization failing', file=sourcefile, line=__LINE__ )
          end if
+
      end subroutine InitBase
+
+     !-----------------------------------------------------------------------
+
+     subroutine Check1DPtrSize( this, bounds )
+         !
+         ! Description:
+         !
+         ! Check that the stream data pointer size is as expected
+         !
+         use shr_kind_mod , only : CS => shr_kind_CS
+         use dshr_stream_mod, only : shr_stream_streamType, shr_stream_getStreamFieldList
+         use dshr_stream_mod, only : shr_stream_getMeshFileName
+         use shr_log_mod , only : errMsg => shr_log_errMsg
+         ! Arguments:
+         class(ctsm_force_2DStream_base_type), intent(inout) :: this
+         type(bounds_type), intent(in) :: bounds
+         ! Local variables
+         integer :: n ! Indices
+         integer :: nvars ! Number of variables
+         real(r8), pointer :: dataptr1d(:)  ! Pointer to the 1D data
+         character(len=CS), allocatable :: varnames(:)
+         type(shr_stream_streamType), pointer :: stream => NULL()
+         character(len=CL) :: meshname
+
+         ! Loop through the list of varnames
+
+         stream => this%sdat%stream(1)
+         nvars = stream%nvars
+         allocate( varnames(nvars) )
+         call shr_stream_getStreamFieldList( stream, varnames )
+         call shr_stream_getMeshFileName( stream, meshname )
+         do n = 1, nvars
+             call this%GetPtr1D( varnames(n), dataptr1d )
+             if ( trim(meshname) == 'none' ) then
+                call shr_assert( size(dataptr1d) == 1, "Expect stream data to be 1 when no mesh given"//errMsg( file=sourcefile, line=__LINE__) )
+             else
+                call shr_assert( size(dataptr1d) == bounds%endg-bounds%begg, "Expect stream data to be the size of grid bounds"//errMsg( file=sourcefile, line=__LINE__) )
+             end if
+         end do
+         deallocate( varnames )
+
+     end subroutine Check1DPtrSize
 
      !-----------------------------------------------------------------------
 
@@ -195,7 +239,7 @@ module CTSMForce2DStreamBaseType
          ! Normally types that extend this base type will call this as part of their clean operation
          !
          ! Arguments:
-         class(ctsm_force_2DStream_base_type) , intent(inout) :: this 
+         class(ctsm_force_2DStream_base_type) , intent(inout) :: this
 
          integer :: ierr ! error code
 
@@ -243,7 +287,7 @@ module CTSMForce2DStreamBaseType
          ! Description:
          !
          ! Get the pointer to the 1D data array for the given field name
-         ! Normally stream extensions will use this in the Interp method to 
+         ! Normally stream extensions will use this in the Interp method to
          ! save the stream data locally.
          !
          ! Uses:
