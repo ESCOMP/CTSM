@@ -1018,6 +1018,14 @@ sub setup_cmdl_fire_light_res {
   my $val = $opts->{$var};
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+  } else {
+     if ( &value_is_true($nl->get_value('use_fates')) ) {
+     # fates_spitfire_mode default has to get a default here and not in setup_logic_fates
+        if ( ! defined($nl->get_value('fates_spitfire_mode'))){
+            add_default($opts, $nl_flags->{'inputdata_rootdir'},  $definition, $defaults, $nl,'fates_spitfire_mode',
+                       'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'});
+        }
+     }
   }
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
@@ -4704,7 +4712,7 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+        my @list  = (  "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
                        "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
