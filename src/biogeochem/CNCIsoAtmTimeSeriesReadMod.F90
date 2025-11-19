@@ -64,6 +64,8 @@ module CIsoAtmTimeseriesMod
   ! Private data for the control namelist:
   character(len=CL), private :: stream_fldfilename_atm_c14 = ' '
   character(len=CL), private :: stream_fldfilename_atm_c13 = ' '
+  !character(len=CL), private :: stream_meshfile_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/isotopes/mesh_4x1_global_c20251013.nc'
+  character(len=CL), private :: stream_meshfile_atm_c14 = '/glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/360x720_120830_ESMFmesh_c20210507.nc'
   integer, private :: stream_year_first_atm_c14 = 1850
   integer, private :: stream_year_last_atm_c14 = 2023
   integer, private :: stream_model_year_align_atm_c14 = 1850
@@ -561,7 +563,7 @@ contains
     ! Streams method
     call atm_c14_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c14, &
-        meshfile= 'none', &
+        meshfile= stream_meshfile_atm_c14, &
         mapalgo=stream_mapalgo_atm_c14, &
         tintalgo=stream_tintalgo_atm_c14, &
         taxmode=stream_taxmode_atm_c14, &
