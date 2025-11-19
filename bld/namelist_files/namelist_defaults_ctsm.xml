@@ -110,6 +110,17 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <stomatalcond_method               >Medlyn2011</stomatalcond_method>
 <stomatalcond_method phys="clm4_5" >Ball-Berry1987</stomatalcond_method>
 
+<!-- Carbon isotope settings -->
+<use_c13>.false.</use_c13>
+<use_c14>.false.</use_c14>
+<use_c13_timeseries>.false.</use_c13_timeseries>
+<use_c14_bombspike>.false.</use_c14_bombspike>
+
+<use_c13 phys="clm6_0" bgc_mode="bgc" >.true.</use_c13>
+<use_c14 phys="clm6_0" bgc_mode="bgc" >.true.</use_c14>
+<use_c13_timeseries phys="clm6_0" bgc_mode="bgc" >.true.</use_c13_timeseries>
+<use_c14_bombspike phys="clm6_0" bgc_mode="bgc" >.true.</use_c14_bombspike>
+
 <!-- Carbon isotope concentration files -->
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c190528.nc</atm_c13_filename>
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/isotopes/atm_delta_C13_CMIP6_SSP119_1850-2100_yearly_c181209.nc</atm_c13_filename>
@@ -484,13 +495,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <snow_thermal_cond_method>Jordan1991</snow_thermal_cond_method>
 <snow_thermal_cond_method phys="clm6_0">Sturm1997</snow_thermal_cond_method>
 
-<!-- TODO change clm6 to Jordan with answer changing tag for glacier mass ballance -->
 <snow_thermal_cond_glc_method>Jordan1991</snow_thermal_cond_glc_method>
-<snow_thermal_cond_glc_method phys="clm6_0">Sturm1997</snow_thermal_cond_glc_method>
+<snow_thermal_cond_glc_method phys="clm6_0">Jordan1991</snow_thermal_cond_glc_method>
 
-<!-- TODO change clm6 to Sturm with answer changing tag -->
 <snow_thermal_cond_lake_method>Jordan1991</snow_thermal_cond_lake_method>
-<snow_thermal_cond_lake_method phys="clm6_0">Jordan1991</snow_thermal_cond_lake_method>
+<snow_thermal_cond_lake_method phys="clm6_0">Sturm1997</snow_thermal_cond_lake_method>
 
 <!-- Default glacier behavior is:
      Mountain glaciers: single_at_atm_topo
@@ -532,7 +541,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0">lnd/clm2/paramdata/ctsm60_params.c250311.nc</paramfile>
+<paramfile phys="clm6_0">lnd/clm2/paramdata/ctsm5.3.041.Nfix_params.v13.c250221_upplim250.nc</paramfile>
 <paramfile phys="clm6_0" use_fates=".true.">lnd/clm2/paramdata/ctsm60_params.5.3.045_noresm_v14_c251031.nc</paramfile>
 <paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c250311.nc</paramfile>
 <paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c250311.nc</paramfile>
@@ -1119,6 +1128,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
+<!-- 2013 IC's - exact match for CONUS grid ... -->
+<init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
+>hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
 <!-- MPAS -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="mpasa480"
@@ -1282,15 +1297,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm53019_f09_BNF_pSASU.clm2.r.0161-01-01-00000.nc
+         phys="clm6_0" use_init_interp=".true."
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000_64bitoffset.nc
 </finidat>
 <!-- Corresponding ne30 -->
 <finidat hgrid="ne30np4.pg3" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".true." irrigate=".false."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm53019_f09_BNF_pSASU.clm2.r.0161-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_ne30_102_pSASU.clm2.r.0081-01-01-00000_64bitoffset.nc
 </finidat>
 <!-- Corresponding f19 -->
 <finidat hgrid="1.9x2.5" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
@@ -1425,13 +1440,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm53019_f09_BNF_hist.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_ne30_102_HIST.clm2.r.2000-01-01-00000.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.3/ctsm53019_f09_BNF_hist.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_ne30_102_HIST.clm2.r.2000-01-01-00000.nc
 </finidat>
 
 <!-- clm5_0 and cam7.0 -->
@@ -1667,6 +1682,8 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa480_hist_2000_78pfts_c240908.nc</
 <fsurdat hgrid="mpasa120"  sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_mpasa120_hist_2000_78pfts_c240908.nc</fsurdat>
 
+<fsurdat hgrid="ne3np4"                  sim_year="2000">
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4_hist_2000_78pfts_c240925.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"              sim_year="2000">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_2000_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne120np4.pg3"             sim_year="2000">
@@ -1721,6 +1738,8 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg2_hist_1850_78pfts_c240908.n
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne30np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne3np4.pg3"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
+<fsurdat hgrid="ne3np4"       sim_year="1850">
+lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4_hist_1850_78pfts_c240925.nc</fsurdat>
 
 <fsurdat hgrid="C96"  sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_C96_hist_1850_78pfts_c240908.nc</fsurdat>
@@ -1731,8 +1750,6 @@ lnd/clm2/surfdata_esmf/ctsm5.3.0/synthetic/surfdata_1x1_cidadinhoBR_synth_hist_2
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_1x1_brazil_hist_1850_78pfts_c240912.nc</fsurdat>
 
-<fsurdat hgrid="ne3np4.pg3"               sim_year="1850">
-lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne3np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne16np4.pg3"              sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.3.0/surfdata_ne16np4.pg3_hist_1850_78pfts_c240908.nc</fsurdat>
 <fsurdat hgrid="ne120np4.pg3"             sim_year="1850">
@@ -1803,6 +1820,8 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="ne3np4"        sim_year_range="1850-2000"
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4_SSP2-4.5_1850-2100_78pfts_c240926.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne3np4.pg3"    sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2000"
@@ -1849,6 +1868,8 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.3.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_mpasa120_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 
+<flanduse_timeseries hgrid="ne3np4"        sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
+>lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4_SSP2-4.5_1850-2100_78pfts_c240926.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne3np4.pg3"    sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"
 >lnd/clm2/surfdata_esmf/ctsm5.3.0/landuse.timeseries_ne3np4.pg3_SSP2-4.5_1850-2100_78pfts_c240908.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="ne16np4.pg3"   sim_year_range="1850-2100" ssp_rcp="SSP2-4.5"

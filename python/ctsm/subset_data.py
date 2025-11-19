@@ -69,7 +69,8 @@ from ctsm.args_utils import plat_type, plon_type
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude
+from ctsm.longitude import Longitude, detect_lon_type
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -597,9 +598,9 @@ def determine_num_pft(crop):
         num_pft (int) : number of pfts for surface dataset
     """
     if crop:
-        num_pft = "78"
+        num_pft = str(MAX_PFT_MANAGEDCROPS)
     else:
-        num_pft = "16"
+        num_pft = str(MAX_PFT_GENERICCROPS)
     logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
@@ -626,60 +627,68 @@ def setup_files(args, defaults, cesmroot):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
         abort("inputdata directory does not exist")
 
+    file_dict = {"main_dir": clmforcingindir}
+
     # DATM data
-    # TODO Issue #2960: Make datm_type a user option at the command
-    # line. For reference, this option affects three .cfg files:
-    #      tools/site_and_regional/default_data_1850.cfg
-    #      tools/site_and_regional/default_data_2000.cfg
-    #      python/ctsm/test/testinputs/default_data.cfg
-    datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
-    dir_output_datm = "datmdata"
-    dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
+    # To find the affected files, from the top level of ctsm, do:
+    #     grep "\[datm\]" $(find . -type f -name "*cfg")
     if args.create_datm:
+        datm_cfg_section = "datm"
+
+        # Issue #3269: Changes in PR #3259 mean that --create-datm won't work with GSWP3
+        settings_to_check_for_gswp3 = ["solartag", "prectag", "tpqwtag"]
+        for setting in settings_to_check_for_gswp3:
+            value = defaults.get(datm_cfg_section, setting)
+            if "gswp3" in value.lower():
+                msg = (
+                    "--create-datm is no longer supported for GSWP3 data; "
+                    "see https://github.com/ESCOMP/CTSM/issues/3269"
+                )
+                raise NotImplementedError(msg)
+
+        dir_output_datm = "datmdata"
+        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_cfg_section, "dir"))
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
         logger.info("dir_input_datm : %s", dir_input_datm)
         logger.info("dir_output_datm: %s", os.path.join(args.out_dir, dir_output_datm))
+        file_dict["datm_tuple"] = DatmFiles(
+            dir_input_datm,
+            dir_output_datm,
+            defaults.get(datm_cfg_section, "domain"),
+            defaults.get(datm_cfg_section, "solardir"),
+            defaults.get(datm_cfg_section, "precdir"),
+            defaults.get(datm_cfg_section, "tpqwdir"),
+            defaults.get(datm_cfg_section, "solartag"),
+            defaults.get(datm_cfg_section, "prectag"),
+            defaults.get(datm_cfg_section, "tpqwtag"),
+            defaults.get(datm_cfg_section, "solarname"),
+            defaults.get(datm_cfg_section, "precname"),
+            defaults.get(datm_cfg_section, "tpqwname"),
+        )
 
     # if the crop flag is on - we need to use a different land use and surface data file
     num_pft = determine_num_pft(args.crop_flag)
 
-    fsurf_in = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
-    fluse_in = defaults.get("landuse", "landuse_" + num_pft + "pft")
-    if args.out_surface:
-        fsurf_out = args.out_surface
-    else:
-        fsurf_out = None
-
-    file_dict = {
-        "main_dir": clmforcingindir,
-        "fdomain_in": defaults.get("domain", "file"),
-        "fsurf_dir": os.path.join(
+    if args.create_domain:
+        file_dict["fdomain_in"] = defaults.get("domain", "file")
+    if args.create_surfdata:
+        file_dict["fsurf_dir"] = os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("surfdat", "dir")),
-        ),
-        "fluse_dir": os.path.join(
+        )
+        file_dict["fsurf_in"] = defaults.get("surfdat", "surfdat_" + num_pft + "pft")
+        if args.out_surface:
+            fsurf_out = args.out_surface
+        else:
+            fsurf_out = None
+        file_dict["fsurf_out"] = fsurf_out
+    if args.create_landuse:
+        file_dict["fluse_in"] = defaults.get("landuse", "landuse_" + num_pft + "pft")
+        file_dict["fluse_dir"] = os.path.join(
             clmforcingindir,
             os.path.join(defaults.get("landuse", "dir")),
-        ),
-        "fsurf_in": fsurf_in,
-        "fsurf_out": fsurf_out,
-        "fluse_in": fluse_in,
-        "datm_tuple": DatmFiles(
-            dir_input_datm,
-            dir_output_datm,
-            defaults.get(datm_type, "domain"),
-            defaults.get(datm_type, "solardir"),
-            defaults.get(datm_type, "precdir"),
-            defaults.get(datm_type, "tpqwdir"),
-            defaults.get(datm_type, "solartag"),
-            defaults.get(datm_type, "prectag"),
-            defaults.get(datm_type, "tpqwtag"),
-            defaults.get(datm_type, "solarname"),
-            defaults.get(datm_type, "precname"),
-            defaults.get(datm_type, "tpqwname"),
-        ),
-    }
+        )
 
     return file_dict
 
@@ -821,17 +830,6 @@ def subset_region(args, file_dict: dict):
     logger.info("Successfully ran script for a regional case.")
 
 
-def _detect_lon_type(lon_in):
-    if lon_in < 0:
-        lon_type = 180
-    elif lon_in > 180:
-        lon_type = 360
-    else:
-        msg = "When providing an ambiguous longitude, you must specify --lon-type 180 or 360"
-        raise argparse.ArgumentTypeError(msg)
-    return lon_type
-
-
 def process_args(args):
     """
     Process arguments after parsing
@@ -845,10 +843,10 @@ def process_args(args):
     if any(lon_arg_values):
         if args.lon_type is None:
             if hasattr(args, "plon"):
-                args.lon_type = _detect_lon_type(args.plon)
+                args.lon_type = detect_lon_type(args.plon)
             else:
-                lon1_type = _detect_lon_type(args.lon1)
-                lon2_type = _detect_lon_type(args.lon2)
+                lon1_type = detect_lon_type(args.lon1)
+                lon2_type = detect_lon_type(args.lon2)
                 if lon1_type != lon2_type:
                     raise argparse.ArgumentTypeError(
                         "--lon1 and --lon2 seem to be of different types"

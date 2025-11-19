@@ -7,10 +7,14 @@ You can run this by:
 """
 
 import unittest
+import tempfile
+import shutil
 import configparser
 import argparse
 import os
 import sys
+import numpy as np
+import xarray as xr
 
 # -- add python/ctsm  to path (needed if we want to run the test stand-alone)
 _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
@@ -21,7 +25,50 @@ from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
 from ctsm.path_utils import path_to_ctsm_root
 
-# pylint: disable=invalid-name,too-many-public-methods
+# pylint: disable=invalid-name,too-many-public-methods,protected-access
+
+
+def setup_fake_dataset(fake_values, lon_values, lat_values):
+    """
+    Set up a Dataset with some fake data for use in testing subset_data
+    """
+
+    # Define longitude dimension/coordinates
+    x_dimname = "lon_dim"
+    x_varname = "lon_var"
+    lon_da = xr.DataArray(
+        data=lon_values,
+        name=x_varname,
+        dims=x_dimname,
+        coords={x_dimname: lon_values},
+    )
+
+    # Define latitude dimension/coordinates
+    y_dimname = "lat_dim"
+    y_varname = "lat_var"
+    lat_da = xr.DataArray(
+        data=lat_values,
+        name=y_varname,
+        dims=y_dimname,
+        coords={y_dimname: lat_values},
+    )
+
+    # Make DataArray (lat x lon) with fake data
+    fake_da = xr.DataArray(
+        data=fake_values,
+        dims=[y_dimname, x_dimname],
+    )
+
+    # Make Dataset
+    fake_ds = xr.Dataset(
+        data_vars={
+            "lon": lon_da,
+            "lat": lat_da,
+            "fake": fake_da,
+        }
+    )
+
+    return x_dimname, y_dimname, fake_ds
 
 
 class TestSubsetData(unittest.TestCase):
@@ -39,6 +86,18 @@ class TestSubsetData(unittest.TestCase):
         self.cesmroot = path_to_ctsm_root()
         self.defaults = configparser.ConfigParser()
         self.defaults.read(os.path.join(self.cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+
+        # Work in temporary directory
+        self._previous_dir = os.getcwd()
+        self._tempdir = tempfile.mkdtemp()
+        os.chdir(self._tempdir)  # cd to tempdir
+
+    def tearDown(self):
+        """
+        Remove temporary directory
+        """
+        os.chdir(self._previous_dir)
+        shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_inputdata_setup_files_basic(self):
         """
@@ -69,6 +128,23 @@ class TestSubsetData(unittest.TestCase):
         self.args = check_args(self.args)
         self.defaults.set("main", "clmforcingindir", "/zztop")
         with self.assertRaisesRegex(SystemExit, "inputdata directory does not exist"):
+            setup_files(self.args, self.defaults, self.cesmroot)
+
+    def test_inputdata_setup_files_gswp3_error(self):
+        """
+        Test that error is thrown if user tries to --create-datm GSWP3
+        """
+        cfg_file = os.path.join(
+            _CTSM_PYTHON, "ctsm", "test", "testinputs", "default_data_gswp3.cfg"
+        )
+        sys.argv = ["subset_data", "point", "--create-datm", "--cfg-file", cfg_file]
+        self.args = self.parser.parse_args()
+        self.defaults = configparser.ConfigParser()
+        self.defaults.read(self.args.config_file)
+
+        with self.assertRaisesRegex(
+            NotImplementedError, "https://github.com/ESCOMP/CTSM/issues/3269"
+        ):
             setup_files(self.args, self.defaults, self.cesmroot)
 
     def test_check_args_nooutput(self):
@@ -184,7 +260,7 @@ class TestSubsetData(unittest.TestCase):
         for an existing dataset without the overwrite option
         """
         outfile = os.path.join(
-            os.getcwd(),
+            _CTSM_PYTHON,
             "ctsm/test/testinputs/",
             "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
@@ -328,7 +404,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             ValueError,
-            r"lon_in needs to be in the range \[0, 360\]",
+            r"\(All values of\) lon_in must be in the range \[0, 360\]",
         ):
             check_args(args)
 
@@ -499,7 +575,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
@@ -564,7 +640,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
@@ -591,7 +667,7 @@ class TestSubsetData(unittest.TestCase):
         args = self.parser.parse_args()
         with self.assertRaisesRegex(
             argparse.ArgumentTypeError,
-            "When providing an ambiguous longitude, you must specify --lon-type 180 or 360",
+            r"Longitude\(s\) ambiguous; could be type 180 or 360",
         ):
             check_args(args)
 
@@ -672,6 +748,127 @@ class TestSubsetData(unittest.TestCase):
         self.assertEqual(args.lon1.get(lon_type), lon1)
         self.assertEqual(args.lon2.get(lon_type), lon2)
         _set_up_regional_case(args)
+
+    def test_check_region_bounds_none_error(self):
+        """
+        In region mode, test that error is thrown if any region bound is None
+        """
+        # Define a good region to pass initial setup
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "194",
+            "--lon2",
+            "287",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Mess up the region
+        region.lon1 = None
+        err_msg = "Latitude and longitude bounds must be provided and not None"
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, err_msg):
+            region.check_region_bounds()
+
+    def test_check_region_bounds_lat_eq_error(self):
+        """
+        In region mode, test that error is thrown if lat1 == lat2
+        """
+        # Define a good region to pass initial setup
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+            "--lat1",
+            "0",
+            "--lat2",
+            "40",
+            "--lon1",
+            "194",
+            "--lon2",
+            "287",
+        ]
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Mess up the region
+        region.lat2 = region.lat1
+        err_msg = "ERROR: lat1 is bigger than lat2"
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, err_msg):
+            region.check_region_bounds()
+
+    def test_subset_lon_lat(self):
+        """
+        Test that RegionalCase._subset_lon_lat() works as expected
+        """
+
+        # Define lon/lat boundaries of the fake Dataset we'll be making
+        fakefile_bounds_lon = [-21, -18]
+        fakefile_bounds_lat = [3, 7]
+        # Get lon/lat values within those bounds, with 1-deg increments
+        lon_values = np.arange(fakefile_bounds_lon[0], fakefile_bounds_lon[1] + 1)
+        lat_values = np.arange(fakefile_bounds_lat[0], fakefile_bounds_lat[1] + 1)
+        # Define array of data to be in the "fake" variable of our Dataset
+        fake_values = np.array(
+            [
+                [0, 1, 2, 3],
+                [4, 5, 6, 7],
+                [8, 9, 10, 11],
+                [12, 13, 14, 15],
+                [16, 17, 18, 19],
+            ]
+        )
+        # Set up fake input Dataset
+        x_dimname, y_dimname, fake_ds = setup_fake_dataset(fake_values, lon_values, lat_values)
+
+        # Define lon/lat boundaries of the region from that file we're subsetting
+        region_bounds_lon = [-21, -19]
+        region_bounds_lat = [4, 6]
+        # Set up command-line arguments for subset region boundaries
+        region_bound_args = [
+            "--lat1",
+            str(region_bounds_lat[0]),
+            "--lat2",
+            str(region_bounds_lat[1]),
+            "--lon1",
+            str(region_bounds_lon[0]),
+            "--lon2",
+            str(region_bounds_lon[1]),
+        ]
+
+        sys.argv = [
+            "subset_data",
+            "region",
+            "--create-domain",
+            "--verbose",
+        ] + region_bound_args
+        self.parser = get_parser()
+        args = self.parser.parse_args()
+        args = check_args(args)
+        region = _set_up_regional_case(args)
+
+        # Test subsetting
+        result = region._subset_lon_lat(x_dimname, y_dimname, fake_ds)
+        expected_fake_values = np.array(
+            [
+                [4, 5, 6],
+                [8, 9, 10],
+                [12, 13, 14],
+            ]
+        )
+        self.assertTrue(np.array_equal(result["fake"].values, expected_fake_values))
 
 
 if __name__ == "__main__":
