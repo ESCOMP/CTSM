@@ -224,7 +224,7 @@ module CTSMForce2DStreamBaseType
              if ( trim(meshname) == 'none' ) then
                 call shr_assert( size(dataptr1d) == 1, "Expect stream data to be 1 when no mesh given"//errMsg( file=sourcefile, line=__LINE__) )
              else
-                call shr_assert( size(dataptr1d) == bounds%endg-bounds%begg, "Expect stream data to be the size of grid bounds"//errMsg( file=sourcefile, line=__LINE__) )
+                call shr_assert( size(dataptr1d) == bounds%endg-bounds%begg + 1, "Expect stream data to be the size of grid bounds"//errMsg( file=sourcefile, line=__LINE__) )
              end if
          end do
          deallocate( varnames )
