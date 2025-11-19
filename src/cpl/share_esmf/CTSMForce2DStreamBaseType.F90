@@ -221,12 +221,13 @@ module CTSMForce2DStreamBaseType
          call shr_stream_getMeshFileName( stream, meshname )
          do n = 1, nvars
              call this%GetPtr1D( varnames(n), dataptr1d )
+             call shr_assert( size(dataptr1d) >= bounds%endg-bounds%begg + 1, "Expect stream data to be >= size of grid bounds (includes ocean)"//errMsg( file=sourcefile, line=__LINE__) )
              if ( trim(meshname) == 'none' ) then
-                call shr_assert( size(dataptr1d) == 1, "Expect stream data to be 1 when no mesh given"//errMsg( file=sourcefile, line=__LINE__) )
-             else
-                call shr_assert( size(dataptr1d) == bounds%endg-bounds%begg + 1, "Expect stream data to be the size of grid bounds"//errMsg( file=sourcefile, line=__LINE__) )
+                call shr_assert( all(dataptr1d(:) == dataptr1d(1)), "Expect stream data to duplicate a single value when no mesh given"//errMsg( file=sourcefile, line=__LINE__) )
              end if
          end do
+         nullify( dataptr1d )
+         nullify( stream )
          deallocate( varnames )
 
      end subroutine Check1DPtrSize
@@ -295,12 +296,13 @@ module CTSMForce2DStreamBaseType
          ! Arguments:
          class(ctsm_force_2DStream_base_type), intent(inout) :: this
          character(*), intent(in) :: fldname  ! field name to get pointer for
-         real(r8), pointer :: dataptr1d(:)  ! Pointer to the 1D data
+         real(r8), intent(inout), pointer :: dataptr1d(:)  ! Pointer to the 1D data
 
          ! Local variables
          integer :: rc ! error return code
 
          ! Get pointer for stream data that is time and spatially interpolated to model time and grid
+         nullify( dataptr1d )
          call dshr_fldbun_getFldPtr(this%sdat%pstrm(1)%fldbun_model, fldname=fldname, fldptr1=dataptr1d, rc=rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=sourcefile)) then
             call endrun( 'Error getting field pointer for '//trim(fldname)//' from stream data', file=sourcefile, line=__LINE__ )
