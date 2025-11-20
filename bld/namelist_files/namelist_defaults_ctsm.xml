@@ -2230,7 +2230,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <model_year_align_cropcal_cultivar_gdds   >2000</model_year_align_cropcal_cultivar_gdds>
 
 <!-- crop calendars: default maturity requirement files -->
-<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/gdds_20250809_025305.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
+<stream_fldfilename_cultivar_gdds cropcals_rx=".true.">lnd/clm2/cropdata/calendars/processed/cultivar_gdds.c251120.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm4_5_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm5_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
 <stream_fldfilename_cultivar_gdds cropcals_rx=".true." lnd_tuning_mode="clm6_0_GSWP3v1">lnd/clm2/cropdata/calendars/processed/gdds_20230829_161011.tweaked_latlons.nc</stream_fldfilename_cultivar_gdds>
