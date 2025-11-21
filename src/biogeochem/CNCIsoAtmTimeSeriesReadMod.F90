@@ -1,23 +1,27 @@
 module CIsoAtmTimeseriesMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
   ! !USES:
-  use shr_kind_mod     , only : r8 => shr_kind_r8
+  use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use clm_time_manager , only : get_curr_date, get_curr_yearfrac
   use clm_varcon       , only : c13ratio, c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, use_c13, use_c14
   use abortutils       , only : endrun
   use spmdMod          , only : masterproc
   use shr_log_mod      , only : errMsg => shr_log_errMsg
+  use AtmCarbonIsotopeStreamType, only : atm_delta_c13_stream_type, atm_delta_c14_stream_type
   use decompMod        , only : bounds_type
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
+  public:: CIsoAtmReadNML         ! Read namelist for atmospheric C14/C13 isotope time series
   public:: C14BombSpike           ! Time series for C14 data
   public:: C14_init_BombSpike     ! Initialize C14 data series and read data in
   public:: C13Timeseries          ! Time series for C13 data
@@ -29,11 +33,20 @@ module CIsoAtmTimeseriesMod
   logical            , public :: use_c13_timeseries = .false. ! do we use time-varying atmospheric C13?
   character(len=256) , public :: atm_c13_filename = ' '       ! file name of C13 input data
 
-  real(r8), allocatable, public :: rc14_atm_grc(:)       ! Ratio of C14 C12 data on gridcell
-  real(r8), allocatable, public :: rc13_atm_grc(:)       ! Ratio of C13 C12 data on gridcell
+  real(r8), allocatable, public, protected :: rc14_atm_grc(:)       ! Ratio of C14 C12 data on gridcell
+  real(r8), allocatable, public, protected :: rc13_atm_grc(:)       ! Ratio of C13 C12 data on gridcell
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private:: check_units   ! Check the units of the data on the input file
+
+  ! Private subroutines only made public for unit testing
+  public:: CIsoCheckNMLInputs  ! Check that the namelist inputs are valid
+  public:: CIsoSetNMLInputs    ! Set the namelist inputs for unit testing
+  public:: CIsoSetControl      ! Set the control variables for Carbon Isotopes
+  public:: CIsoLogControl      ! Write out the control settings to the logfile
+
+  type(atm_delta_c13_stream_type), private :: atm_c13_stream  ! Atmospheric C13 stream object
+  type(atm_delta_c14_stream_type), private :: atm_c14_stream  ! Atmospheric C14 stream object
 
   ! !PRIVATE TYPES:
   integer, parameter   , private :: nsectors_c14 = 3          ! Number of latitude sectors the C14 data has
@@ -45,11 +58,286 @@ module CIsoAtmTimeseriesMod
   real(r8), allocatable, private :: atm_delta_c13_grc(:)      ! Delta C13 data on gridcell
   real(r8), parameter :: time_axis_offset = 1850.0_r8         ! Offset in years of time on file
 
+  logical, private :: use_c13_streams = .false.  ! By default read in the CMIP6 file format for C13
+  logical, private :: use_c14_streams = .false.  ! By default read in the CMIP6 file format for C14
+
+  ! Private data for the control namelist:
+  character(len=CL), private :: stream_fldfilename_atm_c14 = ' '
+  character(len=CL), private :: stream_fldfilename_atm_c13 = ' '
+  integer, private :: stream_year_first_atm_c14 = 1850
+  integer, private :: stream_year_last_atm_c14 = 2023
+  integer, private :: stream_model_year_align_atm_c14 = 1850
+  integer, private :: stream_year_first_atm_c13 = 1850
+  integer, private :: stream_year_last_atm_c13 = 2023
+  integer, private :: stream_model_year_align_atm_c13 = 1850
+  character(len=CL), private :: stream_mapalgo_atm_c14 = 'nn'
+  character(len=CL), private :: stream_tintalgo_atm_c14 = 'linear'
+  character(len=CL), private :: stream_taxmode_atm_c14 = 'extend'
+  character(len=CL), private :: stream_mapalgo_atm_c13 = 'nn'
+  character(len=CL), private :: stream_tintalgo_atm_c13 = 'linear'
+  character(len=CL), private :: stream_taxmode_atm_c13 = 'extend'
+
   character(len=*), parameter, private :: sourcefile = &
   __FILE__
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoAtmReadNML( NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Read in the namelist for atmospheric C14/C13 isotope time series
+    !
+    ! Uses:
+    use shr_nl_mod , only : shr_nl_find_group_name
+    use spmdMod    , only : masterproc, mpicom
+    use shr_mpi_mod, only : shr_mpi_bcast
+
+    ! Arguments:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename to read
+
+    ! !LOCAL VARIABLES:
+    integer :: ierr  ! error code
+    integer :: unitn ! unit for namelist file
+    character(len=*), parameter :: nml_name = 'carbon_isotope_streams'    ! MUST agree with name in namelist and read
+
+    namelist /carbon_isotope_streams/ stream_fldfilename_atm_c14, &
+             stream_fldfilename_atm_c13, stream_year_first_atm_c14, &
+             stream_year_last_atm_c14, stream_model_year_align_atm_c14, &
+             stream_year_first_atm_c13, stream_year_last_atm_c13, &
+             stream_model_year_align_atm_c13
+
+   ! Read in the namelist on the main task
+   if (masterproc) then
+      open( newunit=unitn, file=trim(NLFilename), status='old', iostat=ierr )
+      write(iulog,*) 'Read in '//nml_name//'  namelist'
+      call shr_nl_find_group_name(unitn, nml_name, status=ierr)
+      if (ierr == 0) then
+         read(unitn, nml=carbon_isotope_streams, iostat=ierr)
+         if (ierr /= 0) then
+            call endrun(msg="ERROR reading "//nml_name//"namelist", file=sourcefile, line=__LINE__)
+            return
+         end if
+      else
+         call endrun(msg="ERROR could NOT find "//nml_name//"namelist", file=sourcefile, line=__LINE__)
+         return
+      end if
+      close( unitn )
+   end if
+   ! Broadcast namelist values to all tasks
+   call shr_mpi_bcast( stream_fldfilename_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_year_first_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_year_last_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_model_year_align_atm_c14, mpicom )
+   call shr_mpi_bcast( stream_fldfilename_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_year_first_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_year_last_atm_c13, mpicom )
+   call shr_mpi_bcast( stream_model_year_align_atm_c13, mpicom )
+
+   ! Do some error checking of input namelist items, set control flags, and write to the log
+   call CIsoCheckNMLInputs()
+
+   call CIsoSetControl()
+   call CIsoLogControl()
+
+  end subroutine CIsoAtmReadNML
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoSetControl()
+   ! Set control settings based on the namelist inputs
+   ! Also do some assert checks to make sure other settings are as expected
+   !
+   if ( use_c13_timeseries )then
+      ! Decide if C14/C13 streams are going to be used or the old method
+      if ( len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+         use_c13_streams = .true.
+      else
+         use_c13_streams = .false.
+         call shr_assert( len_trim(atm_c13_filename) /= 0 , &
+            msg="ERROR: use_c13_timeseries is true but atm_c13_filename is blank", file=sourcefile, line=__LINE__)
+         call shr_assert( .not. use_c13_streams , &
+            msg="ERROR: stream_fldfilename_atm_c13 is blank but use_c13_streams is not TRUE", file=sourcefile, line=__LINE__)
+      end if
+   else
+      use_c13_streams = .false.
+      call shr_assert( .not. use_c13_streams , &
+            msg="ERROR: use_c13_timeseries is false, but use_c13_streams is TRUE", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c13_filename) == 0 , &
+            msg="ERROR: use_c13_timeseries is false but atm_c13_filename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0 , &
+            msg="ERROR: use_c13_timeseries is false but stream_fldfilename_atm_c13 is NOT blank", file=sourcefile, line=__LINE__)
+   end if
+   if ( use_c14_bombspike )then
+      if ( len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+         use_c14_streams = .true.
+      else
+         use_c14_streams = .false.
+         call shr_assert( len_trim(atm_c14_filename) /= 0 , &
+            msg="ERROR: use_c14_bombspike is true but atm_c14_filename is blank", file=sourcefile, line=__LINE__)
+         call shr_assert( .not. use_c14_streams , &
+            msg="ERROR: stream_fldfilename_atm_c14 is blank but use_c14_streams is not TRUE", &
+            file=sourcefile, line=__LINE__)
+      end if
+   else
+      use_c14_streams = .false.
+      call shr_assert( .not. use_c14_streams , &
+            msg="ERROR: use_c14_bombspike is false, but use_c14_streams is TRUE", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c14_filename) == 0, &
+            msg="ERROR: use_c14_bombspike is false but atm_c14_filename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0 , &
+            msg="ERROR: use_c14_bombspike is false but stream_fldfilename_atm_c14 is NOT blank", &
+            file=sourcefile, line=__LINE__)
+   end if
+
+  end subroutine CIsoSetControl
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoLogControl()
+   ! Log namelist and control settings to output to display what behavior will be
+   !
+   if ( use_c13_timeseries )then
+      if ( use_c13_streams ) then
+         call shr_assert( len_trim(stream_fldfilename_atm_c13) /= 0 , &
+            msg="use_c13_streams is TRUE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+         write(iulog,*) 'C13 atmospheric data will be read in using the streams method from file: '// &
+                        trim(stream_fldfilename_atm_c13)
+      else if ( len_trim(atm_c13_filename) /= 0 ) then
+         write(iulog,*) 'C13 atmospheric data will be read in using the CMIP6 time series method from file: '// &
+                        trim(atm_c13_filename)
+      else
+         call endrun(msg="use_c13_timeseries is true but use_c13_streams=FALSE and atm_c13_filename is blank", &
+                     file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( len_trim(stream_fldfilename_atm_c13) == 0 , &
+            msg="use_c13_timeseries is FALSE but stream_fldfilename is NOT blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c13_filename) == 0 , &
+            msg="use_c13_timeseries is FALSE but stream_fldfilename is NOT blank", file=sourcefile, line=__LINE__)
+      write(iulog,*) 'C13 atmospheric data will be the global constant pre-industrial level'
+   end if
+   if ( use_c14_bombspike )then
+     if ( use_c14_streams ) then
+         write(iulog,*) 'C14 atmospheric data will be read in using the streams method from file: '// &
+                        trim(stream_fldfilename_atm_c14)
+      else if ( len_trim(atm_c14_filename) /= 0 ) then
+         write(iulog,*) 'C14 atmospheric data will be read in using the CMIP6 time series method from file: '// &
+                        trim(atm_c14_filename)
+      else
+         call endrun(msg="use_c14_bombspike is true but use_c14_streams=FALSE and atm_c14_filename is blank", &
+                     file=sourcefile, line=__LINE__)
+      end if
+   else
+      call shr_assert( len_trim(stream_fldfilename_atm_c14) == 0 , &
+            msg="use_c14_bombspike is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+      call shr_assert( len_trim(atm_c14_filename) == 0 , &
+            msg="use_c14_bombspike is FALSE but stream_fldfilename is blank", file=sourcefile, line=__LINE__)
+      write(iulog,*) 'C14 atmospheric data will be global constant pre-industrial level'
+   end if
+
+  end subroutine CIsoLogControl
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoCheckNMLInputs()
+    !
+    ! !DESCRIPTION:
+    ! Check that the namelist inputs are valid
+    !
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    ! When carbon isotopes are off nothing should be set
+    if ( .not. use_c13 )then
+       if ( use_c13_timeseries ) then
+          call endrun( msg="use_c13 is false but use_c13_timeseries is TRUE " // &
+                           "(use_c13_timeseries can only be TRUE if use_c13 is TRUE)", file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
+    if ( .not. use_c14 )then
+       if ( use_c14_bombspike ) then
+          call endrun( msg="use_c14 is false but use_c14_bombspike is TRUE " // &
+                           "(use_c14_bombspike can only be TRUE if use_c14 is TRUE)", &
+                           file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
+
+    !
+    ! Check C14 stream namelist inputs
+    !
+    if ( use_c14_bombspike ) then
+       if ( len_trim(atm_c14_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+          call endrun(msg="use_c14_bombspike TRUE but both atm_c14_filename AND stream_fldfilename_atm_c14 are set and only one should be", &
+                      file=sourcefile, line=__LINE__)
+          return
+       end if
+       if ( len_trim(atm_c14_filename) == 0 .and. len_trim(stream_fldfilename_atm_c14) == 0 ) then
+          call endrun(msg="use_c14_bombspike TRUE but neither atm_c14_filename nor stream_fldfilename_atm_c14 are set and one or the other needs to be", &
+                      file=sourcefile, line=__LINE__)
+          return
+       end if
+    else
+       if ( len_trim(atm_c14_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c14) /= 0 ) then
+          call endrun(msg="use_c14_bombspike false but either atm_c14_filename or stream_fldfilename_atm_c14 is set and neither should be", &
+                      file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
+    !
+    ! Check C13 stream namelist inputs
+    !
+    if ( use_c13_timeseries ) then
+       if ( len_trim(atm_c13_filename) /= 0 .and. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+          call endrun(msg="use_c13_timeseries TRUE but both atm_c13_filename AND stream_fldfilename_atm_c13 are set and only one should be", &
+                     file=sourcefile, line=__LINE__)
+          return
+       end if
+       if ( len_trim(atm_c13_filename) == 0 .and. len_trim(stream_fldfilename_atm_c13) == 0 ) then
+          call endrun(msg="use_c13_timeseries TRUE but neither atm_c13_filename nor stream_fldfilename_atm_c13 are set and one or the other needs to be", &
+                      file=sourcefile, line=__LINE__)
+          return
+       end if
+    else
+       if ( len_trim(atm_c13_filename) /= 0 .or. len_trim(stream_fldfilename_atm_c13) /= 0 ) then
+         call endrun(msg="use_c13_timeseries is false but either atm_c13_filename or stream_fldfilename_atm_c13 are set and neither should be", &
+                     file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
+
+  end subroutine CIsoCheckNMLInputs
+
+  !-----------------------------------------------------------------------
+  subroutine CIsoSetNMLInputs( stream_fldfilename_atm_c13_in, stream_fldfilename_atm_c14_in, &
+                               use_c13_streams_in, use_c14_streams_in )
+    !
+    ! !DESCRIPTION:
+    ! Set the namelist inputs for unit testing
+    !
+    ! Arguments:
+      character(len=*), intent(in), optional :: stream_fldfilename_atm_c13_in
+      character(len=*), intent(in), optional :: stream_fldfilename_atm_c14_in
+      logical, intent(in), optional :: use_c13_streams_in
+      logical, intent(in), optional :: use_c14_streams_in
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+       if ( present(stream_fldfilename_atm_c13_in) ) then
+          stream_fldfilename_atm_c13 = stream_fldfilename_atm_c13_in
+       end if
+       if ( present(stream_fldfilename_atm_c14_in) ) then
+          stream_fldfilename_atm_c14 = stream_fldfilename_atm_c14_in
+       end if
+       if ( present(use_c13_streams_in) ) then
+          use_c13_streams = use_c13_streams_in
+       end if
+       if ( present(use_c14_streams_in) ) then
+          use_c14_streams = use_c14_streams_in
+       end if
+
+  end subroutine CIsoSetNMLInputs
+
 
   !-----------------------------------------------------------------------
   subroutine C14BombSpike( bounds )
@@ -79,6 +367,10 @@ contains
     !
     if ( use_c14_bombspike )then
 
+       if ( use_c14_streams )then
+          call C14Streams( bounds )
+          RETURN
+       end if
        ! get current date
        call get_curr_date(yr, mon, day, tod)
        dateyear = real(yr) + get_curr_yearfrac()
@@ -136,6 +428,29 @@ contains
   end subroutine C14BombSpike
 
   !-----------------------------------------------------------------------
+  subroutine C14Streams( bounds )
+    ! Description:
+    !
+    ! Use the streams method to read in atmospheric C14 bomb spike data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    integer :: g   ! Indices
+
+    call atm_c14_stream%Advance( )
+    call atm_c14_stream%Interp( bounds)
+
+    do g = bounds%begg, bounds%endg
+       atm_delta_c14_grc(g) = atm_c14_stream%atm_delta_c14(g)
+       rc14_atm_grc(g) = (atm_delta_c14_grc(g) * 1.e-3_r8 + 1._r8) * c14ratio
+    end do
+
+  end subroutine C14Streams
+
+  !-----------------------------------------------------------------------
   subroutine C14_init_BombSpike( bounds )
     !
     ! !DESCRIPTION:
@@ -160,17 +475,33 @@ contains
     character(len=*), parameter :: vname = 'Delta14co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
 
+    ! Allocate the gridcell arrays
+    ! TODO: This should be below within the use_c14_bombspike if block
+    allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
+    allocate(rc14_atm_grc(bounds%begg:bounds%endg))
+    atm_delta_c14_grc(:) = nan
+    rc14_atm_grc(:) = nan
     !
     !  If the bombspike timeseries file is being used, read the file in
     !
     if ( use_c14_bombspike )then
 
-       call getfil(atm_c14_filename, locfn, 0)
+       if ( use_c14_streams )then
+          write(iulog,*) 'Read in atmospheric C14 data from streams'
+          call C14StreamsInit( bounds )
+          RETURN
+       end if
+       if ( .not. use_c14_streams .and. len_trim(atm_c14_filename) == 0 )then
+          write(iulog,*) 'Use constant preindustrial atmospheric C14 data'
+          RETURN
+       end if
 
        if ( masterproc ) then
           write(iulog, *) 'C14_init_BombSpike: preparing to open file:'
           write(iulog, *) trim(locfn)
        endif
+
+       call getfil(atm_c14_filename, locfn, 0)
 
        call ncd_pio_openfile (ncid, trim(locfn), 0)
 
@@ -208,15 +539,39 @@ contains
        end do
     end if
 
-    ! Allocate the gridcell arrays
-    allocate(atm_delta_c14_grc(bounds%begg:bounds%endg))
-    allocate(rc14_atm_grc(bounds%begg:bounds%endg))
-    atm_delta_c14_grc(:) = nan
-    rc14_atm_grc(:) = nan
-
-
   end subroutine C14_init_BombSpike
 
+
+  !-----------------------------------------------------------------------
+  subroutine C14StreamsInit( bounds )
+    ! Description:
+    !
+    ! Initialize the streams method to read in atmospheric C14 bomb spike data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if ( masterproc ) then
+       write(iulog, *) 'C14StreamsInit: Initializing C14 streams with file:'
+       write(iulog, *) trim(stream_fldfilename_atm_c14)
+    end if
+    ! Streams method
+    call atm_c14_stream%Init( bounds, &
+        fldfilename=stream_fldfilename_atm_c14, &
+        meshfile= 'none', &
+        mapalgo=stream_mapalgo_atm_c14, &
+        tintalgo=stream_tintalgo_atm_c14, &
+        taxmode=stream_taxmode_atm_c14, &
+        year_first=stream_year_first_atm_c14, &
+        year_last=stream_year_last_atm_c14, &
+        model_year_align=stream_model_year_align_atm_c14 )
+    call atm_c14_stream%Advance( )
+    call atm_c14_stream%Interp( bounds )
+
+  end subroutine C14StreamsInit
 
   !-----------------------------------------------------------------------
   subroutine C13TimeSeries( bounds, atm2lnd_inst )
@@ -248,6 +603,14 @@ contains
     !
     if ( use_c13_timeseries )then
 
+        if ( use_c13_streams )then
+           call C13Streams( bounds )
+           RETURN
+        end if
+        if ( .not. use_c13_streams .and. len_trim(atm_c13_filename) == 0 )then
+           write(iulog,*) 'Use constant preindustrial atmospheric C13 data'
+           RETURN
+        end if
         ! get current date
         call get_curr_date(yr, mon, day, tod)
         dateyear = real(yr) + get_curr_yearfrac()
@@ -310,6 +673,27 @@ contains
   end subroutine C13TimeSeries
 
   !-----------------------------------------------------------------------
+  subroutine C13Streams( bounds )
+    ! Description:
+    !
+    ! Use the streams method to read in atmospheric C13 data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g   ! Indices
+
+    call atm_c13_stream%Interp( bounds)
+
+    do g = bounds%begg, bounds%endg
+       atm_delta_c13_grc(g) = atm_c13_stream%atm_delta_c13(g)
+       rc13_atm_grc(g) = (atm_delta_c13_grc(g) * 1.e-3_r8 + 1._r8) * SHR_CONST_PDB
+    end do
+
+  end subroutine C13Streams
+
+  !-----------------------------------------------------------------------
   subroutine C13_init_TimeSeries( bounds )
     !
     ! !DESCRIPTION:
@@ -332,10 +716,22 @@ contains
     logical :: readvar                    ! if variable read or not
     character(len=*), parameter :: vname = 'delta13co2_in_air'  ! Variable name on file
     !-----------------------------------------------------------------------
+
+    ! TODO: This should be below within the use_c13_timeseries if block
+    ! Allocate the gridcell arrays
+    allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
+    allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
+    atm_delta_c13_grc(:) = nan
+    rc13_atm_grc(:) = nan
     !
     !  If the timeseries file is being used, read the file in
     !
     if ( use_c13_timeseries )then
+
+       if ( use_c13_streams )then
+         call C13StreamsInit( bounds )
+         RETURN
+       end if
 
        call getfil(atm_c13_filename, locfn, 0)
 
@@ -378,13 +774,38 @@ contains
        end do
     end if
 
-    ! Allocate the gridcell arrays
-    allocate(atm_delta_c13_grc(bounds%begg:bounds%endg) )
-    allocate(rc13_atm_grc(bounds%begg:bounds%endg) )
-    atm_delta_c13_grc(:) = nan
-    rc13_atm_grc(:) = nan
-
   end subroutine C13_init_TimeSeries
+
+  !-----------------------------------------------------------------------
+  subroutine C13StreamsInit( bounds )
+    ! Description:
+    !
+    ! Initialize the streams method to read in atmospheric C13 data
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    if ( masterproc ) then
+       write(iulog, *) 'C13StreamsInit: Initializing C13 streams with file:'
+       write(iulog, *) trim(stream_fldfilename_atm_c13)
+    end if
+    ! Streams method
+    call atm_c13_stream%Init( bounds, &
+        fldfilename=stream_fldfilename_atm_c13, &
+        meshfile= 'none', &
+        mapalgo=stream_mapalgo_atm_c13, &
+        tintalgo=stream_tintalgo_atm_c13, &
+        taxmode=stream_taxmode_atm_c13, &
+        year_first=stream_year_first_atm_c13, &
+        year_last=stream_year_last_atm_c13, &
+        model_year_align=stream_model_year_align_atm_c13 )
+    call atm_c13_stream%Advance( )
+    call atm_c13_stream%Interp( bounds )
+
+  end subroutine C13StreamsInit
 
   !-----------------------------------------------------------------------
   subroutine check_units( ncid, vname, relativeto )
