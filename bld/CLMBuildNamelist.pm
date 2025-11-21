@@ -3798,7 +3798,6 @@ sub setup_logic_c_isotope {
       if ( &value_is_true($use_c13_timeseries) ) {
          if ( defined($stream_fldfilename_atm_c13) ) {
             &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
-            &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
             setup_logic_c13_streams($opts, $nl_flags, $definition, $defaults, $nl);
          } else {
             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
