@@ -3766,14 +3766,14 @@ sub setup_logic_c_isotope {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'use_c14'=>$use_c14 );
       $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
       if ( &value_is_true($use_c14_bombspike) ) {
-         if ( defined($stream_fldfilename_atm_c14) ) {
+         #if ( defined($stream_fldfilename_atm_c14) ) {
             &add_logical_to_nl_flags( $nl_flags, $nl, "use_c14_bombspike" );
             setup_logic_c14_streams($opts, $nl_flags, $definition, $defaults, $nl);
-         } else {
-            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                    'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
-                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-         }
+         #} else {
+         #   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
+         #           'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
+         #           'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         #}
          $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
          $atm_c14_filename = $nl->get_value('atm_c14_filename');
          if ( defined($stream_fldfilename_atm_c14) && defined($atm_c14_filename) ) {
@@ -3796,14 +3796,15 @@ sub setup_logic_c_isotope {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13_timeseries', 'use_c13'=>$use_c13 );
       $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
       if ( &value_is_true($use_c13_timeseries) ) {
-         if ( defined($stream_fldfilename_atm_c13) ) {
+         #if ( defined($stream_fldfilename_atm_c13) ) {
+         #   &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
             &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
             setup_logic_c13_streams($opts, $nl_flags, $definition, $defaults, $nl);
-         } else {
-            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
-                    'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
-                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-         }
+         #} else {
+         #   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
+         #           'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
+         #           'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         #}
          $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
          $atm_c13_filename = $nl->get_value('atm_c13_filename');
          if ( defined($stream_fldfilename_atm_c13) && defined($atm_c13_filename) ) {
@@ -3844,7 +3845,7 @@ sub setup_logic_c13_streams {
   if ( ! &value_is_true($nl_flags->{'use_c13'}) ) { return; }
   if ( ! &value_is_true($nl_flags->{'use_c13_timeseries'}) ) { return; }
   # TODO: Remove this line once we have this done always for CMIP7
-  if ( ! defined($nl->get_value('stream_fldfilename_atm_c13')) ) { return; }
+  #if ( ! defined($nl->get_value('stream_fldfilename_atm_c13')) ) { return; }
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_atm_c13',
               'use_c13'=>$nl_flags->{'use_c13'}, 'use_c13_timeseries'=>$nl_flags->{'use_c13_timeseries'},
@@ -3872,7 +3873,7 @@ sub setup_logic_c14_streams {
   if ( ! &value_is_true($nl_flags->{'use_c14'}) ) { return; }
   if ( ! &value_is_true($nl_flags->{'use_c14_bombspike'}) ) { return; }
   # TODO: Remove this line once we have this done always for CMIP7
-  if ( ! defined($nl->get_value('stream_fldfilename_atm_c14')) ) { return; }
+  #if ( ! defined($nl->get_value('stream_fldfilename_atm_c14')) ) { return; }
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_atm_c14',
               'use_c14'=>$nl_flags->{'use_c14'}, 'use_c14_bombspike'=>$nl_flags->{'use_c14_bombspike'},
