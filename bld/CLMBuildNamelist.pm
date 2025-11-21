@@ -3857,7 +3857,7 @@ sub setup_logic_c13_streams {
               'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
   # Set align year, if first and last years are different
   if ( $nl->get_value('stream_year_first_atm_c13') != $nl->get_value('stream_year_last_atm_c13') ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_atm_c13',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_model_year_align_atm_c13',
                 'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
 }
@@ -3888,7 +3888,7 @@ sub setup_logic_c14_streams {
               'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
   # Set align year, if first and last years are different
   if ( $nl->get_value('stream_year_first_atm_c14') != $nl->get_value('stream_year_last_atm_c14') ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_atm_c14',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_model_year_align_atm_c14',
                 'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
   }
 }

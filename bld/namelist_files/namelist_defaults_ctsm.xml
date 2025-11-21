@@ -174,7 +174,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <stream_year_first_atm_c14 sim_year_range="1850-2000" >1700</stream_year_first_atm_c14>
 <stream_year_last_atm_c14  sim_year_range="1850-2000" >2023</stream_year_last_atm_c14>
-<model_year_align_atm_c14  sim_year_range="1850-2000" >1700</model_year_align_atm_c14>
+<stream_model_year_align_atm_c14  sim_year_range="1850-2000" >1700</stream_model_year_align_atm_c14>
 
 <stream_fldfilename_atm_c13 use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist" >lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc</stream_fldfilename_atm_c13>
 
@@ -199,7 +199,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <stream_year_first_atm_c13 sim_year_range="1850-2000" >1700</stream_year_first_atm_c13>
 <stream_year_last_atm_c13  sim_year_range="1850-2000" >2023</stream_year_last_atm_c13>
-<model_year_align_atm_c13  sim_year_range="1850-2000" >1700</model_year_align_atm_c13>
+<stream_model_year_align_atm_c13  sim_year_range="1850-2000" >1700</stream_model_year_align_atm_c13>
 
 <!-- Irrigation default (Note, the use-cases also set this) -->
 <irrigate                                                             >.false.</irrigate>
