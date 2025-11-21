@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3400;
+my $ntests = 3403;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1421,6 +1421,11 @@ my %warntest = (
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      phys=>"clm5_0",
                                    },
+     "c14_meshfile_none"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null', " .
+                                              "stream_meshfile_atm_c14='none'",
+                                     phys=>"clm6_0",
+                                   },
      "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1611,9 +1616,9 @@ foreach my $res ( @resolutions ) {
    &cleanup(); print "\n";
 }
 
-print "\n==================================================\n";
-print " Test all use-cases over all physics options\n";
-print "==================================================\n";
+print "\n=============================================================\n";
+print   " Test all use-cases over all physics options for f09 and SP \n";
+print   "=============================================================\n";
 
 # Run over all use-cases for f09 and all physics...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
@@ -1634,7 +1639,8 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
-      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
+      # Just do SP here as some use-cases can't do crop (nonanthro), and some not BGC (stdurbpt)
+      $options = "-res 0.9x1.25 -use_case $usecase --bgc bgc -envxml_dir .";
       &make_env_run();
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
@@ -1940,6 +1946,12 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
      my @clmres = ( "10x15", "4x5", "360x720cru", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
+        # For clm6_0 and BGC use Carbon isotope streams
+        if ( ($phys eq "clm6_0") && ($clmopts =~ /bgc bgc/) ) {
+           $options = "$options --namelist \"&a stream_fldfilename_atm_c14 = '/dev/null'," .
+                      "stream_meshfile_atm_c14 = '/dev/null', " .
+                      "stream_fldfilename_atm_c13 = '/dev/null' /\"";
+        }
         &make_env_run( );
         eval{ system( "$bldnml $options $clmopts > $tempfile 2>&1 " ); };
         is( $@, '', "$options $clmopts" );
