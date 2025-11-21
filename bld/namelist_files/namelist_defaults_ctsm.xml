@@ -153,7 +153,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <stream_fldfilename_atm_c14 use_c14=".true." use_c14_bombspike =".true." ssp_rcp="hist" >lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_360x720_1700-2023_yearly_v3.0_c251117.nc</stream_fldfilename_atm_c14>
 <stream_meshfile_atm_c14    use_c14=".true." use_c14_bombspike =".true." >share/meshes/360x720_120830_ESMFmesh_c20210507.nc</stream_meshfile_atm_c14>
 
-<!-- The following are only set if both use_c14 and use_c14_bonbspike are TRUE -->
+<!-- The following are only set if both use_c14 and use_c14_bombspike are TRUE -->
 <stream_year_first_atm_c14 sim_year="2018" sim_year_range="constant">2018</stream_year_first_atm_c14>
 <stream_year_last_atm_c14  sim_year="2018" sim_year_range="constant">2018</stream_year_last_atm_c14>
 
