@@ -110,6 +110,10 @@ def open_paramfile(file_in, mask_and_scale=False):
     return xr.open_dataset(file_in, decode_timedelta=False, mask_and_scale=mask_and_scale)
 
 
+# Flags that can be used for the PFT argument
+PFT_FLAGS = ["-p", "--pft"]
+
+
 def paramfile_parser_setup(description):
     """
     Set up an argument parser for parameter file utilities.
@@ -130,7 +134,4 @@ def paramfile_parser_setup(description):
     )
     parser.add_argument("-i", "--input", required=True, help="Input netCDF file")
 
-    # Flags that can be used for the PFT argument
-    pft_flags = ["-p", "--pft"]
-
-    return parser, pft_flags
+    return parser, PFT_FLAGS
