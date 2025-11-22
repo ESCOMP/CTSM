@@ -4040,13 +4040,13 @@ sub setup_logic_dry_deposition {
 
   my @list = ( "drydep_list", "dep_data_file");
   if ($opts->{'drydep'} ) {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file');
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'drydep_list', "use_fates"=>$nl_flags->{'use_fates'});
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dep_data_file', "use_fates"=>$nl_flags->{'use_fates'});
     &remove_newlines( $nl, $definition, "drydep_list" );
   }
   # fates-sp will set use_fates_nocomp in the setup logic for fates earlier
   if ( &value_is_true( $nl_flags->{'use_fates'}) && 
-       not &value_is_true($nl->get_value('use_fates_nocomp'))) {
+       ! &value_is_true($nl->get_value('use_fates_nocomp'))) {
      foreach my $var ( @list ) {
         if ( defined($nl->get_value($var)) ) {
            $log->warning("DryDeposition $var is being set and can NOT be on when FATES is also on unless FATES-NOCOMP mode is on.\n" .
@@ -4175,8 +4175,12 @@ sub setup_logic_megan {
   }
 
   if ($nl_flags->{'megan'} ) {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier');
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file');
+     if (&value_is_true($nl_flags->{"use_fates"}) && ! &value_is_true($nl->get_value('use_fates_nocomp'))) {
+        $log->fatal_error("Running MEGAN in fates bgc mode without use_fates_nocomp=.true. or use_fates_sp=.true. is not allowed");
+  }
+
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_specifier',"use_fates"=>$nl_flags->{'use_fates'});
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'megan_factors_file',"use_fates"=>$nl_flags->{'use_fates'});
   }
   if ( defined($nl->get_value('megan_specifier')) ||
        defined($nl->get_value('megan_factors_file')) ) {

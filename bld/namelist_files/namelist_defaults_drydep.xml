@@ -23,9 +23,18 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
       'NOA','O3','O3S','ONITR','PAN','POOH','ROOH','SO2','SOAG','XOOH'
 </drydep_list>
 
+<drydep_list use_fates = ".true.">'O3','NO2','HNO3','NO','HO2NO2',
+             'CH3OOH','CH2O','CO','H2O2','CH3COOOH',
+             'PAN','MPAN','C2H5OOH','ONIT','POOH',
+             'C3H7OOH','ROOH','CH3COCHO','CH3COCH3',
+             'Pb','ONITR','MACROOH','XOOH','ISOPOOH',
+             'CH3OH','C2H5OH','CH3CHO','GLYALD','HYAC',
+             'HYDRALD','ALKOOH','MEKOOH','TOLOOH','TERPOOH',
+             'CH3COOH','CB1','CB2','OC1','OC2','SOA','SO2','SO4','NH3','NH4NO3'
+</drydep_list>
 <!-- effective Henry's coef data for wet and dry deposition -->
 <dep_data_file>atm/cam/chem/trop_mozart/dvel/dep_data_c20221208.nc</dep_data_file>
-
+<dep_data_file use_fates=".true.">atm/cam/chem/trop_mozart/dvel/dep_data_c201019.nc</dep_data_file>
 <!-- 
      Defaults for megan_emis_nl namelists to test standalone CTSM with 
      This is from the CAM FHISTC_MTt4s compset namelist from 04/25/2025 EBK
@@ -59,6 +68,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
         ' germacrene_B + germacrene_D + gurjunene_b + humulene_a + humulene_g + isolongifolene +',
         ' longifolene + longipinene + muurolene_a + muurolene_g + selinene_b + selinene_d +',
         ' nerolidol_c + nerolidol_t)'
+</megan_specifier>
+
+<megan_specifier use_fates=".true.">'ISOP = isoprene',
+                 'C10H16 = pinene_a + carene_3 + thujene_a',
+                 'CH3OH = methanol',
+                 'C2H5OH = ethanol',
+                 'CH2O = formaldehyde',
+                 'CH3CHO = acetaldehyde',
+                 'CH3COOH = acetic_acid', 'CH3COCH3 = acetone'
 </megan_specifier>
 
 <megan_factors_file phys="clm6_0" use_fates=".true." >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>

@@ -4598,7 +4598,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f45_f45_mg37" compset="IHistClm60Sp" testmods="clm/default">
+  <test name="ERP_D_Ld5" grid="f45_f45_mg37" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
     </machines>
@@ -4607,7 +4607,7 @@
       <option name="comment">""</option>
     </options>
   </test>
-  <test name="ERS_D" grid="f45_f45_mg37" compset="I1850Clm60Sp" testmods="clm/default">
+  <test name="ERS_D" grid="f45_f45_mg37" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
     </machines>
