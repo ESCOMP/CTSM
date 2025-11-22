@@ -377,7 +377,14 @@ def _one_unequal_value_msg(
         indices_list = str([int(i) for i in indices]) + " "
 
     raw_equal = v0 == v1
-    ms_equal = v0_ms == v1_ms or (np.isnan(v0_ms) and np.isnan(v1_ms))
+
+    # Check if masked/scaled values are equal, handling NaN comparison
+    # Some data types (like strings) can't use np.isnan, so handle TypeError
+    ms_equal = v0_ms == v1_ms
+    try:
+        ms_equal = ms_equal or (np.isnan(v0_ms) and np.isnan(v1_ms))
+    except TypeError:
+        pass
 
     # Raw values differ, but they're the same after masking/scaling
     # TODO: Include m/s value

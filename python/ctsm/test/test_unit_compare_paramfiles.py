@@ -763,6 +763,21 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Second line should have spaces equal to "[1] " (4 chars) to align
         self.assertIn("    masked/scaled: 2.0 → 2.5", lines[1])
 
+    def test_string_dtype(self):
+        """Test with string data type"""
+        np0 = np.array(["apple", "banana", "cherry"])
+        np1 = np.array(["apple", "orange", "cherry"])
+        np0_ms = np.array(["apple", "banana", "cherry"])
+        np1_ms = np.array(["apple", "orange", "cherry"])
+        indices = (1,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Should handle string comparison without NaN issues
+        self.assertIn("[1] raw and masked/scaled: banana → orange", result)
+
 
 if __name__ == "__main__":
     unittest.main()
