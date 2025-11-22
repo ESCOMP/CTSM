@@ -296,13 +296,11 @@ def _compare_da_values(
 
     # Do values match?
     values_match = np.array_equal(np0, np1)
-    # TODO: Need to handle mask/scaled values that aren't nan-capable!
     try:
         values_match = values_match and np.array_equal(np0_ms, np1_ms, equal_nan=True)
     except TypeError:
-        # Some data types can't have NaNs and will thus TypeError at
-        # np.array_equal(..., equal_nan=True)
-        pass
+        # Some data types will TypeError at np.array_equal(..., equal_nan=True)
+        values_match = values_match and np.array_equal(np0_ms, np1_ms)
 
     # If not, loop through mismatches and add them to message
     if not values_match:
