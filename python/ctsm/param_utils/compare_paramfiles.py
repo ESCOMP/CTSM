@@ -380,12 +380,14 @@ def _one_unequal_value_msg(
     ms_equal = v0_ms == v1_ms or (np.isnan(v0_ms) and np.isnan(v1_ms))
 
     # Raw values differ, but they're the same after masking/scaling
+    # TODO: Include m/s value
     if ms_equal and not raw_equal:
         msg += (
             2 * INDENT + f"{indices_list}raw: {v0} → {v1} (but identical after masking/scaling)\n"
         )
 
     # Raw values are the same, but they differ after masking/scaling
+    # TODO: Include raw value
     elif raw_equal and not ms_equal:
         msg += 2 * INDENT + f"{indices_list}masked/scaled (raw identical): {v0_ms} → {v1_ms}\n"
 

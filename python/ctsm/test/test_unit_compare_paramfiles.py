@@ -487,5 +487,282 @@ class TestCompareAttrs(unittest.TestCase):
         self.assertIn("attr1", lines[header_idx + 1])
 
 
+class TestOneUnequalValueMsg(unittest.TestCase):
+    """Unit tests for _one_unequal_value_msg"""
+
+    def test_raw_differ_ms_same(self):
+        """Test when raw values differ but masked/scaled values are the same"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([1.0])  # After scaling
+        np1_ms = np.array([1.0])  # After scaling
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
+
+    def test_raw_same_ms_differ(self):
+        """Test when raw values are the same but masked/scaled values differ"""
+        np0 = np.array([100])
+        np1 = np.array([100])
+        np0_ms = np.array([1.0])
+        np1_ms = np.array([2.0])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("masked/scaled (raw identical): 1.0 → 2.0", result)
+
+    def test_both_differ_no_scaling(self):
+        """Test when both raw and m/s differ, but no scaling applied (values identical)"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([100])  # No scaling
+        np1_ms = np.array([200])  # No scaling
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw and masked/scaled: 100 → 200", result)
+
+    def test_both_differ_with_scaling(self):
+        """Test when both raw and m/s differ, with different scaling"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([1.0])
+        np1_ms = np.array([3.0])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        lines = result.split("\n")
+        # First line should have raw values
+        self.assertIn("raw:           100 → 200", lines[0])
+        # Second line should have masked/scaled values
+        self.assertIn("masked/scaled: 1.0 → 3.0", lines[1])
+
+    def test_single_element_array_no_indices(self):
+        """Test with single element array (no indices in output)"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([100])
+        np1_ms = np.array([200])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Should not have indices list for single element
+        self.assertNotIn("[0]", result)
+        self.assertIn("raw and masked/scaled: 100 → 200", result)
+
+    def test_multi_element_array_with_indices(self):
+        """Test with multi-element array (indices shown in output)"""
+        np0 = np.array([100, 200, 300])
+        np1 = np.array([100, 250, 300])
+        np0_ms = np.array([100, 200, 300])
+        np1_ms = np.array([100, 250, 300])
+        indices = (1,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Should have indices list for multi-element array
+        # Check that [1] appears at the beginning (after indentation) immediately before the message
+        self.assertIn("[1] raw and masked/scaled: 200 → 250", result)
+
+    def test_multidimensional_array_indices(self):
+        """Test with multidimensional array"""
+        np0 = np.array([[1, 2], [3, 4]])
+        np1 = np.array([[1, 2], [3, 5]])
+        np0_ms = np.array([[1, 2], [3, 4]])
+        np1_ms = np.array([[1, 2], [3, 5]])
+        indices = (1, 1)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Should show both indices immediately before the message
+        self.assertIn("[1, 1] raw and masked/scaled: 4 → 5", result)
+
+    def test_nan_values_both_nan(self):
+        """Test when both masked/scaled values are NaN"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([np.nan])
+        np1_ms = np.array([np.nan])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Both NaN should be considered equal for m/s
+        self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
+
+    def test_nan_value_one_side(self):
+        """Test when only one masked/scaled value is NaN"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([np.nan])
+        np1_ms = np.array([2.0])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        lines = result.split("\n")
+        # NaN != 2.0, so both should differ with separate lines
+        self.assertIn("raw:", lines[0])
+        self.assertIn("100 → 200", lines[0])
+        self.assertIn("masked/scaled:", lines[1])
+        self.assertIn("nan → 2.0", lines[1])
+
+    def test_negative_values(self):
+        """Test with negative values"""
+        np0 = np.array([-100])
+        np1 = np.array([-200])
+        np0_ms = np.array([-100])
+        np1_ms = np.array([-200])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw and masked/scaled: -100 → -200", result)
+
+    def test_float_values(self):
+        """Test with floating point values"""
+        np0 = np.array([1.5])
+        np1 = np.array([2.5])
+        np0_ms = np.array([1.5])
+        np1_ms = np.array([2.5])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw and masked/scaled: 1.5 → 2.5", result)
+
+    def test_zero_values(self):
+        """Test with zero values"""
+        np0 = np.array([0])
+        np1 = np.array([1])
+        np0_ms = np.array([0])
+        np1_ms = np.array([1])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw and masked/scaled: 0 → 1", result)
+
+    def test_very_large_values(self):
+        """Test with very large values"""
+        np0 = np.array([1e10])
+        np1 = np.array([2e10])
+        np0_ms = np.array([1e10])
+        np1_ms = np.array([2e10])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("10000000000.0 → 20000000000.0", result)
+
+    def test_very_small_values(self):
+        """Test with very small values"""
+        np0 = np.array([1e-10])
+        np1 = np.array([2e-10])
+        np0_ms = np.array([1e-10])
+        np1_ms = np.array([2e-10])
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        # Check that both parts are on the same line
+        self.assertIn("raw and masked/scaled: 1e-10 → 2e-10", result)
+
+    def test_appends_to_existing_message(self):
+        """Test that function appends to existing message"""
+        np0 = np.array([100])
+        np1 = np.array([200])
+        np0_ms = np.array([100])
+        np1_ms = np.array([200])
+        indices = (0,)
+        existing_msg = "Previous content\n"
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=existing_msg
+        )
+
+        self.assertTrue(result.startswith("Previous content\n"))
+        self.assertIn("raw and masked/scaled: 100 → 200", result)
+
+    def test_integer_dtype(self):
+        """Test with integer data type"""
+        np0 = np.array([100], dtype=np.int32)
+        np1 = np.array([200], dtype=np.int32)
+        np0_ms = np.array([100], dtype=np.int32)
+        np1_ms = np.array([200], dtype=np.int32)
+        indices = (0,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        self.assertIn("raw and masked/scaled: 100 → 200", result)
+
+    def test_raises_error_when_values_equal(self):
+        """Test that RuntimeError is raised when values are actually equal"""
+        np0 = np.array([100])
+        np1 = np.array([100])
+        np0_ms = np.array([100])
+        np1_ms = np.array([100])
+        indices = (0,)
+
+        with self.assertRaises(RuntimeError):
+            cp._one_unequal_value_msg(
+                np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            )
+
+    def test_indices_alignment_in_two_line_output(self):
+        """Test that indices are properly aligned in two-line output"""
+        np0 = np.array([100, 200, 300])
+        np1 = np.array([100, 250, 300])
+        np0_ms = np.array([1.0, 2.0, 3.0])
+        np1_ms = np.array([1.0, 2.5, 3.0])
+        indices = (1,)
+
+        result = cp._one_unequal_value_msg(
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+        )
+
+        lines = result.split("\n")
+        # First line should have indices and raw values
+        self.assertIn("[1] raw:           200 → 250", lines[0])
+        # Second line should have spaces equal to "[1] " (4 chars) to align
+        self.assertIn("    masked/scaled: 2.0 → 2.5", lines[1])
+
+
 if __name__ == "__main__":
     unittest.main()
