@@ -21,6 +21,7 @@ module CTSMForce2DStreamBaseType
       procedure, public, non_overridable :: CleanBase ! Clean method for the base type
       procedure, public, non_overridable :: Advance   ! Advance the streams data to the current model date
       procedure, public :: GetPtr1D  ! Get pointer to the 1D data array
+      procedure, public :: Check1DPtrSize  ! Check the size of the 1D stream data array
       procedure(Interp_interface), public, deferred :: Interp  ! method in extensions to turn stream data into output data
 
   end type ctsm_force_2DStream_base_type
@@ -116,5 +117,15 @@ module CTSMForce2DStreamBaseType
          real(r8), pointer :: dataptr1d(:)  ! Pointer to the 1D data
 
       end subroutine GetPtr1D
+
+     !-----------------------------------------------------------------------
+
+     subroutine Check1DPtrSize( this, bounds )
+         ! Check that the stream data pointer size is as expected
+         ! Arguments:
+         class(ctsm_force_2DStream_base_type), intent(inout) :: this
+         type(bounds_type), intent(in) :: bounds
+
+     end subroutine Check1DPtrSize
 
 end module CTSMForce2DStreamBaseType
