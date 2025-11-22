@@ -555,6 +555,7 @@ def main():
     """
     args = get_arguments()
     check_arguments(args)
+    any_diffs = False
 
     # Print info
     print(f"File 0: {args.file0}")
@@ -567,12 +568,14 @@ def main():
     # Check for variables only present in one dataset or the other
     vars_in_0_not_1 = _get_variables_in_only_one_ds(file0_ds, file1_ds)
     if vars_in_0_not_1:
+        any_diffs = True
         print("Variable(s) present in File 0 but not File 1:")
         for var in vars_in_0_not_1:
             print(INDENT + var)
         print("")
     vars_in_1_not_0 = _get_variables_in_only_one_ds(file1_ds, file0_ds)
     if vars_in_1_not_0:
+        any_diffs = True
         print("Variable(s) present in File 1 but not File 0:")
         for var in vars_in_1_not_0:
             print(INDENT + var)
@@ -609,8 +612,12 @@ def main():
             msg = _compare_da_values(da0_ms, da1_ms, da0, da1, msg)
 
         if msg:
+            any_diffs = True
             msg = f"{var}:\n" + msg
             print(msg)
+
+    if not any_diffs:
+        print("Files are identical.")
 
 
 if __name__ == "__main__":
