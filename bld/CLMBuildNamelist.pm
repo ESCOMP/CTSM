@@ -60,6 +60,7 @@ SYNOPSIS
      Create the namelist for CLM
 REQUIRED OPTIONS
      -cimeroot "directory"    Path to cime directory
+     -landroot "directory"    Path to the land models parent directory, ie <>/ctsm
      -config "filepath"       Read the given CLM configuration cache file.
                               Default: "config_cache.xml".
      -configuration "cfg"     The overall configuration being used [ clm | nwp ]
@@ -259,6 +260,7 @@ sub process_commandline {
   $nl_flags->{'cmdline'} = "@ARGV\n";
 
   my %opts = ( cimeroot              => undef,
+	       landroot              => undef,
                config                => "config_cache.xml",
                configuration         => undef,
                csmdata               => undef,
@@ -300,6 +302,7 @@ sub process_commandline {
 
   GetOptions(
              "cimeroot=s"                => \$opts{'cimeroot'},
+             "landroot=s"                => \$opts{'landroot'},
              "driver=s"                  => \$opts{'driver'},
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
@@ -5460,17 +5463,21 @@ sub add_default {
     # The default values for input pathnames are relative.  If the namelist
     # variable is defined to be an absolute pathname, then prepend
     # the CESM inputdata root directory.
-    if (not defined $settings{'no_abspath'}) {
-      if (defined $settings{'set_abspath'}) {
-        $val = set_abs_filepath($val, $settings{'set_abspath'});
-      } else {
-        if ($is_input_pathname eq 'abs') {
-          $val = set_abs_filepath($val, $inputdata_rootdir);
-          if ( $test_files and ($val !~ /null|none/) and (! -f "$val") ) {
-            $log->fatal_error("file not found: $var = $val");
-          }
-        }
-      }
+    if ($is_input_pathname eq 'landroot') {
+	$val = set_abs_filepath($val, $landroot);
+    } else {
+	if (not defined $settings{'no_abspath'}) {
+	    if (defined $settings{'set_abspath'}) {
+		$val = set_abs_filepath($val, $settings{'set_abspath'});
+	    } else {
+		if ($is_input_pathname eq 'abs') {
+		    $val = set_abs_filepath($val, $inputdata_rootdir);
+		    if ( $test_files and ($val !~ /null|none/) and (! -f "$val") ) {
+			$log->fatal_error("file not found: $var = $val");
+		    }
+		}
+	    }
+	}
     }
 
     # query the definition to find out if the variable takes a string value.

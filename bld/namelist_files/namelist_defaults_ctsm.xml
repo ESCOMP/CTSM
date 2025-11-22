@@ -576,10 +576,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
+<!-- path is relative to the land root (ie the path to CTSM)            -->
 <!-- ================================================================== -->
 
-<fates_paramfile>${COMP_ROOT_DIR_LND}/src/fates/parameter_files/fates_params_default.json</fates_paramfile>
-
+<fates_paramfile>src/fates/parameter_files/fates_params_default.json</fates_paramfile>
 
 <!-- ================================================================== -->
 <!-- Default surface roughness parameterization                         -->
