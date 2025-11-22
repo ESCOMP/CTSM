@@ -307,6 +307,9 @@ def _compare_da_values(
         if where_unequal:
             msg += INDENT + "Values differ:\n"
 
+        # Get dimension names if they match between the two DataArrays
+        dimnames = list(da0.dims) if da0.dims == da1.dims else None
+
         for indices in zip(*where_unequal):
             msg = _one_unequal_value_msg(
                 np0=np0,
@@ -314,6 +317,7 @@ def _compare_da_values(
                 np0_ms=np0_ms,
                 np1_ms=np1_ms,
                 indices=indices,
+                dimnames=dimnames,
                 msg=msg,
             )
     return msg
@@ -326,6 +330,7 @@ def _one_unequal_value_msg(
     np0_ms: np.ndarray,
     np1_ms: np.ndarray,
     indices: tuple,
+    dimnames: list[str] | None,
     msg: str,
 ) -> str:
     """
@@ -346,6 +351,8 @@ def _one_unequal_value_msg(
         Second array with mask/scale applied.
     indices : tuple
         Indices where the values differ.
+    dimnames : list[str] | None
+        List of dimension names if they match between arrays, None otherwise.
     msg : str
         Existing message string to which the difference description will be appended.
 
@@ -369,8 +376,14 @@ def _one_unequal_value_msg(
     if np.atleast_1d(np0).size == 1:  # We've already checked that the arrays are the same size.
         indices_list = ""
     else:
-        # TODO: If a dimension is pftname, give "name_of_pft (i)" instead of just "i"
-        indices_list = str([int(i) for i in indices]) + " "
+        # Format indices with dimension names if available
+        if dimnames:
+            indices_parts = [f"{dimname} {int(idx)}" for dimname, idx in zip(dimnames, indices)]
+            indices_list = "[" + ", ".join(indices_parts) + "] "
+        else:
+            indices_list = str([int(i) for i in indices]) + " "
+        # TODO: If a dimension is pftname and pft names match, give "pftname i (name_of_pft)"
+        #       instead of just "pftname i"
 
     raw_equal = v0 == v1
 

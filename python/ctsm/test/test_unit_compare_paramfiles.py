@@ -528,7 +528,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -545,7 +545,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -562,7 +562,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -579,7 +579,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 2 lines
@@ -600,7 +600,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -619,15 +619,22 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (1,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=["level"],
         )
 
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
         # Should have indices list for multi-element array
-        # Check that [1] appears at the beginning (after indentation) immediately before the message
-        self.assertIn("[1] raw and masked/scaled: 200 → 250", result)
+        # Check that [level 1] appears at the beginning (after indentation) immediately before the
+        # message
+        self.assertIn("[level 1] raw and masked/scaled: 200 → 250", result)
 
     def test_multidimensional_array_indices(self):
         """Test with multidimensional array"""
@@ -636,16 +643,23 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         np0_ms = np.array([[1, 2], [3, 4]])
         np1_ms = np.array([[1, 2], [3, 5]])
         indices = (1, 1)
+        dimnames = ["dim0", "dim1"]
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=dimnames,
         )
 
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
         # Should show both indices immediately before the message
-        self.assertIn("[1, 1] raw and masked/scaled: 4 → 5", result)
+        self.assertIn("[dim0 1, dim1 1] raw and masked/scaled: 4 → 5", result)
 
     def test_nan_values_both_nan(self):
         """Test when both masked/scaled values are NaN"""
@@ -656,7 +670,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -674,7 +688,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 2 lines
@@ -696,7 +710,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -713,7 +727,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -730,7 +744,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -747,7 +761,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -764,7 +778,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -783,7 +797,13 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         existing_msg = "Previous content\n"
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=existing_msg
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg=existing_msg,
+            dimnames=None,
         )
 
         # Should have 2 lines
@@ -801,7 +821,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -819,7 +839,13 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             cp._one_unequal_value_msg(
-                np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+                np0=np0,
+                np1=np1,
+                np0_ms=np0_ms,
+                np1_ms=np1_ms,
+                indices=indices,
+                msg="",
+                dimnames=None,
             )
 
     def test_indices_alignment_in_two_line_output(self):
@@ -831,7 +857,13 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (1,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=["some_dim"],
         )
 
         # Should have 2 lines
@@ -839,9 +871,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         lines = result.split("\n")
         # First line should have indices and raw values
-        self.assertIn("[1] raw:           200 → 250", lines[0])
+        self.assertIn("[some_dim 1] raw:           200 → 250", lines[0])
         # Second line should have spaces equal to "[1] " (4 chars) to align
-        self.assertIn("    masked/scaled: 2.0 → 2.5", lines[1])
+        self.assertIn("             masked/scaled: 2.0 → 2.5", lines[1])
 
     def test_string_dtype(self):
         """Test with string data type"""
@@ -856,7 +888,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np.array_equal(np0, np1, equal_nan=True)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
+            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
         )
 
         # Should have 1 line
@@ -1008,10 +1040,27 @@ class TestCompareDaValues(unittest.TestCase):
 
     def test_multidimensional_array(self):
         """Test with multidimensional arrays"""
-        da0 = xr.DataArray([[1, 2], [3, 4]])
-        da1 = xr.DataArray([[1, 2], [3, 9]])
-        da0_ms = xr.DataArray([[1, 2], [3, 4]])
-        da1_ms = xr.DataArray([[1, 2], [3, 9]])
+        dimnames = ["level", "cohort"]
+        da0 = xr.DataArray([[1, 2], [3, 4]], dims=dimnames)
+        da1 = xr.DataArray([[1, 2], [3, 9]], dims=dimnames)
+        da0_ms = xr.DataArray([[1, 2], [3, 4]], dims=dimnames)
+        da1_ms = xr.DataArray([[1, 2], [3, 9]], dims=dimnames)
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("[level 1, cohort 1]", result)
+        self.assertIn("4 → 9", result)
+
+    def test_multidimensional_array_dimnames_dont_match(self):
+        """Test with multidimensional arrays whose dimension names don't match"""
+        da0 = xr.DataArray([[1, 2], [3, 4]], dims=["level", "cohort"])
+        da1 = xr.DataArray([[1, 2], [3, 9]], dims=["dim0", "dim1"])
+        da0_ms = xr.DataArray([[1, 2], [3, 4]], dims=["level", "cohort"])
+        da1_ms = xr.DataArray([[1, 2], [3, 9]], dims=["dim0", "dim1"])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
 
