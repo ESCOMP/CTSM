@@ -251,7 +251,8 @@ def _compare_attrs(da0: xr.DataArray, da1: xr.DataArray, msg: str) -> str:
     for attr in _get_attributes_in_both_da(da0, da1):
         a0 = da0.attrs[attr]
         a1 = da1.attrs[attr]
-        if not np.all(a0 == a1):
+        shapes_differ = np.array(a0).shape != np.array(a1).shape
+        if shapes_differ or not np.all(a0 == a1):
             if not any_attrs_differ:
                 msg += INDENT + "Attribute(s) with different values:\n"
                 any_attrs_differ = True

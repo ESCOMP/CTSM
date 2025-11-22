@@ -381,7 +381,18 @@ class TestCompareAttrs(unittest.TestCase):
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("valid_range", lines[header_idx + 1])
 
-    # TODO: Test arrays and lists of different sizes
+    def test_array_attribute_values_different_sizes(self):
+        """Test when array attributes have different sizes"""
+
+        da0 = xr.DataArray([1, 2, 3], attrs={"valid_range": np.array([0, 100])})
+        da1 = xr.DataArray([4, 5, 6], attrs={"valid_range": np.array([0, 100, 200])})
+
+        result = cp._compare_attrs(da0, da1, "")
+        lines = result.split("\n")
+
+        self.assertIn("Attribute(s) with different values:", result)
+        header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
+        self.assertIn("valid_range", lines[header_idx + 1])
 
     def test_multiple_differences(self):
         """Test when there are multiple types of differences"""
@@ -466,7 +477,7 @@ class TestCompareAttrs(unittest.TestCase):
     def test_list_attribute_values_differ(self):
         """Test when list attributes differ"""
         da0 = xr.DataArray([1, 2, 3], attrs={"attr1": [1, 2, 3]})
-        da1 = xr.DataArray([4, 5, 6], attrs={"attr1": [1, 2, 4]})
+        da1 = xr.DataArray([4, 5, 6], attrs={"attr1": [1, 2]})
 
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
