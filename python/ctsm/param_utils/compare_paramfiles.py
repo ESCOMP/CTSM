@@ -11,6 +11,7 @@ import xarray as xr
 
 from ctsm.param_utils.paramfile_shared import open_paramfile, get_pft_names
 from ctsm.param_utils.paramfile_shared import are_paramfile_dataarrays_identical
+from ctsm.netcdf_utils import get_netcdf_format
 
 INDENT = "   "
 
@@ -563,6 +564,14 @@ def main():
     print(f"File 0: {args.file0}")
     print(f"File 1: {args.file1}\n")
 
+    # Check whether file types differ
+    file0_type = get_netcdf_format(args.file0)
+    file1_type = get_netcdf_format(args.file1)
+    file_types_match = file0_type == file1_type
+    if not file_types_match:
+        any_diffs = True
+        print(f"File types differ: {file0_type} → {file1_type}\n")
+
     # Open files
     file0_ds, file0_ms_ds = _read_paramfile(args.file0)
     file1_ds, file1_ms_ds = _read_paramfile(args.file1)
@@ -582,8 +591,6 @@ def main():
         for var in vars_in_1_not_0:
             print(INDENT + var)
         print("")
-
-    # TODO: Check whether file types differ
 
     # Loop through shared variables
     for var in _get_variables_in_both_ds(file0_ds, file1_ds):
@@ -617,14 +624,16 @@ def main():
             any_diffs = True
             msg = f"{var}:\n" + msg
             print(msg)
-        else:
-            # In case we missed something here
+        elif file_types_match:
+            # In case we missed something here. Since this is sort of just a bonus, don't do this
+            # check if file types don't match, because are_paramfile_dataarrays_identical() will
+            # say the DataArrays also don't match no matter what.
             identical = are_paramfile_dataarrays_identical(da0, da1)
             identical_ms = are_paramfile_dataarrays_identical(da0_ms, da1_ms)
             if not (identical and identical_ms):
                 warnings.warn(
                     f"compare_paramfiles thinks {var} DataArrays are identical but"
-                    "are_paramfile_dataarrays_identical() disagrees."
+                    " are_paramfile_dataarrays_identical() disagrees."
                 )
 
     if not any_diffs:
