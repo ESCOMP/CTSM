@@ -528,7 +528,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -545,7 +552,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -562,7 +576,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -579,7 +600,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 2 lines
@@ -600,7 +628,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -625,16 +660,17 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np1_ms=np1_ms,
             indices=indices,
             msg="",
-            dimnames=["level"],
+            dimnames=["pft"],
+            pftnames=None,  # As if pftnames didn't match between files
         )
 
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
         # Should have indices list for multi-element array
-        # Check that [level 1] appears at the beginning (after indentation) immediately before the
+        # Check that [pft 1] appears at the beginning (after indentation) immediately before the
         # message
-        self.assertIn("[level 1] raw and masked/scaled: 200 → 250", result)
+        self.assertIn("[pft 1] raw and masked/scaled: 200 → 250", result)
 
     def test_multidimensional_array_indices(self):
         """Test with multidimensional array"""
@@ -653,6 +689,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             indices=indices,
             msg="",
             dimnames=dimnames,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -670,7 +707,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -688,7 +732,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 2 lines
@@ -710,7 +761,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -727,7 +785,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -744,7 +809,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -761,7 +833,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -778,7 +857,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -804,6 +890,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             indices=indices,
             msg=existing_msg,
             dimnames=None,
+            pftnames=None,
         )
 
         # Should have 2 lines
@@ -821,7 +908,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         indices = (0,)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line
@@ -846,6 +940,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
                 indices=indices,
                 msg="",
                 dimnames=None,
+                pftnames=None,
             )
 
     def test_indices_alignment_in_two_line_output(self):
@@ -863,7 +958,8 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np1_ms=np1_ms,
             indices=indices,
             msg="",
-            dimnames=["some_dim"],
+            dimnames=["pft"],
+            pftnames=["rice", "cotton", "coffee"],
         )
 
         # Should have 2 lines
@@ -871,9 +967,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         lines = result.split("\n")
         # First line should have indices and raw values
-        self.assertIn("[some_dim 1] raw:           200 → 250", lines[0])
+        self.assertIn("[pft 1 (cotton)] raw:           200 → 250", lines[0])
         # Second line should have spaces equal to "[1] " (4 chars) to align
-        self.assertIn("             masked/scaled: 2.0 → 2.5", lines[1])
+        self.assertIn("                  masked/scaled: 2.0 → 2.5", lines[1])
 
     def test_string_dtype(self):
         """Test with string data type"""
@@ -888,7 +984,14 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np.array_equal(np0, np1, equal_nan=True)
 
         result = cp._one_unequal_value_msg(
-            np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg="", dimnames=None
+            np0=np0,
+            np1=np1,
+            np0_ms=np0_ms,
+            np1_ms=np1_ms,
+            indices=indices,
+            msg="",
+            dimnames=None,
+            pftnames=None,
         )
 
         # Should have 1 line

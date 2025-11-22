@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 import xarray as xr
 
-from ctsm.param_utils.paramfile_shared import open_paramfile
+from ctsm.param_utils.paramfile_shared import open_paramfile, get_pft_names
 
 INDENT = "   "
 
@@ -310,6 +310,18 @@ def _compare_da_values(
         # Get dimension names if they match between the two DataArrays
         dimnames = list(da0.dims) if da0.dims == da1.dims else None
 
+        # Get pftnames if they match between the two DataArrays
+        pftnames = None
+        if dimnames:
+            try:
+                pftnames0 = get_pft_names(da0)
+                pftnames1 = get_pft_names(da1)
+                if pftnames0 == pftnames1:
+                    pftnames = pftnames0
+            except KeyError:
+                # pftname coordinate not found on one or both DataArrays
+                pass
+
         for indices in zip(*where_unequal):
             msg = _one_unequal_value_msg(
                 np0=np0,
@@ -318,6 +330,7 @@ def _compare_da_values(
                 np1_ms=np1_ms,
                 indices=indices,
                 dimnames=dimnames,
+                pftnames=pftnames,
                 msg=msg,
             )
     return msg
@@ -331,6 +344,7 @@ def _one_unequal_value_msg(
     np1_ms: np.ndarray,
     indices: tuple,
     dimnames: list[str] | None,
+    pftnames: list[str] | None,
     msg: str,
 ) -> str:
     """
@@ -353,6 +367,8 @@ def _one_unequal_value_msg(
         Indices where the values differ.
     dimnames : list[str] | None
         List of dimension names if they match between arrays, None otherwise.
+    pftnames : list[str] | None
+        List of PFT names if they match between arrays, None otherwise.
     msg : str
         Existing message string to which the difference description will be appended.
 
@@ -378,12 +394,18 @@ def _one_unequal_value_msg(
     else:
         # Format indices with dimension names if available
         if dimnames:
-            indices_parts = [f"{dimname} {int(idx)}" for dimname, idx in zip(dimnames, indices)]
+            indices_parts = []
+            for i, (dimname, idx) in enumerate(zip(dimnames, indices)):
+                idx_int = int(idx)
+                # If this dimension is pft/pftname and we have pftnames, include the PFT name
+                if pftnames and dimname.lower() in ["pft", "pftname"]:
+                    pft_name = pftnames[idx_int]
+                    indices_parts.append(f"{dimname} {idx_int} ({pft_name})")
+                else:
+                    indices_parts.append(f"{dimname} {idx_int}")
             indices_list = "[" + ", ".join(indices_parts) + "] "
         else:
             indices_list = str([int(i) for i in indices]) + " "
-        # TODO: If a dimension is pftname and pft names match, give "pftname i (name_of_pft)"
-        #       instead of just "pftname i"
 
     raw_equal = v0 == v1
 
