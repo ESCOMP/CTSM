@@ -311,6 +311,9 @@ class TestCompareAttrs(unittest.TestCase):
 
         result = cp._compare_attrs(da0, da1, "")
 
+        # Should have 2 lines: header + 1 attribute
+        self.assertEqual(result.count("\n"), 2)
+
         self.assertIn("Attribute(s) present in File 0 but not File 1:", result)
         # Check that attr1 appears on the line after the header
         lines = result.split("\n")
@@ -323,6 +326,9 @@ class TestCompareAttrs(unittest.TestCase):
         da1 = xr.DataArray([4, 5, 6], attrs={"attr1": "value1", "attr2": "value2"})
 
         result = cp._compare_attrs(da0, da1, "")
+
+        # Should have 2 lines: header + 1 attribute
+        self.assertEqual(result.count("\n"), 2)
 
         self.assertIn("Attribute(s) present in File 1 but not File 0:", result)
         # Check that attr2 appears on the line after the header
@@ -338,6 +344,9 @@ class TestCompareAttrs(unittest.TestCase):
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
 
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
+
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("attr1, file 0: value1", lines[header_idx + 1])
@@ -350,6 +359,9 @@ class TestCompareAttrs(unittest.TestCase):
 
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
+
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
 
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
@@ -375,7 +387,11 @@ class TestCompareAttrs(unittest.TestCase):
         da1 = xr.DataArray([4, 5, 6], attrs={"valid_range": np.array([0, 200])})
 
         result = cp._compare_attrs(da0, da1, "")
+        print(result)
         lines = result.split("\n")
+
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
 
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
@@ -390,6 +406,9 @@ class TestCompareAttrs(unittest.TestCase):
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
 
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
+
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("valid_range", lines[header_idx + 1])
@@ -401,6 +420,9 @@ class TestCompareAttrs(unittest.TestCase):
 
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
+
+        # Should have 7 lines: header + 6 attribute lines
+        self.assertEqual(result.count("\n"), 7)
 
         # Should report attr1 only in file 0
         self.assertIn("Attribute(s) present in File 0 but not File 1:", result)
@@ -451,6 +473,9 @@ class TestCompareAttrs(unittest.TestCase):
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
 
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
+
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("attr1, file 0:", lines[header_idx + 1])
@@ -482,6 +507,9 @@ class TestCompareAttrs(unittest.TestCase):
         result = cp._compare_attrs(da0, da1, "")
         lines = result.split("\n")
 
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
+
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("attr1", lines[header_idx + 1])
@@ -502,6 +530,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
 
     def test_raw_same_ms_differ(self):
@@ -515,6 +546,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
 
         self.assertIn("masked/scaled (raw identical): 1.0 → 2.0", result)
 
@@ -530,6 +564,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         self.assertIn("raw and masked/scaled: 100 → 200", result)
 
     def test_both_differ_with_scaling(self):
@@ -543,6 +580,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 2 lines
+        self.assertEqual(result.count("\n"), 2)
 
         lines = result.split("\n")
         # First line should have raw values
@@ -562,6 +602,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         # Should not have indices list for single element
         self.assertNotIn("[0]", result)
         self.assertIn("raw and masked/scaled: 100 → 200", result)
@@ -577,6 +620,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
 
         # Should have indices list for multi-element array
         # Check that [1] appears at the beginning (after indentation) immediately before the message
@@ -594,6 +640,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         # Should show both indices immediately before the message
         self.assertIn("[1, 1] raw and masked/scaled: 4 → 5", result)
 
@@ -609,6 +658,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         # Both NaN should be considered equal for m/s
         self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
 
@@ -623,6 +675,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 2 lines
+        self.assertEqual(result.count("\n"), 2)
 
         lines = result.split("\n")
         # NaN != 2.0, so both should differ with separate lines
@@ -643,6 +698,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         self.assertIn("raw and masked/scaled: -100 → -200", result)
 
     def test_float_values(self):
@@ -656,6 +714,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
 
         self.assertIn("raw and masked/scaled: 1.5 → 2.5", result)
 
@@ -671,6 +732,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         self.assertIn("raw and masked/scaled: 0 → 1", result)
 
     def test_very_large_values(self):
@@ -685,6 +749,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         self.assertIn("10000000000.0 → 20000000000.0", result)
 
     def test_very_small_values(self):
@@ -698,6 +765,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
 
         # Check that both parts are on the same line
         self.assertIn("raw and masked/scaled: 1e-10 → 2e-10", result)
@@ -715,6 +785,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=existing_msg
         )
 
+        # Should have 2 lines
+        self.assertEqual(result.count("\n"), 2)
+
         self.assertTrue(result.startswith("Previous content\n"))
         self.assertIn("raw and masked/scaled: 100 → 200", result)
 
@@ -729,6 +802,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
+
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
 
         self.assertIn("raw and masked/scaled: 100 → 200", result)
 
@@ -757,6 +833,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 2 lines
+        self.assertEqual(result.count("\n"), 2)
+
         lines = result.split("\n")
         # First line should have indices and raw values
         self.assertIn("[1] raw:           200 → 250", lines[0])
@@ -779,11 +858,11 @@ class TestOneUnequalValueMsg(unittest.TestCase):
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
+        # Should have 1 line
+        self.assertEqual(result.count("\n"), 1)
+
         # Should handle string comparison without NaN issues
         self.assertIn("[1] raw and masked/scaled: banana → orange", result)
-
-
-# TODO: All tests should check for correct number of lines.
 
 
 class TestCompareDaValues(unittest.TestCase):
@@ -809,6 +888,9 @@ class TestCompareDaValues(unittest.TestCase):
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
 
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
         self.assertIn("Values differ:", result)
         self.assertIn("2 → 5", result)
 
@@ -820,6 +902,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([1, 5, 3, 8])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 3 lines including header
+        self.assertEqual(result.count("\n"), 3)
 
         self.assertIn("Values differ:", result)
         # Should report both differences
@@ -846,6 +931,9 @@ class TestCompareDaValues(unittest.TestCase):
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
 
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
         self.assertIn("Values differ:", result)
         self.assertIn("42 → 99", result)
 
@@ -857,6 +945,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([1.0, np.nan, 3.0])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
 
         # Raw values differ but m/s are same (both NaN)
         self.assertIn("Values differ:", result)
@@ -870,6 +961,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([1.0, 5.0, 3.0])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 3 lines including header
+        self.assertEqual(result.count("\n"), 3)
 
         # Raw values differ and m/s differ
         self.assertIn("Values differ:", result)
@@ -888,6 +982,9 @@ class TestCompareDaValues(unittest.TestCase):
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
 
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
         # Should still work despite TypeError in equal_nan
         self.assertIn("Values differ:", result)
         self.assertIn("b → x", result)
@@ -902,6 +999,9 @@ class TestCompareDaValues(unittest.TestCase):
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, existing_msg)
 
+        # Should have 3 lines including header and previous content
+        self.assertEqual(result.count("\n"), 3)
+
         self.assertTrue(result.startswith("Previous content\n"))
         self.assertIn("Values differ:", result)
 
@@ -913,6 +1013,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([[1, 2], [3, 9]])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
 
         self.assertIn("Values differ:", result)
         self.assertIn("[1, 1]", result)
@@ -926,6 +1029,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([4, 5, 6])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 4 lines including header
+        self.assertEqual(result.count("\n"), 4)
 
         self.assertIn("Values differ:", result)
         # Should report all three differences
@@ -941,6 +1047,9 @@ class TestCompareDaValues(unittest.TestCase):
         da1_ms = xr.DataArray([4, 5, 6])
 
         result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 4 lines including header
+        self.assertEqual(result.count("\n"), 4)
 
         # Count occurrences of the header
         self.assertEqual(result.count("Values differ:"), 1)
