@@ -491,6 +491,15 @@ class TestCompareAttrs(unittest.TestCase):
 
         self.assertEqual(result, "")
 
+    def test_nan_attribute_values(self):
+        """Test when attributes have NaN values"""
+        da0 = xr.DataArray([1, 2, 3], attrs={"attr1": np.nan})
+        da1 = xr.DataArray([4, 5, 6], attrs={"attr1": np.nan})
+
+        result = cp._compare_attrs(da0, da1, "")
+
+        self.assertEqual(result, "")
+
     def test_list_attribute_values(self):
         """Test when attributes are lists"""
         da0 = xr.DataArray([1, 2, 3], attrs={"attr1": [1, 2, 3]})

@@ -250,7 +250,14 @@ def _compare_attrs(da0: xr.DataArray, da1: xr.DataArray, msg: str) -> str:
         a0 = da0.attrs[attr]
         a1 = da1.attrs[attr]
         shapes_differ = np.array(a0).shape != np.array(a1).shape
-        if shapes_differ or not np.all(a0 == a1):
+        if shapes_differ:
+            values_differ = True
+        else:
+            try:
+                values_differ = not np.all((a0 == a1) | (np.isnan(a0) & np.isnan(a1)))
+            except TypeError:
+                values_differ = not np.all(a0 == a1)
+        if values_differ:
             if not any_attrs_differ:
                 msg += INDENT + "Attribute(s) with different values:\n"
                 any_attrs_differ = True
@@ -568,6 +575,8 @@ def main():
         for var in vars_in_1_not_0:
             print(INDENT + var)
         print("")
+
+    # TODO: Check whether file types differ
 
     # Loop through shared variables
     for var in _get_variables_in_both_ds(file0_ds, file1_ds):
