@@ -159,6 +159,14 @@ module CTSMForce2DStreamBaseType
          if ( len(fldfilename) >= FL )then
             call endrun( 'stream field filename is too long:'//trim(fldfilename), file=sourcefile, line=__LINE__ )
          end if
+         if( trim(meshfile) == "none" .and. trim(mapalgo) /= "none" ) then
+            write(iulog,*) 'mapalgo = ', trim(mapalgo), ' meshfile = ', trim(meshfile)
+            call endrun( "if meshfile is none so must be mapalgo", file=sourcefile, line=__LINE__ )
+         end if
+         if( trim(meshfile) /= "none" .and. trim(mapalgo) == "none" ) then
+            write(iulog,*) 'mapalgo = ', trim(mapalgo), ' meshfile = ', trim(meshfile)
+            call endrun( "if mapalgo is none so must be meshfile", file=sourcefile, line=__LINE__ )
+         end if
          this%stream_filename = fldfilename
          this%stream_name = name
          call shr_strdata_init_from_inline(this%sdat, &

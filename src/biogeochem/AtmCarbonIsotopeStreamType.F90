@@ -1,4 +1,7 @@
 module AtmCarbonIsotopeStreamType
+
+
+#include "shr_assert.h"
   !
   ! Description:
   !
@@ -9,6 +12,7 @@ module AtmCarbonIsotopeStreamType
   use clm_varctl , only : iulog
   use abortutils , only : endrun
   use decompMod , only : bounds_type
+  use shr_log_mod, only : errMsg => shr_log_errMsg
   use CTSMForce2DStreamBaseType, only : ctsm_force_2DStream_base_type
 
   implicit none
@@ -84,6 +88,9 @@ module AtmCarbonIsotopeStreamType
          integer, intent(in) :: year_last ! last  year to use
          integer, intent(in) :: model_year_align ! align yearFirst with this model year
 
+         ! Since C13 data is a single global value mapalgo and meshfile must both be none
+         call shr_assert( trim(mapalgo) == "none", "mapalgo MUST be none for C13 streams"//errMsg( file=sourcefile, line=__LINE__) )
+         call shr_assert( trim(meshfile) == "none", "meshfile MUST be none for C13 streams"//errMsg( file=sourcefile, line=__LINE__) )
          call this%InitBase( bounds, varnames = (/ varname_c13 /), fldfilename=fldfilename, meshfile=meshfile, &
                              mapalgo=mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c13, &
                              year_first=year_first, year_last=year_last, model_year_align=model_year_align )
@@ -170,6 +177,10 @@ module AtmCarbonIsotopeStreamType
          integer, intent(in) :: year_last ! last  year to use
          integer, intent(in) :: model_year_align ! align yearFirst with this model year
 
+         ! Since C14 data has latitude bands mapalgo and meshfile can neither be set to none
+         call shr_assert( trim(mapalgo) /= "none", "mapalgo MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
+         ! TODO: Uncomment this error check when we are ready for the test for this to change answers
+         !call shr_assert( trim(meshfile) /= "none", "meshfile MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
          call this%InitBase( bounds, varnames = (/ varname_c14 /), fldfilename=fldfilename, meshfile=meshfile, &
                              mapalgo=mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c14, &
                              year_first=year_first, year_last=year_last, model_year_align=model_year_align )

@@ -74,7 +74,7 @@ module CIsoAtmTimeseriesMod
   character(len=CL), private :: stream_mapalgo_atm_c14 = 'nn'
   character(len=CL), private :: stream_tintalgo_atm_c14 = 'linear'
   character(len=CL), private :: stream_taxmode_atm_c14 = 'extend'
-  character(len=CL), private :: stream_mapalgo_atm_c13 = 'nn'
+  character(len=CL), private :: stream_mapalgo_atm_c13 = 'none'
   character(len=CL), private :: stream_tintalgo_atm_c13 = 'linear'
   character(len=CL), private :: stream_taxmode_atm_c13 = 'extend'
 
@@ -567,6 +567,9 @@ contains
        write(iulog, *) 'C14StreamsInit: Initializing C14 streams with file:'
        write(iulog, *) trim(stream_fldfilename_atm_c14)
     end if
+    ! Any error checking
+    call shr_assert( trim(stream_mapalgo_atm_c14) == "nn", "stream_mapalgo_atm_c14 MUST be nn because the file " // &
+                     "is lattitude bands copied to a half degree grid: "//errMsg( file=sourcefile, line=__LINE__) )
     ! Streams method
     call atm_c14_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c14, &
@@ -804,6 +807,7 @@ contains
     ! Streams method
     call atm_c13_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c13, &
+        ! meshfile MUST be none for C13 streams since its a single global value
         meshfile= 'none', &
         mapalgo=stream_mapalgo_atm_c13, &
         tintalgo=stream_tintalgo_atm_c13, &
