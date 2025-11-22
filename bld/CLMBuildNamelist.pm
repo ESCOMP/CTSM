@@ -4401,7 +4401,7 @@ sub setup_logic_cropcal_streams {
        'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}
        );
     if ( &value_is_true($cropcals_rx_adapt) ) {
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline', 'stream_gdd20_seasons'=>$stream_gdd20_seasons);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_gdd20_baseline', 'stream_gdd20_seasons'=>$stream_gdd20_seasons, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'});
     }
   }
 
