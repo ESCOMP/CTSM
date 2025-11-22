@@ -550,7 +550,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw: 100 → 200 (but both 1.0 after masking/scaling)", result)
+        self.assertIn("raw: 100 → 200 (raw; both 1.0 after masking/scaling)", result)
 
     def test_raw_same_ms_differ(self):
         """Test when raw values are the same but masked/scaled values differ"""
@@ -574,7 +574,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("masked/scaled (raw both 100): 1.0 → 2.0", result)
+        self.assertIn("1.0 → 2.0 (masked/scaled; raw both 100)", result)
 
     def test_both_differ_no_scaling(self):
         """Test when both raw and m/s differ, but no scaling applied (values identical)"""
@@ -598,7 +598,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw and masked/scaled: 100 → 200", result)
+        self.assertIn("100 → 200", result)
 
     def test_both_differ_with_scaling(self):
         """Test when both raw and m/s differ, with different scaling"""
@@ -624,9 +624,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         lines = result.split("\n")
         # First line should have raw values
-        self.assertIn("raw:           100 → 200", lines[0])
+        self.assertIn("100 → 200 (raw)", lines[0])
         # Second line should have masked/scaled values
-        self.assertIn("masked/scaled: 1.0 → 3.0", lines[1])
+        self.assertIn("1.0 → 3.0 (masked/scaled)", lines[1])
 
     def test_single_element_array_no_indices(self):
         """Test with single element array (no indices in output)"""
@@ -652,7 +652,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         # Should not have indices list for single element
         self.assertNotIn("[0]", result)
-        self.assertIn("raw and masked/scaled: 100 → 200", result)
+        self.assertIn("100 → 200", result)
 
     def test_multi_element_array_with_indices(self):
         """Test with multi-element array (indices shown in output)"""
@@ -679,7 +679,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have indices list for multi-element array
         # Check that [pft 1] appears at the beginning (after indentation) immediately before the
         # message
-        self.assertIn("[pft 1] raw and masked/scaled: 200 → 250", result)
+        self.assertIn("[pft 1] 200 → 250", result)
 
     def test_multidimensional_array_indices(self):
         """Test with multidimensional array"""
@@ -705,7 +705,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 1)
 
         # Should show both indices immediately before the message
-        self.assertIn("[dim0 1, dim1 1] raw and masked/scaled: 4 → 5", result)
+        self.assertIn("[dim0 1, dim1 1] 4 → 5", result)
 
     def test_nan_values_both_nan(self):
         """Test when both masked/scaled values are NaN"""
@@ -730,7 +730,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 1)
 
         # Both NaN should be considered equal for m/s
-        self.assertIn("raw: 100 → 200 (but both nan after masking/scaling)", result)
+        self.assertIn("raw: 100 → 200 (raw; both nan after masking/scaling)", result)
 
     def test_nan_value_one_side(self):
         """Test when only one masked/scaled value is NaN"""
@@ -756,9 +756,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         lines = result.split("\n")
         # NaN != 2.0, so both should differ with separate lines
-        self.assertIn("raw:", lines[0])
+        self.assertIn("(raw)", lines[0])
         self.assertIn("100 → 200", lines[0])
-        self.assertIn("masked/scaled:", lines[1])
+        self.assertIn("(masked/scaled)", lines[1])
         self.assertIn("nan → 2.0", lines[1])
 
     def test_negative_values(self):
@@ -783,7 +783,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw and masked/scaled: -100 → -200", result)
+        self.assertIn("-100 → -200", result)
 
     def test_float_values(self):
         """Test with floating point values"""
@@ -807,7 +807,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw and masked/scaled: 1.5 → 2.5", result)
+        self.assertIn("1.5 → 2.5", result)
 
     def test_zero_values(self):
         """Test with zero values"""
@@ -831,7 +831,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw and masked/scaled: 0 → 1", result)
+        self.assertIn("0 → 1", result)
 
     def test_very_large_values(self):
         """Test with very large values"""
@@ -880,7 +880,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 1)
 
         # Check that both parts are on the same line
-        self.assertIn("raw and masked/scaled: 1e-10 → 2e-10", result)
+        self.assertIn("1e-10 → 2e-10", result)
 
     def test_appends_to_existing_message(self):
         """Test that function appends to existing message"""
@@ -906,7 +906,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 2)
 
         self.assertTrue(result.startswith("Previous content\n"))
-        self.assertIn("raw and masked/scaled: 100 → 200", result)
+        self.assertIn("100 → 200", result)
 
     def test_integer_dtype(self):
         """Test with integer data type"""
@@ -930,7 +930,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw and masked/scaled: 100 → 200", result)
+        self.assertIn("100 → 200", result)
 
     def test_raises_error_when_values_equal(self):
         """Test that RuntimeError is raised when values are actually equal"""
@@ -976,9 +976,9 @@ class TestOneUnequalValueMsg(unittest.TestCase):
 
         lines = result.split("\n")
         # First line should have indices and raw values
-        self.assertIn("[pft 1 (cotton)] raw:           200 → 250", lines[0])
-        # Second line should have spaces equal to "[1] " (4 chars) to align
-        self.assertIn("                  masked/scaled: 2.0 → 2.5", lines[1])
+        self.assertIn("[pft 1 (cotton)] 200 → 250 (raw)", lines[0])
+        # Second line should have spaces to align
+        self.assertIn("                 2.0 → 2.5 (masked/scaled)", lines[1])
 
     def test_string_dtype(self):
         """Test with string data type"""
@@ -1007,7 +1007,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 1)
 
         # Should handle string comparison without NaN issues
-        self.assertIn("[1] raw and masked/scaled: banana → orange", result)
+        self.assertIn("[1] banana → orange", result)
 
 
 class TestCompareDaValues(unittest.TestCase):

@@ -410,9 +410,9 @@ def _one_unequal_value_msg(
                     indices_parts.append(f"{dimname} {idx_int} ({pft_name})")
                 else:
                     indices_parts.append(f"{dimname} {idx_int}")
-            indices_list = "[" + ", ".join(indices_parts) + "] "
+            indices_list = "[" + ", ".join(indices_parts) + "]"
         else:
-            indices_list = str([int(i) for i in indices]) + " "
+            indices_list = str([int(i) for i in indices])
 
     raw_equal = v0 == v1
 
@@ -428,24 +428,26 @@ def _one_unequal_value_msg(
     if ms_equal and not raw_equal:
         msg += (
             2 * INDENT
-            + f"{indices_list}raw: {v0} → {v1} (but both {v0_ms} after masking/scaling)\n"
+            + f"{indices_list} raw: {v0} → {v1} (raw; both {v0_ms} after masking/scaling)\n"
         )
 
     # Raw values are the same, but they differ after masking/scaling
     elif raw_equal and not ms_equal:
-        msg += 2 * INDENT + f"{indices_list}masked/scaled (raw both {v0}): {v0_ms} → {v1_ms}\n"
+        msg += 2 * INDENT + f"{indices_list} {v0_ms} → {v1_ms} (masked/scaled; raw both {v0})\n"
 
     elif not raw_equal and not ms_equal:
         # Files differ in their raw and masked/scaled values, but raw difference and m/s difference
         # are the same
         if v0 == v0_ms and v1 == v1_ms:
-            msg += 2 * INDENT + f"{indices_list}raw and masked/scaled: {v0} → {v1}\n"
+            msg += 2 * INDENT + f"{indices_list} {v0} → {v1}\n"
 
         # Files differ in their raw and masked/scaled values, AND the raw values vs. m/s values are
         # differently different.
         else:
-            msg += 2 * INDENT + f"{indices_list}raw:           {v0} → {v1}\n"
-            msg += 2 * INDENT + " " * len(str(indices_list)) + f"masked/scaled: {v0_ms} → {v1_ms}\n"
+            msg += 2 * INDENT + f"{indices_list} {v0} → {v1} (raw)\n"
+            msg += (
+                2 * INDENT + " " * len(str(indices_list)) + f" {v0_ms} → {v1_ms} (masked/scaled)\n"
+            )
 
     # This shouldn't be reachable, because it means neither raw nor m/s values differ
     else:
