@@ -3,7 +3,6 @@ Tool for comparing two CTSM paramfiles.
 """
 
 import os
-import sys
 import argparse
 import warnings
 import numpy as np
@@ -40,7 +39,8 @@ def check_arguments(args) -> None:
 
     if os.path.realpath(args.file0) == os.path.realpath(args.file1):
         print("These are the same file.")
-        sys.exit()
+        return False
+    return True
 
 
 def get_arguments() -> argparse.Namespace:
@@ -557,7 +557,8 @@ def main():
     add_offset).
     """
     args = get_arguments()
-    check_arguments(args)
+    if not check_arguments(args):
+        return
     any_diffs = False
 
     # Print info

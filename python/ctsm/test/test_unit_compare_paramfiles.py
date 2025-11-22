@@ -84,26 +84,30 @@ class TestCheckArguments(unittest.TestCase):
             cp.check_arguments(args)
 
     def test_check_arguments_same_file(self):
-        """Test check_arguments exits when files are the same"""
+        """Test check_arguments returns early when files are the same"""
         args = argparse.Namespace(file0=self.file0, file1=self.file0)
 
-        with self.assertRaises(SystemExit):
-            with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-                cp.check_arguments(args)
-                self.assertIn("These are the same file.", mock_stdout.getvalue())
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.check_arguments(args)
+            output = mock_stdout.getvalue()
+            lines = output.split("\n")
+            self.assertEqual(len(lines), 2)
+            self.assertIn("These are the same file.", output)
 
     def test_check_arguments_same_file_realpath(self):
-        """Test check_arguments exits when files are the same via realpath"""
+        """Test check_arguments returns early when files are the same via realpath"""
         # Create a symlink to file0
         symlink = os.path.join(self.tempdir, "symlink.nc")
         os.symlink(self.file0, symlink)
 
         args = argparse.Namespace(file0=self.file0, file1=symlink)
 
-        with self.assertRaises(SystemExit):
-            with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-                cp.check_arguments(args)
-                self.assertIn("These are the same file.", mock_stdout.getvalue())
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.check_arguments(args)
+            output = mock_stdout.getvalue()
+            lines = output.split("\n")
+            self.assertEqual(len(lines), 2)
+            self.assertIn("These are the same file.", output)
 
 
 class TestGetVariablesInOnlyOneDs(unittest.TestCase):
