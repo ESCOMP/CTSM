@@ -239,14 +239,12 @@ def _compare_attrs(da0: xr.DataArray, da1: xr.DataArray, msg: str) -> str:
     if attrs_in_0_not_1:
         msg += INDENT + "Attribute(s) present in File 0 but not File 1:\n"
         for attr in attrs_in_0_not_1:
-            # TODO: Print the attribute value
-            msg += 2 * INDENT + attr + "\n"
+            msg += f"{2*INDENT} {attr}: {da0.attrs[attr]}\n"
     attrs_in_1_not_0 = _get_attributes_in_only_one_da(da1, da0)
     if attrs_in_1_not_0:
         msg += INDENT + "Attribute(s) present in File 1 but not File 0:\n"
         for attr in attrs_in_1_not_0:
-            # TODO: Print the attribute value
-            msg += 2 * INDENT + attr + "\n"
+            msg += f"{2*INDENT} {attr}: {da1.attrs[attr]}\n"
     any_attrs_differ = False
     for attr in _get_attributes_in_both_da(da0, da1):
         a0 = da0.attrs[attr]

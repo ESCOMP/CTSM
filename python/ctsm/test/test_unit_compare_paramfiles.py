@@ -20,6 +20,7 @@ from ctsm.param_utils import compare_paramfiles as cp
 # pylint: disable=invalid-name
 
 # pylint: disable=protected-access
+# pylint: disable=too-many-lines
 
 
 class TestGetArguments(unittest.TestCase):
@@ -318,7 +319,7 @@ class TestCompareAttrs(unittest.TestCase):
         # Check that attr1 appears on the line after the header
         lines = result.split("\n")
         header_idx = next(i for i, line in enumerate(lines) if "File 0 but not File 1:" in line)
-        self.assertIn("attr1", lines[header_idx + 1])
+        self.assertIn("attr1: value1", lines[header_idx + 1])
 
     def test_attribute_only_in_second(self):
         """Test when attribute exists only in second DataArray"""
@@ -334,7 +335,7 @@ class TestCompareAttrs(unittest.TestCase):
         # Check that attr2 appears on the line after the header
         lines = result.split("\n")
         header_idx = next(i for i, line in enumerate(lines) if "File 1 but not File 0:" in line)
-        self.assertIn("attr2", lines[header_idx + 1])
+        self.assertIn("attr2: value2", lines[header_idx + 1])
 
     def test_different_attribute_values(self):
         """Test when attributes have different values"""
@@ -427,12 +428,12 @@ class TestCompareAttrs(unittest.TestCase):
         # Should report attr1 only in file 0
         self.assertIn("Attribute(s) present in File 0 but not File 1:", result)
         header_idx = next(i for i, line in enumerate(lines) if "File 0 but not File 1:" in line)
-        self.assertIn("attr1", lines[header_idx + 1])
+        self.assertIn("attr1: value1", lines[header_idx + 1])
 
         # Should report attr4 only in file 1
         self.assertIn("Attribute(s) present in File 1 but not File 0:", result)
         header_idx = next(i for i, line in enumerate(lines) if "File 1 but not File 0:" in line)
-        self.assertIn("attr4", lines[header_idx + 1])
+        self.assertIn("attr4: new", lines[header_idx + 1])
 
         # Should report attr2 with different values
         self.assertIn("Attribute(s) with different values:", result)
