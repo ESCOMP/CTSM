@@ -771,12 +771,179 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         np1_ms = np.array(["apple", "orange", "cherry"])
         indices = (1,)
 
+        # Verify that equal_nan=True raises TypeError for string arrays
+        with self.assertRaises(TypeError):
+            np.array_equal(np0, np1, equal_nan=True)
+
         result = cp._one_unequal_value_msg(
             np0=np0, np1=np1, np0_ms=np0_ms, np1_ms=np1_ms, indices=indices, msg=""
         )
 
         # Should handle string comparison without NaN issues
         self.assertIn("[1] raw and masked/scaled: banana → orange", result)
+
+
+# TODO: All tests should check for correct number of lines.
+
+
+class TestCompareDaValues(unittest.TestCase):
+    """Unit tests for _compare_da_values"""
+
+    def test_identical_values(self):
+        """Test when all values are identical"""
+        da0 = xr.DataArray([1, 2, 3])
+        da1 = xr.DataArray([1, 2, 3])
+        da0_ms = xr.DataArray([1, 2, 3])
+        da1_ms = xr.DataArray([1, 2, 3])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertEqual(result, "")
+
+    def test_single_difference(self):
+        """Test when there is a single value difference"""
+        da0 = xr.DataArray([1, 2, 3])
+        da1 = xr.DataArray([1, 5, 3])
+        da0_ms = xr.DataArray([1, 2, 3])
+        da1_ms = xr.DataArray([1, 5, 3])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("2 → 5", result)
+
+    def test_multiple_differences(self):
+        """Test when there are multiple value differences"""
+        da0 = xr.DataArray([1, 2, 3, 4])
+        da1 = xr.DataArray([1, 5, 3, 8])
+        da0_ms = xr.DataArray([1, 2, 3, 4])
+        da1_ms = xr.DataArray([1, 5, 3, 8])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertIn("Values differ:", result)
+        # Should report both differences
+        self.assertIn("2 → 5", result)
+        self.assertIn("4 → 8", result)
+
+    def test_scalar_values_identical(self):
+        """Test with scalar values that are identical"""
+        da0 = xr.DataArray(42)
+        da1 = xr.DataArray(42)
+        da0_ms = xr.DataArray(42)
+        da1_ms = xr.DataArray(42)
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertEqual(result, "")
+
+    def test_scalar_values_differ(self):
+        """Test with scalar values that differ"""
+        da0 = xr.DataArray(42)
+        da1 = xr.DataArray(99)
+        da0_ms = xr.DataArray(42)
+        da1_ms = xr.DataArray(99)
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("42 → 99", result)
+
+    def test_with_nans_both_nan(self):
+        """Test when both masked/scaled arrays have NaN at same position"""
+        da0 = xr.DataArray([1.0, 2.0, 3.0])
+        da1 = xr.DataArray([1.0, 5.0, 3.0])
+        da0_ms = xr.DataArray([1.0, np.nan, 3.0])
+        da1_ms = xr.DataArray([1.0, np.nan, 3.0])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Raw values differ but m/s are same (both NaN)
+        self.assertIn("Values differ:", result)
+        self.assertIn("2.0 → 5.0", result)
+
+    def test_with_nans_different(self):
+        """Test when NaN appears in only one masked/scaled array"""
+        da0 = xr.DataArray([1.0, 2.0, 3.0])
+        da1 = xr.DataArray([1.0, 5.0, 3.0])  # Raw value differs
+        da0_ms = xr.DataArray([1.0, np.nan, 3.0])
+        da1_ms = xr.DataArray([1.0, 5.0, 3.0])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Raw values differ and m/s differ
+        self.assertIn("Values differ:", result)
+        self.assertIn("2.0 → 5.0", result)
+        self.assertIn("nan → 5.0", result)
+
+    def test_string_dtype_no_nan_handling(self):
+        """Test with string dtype (can't have NaN, should handle TypeError)"""
+        da0 = xr.DataArray(np.array(["a", "b", "c"], dtype=str))
+        da1 = xr.DataArray(np.array(["a", "x", "c"], dtype=str))
+        # Verify that equal_nan=True raises TypeError for string arrays
+        with self.assertRaises(TypeError):
+            np.array_equal(da0, da1, equal_nan=True)
+        da0_ms = xr.DataArray(np.array(["a", "b", "c"], dtype=str))
+        da1_ms = xr.DataArray(np.array(["a", "x", "c"], dtype=str))
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should still work despite TypeError in equal_nan
+        self.assertIn("Values differ:", result)
+        self.assertIn("b → x", result)
+
+    def test_appends_to_existing_message(self):
+        """Test that function appends to existing message"""
+        da0 = xr.DataArray([1, 2])
+        da1 = xr.DataArray([1, 5])
+        da0_ms = xr.DataArray([1, 2])
+        da1_ms = xr.DataArray([1, 5])
+        existing_msg = "Previous content\n"
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, existing_msg)
+
+        self.assertTrue(result.startswith("Previous content\n"))
+        self.assertIn("Values differ:", result)
+
+    def test_multidimensional_array(self):
+        """Test with multidimensional arrays"""
+        da0 = xr.DataArray([[1, 2], [3, 4]])
+        da1 = xr.DataArray([[1, 2], [3, 9]])
+        da0_ms = xr.DataArray([[1, 2], [3, 4]])
+        da1_ms = xr.DataArray([[1, 2], [3, 9]])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("[1, 1]", result)
+        self.assertIn("4 → 9", result)
+
+    def test_all_values_differ(self):
+        """Test when all values differ"""
+        da0 = xr.DataArray([1, 2, 3])
+        da1 = xr.DataArray([4, 5, 6])
+        da0_ms = xr.DataArray([1, 2, 3])
+        da1_ms = xr.DataArray([4, 5, 6])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        self.assertIn("Values differ:", result)
+        # Should report all three differences
+        self.assertIn("1 → 4", result)
+        self.assertIn("2 → 5", result)
+        self.assertIn("3 → 6", result)
+
+    def test_values_differ_header_only_once(self):
+        """Test that 'Values differ:' header appears only once even with multiple differences"""
+        da0 = xr.DataArray([1, 2, 3])
+        da1 = xr.DataArray([4, 5, 6])
+        da0_ms = xr.DataArray([1, 2, 3])
+        da1_ms = xr.DataArray([4, 5, 6])
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Count occurrences of the header
+        self.assertEqual(result.count("Values differ:"), 1)
 
 
 if __name__ == "__main__":
