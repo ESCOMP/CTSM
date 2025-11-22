@@ -5,10 +5,12 @@ Tool for comparing two CTSM paramfiles.
 import os
 import sys
 import argparse
+import warnings
 import numpy as np
 import xarray as xr
 
 from ctsm.param_utils.paramfile_shared import open_paramfile, get_pft_names
+from ctsm.param_utils.paramfile_shared import are_paramfile_dataarrays_identical
 
 INDENT = "   "
 
@@ -615,6 +617,15 @@ def main():
             any_diffs = True
             msg = f"{var}:\n" + msg
             print(msg)
+        else:
+            # In case we missed something here
+            identical = are_paramfile_dataarrays_identical(da0, da1)
+            identical_ms = are_paramfile_dataarrays_identical(da0_ms, da1_ms)
+            if not (identical and identical_ms):
+                warnings.warn(
+                    f"compare_paramfiles thinks {var} DataArrays are identical but"
+                    "are_paramfile_dataarrays_identical() disagrees."
+                )
 
     if not any_diffs:
         print("Files are identical.")
