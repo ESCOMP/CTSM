@@ -577,6 +577,8 @@ def main():
     file0_ds, file0_ms_ds = _read_paramfile(args.file0)
     file1_ds, file1_ms_ds = _read_paramfile(args.file1)
 
+    # TODO: Check global attributes
+
     # Check for variables only present in one dataset or the other
     vars_in_0_not_1 = _get_variables_in_only_one_ds(file0_ds, file1_ds)
     if vars_in_0_not_1:
