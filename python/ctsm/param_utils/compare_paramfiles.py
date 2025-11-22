@@ -387,16 +387,15 @@ def _one_unequal_value_msg(
         pass
 
     # Raw values differ, but they're the same after masking/scaling
-    # TODO: Include m/s value
     if ms_equal and not raw_equal:
         msg += (
-            2 * INDENT + f"{indices_list}raw: {v0} → {v1} (but identical after masking/scaling)\n"
+            2 * INDENT
+            + f"{indices_list}raw: {v0} → {v1} (but both {v0_ms} after masking/scaling)\n"
         )
 
     # Raw values are the same, but they differ after masking/scaling
-    # TODO: Include raw value
     elif raw_equal and not ms_equal:
-        msg += 2 * INDENT + f"{indices_list}masked/scaled (raw identical): {v0_ms} → {v1_ms}\n"
+        msg += 2 * INDENT + f"{indices_list}masked/scaled (raw both {v0}): {v0_ms} → {v1_ms}\n"
 
     elif not raw_equal and not ms_equal:
         # Files differ in their raw and masked/scaled values, but raw difference and m/s difference

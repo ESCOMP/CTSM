@@ -533,7 +533,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
+        self.assertIn("raw: 100 → 200 (but both 1.0 after masking/scaling)", result)
 
     def test_raw_same_ms_differ(self):
         """Test when raw values are the same but masked/scaled values differ"""
@@ -550,7 +550,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         # Should have 1 line
         self.assertEqual(result.count("\n"), 1)
 
-        self.assertIn("masked/scaled (raw identical): 1.0 → 2.0", result)
+        self.assertIn("masked/scaled (raw both 100): 1.0 → 2.0", result)
 
     def test_both_differ_no_scaling(self):
         """Test when both raw and m/s differ, but no scaling applied (values identical)"""
@@ -662,7 +662,7 @@ class TestOneUnequalValueMsg(unittest.TestCase):
         self.assertEqual(result.count("\n"), 1)
 
         # Both NaN should be considered equal for m/s
-        self.assertIn("raw: 100 → 200 (but identical after masking/scaling)", result)
+        self.assertIn("raw: 100 → 200 (but both nan after masking/scaling)", result)
 
     def test_nan_value_one_side(self):
         """Test when only one masked/scaled value is NaN"""
