@@ -117,6 +117,13 @@ class TestCompareParamfilesMain(unittest.TestCase):
         assert different_format != NETCDF_TYPE
         ds7.to_netcdf(self.file7, format=different_format)
 
+        # Create 8th paramfile (like file2 but with another new variable)
+        self.file8 = os.path.join(self.tempdir, "params7.nc")
+        ds8 = ds2.copy(deep=True)
+        # Add a new variable
+        ds8["new_var2"] = xr.DataArray(123, attrs={"units": "m/s", "long_name": "New variable 2"})
+        ds8.to_netcdf(self.file8, format=NETCDF_TYPE)
+
     def tearDown(self):
         """Clean up test fixtures"""
         shutil.rmtree(self.tempdir)
@@ -298,6 +305,60 @@ class TestCompareParamfilesMain(unittest.TestCase):
 
         # pft_param1 should come before scalar_int (alphabetical order)
         self.assertLess(pos_pft_param1, pos_scalar_int)
+
+    def test_params_arg_in0not1_complete(self):
+        """Test that --params arg works with a variable in first file and not second"""
+
+        # Test with all option names
+        opt_name_list = ["params", "param", "parameters"]
+        for opt_name in opt_name_list:
+            sys.argv = [
+                "compare_paramfiles.py",
+                f"--{opt_name}",
+                "pft_param1,new_var",
+                self.file8,
+                self.file0,
+            ]
+
+            with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+                cp.main()
+                output = mock_stdout.getvalue()
+
+            self.assertRegex(output, r"Variable\(s\) present in File 0 but not File 1:\n\s+new_var")
+            self.assertNotIn("new_var2", output)  # Even though it's only in one file
+            self.assertIn("pft_param1", output)
+            self.assertNotIn("scalar_int", output)  # Even though it does differ
+            self.assertNotIn("scalar_float", output)
+            self.assertNotIn("pft_param2", output)
+
+    def test_params_arg_in1not0(self):
+        """Test that --params arg works with a variable in first file and not second"""
+        sys.argv = [
+            "compare_paramfiles.py",
+            "--params",
+            "pft_param1,new_var",
+            self.file0,
+            self.file8,
+        ]
+
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.main()
+            output = mock_stdout.getvalue()
+
+        self.assertRegex(output, r"Variable\(s\) present in File 1 but not File 0:\n\s+new_var")
+
+    def test_params_arg_keyerror(self):
+        """Test that --params arg throws KeyError if nonexistent variables requested"""
+        sys.argv = [
+            "compare_paramfiles.py",
+            "--params",
+            "missing_var1,missing_var2",
+            self.file0,
+            self.file8,
+        ]
+
+        with self.assertRaisesRegex(KeyError, ": missing_var1, missing_var2"):
+            cp.main()
 
 
 if __name__ == "__main__":

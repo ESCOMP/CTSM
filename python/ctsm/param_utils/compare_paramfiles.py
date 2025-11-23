@@ -11,6 +11,7 @@ import xarray as xr
 from ctsm.param_utils.paramfile_shared import open_paramfile, get_pft_names
 from ctsm.param_utils.paramfile_shared import are_paramfile_dataarrays_identical
 from ctsm.netcdf_utils import get_netcdf_format
+from ctsm.args_utils import comma_separated_list
 
 INDENT = "   "
 
@@ -73,8 +74,6 @@ def get_arguments() -> argparse.Namespace:
     #     default=None,
     # )
 
-    # TODO: Add option to compare only a certain list of parameters
-
     parser.add_argument(
         "file0",
         help="Path to first paramfile",
@@ -83,6 +82,15 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "file1",
         help="Path to second paramfile",
+    )
+
+    parser.add_argument(
+        "--params",
+        "--param",
+        "--parameters",
+        help="Comma-separated list of parameters to compare",
+        type=comma_separated_list,
+        default=[],
     )
 
     args = parser.parse_args()
@@ -146,12 +154,15 @@ def _get_variables_in_only_one_ds(ds_a: xr.Dataset, ds_b: xr.Dataset) -> list[st
 
 
 def _print_variables_in_only_one_ds(
-    header: str, vars_in_only_one: list[str], any_diffs: bool
+    header: str, vars_in_only_one: list[str], any_diffs: bool, args_params: list[str]
 ) -> bool:
     if vars_in_only_one:
-        any_diffs = True
-        print(header)
         for var in vars_in_only_one:
+            if args_params and var not in args_params:
+                continue
+            if not any_diffs:
+                any_diffs = True
+                print(header)
             print(INDENT + var)
         print("")
     return any_diffs
@@ -596,15 +607,29 @@ def main():
         "Variable(s) present in File 0 but not File 1:",
         _get_variables_in_only_one_ds(file0_ds, file1_ds),
         any_diffs,
+        args.params,
     )
     any_diffs = _print_variables_in_only_one_ds(
         "Variable(s) present in File 1 but not File 0:",
         _get_variables_in_only_one_ds(file1_ds, file0_ds),
         any_diffs,
+        args.params,
     )
 
-    # Loop through shared variables
-    for var in _get_variables_in_both_ds(file0_ds, file1_ds):
+    # Get shared parameters, restricting to those in --params if given
+    params_to_check = _get_variables_in_both_ds(file0_ds, file1_ds)
+    if args.params:
+        # Check that all requested parameters are in at least one file
+        vars_in_neither = []
+        for var in args.params:
+            if var not in file0_ds and var not in file1_ds:
+                vars_in_neither.append(var)
+        if vars_in_neither:
+            raise KeyError(f"Requested parameter(s) in neither file: {', '.join(vars_in_neither)}")
+        params_to_check = [var for var in params_to_check if var in args.params]
+
+    # Loop through parameters
+    for var in params_to_check:
         msg = ""
 
         # Masked and scaled version: _FillValue/missing_value, scale_factor, and add_offset applied
