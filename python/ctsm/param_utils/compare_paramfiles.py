@@ -16,17 +16,22 @@ from ctsm.args_utils import comma_separated_list
 INDENT = "   "
 
 
-def check_arguments(args) -> None:
+def check_arguments(args) -> bool:
     """
     Validate command-line arguments for compare_paramfiles.
 
     Checks that both input files exist and are not the same file.
-    Prints a message and exits if both input paths point to the same file.
+    Prints a message if both input paths point to the same file.
 
     Parameters
     ----------
     args : argparse.Namespace
         Parsed command-line arguments.
+
+    Returns
+    -------
+    bool
+        True if comparison should proceed, False otherwise.
 
     Raises
     ------
@@ -49,7 +54,7 @@ def get_arguments() -> argparse.Namespace:
     Parse command-line arguments for compare_paramfiles.
 
     Sets up argument parser for comparing two CTSM parameter files.
-    Currently accepts two positional arguments for the file paths.
+    Accepts two positional arguments for file paths and optional parameter filtering.
 
     Returns
     -------
@@ -59,20 +64,22 @@ def get_arguments() -> argparse.Namespace:
             Path to the first parameter file
         - file1 : str
             Path to the second parameter file
+        - params : list[str]
+            List of parameter names to compare (empty list means compare all)
     """
     parser = argparse.ArgumentParser(
         description="Compare two CTSM parameter files (netCDF)",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    # TODO: Add handling of PFT list option
-    # # TODO: Add mutually-exclusive --exclude-pfts argument for PFTs you DON'T want to include
-    # parser.add_argument(
-    #     *PFT_FLAGS,
-    #     help="Comma-separated list of PFTs to include (only applies to PFT-specific variables)",
-    #     type=comma_separated_list,
-    #     default=None,
-    # )
+    # TODO: Add handling of PFT list option. Actually, make it more general:
+    # * --dim-[dimname], --index-[dimname], --indices-[dimname], --indexes-[dimname] should all do
+    #   isel along the given dim. Help text should indicate that these are 0-based.
+    # * --coord-[coordname], --value-[coordname], --values-[coordname] should all do sel along the
+    #   given coord.
+    # * -p/--pft (i.e., PFT_FLAGS) as shortcut for --dim-pft and --coord-pftname. Decide whether
+    #   user meant dimension (index) or coordinate (value) based on whether they gave integers or
+    #   names, respectively.
 
     parser.add_argument(
         "file0",
@@ -156,6 +163,28 @@ def _get_variables_in_only_one_ds(ds_a: xr.Dataset, ds_b: xr.Dataset) -> list[st
 def _print_variables_in_only_one_ds(
     header: str, vars_in_only_one: list[str], any_diffs: bool, args_params: list[str]
 ) -> bool:
+    """
+    Print variables that exist in only one dataset, filtered by parameter list.
+
+    Prints a header followed by variable names, but only if there are variables to report
+    and they match the parameter filter (if provided).
+
+    Parameters
+    ----------
+    header : str
+        Header text to print before the variable list.
+    vars_in_only_one : list[str]
+        List of variable names that exist in only one dataset.
+    any_diffs : bool
+        Whether any differences have been found so far.
+    args_params : list[str]
+        List of parameters to filter by. If empty, all variables are included.
+
+    Returns
+    -------
+    bool
+        Updated any_diffs flag - True if any variables were printed, otherwise unchanged.
+    """
     if vars_in_only_one:
         for var in vars_in_only_one:
             if args_params and var not in args_params:
@@ -568,6 +597,7 @@ def main():
     Main entry point for compare_paramfiles.
 
     Compares two CTSM parameter files and prints detailed differences including:
+    - File type (netCDF format) differences
     - Variables present in only one file
     - Attribute differences for shared variables
     - Dimension name differences
@@ -578,6 +608,11 @@ def main():
     The comparison is performed on both raw values and values with netCDF
     mask/scale transformations applied (_FillValue, missing_value, scale_factor,
     add_offset).
+
+    Returns early if the files are the same (based on realpath comparison).
+    Prints "Files are identical" if no differences are found.
+
+    Command-line arguments can filter which parameters to compare using --params.
     """
     args = get_arguments()
     if not check_arguments(args):
