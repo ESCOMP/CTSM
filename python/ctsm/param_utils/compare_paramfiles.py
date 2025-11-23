@@ -145,6 +145,18 @@ def _get_variables_in_only_one_ds(ds_a: xr.Dataset, ds_b: xr.Dataset) -> list[st
     return in_a_not_b
 
 
+def _print_variables_in_only_one_ds(
+    header: str, vars_in_only_one: list[str], any_diffs: bool
+) -> bool:
+    if vars_in_only_one:
+        any_diffs = True
+        print(header)
+        for var in vars_in_only_one:
+            print(INDENT + var)
+        print("")
+    return any_diffs
+
+
 def _get_variables_in_both_ds(ds_a: xr.Dataset, ds_b: xr.Dataset) -> list[str]:
     """
     Returns a sorted list of variables that exist in both Datasets.
@@ -580,20 +592,16 @@ def main():
     # TODO: Check global attributes
 
     # Check for variables only present in one dataset or the other
-    vars_in_0_not_1 = _get_variables_in_only_one_ds(file0_ds, file1_ds)
-    if vars_in_0_not_1:
-        any_diffs = True
-        print("Variable(s) present in File 0 but not File 1:")
-        for var in vars_in_0_not_1:
-            print(INDENT + var)
-        print("")
-    vars_in_1_not_0 = _get_variables_in_only_one_ds(file1_ds, file0_ds)
-    if vars_in_1_not_0:
-        any_diffs = True
-        print("Variable(s) present in File 1 but not File 0:")
-        for var in vars_in_1_not_0:
-            print(INDENT + var)
-        print("")
+    any_diffs = _print_variables_in_only_one_ds(
+        "Variable(s) present in File 0 but not File 1:",
+        _get_variables_in_only_one_ds(file0_ds, file1_ds),
+        any_diffs,
+    )
+    any_diffs = _print_variables_in_only_one_ds(
+        "Variable(s) present in File 1 but not File 0:",
+        _get_variables_in_only_one_ds(file1_ds, file0_ds),
+        any_diffs,
+    )
 
     # Loop through shared variables
     for var in _get_variables_in_both_ds(file0_ds, file1_ds):
