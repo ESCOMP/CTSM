@@ -61,9 +61,6 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
      real(r8), pointer :: fates_litter_flux                         (:)     ! (gC/m2/s) A summary of the total litter
                                                                             ! flux passed in from FATES.
-     ! This is a diagnostic for balance checks only
-     real(r8), pointer :: fates_product_loss_grc                     (:)    ! (gC/m2/s)  product loss flux at gridcell scale to be used with FATES is on 
-     
      ! track tradiagonal matrix  
      real(r8), pointer :: matrix_decomp_fire_k_col                  (:,:)   ! decomposition rate due to fire (gC*m3)/(gC*m3*step))
      real(r8), pointer :: tri_ma_vr                                 (:,:)   ! vertical C transfer rate in sparse matrix format (gC*m3)/(gC*m3*step))
@@ -184,7 +181,6 @@ contains
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
 
      if(use_fates)then
-        allocate(this%fates_product_loss_grc(begg:endg)) ; this%fates_product_loss_grc(:) = nan
         allocate(this%fates_litter_flux(begc:endc)); this%fates_litter_flux(:) = nan
      else
         allocate(this%fates_litter_flux(0:0)); this%fates_litter_flux(:) = nan
@@ -687,9 +683,6 @@ contains
     call this%SetValues (num_column=num_special_col, filter_column=special_col, &
          value_column=0._r8)
 
-    if(use_fates_bgc)then
-      this%fates_product_loss_grc(bounds%begg:bounds%endg) = 0._r8
-    endif
 
   end subroutine InitCold
 

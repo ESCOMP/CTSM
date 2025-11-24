@@ -1160,7 +1160,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
           call t_stopf('EcosysDynPostDrainage')
        end if
 
@@ -1269,14 +1269,16 @@ contains
 
        ! This is only relevant to  fates two stream to not break sun fraction calculations
        ! on the second timestep after start from finidat or for hybrid run.
-       if (use_fates .and. .not. use_fates_sp .and. fates_radiation_model == 'twostream') then
-          if (.not. doalb .and. get_nstep() == 1) then
-             if (.not. is_cold_start .and. nsrest == nsrStartup) then
-                call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
-                call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
+       ! The first clause is to maintain b4b with base, but is not necessary.
+       
+       if (use_fates .and. .not.doalb ) then
+          if ( (is_cold_start .and. get_nstep() == 1) .or. & 
+              ((fates_radiation_model == 'twostream') .and. (get_nstep()== 1) .and. (.not.use_fates_sp) &
+                .and. (.not.is_cold_start) .and. (nsrest == nsrStartup)) ) then
+             call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
+             call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
                   water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
                   surfalb_inst)
-             endif
           endif
        endif
 

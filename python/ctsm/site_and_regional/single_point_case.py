@@ -159,9 +159,12 @@ class SinglePointCase(BaseCase):
             plon_orig = plon_in.get(plon_type)
             plon_out = plon_in.get(f_lon_type)
             if plon_orig != plon_out:
-                print(
-                    f"Converted plon from type {plon_type} (value {plon_orig}) "
-                    f"to type {f_lon_type} (value {plon_out})"
+                logger.info(
+                    "Converted plon from type %s (value %f) to type %s (value %f)",
+                    plon_type,
+                    plon_orig,
+                    f_lon_type,
+                    plon_out,
                 )
         return plon_out
 
@@ -173,7 +176,7 @@ class SinglePointCase(BaseCase):
         if self.site_name:
             self.tag = self.site_name
         else:
-            self.tag = "{}_{}".format(str(self.plon), str(self.plat))
+            self.tag = "{}_{}".format(self.plon.get_str(self.plon.lon_type()), str(self.plat))
 
     def check_dom_pft(self):
         """
@@ -333,7 +336,11 @@ class SinglePointCase(BaseCase):
         Create domain file for this SinglePointCase class.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating domain file at %s, %s.", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating domain file at %s, %s.",
+            self.plon.get_str(self.plon.lon_type()),
+            str(self.plat),
+        )
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -367,7 +374,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating land use file at %s, %s.",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -502,7 +509,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -577,7 +584,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating DATM domain file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -646,7 +653,9 @@ class SinglePointCase(BaseCase):
         with open(file, "w") as nl_file:
             self.write_to_file("# Change below line if you move the subset data directory", nl_file)
             self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
-            self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
+            self.write_to_file(
+                "./xmlchange PTS_LON={}".format(self.plon.get_str(self.plon.lon_type())), nl_file
+            )
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
             if self.create_datm:
@@ -672,7 +681,9 @@ class SinglePointCase(BaseCase):
         Create all of a DATM dataset at a point.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating DATM files at %s, %s", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating DATM files at %s, %s", self.plon.get_str(self.plon.lon_type()), str(self.plat)
+        )
 
         # --  create data files
         infile = []

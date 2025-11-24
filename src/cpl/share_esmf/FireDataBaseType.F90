@@ -246,6 +246,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_popdens , mpicom)
    call shr_mpi_bcast(stream_meshfile_popdens    , mpicom)
    call shr_mpi_bcast(popdens_tintalgo           , mpicom)
+   call shr_mpi_bcast(popdensmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)'   ) ' '
@@ -337,6 +338,7 @@ contains
     ig = 0
     do g = bounds%begg,bounds%endg
        ig = ig+1
+       SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
        this%forc_hdm(g) = dataptr1d(ig)
     end do
 
@@ -413,6 +415,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_lightng , mpicom)
    call shr_mpi_bcast(stream_meshfile_lightng    , mpicom)
    call shr_mpi_bcast(lightng_tintalgo           , mpicom)
+   call shr_mpi_bcast(lightngmapalgo             , mpicom)
 
    if (masterproc) then
       write(iulog,'(a)') ' '
@@ -504,6 +507,7 @@ contains
     ig = 0
     do g = bounds%begg,bounds%endg
        ig = ig+1
+       SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
        this%forc_lnfm(g) = dataptr1d(ig)
     end do
 

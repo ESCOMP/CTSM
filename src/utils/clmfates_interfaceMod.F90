@@ -49,6 +49,7 @@ module CLMFatesInterfaceMod
    use PRTGenericMod     , only : prt_cnp_flex_allom_hyp
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
+   use clm_varctl        , only : use_fates_managed_fire
    use clm_varctl        , only : use_fates_tree_damage
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
@@ -79,6 +80,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_lch4
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
+   use clm_varctl        , only : Allocate_Carbon_only
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -440,6 +442,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_hydro_solver
      integer                                        :: pass_radiation_model
      integer                                        :: pass_electron_transport_model
+     integer                                        :: pass_managed_fire
 
      call t_startf('fates_globals2')
 
@@ -484,28 +487,21 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_tree_damage',ival=pass_tree_damage)
         
-        ! These may be in a non-limiting status (ie when supplements)
-        ! are added, but they are always allocated and cycled non-the less
-        ! FATES may want to interact differently with other models
-        ! that don't even have these arrays allocated.
-        ! FATES also checks that if NO3 is cycled in ELM, then
-        ! any plant affinity parameters are checked.
-
-        if(use_nitrif_denitrif) then
-           call set_fates_ctrlparms('nitrogen_spec',ival=1)
-        else
-           call set_fates_ctrlparms('nitrogen_spec',ival=2)
-        end if
-
-        ! Phosphorus is not tracked in CLM
-        call set_fates_ctrlparms('phosphorus_spec',ival=0)
-
-
+        ! Pass spitfire mode values
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
+
+        ! Pass managed fire mode value
+        if (use_fates_managed_fire) then
+           pass_managed_fire = 1
+        else
+           pass_managed_fire = 0
+        end if
+        call set_fates_ctrlparms('use_managed_fire',ival=pass_managed_fire)
+
 
         ! This has no variable on the FATES side yet (RGK)
         !call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
@@ -1161,6 +1157,12 @@ module CLMFatesInterfaceMod
       real(r8) :: s_node, smp_node         ! local for relative water content and potential
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
+      logical  :: nitr_suppl                     ! true -> CLM is supplementing Nitrogen
+      logical, parameter :: phos_dummy_suppl = .true.    ! true -> Phosphorus is NOT limited (i.e. supplemented)
+                                                         ! This argument is needed for FATES
+                                                         ! to specify if phosphorus is being
+                                                         ! supplemented, Phosphorous is not limited in CLM
+                                                         ! so we set it to TRUE
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -1342,10 +1344,16 @@ module CLMFatesInterfaceMod
 
       end do
 
+      if(Allocate_Carbon_only())then
+         nitr_suppl = .true.
+      else
+         nitr_suppl = .false.
+      end if
+      
       ! Nutrient uptake fluxes have been accumulating with each short
       ! timestep, here, we unload them from the boundary condition
       ! structures into the cohort structures.
-      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in, nitr_suppl, phos_dummy_suppl)
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapGlobalSeedDispersal call
@@ -2365,11 +2373,11 @@ module CLMFatesInterfaceMod
 
      call t_startf('fates_wrapsunfrac')
 
-      associate( forc_solad => atm2lnd_inst%forc_solad_not_downscaled_grc, &
-                 forc_solai => atm2lnd_inst%forc_solai_grc, &
-                 fsun       => canopystate_inst%fsun_patch, &
-                 laisun     => canopystate_inst%laisun_patch, &
-                 laisha     => canopystate_inst%laisha_patch )
+     associate( forc_solad_g => atm2lnd_inst%forc_solad_not_downscaled_grc, &
+                forc_solai_g => atm2lnd_inst%forc_solai_grc, &
+                fsun       => canopystate_inst%fsun_patch, &
+                laisun     => canopystate_inst%laisun_patch, &
+                laisha     => canopystate_inst%laisha_patch )
 
         ! -------------------------------------------------------------------------------
         ! Convert input BC's
@@ -2381,8 +2389,8 @@ module CLMFatesInterfaceMod
            g = col%gridcell(c)
 
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad(g,:)
-              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai(g,:)
+              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad_g(g,:)
+              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai_g(g,:)
            end do
         end do
 
@@ -2911,7 +2919,7 @@ module CLMFatesInterfaceMod
  ! ==============================================================================
 
  subroutine wrap_co2_to_atm(this, bounds_clump, num_soilc, filter_soilc, & 
-                            soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc )
+                            soilbiogeochem_carbonflux_inst, c_products_inst, net_carbon_exchange_grc )
 
    ! USES
    use subgridAveMod, only : c2g
@@ -2922,6 +2930,7 @@ module CLMFatesInterfaceMod
    integer                             , intent(in)    :: num_soilc          ! size of column filter
    integer                             , intent(in)    :: filter_soilc(:)    ! column filter
    type(soilbiogeochem_carbonflux_type), intent(in)    :: soilbiogeochem_carbonflux_inst
+   type(cn_products_type)              , intent(in)    :: c_products_inst
    real(r8)                            , intent(inout) :: net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
 
   ! Locals
@@ -2932,7 +2941,6 @@ module CLMFatesInterfaceMod
    net_carbon_exchange_col(bounds_clump%begc:bounds_clump%endc) = 0.0_r8
    net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = 0.0_r8
    ci = bounds_clump%clump_index
-
    ! Loop over columns
    do fc = 1, num_soilc
       
@@ -2954,9 +2962,8 @@ module CLMFatesInterfaceMod
          l2g_scale_type = 'unity')
    ! change sign, same way it is done in get_net_carbon_exchange
 
-   do g = bounds_clump%begg,bounds_clump%endg
-       net_carbon_exchange_grc(g) = net_carbon_exchange_grc(g) - soilbiogeochem_carbonflux_inst%fates_product_loss_grc(g)
-    enddo
+   net_carbon_exchange_grc(bounds%begg:bounds%endg) = net_carbon_exchange_grc(bounds%begg:bounds%endg) &
+                                                    - c_products_inst%product_loss_grc(bounds%begg:bounds%endg)
 
   net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = - net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
 

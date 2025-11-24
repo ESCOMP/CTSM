@@ -8,7 +8,7 @@ import string
 import re
 import pdb
 
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from getpass import getuser
 
 from ctsm.git_utils import get_ctsm_git_short_hash
@@ -267,3 +267,10 @@ def find_one_file_matching_pattern(pattern):
             f"Expected 1 but found {n_found} files found matching pattern: " + pattern
         )
     return file_list[0]
+
+
+def datetime_string():
+    """
+    Return a datetime string like "YYYY-mm-dd HH:MM:SS"
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

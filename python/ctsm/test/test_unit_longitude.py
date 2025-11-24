@@ -446,6 +446,27 @@ class TestLongitude(unittest.TestCase):
         lon = Longitude(55, 180)
         self.assertEqual(lon.lon_type(), 180)
 
+    def test_no_implicit_string_conversion(self):
+        """Ensure that implicit string conversion is disallowed"""
+        lon = Longitude(55, 180)
+        with self.assertRaisesRegex(
+            NotImplementedError, r"Use Longitude\.get_str\(\) instead of implicit string conversion"
+        ):
+            _ = f"{lon}"
+        with self.assertRaisesRegex(
+            NotImplementedError, r"Use Longitude\.get_str\(\) instead of implicit string conversion"
+        ):
+            _ = str(lon)
+
+    def test_get_str(self):
+        """Ensure that explicit string conversion works as expected"""
+        lon = Longitude(55, 180)
+        self.assertEqual(lon.get_str(180), "55.0")
+        self.assertEqual(lon.get_str(360), "55.0")
+        lon = Longitude(-55, 180)
+        self.assertEqual(lon.get_str(180), "-55.0")
+        self.assertEqual(lon.get_str(360), "305.0")
+
 
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
