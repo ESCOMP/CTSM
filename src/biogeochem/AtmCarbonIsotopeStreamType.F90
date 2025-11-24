@@ -177,12 +177,22 @@ module AtmCarbonIsotopeStreamType
          integer, intent(in) :: year_last ! last  year to use
          integer, intent(in) :: model_year_align ! align yearFirst with this model year
 
+         character(len=len(mapalgo)) :: str_mapalgo ! Temporary copy of mapalgo so can change input if meshfile is none
+
          ! Since C14 data has latitude bands mapalgo and meshfile can neither be set to none
          call shr_assert( trim(mapalgo) /= "none", "mapalgo MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
          ! TODO: Uncomment this error check when we are ready for the test for this to change answers
          !call shr_assert( trim(meshfile) /= "none", "meshfile MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
+         ! TOD: Remove this tempoary bit at the same time
+         if ( trim(meshfile) == "none" )then
+            str_mapalgo = "none"
+         else
+            str_mapalgo = mapalgo
+         end if
+         ! TODO: End of temporary bit
+
          call this%InitBase( bounds, varnames = (/ varname_c14 /), fldfilename=fldfilename, meshfile=meshfile, &
-                             mapalgo=mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c14, &
+                             mapalgo=str_mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c14, &
                              year_first=year_first, year_last=year_last, model_year_align=model_year_align )
          call this%C14InitAllocate( bounds )
          call this%Advance( )
