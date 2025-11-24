@@ -60,9 +60,9 @@ To run CTSM at a NEON site, change directories to where the run_tower tool is lo
 When a simulation completes, the data are stored in the archive directory under ``CTSM/tools/site_and_regional/archive``. In this directory you will find files that include data for every day of the simulation, as well as files that average model variables monthly. The output file names are automatically generated and are composed of the simulation name, which includes the site name, type of simulation (eg, ``transient``), and the date of simulated data.
 The tower simulations generate two types of files:
 
-1) ``h0`` Variables that are averaged monthly. One file is available for every month of the simulation. These files include hundreds of variables.
+1) ``h0a`` Variables that are averaged monthly. One file is available for every month of the simulation. These files include hundreds of variables.
 
-2) ``h1`` Variables that are recorded every 30 minutes. Values are aggregated into one file for each day of the simulation. Each file includes 48 data points for selected variables.
+2) ``h1a`` Variables that are recorded every 30 minutes. Values are aggregated into one file for each day of the simulation. Each file includes 48 data points for selected variables.
 
 =========================================
 PLUMBER Tower Single Point Simulations

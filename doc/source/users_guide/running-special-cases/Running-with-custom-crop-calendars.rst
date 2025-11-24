@@ -59,18 +59,18 @@ In a GDD-generating run, crops are planted on the specified sowing dates and are
    generate_crop_gdds = .true.
    use_mxmat = .false.
 
-   ! (h0) Save default variables monthly instead of daily to save space
+   ! (h0a) Save default variables monthly instead of daily to save space
    hist_nhtfrq = 0
    hist_mfilt = 12
 
-   ! (h1) Annual outputs for GDD generation
+   ! (h1i) Annual outputs for GDD generation
    hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'
    hist_nhtfrq(2) = 17520
    hist_mfilt(2) = 999
    hist_type1d_pertape(2) = 'PFTS'
    hist_dov2xy(2) = .false.
    
-   ! (h2) Daily outputs for GDD generation
+   ! (h2a) Daily outputs for GDD generation
    hist_fincl3 = 'GDDACCUM', 'GDDHARV'
    hist_nhtfrq(3) = -24
    hist_mfilt(3) = 365
