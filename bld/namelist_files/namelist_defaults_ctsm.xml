@@ -405,9 +405,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <bt_min                   fire_method="li2024crujra" >0.85d00</bt_min>
 <bt_max                   fire_method="li2024crujra" >0.98d00</bt_max>
 <cli_scale                fire_method="li2024crujra" >0.03d00</cli_scale>
-<boreal_peatfire_c        fire_method="li2024crujra" >0.28d-4</boreal_peatfire_c>
+<boreal_peatfire_c        fire_method="li2024crujra" >0.58d-4</boreal_peatfire_c>
 <pot_hmn_ign_counts_alpha fire_method="li2024crujra" >0.010d00</pot_hmn_ign_counts_alpha>
-<non_boreal_peatfire_c    fire_method="li2024crujra" >0.71d-4</non_boreal_peatfire_c>
+<non_boreal_peatfire_c    fire_method="li2024crujra" >0.75d-4</non_boreal_peatfire_c>
 <cropfire_a1              fire_method="li2024crujra" >0.34d00</cropfire_a1>
 <occur_hi_gdp_tree        fire_method="li2024crujra" >0.33d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2024crujra" >75.d00</lfuel>
@@ -417,7 +417,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <max_rh30_affecting_fuel  fire_method="li2024crujra" >95.</max_rh30_affecting_fuel>
 <defo_fire_precip_thresh_bet fire_method="li2024crujra" >1.8d00</defo_fire_precip_thresh_bet>
 <defo_fire_precip_thresh_bdt fire_method="li2024crujra" >0.6d00</defo_fire_precip_thresh_bdt>
-<borpeat_fire_soilmoist_denom fire_method="li2024crujra" > 0.35d00</borpeat_fire_soilmoist_denom>
+<borpeat_fire_soilmoist_denom fire_method="li2024crujra" > 0.3d00</borpeat_fire_soilmoist_denom>
 <nonborpeat_fire_precip_denom fire_method="li2024crujra" >6.5d00</nonborpeat_fire_precip_denom>
 
 
