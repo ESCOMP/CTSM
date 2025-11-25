@@ -7,15 +7,15 @@
 * New surface datasets from CMIP7 data including PFT and urban distributions, land use transitions, population density, and atmospheric C isotopes.  These data are only available through the historical record (1850-2023), and  
   * are not available for future periods (presently known as SSP),  
   * for future periods and N deposition we continue to use CMIP6 data from CESM2.  
-* Option to use CRUJRA2024 atmospheric driver data with clm6 and clm5 physics options ([PR \\\#2956](https://github.com/ESCOMP/ctsm/pull/2956)), this is the default data-atmosphere (DATM) for clm6. This CRUJRA dataset covers 1901-2023, whereas previous GSWP3 only covers 1901-2014.  
-* Capability to run single-point PLUMBER tower sites, similar to the NEON tower capability ([issue \\\#1487](https://github.com/ESCOMP/CTSM/issues/1487)). Initial conditions are not provided for PLUMBER sites.  
+* Option to use CRUJRA2024 atmospheric driver data with clm6 and clm5 physics options ([PR \#2956](https://github.com/ESCOMP/ctsm/pull/2956)), this is the default data-atmosphere (DATM) for clm6. This CRUJRA dataset covers 1901-2023, whereas previous GSWP3 only covers 1901-2014.  
+* Capability to run single-point PLUMBER tower sites, similar to the NEON tower capability ([issue \#1487](https://github.com/ESCOMP/CTSM/issues/1487)). Initial conditions are not provided for PLUMBER sites.  
 * New CLM\_CMIP\_ERA flag in env\_run.xml. Valid options are cmip7 and cmip6. Defaults to cmip7 except in compsets containing SSP for which it defaults to cmip6 because there are no future-period datasets yet available for CMIP7.  
 * Automatic, more flexible use of anomaly forcings for CMIP6 ISSP cases, which also use the cmip6 CLM\_CMIP\_ERA flag: [Documentation](https://escomp.github.io/CTSM/users_guide/running-special-cases/Running-with-anomaly-forcing.html)
 
-* Unsupported script that checks for spinup equilibrium in `tools/contrib/` for spectral element grids ([PR \\\#2991](https://github.com/ESCOMP/ctsm/pull/2991)).  
+* Unsupported script that checks for spinup equilibrium in `tools/contrib/` for spectral element grids ([PR \#2991](https://github.com/ESCOMP/ctsm/pull/2991)).  
 * New paramfile tools that allow users to query and modify CLM parameter files ([documentation](https://escomp.github.io/CTSM/users_guide/using-clm-tools/paramfile-tools.html))  
 * Optional time-evolving \`leafcn\_target\`. More under “Additional detail” below.  
-* New vertical movement scheme for soil nitrate, which is off by default (PR \\[\#2992](https://github.com/ESCOMP/CTSM/pull/2992)).  
+* New vertical movement scheme for soil nitrate, which is off by default (PR [\#2992](https://github.com/ESCOMP/CTSM/pull/2992)).  
 * Documentation improvements and new URL: https://escomp.github.io/CTSM/index.html.  
 * FATES:  
   * Grazing ([sci.1.81.0\_api.37.1.0](https://github.com/NGEET/fates/releases/tag/sci.1.81.0_api.37.1.0)).  
@@ -27,9 +27,9 @@
 Changes to defaults for \`clm6\` physics:
 
 * New CMIP7 surface and landuse timeseries datasets (see in Additional Details below).  
-* New namelist variables \`snow\_thermal\_cond\_glc\_method\` and \`snow\_thermal\_cond\_lake\_method\` ([PR \\\#3072](https://github.com/ESCOMP/CTSM/pull/3072)). Snow thermal conductivity uses Jordan1991 over glaciers to reduce Greenland melt rates by default and Sturm over land and lake land units.  
-* Bytnerowicz is now the default nfix\_method for clm6 (\[PR \\\#2972\]([https://github.com/ESCOMP/ctsm/pull/2972](https://github.com/ESCOMP/ctsm/pull/2972))) which revises the temperature function for nitrogen fixation, replacing the Houlton *et al.* function.  
-* Updates to MEGAN for BVOCs (\[PR \\\#3065\](https://github.com/ESCOMP/CTSM/pull/3065) [PR \\\#3309](https://github.com/ESCOMP/CTSM/pull/3309)). Removes dependence on soil moisture from clm6 physics.  
+* New namelist variables \`snow\_thermal\_cond\_glc\_method\` and \`snow\_thermal\_cond\_lake\_method\` ([PR \#3072](https://github.com/ESCOMP/CTSM/pull/3072)). Snow thermal conductivity uses Jordan1991 over glaciers to reduce Greenland melt rates by default and Sturm over land and lake land units.  
+* Bytnerowicz is now the default nfix\_method for clm6 (https://github.com/ESCOMP/ctsm/pull/2972) which revises the temperature function for nitrogen fixation, replacing the Houlton *et al.* function.  
+* Updates to MEGAN for BVOCs (https://github.com/ESCOMP/CTSM/pull/3065 https://github.com/ESCOMP/CTSM/pull/3309). Removes dependence on soil moisture from clm6 physics.  
 * New model parameter values that were calibrated to improve carbon cycle representation with CRUJRA.  
 * New model parameter values that were calibrated to improve the fire model. Now using li2024 fire code.  
 * New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000\) resolutions.  
@@ -42,13 +42,13 @@ Changes to defaults for \`clm6\` physics:
 
 Changes for all physics versions:
 
-* Parameters updated: Added MIMICS parameter \`mimics\_fi\` (fraction of litter inputs that bypass litter pools, directly contributing to SOM) and updated other MIMICS parameters (\[PR \\\#2365\]([https://github.com/ESCOMP/CTSM/pull/2365](https://github.com/ESCOMP/CTSM/pull/2365))) to remove NPP control on turnover, fix density dependent control on turnover, add litterfall fluxes that bypass litter pools and contribute directly to soil organic matter.  
-* FATES parameter file updated: ([PR \\\#2965](https://github.com/ESCOMP/CTSM/pull/2965), [PR \\\#2904](https://github.com/ESCOMP/CTSM/pull/2904), [PR \\\#1344](https://github.com/NGEET/fates/pull/1344), [PR \\\#3087](https://github.com/ESCOMP/CTSM/pull/3087)). See “FATES parameter file” section below for details.  
+* Parameters updated: Added MIMICS parameter \`mimics\_fi\` (fraction of litter inputs that bypass litter pools, directly contributing to SOM) and updated other MIMICS parameters (\[PR \#2365\]([https://github.com/ESCOMP/CTSM/pull/2365](https://github.com/ESCOMP/CTSM/pull/2365))) to remove NPP control on turnover, fix density dependent control on turnover, add litterfall fluxes that bypass litter pools and contribute directly to soil organic matter.  
+* FATES parameter file updated: ([PR \#2965](https://github.com/ESCOMP/CTSM/pull/2965), [PR \#2904](https://github.com/ESCOMP/CTSM/pull/2904), [PR \#1344](https://github.com/NGEET/fates/pull/1344), [PR \#3087](https://github.com/ESCOMP/CTSM/pull/3087)). See “FATES parameter file” section below for details.  
 * New surface datasets and landuse timeseries files (see “surface datasets” section below).
 
 ## Heads up
 
-* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs \[\\\#2445\](https://github.com/ESCOMP/ctsm/pull/2445) \[\\\#117\](https://github.com/ESCOMP/MOSART/pull/117) \[\\\#61\](https://github.com/ESCOMP/RTM/pull/61) and the corresponding issues.  
+* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs \[\#2445\](https://github.com/ESCOMP/ctsm/pull/2445) \[\#117\](https://github.com/ESCOMP/MOSART/pull/117) \[\#61\](https://github.com/ESCOMP/RTM/pull/61) and the corresponding issues.  
 * Adding time to 1d weighting fields in transient simulations PR \\[\#3328](https://github.com/ESCOMP/CTSM/pull/3328)  
 * Regarding CMIP7 vs. CMIP6 inputs:  
   * We supply only CMIP7 C13/C14 isotope datasets, so these get used regardless of CLM\_CMIP\_ERA setting.  
@@ -64,7 +64,7 @@ Changes for all physics versions:
 ## Changes related to history files
 
 (Note 1: The same information in this section applies to MOSART and RTM.  
-Note 2: The gist of the information in this section also appears in the CTSM User’s Guide here [https://escomp.github.io/CTSM/users\_guide/setting-up-and-running-a-case/customizing-the-clm-namelist.html\#various-ways-to-change-history-output-averaging-flags](https://escomp.github.io/CTSM/users_guide/setting-up-and-running-a-case/customizing-the-clm-namelist.html#various-ways-to-change-history-output-averaging-flags))
+Note 2: The gist of the information in this section also appears in the [CTSM User’s Guide](https://escomp.github.io/CTSM/users_guide/setting-up-and-running-a-case/customizing-the-clm-namelist.html#various-ways-to-change-history-output-averaging-flags)).
 
 Following ctsm5.3.018 "Change history time to be the middle of the time bounds" and keeping CLM history consistent with CAM history, the CTSM5.4 change intends to prevent confusion associated with the time corresponding to instantaneous history fields by putting them on separate files than non-instantaneous fields.
 
@@ -86,14 +86,14 @@ Users will now see:
 
 The CLM handles empty history (and corresponding history-restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (considered out of scope), we have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
 
-## New surface datasets and landuse timeseries files (\[PR \\\#3482\](https://github.com/ESCOMP/CTSM/pull/3482))
+## New surface datasets and landuse timeseries files (\[PR \#3482\](https://github.com/ESCOMP/CTSM/pull/3482))
 
 * Transient landuse timeseries files going back to 1700 made for f09 and 360x720 grids.  
-* New resolutions now supported: ne3np4.pg3, mpasa30, ne0np4.NATL.ne30x8 (\[PR \\\#3482\](https://github.com/ESCOMP/CTSM/pull/3482))  
+* New resolutions now supported: ne3np4.pg3, mpasa30, ne0np4.NATL.ne30x8 (\[PR \#3482\](https://github.com/ESCOMP/CTSM/pull/3482))  
 * Updates to input datasets (also referred to as raw datasets):  
-  * PFT/LAI/soil-color raw datasets; now from the CMIP7 timeseries that ends in 2023 (Issues [\\\#2851](https://github.com/ESCOMP/CTSM/issues/2851)).  
+  * PFT/LAI/soil-color raw datasets; now from the CMIP7 timeseries that ends in 2023 (Issues [\#2851](https://github.com/ESCOMP/CTSM/issues/2851)).  
   * Two fire datasets: crop fire peak month and population density (Issue   
-  * \[\\\#2701\]([https://github.com/ESCOMP/CTSM/issues/2701](https://github.com/ESCOMP/CTSM/issues/2701)) \[\\\#3302\](https://github.com/ESCOMP/CTSM/issues/3302)).  
+  * \[\#2701\]([https://github.com/ESCOMP/CTSM/issues/2701](https://github.com/ESCOMP/CTSM/issues/2701)) \[\#3302\](https://github.com/ESCOMP/CTSM/issues/3302)).  
   * Transient (historical) urban datasets are now based on CMIP7 urban data, partitioned into TBD, HD, and MD classes in proportion to GaoOneill present day classification.
 
 ## Changes to FATES and the FATES parameter file
@@ -139,13 +139,13 @@ Information about additional py\_env\_create options — including how to instal
 
 ## Potentially time-evolving \`leafcn\_target\` replaces time-constant \`leafcn\`
 
-The former is calculated as a function of the latter and can be time-evolving depending on new paramfile parameter \`leafcn\_co2\_slope\` (\[PR \\\#1654\](https://github.com/ESCOMP/ctsm/pull/1654). The time-evolving effect defaults to off with \`leafcn\_co2\_slope\` \= 0 on the parameter file.
+The former is calculated as a function of the latter and can be time-evolving depending on new paramfile parameter \`leafcn\_co2\_slope\` https://github.com/ESCOMP/ctsm/pull/1654. The time-evolving effect defaults to off with \`leafcn\_co2\_slope\` \= 0 on the parameter file.
 
 # Simulations supporting this release by providing initial conditions
 
-* f19 \`Clm60BgcCruJra\` 16pft: https://github.com/NCAR/LMWG\_dev/issues/125  
-* f09 with \`Clm60BgcCropCruJra\`: https://github.com/NCAR/LMWG\_dev/issues/124  
-* ne30 with \`Clm60BgcCropCruJra\`: [https://github.com/NCAR/LMWG\_dev/issues/123](https://github.com/NCAR/LMWG_dev/issues/123) (123\_HIST\_popDens)  
-* ne30 SP https://github.com/NCAR/LMWG\_dev/issues/126  
-* f09 SP https://github.com/NCAR/LMWG\_dev/issues/127
+* f19 \`Clm60BgcCruJra\` 16pft: https://github.com/NCAR/LMWG_dev/issues/125  
+* f09 with \`Clm60BgcCropCruJra\`: https://github.com/NCAR/LMWG_dev/issues/124  
+* ne30 with \`Clm60BgcCropCruJra\`: https://github.com/NCAR/LMWG_dev/issues/123 (123\_HIST\_popDens)  
+* ne30 SP https://github.com/NCAR/LMWG_dev/issues/126  
+* f09 SP https://github.com/NCAR/LMWG_dev/issues/127
 
