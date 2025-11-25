@@ -14,7 +14,7 @@ import xarray as xr
 
 from ctsm.utils import abort, update_metadata
 from ctsm.git_utils import get_ctsm_git_short_hash
-from ctsm.config_utils import lon_range_0_to_360
+from ctsm.longitude import Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,22 @@ class ModifyFsurdat:
     """
 
     def __init__(
-        self, my_data, *, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        self,
+        my_data,
+        *,
+        lon_1,
+        lon_2,
+        lat_1,
+        lat_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type=None,
     ):
+
+        if lon_type is not None:
+            lon_1 = Longitude(lon_1, lon_type)
+            lon_2 = Longitude(lon_2, lon_type)
 
         self.numurbl = 3  # Number of urban density types
         self.file = my_data
@@ -72,7 +86,17 @@ class ModifyFsurdat:
 
     @classmethod
     def init_from_file(
-        cls, *, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file, lat_dimname, lon_dimname
+        cls,
+        *,
+        fsurdat_in,
+        lon_1,
+        lon_2,
+        lat_1,
+        lat_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type,
     ):
         """Initialize a ModifyFsurdat object from file fsurdat_in"""
         logger.info("Opening fsurdat_in file to be modified: %s", fsurdat_in)
@@ -86,18 +110,22 @@ class ModifyFsurdat:
             landmask_file=landmask_file,
             lat_dimname=lat_dimname,
             lon_dimname=lon_dimname,
+            lon_type=lon_type,
         )
 
     @staticmethod
-    def _get_rectangle(*, lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    def _get_rectangle(*, lon_1: Longitude, lon_2: Longitude, lat_1, lat_2, longxy, latixy):
         """
         Description
         -----------
         """
 
-        # ensure that lon ranges 0-360 in case user entered -180 to 180
-        lon_1 = lon_range_0_to_360(lon_1)
-        lon_2 = lon_range_0_to_360(lon_2)
+        # Get the longitudes in the correct format
+        if not all(isinstance(x, Longitude) for x in [lon_1, lon_2]):
+            raise TypeError("lon_1 and lon_2 must be of type Longitude")
+        lon_type = 360
+        lon_1 = lon_1.get(lon_type)
+        lon_2 = lon_2.get(lon_type)
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work

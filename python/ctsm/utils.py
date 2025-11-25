@@ -3,11 +3,12 @@
 import logging
 import os
 import sys
+import glob
 import string
 import re
 import pdb
 
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from getpass import getuser
 
 from ctsm.git_utils import get_ctsm_git_short_hash
@@ -250,3 +251,26 @@ def is_instantaneous(time_var):
     if "time at exact middle" in long_name:
         return False
     raise RuntimeError(f"Does this long_name mean instantaneous or not? {long_name}")
+
+
+def find_one_file_matching_pattern(pattern):
+    """
+    Given a file path with wildcards, find all the matching files. Throw an error if there is not
+    exactly one matching file. If there's just one, return its path.
+    """
+    file_list = glob.glob(pattern)
+    if not file_list:
+        raise FileNotFoundError("No file found matching pattern: " + pattern)
+    n_found = len(file_list)
+    if n_found > 1:
+        raise RuntimeError(
+            f"Expected 1 but found {n_found} files found matching pattern: " + pattern
+        )
+    return file_list[0]
+
+
+def datetime_string():
+    """
+    Return a datetime string like "YYYY-mm-dd HH:MM:SS"
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

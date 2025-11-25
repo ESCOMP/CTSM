@@ -2,6 +2,7 @@
 # source files that are currently used in unit tests
 
 list(APPEND clm_sources
+  ch4varcon.F90
   CNSharedParamsMod.F90
   CNPhenologyMod.F90
   CNSpeciesMod.F90
@@ -12,6 +13,14 @@ list(APPEND clm_sources
   DustEmisFactory.F90
   CropReprPoolsMod.F90
   CropType.F90
+  CNFireBaseMod.F90
+  CNFireNoFireMod.F90
+  CNFireFactoryMod.F90
+  CNFireLi2014Mod.F90
+  CNFireLi2016Mod.F90
+  CNFireLi2021Mod.F90
+  CNFireLi2024Mod.F90
+  CNVegMatrixMod.F90
   CNVegStateType.F90
   CNVegCarbonStateType.F90
   CNVegCarbonFluxType.F90
@@ -19,7 +28,13 @@ list(APPEND clm_sources
   CNVegNitrogenStateType.F90
   CNVegNitrogenFluxType.F90
   CNCIsoAtmTimeSeriesReadMod.F90
+  AtmCarbonIsotopeStreamType.F90
   CNVegComputeSeedMod.F90
+  FATESFireBase.F90
+  FATESFireDataMod.F90
+  FATESFireFactoryMod.F90
+  FATESFireNoDataMod.F90
+  SatellitePhenologyMod.F90
   SpeciesBaseType.F90
   SpeciesIsotopeType.F90
   SpeciesNonIsotopeType.F90

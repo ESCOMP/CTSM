@@ -18,8 +18,9 @@ module lnd_set_decomp_and_domain
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc, mpicom
-  use clm_varctl   , only : iulog, inst_suffix
+  use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
+  use perf_mod     , only : t_startf, t_stopf
 
   implicit none
   private ! except
@@ -87,6 +88,7 @@ contains
     real(r8) , pointer     :: dataptr1d(:)
     !-------------------------------------------------------------------------------
 
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: setup')
     rc = ESMF_SUCCESS
 
     ! Write diag info
@@ -105,7 +107,10 @@ contains
     ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
 
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: setup')
+
     ! Read in the land mesh from the file
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -142,9 +147,13 @@ contains
     else
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: final')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=ni, lnj=nj, amask=lndmask_glob)
+    call t_stopf ('decompInit_lnd')
 
     ! Determine ocn decomposition that will be used to create the full mesh
     ! note that the memory for gindex_ocn will be allocated in the following call
@@ -251,6 +260,8 @@ contains
     deallocate(gindex_ocn)
     deallocate(gindex_ctsm)
 
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
+
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
   !===============================================================================
@@ -315,7 +326,9 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Determine decomp and ldomain
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=1, lnj=1, amask=(/1/))
+    call t_stopf ('decompInit_lnd')
 
     ! Initialize processor bounds
     call get_proc_bounds(bounds)
@@ -452,7 +465,7 @@ contains
     real(r8)               :: fmaxval = 1._r8
     logical                :: lexist
     logical                :: checkflag = .false.
-    character(len=CL)      :: flandfrac
+    character(len=FL)      :: flandfrac
     character(len=CL)      :: flandfrac_status
     !-------------------------------------------------------------------------------
 

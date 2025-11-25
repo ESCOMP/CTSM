@@ -1,5 +1,6 @@
 module PrigentRoughnessStreamType
 
+#include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -11,7 +12,7 @@ module PrigentRoughnessStreamType
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
 
@@ -36,8 +37,8 @@ module PrigentRoughnessStreamType
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
-     character(len=CL)  :: stream_fldFileName_prigentroughness   ! data Filename
-     character(len=CL)  :: stream_meshfile_prigentroughness      ! mesh Filename
+     character(len=FL)  :: stream_fldFileName_prigentroughness   ! data Filename
+     character(len=FL)  :: stream_meshfile_prigentroughness      ! mesh Filename
      character(len=CL)  :: prigentroughnessmapalgo               ! map algo
   contains
      procedure, private :: ReadNML      ! Read in control namelist
@@ -151,6 +152,7 @@ contains
                ig = 0
                do g = bounds%begg,bounds%endg
                   ig = ig+1
+                  SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
                   this%prigent_rghn(g) = dataptr1d(ig)
                end do
 
@@ -280,8 +282,8 @@ contains
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
    logical            :: use_prigent_roughness = .true.
-   character(len=CL)  :: stream_fldFileName_prigentroughness = ' '
-   character(len=CL)  :: stream_meshfile_prigentroughness = ' '
+   character(len=FL)  :: stream_fldFileName_prigentroughness = ' '
+   character(len=FL)  :: stream_meshfile_prigentroughness = ' '
    character(len=CL)  :: prigentroughnessmapalgo = 'bilinear'
    character(len=*), parameter :: namelist_name = 'prigentroughness'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('prigentroughness::ReadNML')"

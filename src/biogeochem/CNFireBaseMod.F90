@@ -14,7 +14,7 @@ module CNFireBaseMod
   ! climatological lightning data.
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
   use clm_varpar                         , only : nlevgrnd
@@ -85,13 +85,17 @@ module CNFireBaseMod
     private
       ! !PRIVATE MEMBER DATA:
       ! !PUBLIC MEMBER DATA (used by extensions of the base class):
-      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
+      real(r8), public, pointer :: btran2_patch   (:)  => NULL() ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: CNFireInit                    ! Initialization of Fire
       procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
-      procedure, public :: FireReadNML                   ! Read in namelist for CNFire
+      procedure, public :: CNFireCleanBase               ! Deallocate fire data
+      procedure, public :: FireClean => CNFireCleanBase  ! Deallocate fire data
+      procedure, public :: CNFireReadNML                 ! Read in namelist for CNFire
+      procedure, public :: FireReadNML => CNFireReadNML  ! Read in namelist for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
       procedure, public :: CNFire_calc_fire_root_wetness_Li2014 ! Calculate CN-fire specific root wetness: original version
@@ -129,17 +133,16 @@ module CNFireBaseMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNFireInit( this, bounds, NLFilename )
+  subroutine CNFireInit( this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
     ! Call the base-class Initialization method
-    call this%BaseFireInit( bounds, NLFilename )
+    call this%BaseFireInit( bounds )
 
     ! Allocate memory
     call this%InitAllocate( bounds )
@@ -184,6 +187,24 @@ contains
          avgflag='A', long_name='root zone soil wetness factor', &
          ptr_patch=this%btran2_patch, l2g_scale_type='veg')
   end subroutine InitHistory
+
+  !----------------------------------------------------------------------
+
+  subroutine CNFireCleanBase( this )
+    !
+    ! Deallocate data
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    !-----------------------------------------------------------------------
+    ! Call the base class clean method
+    !call this%BaseFireClean()
+
+    if ( associated(this%btran2_patch) )then
+       deallocate(this%btran2_patch)
+    end if
+    this%btran2_patch => NULL()
+  end subroutine CNFireCleanBase
 
   !----------------------------------------------------------------------
   subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, &
@@ -321,7 +342,7 @@ contains
   !----------------------------------------------------------------------
 
   !----------------------------------------------------------------------
-  subroutine FireReadNML( this, NLFilename )
+  subroutine CNFireReadNML( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for CNFire
@@ -331,17 +352,17 @@ contains
     use shr_nl_mod     , only : shr_nl_find_group_name
     use spmdMod        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
+    type(bounds_type), intent(in):: bounds     !bounds
     character(len=*), intent(in) :: NLFilename ! Namelist filename
     !
     ! !LOCAL VARIABLES:
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'FireReadNML'
+    character(len=*), parameter :: subname = 'CNFireReadNML'
     character(len=*), parameter :: nmlname = 'lifire_inparm'
     !-----------------------------------------------------------------------
     real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
@@ -361,6 +382,9 @@ contains
                              borpeat_fire_soilmoist_denom, nonborpeat_fire_precip_denom
 
     if ( this%need_lightning_and_popdens() ) then
+       ! Read the base namelist
+       call this%BaseFireReadNML( bounds, NLFilename )
+
        cli_scale                 = cnfire_const%cli_scale
        boreal_peatfire_c         = cnfire_const%boreal_peatfire_c
        non_boreal_peatfire_c     = cnfire_const%non_boreal_peatfire_c
@@ -392,9 +416,11 @@ contains
              read(unitn, nml=lifire_inparm, iostat=ierr)
              if (ierr /= 0) then
                 call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+                return
              end if
           else
              call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
+             return
           end if
           call relavu( unitn )
        end if
@@ -447,7 +473,7 @@ contains
        end if
     end if
 
-  end subroutine FireReadNML
+  end subroutine CNFireReadNML
 
   !-----------------------------------------------------------------------
   subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &

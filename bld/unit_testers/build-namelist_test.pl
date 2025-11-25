@@ -163,10 +163,10 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3264;
+my $ntests = 3403;
 
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1980;
+   $ntests += 2061;
 }
 plan( tests=>$ntests );
 
@@ -288,7 +288,7 @@ $mode = "-phys $phys";
 &make_config_cache($phys);
 my @mfiles = ( "lnd_in", "drv_flds_in", $tempfile );
 my $mfiles = NMLTest::CompFiles->new( $cwd, @mfiles );
-foreach my $options ( "-drydep", "-megan", "-drydep -megan", "-fire_emis", "-drydep -megan -fire_emis" ) {
+foreach my $options ( "-drydep --bgc sp", "-megan --bgc sp", "-drydep -megan --bgc bgc", "-fire_emis --bgc bgc", "-drydep -megan -fire_emis --bgc bgc" ) {
    &make_env_run();
    eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
@@ -323,6 +323,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 -namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-res 0.9x1.25 -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
+                         "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist' ndepmapalgo='consd' popdensmapalgo='consf'\"",
                          "-res 0.9x1.25 -use_case 1850_control",
                          "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
@@ -537,9 +538,9 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys CAM_SETS_DRV_FLDS";
    &make_config_cache($phys);
    foreach my $options (
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4.ARCTIC.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4.ARCTICGRIS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4CONUS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
@@ -576,8 +577,8 @@ foreach my $options (
                       "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
                       "-namelist \"&a dust_emis_method='Zender_2003', zender_soil_erod_source='lnd' /'\"",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
-                      "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
-                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
+                      "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep",
+                      "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -megan -light_res 360x720",
                       "--bgc bgc --light_res none --namelist \"&a fire_method='nofire'/\"",
                       "--bgc fates --light_res 360x720 --no-megan --namelist \"&a fates_spitfire_mode=2/\"",
                       "--bgc fates --light_res none --no-megan --namelist \"&a fates_spitfire_mode=1/\"",
@@ -677,6 +678,10 @@ my %failtest = (
      "bgc_with_no_decomp"        =>{ options=>" -envxml_dir . -bgc bgc",
                                      namelst=>"soil_decomp_method='None'",
                                      phys=>"clm5_0",
+                                   },
+     "reseed with branch"        =>{ options=>"-clm_start_type branch -envxml_dir .",
+                                     namelst=>"reseed_dead_plants=.true.",
+                                     phys=>"clm6_0",
                                    },
      "reseed without CN"         =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"reseed_dead_plants=.true.",
@@ -789,6 +794,30 @@ my %failtest = (
      "bombspike no cn"           =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c14_bombspike=.true.",
                                      phys=>"clm5_0",
+                                   },
+     "bombspike file and stream" =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=TRUE use_c14_bombspike=.true. stream_fldfilename_atm_c14='/dev/null', atm_c14_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 file and stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13_timeseries=.true. stream_fldfilename_atm_c13='/dev/null', atm_c13_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13=.false. stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c14 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=.false. stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c13 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c14 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
                                    },
      "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
                                      namelst=>"",
@@ -1093,6 +1122,10 @@ my %failtest = (
                                      namelst=>"suplnitro='NONE'",
                                      phys=>"clm6_0",
                                    },
+     "FATESwBothSpST3"           =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fates_sp = TRUE, use_fates_ed_st3 = TRUE",
+                                     phys=>"clm6_0",
+                                   },
      "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
                                      namelst=>"fire_method='li2021gswpfrc'",
                                      phys=>"clm6_0",
@@ -1107,6 +1140,10 @@ my %failtest = (
                                    },
      "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
+                                     phys=>"clm5_0",
+                                   },
+     "managedfirenospitfire"    =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"fates_spitfire_mode=0,use_fates_managed_fire=.true.",
                                      phys=>"clm5_0",
                                    },
      "usefatesspusefateshydro"   =>{ options=>"-envxml_dir . --bgc fates",
@@ -1144,6 +1181,14 @@ my %failtest = (
      "useFIREEMISwithFATES"      =>{ options=>"-bgc fates -envxml_dir . -fire_emis --no-megan",
                                     namelst=>"",
                                     phys=>"clm4_5",
+                                 },
+     "useFIREEMISwithNOFIRE"     =>{ options=>"--bgc bgc --envxml_dir . --fire_emis",
+                                    namelst=>"fire_method='nofire'",
+                                    phys=>"clm6_0",
+                                 },
+     "useFIREEMISwithSP"         =>{ options=>"--bgc sp --envxml_dir . --fire_emis",
+                                    namelst=>"",
+                                    phys=>"clm6_0",
                                  },
      "useDRYDEPwithFATES"        =>{ options=>"--bgc fates --envxml_dir . --no-megan --drydep",
                                      namelst=>"",
@@ -1297,6 +1342,14 @@ my %failtest = (
                                      namelst=>"use_lai_streams=.true.",
                                      phys=>"clm5_0",
                                      },
+     "megan_opts_wo_megan"       =>{ options=>"--envxml_dir . --bgc bgc --no-megan",
+                                     namelst=>"megan_use_gamma_sm=TRUE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
+                                   },
+     "megan_min_wo_megan_use"    =>{ options=>"--envxml_dir . --bgc bgc --megan",
+                                     namelst=>"megan_use_gamma_sm=FALSE, megan_min_gamma_sm=1.0",
+                                     phys=>"clm6_0",
+                                   },
      "soil_erod_wo_Zender"      =>{ options=>"--envxml_dir . --ignore_warnings",
                                      namelst=>"dust_emis_method='Leung_2023', stream_meshfile_zendersoilerod = '/dev/null'",
                                      phys=>"clm6_0",
@@ -1367,6 +1420,11 @@ my %warntest = (
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      phys=>"clm5_0",
+                                   },
+     "c14_meshfile_none"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null', " .
+                                              "stream_meshfile_atm_c14='none'",
+                                     phys=>"clm6_0",
                                    },
      "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
                                      namelst=>"",
@@ -1494,7 +1552,7 @@ print "Test ALL resolutions that have surface datasets with SP for 1850 and 2000
 print "========================================================================\n";
 
 # Check for ALL resolutions with CLM50SP
-my @resolutions = ( "360x720cru", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne16np4.pg3", "ne30np4", "ne30np4.pg2", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C96", "mpasa480", "mpasa120" );
+my @resolutions = ( "360x720cru", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4", "ne30np4.pg2", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C96", "mpasa480", "mpasa120" );
 my @only2000_resolutions = ( "1x1_numaIA", "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "0.125nldas2", "mpasa60", "mpasa15", "mpasa3p75" );
 my @regional;
 foreach my $res ( @resolutions ) {
@@ -1531,7 +1589,7 @@ print "\n==================================================\n";
 print " Test important resolutions for BGC and historical\n";
 print "==================================================\n";
 
-my @resolutions = ( "4x5", "10x15", "360x720cru", "ne30np4.pg3", "ne3np4.pg3", "1.9x2.5", "0.9x1.25", "C96", "mpasa120" );
+my @resolutions = ( "4x5", "10x15", "360x720cru", "ne30np4.pg3", "ne3np4", "ne3np4.pg3", "1.9x2.5", "0.9x1.25", "C96", "mpasa120" );
 my @regional;
 my $nlbgcmode = "bgc";
 my $mode = "$phys-$nlbgcmode";
@@ -1558,9 +1616,9 @@ foreach my $res ( @resolutions ) {
    &cleanup(); print "\n";
 }
 
-print "\n==================================================\n";
-print " Test all use-cases over all physics options\n";
-print "==================================================\n";
+print "\n=============================================================\n";
+print   " Test all use-cases over all physics options for f09 and SP \n";
+print   "=============================================================\n";
 
 # Run over all use-cases for f09 and all physics...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
@@ -1581,7 +1639,8 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
-      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
+      # Just do SP here as some use-cases can't do crop (nonanthro), and some not BGC (stdurbpt)
+      $options = "-res 0.9x1.25 -use_case $usecase --bgc bgc -envxml_dir .";
       &make_env_run();
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
@@ -1758,7 +1817,7 @@ foreach my $res ( @crop1850_res ) {
    &cleanup();
 }
 
-my @crop_res = ( "1x1_numaIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
+my @crop_res = ( "1x1_numaIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne30np4", "ne30np4.pg3", "C96", "mpasa120" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
    &make_env_run();
@@ -1847,7 +1906,7 @@ foreach my $res ( @tran_res ) {
    &cleanup();
 }
 # Transient ssp_rcp scenarios that work
-my @tran_res = ( "4x5", "0.9x1.25", "1.9x2.5", "10x15", "360x720cru", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
+my @tran_res = ( "4x5", "0.9x1.25", "1.9x2.5", "10x15", "360x720cru", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
 foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
    my $startymd = 20150101;
    foreach my $res ( @tran_res ) {
@@ -1884,9 +1943,15 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
                      "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000 -namelist '&a start_ymd=18500101/'",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
-     my @clmres = ( "10x15", "4x5", "360x720cru", "0.9x1.25", "1.9x2.5", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
+     my @clmres = ( "10x15", "4x5", "360x720cru", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
+        # For clm6_0 and BGC use Carbon isotope streams
+        if ( ($phys eq "clm6_0") && ($clmopts =~ /bgc bgc/) ) {
+           $options = "$options --namelist \"&a stream_fldfilename_atm_c14 = '/dev/null'," .
+                      "stream_meshfile_atm_c14 = '/dev/null', " .
+                      "stream_fldfilename_atm_c13 = '/dev/null' /\"";
+        }
         &make_env_run( );
         eval{ system( "$bldnml $options $clmopts > $tempfile 2>&1 " ); };
         is( $@, '', "$options $clmopts" );

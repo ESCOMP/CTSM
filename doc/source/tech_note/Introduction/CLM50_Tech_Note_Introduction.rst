@@ -152,6 +152,8 @@ Introduction
 
 The purpose of this document is to fully describe the biogeophysical and biogeochemical parameterizations and numerical implementation of version 5.0 of the Community Land Model (CLM5.0). Scientific justification and evaluation of these parameterizations can be found in the referenced scientific papers (:ref:`rst_References`). This document and the CLM5.0 User's Guide together provide the user with the scientific description and operating instructions for CLM.
 
+.. _model-history:
+
 Model History
 ---------------
 
@@ -263,7 +265,7 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. Glacier processes (Chapter :numref:`rst_Glaciers`)
 
-#. River routing and river flow (Chapter :numref:`rst_River Transport Model (RTM)`)
+#. River routing and river flow (Chapter :numref:`rst_MOSART`)
 
 #. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 

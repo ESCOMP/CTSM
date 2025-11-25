@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod      , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
+  use pftconMod      , only : noveg, is_prognostic_crop, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use CNSharedParamsMod, only : use_matrixcn
@@ -1532,7 +1532,7 @@ contains
                    this%matrix_cap_frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
                    this%matrix_cap_frootc_storage_patch(p) = 0._r8    
                 end if
-             else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
+             else if (is_prognostic_crop(patch%itype(p))) then ! prognostic crop types
                 this%leafc_patch(p)                        = 0._r8
                 this%leafc_storage_patch(p)                = 0._r8
                 this%frootc_patch(p)                       = 0._r8            
@@ -1793,7 +1793,6 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
     use landunit_varcon  , only : istsoil, istcrop 
@@ -4579,7 +4578,7 @@ contains
             this%gresp_storage_patch(p)      + &
             this%gresp_xfer_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%storvegc_patch(p) =            &
                   this%storvegc_patch(p)       + &
@@ -4637,6 +4636,7 @@ contains
        num_soilp_with_inactive, filter_soilp_with_inactive, &
        patch_state_updater, &
        leafc_seed, deadstemc_seed, &
+       leafcn_t_evolving, &
        conv_cflux, wood_product_cflux, crop_product_cflux, &
        dwt_frootc_to_litter, &
        dwt_livecrootc_to_litter, &
@@ -4658,6 +4658,7 @@ contains
     type(patch_state_updater_type)  , intent(in)    :: patch_state_updater
     real(r8)                        , intent(in)    :: leafc_seed  ! seed amount for leaf C
     real(r8)                        , intent(in)    :: deadstemc_seed ! seed amount for deadstem C
+    real(r8)                        , intent(in)    :: leafcn_t_evolving( bounds%begp: )  ! current leaf C:N (gC/gN)
     real(r8)                        , intent(inout) :: conv_cflux( bounds%begp: )  ! patch-level conversion C flux to atm (expressed per unit GRIDCELL area)
     real(r8)                        , intent(inout) :: wood_product_cflux( bounds%begp: ) ! patch-level product C flux (expressed per unit GRIDCELL area)
     real(r8)                        , intent(inout) :: crop_product_cflux( bounds%begp: ) ! patch-level crop product C flux (expressed per unit GRIDCELL area)
@@ -4700,6 +4701,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          num_soilp_with_inactive, filter_soilp_with_inactive, &
+         leafcn_t_evolving = leafcn_t_evolving(begp:endp), &
          species = this%species, &
          leafc_seed = leafc_seed, &
          deadstemc_seed = deadstemc_seed, &

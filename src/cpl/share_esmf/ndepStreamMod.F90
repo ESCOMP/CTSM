@@ -1,5 +1,7 @@
 module ndepStreamMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains methods for reading in nitrogen deposition data file
@@ -12,7 +14,7 @@ module ndepStreamMod
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl, CS => shr_kind_cs
   use spmdMod          , only : mpicom, masterproc, iam
   use decompMod        , only : bounds_type
-  use clm_varctl       , only : iulog, inst_name
+  use clm_varctl       , only : iulog, inst_name, FL => fname_len
   use abortutils       , only : endrun
 
   ! !PUBLIC TYPES:
@@ -66,8 +68,8 @@ contains
     character(len=CS)       :: ndep_taxmode = 'extend'
     character(len=CL)       :: ndep_varlist = 'NDEP_year'
     integer                 :: ndep_offset = 0        ! Offset in time for dataset (sec)
-    character(len=CL)       :: stream_fldFileName_ndep
-    character(len=CL)       :: stream_meshfile_ndep
+    character(len=FL)       :: stream_fldFileName_ndep
+    character(len=FL)       :: stream_meshfile_ndep
     integer                 :: stream_nflds
     integer                 :: rc
     character(*), parameter :: subName = "('ndepdyn_init')"
@@ -111,6 +113,7 @@ contains
     call shr_mpi_bcast(model_year_align_ndep  , mpicom)
     call shr_mpi_bcast(ndep_varlist           , mpicom)
     call shr_mpi_bcast(ndep_taxmode           , mpicom)
+    call shr_mpi_bcast(ndepmapalgo            , mpicom)
     call shr_mpi_bcast(ndep_tintalgo          , mpicom)
     call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
     call shr_mpi_bcast(stream_meshfile_ndep   , mpicom)
@@ -255,12 +258,14 @@ contains
        dayspyr = get_curr_days_per_year( )
        do g = bounds%begg,bounds%endg
           ig = ig+1
+          SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
           atm2lnd_inst%forc_ndep_grc(g) = dataptr1d(ig) / (secspday * dayspyr)
        end do
     else
        ig = 0
        do g = bounds%begg,bounds%endg
           ig = ig+1
+          SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
           atm2lnd_inst%forc_ndep_grc(g) = dataptr1d(ig)
        end do
     end if

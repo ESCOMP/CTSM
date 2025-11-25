@@ -1,0 +1,48 @@
+name: Run an omnibus test script for the docs
+
+on:
+  push:
+    # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
+    paths:
+      - 'doc/test/*'
+      - 'doc/Makefile'
+
+  pull_request:
+    # Run on pull requests that change the listed files
+    paths:
+      - 'doc/test/*'
+      - 'doc/Makefile'
+
+  workflow_dispatch:
+
+jobs:
+  build-docs-omnibus-test:
+    # Don't run on forks, because part(s) of omnibus testing script will look for
+    # branch(es) that forks may not have.
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      # Set up conda
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      - name: Text Sphinx builds with omnibus script
+        run: |
+          cd doc/test/ && ./testing.sh

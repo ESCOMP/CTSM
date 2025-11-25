@@ -10,7 +10,7 @@ module controlMod
   !       Display the file in a browser to see it neatly formatted in html.
   !
   ! !USES:
-  use shr_kind_mod                     , only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod                     , only: r8 => shr_kind_r8
   use shr_nl_mod                       , only: shr_nl_find_group_name
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
@@ -67,7 +67,7 @@ module controlMod
   !
   ! !PRIVATE TYPES:
   character(len=  7) :: runtyp(4)                        ! run type
-  character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
+  character(len=fname_len) :: NLFilename = 'lnd.stdin' ! Namelist filename
 
 #if (defined _OPENMP)
   integer, external :: omp_get_max_threads  ! max number of threads that can execute concurrently in a single parallel region
@@ -207,7 +207,8 @@ contains
          create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, &
-         snow_thermal_cond_method, snow_cover_fraction_method, &
+         snow_thermal_cond_method, snow_thermal_cond_glc_method, &
+         snow_thermal_cond_lake_method, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
@@ -256,7 +257,8 @@ contains
           use_fates_tree_damage,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
-          fates_history_dimlevel
+          fates_history_dimlevel,                       &
+          use_fates_managed_fire
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -317,7 +319,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac, flush_gdd20
+         use_nguardrail, crop_residue_removal_frac, flush_gdd20, use_nvmovement
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -728,6 +730,7 @@ contains
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nvmovement, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -843,6 +846,7 @@ contains
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (use_fates_managed_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -926,6 +930,8 @@ contains
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snow_thermal_cond_method, len(snow_thermal_cond_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snow_thermal_cond_glc_method, len(snow_thermal_cond_glc_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snow_thermal_cond_lake_method, len(snow_thermal_cond_lake_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (z0param_method , len(z0param_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_z0m_snowmelt, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1023,6 +1029,7 @@ contains
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
+    write(iulog,*) '    use_nvmovement = ', use_nvmovement
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_excess_ice = ', use_excess_ice
@@ -1256,6 +1263,7 @@ contains
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
+       write(iulog, *) '    use_fates_managed_fire= ', use_fates_managed_fire
     end if
   end subroutine control_print
 
@@ -1273,7 +1281,7 @@ contains
    ! !LOCAL VARIABLES:
    logical                    :: lexists
    integer                    :: klen
-   character(len=SHR_KIND_CL) :: status_file
+   character(len=fname_len)   :: status_file
    character(len=*), parameter :: subname = 'check_missing_initdata_status'
    !-----------------------------------------------------------------------
 
@@ -1314,7 +1322,7 @@ contains
     ! !LOCAL VARIABLES:
     logical                    :: lexists
     integer                    :: ncid
-    character(len=SHR_KIND_CL) :: initial_source_file
+    character(len=fname_len)   :: initial_source_file
     integer                    :: status
     character(len=*), parameter :: subname = 'apply_use_init_interp'
     !-----------------------------------------------------------------------
