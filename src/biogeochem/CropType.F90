@@ -67,7 +67,7 @@ module CropType
      real(r8), pointer :: sowing_reason_perharv_patch (:,:) ! reason for each sowing of crops *harvested* this year [patch, mxharvests]
      real(r8), pointer :: harvest_reason_thisyr_patch (:,:) ! reason for each harvest for this patch this year [patch, mxharvests]
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
-     integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
+     integer , pointer :: harvest_count           (:)   ! number of harvest events this year for this patch
      real(r8), pointer :: max_tlai_patch          (:) ! maximum total projected leaf area seen this season (m2/m2) [patch]
      real(r8), pointer :: max_tlai_thisyr_patch   (:,:) ! maximum total projected leaf area for harvests in this patch this year (m2/m2) [patch]
      ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
