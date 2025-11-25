@@ -1,6 +1,6 @@
-$CTSMROOT/README                                          09/05/2024
+$CTSMROOT/README                                          11/24/2025
 
-Community Terrestrial Systems Model (CTSM) science version 5.3 series -- source code, tools, 
+Community Terrestrial Systems Model (CTSM) science version 5.4 series -- source code, tools,
 offline-build and test scripts. This gives you everything you need
 to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRUJRA or GSWP3 forcing data (some older options also available) in
 place of a modeled atmosphere.
@@ -76,7 +76,7 @@ README ------------------- This file
 README.md ---------------- File that displays on github under https::/github.com/ESCOMP/CTSM.git
 README.rst --------------- File that displays under the project in github
 README_GITFLEXIMOD.rst --- Information on how to work with git-fleximod for CTSM
-WhatsNewInCTSM5.3.md ----- Overview document of the changes between ctsm5.2.0 and ctsm5.3.0
+WhatsNewInCTSM5.4.md ----- Overview document of the changes between ctsm5.3 and ctsm5.4
 CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
