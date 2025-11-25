@@ -2056,6 +2056,7 @@ contains
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    real(r8) cphase_orig  ! crop phase before updating
     logical has_rx_sowing_date ! does the crop have a single sowing date instead of a window?
     logical is_in_sowing_window ! is the crop in its sowing window?
     logical is_end_sowing_window ! is it the last day of the crop's sowing window?
@@ -2157,6 +2158,8 @@ contains
          ! Should never be saved as zero, but including this so it's initialized just in case
          harvest_reason = 0._r8
 
+         cphase_orig = cphase(p)
+
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
@@ -2184,6 +2187,21 @@ contains
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
                crop_inst%max_tlai_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%grainc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%grainc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%grainc_maturity_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2511,6 +2529,9 @@ contains
             ! similar changes in CropPhase.
             if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
+               if (cphase(p) /= cphase_orig) then
+                  call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst, cnveg_carbonflux_inst)
+               end if
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
@@ -2536,6 +2557,9 @@ contains
                ! changes to the offset subroutine below
 
             else if (do_harvest) then
+               cphase(p) = cphase_harvest
+               call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst, cnveg_carbonflux_inst)
+
                ! Don't update these if you're just harvesting because of incorrect Dec.
                ! 31 planting
                if (.not. fake_harvest) then
@@ -2551,10 +2575,26 @@ contains
                   crop_inst%sowing_reason_patch(p) = -1 ! "Reason for most recent sowing of this patch." So in the line above we save, and here we reset.
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
                   crop_inst%max_tlai_thisyr_patch(p, harvest_count(p)) = crop_inst%max_tlai_patch(p)
+
+                  ! Crop phase transition biomass sizes
+                  crop_inst%frootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_emergence_patch(p)
+                  crop_inst%frootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_anthesis_patch(p)
+                  crop_inst%frootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_maturity_patch(p)
+                  crop_inst%livecrootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_emergence_patch(p)
+                  crop_inst%livecrootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_anthesis_patch(p)
+                  crop_inst%livecrootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_maturity_patch(p)
+                  crop_inst%livestemc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_emergence_patch(p)
+                  crop_inst%livestemc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_anthesis_patch(p)
+                  crop_inst%livestemc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_maturity_patch(p)
+                  crop_inst%leafc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_emergence_patch(p)
+                  crop_inst%leafc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_anthesis_patch(p)
+                  crop_inst%leafc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_maturity_patch(p)
+                  crop_inst%grainc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_emergence_patch(p)
+                  crop_inst%grainc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_anthesis_patch(p)
+                  crop_inst%grainc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_maturity_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
-               cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -2585,6 +2625,9 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
+               if (cphase(p) /= cphase_orig) then
+                  call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst, cnveg_carbonflux_inst)
+               end if
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
@@ -2963,6 +3006,21 @@ contains
 
       ! Initialize other stuff
       max_tlai = 0._r8
+      crop_inst%frootc_emergence_patch(p) = -1._r8
+      crop_inst%frootc_anthesis_patch(p) = -1._r8
+      crop_inst%frootc_maturity_patch(p) = -1._r8
+      crop_inst%livecrootc_emergence_patch(p) = -1._r8
+      crop_inst%livecrootc_anthesis_patch(p) = -1._r8
+      crop_inst%livecrootc_maturity_patch(p) = -1._r8
+      crop_inst%livestemc_emergence_patch(p) = -1._r8
+      crop_inst%livestemc_anthesis_patch(p) = -1._r8
+      crop_inst%livestemc_maturity_patch(p) = -1._r8
+      crop_inst%leafc_emergence_patch(p) = -1._r8
+      crop_inst%leafc_anthesis_patch(p) = -1._r8
+      crop_inst%leafc_maturity_patch(p) = -1._r8
+      crop_inst%grainc_emergence_patch(p) = -1._r8
+      crop_inst%grainc_anthesis_patch(p) = -1._r8
+      crop_inst%grainc_maturity_patch(p) = -1._r8
 
     end associate
 
