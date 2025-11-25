@@ -3760,32 +3760,58 @@ sub setup_logic_c_isotope {
         $log->warning("use_c14 is ONLY scientifically validated with the bgc=BGC configuration" );
       }
     }
+    my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
+    my $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
+    my $atm_c14_filename = $nl->get_value('atm_c14_filename');
     if ( &value_is_true($use_c14) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'use_c14'=>$use_c14 );
-      my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
+      $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
       if ( &value_is_true($use_c14_bombspike) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
-                 'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
-                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         if ( defined($stream_fldfilename_atm_c14) ) {
+            setup_logic_c14_streams($opts, $nl_flags, $definition, $defaults, $nl);
+         } else {
+            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
+                    'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
+                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         }
+         $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
+         $atm_c14_filename = $nl->get_value('atm_c14_filename');
+         if ( defined($stream_fldfilename_atm_c14) && defined($atm_c14_filename) ) {
+           $log->fatal_error("Both stream_fldfilename_atm_c14 and atm_c14_filename set, only one should be set");
+         }
       }
     } else {
-      if ( defined($nl->get_value('use_c14_bombspike')) ||
-           defined($nl->get_value('atm_c14_filename')) ) {
-        $log->fatal_error("use_c14 is FALSE and use_c14_bombspike or atm_c14_filename set");
+      if ( defined($use_c14_bombspike) ||
+           defined($stream_fldfilename_atm_c14) ||
+           defined($atm_c14_filename) ) {
+        $log->fatal_error("use_c14 is FALSE and use_c14_bombspike, stream_fldfilename_atm_c14 or atm_c14_filename set");
       }
     }
+    my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
+    my $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
+    my $atm_c13_filename = $nl->get_value('atm_c13_filename');
     if ( &value_is_true($use_c13) ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13_timeseries', 'use_c13'=>$use_c13 );
-      my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
+      $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
       if ( &value_is_true($use_c13_timeseries) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
-                 'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
-                 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         if ( defined($stream_fldfilename_atm_c13) ) {
+            setup_logic_c13_streams($opts, $nl_flags, $definition, $defaults, $nl);
+         } else {
+            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
+                    'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
+                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+         }
+         $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
+         $atm_c13_filename = $nl->get_value('atm_c13_filename');
+         if ( defined($stream_fldfilename_atm_c13) && defined($atm_c13_filename) ) {
+           $log->fatal_error("Both stream_fldfilename_atm_c13 and atm_c13_filename set, only one should be set");
+         }
       }
     } else {
       if ( defined($nl->get_value('use_c13_timeseries')) ||
+           defined($nl->get_value('stream_fldfilename_atm_c13')) ||
            defined($nl->get_value('atm_c13_filename')) ) {
-        $log->fatal_error("use_c13 is FALSE and use_c13_timeseries or atm_c13_filename set");
+        $log->fatal_error("use_c13 is FALSE and use_c13_timeseries, stream_fldfilename_atm_c13 or atm_c13_filename set");
       }
     }
   } else {
@@ -3793,11 +3819,31 @@ sub setup_logic_c_isotope {
          &value_is_true($use_c14) ||
          &value_is_true($nl->get_value('use_c14_bombspike')) ||
          defined($nl->get_value('atm_c14_filename'))  ||
+         defined($nl->get_value('stream_fldfilename_atm_c14'))  ||
          &value_is_true($nl->get_value('use_c13_timeseries')) ||
-         defined($nl->get_value('atm_c13_filename')) ) {
+         defined($nl->get_value('atm_c13_filename')) ||
+         defined($nl->get_value('stream_fldfilename_atm_c13')) ) {
            $log->fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_c13_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  #
+  # C13 stream file settings
+  #
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_c14_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+  #
+  # C14 stream file settings
+  #
 }
 
 #-------------------------------------------------------------------------------
@@ -5322,6 +5368,9 @@ sub write_output_files {
   push @groups, "clm_canopy_inparm";
   push @groups, "prigentroughness";
   push @groups, "zendersoilerod";
+  if ( &value_is_true($nl_flags->{'use_cn'}) ) {
+    push @groups, "carbon_isotope_streams";
+  }
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";
   }
