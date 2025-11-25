@@ -1,13 +1,14 @@
 SRCDIR=`./xmlquery SRCROOT --value`
 CASEDIR=`./xmlquery CASEROOT --value`
 FATESDIR=$SRCDIR/src/fates/
-FATESPARAMFILE=$CASEDIR/fates_params_seeddisp_4x5.nc
 
-ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
+FATESPARAMFILE=$CASEDIR/fates_params_seeddisp_4x5.json
 
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_fraction --val 0.2 --allpfts
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_max_dist --val 2500000 --allpfts
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_pdf_scale --val 1e-05 --allpfts
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_seed_dispersal_pdf_shape --val 0.1 --allpfts
+cp $FATESDIR/parameter_files/fates_params_default.json $FATESPARAMFILE
+
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_fraction --values 0.2 --indices all 
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_max_dist --values 2500000 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_pdf_scale --values 1e-05 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_pdf_shape --values 0.1 --indices all
 
 echo "fates_paramfile = '$FATESPARAMFILE'" >> $CASEDIR/user_nl_clm

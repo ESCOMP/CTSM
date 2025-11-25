@@ -5464,7 +5464,8 @@ sub add_default {
     # variable is defined to be an absolute pathname, then prepend
     # the CESM inputdata root directory.
     if ($is_input_pathname eq 'landroot') {
-	$val = set_abs_filepath($val, $landroot);
+	#my $landroot = $opts->{'landroot'};
+	$val = set_abs_filepath($val,$opts->{'landroot'});
     } else {
 	if (not defined $settings{'no_abspath'}) {
 	    if (defined $settings{'set_abspath'}) {
