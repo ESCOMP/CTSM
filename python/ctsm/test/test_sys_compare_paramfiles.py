@@ -124,6 +124,13 @@ class TestCompareParamfilesMain(unittest.TestCase):
         ds8["new_var2"] = xr.DataArray(123, attrs={"units": "m/s", "long_name": "New variable 2"})
         ds8.to_netcdf(self.file8, format=NETCDF_TYPE)
 
+        # Create 9th paramfile (like file4 but with an extra variable)
+        self.file9 = os.path.join(self.tempdir, "params8.nc")
+        ds9 = ds4.copy(deep=True)
+        # Add a new variable
+        ds9["new_var2"] = xr.DataArray(123, attrs={"units": "m/s", "long_name": "New variable 2"})
+        ds9.to_netcdf(self.file9, format=NETCDF_TYPE)
+
     def tearDown(self):
         """Clean up test fixtures"""
         shutil.rmtree(self.tempdir)
@@ -182,8 +189,8 @@ class TestCompareParamfilesMain(unittest.TestCase):
             r"pft_param1:\n\s+Values differ:\n\s+\[pft 1 \(grass1\)\] 2\.0 → 5\.0",
         )
 
-    def test_variable_only_in_one_file(self):
-        """Test that variables present in only one file are reported"""
+    def test_variable_missing_from_first_file(self):
+        """Test that variables missing from first file are reported"""
         sys.argv = ["compare_paramfiles.py", self.file0, self.file2]
 
         with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
@@ -208,6 +215,26 @@ class TestCompareParamfilesMain(unittest.TestCase):
         self.assertRegex(
             output,
             r"Variable\(s\) present in File 0 but not File 1:\n\s+pft_param2",
+        )
+
+    def test_variables_missing_from_both_files(self):
+        """Test that variables missing from first AND second file are reported"""
+        sys.argv = ["compare_paramfiles.py", self.file0, self.file9]
+
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.main()
+            output = mock_stdout.getvalue()
+
+        # Should report pft_param2 only in file 0
+        self.assertRegex(
+            output,
+            r"Variable\(s\) present in File 0 but not File 1:\n\s+pft_param2",
+        )
+
+        # Should report new_var2 only in file 1
+        self.assertRegex(
+            output,
+            r"Variable\(s\) present in File 1 but not File 0:\n\s+new_var2",
         )
 
     def test_attribute_differences(self):
