@@ -2092,6 +2092,7 @@ contains
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
+         max_tlai          =>    crop_inst%max_tlai_patch                      , & ! Input:  [real(r8) (:) ]  maximum total projected leaf area seen this season (m2/m2); set to 0 at sowing and tracked until harvest
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
@@ -2180,6 +2181,7 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
+               crop_inst%max_tlai_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2546,6 +2548,7 @@ contains
                   crop_inst%sowing_reason_perharv_patch(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
                   crop_inst%sowing_reason_patch(p) = -1 ! "Reason for most recent sowing of this patch." So in the line above we save, and here we reset.
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
+                  crop_inst%max_tlai_thisyr_patch(p, harvest_count(p)) = crop_inst%max_tlai_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -2809,6 +2812,7 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          sowing_reason     =>    crop_inst%sowing_reason_thisyr_patch            , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
+         max_tlai          =>    crop_inst%max_tlai_patch                       , & ! Output:  [real(r8)  (:) ]  maximum total projected leaf area seen this season
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          iyop              =>    cnveg_state_inst%iyop_patch                     , & ! Output: [integer  (:) ]  year of planting
@@ -2954,6 +2958,9 @@ contains
       do k = 1, nrepr
          arepr(p,k) = 0._r8
       end do
+
+      ! Initialize other stuff
+      max_tlai = 0._r8
 
     end associate
 

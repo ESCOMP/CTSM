@@ -68,6 +68,8 @@ module CropType
      real(r8), pointer :: harvest_reason_thisyr_patch (:,:) ! reason for each harvest for this patch this year [patch, mxharvests]
      integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
      integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
+     real(r8), pointer :: max_tlai_patch          (:) ! maximum total projected leaf area seen this season (m2/m2) [patch]
+     real(r8), pointer :: max_tlai_thisyr_patch   (:,:) ! maximum total projected leaf area for harvests in this patch this year (m2/m2) [patch]
      ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
      ! hui also accumulates growing degree-days, but can be boosted if full leafout is
      ! achieved before the GDD threshold for grain fill has been reached; see CropPhenology().
@@ -254,6 +256,8 @@ contains
     allocate(this%harvest_reason_thisyr_patch(begp:endp,1:mxharvests)) ; this%harvest_reason_thisyr_patch(:,:) = spval
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
+    allocate(this%max_tlai_patch(begp:endp)) ; this%max_tlai_patch(:) = spval
+    allocate(this%max_tlai_thisyr_patch(begp:endp,1:mxharvests)) ; this%max_tlai_thisyr_patch(:,:) = spval
 
   end subroutine InitAllocate
 
@@ -346,6 +350,11 @@ contains
     call hist_addfld2d (fname='HUI_PERHARV', units='ddays', type2d='mxharvests', &
          avgflag='I', long_name='At-harvest accumulated heat unit index for crop; should only be output annually', &
          ptr_patch=this%hui_thisyr_patch, default='inactive')
+
+    this%max_tlai_thisyr_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='MAX_TLAI_PERHARV', units='m^2/m^2', type2d='mxharvests', &
+         avgflag='I', long_name='Maximum total projected leaf area index in season of each harvest this year; should only be output annually', &
+         ptr_patch=this%max_tlai_thisyr_patch, default='inactive')
 
     this%sowing_reason_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SOWING_REASON', units='unitless', type2d='mxsowings', &
@@ -643,6 +652,10 @@ contains
             dim1name='pft', long_name='vernalization factor', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%vf_patch)
 
+       call restartvar(ncid=ncid, flag=flag,  varname='max_tlai', xtype=ncd_double,  &
+            dim1name='pft', long_name='maximum total projected leaf area seen this season', units='m^2/m^2', &
+            interpinic_flag='interp', readvar=readvar, data=this%max_tlai_patch)
+
        call restartvar(ncid=ncid, flag=flag,  varname='cphase',xtype=ncd_double, &
             dim1name='pft', long_name='crop phenology phase', &
             units='0-not planted, 1-planted, 2-leaf emerge, 3-grain fill, 4-harvest', &
@@ -720,6 +733,11 @@ contains
                 long_name='accumulated heat unit index at harvest for this patch this year', units='ddays', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%hui_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='max_tlai_thisyr_patch', xtype=ncd_double,  &
+                dim1name='pft', dim2name='mxharvests', switchdim=.true., &
+                long_name='Maximum total projected leaf area index in season of each harvest this year', units='m^2/m^2', &
+                scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=this%max_tlai_thisyr_patch)
            call restartvar(ncid=ncid, flag=flag, varname='sowing_reason_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxsowings', switchdim=.true., &
                 long_name='reason for each sowing for this patch this year', units='unitless', &
