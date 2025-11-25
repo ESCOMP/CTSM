@@ -48,8 +48,8 @@ Changes for all physics versions:
 
 ## Heads up
 
-* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs \[\#2445\](https://github.com/ESCOMP/ctsm/pull/2445) \[\#117\](https://github.com/ESCOMP/MOSART/pull/117) \[\#61\](https://github.com/ESCOMP/RTM/pull/61) and the corresponding issues.  
-* Adding time to 1d weighting fields in transient simulations PR \\[\#3328](https://github.com/ESCOMP/CTSM/pull/3328)  
+* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs https://github.com/ESCOMP/ctsm/pull/2445 https://github.com/ESCOMP/MOSART/pull/117 https://github.com/ESCOMP/RTM/pull/61 and the corresponding issues.  
+* Adding time to 1d weighting fields in transient simulations PR https://github.com/ESCOMP/CTSM/pull/3328  
 * Regarding CMIP7 vs. CMIP6 inputs:  
   * We supply only CMIP7 C13/C14 isotope datasets, so these get used regardless of CLM\_CMIP\_ERA setting.  
   * We supply only CMIP7 population density with clm6 physics in non-SSP cases, because the fire model is calibrated to that; conversely, we supply only CMIP6 population density for pre-clm6 physics and for SSP cases.  
@@ -86,14 +86,13 @@ Users will now see:
 
 The CLM handles empty history (and corresponding history-restart) files by not generating them, while rtm and mosart give an error. Instead of refactoring rtm and mosart to behave like the clm (considered out of scope), we have introduced one active instantaneous field in mosart and one in rtm to bypass the "empty file" error.
 
-## New surface datasets and landuse timeseries files (\[PR \#3482\](https://github.com/ESCOMP/CTSM/pull/3482))
+## New surface datasets and landuse timeseries files (https://github.com/ESCOMP/CTSM/pull/3482)
 
 * Transient landuse timeseries files going back to 1700 made for f09 and 360x720 grids.  
-* New resolutions now supported: ne3np4.pg3, mpasa30, ne0np4.NATL.ne30x8 (\[PR \#3482\](https://github.com/ESCOMP/CTSM/pull/3482))  
+* New resolutions now supported: ne3np4.pg3, mpasa30, ne0np4.NATL.ne30x8 (https://github.com/ESCOMP/CTSM/pull/3482)  
 * Updates to input datasets (also referred to as raw datasets):  
-  * PFT/LAI/soil-color raw datasets; now from the CMIP7 timeseries that ends in 2023 (Issues [\#2851](https://github.com/ESCOMP/CTSM/issues/2851)).  
-  * Two fire datasets: crop fire peak month and population density (Issue   
-  * \[\#2701\]([https://github.com/ESCOMP/CTSM/issues/2701](https://github.com/ESCOMP/CTSM/issues/2701)) \[\#3302\](https://github.com/ESCOMP/CTSM/issues/3302)).  
+  * PFT/LAI/soil-color raw datasets; now from the CMIP7 timeseries that ends in 2023 (Issue [\#2851](https://github.com/ESCOMP/CTSM/issues/2851)).  
+  * Two fire datasets: crop fire peak month and population density (https://github.com/ESCOMP/CTSM/issues/2701 https://github.com/ESCOMP/CTSM/issues/3302).  
   * Transient (historical) urban datasets are now based on CMIP7 urban data, partitioned into TBD, HD, and MD classes in proportion to GaoOneill present day classification.
 
 ## Changes to FATES and the FATES parameter file
