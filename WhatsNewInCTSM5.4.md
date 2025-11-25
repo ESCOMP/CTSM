@@ -6,7 +6,6 @@
 
 * New surface datasets from CMIP7 data including PFT and urban distributions, land use transitions, population density, and atmospheric C isotopes.  These data are only available through the historical record (1850-2023), and  
   * are not available for future periods (presently known as SSP),  
-  * nitrogen deposition is calculated by CAM-CHEM, and not yet available from CESM3,  
   * for future periods and N deposition we continue to use CMIP6 data from CESM2.  
 * Option to use CRUJRA2024 atmospheric driver data with clm6 and clm5 physics options ([PR \\\#2956](https://github.com/ESCOMP/ctsm/pull/2956)), this is the default data-atmosphere (DATM) for clm6. This CRUJRA dataset covers 1901-2023, whereas previous GSWP3 only covers 1901-2014.  
 * Capability to run single-point PLUMBER tower sites, similar to the NEON tower capability ([issue \\\#1487](https://github.com/ESCOMP/CTSM/issues/1487)). Initial conditions are not provided for PLUMBER sites.  

@@ -3,7 +3,7 @@ CTSM History Fields (nofates)
 =============================
 
 CAUTION: Not all variables are relevant / present for all CTSM cases.
-NOTE: Instantaneous fields will appear in history files labeled with h0i, h1i, ... and non-instantaneous fields will appear in history fields labeled with h0a, h1a, ...
+NOTE: Instantaneous fields will appear in history files labeled with h0i, h1i, ... and non-instantaneous fields will appear in history files labeled with h0a, h1a, ...
 
 Key flags used in this CTSM case:
 use_cn = T
