@@ -15,6 +15,10 @@ For lists of current bugs (issues) and current development see the CTSM GitHub p
 
 https://github.com/ESCOMP/CTSM
 
+For Code of Conduct (how to work with each other on the CTSM project):
+
+https://github.com/ESCOMP/CTSM?tab=coc-ov-file
+
 INFORMATION ON THE CMEPS DRIVER:
 
 https://escomp.github.io/CMEPS
@@ -77,7 +81,6 @@ README.md ---------------- File that displays on github under https::/github.com
 README.rst --------------- File that displays under the project in github
 README_GITFLEXIMOD.rst --- Information on how to work with git-fleximod for CTSM
 WhatsNewInCTSM5.4.md ----- Overview document of the changes between ctsm5.3 and ctsm5.4
-CODE_OF_CONDUCT.md ------- Code of Conduct for how to work with each other on the CTSM project
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
                            ChangeLog/ChangeSum files
@@ -168,7 +171,7 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
          cd $CIMEROOT/scripts
          ./create_newcase            # get help on how to run create_newcase
-         ./create_newcase --case testI --res f19_g17_gl4 --compset I2000Clm60BgcCrop
+         ./create_newcase --case testI --res f09_t232 --compset I2000Clm60BgcCrop
                                      # create new "I" case for default machine at 1.9x2.5_gx1v7 
                                      # "I2000Clm60BgcCrop" case is clm6_0 physics, CDEPS, and inactive ice/ocn/glc
                                      # and MOSART for river-routing
