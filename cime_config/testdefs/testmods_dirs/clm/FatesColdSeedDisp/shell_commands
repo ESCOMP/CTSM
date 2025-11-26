@@ -6,9 +6,9 @@ FATESPARAMFILE=$CASEDIR/fates_params_seeddisp_4x5.json
 
 cp $FATESDIR/parameter_files/fates_params_default.json $FATESPARAMFILE
 
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_fraction --values 0.2 --indices all 
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_max_dist --values 2500000 --indices all
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_pdf_scale --values 1e-05 --indices all
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_seed_dispersal_pdf_shape --values 0.1 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_seed_dispersal_fraction --values 0.2 --indices all 
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_seed_dispersal_max_dist --values 2500000 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_seed_dispersal_pdf_scale --values 1e-05 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_seed_dispersal_pdf_shape --values 0.1 --indices all
 
 echo "fates_paramfile = '$FATESPARAMFILE'" >> $CASEDIR/user_nl_clm

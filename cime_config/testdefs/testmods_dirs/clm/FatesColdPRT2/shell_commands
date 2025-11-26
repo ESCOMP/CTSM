@@ -6,6 +6,8 @@ FATESPARAMFILE=$CASEDIR/fates_params_prt2_prescribed_np.json
 
 cp $FATESDIR/parameter_files/fates_params_default.json $FATESPARAMFILE
 
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_cnp_prescribed_nuptake --values 1.0 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_cnp_prescribed_nuptake --values 1.0 --indices all
 
-$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --fout $FATESPARAMFILE --param fates_cnp_prescribed_puptake --values 1.0 --indices all
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_cnp_prescribed_puptake --values 1.0 --indices all
+
+echo "fates_paramfile = '$FATESPARAMFILE'" >> $CASEDIR/user_nl_clm
