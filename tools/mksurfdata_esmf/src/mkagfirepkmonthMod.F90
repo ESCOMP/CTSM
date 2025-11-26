@@ -20,9 +20,9 @@ module mkagfirepkmonthMod
 
   public  :: mkagfirepkmon       ! Set agricultural fire peak month
 
-  integer , parameter :: min_valid = 1  ! month value for January
-  integer , parameter :: max_valid = 13  ! value for no agricultural fire
-  integer , parameter :: unsetmon = 14  ! value for no data
+  integer , parameter :: min_valid = 1
+  integer , parameter :: max_valid = 12
+  integer , parameter :: unsetmon = 13
 
   type(ESMF_DynamicMask) :: dynamicMask
 
@@ -36,10 +36,6 @@ contains
   subroutine mkagfirepkmon(file_mesh_i, file_data_i, mesh_o, pioid_o, rc)
     !
     ! Make agricultural fire peak month data from higher resolution data
-    ! by selecting the dominant value from values 1 through 13
-    ! where 13 means no agricultural fire.
-    !
-    ! The relevant subroutine is get_dominant_indices.
     !
     ! input/output variables
     character(len=*)  , intent(in)    :: file_mesh_i      ! input mesh file name
@@ -58,9 +54,9 @@ contains
     integer                        :: k
     integer                        :: ni,no
     integer                        :: ns_i, ns_o
-    integer , allocatable          :: mask_i(:)  ! input grid: mesh file landmask
-    real(r4), allocatable          :: rmask_i(:)  ! input grid: raw dataset landmask
-    real(r8), allocatable          :: frac_o(:)  ! output grid: agricultural fire peak month
+    integer , allocatable          :: mask_i(:)
+    real(r4), allocatable          :: rmask_i(:)
+    real(r8), allocatable          :: frac_o(:)
     integer , allocatable          :: idata_i(:)    ! input grid: agricultural fire peak month
     integer , allocatable          :: agfirepkmon_o(:) ! agricultural fire peak month
     real(r4), pointer              :: dataptr(:)
@@ -120,10 +116,6 @@ contains
     call mkpio_get_rawdata(pioid_i, 'abm', mesh_i, idata_i, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_VMLogMemInfo("After mkpio_getrawdata in "//trim(subname))
-    ! Update idata_i to unsetmon where mask_i == 0, i.e. over ocean
-    do ni = 1, ns_i
-       if (mask_i(ni) == 0) idata_i(ni) = unsetmon
-    end do
 
      ! Create ESMF fields that will be used below
     field_i = ESMF_FieldCreate(mesh_i, ESMF_TYPEKIND_R4, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
@@ -150,7 +142,6 @@ contains
     ! Create a dynamic mask object
     ! The dynamic mask object further holds a pointer to the routine that will be called in order to
     ! handle dynamically masked elements - in this case its DynMaskProc (see below)
-    ! This calls subroutine get_dominant_indices
     call ESMF_DynamicMaskSetR4R8R4(dynamicMask, dynamicMaskRoutine=get_dominant_indices,  &
          handleAllElements=.true., rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -173,7 +164,6 @@ contains
     ! Check validity of output data
     if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
         max_bad(agfirepkmon_o, unsetmon , 'agfirepkmon')) then
-        if (root_task) write(ndiag, '(a)') trim(subname)//" error in agfirepkmon_o value range: expect min_valid to unsetmon which equal ", min_valid, unsetmon
         call shr_sys_abort()
      end if
 
@@ -188,7 +178,7 @@ contains
 
     ! Output diagnostics comparing global area of each peak month on input and output grids
     call output_diagnostics_index(mesh_i, mesh_o, mask_i, frac_o, &
-         min_valid, unsetmon, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
+         1, 13, idata_i, agfirepkmon_o, 'peak fire month', ndiag, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort()
     
     ! Release memory
@@ -216,16 +206,15 @@ contains
 
     ! input/output arguments
     type(ESMF_DynamicMaskElementR4R8R4) , pointer              :: dynamicMaskList(:)
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue  ! Source (i.e. input) grid mask
-    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue  ! Destination (i.e. output) grid mask
-    integer                             , intent(out)          :: rc  ! error status
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicSrcMaskValue
+    real(ESMF_KIND_R4)                  , intent(in), optional :: dynamicDstMaskValue
+    integer                             , intent(out)          :: rc
 
     ! local variables
     integer            :: ni, no, n
     real(ESMF_KIND_R4) :: wts_o(min_valid:max_valid)
     integer            :: maxindex(1)
     logical            :: hasdata 
-    character(len=*), parameter :: subname = 'get_dominant_indices'
     !---------------------------------------------------------------
 
     rc = ESMF_SUCCESS

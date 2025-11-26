@@ -266,7 +266,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
 
     check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
     runfile.write(f"{check} \n")
-    runfile.write("echo Confirm completion of fsurdat/landuse generation in the .log file\n")
+    runfile.write("echo Successfully ran resolution\n")
 
 
 def main():

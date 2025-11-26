@@ -42,7 +42,7 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"", CLM_CMIP_ERA=>"cmip7" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3396;
+my $ntests = 3394;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -261,7 +261,7 @@ print "==================================================\n";
 my $options = "-co2_ppmv 250 ";
    $options .= " -res 10x15 -ssp_rcp SSP2-4.5 -envxml_dir .";
 
-   &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
+   &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "options: $options" );
       $cfiles->checkfilesexist( "default", $mode );
@@ -567,35 +567,14 @@ print "==============================================================\n";
 $phys = "clm5_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-# Four tests that require CLM_CMIP_ERA set to cmip6
 foreach my $options (
                       "--res 0.9x1.25 --bgc sp  --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=18501223/'",
-                      "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
-                      "--res 1.9x2.5 --bgc bgc --use_case 1850_control --namelist '&a start_ymd=18500101/'",
-                      "--res 1.9x2.5 --bgc bgc --use_case 20thC_transient --namelist '&a start_ymd=18500101/'",
-                     ) {
-   my $file = $startfile;
-   &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
-   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
-   is( $@, '', "options: $options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", $mode );
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
-   }
-   &cleanup();
-}
-foreach my $options (
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan",
                       "-bgc fates  -use_case 20thC_transient -no-megan -no-crop --res 4x5",
                       "-bgc fates  -use_case 1850_control -no-megan -namelist \"&a use_fates_sp=T, soil_decomp_method='None'/\"",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
+                      "--res 1.9x2.5 --bgc bgc --use_case 1850-2100_SSP2-4.5_transient --namelist '&a start_ymd=19101023/'",
                       "-namelist \"&a dust_emis_method='Zender_2003', zender_soil_erod_source='lnd' /'\"",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep",
@@ -632,11 +611,6 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
-     "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
-                                     namelst=>"",
-                                     CLM_CMIP_ERA=>"cmip7",
-                                     phys=>"clm6_0",
-                                   },
      "coldstart but with IC file"=>{ options=>"-clm_start_type cold -envxml_dir .",
                                      namelst=>"finidat='$finidat'",
                                      phys=>"clm5_0",
@@ -1172,7 +1146,7 @@ my %failtest = (
                                      namelst=>"use_fates_lupft=.true.",
                                      phys=>"clm4_5",
                                    },
-     "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
@@ -1387,7 +1361,7 @@ foreach my $key ( keys(%failtest) ) {
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
    my %settings;
-   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS", "CLM_CMIP_ERA") {
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS") {
       if ( defined($failtest{$key}{$xmlvar}) ) {
          $settings{$xmlvar} = $failtest{$key}{$xmlvar};
       }
@@ -1637,7 +1611,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
       $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
-      &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
+      &make_env_run();
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
          if ( $failusecase eq $usecase ) {
@@ -1858,21 +1832,15 @@ foreach my $res ( @glc_res ) {
       my $startymd = undef;
       if ( ($usecase eq "1850_control") || ($usecase eq "20thC_transient") ) {
          $startymd = 18500101;
-         &make_env_run();
       } elsif ( $usecase eq "2000_control") {
          $startymd = 20000101;
-         &make_env_run();
       } elsif ( $usecase eq "2010_control") {
          $startymd = 20100101;
-         &make_env_run();
-      } elsif ( $usecase =~ "2100_SSP") {
-         $startymd = 20150101;
-         &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
       } else {
          $startymd = 20150101;
-         &make_env_run();
       }
       $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
+      &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );
@@ -1909,11 +1877,11 @@ foreach my $res ( @tran_res ) {
 }
 # Transient ssp_rcp scenarios that work
 my @tran_res = ( "4x5", "0.9x1.25", "1.9x2.5", "10x15", "360x720cru", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
-my $startymd = 20150101;
-&make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
 foreach my $usecase ( "1850-2100_SSP2-4.5_transient" ) {
+   my $startymd = 20150101;
    foreach my $res ( @tran_res ) {
       $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
+      &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
       $cfiles->checkfilesexist( "$options", $mode );
@@ -2046,8 +2014,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
         if ( $lndtuningmode eq "clm6_0_CRUv7" or
-             $lndtuningmode eq "clm4_5_CRUJRA2024" or
-             $lndtuningmode eq "clm5_0_CRUJRA2024") {
+             $lndtuningmode eq "clm4_5_CRUJRA2024") {
            next;
         }
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

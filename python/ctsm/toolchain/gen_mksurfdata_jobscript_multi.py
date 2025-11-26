@@ -24,41 +24,35 @@ valid_scenarios = [
     "global-present",
     "global-present-low-res",
     "global-present-ultra-hi-res",
-    "global-hist-1850-1and2deg",
-    "global-hist-1850-low-res",
+    "global-hist-1850-f19",
+    "global-hist-1850-f45",
     "crop-tropics-present",
     "crop",
     "crop-global-present",
     "crop-global-present-low-res",
-    "crop-global-present-ne3",
     "crop-global-present-ne16",
     "crop-global-present-ne30",
-    "crop-global-present-vrandne120",
+    "crop-global-present-ne120",
     "crop-global-present-mpasa480",
     "crop-global-present-nldas",
     "crop-global-1850",
     "crop-global-1850-low-res",
-    "crop-global-1850-ne3",
     "crop-global-1850-ne16",
     "crop-global-1850-ne30",
     "crop-global-1850-ne120",
     "crop-global-1850-mpasa480",
     "crop-global-hist",
     "crop-global-hist-low-res",
-    "crop-global-hist-ne3-1",
-    "crop-global-hist-ne3-2",
-    "crop-global-hist-ne3-3",
     "crop-global-hist-ne16",
     "crop-global-hist-ne30",
-    "crop-global-hist-1700",
-    "crop-global-hist-mpasa480",
+    "crop-global-hist-f09",
     "crop-global-SSP1-1.9-f09",
     "crop-global-SSP1-2.6-f09",
     "crop-global-SSP2-4.5-f09",
     "crop-global-SSP2-4.5-f19",
     "crop-global-SSP2-4.5-f10",
     "crop-global-SSP2-4.5-f45",
-    "crop-global-hist-vrandne120",
+    "crop-global-SSP2-4.5-ne0np4",
     "crop-global-SSP2-4.5-ne3",
     "crop-global-SSP2-4.5-ne16",
     "crop-global-SSP2-4.5-ne30",
@@ -151,9 +145,7 @@ def write_runscript(
             runfile.write(f"{output} \n")
             check = f"if [ $? != 0 ]; then echo 'Error running resolution {res}'; exit -4; fi"
             runfile.write(f"{check} \n")
-            runfile.write(
-                f"echo Confirm completion of fsurdat/landuse generation in the .log file {res}\n"
-            )
+            runfile.write(f"echo Successfully ran resolution {res}\n")
 
     runfile.write(f"echo Successfully ran {jobscript_file}\n")
 
@@ -199,10 +191,7 @@ def main():
     # ],
     # --------------------------
     resolution_dict = {
-        "potveg_res": ["0.9x1.25", "1.9x2.5", "ne16np4.pg3", "ne30np4.pg3"],
-        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60", "mpasa30", "ne30np4.pg3"],
-        "1700_res": ["0.9x1.25", "360x720cru"],
-        "1and2deg_no_crop": ["1.9x2.5", "0.9x1.25", "ne30np4.pg3"],
+        "standard_res_no_crop": ["0.9x1.25", "1.9x2.5", "mpasa60"],
         "f09": ["0.9x1.25"],
         "f19": ["1.9x2.5"],
         "hcru": ["360x720cru"],
@@ -210,25 +199,28 @@ def main():
         "mpasa120": ["mpasa120"],
         "f10": ["10x15"],
         "f45": ["4x5"],
-        "low_res": ["4x5", "10x15"],
+        "low_res_no_crop": ["4x5", "10x15"],
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
+        "standard_res_no_f09": ["360x720cru", "1.9x2.5", "C96", "mpasa120"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3", "ne3np4"],
         "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
-        "ne3": ["ne3np4.pg2", "ne3np4.pg3", "ne3np4"],
-        "ne3_1": ["ne3np4"],
-        "ne3_2": ["ne3np4.pg2"],
-        "ne3_3": ["ne3np4.pg3"],
+        "ne3": ["ne3np4", "ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
-        "ne120": ["ne120np4.pg3"],
-        "vr_and_ne120": [
+        "ne0np4": [
             "ne0np4.ARCTICGRIS.ne30x8",
             "ne0np4.ARCTIC.ne30x4",
             "ne0np4CONUS.ne30x8",
             "ne0np4.POLARCAP.ne30x4",
-            "ne0np4.NATL.ne30x8",
+        ],
+        "ne120": [
+            "ne0np4.ARCTICGRIS.ne30x8",
+            "ne0np4.ARCTIC.ne30x4",
+            "ne0np4CONUS.ne30x8",
+            "ne0np4.POLARCAP.ne30x4",
             "ne120np4.pg3",
         ],
     }
@@ -239,7 +231,7 @@ def main():
     dataset_dict = {
         "global-potveg": (
             "--start-year 1850 --end-year 1850 --nocrop --potveg               --res",
-            "potveg_res",
+            "f09",
         ),
         "global-present": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
@@ -247,19 +239,19 @@ def main():
         ),
         "global-present-low-res": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
-            "low_res",
+            "low_res_no_crop",
         ),
         "global-present-ultra-hi-res": (
             "--start-year 2000 --end-year 2000 --nocrop                        --res",
             "ultra_hi_res_no_crop",
         ),
-        "global-hist-1850-1and2deg": (
+        "global-hist-1850-f19": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
-            "1and2deg_no_crop",
+            "f19",
         ),
-        "global-hist-1850-low-res": (
+        "global-hist-1850-f45": (
             "--start-year 1850 --end-year 2023 --nocrop --res",
-            "low_res",
+            "f45",
         ),
         "crop-tropics-present": (
             "--start-year 2000 --end-year 2000                                 --res",
@@ -273,10 +265,6 @@ def main():
             "--start-year 2000 --end-year 2000                                 --res",
             "low_res",
         ),
-        "crop-global-present-ne3": (
-            "--start-year 2000 --end-year 2000                                 --res",
-            "ne3",
-        ),
         "crop-global-present-ne16": (
             "--start-year 2000 --end-year 2000                                 --res",
             "ne16",
@@ -285,9 +273,9 @@ def main():
             "--start-year 2000 --end-year 2000                                 --res",
             "ne30",
         ),
-        "crop-global-present-vrandne120": (
+        "crop-global-present-ne120": (
             "--start-year 2000 --end-year 2000                                 --res",
-            "vr_and_ne120",
+            "ne120",
         ),
         "crop-global-present-mpasa480": (
             "--start-year 2000 --end-year 2000                                 --res",
@@ -305,10 +293,6 @@ def main():
             "--start-year 1850 --end-year 1850                                 --res",
             "low_res",
         ),
-        "crop-global-1850-ne3": (
-            "--start-year 1850 --end-year 1850                                 --res",
-            "ne3",
-        ),
         "crop-global-1850-ne16": (
             "--start-year 1850 --end-year 1850                                 --res",
             "ne16",
@@ -325,29 +309,13 @@ def main():
             "--start-year 1850 --end-year 1850                                 --res",
             "mpasa480",
         ),
-        "crop-global-hist-mpasa480": (
-            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "mpasa480",
-        ),
         "crop-global-hist": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "standard_res",
+            "standard_res_no_f09",
         ),
         "crop-global-hist-low-res": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "low_res",
-        ),
-        "crop-global-hist-ne3-1": (
-            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "ne3_1",
-        ),
-        "crop-global-hist-ne3-2": (
-            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "ne3_2",
-        ),
-        "crop-global-hist-ne3-3": (
-            "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
-            "ne3_3",
         ),
         "crop-global-hist-ne16": (
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
@@ -357,9 +325,9 @@ def main():
             "--start-year 1850 --end-year 2023 --nosurfdata                    --res",
             "ne30",
         ),
-        "crop-global-hist-1700": (
+        "crop-global-hist-f09": (
             "--start-year 1700 --end-year 2023                                 --res",
-            "1700_res",
+            "f09",
         ),
         "crop-global-SSP1-1.9-f09": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP1-1.9 --res",
@@ -389,13 +357,9 @@ def main():
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
             "f45",
         ),
-        # NOTE 2025/10/21: When CMIP7 future scenarios become available,
-        # change 2023 to 2030 for a so-called "midpoint" future scenario.
-        # This future-proofs these cases, so that as time moves on, these
-        # simulations will still include the most recent historical year.
-        "crop-global-hist-vrandne120": (
-            "--start-year 1979 --end-year 2023 --res",
-            "vr_and_ne120",
+        "crop-global-SSP2-4.5-ne0np4": (
+            "--start-year 1979 --end-year 2026 --ssp-rcp SSP2-4.5 --res",
+            "ne0np4",
         ),
         "crop-global-SSP2-4.5-ne3": (
             "--start-year 1850 --end-year 2100 --nosurfdata --ssp-rcp SSP2-4.5 --res",
