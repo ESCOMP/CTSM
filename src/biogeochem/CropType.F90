@@ -481,18 +481,18 @@ contains
          ptr_patch=this%leafc_maturity_thisyr_patch, default='inactive')
 
     this%grainc_emergence_thisyr_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='GRAINC_AT_EMERGENCE_PERHARV', units='gC/m^2', type2d='mxharvests', &
-         avgflag='I', long_name='Grain C at emergence for each harvest this year; should only be output annually', &
+    call hist_addfld2d (fname='HARVORGANC_AT_EMERGENCE_PERHARV', units='gC/m^2', type2d='mxharvests', &
+         avgflag='I', long_name='Harvestable organ (grain) C at emergence for each harvest this year; should only be output annually', &
          ptr_patch=this%grainc_emergence_thisyr_patch, default='inactive')
 
     this%grainc_anthesis_thisyr_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='GRAINC_AT_ANTHESIS_PERHARV', units='gC/m^2', type2d='mxharvests', &
-         avgflag='I', long_name='Grain C at anthesis for each harvest this year; should only be output annually', &
+    call hist_addfld2d (fname='HARVORGANC_AT_ANTHESIS_PERHARV', units='gC/m^2', type2d='mxharvests', &
+         avgflag='I', long_name='Harvestable organ (grain) C at anthesis for each harvest this year; should only be output annually', &
          ptr_patch=this%grainc_anthesis_thisyr_patch, default='inactive')
 
     this%grainc_maturity_thisyr_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='GRAINC_AT_MATURITY_PERHARV', units='gC/m^2', type2d='mxharvests', &
-         avgflag='I', long_name='Grain C at maturity for each harvest this year; should only be output annually', &
+    call hist_addfld2d (fname='HARVORGANC_AT_MATURITY_PERHARV', units='gC/m^2', type2d='mxharvests', &
+         avgflag='I', long_name='Harvestable organ (grain) C at maturity for each harvest this year; should only be output annually', &
          ptr_patch=this%grainc_maturity_thisyr_patch, default='inactive')
 
     this%sowing_reason_thisyr_patch(begp:endp,:) = spval
