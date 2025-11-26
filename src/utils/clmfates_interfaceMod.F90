@@ -2962,8 +2962,8 @@ module CLMFatesInterfaceMod
          l2g_scale_type = 'unity')
    ! change sign, same way it is done in get_net_carbon_exchange
 
-   net_carbon_exchange_grc(bounds%begg:bounds%endg) = net_carbon_exchange_grc(bounds%begg:bounds%endg) &
-                                                    - c_products_inst%product_loss_grc(bounds%begg:bounds%endg)
+   net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) &
+                                                    - c_products_inst%product_loss_grc(bounds_clump%begg:bounds_clump%endg)
 
   net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg) = - net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg)
 

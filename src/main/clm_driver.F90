@@ -1369,7 +1369,8 @@ contains
              call get_clump_bounds(nc, bounds_clump)
              call clm_fates%wrap_co2_to_atm(bounds_clump, &
                          filter_inactive_and_active(nc)%num_bgc_soilc, filter_inactive_and_active(nc)%bgc_soilc, &
-                         soilbiogeochem_carbonflux_inst, net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg))
+                         soilbiogeochem_carbonflux_inst , bgc_vegetation_inst%c_products_inst, &
+                         net_carbon_exchange_grc(bounds_clump%begg:bounds_clump%endg))
           end do
           !$OMP END PARALLEL DO
        endif
