@@ -32,7 +32,7 @@ begin
   subper = 20
   h2osoi_layer = 8               ; Desired soil layer (layer 8 is about 1m)
   tsoi_layer = 10                ; Desired soil layer (layer 10 is about 3m)
-  hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
+  hist_ext = "h0a"               ; Valid options: h0a, h0
 
   do_plot = "True"
 ;=======================================================================;
