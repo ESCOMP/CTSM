@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3393;
+my $ntests = 3403;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -538,9 +538,9 @@ foreach my $phys ( "clm5_0", "clm6_0" ) {
    $mode = "-phys $phys CAM_SETS_DRV_FLDS";
    &make_config_cache($phys);
    foreach my $options (
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
-                      "--res 1.9x2.5 --mask gx1v7 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam6.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
+                      "--res 1.9x2.5 --bgc sp -no-crop --use_case 20thC_transient --namelist '&a start_ymd=19790101/' --lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4.ARCTIC.ne30x4 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4.ARCTICGRIS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
                       "--res ne0np4CONUS.ne30x8 --mask tx0.1v2 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode ${phys}_cam7.0 --infile empty_user_nl_clm",
@@ -794,6 +794,30 @@ my %failtest = (
      "bombspike no cn"           =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c14_bombspike=.true.",
                                      phys=>"clm5_0",
+                                   },
+     "bombspike file and stream" =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=TRUE use_c14_bombspike=.true. stream_fldfilename_atm_c14='/dev/null', atm_c14_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 file and stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13_timeseries=.true. stream_fldfilename_atm_c13='/dev/null', atm_c13_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13=.false. stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c14 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=.false. stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c13 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c14 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
                                    },
      "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
                                      namelst=>"",
@@ -1118,6 +1142,10 @@ my %failtest = (
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
                                      phys=>"clm5_0",
                                    },
+     "managedfirenospitfire"    =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"fates_spitfire_mode=0,use_fates_managed_fire=.true.",
+                                     phys=>"clm5_0",
+                                   },
      "usefatesspusefateshydro"   =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"use_fates_sp=.true.,use_fates_planthydro=.true.",
                                      phys=>"clm5_0",
@@ -1393,6 +1421,11 @@ my %warntest = (
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      phys=>"clm5_0",
                                    },
+     "c14_meshfile_none"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null', " .
+                                              "stream_meshfile_atm_c14='none'",
+                                     phys=>"clm6_0",
+                                   },
      "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1583,9 +1616,9 @@ foreach my $res ( @resolutions ) {
    &cleanup(); print "\n";
 }
 
-print "\n==================================================\n";
-print " Test all use-cases over all physics options\n";
-print "==================================================\n";
+print "\n=============================================================\n";
+print   " Test all use-cases over all physics options for f09 and SP \n";
+print   "=============================================================\n";
 
 # Run over all use-cases for f09 and all physics...
 my $list = `$bldnml -use_case list 2>&1 | grep "use case"`;
@@ -1606,7 +1639,8 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
-      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
+      # Just do SP here as some use-cases can't do crop (nonanthro), and some not BGC (stdurbpt)
+      $options = "-res 0.9x1.25 -use_case $usecase --bgc bgc -envxml_dir .";
       &make_env_run();
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
@@ -1912,6 +1946,12 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
      my @clmres = ( "10x15", "4x5", "360x720cru", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4.pg3", "C96", "mpasa120" );
      foreach my $res ( @clmres ) {
         $options = "-res $res -envxml_dir . ";
+        # For clm6_0 and BGC use Carbon isotope streams
+        if ( ($phys eq "clm6_0") && ($clmopts =~ /bgc bgc/) ) {
+           $options = "$options --namelist \"&a stream_fldfilename_atm_c14 = '/dev/null'," .
+                      "stream_meshfile_atm_c14 = '/dev/null', " .
+                      "stream_fldfilename_atm_c13 = '/dev/null' /\"";
+        }
         &make_env_run( );
         eval{ system( "$bldnml $options $clmopts > $tempfile 2>&1 " ); };
         is( $@, '', "$options $clmopts" );
