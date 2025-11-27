@@ -11,8 +11,8 @@ module clm_varctl
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   public :: clm_varctl_set    ! Set variables
-  public :: cnallocate_carbon_only_set
-  public :: cnallocate_carbon_only
+  public :: allocate_carbon_only_set
+  public :: allocate_carbon_only
   !
   private
   save
@@ -585,15 +585,15 @@ contains
 
   end subroutine clm_varctl_set
 
-  ! Set module carbon_only flag
-  subroutine cnallocate_carbon_only_set(carbon_only_in)
+  ! Set module carbon_only flag (applies to both CN and FATES)
+  subroutine allocate_carbon_only_set(carbon_only_in)
     logical, intent(in) :: carbon_only_in
     carbon_only = carbon_only_in
-  end subroutine cnallocate_carbon_only_set
+  end subroutine allocate_carbon_only_set
 
-  ! Get module carbon_only flag
-  logical function CNAllocate_Carbon_only()
-    cnallocate_carbon_only = carbon_only
-  end function CNAllocate_Carbon_only
+  ! Get module carbon_only flag (applies to both CN and FATES)
+  logical function Allocate_Carbon_only()
+    allocate_carbon_only = carbon_only
+  end function Allocate_Carbon_only
 
 end module clm_varctl

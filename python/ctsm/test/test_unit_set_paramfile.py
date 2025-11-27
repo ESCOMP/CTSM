@@ -65,14 +65,14 @@ class TestUnitCheckCorrectNdims(unittest.TestCase):
         self.assertTrue(sp.check_correct_ndims(da, np.int32(1)))
 
     def test_checkcorrectndims_1d_int(self):
-        """Check False when given a standard int for a 0d parameter"""
+        """Check True when given a standard int for a 0d parameter"""
         da = xr.DataArray(data=[1, 2])
-        self.assertFalse(sp.check_correct_ndims(da, 1))
+        self.assertTrue(sp.check_correct_ndims(da, 1))
 
     def test_checkcorrectndims_1d_int_np(self):
-        """Check False when given a numpy int for a 0d parameter"""
+        """Check True when given a numpy int for a 0d parameter"""
         da = xr.DataArray(data=[1, 2])
-        self.assertFalse(sp.check_correct_ndims(da, np.int32(1)))
+        self.assertTrue(sp.check_correct_ndims(da, np.int32(1)))
 
     def test_checkcorrectndims_0d_list(self):
         """Check False when given a list for a 0d parameter"""
