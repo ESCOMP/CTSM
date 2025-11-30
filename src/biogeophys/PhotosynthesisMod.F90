@@ -2067,7 +2067,7 @@ contains
     !
     ! Determine total photosynthesis
     !
-    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    !use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
     use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2112,11 +2112,6 @@ contains
          fpsn_wj     => photosyns_inst%fpsn_wj_patch     , & ! Output: [real(r8) (:) ]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)
          fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
          )
-
-      ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
-      ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
-      if ( use_c14 ) call C14BombSpike(bounds)
-      if ( use_c13 ) call C13TimeSeries(bounds, atm2lnd_inst)
 
       do f = 1, fn
          p = filterp(f)
