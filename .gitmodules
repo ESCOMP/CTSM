@@ -60,7 +60,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 [submodule "mizuRoute"]
 	path = components/mizuroute
 	url = https://github.com/ESCOMP/mizuRoute
-fxtag = cesm-coupling.n03_v2.2.0
+fxtag = v3.0.1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
