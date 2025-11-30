@@ -88,9 +88,9 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 path = components/cmeps
 #url = https://github.com/ESCOMP/CMEPS.git
 url = https://github.com/ekluzek/CMEPS.git
-#fxtag = cmeps1.1.23
+#fxtag = cmeps1.1.24
 #fxtag = errors_to_cesmlog_524_runtype_branch_525_cpl_inputdatalist_526
-fxtag = 936ddacee1c6c0e35359237c7150a0ca345d03db
+fxtag = c5bbd1fb2a9cd60bd5bb09bed41ca5228e6ca646
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
