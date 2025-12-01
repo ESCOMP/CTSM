@@ -1222,7 +1222,7 @@ contains
   end subroutine CropIncrementYear
 
   !-----------------------------------------------------------------------
-  subroutine CropPhaseTransitionBiomass (this, p, cnveg_carbonstate_inst, cnveg_carbonflux_inst)
+  subroutine CropPhaseTransitionBiomass (this, p, cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
@@ -1236,7 +1236,6 @@ contains
     class(crop_type) :: this
     integer , intent(in) :: p  ! Patch index
     type(cnveg_carbonstate_type) , intent(in) :: cnveg_carbonstate_inst
-    type(cnveg_carbonflux_type) , intent(in) :: cnveg_carbonflux_inst
     !
     ! !LOCALS:
     real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
@@ -1246,7 +1245,7 @@ contains
     livestemc = cnveg_carbonstate_inst%livestemc_patch(p)
     leafc = cnveg_carbonstate_inst%leafc_patch(p)
     ! sum over all grain tisues and destinations
-    reprc = sum(cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,:) + cnveg_carbonflux_inst%repr_grainc_to_seed_patch(p,:))
+    reprc = sum(cnveg_carbonstate_inst%reproductivec_patch(p,:))
 
     if (this%cphase_patch(p) == cphase_leafemerge) then
        this%frootc_emergence_patch(p) = frootc
