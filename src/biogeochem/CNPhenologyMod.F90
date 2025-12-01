@@ -2199,9 +2199,9 @@ contains
                crop_inst%leafc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%leafc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%leafc_maturity_thisyr_patch(p,s) = -1._r8
-               crop_inst%grainc_emergence_thisyr_patch(p,s) = -1._r8
-               crop_inst%grainc_anthesis_thisyr_patch(p,s) = -1._r8
-               crop_inst%grainc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_maturity_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2589,9 +2589,9 @@ contains
                   crop_inst%leafc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_emergence_patch(p)
                   crop_inst%leafc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_anthesis_patch(p)
                   crop_inst%leafc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_maturity_patch(p)
-                  crop_inst%grainc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_emergence_patch(p)
-                  crop_inst%grainc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_anthesis_patch(p)
-                  crop_inst%grainc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%grainc_maturity_patch(p)
+                  crop_inst%reprc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_emergence_patch(p)
+                  crop_inst%reprc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_anthesis_patch(p)
+                  crop_inst%reprc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_maturity_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -3018,9 +3018,9 @@ contains
       crop_inst%leafc_emergence_patch(p) = -1._r8
       crop_inst%leafc_anthesis_patch(p) = -1._r8
       crop_inst%leafc_maturity_patch(p) = -1._r8
-      crop_inst%grainc_emergence_patch(p) = -1._r8
-      crop_inst%grainc_anthesis_patch(p) = -1._r8
-      crop_inst%grainc_maturity_patch(p) = -1._r8
+      crop_inst%reprc_emergence_patch(p) = -1._r8
+      crop_inst%reprc_anthesis_patch(p) = -1._r8
+      crop_inst%reprc_maturity_patch(p) = -1._r8
 
     end associate
 

@@ -84,9 +84,9 @@ module CropType
      real(r8), pointer :: leafc_emergence_patch (:)  ! Leaf C at emergence for this patch this season (gC/m2) [patch]
      real(r8), pointer :: leafc_anthesis_patch (:)  ! Leaf C at anthesis for this patch this season (gC/m2) [patch]
      real(r8), pointer :: leafc_maturity_patch (:)  ! Leaf C at maturity for this patch this season (gC/m2) [patch]
-     real(r8), pointer :: grainc_emergence_patch (:)  ! Grain C at emergence for this patch this season (gC/m2) [patch]
-     real(r8), pointer :: grainc_anthesis_patch (:)  ! Grain C at anthesis for this patch this season (gC/m2) [patch]
-     real(r8), pointer :: grainc_maturity_patch (:)  ! Grain C at maturity for this patch this season (gC/m2) [patch]
+     real(r8), pointer :: reprc_emergence_patch (:)  ! Reproductive C at emergence for this patch this season (gC/m2) [patch]
+     real(r8), pointer :: reprc_anthesis_patch (:)  ! Reproductive C at anthesis for this patch this season (gC/m2) [patch]
+     real(r8), pointer :: reprc_maturity_patch (:)  ! Reproductive C at maturity for this patch this season (gC/m2) [patch]
      real(r8), pointer :: frootc_emergence_thisyr_patch (:,:)  ! Fine root C at emergence for harvests in this patch this year (gC/m2) [patch]
      real(r8), pointer :: frootc_anthesis_thisyr_patch (:,:)  ! Fine root C at anthesis for harvests in this patch this year (gC/m2) [patch]
      real(r8), pointer :: frootc_maturity_thisyr_patch (:,:)  ! Fine root C at maturity for harvests in this patch this year (gC/m2) [patch]
@@ -99,9 +99,9 @@ module CropType
      real(r8), pointer :: leafc_emergence_thisyr_patch (:,:)  ! Leaf C at emergence for harvests in this patch this year (gC/m2) [patch]
      real(r8), pointer :: leafc_anthesis_thisyr_patch (:,:)  ! Leaf C at anthesis for harvests in this patch this year (gC/m2) [patch]
      real(r8), pointer :: leafc_maturity_thisyr_patch (:,:)  ! Leaf C at maturity for harvests in this patch this year (gC/m2) [patch]
-     real(r8), pointer :: grainc_emergence_thisyr_patch (:,:)  ! Grain C at emergence for harvests in this patch this year (gC/m2) [patch]
-     real(r8), pointer :: grainc_anthesis_thisyr_patch (:,:)  ! Grain C at anthesis for harvests in this patch this year (gC/m2) [patch]
-     real(r8), pointer :: grainc_maturity_thisyr_patch (:,:)  ! Grain C at maturity for harvests in this patch this year (gC/m2) [patch]
+     real(r8), pointer :: reprc_emergence_thisyr_patch (:,:)  ! Reproductive C at emergence for harvests in this patch this year (gC/m2) [patch]
+     real(r8), pointer :: reprc_anthesis_thisyr_patch (:,:)  ! Reproductive C at anthesis for harvests in this patch this year (gC/m2) [patch]
+     real(r8), pointer :: reprc_maturity_thisyr_patch (:,:)  ! Reproductive C at maturity for harvests in this patch this year (gC/m2) [patch]
 
      ! gddaccum tracks the actual growing degree-days accumulated over the growing season.
      ! hui also accumulates growing degree-days, but can be boosted if full leafout is
@@ -304,9 +304,9 @@ contains
     allocate(this%leafc_emergence_patch(begp:endp)) ; this%leafc_emergence_patch(:) = spval
     allocate(this%leafc_anthesis_patch(begp:endp)) ; this%leafc_anthesis_patch(:) = spval
     allocate(this%leafc_maturity_patch(begp:endp)) ; this%leafc_maturity_patch(:) = spval
-    allocate(this%grainc_emergence_patch(begp:endp)) ; this%grainc_emergence_patch(:) = spval
-    allocate(this%grainc_anthesis_patch(begp:endp)) ; this%grainc_anthesis_patch(:) = spval
-    allocate(this%grainc_maturity_patch(begp:endp)) ; this%grainc_maturity_patch(:) = spval
+    allocate(this%reprc_emergence_patch(begp:endp)) ; this%reprc_emergence_patch(:) = spval
+    allocate(this%reprc_anthesis_patch(begp:endp)) ; this%reprc_anthesis_patch(:) = spval
+    allocate(this%reprc_maturity_patch(begp:endp)) ; this%reprc_maturity_patch(:) = spval
     allocate(this%frootc_emergence_thisyr_patch(begp:endp,1:mxharvests)) ; this%frootc_emergence_thisyr_patch(:,:) = spval
     allocate(this%frootc_anthesis_thisyr_patch(begp:endp,1:mxharvests)) ; this%frootc_anthesis_thisyr_patch(:,:) = spval
     allocate(this%frootc_maturity_thisyr_patch(begp:endp,1:mxharvests)) ; this%frootc_maturity_thisyr_patch(:,:) = spval
@@ -319,9 +319,9 @@ contains
     allocate(this%leafc_emergence_thisyr_patch(begp:endp,1:mxharvests)) ; this%leafc_emergence_thisyr_patch(:,:) = spval
     allocate(this%leafc_anthesis_thisyr_patch(begp:endp,1:mxharvests)) ; this%leafc_anthesis_thisyr_patch(:,:) = spval
     allocate(this%leafc_maturity_thisyr_patch(begp:endp,1:mxharvests)) ; this%leafc_maturity_thisyr_patch(:,:) = spval
-    allocate(this%grainc_emergence_thisyr_patch(begp:endp,1:mxharvests)) ; this%grainc_emergence_thisyr_patch(:,:) = spval
-    allocate(this%grainc_anthesis_thisyr_patch(begp:endp,1:mxharvests)) ; this%grainc_anthesis_thisyr_patch(:,:) = spval
-    allocate(this%grainc_maturity_thisyr_patch(begp:endp,1:mxharvests)) ; this%grainc_maturity_thisyr_patch(:,:) = spval
+    allocate(this%reprc_emergence_thisyr_patch(begp:endp,1:mxharvests)) ; this%reprc_emergence_thisyr_patch(:,:) = spval
+    allocate(this%reprc_anthesis_thisyr_patch(begp:endp,1:mxharvests)) ; this%reprc_anthesis_thisyr_patch(:,:) = spval
+    allocate(this%reprc_maturity_thisyr_patch(begp:endp,1:mxharvests)) ; this%reprc_maturity_thisyr_patch(:,:) = spval
 
   end subroutine InitAllocate
 
@@ -480,20 +480,20 @@ contains
          avgflag='I', long_name='Leaf C at maturity for each harvest this year; should only be output annually', &
          ptr_patch=this%leafc_maturity_thisyr_patch, default='inactive')
 
-    this%grainc_emergence_thisyr_patch(begp:endp,:) = spval
+    this%reprc_emergence_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='REPRC_AT_EMERGENCE_PERHARV', units='gC/m^2', type2d='mxharvests', &
          avgflag='I', long_name='Reproductive C at emergence for each harvest this year; should only be output annually', &
-         ptr_patch=this%grainc_emergence_thisyr_patch, default='inactive')
+         ptr_patch=this%reprc_emergence_thisyr_patch, default='inactive')
 
-    this%grainc_anthesis_thisyr_patch(begp:endp,:) = spval
+    this%reprc_anthesis_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='REPRC_AT_ANTHESIS_PERHARV', units='gC/m^2', type2d='mxharvests', &
          avgflag='I', long_name='Reproductive C at anthesis for each harvest this year; should only be output annually', &
-         ptr_patch=this%grainc_anthesis_thisyr_patch, default='inactive')
+         ptr_patch=this%reprc_anthesis_thisyr_patch, default='inactive')
 
-    this%grainc_maturity_thisyr_patch(begp:endp,:) = spval
+    this%reprc_maturity_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='REPRC_AT_MATURITY_PERHARV', units='gC/m^2', type2d='mxharvests', &
          avgflag='I', long_name='Reproductive C at maturity for each harvest this year; should only be output annually', &
-         ptr_patch=this%grainc_maturity_thisyr_patch, default='inactive')
+         ptr_patch=this%reprc_maturity_thisyr_patch, default='inactive')
 
     this%sowing_reason_thisyr_patch(begp:endp,:) = spval
     call hist_addfld2d (fname='SOWING_REASON', units='unitless', type2d='mxsowings', &
@@ -808,9 +808,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='leafc_emergence_patch', xtype=ncd_double,  &
             dim1name='pft', long_name='Leaf C at emergence for this patch this season', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_emergence_patch)
-       call restartvar(ncid=ncid, flag=flag, varname='grainc_emergence_patch', xtype=ncd_double,  &
-            dim1name='pft', long_name='Grain C at emergence for this patch this season', units='unitless', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_emergence_patch)
+       call restartvar(ncid=ncid, flag=flag, varname='reprc_emergence_patch', xtype=ncd_double,  &
+            dim1name='pft', long_name='Reproductive C at emergence for this patch this season', units='unitless', &
+            interpinic_flag='interp', readvar=readvar, data=this%reprc_emergence_patch)
        call restartvar(ncid=ncid, flag=flag, varname='frootc_anthesis_patch', xtype=ncd_double,  &
             dim1name='pft', long_name='Fine root C at anthesis for this patch this season', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_anthesis_patch)
@@ -823,9 +823,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='leafc_anthesis_patch', xtype=ncd_double,  &
             dim1name='pft', long_name='Leaf C at anthesis for this patch this season', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_anthesis_patch)
-       call restartvar(ncid=ncid, flag=flag, varname='grainc_anthesis_patch', xtype=ncd_double,  &
-            dim1name='pft', long_name='Grain C at anthesis for this patch this season', units='unitless', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_anthesis_patch)
+       call restartvar(ncid=ncid, flag=flag, varname='reprc_anthesis_patch', xtype=ncd_double,  &
+            dim1name='pft', long_name='Reproductive C at anthesis for this patch this season', units='unitless', &
+            interpinic_flag='interp', readvar=readvar, data=this%reprc_anthesis_patch)
        call restartvar(ncid=ncid, flag=flag, varname='frootc_maturity_patch', xtype=ncd_double,  &
             dim1name='pft', long_name='Fine root C at maturity for this patch this season', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_maturity_patch)
@@ -838,9 +838,9 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='leafc_maturity_patch', xtype=ncd_double,  &
             dim1name='pft', long_name='Leaf C at maturity for this patch this season', units='unitless', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_maturity_patch)
-       call restartvar(ncid=ncid, flag=flag, varname='grainc_maturity_patch', xtype=ncd_double,  &
-            dim1name='pft', long_name='Grain C at maturity for this patch this season', units='unitless', &
-            interpinic_flag='interp', readvar=readvar, data=this%grainc_maturity_patch)
+       call restartvar(ncid=ncid, flag=flag, varname='reprc_maturity_patch', xtype=ncd_double,  &
+            dim1name='pft', long_name='Reproductive C at maturity for this patch this season', units='unitless', &
+            interpinic_flag='interp', readvar=readvar, data=this%reprc_maturity_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='cphase',xtype=ncd_double, &
             dim1name='pft', long_name='crop phenology phase', &
@@ -961,11 +961,11 @@ contains
                 long_name='Leaf C at emergence for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%leafc_emergence_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='grainc_emergence_thisyr_patch', xtype=ncd_double,  &
+           call restartvar(ncid=ncid, flag=flag, varname='reprc_emergence_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Grain C at emergence for harvests in this patch this year', units='unitless', &
+                long_name='Reproductive C at emergence for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%grainc_emergence_thisyr_patch)
+                interpinic_flag='interp', readvar=readvar, data=this%reprc_emergence_thisyr_patch)
            call restartvar(ncid=ncid, flag=flag, varname='frootc_anthesis_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='Fine root C at anthesis for harvests in this patch this year', units='unitless', &
@@ -986,11 +986,11 @@ contains
                 long_name='Leaf C at anthesis for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%leafc_anthesis_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='grainc_anthesis_thisyr_patch', xtype=ncd_double,  &
+           call restartvar(ncid=ncid, flag=flag, varname='reprc_anthesis_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Grain C at anthesis for harvests in this patch this year', units='unitless', &
+                long_name='Reproductive C at anthesis for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%grainc_anthesis_thisyr_patch)
+                interpinic_flag='interp', readvar=readvar, data=this%reprc_anthesis_thisyr_patch)
            call restartvar(ncid=ncid, flag=flag, varname='frootc_maturity_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
                 long_name='Fine root C at maturity for harvests in this patch this year', units='unitless', &
@@ -1011,11 +1011,11 @@ contains
                 long_name='Leaf C at maturity for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%leafc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='grainc_maturity_thisyr_patch', xtype=ncd_double,  &
+           call restartvar(ncid=ncid, flag=flag, varname='reprc_maturity_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Grain C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Reproductive C at maturity for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%grainc_maturity_thisyr_patch)
+                interpinic_flag='interp', readvar=readvar, data=this%reprc_maturity_thisyr_patch)
 
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read') then
@@ -1239,33 +1239,33 @@ contains
     type(cnveg_carbonflux_type) , intent(in) :: cnveg_carbonflux_inst
     !
     ! !LOCALS:
-    real(r8) :: frootc, livecrootc, livestemc, leafc, grainc
+    real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
 
     frootc = cnveg_carbonstate_inst%frootc_patch(p)
     livecrootc = cnveg_carbonstate_inst%livecrootc_patch(p)
     livestemc = cnveg_carbonstate_inst%livestemc_patch(p)
     leafc = cnveg_carbonstate_inst%leafc_patch(p)
     ! sum over all grain tisues and destinations
-    grainc = sum(cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,:) + cnveg_carbonflux_inst%repr_grainc_to_seed_patch(p,:))
+    reprc = sum(cnveg_carbonflux_inst%repr_grainc_to_food_patch(p,:) + cnveg_carbonflux_inst%repr_grainc_to_seed_patch(p,:))
 
     if (this%cphase_patch(p) == cphase_leafemerge) then
        this%frootc_emergence_patch(p) = frootc
        this%livecrootc_emergence_patch(p) = livecrootc
        this%livestemc_emergence_patch(p) = livestemc
        this%leafc_emergence_patch(p) = leafc
-       this%grainc_emergence_patch(p) = grainc
+       this%reprc_emergence_patch(p) = reprc
     else if (this%cphase_patch(p) == cphase_grainfill) then
        this%frootc_anthesis_patch(p) = frootc
        this%livecrootc_anthesis_patch(p) = livecrootc
        this%livestemc_anthesis_patch(p) = livestemc
        this%leafc_anthesis_patch(p) = leafc
-       this%grainc_anthesis_patch(p) = grainc
+       this%reprc_anthesis_patch(p) = reprc
     else if (this%cphase_patch(p) == cphase_harvest) then
        this%frootc_maturity_patch(p) = frootc
        this%livecrootc_maturity_patch(p) = livecrootc
        this%livestemc_maturity_patch(p) = livestemc
        this%leafc_maturity_patch(p) = leafc
-       this%grainc_maturity_patch(p) = grainc
+       this%reprc_maturity_patch(p) = reprc
     end if
 
   end subroutine CropPhaseTransitionBiomass
