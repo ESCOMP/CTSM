@@ -1003,7 +1003,8 @@ contains
             temp1 = h2osfc(c) + xm(c)
 
             z_avg=frac_sno(c)*snow_depth(c)
-            if (z_avg > 0._r8) then 
+            ! prevent  div by zero and floating-point overflow
+            if (frac_sno(c) > thin_sfclayer .or. snow_depth(c) > thin_sfclayer) then 
                rho_avg=min(800._r8,h2osno_total(c)/z_avg)
             else
                rho_avg=200._r8
