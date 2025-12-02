@@ -570,8 +570,6 @@ contains
     ! Any error checking
     call shr_assert( trim(stream_mapalgo_atm_c14) == "nn", "stream_mapalgo_atm_c14 MUST be nn because the file " // &
                      "is lattitude bands copied to a half degree grid: "//errMsg( file=sourcefile, line=__LINE__) )
-    ! TODO: Remove the following line once we can change answers
-    if ( trim(stream_meshfile_atm_c14) == "none") ) stream_mapalgo_atm_c14 = "none"
     ! Streams method
     call atm_c14_stream%Init( bounds, &
         fldfilename=stream_fldfilename_atm_c14, &
@@ -698,7 +696,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g   ! Indices
 
-    call atm_c13_stream%Advance( bounds)
+    call atm_c13_stream%Advance( )
     call atm_c13_stream%Interp( bounds)
 
     do g = bounds%begg, bounds%endg
