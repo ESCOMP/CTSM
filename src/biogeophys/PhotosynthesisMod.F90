@@ -2067,8 +2067,7 @@ contains
     !
     ! Determine total photosynthesis
     !
-    !use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
-    use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
+    use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc  ! Atmospheric Carbon isotope timeseries data
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                             ! size of pft filter
