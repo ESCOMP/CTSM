@@ -754,6 +754,19 @@ bioms:   do f = 1, fn
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
                sa_leaf(p) = sa_leaf(p) + esai(p)
+            else
+               ! Add esai to sa_leaf if elai is less than threshold.
+               ! Intended to avoid small sa_leaf which leads to small leaf conductance
+               ! and high leaf temperature. This in turn can lead to unrealistically
+               ! high surface temperatures passed to the atmospheric model (The RRTMGP
+               ! component in particular, which returns an error and stops the model
+               ! if the surface temperature is greater than 355K).
+               ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
+               ! The 0.1_r8 value is fairly arbitrary but has been effective in 
+               ! avoiding RRTMGP errors in CESM3 development simulations.
+               if(elai(p) .lt. 0.1_r8) then
+                  sa_leaf(p) = sa_leaf(p) + esai(p)
+               endif
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
