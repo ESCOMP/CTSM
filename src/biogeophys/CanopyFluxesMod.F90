@@ -747,10 +747,10 @@ bioms:   do f = 1, fn
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
-            !
             ! only calculate separate leaf/stem heat capacity for trees
-            ! and shrubs if dbh is greater than some minimum value
-            ! (set surface area for stem, and fraction absorbed by stem to zero)
+            ! and shrubs if dbh is greater than some minimum value.
+            ! otherwise, set surface area for stem and fraction absorbed by stem to zero,
+            ! and add esai to sa_leaf.
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
