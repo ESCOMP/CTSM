@@ -75,11 +75,11 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 
 [submodule "cime"]
 path = cime
-url = https://github.com/ESMCI/cime
-#url = https://github.com/ekluzek/cime
-fxtag = cime6.1.144
+#url = https://github.com/ESMCI/cime
+url = https://github.com/ekluzek/cime
+#fxtag = cime6.1.144
 #fxtag = allow_colon_for_input_pathname_4738
-#fxtag = fe5bf83aa4a69f88f0ee91e528dee410e7b11dac
+fxtag = 91be248dffed218ae787c306103cf05c8fba450f
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
