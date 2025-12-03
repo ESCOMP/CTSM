@@ -437,6 +437,8 @@ contains
     real(r8), parameter :: k_cyl_area = 1.0_r8         !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0_r8         !self-absorbtion of leaf/stem longwave
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: min_lai    = 0.1_r8         !minimum elai threshold to add esai to sa_leaf calculation
+                                                       !value is arbitrary but has been effective in avoiding RRTMGP errors in CESM3 development simulations
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -762,9 +764,9 @@ bioms:   do f = 1, fn
                ! component in particular, which returns an error and stops the model
                ! if the surface temperature is greater than 355K).
                ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
-               ! The 0.1_r8 value is fairly arbitrary but has been effective in 
+               ! The 0.1_r8 value is arbitrary but has been effective in 
                ! avoiding RRTMGP errors in CESM3 development simulations.
-               if(elai(p) < 0.1_r8) then
+               if(elai(p) < min_lai) then
                   sa_leaf(p) = sa_leaf(p) + esai(p)
                endif
             endif
