@@ -4419,15 +4419,6 @@
 
   <!-- FATES-NOCOMP -->
 
-  <test name="ERS_Ld366" grid="ne30pg3_ne30pg3_mtn14" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:50:00</option>
-      <option name="comment">""</option>
-    </options>
-  </test>
   <test name="ERS_D_Ld11" grid="ne30pg3_ne30pg3_mtn14" compset="I1850Clm60FatesNocompSpinup" testmods="clm/FatesColdSpinup">
     <machines>
       <machine name="betzy" compiler="intel" category="aux_clm_noresm"/>
@@ -4528,6 +4519,16 @@
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
+      <option name="comment">""</option>
+    </options>
+  </test>
+
+  <test name="ERI_D_Ld80_P1024" grid="ne16pg3_ne16pg3_mtn14" compset="I2000Clm60Fates" testmods="clm/FatesCold">
+    <machines>
+      <machine name="betzy" compiler="gnu" category="aux_clm_noresm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:50:00</option>
       <option name="comment">""</option>
     </options>
   </test>
