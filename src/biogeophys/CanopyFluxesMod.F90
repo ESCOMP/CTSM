@@ -764,7 +764,7 @@ bioms:   do f = 1, fn
                ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
                ! The 0.1_r8 value is fairly arbitrary but has been effective in 
                ! avoiding RRTMGP errors in CESM3 development simulations.
-               if(elai(p) .lt. 0.1_r8) then
+               if(elai(p) < 0.1_r8) then
                   sa_leaf(p) = sa_leaf(p) + esai(p)
                endif
             endif
