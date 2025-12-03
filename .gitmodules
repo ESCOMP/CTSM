@@ -90,7 +90,7 @@ path = components/cmeps
 url = https://github.com/ekluzek/CMEPS.git
 #fxtag = cmeps1.1.24
 #fxtag = errors_to_cesmlog_524_runtype_branch_525_cpl_inputdatalist_526
-fxtag = ef71459120f62942a5ebef959434f5872f85e8e2
+fxtag = 3497948aec564770a7acdec175c5524f50d49677
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
