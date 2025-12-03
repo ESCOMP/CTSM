@@ -764,8 +764,6 @@ bioms:   do f = 1, fn
                ! component in particular, which returns an error and stops the model
                ! if the surface temperature is greater than 355K).
                ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
-               ! The 0.1_r8 value is arbitrary but has been effective in 
-               ! avoiding RRTMGP errors in CESM3 development simulations.
                if(elai(p) < min_lai) then
                   sa_leaf(p) = sa_leaf(p) + esai(p)
                endif
