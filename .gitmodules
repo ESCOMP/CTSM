@@ -75,8 +75,11 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 
 [submodule "cime"]
 path = cime
-url = https://github.com/ESMCI/cime
-fxtag = cime6.1.128
+url = https://github.com/jedwards4b/cime
+#url = https://github.com/ESMCI/cime
+#fxtag = cime6.1.144
+#fxtag = jedwards4b:fix/spider_mode_disabled
+fxtag = d2ddac622c7b4679dbb3c2f07070dd9c7ed57478
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
