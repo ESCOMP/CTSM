@@ -278,7 +278,16 @@ module CTSMForce2DStreamBaseType
          integer :: sec     ! seconds into current date for nstep+1
          integer :: mcdate  ! Current model date (yyyymmdd)
          integer :: rc      ! Error return code
+#ifdef _OPENMP
+         logical, external :: omp_in_parallel
+#endif
 
+#ifdef _OPENMP
+         if ( omp_in_parallel() )then
+            call endrun( 'CTSM forcing Streams Advance is being called from within an OMP loop and should NOT be', &
+                         file=sourcefile, line=__LINE__ )
+         end if
+#endif
          ! Advance sdat stream
          call get_curr_date(year, mon, day, sec)
          mcdate = year*10000 + mon*100 + day
