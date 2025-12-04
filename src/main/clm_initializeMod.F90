@@ -157,6 +157,7 @@ contains
     use clm_time_manager              , only : get_curr_date, get_nstep, advance_timestep
     use clm_time_manager              , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod          , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
+    use CIsoAtmTimeseriesMod          , only : CIsoAtmReadNML
     use DaylengthMod                  , only : InitDaylength
     use dynSubgridDriverMod           , only : dynSubgrid_init
     use dynConsBiogeophysMod          , only : dyn_hwcontent_set_baselines
@@ -475,11 +476,12 @@ contains
           ! Also do this for FATES see below
           call SatellitePhenologyInit(bounds_proc)
        end if
-       if ( use_c14 .and. use_c14_bombspike ) then
-          call C14_init_BombSpike()
+       if ( use_c13 .or. use_c14 ) call CIsoAtmReadNML( NLFilename )
+       if ( use_c14 ) then
+          call C14_init_BombSpike( bounds_proc )
        end if
-       if ( use_c13 .and. use_c13_timeseries ) then
-          call C13_init_TimeSeries()
+       if ( use_c13 ) then
+          call C13_init_TimeSeries( bounds_proc )
        end if
 
     else ! FATES OR Satellite phenology

@@ -1,4 +1,4 @@
-module  PhotosynthesisMod
+module PhotosynthesisMod
 
 #include "shr_assert.h"
 
@@ -21,7 +21,6 @@ module  PhotosynthesisMod
   use decompMod           , only : bounds_type, subgrid_level_patch
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
-  use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
   use CNVegnitrogenstateType, only : cnveg_nitrogenstate_type
@@ -1257,7 +1256,7 @@ contains
     use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl     , only : cnallocate_carbon_only
+    use clm_varctl     , only : allocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use pftconMod      , only : nbrdlf_dcd_tmp_shrub
 
@@ -1642,7 +1641,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then                                                                   
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)  
@@ -2063,12 +2062,15 @@ contains
   end subroutine Photosynthesis
 
   !------------------------------------------------------------------------------
-  subroutine PhotosynthesisTotal (fn, filterp, &
+  subroutine PhotosynthesisTotal (bounds, fn, filterp, &
        atm2lnd_inst, canopystate_inst, photosyns_inst)
     !
     ! Determine total photosynthesis
     !
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc
     ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                             ! size of pft filter
     integer                , intent(in)    :: filterp(fn)                    ! patch filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -2078,13 +2080,10 @@ contains
     ! !LOCAL VARIABLES:
     integer :: f,fp,p,l,g               ! indices
 
-    real(r8) :: rc14_atm(nsectors_c14), rc13_atm
-    integer :: sector_c14
     !-----------------------------------------------------------------------
 
     associate(                                             &
          forc_pco2   => atm2lnd_inst%forc_pco2_grc       , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)
-         forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc     , & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)
          forc_po2    => atm2lnd_inst%forc_po2_grc        , & ! Input:  [real(r8) (:) ]  partial pressure o2 (Pa)
 
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
@@ -2114,19 +2113,10 @@ contains
          fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
          )
 
-      if ( use_c14 ) then
-         if (use_c14_bombspike) then
-            call C14BombSpike(rc14_atm)
-         else
-            rc14_atm(:) = c14ratio
-         end if
-      end if
-
-      if ( use_c13 ) then
-         if (use_c13_timeseries) then
-            call C13TimeSeries(rc13_atm)
-         end if
-      end if
+      ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
+      ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
+      if ( use_c14 ) call C14BombSpike(bounds)
+      if ( use_c13 ) call C13TimeSeries(bounds, atm2lnd_inst)
 
       do f = 1, fn
          p = filterp(f)
@@ -2141,11 +2131,7 @@ contains
 
          if (use_cn) then
             if ( use_c13 ) then
-               if (use_c13_timeseries) then
-                  rc13_canair(p) = rc13_atm
-               else
-                  rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
-               endif
+               rc13_canair(p) = rc13_atm_grc(g)
                rc13_psnsun(p) = rc13_canair(p)/alphapsnsun(p)
                rc13_psnsha(p) = rc13_canair(p)/alphapsnsha(p)
                c13_psnsun(p)  = psnsun(p) * (rc13_psnsun(p)/(1._r8+rc13_psnsun(p)))
@@ -2157,19 +2143,10 @@ contains
             endif
             if ( use_c14 ) then
 
-               ! determine latitute sector for radiocarbon bomb spike inputs
-               if ( grc%latdeg(g) .ge. 30._r8 ) then
-                  sector_c14 = 1
-               else if ( grc%latdeg(g) .ge. -30._r8 ) then            
-                  sector_c14 = 2
-               else
-                  sector_c14 = 3
-               endif
+               rc14_canair(p) = rc14_atm_grc(g)
 
-               rc14_canair(p) = rc14_atm(sector_c14)
-
-               c14_psnsun(p) = rc14_atm(sector_c14) * psnsun(p)
-               c14_psnsha(p) = rc14_atm(sector_c14) * psnsha(p)
+               c14_psnsun(p) = rc14_atm_grc(g) * psnsun(p)
+               c14_psnsha(p) = rc14_atm_grc(g) * psnsha(p)
             endif
          end if
 
@@ -2750,7 +2727,7 @@ contains
     use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl        , only : cnallocate_carbon_only
+    use clm_varctl        , only : allocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
     use pftconMod         , only : nbrdlf_dcd_tmp_shrub
@@ -3267,7 +3244,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)

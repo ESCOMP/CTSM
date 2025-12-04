@@ -1,4 +1,227 @@
 ===============================================================
+Tag name: ctsm5.3.085
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Nov 14 11:08:54 AM MST 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+ PRs
+ #3581 by Bill Sacks: Generalize some paths so unit testing works in a CESM checkout, previously assumed standalone CTSM checkout.
+ #3561 by Erik Kluzek: Start adding streams infrastructure for carbon isotopes.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2837
+ Resolves #3502
+ Design notes in #3546
+ Some work on #3346
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3609
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.084
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 31 Oct 2025 01:12:26 PM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Bring changes on b4b-dev to master
+
+- Fix FUNIT testing on Mac's
+- Some fixes to set_paramfile
+- Don't auto build documentation on personal forks, only on ESCOMP
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #3571 -- set_paramfile ordering of PFT's from user doesn't have to match paramfile order
+  Fixes #3559 -- Correct Ndims error
+  Fixes #3369 -- Docs build and deploy only runs on ESCOMP not personal forks
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+   Some changes to set_paramfile documentation
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  -- #3577 unit testing on Mac
+  -- #3572 set_paramfile ordering
+  -- #3560 Fix Ndim error in set_paramfile
+  -- #3557 doc/build/run/deploy only on ESCOMP
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.083
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Wed 29 Oct 2025 03:35:50 PM MDT
+One-line Summary: Changes to coupling of supplementation status with FATES.
+
+Purpose and description of changes
+----------------------------------
+
+Supplementation status is now passed to FATES as a run-time boundary condition. This set of changes is synchronized with FATES-side changes that were oriented around how supplementation status impacts whether or not fine-root proportions are allowed to change during CNP runs.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+Bugs fixed
+----------
+
+No bugs were fixed.
+
+Notes of particular relevance for users
+---------------------------------------
+
+When CTSM-FATES has nutrient coupling, note that FATES plants will default to not changing L2FR when supplementing nitrogen.
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Changes to documentation: None necessary.
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+We had been passing a stealth namelist variable from CTSM to FATES, it gave FATES information about what types of mineralized nutrient were available (ie NO3 or NH4), but FATES has never used this information, so it was removed.
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No answer changes with one exception. Some FATES-specific variables related to radiation diagnostics and error tracking changed with updating the FATES tag. These were diagnostic only changes, and not related to FATES internals changing in any way.
+
+ther details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/3348
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.082
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Fri 24 Oct 2025 11:17:41 AM MDT

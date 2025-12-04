@@ -1806,6 +1806,51 @@ Mapping method from Nitrogen deposition input file to the model resolution
     none     = no interpolation
 </entry>
 
+<!-- ======================================================================================== 
+     Carbon isotope streams Namelist (only used when use_c13/use_c14 is on and bgc=cn or bgc)
+     (Atmospheric C13 and C14 ratios in terms of a delta)
+     ========================================================================================  -->
+
+<entry id="stream_year_first_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+First year to loop over for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_year_last_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Last year to loop over for data atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_model_year_align_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_atm_c14 value
+</entry>
+
+<entry id="stream_fldfilename_atm_c14" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream data for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_year_first_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+First year to loop over for atmospheric C13 isotope delta data
+</entry>
+
+<entry id="stream_year_last_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Last year to loop over for data atmospheric C13 isotope delta data
+</entry>
+
+<entry id="stream_model_year_align_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_atm_c13 value
+</entry>
+
+<entry id="stream_fldfilename_atm_c13" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream data for atmospheric C13 isotope delta data
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Prigent roughness stream -->
 <!-- ========================================================================================  -->
