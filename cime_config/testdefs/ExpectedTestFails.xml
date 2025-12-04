@@ -449,4 +449,11 @@
     </phase>
   </test>
 
+  <test name="ERI_D_Ld80_P1024.ne16pg3_ne16pg3_mtn14.I2000Clm60Fates.betzy_gnu.clm-FatesCold">
+    <phase name="COMPARE_base_hybrid">
+      <status>FAIL</status>
+      <issue>ESCOMP/CTSM#3494</issue>
+    </phase>
+  </test>
+
 </expectedFails>

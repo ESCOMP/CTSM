@@ -4893,7 +4893,7 @@
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
-      <option name="comment">""</option>
+      <option name="comment">"Will fail in mosart, but check for other fails"</option>
     </options>
   </test>
 
