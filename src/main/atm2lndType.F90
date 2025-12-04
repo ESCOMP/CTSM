@@ -143,15 +143,18 @@ contains
 
   !-----------------------------------------------------------------------
   function atm2lnd_params_constructor(repartition_rain_snow, glcmec_downscale_longwave, &
-       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit, &
-       precip_repartition_glc_all_snow_t, precip_repartition_glc_all_rain_t, &
-       precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t) &
+       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit) &
        result(params)
     !
     ! !DESCRIPTION:
     ! Creates a new instance of atm2lnd_params_type
     !
     ! !USES:
+    use clm_varctl  , only : paramfile
+    use fileutils   , only : getfil
+    use ncdio_pio   , only : ncd_pio_closefile, ncd_pio_openfile
+    use ncdio_pio   , only : file_desc_t
+    use paramUtilMod, only : readNcdioScalar
     !
     ! !ARGUMENTS:
     type(atm2lnd_params_type) :: params  ! function result
@@ -169,17 +172,18 @@ contains
     ! Must be present if glcmec_downscale_longwave is true; ignored otherwise
     real(r8), intent(in), optional :: longwave_downscaling_limit
 
-    ! End-points of the rain-snow ramp for glacier landunits (degrees C)
-    ! Must be present if repartition_rain_snow is true; ignored otherwise
-    real(r8), intent(in), optional :: precip_repartition_glc_all_snow_t
-    real(r8), intent(in), optional :: precip_repartition_glc_all_rain_t
-
-    ! End-points of the rain-snow ramp for non-glacier landunits (degrees C)
-    ! Must be present if repartition_rain_snow is true; ignored otherwise
-    real(r8), intent(in), optional :: precip_repartition_nonglc_all_snow_t
-    real(r8), intent(in), optional :: precip_repartition_nonglc_all_rain_t
     !
     ! !LOCAL VARIABLES:
+    character(len=256) :: locfn ! local file name
+    type(file_desc_t)  :: ncid  ! pio netCDF file id
+
+    ! Rain-snow transition temperatures (C) for glacier landunits
+    real(r8) :: precip_repartition_glc_all_rain_t_celsius
+    real(r8) :: precip_repartition_glc_all_snow_t_celsius
+
+    ! Rain-snow transition temperatures (C) for non-glacier landunits
+    real(r8) :: precip_repartition_nonglc_all_rain_t_celsius
+    real(r8) :: precip_repartition_nonglc_all_snow_t_celsius
 
     character(len=*), parameter :: subname = 'atm2lnd_params_constructor'
     !-----------------------------------------------------------------------
@@ -214,33 +218,32 @@ contains
 
     if (repartition_rain_snow) then
 
-       ! Make sure all of the repartitioning-related parameters are present
+       ! Read repartition temperatures from parameter file
+       call getfil (paramfile, locfn, 0)
+       call ncd_pio_openfile (ncid, trim(locfn), 0)
 
-       if (.not. present(precip_repartition_glc_all_snow_t)) then
-          call endrun(subname // &
-               ' ERROR: For repartition_rain_snow true, precip_repartition_glc_all_snow_t must be provided')
-       end if
-       if (.not. present(precip_repartition_glc_all_rain_t)) then
-          call endrun(subname // &
-               ' ERROR: For repartition_rain_snow true, precip_repartition_glc_all_rain_t must be provided')
-       end if
-       if (.not. present(precip_repartition_nonglc_all_snow_t)) then
-          call endrun(subname // &
-               ' ERROR: For repartition_rain_snow true, precip_repartition_nonglc_all_snow_t must be provided')
-       end if
-       if (.not. present(precip_repartition_nonglc_all_rain_t)) then
-          call endrun(subname // &
-               ' ERROR: For repartition_rain_snow true, precip_repartition_nonglc_all_rain_t must be provided')
-       end if
+       ! non-glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_rain_t', subname, precip_repartition_nonglc_all_rain_t_celsius)
+
+       ! non-glacier all snow temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_snow_t', subname, precip_repartition_nonglc_all_snow_t_celsius)
+
+       ! glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_rain_t', subname, precip_repartition_glc_all_rain_t_celsius)
+
+       ! glacier all snow temperature (degrees C) 
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_snow_t', subname, precip_repartition_glc_all_snow_t_celsius)
+
+       call ncd_pio_closefile(ncid)
 
        ! Do some other error checking
 
-       if (precip_repartition_glc_all_rain_t <= precip_repartition_glc_all_snow_t) then
+       if (precip_repartition_glc_all_rain_t_celsius <= precip_repartition_glc_all_snow_t_celsius) then
           call endrun(subname // &
                ' ERROR: Must have precip_repartition_glc_all_snow_t < precip_repartition_glc_all_rain_t')
        end if
 
-       if (precip_repartition_nonglc_all_rain_t <= precip_repartition_nonglc_all_snow_t) then
+       if (precip_repartition_nonglc_all_rain_t_celsius <= precip_repartition_nonglc_all_snow_t_celsius) then
           call endrun(subname // &
                ' ERROR: Must have precip_repartition_nonglc_all_snow_t < precip_repartition_nonglc_all_rain_t')
        end if
@@ -248,22 +251,17 @@ contains
        ! Convert to the form of the parameters we want for the main code
 
        call compute_ramp_params( &
-            all_snow_t_c = precip_repartition_glc_all_snow_t, &
-            all_rain_t_c = precip_repartition_glc_all_rain_t, &
+            all_snow_t_c = precip_repartition_glc_all_snow_t_celsius, &
+            all_rain_t_c = precip_repartition_glc_all_rain_t_celsius, &
             all_snow_t_k = params%precip_repartition_glc_all_snow_t, &
             frac_rain_slope = params%precip_repartition_glc_frac_rain_slope)
 
        call compute_ramp_params( &
-            all_snow_t_c = precip_repartition_nonglc_all_snow_t, &
-            all_rain_t_c = precip_repartition_nonglc_all_rain_t, &
+            all_snow_t_c = precip_repartition_nonglc_all_snow_t_celsius, &
+            all_rain_t_c = precip_repartition_nonglc_all_rain_t_celsius, &
             all_snow_t_k = params%precip_repartition_nonglc_all_snow_t, &
             frac_rain_slope = params%precip_repartition_nonglc_frac_rain_slope)
 
-    else  ! .not. repartition_rain_snow
-       params%precip_repartition_glc_all_snow_t = nan
-       params%precip_repartition_glc_frac_rain_slope = nan
-       params%precip_repartition_nonglc_all_snow_t = nan
-       params%precip_repartition_nonglc_frac_rain_slope = nan
     end if
 
   contains
@@ -279,7 +277,6 @@ contains
     end subroutine compute_ramp_params
 
   end function atm2lnd_params_constructor
-
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename)
@@ -356,10 +353,6 @@ contains
     real(r8) :: lapse_rate
     real(r8) :: lapse_rate_longwave
     real(r8) :: longwave_downscaling_limit
-    real(r8) :: precip_repartition_glc_all_snow_t
-    real(r8) :: precip_repartition_glc_all_rain_t
-    real(r8) :: precip_repartition_nonglc_all_snow_t
-    real(r8) :: precip_repartition_nonglc_all_rain_t
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -369,9 +362,7 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /atm2lnd_inparm/ repartition_rain_snow, glcmec_downscale_longwave, &
-         lapse_rate, lapse_rate_longwave, longwave_downscaling_limit, &
-         precip_repartition_glc_all_snow_t, precip_repartition_glc_all_rain_t, &
-         precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t
+         lapse_rate, lapse_rate_longwave, longwave_downscaling_limit
 
     ! Initialize namelist variables to defaults
     repartition_rain_snow = .false.
@@ -379,10 +370,6 @@ contains
     lapse_rate = nan
     lapse_rate_longwave = nan
     longwave_downscaling_limit = nan
-    precip_repartition_glc_all_snow_t = nan
-    precip_repartition_glc_all_rain_t = nan
-    precip_repartition_nonglc_all_snow_t = nan
-    precip_repartition_nonglc_all_rain_t = nan
 
     if (masterproc) then
        unitn = getavu()
@@ -404,10 +391,6 @@ contains
     call shr_mpi_bcast(lapse_rate, mpicom)
     call shr_mpi_bcast(lapse_rate_longwave, mpicom)
     call shr_mpi_bcast(longwave_downscaling_limit, mpicom)
-    call shr_mpi_bcast(precip_repartition_glc_all_snow_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_glc_all_rain_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_nonglc_all_snow_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_nonglc_all_rain_t, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -421,12 +404,6 @@ contains
           write(iulog,*) 'lapse_rate_longwave = ', lapse_rate_longwave
           write(iulog,*) 'longwave_downscaling_limit = ', longwave_downscaling_limit
        end if
-       if (repartition_rain_snow) then
-          write(iulog,*) 'precip_repartition_glc_all_snow_t = ', precip_repartition_glc_all_snow_t
-          write(iulog,*) 'precip_repartition_glc_all_rain_t = ', precip_repartition_glc_all_rain_t
-          write(iulog,*) 'precip_repartition_nonglc_all_snow_t = ', precip_repartition_nonglc_all_snow_t
-          write(iulog,*) 'precip_repartition_nonglc_all_rain_t = ', precip_repartition_nonglc_all_rain_t
-       end if
        write(iulog,*) ' '
     end if
 
@@ -435,11 +412,7 @@ contains
          glcmec_downscale_longwave = glcmec_downscale_longwave, &
          lapse_rate = lapse_rate, &
          lapse_rate_longwave = lapse_rate_longwave, &
-         longwave_downscaling_limit = longwave_downscaling_limit, &
-         precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
-         precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
-         precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &
-         precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
+         longwave_downscaling_limit = longwave_downscaling_limit)
 
   end subroutine ReadNamelist
 
