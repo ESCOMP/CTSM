@@ -1026,14 +1026,6 @@ sub setup_cmdl_fire_light_res {
   my $val = $opts->{$var};
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-  } else {
-     if ( &value_is_true($nl->get_value('use_fates')) ) {
-     # fates_spitfire_mode default has to get a default here and not in setup_logic_fates
-        if ( ! defined($nl->get_value('fates_spitfire_mode'))){
-            add_default($opts, $nl_flags->{'inputdata_rootdir'},  $definition, $defaults, $nl,'fates_spitfire_mode',
-                       'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'});
-        }
-     }
   }
 
   # we have to process defaults for fates fire modes before and not in setup_logc_fates, however, they should not be defined for use_cn or other bgc
