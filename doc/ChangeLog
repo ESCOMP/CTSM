@@ -22,6 +22,8 @@ Purpose and description of changes
    * Changes to fire parameters along with new fire_method "li2024crujra"
    * New population density file
 
+Contributors: Sam Levis @slevis-lmwg, Peter Lawrence @lawrencepj1, Erik Kluzek @ekluzek, Will Wieder @wwieder, Keith Oleson @olyson, Sam Rabin @samsrabin, Fang Li @lifang0209
+
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
@@ -32,11 +34,11 @@ Does this tag change answers significantly for any of the following physics conf
 
 [X] clm6_0
 
-[ ] clm5_0
+[X] clm5_0
 
-[ ] ctsm5_0-nwp
+[X] ctsm5_0-nwp
 
-[ ] clm4_5
+[X] clm4_5
 
 
 Bugs fixed
@@ -46,6 +48,21 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ The new ctsm5.4 fsurdat/flanduse_timeseries datasets are used by default, but the model will work with previous ctsm5.3 datasets. The new initial conditions (finidat) for clm6_0 will work without having to interpolate them. The initial conditions for previous physics (so previous finidat files you've been using) do need to be interpolated (so add use_init_interp=TRUE to user_nl_clm).
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New XML variable: CLM_CMIP_ERA (can be cmip6 or cmip7)
+ Defaults to cmip7 except for the SSP scenarios which use cmip6
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ init_interp_fill_missing_urban_with_HD is set to TRUE all of the time even when not needed
+
+ Fire parameters update: (li2024gswp3, and li2024crujra fire_method):
+   - defo_fire_precip_thresh_bet
+   - cli_scale
+   - cropfire_a1
+
 Changes to the datasets (e.g., parameter, surface or initial files):
  New fsurdat/landuse files
  For clm6: New paramfile, finidat files, crop calendar datasets, population density stream file
@@ -55,8 +72,10 @@ Changes to documentation:
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
  ccs_config points to temporary tag ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to allow use of a new grid. The temporary tag will get replaced appropriately in the next merge of b4b-dev to master.
+
+ fsurdat/landuse files are associated with a cmip_era flag in namelist_defaults to describe if it's a cmip6 or cmip7 version.
 
 Changes to tests or testing:
  The ctsm_sci test-suite now includes new tests for a few newly introduced grids.
@@ -68,6 +87,10 @@ Testing summary:
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
     derecho - OK
+
+    Also namelist comparisons as outlined here:
+    https://github.com/ESCOMP/CTSM/wiki/Minor-Version-Update-Protocols#namelist-validation
+    We compared against ctsm5.3.021 namelists, i.e. against the ctsm5.3 release tag
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -91,6 +114,12 @@ Testing summary:
   rtm tests compared to rtm1_0_89-ctsm5.3.065
     derecho ----- OK
     izumi ------- OK
+
+  mksurfdata_esmf
+    derecho ----- OK tested a single resolution for b4b with different number of cpus; ran "make all" to create all datasets (completes in 6 hours, longest mksrf_crop-global-hist-low-res)
+
+  fsurdat verification
+    derecho ----- OK validate_fsurdat_files.sh script added in tools/mksurfdata_esmf
 
 Answer changes
 --------------
@@ -117,6 +146,13 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/3638
+
+ 35 PRs went onto the alpha-ctsm5.4.CMIP7 branch
+ Dates span from Apr/23/2025 to Dec/4/2025 (7.5 months)
+ 29 Tags on the branch from alpha-ctsm5.4.CMIP7.01.ctsm5.3.040 to alpha-ctsm5.4.CMIP7.21.ctsm5.3.085
+
+ For the list of PRs see:
+ https://github.com/ESCOMP/CTSM/pulls?page=2&q=is%3Apr+base%3Aalpha-ctsm5.4.CMIP7+is%3Aclosed
 
 ===============================================================
 ===============================================================
