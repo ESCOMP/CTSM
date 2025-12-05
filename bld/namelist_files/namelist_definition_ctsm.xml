@@ -1472,6 +1472,11 @@ Set to .true. in order to override crop harvesting logic and to instead harvest 
 Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
 </entry>
 
+<entry id="suppress_gddmaturity_warning" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".false.">
+If set to .true., suppress the warning message when a prescribed cultivar GDD requirement is below the minimum allowed value and is replaced with min_gddmaturity. Useful when using prescribed crop calendars with intentionally low GDD requirements.
+</entry>
+
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
        group="cnphenology" valid_values="Constant,DependsOnLat,DependsOnVeg,DependsOnLatAndVeg">
 Method for determining what the minimum critical day length for seasonal decidious leaf offset depends on

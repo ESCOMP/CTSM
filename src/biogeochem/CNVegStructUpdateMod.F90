@@ -127,6 +127,7 @@ contains
          peaklai            =>  cnveg_state_inst%peaklai_patch          , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
 
          harvdate           =>  crop_inst%harvdate_patch                , & ! Input:  [integer  (:) ] harvest date                                       
+         max_tlai           =>  crop_inst%max_tlai_patch                , & ! Output: [real(r8) (:) ] maximum total projected leaf area seen this season
 
          ! *** Key Output from CN***
          tlai               =>  canopystate_inst%tlai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow      
@@ -259,6 +260,9 @@ contains
                htmx(p) = max(htmx(p), htop(p))
                htop(p) = max(0.05_r8, max(htmx(p),htop(p)))
                hbot(p) = 0.02_r8
+
+               ! Maximum LAI seen this season
+               max_tlai(p) = max(max_tlai(p), tlai(p))
 
             else ! generic crops and ...
 

@@ -146,6 +146,7 @@ module CNPhenologyMod
   real(r8)         :: min_gddmaturity = 1._r8     ! Weird things can happen if gddmaturity is tiny
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
+  logical,  private :: suppress_gddmaturity_warning = .false. ! If true, suppress warning when using min_gddmaturity
 
   ! For use with adapt_cropcal_rx_cultivar_gdds .true.
   real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
@@ -200,7 +201,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           use_mxmat
+                           use_mxmat, suppress_gddmaturity_warning
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -226,6 +227,7 @@ contains
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
     call shr_mpi_bcast (use_mxmat,                   mpicom)
+    call shr_mpi_bcast (suppress_gddmaturity_warning, mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2054,6 +2056,7 @@ contains
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    real(r8) cphase_orig  ! crop phase before updating
     logical has_rx_sowing_date ! does the crop have a single sowing date instead of a window?
     logical is_in_sowing_window ! is the crop in its sowing window?
     logical is_end_sowing_window ! is it the last day of the crop's sowing window?
@@ -2092,6 +2095,7 @@ contains
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
+         max_tlai          =>    crop_inst%max_tlai_patch                      , & ! Input:  [real(r8) (:) ]  maximum total projected leaf area seen this season (m2/m2); set to 0 at sowing and tracked until harvest
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
@@ -2154,6 +2158,8 @@ contains
          ! Should never be saved as zero, but including this so it's initialized just in case
          harvest_reason = 0._r8
 
+         cphase_orig = cphase(p)
+
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
@@ -2180,6 +2186,22 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
+               crop_inst%max_tlai_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_maturity_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2507,6 +2529,9 @@ contains
             ! similar changes in CropPhase.
             if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
+               if (cphase(p) /= cphase_orig) then
+                  call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst)
+               end if
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
@@ -2532,6 +2557,9 @@ contains
                ! changes to the offset subroutine below
 
             else if (do_harvest) then
+               cphase(p) = cphase_harvest
+               call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst)
+
                ! Don't update these if you're just harvesting because of incorrect Dec.
                ! 31 planting
                if (.not. fake_harvest) then
@@ -2546,10 +2574,27 @@ contains
                   crop_inst%sowing_reason_perharv_patch(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
                   crop_inst%sowing_reason_patch(p) = -1 ! "Reason for most recent sowing of this patch." So in the line above we save, and here we reset.
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
+                  crop_inst%max_tlai_thisyr_patch(p, harvest_count(p)) = crop_inst%max_tlai_patch(p)
+
+                  ! Crop phase transition biomass sizes
+                  crop_inst%frootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_emergence_patch(p)
+                  crop_inst%frootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_anthesis_patch(p)
+                  crop_inst%frootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_maturity_patch(p)
+                  crop_inst%livecrootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_emergence_patch(p)
+                  crop_inst%livecrootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_anthesis_patch(p)
+                  crop_inst%livecrootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_maturity_patch(p)
+                  crop_inst%livestemc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_emergence_patch(p)
+                  crop_inst%livestemc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_anthesis_patch(p)
+                  crop_inst%livestemc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_maturity_patch(p)
+                  crop_inst%leafc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_emergence_patch(p)
+                  crop_inst%leafc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_anthesis_patch(p)
+                  crop_inst%leafc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_maturity_patch(p)
+                  crop_inst%reprc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_emergence_patch(p)
+                  crop_inst%reprc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_anthesis_patch(p)
+                  crop_inst%reprc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_maturity_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
-               cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -2580,6 +2625,9 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
+               if (cphase(p) /= cphase_orig) then
+                  call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst)
+               end if
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
@@ -2809,6 +2857,7 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          sowing_reason     =>    crop_inst%sowing_reason_thisyr_patch            , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
+         max_tlai          =>    crop_inst%max_tlai_patch                       , & ! Output:  [real(r8)  (:) ]  maximum total projected leaf area seen this season
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          iyop              =>    cnveg_state_inst%iyop_patch                     , & ! Output: [integer  (:) ]  year of planting
@@ -2932,7 +2981,7 @@ contains
 
       if (gddmaturity(p) < min_gddmaturity) then
          if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
-             if (did_rx_gdds) then
+             if (did_rx_gdds .and. .not. suppress_gddmaturity_warning) then
                  write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
              end if
              gddmaturity(p) = min_gddmaturity
@@ -2954,6 +3003,24 @@ contains
       do k = 1, nrepr
          arepr(p,k) = 0._r8
       end do
+
+      ! Initialize other stuff
+      max_tlai = 0._r8
+      crop_inst%frootc_emergence_patch(p) = -1._r8
+      crop_inst%frootc_anthesis_patch(p) = -1._r8
+      crop_inst%frootc_maturity_patch(p) = -1._r8
+      crop_inst%livecrootc_emergence_patch(p) = -1._r8
+      crop_inst%livecrootc_anthesis_patch(p) = -1._r8
+      crop_inst%livecrootc_maturity_patch(p) = -1._r8
+      crop_inst%livestemc_emergence_patch(p) = -1._r8
+      crop_inst%livestemc_anthesis_patch(p) = -1._r8
+      crop_inst%livestemc_maturity_patch(p) = -1._r8
+      crop_inst%leafc_emergence_patch(p) = -1._r8
+      crop_inst%leafc_anthesis_patch(p) = -1._r8
+      crop_inst%leafc_maturity_patch(p) = -1._r8
+      crop_inst%reprc_emergence_patch(p) = -1._r8
+      crop_inst%reprc_anthesis_patch(p) = -1._r8
+      crop_inst%reprc_maturity_patch(p) = -1._r8
 
     end associate
 
