@@ -163,11 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-<<<<<<< HEAD
 my $ntests = 3403;
-=======
-my $ntests = 3402;
->>>>>>> ctsm5.4.000
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1669,14 +1665,9 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
    &make_config_cache($phys);
    foreach my $usecase ( @usecases ) {
       print "usecase = $usecase\n";
-<<<<<<< HEAD
       # Just do SP here as some use-cases can't do crop (nonanthro), and some not BGC (stdurbpt)
       $options = "-res 0.9x1.25 -use_case $usecase --bgc bgc -envxml_dir .";
-      &make_env_run();
-=======
-      $options = "-res 0.9x1.25 -use_case $usecase  -envxml_dir .";
       &make_env_run( 'CLM_CMIP_ERA'=>"cmip6" );
->>>>>>> ctsm5.4.000
       my $expect_fail = undef;
       foreach my $failusecase ( @expect_fails ) {
          if ( $failusecase eq $usecase ) {
