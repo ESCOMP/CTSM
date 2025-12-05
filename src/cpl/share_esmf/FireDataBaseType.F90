@@ -338,6 +338,7 @@ contains
     ig = 0
     do g = bounds%begg,bounds%endg
        ig = ig+1
+       SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
        this%forc_hdm(g) = dataptr1d(ig)
     end do
 
@@ -506,6 +507,7 @@ contains
     ig = 0
     do g = bounds%begg,bounds%endg
        ig = ig+1
+       SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
        this%forc_lnfm(g) = dataptr1d(ig)
     end do
 

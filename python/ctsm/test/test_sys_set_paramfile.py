@@ -121,8 +121,11 @@ class TestSysSetParamfile(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Incorrect N dims"):
             sp.main()
 
-    def test_set_paramfile_changeparam_1d_errors_given_scalar(self):
-        """Test that set_paramfile errors if given a scalar for a 1-d parameter"""
+    def test_set_paramfile_changeparam_1d_given_scalar(self):
+        """
+        Test that set_paramfile works correctly if given a scalar for a 1-d parameter. We want it
+        to set all members of the 1d array to the given scalar.
+        """
         output_path = os.path.join(self.tempdir, "output.nc")
         sys.argv = [
             "set_paramfile",
@@ -130,10 +133,53 @@ class TestSysSetParamfile(unittest.TestCase):
             PARAMFILE,
             "-o",
             output_path,
-            "xl=0.724",
+            "mxmat=1987",
         ]
-        with self.assertRaisesRegex(RuntimeError, "Incorrect N dims"):
-            sp.main()
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        for var in ds_in.variables:
+            # Check that all variables/coords are equal except the ones we changed, which should be
+            # set to what we asked
+            if var == "mxmat":
+                self.assertTrue(np.all(ds_out[var].values == 1987))
+            else:
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
+
+    def test_set_paramfile_changeparam_1d_given_scalar_and_pftlist(self):
+        """
+        Test that set_paramfile works correctly if given a scalar for a 1-d parameter. We want it
+        to set all members of the 1d array to the given scalar. As
+        test_set_paramfile_changeparam_1d_given_scalar, but here we give a pft list.
+        """
+        output_path = os.path.join(self.tempdir, "output.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output_path,
+            "-p",
+            "temperate_corn,irrigated_temperate_corn",
+            "mxmat=1987",
+        ]
+        sp.main()
+        self.assertTrue(os.path.exists(output_path))
+        ds_in = open_paramfile(PARAMFILE)
+        ds_out = open_paramfile(output_path)
+
+        for var in ds_in.variables:
+            # Check that all variables/coords are equal except the ones we changed, which should be
+            # set to what we asked
+            if var == "mxmat":
+                # First, check that they weren't 1987 before
+                self.assertFalse(np.any(ds_in[var].values[17:18] == 1987))
+                # Now check that they are 1987
+                self.assertTrue(np.all(ds_out[var].values[17:18] == 1987))
+            else:
+                self.assertTrue(are_paramfile_dataarrays_identical(ds_in[var], ds_out[var]))
 
     def test_set_paramfile_changeparams_scalar_double(self):
         """Test that set_paramfile can copy to a new file with some scalar double params changed"""
@@ -731,6 +777,46 @@ class TestSysSetParamfile(unittest.TestCase):
         # Check that it's still a double after saving
         ds_out = open_paramfile(output_path)
         self.assertFalse(sp.is_integer(ds_out[param_name].values))
+
+    def test_set_paramfile_pft_order(self):
+        """
+        Test that set_paramfile gives the same result regardless of the order you specify the PFTs
+        """
+
+        # First order
+        pfts_to_include = ["rice", "irrigated_rice"]
+        output0_path = os.path.join(self.tempdir, "output0.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output0_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "mxmat=100,200",
+        ]
+        sp.main()
+
+        # Reverse order
+        pfts_to_include.reverse()
+        output1_path = os.path.join(self.tempdir, "output1.nc")
+        sys.argv = [
+            "set_paramfile",
+            "-i",
+            PARAMFILE,
+            "-o",
+            output1_path,
+            "-p",
+            ",".join(pfts_to_include),
+            "mxmat=200,100",
+        ]
+        sp.main()
+
+        # These files should be identical
+        ds0 = open_paramfile(output0_path)
+        ds1 = open_paramfile(output1_path)
+        self.assertTrue(ds0.equals(ds1))
 
 
 if __name__ == "__main__":

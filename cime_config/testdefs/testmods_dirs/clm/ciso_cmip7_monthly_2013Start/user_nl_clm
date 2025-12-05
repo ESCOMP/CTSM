@@ -1,0 +1,6 @@
+ stream_fldfilename_atm_c13 = '$DIN_LOC_ROOT/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc'
+ stream_fldfilename_atm_c14 = '$DIN_LOC_ROOT/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_4x1_global_1700-2023_yearly_v3.0_c251013.nc'
+ stream_year_first_atm_c14 = 2013
+ stream_model_year_align_atm_c14 = 2013
+ stream_year_first_atm_c13 = 2013
+ stream_model_year_align_atm_c13 = 2013

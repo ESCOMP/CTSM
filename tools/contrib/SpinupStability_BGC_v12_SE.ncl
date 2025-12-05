@@ -41,7 +41,7 @@ begin
  region = "Global"              ; Global
  subper = 20                    ; Subsampling period in years
  paleo = False                  ; Use paleo map ; UNTESTED IN THIS VERSION
- hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
+ hist_ext = "h0a"               ; Valid options: h0a, h0
 
 ;--- ARH mods ---
  map_method = "conserve"      ;bilinear,conserve or patch

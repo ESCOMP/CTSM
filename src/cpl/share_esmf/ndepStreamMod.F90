@@ -1,5 +1,7 @@
 module ndepStreamMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains methods for reading in nitrogen deposition data file
@@ -256,12 +258,14 @@ contains
        dayspyr = get_curr_days_per_year( )
        do g = bounds%begg,bounds%endg
           ig = ig+1
+          SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
           atm2lnd_inst%forc_ndep_grc(g) = dataptr1d(ig) / (secspday * dayspyr)
        end do
     else
        ig = 0
        do g = bounds%begg,bounds%endg
           ig = ig+1
+          SHR_ASSERT_FL( ig == g, sourcefile, __LINE__ )
           atm2lnd_inst%forc_ndep_grc(g) = dataptr1d(ig)
        end do
     end if

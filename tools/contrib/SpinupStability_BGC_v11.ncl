@@ -36,7 +36,7 @@ begin
   region = "Global"              ; Global, Arctic, or SPT (single point)
   subper = 20                    ; Subsampling period in years
   paleo = False                  ; Use paleo map
-  hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
+  hist_ext = "h0a"               ; Valid options: h0a, h0
 
 ; SPT (single point) EXAMPLE
 ; caseid = "clm50_release-clm5.0.15_SPT_GSWP3V1_1850spin"
@@ -45,7 +45,7 @@ begin
 ; region = "SPT"                 ; Global, Arctic, or SPT (single point)
 ; subper = 20                    ; Subsampling period in years
 ; paleo = False                  ; Use paleo map
-; hist_ext = "h0"                ; Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
+; hist_ext = "h0a"               ; Valid options: h0a, h0
 
   do_plot = True
 ; do_plot = False

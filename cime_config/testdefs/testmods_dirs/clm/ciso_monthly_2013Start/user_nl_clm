@@ -1,0 +1,3 @@
+! Add C13/C14 output to validate the incoming data
+hist_fincl1 += 'RC13_CANAIR', 'RC14_CANAIR'
+hist_fincl2 = 'RC13_CANAIR', 'RC14_CANAIR'

@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3396;
+my $ntests = 3402;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -820,6 +820,30 @@ my %failtest = (
      "bombspike no cn"           =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_c14_bombspike=.true.",
                                      phys=>"clm5_0",
+                                   },
+     "bombspike file and stream" =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=TRUE use_c14_bombspike=.true. stream_fldfilename_atm_c14='/dev/null', atm_c14_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 file and stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13_timeseries=.true. stream_fldfilename_atm_c13='/dev/null', atm_c13_filename='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c13 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c13=.false. stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "c14 off, but stream"       =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_c14=.false. stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c13 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c13='/dev/null'",
+                                     phys=>"clm6_0",
+                                   },
+     "sp,  but c14 stream"       =>{ options=>"-bgc sp -envxml_dir .",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null'",
+                                     phys=>"clm6_0",
                                    },
      "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
                                      namelst=>"",
