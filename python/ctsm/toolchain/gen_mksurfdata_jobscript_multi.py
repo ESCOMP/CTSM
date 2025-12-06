@@ -203,11 +203,11 @@ def main():
         "ultra_hi_res_no_crop": ["mpasa15", "mpasa3p75"],
         "standard_res": ["360x720cru", "0.9x1.25", "1.9x2.5", "C96", "mpasa120"],
         "standard_res_no_f09": ["360x720cru", "1.9x2.5", "C96", "mpasa120"],
-        "low_res": ["4x5", "10x15", "ne3np4.pg3"],
+        "low_res": ["4x5", "10x15", "ne3np4.pg3", "ne3np4"],
         "mpasa480": ["mpasa480"],
         "nldas_res": ["0.125nldas2"],
         "5x5_amazon": ["5x5_amazon"],
-        "ne3": ["ne3np4.pg3"],
+        "ne3": ["ne3np4", "ne3np4.pg3"],
         "ne16": ["ne16np4.pg3"],
         "ne30": ["ne30np4.pg3", "ne30np4.pg2", "ne30np4"],
         "ne0np4": [

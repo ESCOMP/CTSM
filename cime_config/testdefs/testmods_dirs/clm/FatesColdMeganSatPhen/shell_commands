@@ -1,2 +1,0 @@
-./xmlchange CLM_BLDNML_OPTS='--megan' --append
-./xmlchange CLM_BLDNML_OPTS="--ignore_warnings" --append

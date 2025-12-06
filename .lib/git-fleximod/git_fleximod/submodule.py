@@ -119,27 +119,25 @@ class Submodule():
                                 atag = atag[:-1]
                             if atag == self.fxtag:
                                 break
-
-                
-                #print(f"line is {line} ahash is {ahash} atag is {atag} {parts}")
-                #                atag = git.git_operation("describe", "--tags", "--always")
-                # ahash =  git.git_operation("rev-list", "HEAD").partition("\n")[0]
-                    
                 recurse = False
                 if rurl != self.url:
                     remote = self._add_remote(git)
                     git.git_operation("fetch", remote)
+                # Asked for a tag and found that tag
                 if self.fxtag and atag == self.fxtag:
                     result = f"  {self.name:>20} at tag {self.fxtag}"
                     recurse = True
                     testfails = False
+                # Asked for and found a hash
                 elif self.fxtag and (ahash[: len(self.fxtag)] == self.fxtag or (self.fxtag.find(ahash)==0)):
                     result = f"  {self.name:>20} at hash {ahash}"
                     recurse = True
                     testfails = False
+                # Asked for and found a hash
                 elif atag == ahash:
                     result = f"  {self.name:>20} at hash {ahash}"
                     recurse = True
+                # Did not find requested tag or hash
                 elif self.fxtag:
                     result = f"s {self.name:>20} {atag} {ahash} is out of sync with .gitmodules {self.fxtag}"
                     testfails = True
@@ -284,17 +282,18 @@ class Submodule():
                 if not os.path.isdir(infodir):
                     os.makedirs(infodir)
                 gitsparse = os.path.abspath(os.path.join(infodir, "sparse-checkout"))
-            if os.path.isfile(gitsparse):
-                self.logger.warning(
-                    "submodule {} is already initialized {}".format(self.name, rootdotgit)
-                )
-                return
-
-            with utils.pushd(sprep_repo):
-                if os.path.isfile(self.fxsparse):
-                    
-                    shutil.copy(self.fxsparse, gitsparse)
+                if os.path.isfile(gitsparse):
+                    self.logger.warning(
+                        "submodule {} is already initialized {}".format(self.name, rootdotgit)
+                    )
+                    os.remove(gitsparse)
                 
+                if os.path.isfile(self.fxsparse):
+                    shutil.copy(self.fxsparse, gitsparse)
+                else:
+                    self.logger.warning(
+                        "submodule {} could not find {}".format(self.name, self.fxsparse)
+                    )
 
         # Finally checkout the repo
         sprepo_git.git_operation("fetch", "origin", "--tags")
@@ -303,11 +302,18 @@ class Submodule():
             print(f"Error checking out {self.name:>20} at {self.fxtag}")
         else:
             print(f"Successfully checked out {self.name:>20} at {self.fxtag}")
+        status,f = sprepo_git.git_operation("status")
+        # Restore any files deleted from sandbox
+        for line in f.splitlines():
+            if "deleted:" in line:
+                deleted_file = line.split("deleted:")[1].strip()
+                sprepo_git.git_operation("checkout", deleted_file)
+
         rgit.config_set_value('submodule.' + self.name, "active", "true")
         rgit.config_set_value('submodule.' + self.name, "url", self.url)
         rgit.config_set_value('submodule.' + self.name, "path", self.path)
 
-    def update(self):
+    async def update(self):
         """
         Updates the submodule to the latest or specified version.
 
@@ -341,6 +347,9 @@ class Submodule():
         # Look for a .gitmodules file in the newly checkedout repo
         if self.fxsparse:
             print(f"Sparse checkout {self.name} fxsparse {self.fxsparse}")
+            if not os.path.isfile(self.fxsparse):
+                self.logger.info("Submodule {} fxsparse file not found".format(self.name))
+
             self.sparse_checkout()
         else:
             if not repo_exists and self.url:
@@ -378,19 +387,26 @@ class Submodule():
                 git.git_operation("submodule", "add", "--name", self.name, "--", self.url, self.path) 
 
             if not repo_exists:
-                git.git_operation("submodule", "update", "--init", "--", self.path)
+                git.git_operation("submodule", "init", "--", self.path)
+                await git.git_operation_async("submodule", "update", "--", self.path)
 
             if self.fxtag:        
                 smgit = GitInterface(repodir, self.logger)
                 newremote = self._add_remote(smgit)
                 # Trying to distingush a tag from a hash
-                allowed = set(string.digits + 'abcdef') 
+                allowed = set(string.digits + 'abcdef')
+                status = 0
                 if not set(self.fxtag) <= allowed:
                     # This is a tag
                     tag = f"refs/tags/{self.fxtag}:refs/tags/{self.fxtag}"
-                    smgit.git_operation("fetch", newremote, tag)
-                smgit.git_operation("checkout", self.fxtag)
-
+                    status,_ = smgit.git_operation("fetch", newremote, tag)
+                if status == 0:
+                    status,_ = smgit.git_operation("checkout", self.fxtag)
+                if status:
+                    utils.fatal_error(
+                        f"Failed to checkout {self.name} at tag or hash {self.fxtag} from {repodir}"
+                    )
+                    
             if not os.path.exists(os.path.join(repodir, ".git")):
                 utils.fatal_error(
                     f"Failed to checkout {self.name} {repo_exists} {repodir} {self.path}"
@@ -408,6 +424,18 @@ class Submodule():
                 if fxtag and fxtag not in tags:
                     git.git_operation("fetch", newremote, "--tags")
                 status, atag = git.git_operation("describe", "--tags", "--always")
+                status, files = git.git_operation("diff", "--name-only", "-z")
+                modfiles = []
+                moddirs = []
+                if files:
+                    for f in files.split('\0'):
+                        if f:
+                            if os.path.exists(f):
+                                git.git_operation("checkout",f)
+                            elif os.path.isdir(f):
+                                moddirs.append(f)
+                            else:
+                                modfiles.append(f)
                 if fxtag and fxtag != atag:
                     try:
                         status, _ = git.git_operation("checkout", fxtag)
@@ -419,6 +447,10 @@ class Submodule():
 
                 elif not fxtag:
                     print(f"No fxtag found for submodule {self.name:>20}")
+                elif modfiles:
+                    print(f"{self.name:>20} has modified files: {modfiles}")
+                elif moddirs:
+                    print(f"{self.name:>20} has modified directories: {moddirs}")
                 else:
                     print(f"{self.name:>20} up to date.")
 

@@ -15,16 +15,10 @@ import xarray as xr
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
+from ctsm.longitude import detect_lon_type
+from ctsm.pft_utils import MAX_NAT_PFT, MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 logger = logging.getLogger(__name__)
-
-NAT_PFT = 15  # natural pfts
-NUM_PFT = 17  # for runs with generic crops
-MAX_PFT = 78  # for runs with explicit crops
-
-# -- constants to represent months of year
-FIRST_MONTH = 1
-LAST_MONTH = 12
 
 
 class SinglePointCase(BaseCase):
@@ -151,6 +145,29 @@ class SinglePointCase(BaseCase):
         # self.check_nonveg()
         self.check_pct_pft()
 
+    def convert_plon_to_filetype_if_needed(self, lon_da):
+        """
+        Check that point and input file longitude types are equal. If not, convert point to match
+        file.
+        """
+        plon_in = self.plon
+        f_lon_type = detect_lon_type(lon_da)
+        plon_type = plon_in.lon_type()
+        if f_lon_type == plon_type:
+            plon_out = plon_in.get(plon_type)
+        else:
+            plon_orig = plon_in.get(plon_type)
+            plon_out = plon_in.get(f_lon_type)
+            if plon_orig != plon_out:
+                logger.info(
+                    "Converted plon from type %s (value %f) to type %s (value %f)",
+                    plon_type,
+                    plon_orig,
+                    f_lon_type,
+                    plon_out,
+                )
+        return plon_out
+
     def create_tag(self):
         """
         Create a tag for single point which is the site name
@@ -159,7 +176,7 @@ class SinglePointCase(BaseCase):
         if self.site_name:
             self.tag = self.site_name
         else:
-            self.tag = "{}_{}".format(str(self.plon), str(self.plat))
+            self.tag = "{}_{}".format(self.plon.get_str(self.plon.lon_type()), str(self.plat))
 
     def check_dom_pft(self):
         """
@@ -173,20 +190,21 @@ class SinglePointCase(BaseCase):
           same range.
           e.g. If users specified multiple dom_pft, they should be
           either in :
-            - 0 - NAT_PFT-1 range
+            - 0 - MAX_NAT_PFT range
             or
-            - NAT_PFT - MAX_PFT range
+            - MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS range
             - give an error: mixed land units not possible
 
         -------------
         Raises:
             Error (ArgumentTypeError):
-                If any dom_pft is bigger than MAX_PFT.
+                If any dom_pft is bigger than MAX_PFT_MANAGEDCROPS.
             Error (ArgumentTypeError):
                 If any dom_pft is less than 1.
             Error (ArgumentTypeError):
                 If mixed land units are chosen.
-                dom_pft values are both in range of (0 - NAT_PFT-1) and (NAT_PFT - MAX_PFT).
+                dom_pft values are both in range of
+                (0 - MAX_NAT_PFT) and (MAX_NAT_PFT+1 - MAX_PFT_MANAGEDCROPS).
 
 
         """
@@ -200,27 +218,29 @@ class SinglePointCase(BaseCase):
             min_dom_pft = min(self.dom_pft)
             max_dom_pft = max(self.dom_pft)
 
-            # -- check dom_pft values should be between 0-MAX_PFT
-            if min_dom_pft < 0 or max_dom_pft > MAX_PFT:
-                err_msg = "values for --dompft should be between 1 and 78."
+            # -- check dom_pft values should be between 0-MAX_PFT_MANAGEDCROPS
+            if min_dom_pft < 0 or max_dom_pft > MAX_PFT_MANAGEDCROPS:
+                err_msg = f"values for --dompft should be between 1 and {MAX_PFT_MANAGEDCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs num_pft
             if max_dom_pft > self.num_pft:
-                err_msg = "Please use --crop flag when --dompft is above 16."
+                err_msg = f"Please use --crop flag when --dompft is above {MAX_PFT_GENERICCROPS}."
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs MAX_pft
-            if self.num_pft - 1 < max_dom_pft < NUM_PFT:
+            if self.num_pft - 1 < max_dom_pft <= MAX_PFT_GENERICCROPS:
                 logger.info(
-                    "WARNING, you trying to run with generic crops (16 PFT surface dataset)"
+                    "WARNING, you are trying to run with generic crops (%s PFT surface dataset)",
+                    MAX_PFT_GENERICCROPS,
                 )
 
             # -- check if all dom_pft are in the same range:
-            if min_dom_pft < NAT_PFT <= max_dom_pft:
+            if min_dom_pft <= MAX_NAT_PFT < max_dom_pft:
                 err_msg = (
                     "You are subsetting using mixed land units that have both "
-                    "natural pfts and crop cfts. Check your surface dataset. "
+                    "natural pfts and crop cfts. Check your surface dataset.\n"
+                    f"{min_dom_pft} <= {MAX_NAT_PFT} < {max_dom_pft}\n"
                 )
                 raise argparse.ArgumentTypeError(err_msg)
 
@@ -316,7 +336,11 @@ class SinglePointCase(BaseCase):
         Create domain file for this SinglePointCase class.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating domain file at %s, %s.", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating domain file at %s, %s.",
+            self.plon.get_str(self.plon.lon_type()),
+            str(self.plat),
+        )
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -350,7 +374,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating land use file at %s, %s.",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -363,8 +387,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
@@ -405,7 +432,7 @@ class SinglePointCase(BaseCase):
         if self.dom_pft is not None:
             max_dom_pft = max(self.dom_pft)
             # -- First initialize everything:
-            if max_dom_pft < NAT_PFT:
+            if max_dom_pft <= MAX_NAT_PFT:
                 f_mod["PCT_NAT_PFT"][:, :, :] = 0
             else:
                 f_mod["PCT_CFT"][:, :, :] = 0
@@ -424,10 +451,10 @@ class SinglePointCase(BaseCase):
                 if cth is not None:
                     f_mod["MONTHLY_HEIGHT_TOP"][:, :, :, dom_pft] = cth
                     f_mod["MONTHLY_HEIGHT_BOT"][:, :, :, dom_pft] = cbh
-                if dom_pft < NAT_PFT:
+                if dom_pft <= MAX_NAT_PFT:
                     f_mod["PCT_NAT_PFT"][:, :, dom_pft] = pct_pft
                 else:
-                    dom_pft = dom_pft - NAT_PFT
+                    dom_pft = dom_pft - (MAX_NAT_PFT + 1)
                     f_mod["PCT_CFT"][:, :, dom_pft] = pct_pft
 
         # -------------------------------
@@ -445,7 +472,7 @@ class SinglePointCase(BaseCase):
 
             if self.dom_pft is not None:
                 max_dom_pft = max(self.dom_pft)
-                if max_dom_pft < NAT_PFT:
+                if max_dom_pft <= MAX_NAT_PFT:
                     f_mod["PCT_NATVEG"][:, :] = 100
                     f_mod["PCT_CROP"][:, :] = 0
                 else:
@@ -482,7 +509,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating surface dataset file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -498,8 +525,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lsmlon"])
+
         # extract gridcell closest to plon/plat
-        f_tmp = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_tmp = f_in.sel(lsmlon=plon_float, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_tmp = f_tmp.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
@@ -525,10 +555,10 @@ class SinglePointCase(BaseCase):
         # update lsmlat and lsmlon to match site specific instead of the nearest point
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        f_out["lsmlon"] = np.atleast_1d(self.plon)
+        f_out["lsmlon"] = np.atleast_1d(plon_float)
         f_out["lsmlat"] = np.atleast_1d(self.plat)
         f_out["LATIXY"][:, :] = self.plat
-        f_out["LONGXY"][:, :] = self.plon
+        f_out["LONGXY"][:, :] = plon_float
 
         # update attributes
         self.update_metadata(f_out)
@@ -554,7 +584,7 @@ class SinglePointCase(BaseCase):
         logger.info("----------------------------------------------------------------------")
         logger.info(
             "Creating DATM domain file at %s, %s",
-            str(self.plon),
+            self.plon.get_str(self.plon.lon_type()),
             str(self.plat),
         )
 
@@ -568,8 +598,11 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=plon_float, nj=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
@@ -591,14 +624,17 @@ class SinglePointCase(BaseCase):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
 
+        # get point longitude, converting to match file type if needed
+        plon_float = self.convert_plon_to_filetype_if_needed(f_in["lon"])
+
         # extract gridcell closest to plon/plat
-        f_out = f_in.sel(lon=self.plon, lat=self.plat, method="nearest")
+        f_out = f_in.sel(lon=plon_float, lat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lat", "lon"])
 
         # specify dimension order
-        f_out = f_out.transpose("scalar", "time", "lat", "lon")
+        f_out = f_out.transpose("time", "lat", "lon")
 
         # update attributes
         self.update_metadata(f_out)
@@ -617,7 +653,9 @@ class SinglePointCase(BaseCase):
         with open(file, "w") as nl_file:
             self.write_to_file("# Change below line if you move the subset data directory", nl_file)
             self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.out_dir), nl_file)
-            self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
+            self.write_to_file(
+                "./xmlchange PTS_LON={}".format(self.plon.get_str(self.plon.lon_type())), nl_file
+            )
             self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
             self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
             if self.create_datm:
@@ -643,7 +681,9 @@ class SinglePointCase(BaseCase):
         Create all of a DATM dataset at a point.
         """
         logger.info("----------------------------------------------------------------------")
-        logger.info("Creating DATM files at %s, %s", str(self.plon), str(self.plat))
+        logger.info(
+            "Creating DATM files at %s, %s", self.plon.get_str(self.plon.lon_type()), str(self.plat)
+        )
 
         # --  create data files
         infile = []
@@ -653,46 +693,36 @@ class SinglePointCase(BaseCase):
         tpqwfiles = []
         for year in range(datm_syr, datm_eyr + 1):
             ystr = str(year)
-            for month in range(FIRST_MONTH, LAST_MONTH + 1):
-                mstr = str(month)
-                if month < 10:
-                    mstr = "0" + mstr
 
-                dtag = ystr + "-" + mstr
+            fsolar = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_solar,
+                "{}{}.nc".format(datm_tuple.tag_solar, ystr),
+            )
+            fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, ystr)
+            fprecip = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_prec,
+                "{}{}.nc".format(datm_tuple.tag_prec, ystr),
+            )
+            fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, ystr)
+            ftpqw = os.path.join(
+                datm_tuple.indir,
+                datm_tuple.dir_tpqw,
+                "{}{}.nc".format(datm_tuple.tag_tpqw, ystr),
+            )
+            ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, ystr)
 
-                fsolar = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_solar,
-                    "{}{}.nc".format(datm_tuple.tag_solar, dtag),
-                )
-                fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
-                fprecip = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_prec,
-                    "{}{}.nc".format(datm_tuple.tag_prec, dtag),
-                )
-                fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
-                ftpqw = os.path.join(
-                    datm_tuple.indir,
-                    datm_tuple.dir_tpqw,
-                    "{}{}.nc".format(datm_tuple.tag_tpqw, dtag),
-                )
-                ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
-
-                outdir = os.path.join(self.out_dir, datm_tuple.outdir)
-                infile += [fsolar, fprecip, ftpqw]
-                outfile += [
-                    os.path.join(outdir, fsolar2),
-                    os.path.join(outdir, fprecip2),
-                    os.path.join(outdir, ftpqw2),
-                ]
-                solarfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2)
-                )
-                precfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2)
-                )
-                tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
+            outdir = os.path.join(self.out_dir, datm_tuple.outdir)
+            infile += [fsolar, fprecip, ftpqw]
+            outfile += [
+                os.path.join(outdir, fsolar2),
+                os.path.join(outdir, fprecip2),
+                os.path.join(outdir, ftpqw2),
+            ]
+            solarfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2))
+            precfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2))
+            tpqwfiles.append(os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         for idx, out_f in enumerate(outfile):
             logger.debug(out_f)

@@ -12,7 +12,7 @@ module lnd2atmType
   use decompMod     , only : bounds_type
   use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
   use clm_varcon    , only : spval
-  use clm_varctl    , only : iulog, use_lch4
+  use clm_varctl    , only : iulog, use_lch4, use_cn, use_fates
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use shr_drydep_mod, only : n_drydep
@@ -245,6 +245,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: begc, endc
     integer  :: begg, endg
+    character(len=8) :: default = "inactive"
     !---------------------------------------------------------------------
 
     begc = bounds%begc; endc = bounds%endc
@@ -263,12 +264,15 @@ contains
          long_name='sensible heat flux generated from conversion of ice runoff to liquid', &
          ptr_col=this%eflx_sh_ice_to_liq_col)
 
+    if (use_cn .or. use_fates) then
+       default = 'active'
+    endif
     this%net_carbon_exchange_grc(begg:endg) = spval
     call hist_addfld1d(fname='FCO2', units='kgCO2/m2/s', &
          avgflag='A', &
          long_name='CO2 flux to atmosphere (+ to atm)', &
          ptr_lnd=this%net_carbon_exchange_grc, &
-         default='inactive')
+         default=trim(default))
 
     ! No need to set this to spval (or 0) because it is a gridcell-level field, so should
     ! have valid values everywhere

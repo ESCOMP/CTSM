@@ -10,7 +10,7 @@
 
   <mksrf_flai>
     <entry>
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histMKSRFDeg025_240709/mksrf_landuse_ctsm53_pftlai_CLIM.c240709.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histMKSRFDeg025_240709/mksrf_landuse_ctsm53_pftlai_CLIM.c240709.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_flai>
@@ -21,7 +21,7 @@
 
   <mksrf_fsoicol>
     <entry>
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histMKSRFDeg025_240709/mksrf_landuse_ctsm53_soilcolor_CLIM.c240709.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histMKSRFDeg025_240709/mksrf_landuse_ctsm53_soilcolor_CLIM.c240709.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
     </entry>
   </mksrf_fsoicol>
@@ -213,28 +213,28 @@ version of the raw dataset will probably go away.
     </entry>
 
     <entry pft_years="1700">
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_1700.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_1700.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_1850_cdf5_c20220910.nc</urban_filename>
     </entry>
 
     <entry pft_years="1850">
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_1850.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_1850.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_1850.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_1850_cdf5_c20220910.nc</urban_filename>
     </entry>
 
     <entry pft_years="2000">
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_2000.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_2000.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2000.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_2000_cdf5_c20220910.nc</urban_filename>
     </entry>
 
     <entry pft_years="2005">
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_2005.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_2005.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_2005.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_2005_cdf5_c20220910.nc</urban_filename>
@@ -253,7 +253,7 @@ version of the raw dataset will probably go away.
     <!-- Lake data from 2018 to 2023 is copied from 2017 -->
     <!-- Urban data from 2016 to 2023 is copied from 2015 -->
     <entry pft_years="1700-2023" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53histTRENDY2024Deg025_240728/mksrf_landuse_ctsm53_histTRENDY2024_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/historical/urban_properties_GaoOneil_05deg_ThreeClass_%y_cdf5_c20220910.nc</urban_filename>
@@ -268,7 +268,7 @@ version of the raw dataset will probably go away.
 
     <!-- SSP1-RCP 2.6 -->
     <entry  ssp_rcp="SSP1-2.6" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP126Deg025_240728/mksrf_landuse_ctsm53_TRSSP126_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP126Deg025_240728/mksrf_landuse_ctsm53_TRSSP126_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp1/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_%y_cdf5_c20220910.nc</urban_filename>
@@ -281,21 +281,21 @@ version of the raw dataset will probably go away.
     </entry>
     <!-- SSP1-RCP 1.9 -->
     <entry  ssp_rcp="SSP1-1.9" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP119Deg025_240728/mksrf_landuse_ctsm53_TRSSP119_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP119Deg025_240728/mksrf_landuse_ctsm53_TRSSP119_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp1/urban_properties_GaoOneil_05deg_ThreeClass_ssp1_%y_cdf5_c20220910.nc</urban_filename>
     </entry>
     <!-- SSP2-RCP 4.5 -->
     <entry  ssp_rcp="SSP2-4.5" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP245Deg025_240728/mksrf_landuse_ctsm53_TRSSP245_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP245Deg025_240728/mksrf_landuse_ctsm53_TRSSP245_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp2/urban_properties_GaoOneil_05deg_ThreeClass_ssp2_%y_cdf5_c20220910.nc</urban_filename>
     </entry>
     <!-- SSP3-RCP 7.0 -->
     <entry  ssp_rcp="SSP3-7.0" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP370Deg025_240728/mksrf_landuse_ctsm53_TRSSP370_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP370Deg025_240728/mksrf_landuse_ctsm53_TRSSP370_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp3/urban_properties_GaoOneil_05deg_ThreeClass_ssp3_%y_cdf5_c20220910.nc</urban_filename>
@@ -309,14 +309,14 @@ version of the raw dataset will probably go away.
     </entry>
     <!-- SSP4-RCP 6.0 -->
     <entry  ssp_rcp="SSP4-6.0" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP460Deg025_240728/mksrf_landuse_ctsm53_TRSSP460_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP460Deg025_240728/mksrf_landuse_ctsm53_TRSSP460_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp4/urban_properties_GaoOneil_05deg_ThreeClass_ssp4_%y_cdf5_c20220910.nc</urban_filename>
     </entry>
     <!-- SSP5-RCP 8.5 -->
     <entry  ssp_rcp="SSP5-8.5" pft_years_ssp="2024-2100" >
-      <data_filename>/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP585Deg025_240728/mksrf_landuse_ctsm53_TRSSP585_%y.c240728.nc</data_filename>
+      <data_filename>lnd/clm2/rawdata/CTSM53RawData/globalctsm53TRSSP585Deg025_240728/mksrf_landuse_ctsm53_TRSSP585_%y.c240728.nc</data_filename>
       <mesh_filename>lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_cdf5_c200129.nc</mesh_filename>
       <lake_filename>lnd/clm2/rawdata/lake_area/mksurf_lake_0.05x0.05_hist_clm5_hydrolakes_%y.cdf5.c20220325.nc</lake_filename>
       <urban_filename>lnd/clm2/rawdata/gao_oneill_urban/ssp5/urban_properties_GaoOneil_05deg_ThreeClass_ssp5_%y_cdf5_c20220910.nc</urban_filename>

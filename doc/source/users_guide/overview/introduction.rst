@@ -33,7 +33,7 @@ Developers that are making changes to CLM either for their own development or fo
  What is New with |version|
 ============================
 
-`What's new with |version| science <https://escomp.github.io/ctsm-docs/doc/build/html/tech_note/Introduction/CLM50_Tech_Note_Introduction.html#|version|/>`_ gives a synopsis of the changes to CLM since the CLM4.5 release. More details are given in the CLM ChangeLog files:
+The :ref:`model history section <model-history>` section gives a synopsis of the changes to CLM in each release. More details are given in the CLM ChangeLog files:
 
 - `CLM 3.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm3_0_ChangeLog>`_
 - `CLM 4.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm4_0_ChangeLog>`_
@@ -61,8 +61,6 @@ As a followup to the tools chapter, :ref:`adding-new-resolutions-section` tells 
 In :ref:`running-special-cases-section`, again for the expert user, we give details on how to do some particularly difficult special cases. For example, we give the protocol for spinning up the |version|-BGC and CLMCN models as well as CLM with dynamic vegetation active (CNDV). We give instructions to do a spinup case from a previous case with Coupler history output for atmospheric forcing. We also give instructions on running both the prognostic crop and irrigation models. Lastly we tell the user how to use the DATM model to send historical CO2 data to CLM.
 
 :ref:`running-single-points` outlines how to do single-point or regional simulations using |version|. This is useful to either compare |version| simulations with point observational stations, such as tower sites (which might include your own atmospheric forcing), or to do quick simulations with CLM for example to test a new parameterization. There are several different ways given on how to perform single-point simulations which range from simple sampling of existing inputs to more complex where you create all your own datasets, tying into :ref:`using-clm-tools-section` and also :ref:`adding-new-resolutions-section` to add the files into the build-namelist XML database.
-
-There is also :ref:`pts_mode`, which is useful for running single points as part of the Single Column Atmospheric Model (SCAM).
 
 :ref:`troubleshooting-index` gives some guidance on trouble-shooting problems when using |version|. It doesn't cover all possible problems with CLM, but gives you some guidelines for things that can be done for some common problems.
 

@@ -2,11 +2,16 @@
 *.nc
 # but don't ignore netcdf files here:
 !/python/ctsm/test/testinputs/*.nc
+!/python/ctsm/test/testinputs/**/*.nc
 
 # editor files
 *.swp
 *~
+
+# MS VS Code
 .vscode/
+# but don't ignore the main .vscode directory here:
+!/.vscode
 
 # vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
 # Swap
@@ -111,6 +116,7 @@ core.*
 *.pyc
 Depends
 
-# Docs build output
+# Docs build and testing output
 _build*/
-
+_publish*/
+doc/.coverage
