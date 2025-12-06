@@ -118,6 +118,7 @@ contains
     use laiStreamMod          , only : lai_advance
     use FATESFireFactoryMod   , only : scalar_lightning
     use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
     !
     ! !ARGUMENTS:
     implicit none
@@ -408,6 +409,14 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
+    if ( use_cn )then
+       ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
+       ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
+       ! NOTE: These calls need to happen outside loops over nclumps (as streams are not threadsafe).
+       ! TODO: This should probably be moved to CNVegetationFacade in the InterpFileInputs subroutine
+       if ( use_c14 ) call C14BombSpike(bounds_proc)
+       if ( use_c13 ) call C13TimeSeries(bounds_proc, atm2lnd_inst)
+    end if
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
