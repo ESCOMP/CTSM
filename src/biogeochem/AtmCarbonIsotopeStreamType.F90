@@ -181,15 +181,8 @@ module AtmCarbonIsotopeStreamType
 
          ! Since C14 data has latitude bands mapalgo and meshfile can neither be set to none
          call shr_assert( trim(mapalgo) /= "none", "mapalgo MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
-         ! TODO: Uncomment this error check when we are ready for the test for this to change answers
-         !call shr_assert( trim(meshfile) /= "none", "meshfile MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
-         ! TOD: Remove this tempoary bit at the same time
-         if ( trim(meshfile) == "none" )then
-            str_mapalgo = "none"
-         else
-            str_mapalgo = mapalgo
-         end if
-         ! TODO: End of temporary bit
+         call shr_assert( trim(mapalgo) == "nn", "mapalgo MUST be nearest neighbor (nn) for C14 streams (since the file is in pure latitude bands)"//errMsg( file=sourcefile, line=__LINE__) )
+         call shr_assert( trim(meshfile) /= "none", "meshfile MUST NOT be none for C14 streams"//errMsg( file=sourcefile, line=__LINE__) )
 
          call this%InitBase( bounds, varnames = (/ varname_c14 /), fldfilename=fldfilename, meshfile=meshfile, &
                              mapalgo=str_mapalgo, tintalgo=tintalgo, taxmode=taxmode, name=varname_c14, &
