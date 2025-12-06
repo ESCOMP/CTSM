@@ -23,6 +23,7 @@ on:
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-image-and-test-docs:
+    if: ${{ ! github.repository == 'ESCOMP/CTSM' }}
     name: Build image and test docs
     uses: ./.github/workflows/docker-image-common.yml
     secrets: inherit
