@@ -107,7 +107,7 @@ class TestSubsetData(unittest.TestCase):
         files = setup_files(self.args, self.defaults, self.cesmroot, testing=True)
         self.assertEqual(
             files["fsurf_in"],
-            "surfdata_0.9x1.25_hist_2000_16pfts_c240908.nc",
+            "surfdata_0.9x1.25_hist_2000_16pfts_c251022.nc",
             "fsurf_in filename not whats expected",
         )
         self.assertEqual(
@@ -117,7 +117,7 @@ class TestSubsetData(unittest.TestCase):
         )
         self.assertEqual(
             files["main_dir"],
-            "/glade/campaign/cesm/cesmdata/cseg/inputdata",
+            "/glade/campaign/cesm/cesmdata/inputdata",
             "main_dir directory not whats expected",
         )
 
