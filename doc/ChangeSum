@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.001 samrabin 12/08/2025 Merge b4b-dev
+       ctsm5.4.000 multiple 12/04/2025 Merge alpha-ctsm5.4.CMIP7 to master
        ctsm5.3.085   slevis 11/14/2025 Merge b4b-dev to master
        ctsm5.3.084     erik 10/31/2025 Merge b4b-dev to master
        ctsm5.3.083   rgknox 10/29/2025 Changes to coupling of supplementation status with FATES.
