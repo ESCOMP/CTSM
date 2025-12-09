@@ -1659,7 +1659,7 @@
   </test>
   <test name="ERP_P36x2_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default--clm/all_outputs">
     <machines>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
