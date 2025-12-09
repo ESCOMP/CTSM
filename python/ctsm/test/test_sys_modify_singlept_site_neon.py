@@ -55,14 +55,14 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         sys.argv = [
             "modify_singlept_site_neon",
             "--neon_site",
-            path_to_ctsm_root() + "/ctsm/cime_config/usermods_dirs/NEON/ABBY",
+            path_to_ctsm_root() + "/ctsm/cime_config/usermods_dirs/clm/NEON/ABBY",
         ]
         # TODO: the above requires a full path instead of site name
-        #       because of how run_neon is configured.
-        # This needs to be fixed in run_neon.
+        #       because of how run_tower is configured.
+        # This needs to be fixed in run_tower.
         with self.assertRaises(SystemExit):
             print(
-                """This should currently fail due to directory structure in run_neon
+                """This should currently fail due to directory structure in run_tower
                    and the directory structure listed in sys.argv"""
             )
             main()

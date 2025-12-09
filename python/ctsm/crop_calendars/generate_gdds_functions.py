@@ -1,20 +1,26 @@
 """
 Functions to support generate_gdds.py
 """
+
 # pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
 import glob
-import datetime as dt
 from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
+from ctsm.utils import is_instantaneous
+from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 from ctsm.crop_calendars.grid_one_variable import grid_one_variable
 from ctsm.crop_calendars.import_ds import import_ds
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 CAN_PLOT = True
 try:
@@ -46,22 +52,6 @@ try:
 except ModuleNotFoundError:
     print("Will NOT produce harvest requirement map figure files.")
     CAN_PLOT = False
-
-
-def log(logger, string):
-    """
-    Simultaneously print INFO messages to console and to log file
-    """
-    print(string)
-    logger.info(string)
-
-
-def error(logger, string):
-    """
-    Simultaneously print ERROR messages to console and to log file
-    """
-    logger.error(string)
-    raise RuntimeError(string)
 
 
 def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
@@ -257,13 +247,13 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
+    h1_instantaneous,
 ):
     """
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
     log(logger, f"netCDF year {this_year}...")
-    log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -271,14 +261,14 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h2 file (list)
-    h1_pattern = os.path.join(indir, "*h1.*.nc")
+    # Get h1 file (list)
+    h1_pattern = os.path.join(indir, "*h1i.*.nc")
     h1_filelist = glob.glob(h1_pattern)
     if not h1_filelist:
-        h1_pattern = os.path.join(indir, "*h1.*.nc.base")
+        h1_pattern = os.path.join(indir, "*h1i.*.nc.base")
         h1_filelist = glob.glob(h1_pattern)
         if not h1_filelist:
-            error(logger, "No files found matching pattern '*h1.*.nc(.base)'")
+            error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
 
     # Get list of crops to include
     if skip_crops is not None:
@@ -286,13 +276,21 @@ def import_and_process_1yr(
     else:
         crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
-    print(h1_filelist)
+    # Are h1 files instantaneous?
+    if h1_instantaneous is None:
+        h1_instantaneous = is_instantaneous(xr.open_dataset(h1_filelist[0])["time"])
+
+    if h1_instantaneous:
+        slice_year = this_year
+    else:
+        slice_year = this_year - 1
     dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
-        time_slice=slice(f"{this_year}-01-01", f"{this_year}-12-31"),
+        time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
+        logger=logger,
     )
     for timestep in dates_ds["time"].values:
         print(timestep)
@@ -551,18 +549,20 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc")
-    h2_files = glob.glob(pattern)
-    if not h2_files:
-        pattern = os.path.join(indir, f"*h2.{this_year-1}-01-01*.nc.base")
+    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
         h2_files = glob.glob(pattern)
-        if not h2_files:
-            error(logger, f"No files found matching pattern '*h2.{this_year-1}-01-01*.nc(.base)'")
+        if h2_files:
+            break
+    if not h2_files:
+        error(logger, f"No files found matching patterns: {patterns}")
     h2_ds = import_ds(
         h2_files,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
+        logger=logger,
     )
 
     # Restrict to patches we're including
@@ -588,7 +588,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            log(logger, f"      SKIPPING {vegtype_str}")
+            log(logger, f"SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -597,12 +597,13 @@ def import_and_process_1yr(
         # Get time series for each patch of this type
         this_crop_ds = xr_flexsel(h2_incl_ds, vegtype=vegtype_str)
         this_crop_gddaccum_da = this_crop_ds[clm_gdd_var]
+        check_gddharv = False
         if save_figs:
             this_crop_gddharv_da = this_crop_ds["GDDHARV"]
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        log(logger, f"      {vegtype_str}...")
+        log(logger, f"{vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches
@@ -641,6 +642,7 @@ def import_and_process_1yr(
         i_times = list(np.array(i_times)[np.array(sortorder)])
         # Select using the indexing tuple
         gddaccum_atharv_p = this_crop_gddaccum_da.values[(i_times, i_patches)]
+        gddharv_atharv_p = None
         if save_figs:
             gddharv_atharv_p = this_crop_gddharv_da.values[(i_times, i_patches)]
         if np.any(np.isnan(gddaccum_atharv_p)):
@@ -649,7 +651,7 @@ def import_and_process_1yr(
                 f"         ❗ {np.sum(np.isnan(gddaccum_atharv_p))}/{len(gddaccum_atharv_p)} "
                 + "NaN after extracting GDDs accumulated at harvest",
             )
-        if save_figs and np.any(np.isnan(gddharv_atharv_p)):
+        if save_figs and gddharv_atharv_p is not None and np.any(np.isnan(gddharv_atharv_p)):
             if np.all(np.isnan(gddharv_atharv_p)):
                 log(logger, "         ❗ All GDDHARV are NaN; should only affect figure")
                 check_gddharv = False
@@ -719,13 +721,13 @@ def import_and_process_1yr(
                 else:
                     error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
-            gddaccum_yp_list[var][
-                year_index - 1, active_this_year_where_gs_lastyr_indices
-            ] = gddaccum_atharv_p[where_gs_lastyr]
+            gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                gddaccum_atharv_p[where_gs_lastyr]
+            )
             if save_figs:
-                gddharv_yp_list[var][
-                    year_index - 1, active_this_year_where_gs_lastyr_indices
-                ] = gddharv_atharv_p[where_gs_lastyr]
+                gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
+                    gddharv_atharv_p[where_gs_lastyr]
+                )
             # Last year's season should be filled out now; make sure.
             if np.any(
                 np.isnan(
@@ -808,6 +810,7 @@ def import_and_process_1yr(
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
+        h1_instantaneous,
     )
 
 
@@ -1097,7 +1100,9 @@ if CAN_PLOT:
         if land_use_file:
             year_1_lu = year_1 if first_land_use_year is None else first_land_use_year
             year_n_lu = year_n if last_land_use_year is None else last_land_use_year
-            lu_ds = cc.open_lu_ds(land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, ungrid=False)
+            lu_ds = cc.open_lu_ds(
+                land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, logger=logger, ungrid=False
+            )
             lu_years_text = f" (masked by {year_1_lu}-{year_n_lu} area)"
             lu_years_file = f"_mask{year_1_lu}-{year_n_lu}"
         else:
@@ -1181,6 +1186,7 @@ if CAN_PLOT:
             vmax = max(np.max(gdd_map_yx), np.max(gddharv_map_yx)).values
 
             # Set up figure and first subplot
+            this_axis = None
             if layout == "3x1":
                 fig = plt.figure(figsize=(7.5, 14))
                 this_axis = fig.add_subplot(nplot_y, nplot_x, 1, projection=ccrs.PlateCarree())

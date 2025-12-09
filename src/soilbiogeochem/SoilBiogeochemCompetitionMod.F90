@@ -76,7 +76,7 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNAllocParamsType'
+    character(len=32)  :: subname = 'readParams'
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in parameter
@@ -130,7 +130,7 @@ contains
     ! !USES:
     use clm_varcon      , only: secspday
     use clm_time_manager, only: get_step_size_real
-    use clm_varctl      , only: iulog, cnallocate_carbon_only_set
+    use clm_varctl      , only: iulog, allocate_carbon_only_set
     use shr_infnan_mod  , only: nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
@@ -160,7 +160,7 @@ contains
             errMsg(sourcefile, __LINE__))
     end select
 
-    call cnallocate_carbon_only_set(carbon_only)
+    call allocate_carbon_only_set(carbon_only)
 
   end subroutine SoilBiogeochemCompetitionInit
 
@@ -175,7 +175,7 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only, iulog
+    use clm_varctl       , only: allocate_carbon_only, iulog
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
@@ -338,7 +338,7 @@ contains
                   fpi_vr(c,j) = 1.0_r8
                   actual_immob_vr(c,j) = potential_immob_vr(c,j)
                   sminn_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
-               else if ( cnallocate_carbon_only()) then !.or. &
+               else if ( allocate_carbon_only()) then !.or. &
                   ! this code block controls the addition of N to sminn pool
                   ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
                   ! model behave essentially as a carbon-only model, but with the
@@ -729,7 +729,7 @@ contains
                ! eliminate N limitations, so there is still a diagnostic quantity
                ! that describes the degree of N limitation at steady-state.
 
-               if ( cnallocate_carbon_only()) then !.or. &
+               if ( allocate_carbon_only()) then !.or. &
                   if ( fpi_no3_vr(c,j) + fpi_nh4_vr(c,j) < 1._r8 ) then
                      fpi_nh4_vr(c,j) = 1.0_r8 - fpi_no3_vr(c,j)
                      supplement_to_sminn_vr(c,j) = (potential_immob_vr(c,j) &

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for lilac_make_runtime_inputs
-"""
+"""Unit tests for lilac_make_runtime_inputs"""
 
 import unittest
 

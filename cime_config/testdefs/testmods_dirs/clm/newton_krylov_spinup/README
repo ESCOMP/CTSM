@@ -1,6 +1,6 @@
 slevis 2022/2/1:
 This testmod tests the newton_krylov_spinup usermod found in
-cime_config/usermods_dirs/newton_krylov_spinup
+cime_config/usermods_dirs/clm/newton_krylov_spinup
 combined with the mimics testmod.
 
 By default this usermod runs for 20 yrs and writes a history file at that

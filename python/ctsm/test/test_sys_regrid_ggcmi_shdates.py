@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for regrid_ggcmi_shdates.py
-
-"""
+"""System tests for regrid_ggcmi_shdates.py"""
 
 import os
 

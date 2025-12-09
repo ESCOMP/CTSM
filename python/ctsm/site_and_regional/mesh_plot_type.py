@@ -1,6 +1,7 @@
 """
 This module extends the mesh type for advanced plotting
 """
+
 import logging
 
 import numpy as np

@@ -16,8 +16,10 @@ Using CLM tools
 
    what-are-the-clm-tools.rst
    building-the-clm-tools.rst
+   using-ctsm-pylib.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
    creating-domain-files.rst
    observational-sites-datasets.rst
    cprnc.rst
+   paramfile-tools.md

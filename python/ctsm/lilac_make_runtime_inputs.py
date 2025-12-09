@@ -28,7 +28,7 @@ _CONFIG_CACHE_TEMPLATE = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1,clm6_0">Specifies ctsm physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm6_0">Specifies ctsm physics</entry>
 </config_definition>
 """
 
@@ -163,7 +163,7 @@ def buildnml(cime_path, rundir):
         "buildnml_input",
         "ctsm_phys",
         ctsm_cfg_path,
-        allowed_values=["clm4_5", "clm5_0", "clm5_1", "clm6_0"],
+        allowed_values=["clm4_5", "clm5_0", "clm6_0"],
     )
     configuration = get_config_value(
         config,

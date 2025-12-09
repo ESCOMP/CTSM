@@ -1,0 +1,6 @@
+This points to an alternate params file with
+leafcn_co2_slope = 30 (default = 0)
+to confirm that the leafcn_t_evolving calculation doesn't fail.
+
+When we added this test, slevis and ekluzek agreed to consolidate our custom paramfiles into one.
+The first of the consolidated paramfiles is named ctsm60_ceta450_cn30_co2_slope30.c250326.nc.

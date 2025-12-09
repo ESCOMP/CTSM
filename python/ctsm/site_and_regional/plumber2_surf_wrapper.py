@@ -22,16 +22,18 @@ from __future__ import print_function
 
 import argparse
 import logging
-import os
-import subprocess
+import sys
 import tqdm
 
-import pandas as pd
+# pylint:disable=wrong-import-position
+from ctsm.site_and_regional.plumber2_shared import PLUMBER2_SITES_CSV, read_plumber2_sites_csv
+from ctsm import subset_data
+from ctsm.pft_utils import MAX_PFT_MANAGEDCROPS, is_valid_pft
 
 
-def get_parser():
+def get_args():
     """
-    Get parser object for this script.
+    Get arguments for this script.
     """
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -45,39 +47,44 @@ def get_parser():
         help="Verbose mode will print more information. ",
         action="store_true",
         dest="verbose",
-        default=False,
     )
 
     parser.add_argument(
-        "--16pft",
-        help="Create and/or modify 16-PFT surface datasets (e.g. for a FATES run) ",
+        "--crop",
+        help=f"Create and/or modify {MAX_PFT_MANAGEDCROPS}-PFT "
+        "surface datasets (e.g. for a non-FATES run)",
         action="store_true",
-        dest="pft_16",
-        default=True,
+        dest="use_managed_crops",
     )
 
-    return parser
+    parser.add_argument(
+        "--overwrite",
+        help="Overwrite any existing files",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--plumber2-sites-csv",
+        help=f"Comma-separated value (CSV) file with Plumber2 sites. Default: {PLUMBER2_SITES_CSV}",
+        default=PLUMBER2_SITES_CSV,
+    )
+
+    return parser.parse_args()
 
 
 def execute(command):
     """
-    Function for running a command on shell.
+    Runs subset_data with given arguments.
     Args:
-        command (str):
-            command that we want to run.
+        command (list):
+            list of args for command that we want to run.
     Raises:
-        Error with the return code from shell.
+        Whatever error subset_data gives, if any.
     """
     print("\n", " >>  ", *command, "\n")
 
-    try:
-        subprocess.check_call(command, stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT)
-
-    except subprocess.CalledProcessError as err:
-        # raise RuntimeError("command '{}' return with error
-        # (code {}): {}".format(e.cmd, e.returncode, e.output))
-        # print (e.ouput)
-        print(err)
+    sys.argv = command
+    subset_data.main()
 
 
 def main():
@@ -85,97 +92,103 @@ def main():
     Read plumber2_sites from csv, iterate through sites, and add dominant PFT
     """
 
-    args = get_parser().parse_args()
+    args = get_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    plumber2_sites = pd.read_csv("PLUMBER2_sites.csv", skiprows=4)
+    plumber2_sites = read_plumber2_sites_csv(args.plumber2_sites_csv)
 
     for _, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row["Lat"]
         lon = row["Lon"]
         site = row["Site"]
-        pft1 = row["pft1"]
-        pctpft1 = row["pft1-%"]
-        cth1 = row["pft1-cth"]
-        cbh1 = row["pft1-cbh"]
-        pft2 = row["pft2"]
-        pctpft2 = row["pft2-%"]
-        cth2 = row["pft2-cth"]
-        cbh2 = row["pft2-cbh"]
-        # overwrite missing values from .csv file
-        if pft1 == -999:
-            pft1 = 0
-            pctpft1 = 0
-            cth1 = 0
-            cbh1 = 0
-        if pft2 == -999:
-            pft2 = 0
-            pctpft2 = 0
-            cth2 = 0
-            cbh2 = 0
+
         clmsite = "1x1_PLUMBER2_" + site
         print("Now processing site :", site)
 
-        if args.pft_16:
-            # use surface dataset with 16 pfts, but overwrite to 100% 1 dominant PFT
-            # don't set crop flag
-            # set dominant pft
-            subset_command = [
-                "./subset_data",
-                "point",
-                "--lat",
-                str(lat),
-                "--lon",
-                str(lon),
-                "--site",
-                clmsite,
+        # Set up part of subset_data command that is shared among all options
+        subset_command = [
+            "./subset_data",
+            "point",
+            "--lat",
+            str(lat),
+            "--lon",
+            str(lon),
+            "--site",
+            clmsite,
+            "--create-surface",
+            "--uniform-snowpack",
+            "--cap-saturation",
+            "--lon-type",
+            "180",
+        ]
+
+        # Read info for first PFT
+        pft1 = row["pft1"]
+        if not is_valid_pft(pft1, args.use_managed_crops):
+            raise RuntimeError(f"pft1 must be a valid PFT; got {pft1}")
+        pctpft1 = row["pft1-%"]
+        cth1 = row["pft1-cth"]
+        cbh1 = row["pft1-cbh"]
+
+        # Read info for second PFT, if a valid one is given in the .csv file
+        pft2 = row["pft2"]
+        if is_valid_pft(pft2, args.use_managed_crops):
+            pctpft2 = row["pft2-%"]
+            cth2 = row["pft2-cth"]
+            cbh2 = row["pft2-cbh"]
+
+        # Set dominant PFT(s)
+        if is_valid_pft(pft2, args.use_managed_crops):
+            subset_command += [
                 "--dompft",
                 str(pft1),
                 str(pft2),
                 "--pctpft",
                 str(pctpft1),
                 str(pctpft2),
-                "--cth",
-                str(cth1),
-                str(cth2),
-                "--cbh",
-                str(cbh1),
-                str(cbh2),
-                "--create-surface",
-                "--uniform-snowpack",
-                "--cap-saturation",
-                "--verbose",
-                "--overwrite",
             ]
+        else:
+            subset_command += [
+                "--dompft",
+                str(pft1),
+                "--pctpft",
+                str(pctpft1),
+            ]
+
+        if not args.use_managed_crops:
+            # use surface dataset with 78 pfts, but overwrite to 100% 1 dominant PFT
+            # don't set crop flag
+            # set canopy top and bottom heights
+            if is_valid_pft(pft2, args.use_managed_crops):
+                subset_command += [
+                    "--cth",
+                    str(cth1),
+                    str(cth2),
+                    "--cbh",
+                    str(cbh1),
+                    str(cbh2),
+                ]
+            else:
+                subset_command += [
+                    "--cth",
+                    str(cth1),
+                    "--cbh",
+                    str(cbh1),
+                ]
         else:
             # use surface dataset with 78 pfts, and overwrite to 100% 1 dominant PFT
             # NOTE: FATES will currently not run with a 78-PFT surface dataset
             # set crop flag
-            # set dominant pft
-            subset_command = [
-                "./subset_data",
-                "point",
-                "--lat",
-                str(lat),
-                "--lon",
-                str(lon),
-                "--site",
-                clmsite,
-                "--crop",
-                "--dompft",
-                str(pft1),
-                str(pft2),
-                "--pctpft",
-                str(pctpft1),
-                str(pctpft2),
-                "--create-surface",
-                "--uniform-snowpack",
-                "--cap-saturation",
-                "--verbose",
-                "--overwrite",
-            ]
+            subset_command += ["--crop"]
+            # don't set canopy top and bottom heights
+
+        if args.verbose:
+            subset_command += ["--verbose"]
+        if args.overwrite:
+            subset_command += ["--overwrite"]
+
         execute(subset_command)
 
 

@@ -1,5 +1,4 @@
-"""Various OS-related utility functions
-"""
+"""Various OS-related utility functions"""
 
 import os
 import subprocess

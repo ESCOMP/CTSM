@@ -17,6 +17,7 @@ class JobLauncherBase(object):
 
     def __init__(
         self,
+        *,
         queue=None,
         walltime=None,
         account=None,

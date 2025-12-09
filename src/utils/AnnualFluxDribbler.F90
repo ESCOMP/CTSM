@@ -258,7 +258,8 @@ contains
        do i = beg_index, end_index
           this%amount_from_this_timestep(i) = delta(i)
        end do
-       if (.not. this%allows_non_annual_delta .and. .not. is_first_step()) then
+       ! is_first_step check no longer necessary since there is no nstep=0
+       if (.not. this%allows_non_annual_delta) then
           do i = beg_index, end_index
              if (this%amount_from_this_timestep(i) /= 0._r8) then
                 write(iulog,*) subname//' ERROR: found unexpected non-zero delta mid-year'
