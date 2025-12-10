@@ -29,6 +29,12 @@ lightng_tintalgo = 'nearest'
 popdens_tintalgo = 'linear'   ! The default for this is nearest
 urbantv_tintalgo = 'upper'
 
+! Turn on Carbon isotopes and their streams
+use_c14 = .true.
+use_c13 = .true.
+use_c13_timeseries = .true.
+use_c14_bombspike = .true.
+
 ! Turn on any optional history output that outputs the optional streams
 hist_fincl1 = 'RC13_CANAIR', 'RC14_CANAIR'
 hist_fincl1 += 'HDM', 'LNFM'
