@@ -167,8 +167,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
-  </test>
-    <test name="ERP_D_Ld9" grid="f10_f10_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
+  <test name="ERP_D_Ld9" grid="f10_f10_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
