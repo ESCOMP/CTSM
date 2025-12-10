@@ -5,5 +5,5 @@ FATESPARAMFILE=$CASEDIR/fates_params_prt2_prescribed_p.nc
 
 ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
 
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_cnp_prescribed_puptake --val 1.0 --allpfts
+$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_cnp_prescribed_puptake --val 10.0 --allpfts
 
