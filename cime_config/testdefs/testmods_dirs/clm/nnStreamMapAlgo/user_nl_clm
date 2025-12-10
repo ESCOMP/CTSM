@@ -35,7 +35,7 @@ prigentroughnessmapalgo = 'nn'
 
 ! Turn on any optional history output that outputs the optional streams
 hist_fincl1 = 'DPFCT_ROCK'
-hist_fincl2 += 'SDATES', 'SWINDOW_STARTS', 'SWINDOW_ENDS', 'GDD20_SEASON_START', 'GDD20_SEASON_END'
+hist_fincl1 += 'SDATES', 'SWINDOW_STARTS', 'SWINDOW_ENDS', 'GDD20_SEASON_START', 'GDD20_SEASON_END'
 hist_fincl1 += 'RC13_CANAIR', 'RC14_CANAIR'
 hist_fincl1 += 'HDM', 'LNFM'
 hist_fincl1 += 'TBUILD_MAX', 'P_AC'
