@@ -30,9 +30,9 @@ popdens_tintalgo = 'linear'   ! The default for this is nearest
 urbantv_tintalgo = 'upper'
 
 ! Turn on any optional history output that outputs the optional streams
-hist_fincl1 = 'DPFCT_ROCK'
-hist_fincl1 += 'RC13_CANAIR', 'RC14_CANAIR'
+hist_fincl1 = 'RC13_CANAIR', 'RC14_CANAIR'
 hist_fincl1 += 'HDM', 'LNFM'
 hist_fincl1 += 'TBUILD_MAX', 'P_AC'
 hist_fincl1 += 'EXCESS_ICE'
 hist_fincl1 += 'LND_MBL'
+!hist_fincl1 += 'DPFCT_ROCK' ! This can only be output when Leung2024 dust emissions are on
