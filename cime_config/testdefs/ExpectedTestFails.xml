@@ -102,6 +102,22 @@
     </phase>
   </test>
 
+  <test name="ERP_D_Ld9.f10_f10_mg37.I1850Clm60BgcCrop.izumi_nag.clm-clm60cam7LndTuningModeLDust">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_D_Ld9.f10_f10_mt232.IHistClm60BgcCrop.derecho_intel.clm-clm60cam7LndTuningModeLDust--clm-nnStreamMapAlgo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
+    </phase>
+  </test>
+
   <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
