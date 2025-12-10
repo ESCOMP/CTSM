@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.002
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Dec 10 12:21:33 AM MST 2025
+Date: Wed Dec 10 03:35:12 PM MST 2025
 One-line Summary: Start using CMIP7 Carbon Isotope datasets
 
 Purpose and description of changes
@@ -9,6 +9,8 @@ Purpose and description of changes
 
 By default read in the cmip7 c13/c14 stream files rather than the previous cmip6 ones. Read in the cmip6 ones if CLM_CMIP_ERA=cmip6 and use_c13/use_c14 are on.
 
+Found problems with the "nn" nearest-neighbor interpolation in streams. Added a new test on Derecho
+to turn on nn for several of the streams. These problems go away when using ESMF-8.9.0 or later.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -26,32 +28,28 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
-
 Bugs fixed
 ----------
 
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #182 -- c13/c14 isotope time-series is awkward for 1850 control (convert to streams file)
 
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
-
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   CLM_CMIP_ERA also changes Carbon isotope streams from cmip6 or cmip7
 
 Changes made to namelist defaults (e.g., changed parameter values):
    CMIP7 Carbon Isoptope datasets are used when use_c13/c14 is on and CLM_CMIP_ERA==cmip7
 
-Changes to the datasets (e.g., parameter, surface or initial files):
-   
-
 Notes of particular relevance for developers:
 ---------------------------------------------
-
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
+   cmip_era is now an attribute for C13/C14 timeseries files
 Changes to tests or testing:
-
+   Added stream input history output to the f09_ObscureStreams testmod
+   Added a new test with nn for streams
 
 Testing summary: regular
 ----------------
