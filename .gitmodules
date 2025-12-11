@@ -60,7 +60,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/MOSART
 [submodule "mizuRoute"]
 	path = components/mizuroute
 	url = https://github.com/ESCOMP/mizuRoute
-fxtag = cesm-coupling.n03_v2.2.0
+fxtag = v3.0.1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
@@ -68,7 +68,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
 [submodule "ccs_config"]
 path = ccs_config
 url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm1.0.61
+fxtag = ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
@@ -76,7 +76,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 [submodule "cime"]
 path = cime
 url = https://github.com/ESMCI/cime
-fxtag = cime6.1.128
+fxtag = cime6.1.144
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -84,7 +84,7 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 [submodule "cmeps"]
 path = components/cmeps
 url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.1.20
+fxtag = cmeps1.1.24
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -92,7 +92,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 [submodule "cdeps"]
 path = components/cdeps
 url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.81
+fxtag = cdeps1.0.84
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
@@ -101,9 +101,9 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 path = share
 #url = https://github.com/ESCOMP/CESM_share
 url = https://github.com/ekluzek/CESM_share
-#fxtag = share1.1.9
+#fxtag = share1.1.15
 #fxtag = add_jdennis_procstatus_module
-fxtag = 1a871cad0a90f8a361196f045313cca1919c7cbc
+fxtag = 9637775cebb7ce7805716bb5ecb5d40545cba4d9
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
