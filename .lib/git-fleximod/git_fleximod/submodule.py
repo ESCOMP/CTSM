@@ -161,7 +161,6 @@ class Submodule:
                                 atag = atag[:-1]
                             if atag == self.fxtag:
                                 break
-
                 if rurl != self.url:
                     remote = self._add_remote(git)
                     git.git_operation("fetch", remote)

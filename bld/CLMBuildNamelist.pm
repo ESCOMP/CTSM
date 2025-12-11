@@ -3776,6 +3776,8 @@ sub setup_logic_c_isotope {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14', 
               'bgc_mode'=>$nl_flags->{'bgc_mode'}, 'phys'=>$nl_flags->{'phys'},
               'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, ssp_rcp=>$nl_flags->{'ssp_rcp'} );
+  &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13" );
+  &add_logical_to_nl_flags( $nl_flags, $nl, "use_c14" );
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
@@ -3794,14 +3796,14 @@ sub setup_logic_c_isotope {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c14_bombspike', 'use_c14'=>$use_c14 );
       $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
       if ( &value_is_true($use_c14_bombspike) ) {
-         if ( defined($stream_fldfilename_atm_c14) ) {
-            setup_logic_c14_streams($opts, $nl_flags, $definition, $defaults, $nl);
-         } else {
+         &add_logical_to_nl_flags( $nl_flags, $nl, "use_c14_bombspike" );
+         setup_logic_c14_streams($opts, $nl_flags, $definition, $defaults, $nl);
+         $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
+         if ( ! defined($stream_fldfilename_atm_c14) ) {
             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c14_filename',
                     'use_c14'=>$use_c14, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c14_bombspike'=>$nl->get_value('use_c14_bombspike'),
-                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                    'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'cmip_era'=>$nl_flags->{'cmip_era'} );
          }
-         $stream_fldfilename_atm_c14 = $nl->get_value('stream_fldfilename_atm_c14');
          $atm_c14_filename = $nl->get_value('atm_c14_filename');
          if ( defined($stream_fldfilename_atm_c14) && defined($atm_c14_filename) ) {
            $log->fatal_error("Both stream_fldfilename_atm_c14 and atm_c14_filename set, only one should be set");
@@ -3814,6 +3816,8 @@ sub setup_logic_c_isotope {
         $log->fatal_error("use_c14 is FALSE and use_c14_bombspike, stream_fldfilename_atm_c14 or atm_c14_filename set");
       }
     }
+    &add_logical_to_nl_flags( $nl_flags, $nl, "use_c14_bombspike" );
+
     my $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
     my $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
     my $atm_c13_filename = $nl->get_value('atm_c13_filename');
@@ -3821,14 +3825,14 @@ sub setup_logic_c_isotope {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_c13_timeseries', 'use_c13'=>$use_c13 );
       $use_c13_timeseries = $nl->get_value('use_c13_timeseries');
       if ( &value_is_true($use_c13_timeseries) ) {
-         if ( defined($stream_fldfilename_atm_c13) ) {
-            setup_logic_c13_streams($opts, $nl_flags, $definition, $defaults, $nl);
-         } else {
+         &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
+         setup_logic_c13_streams($opts, $nl_flags, $definition, $defaults, $nl);
+         $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
+         if ( ! defined($nl->get_value('stream_fldfilename_atm_c13')) ) {
             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'atm_c13_filename',
                     'use_c13'=>$use_c13, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_c13_timeseries'=>$nl->get_value('use_c13_timeseries'),
                     'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
          }
-         $stream_fldfilename_atm_c13 = $nl->get_value('stream_fldfilename_atm_c13');
          $atm_c13_filename = $nl->get_value('atm_c13_filename');
          if ( defined($stream_fldfilename_atm_c13) && defined($atm_c13_filename) ) {
            $log->fatal_error("Both stream_fldfilename_atm_c13 and atm_c13_filename set, only one should be set");
@@ -3853,6 +3857,8 @@ sub setup_logic_c_isotope {
            $log->fatal_error("bgc=sp and C isotope  namelist variables were set, both can't be used at the same time");
     }
   }
+  &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_timeseries" );
+  &add_logical_to_nl_flags( $nl_flags, $nl, "use_c13_bombspike" );
 }
 
 #-------------------------------------------------------------------------------
@@ -3862,6 +3868,27 @@ sub setup_logic_c13_streams {
   #
   # C13 stream file settings
   #
+  # Just return if use_c13 and use_c13_timeseries aren't both TRUE
+  if ( ! &value_is_true($nl_flags->{'use_c13'}) ) { return; }
+  if ( ! &value_is_true($nl_flags->{'use_c13_timeseries'}) ) { return; }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_atm_c13',
+              'use_c13'=>$nl_flags->{'use_c13'}, 'use_c13_timeseries'=>$nl_flags->{'use_c13_timeseries'},
+              'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'cmip_era'=>$nl_flags->{'cmip_era'}, 'nofail'=>1);
+  # If stream_fldfilename_atm_c13 is not defined then return and get the cmip6 file format version
+  if ( ! defined( $nl->get_value( "stream_fldfilename_atm_c13") ) ) {
+      return;
+  }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_atm_c13',
+              'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_atm_c13',
+              'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  # Set align year, if first and last years are different
+  if ( $nl->get_value('stream_year_first_atm_c13') != $nl->get_value('stream_year_last_atm_c13') ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_model_year_align_atm_c13',
+                'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3871,6 +3898,33 @@ sub setup_logic_c14_streams {
   #
   # C14 stream file settings
   #
+  # Just return if use_c14 and use_c14_bombspike aren't both TRUE
+  if ( ! &value_is_true($nl_flags->{'use_c14'}) ) { return; }
+  if ( ! &value_is_true($nl_flags->{'use_c14_bombspike'}) ) { return; }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_atm_c14',
+              'use_c14'=>$nl_flags->{'use_c14'}, 'use_c14_bombspike'=>$nl_flags->{'use_c14_bombspike'},
+              'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1);
+   # If stream_fldfilename_atm_c14 is not defined then return and get the cmip6 file format version
+   if ( ! defined( $nl->get_value( "stream_fldfilename_atm_c14") ) ) {
+       return;
+   }
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_atm_c14',
+              'use_c14'=>$nl_flags->{'use_c14'}, 'use_c14_bombspike'=>$nl_flags->{'use_c14_bombspike'});
+   if ( &remove_leading_and_trailing_quotes( $nl->get_value( "stream_meshfile_atm_c14") ) eq "none" ) {
+      $log->fatal_error( "stream_meshfile_atm_c14 is set to 'none' which will only copy the first latitude to the globe")
+   }
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_atm_c14',
+              'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_atm_c14',
+              'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  # Set align year, if first and last years are different
+  if ( $nl->get_value('stream_year_first_atm_c14') != $nl->get_value('stream_year_last_atm_c14') ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_model_year_align_atm_c14',
+                'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'});
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -5954,6 +6008,27 @@ sub logical_to_fortran {
    }
 
    return $result;
+}
+
+#-------------------------------------------------------------------------------
+
+sub add_logical_to_nl_flags {
+   # Add a logical setting to the $nl_flsgs hash, so can be used in attribute checking
+   # This is important to do to make sure that the attribute is matched exactly as
+   # either: .true. or .false.
+   # Also sets nl_flags to .false. when the namelist variable is NOT set
+   my ($nl_flags, $nl, $var) = @_;
+
+   my $val = $nl->get_value($var);
+   if ( defined($val) ) {
+      if ( &value_is_true($val)) {
+         $nl_flags->{$var} = ".true.";
+      } else {
+         $nl_flags->{$var} = ".false.";
+      }
+   } else {
+      $nl_flags->{$var} = ".false.";
+   }
 }
 
 #-------------------------------------------------------------------------------
