@@ -1,4 +1,108 @@
 ===============================================================
+Tag name: ctsm5.4.003
+Originator(s): (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu Dec 11 12:02:28 PM MST 2025
+One-line Summary: Merge post5.4 branch to master
+
+Purpose and description of changes
+----------------------------------
+
+Update namelist_defaults:
+- parameters for the li2024crujra fire method: PR Post 5.4 namelist updates #3626 by Will Wieder
+- snow_thermal_cond_glc_method to Sturm1997 for clm6: PR #3626 by Will Wieder
+- clm paramfile to ctsm60_params.c251124.nc for clm6: PR #3626 by Will Wieder
+- stream_fldfilename_cultivar_gdds and stream_fldFileName_gdd20_baseline to latest files: PR post-5.4.n00: New crop calendar inputs and updated params (omni02) #3618 by Sam Rabin
+- Update default NEON inputs to v4: PR #3626 by Will Wieder
+
+Update cismwrap_2_2_010 to cismwrap_2_2_011 and ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to ccs_config_cesm1.0.66: PR #3626 by Will Wieder
+
+Remove fsat effect on baf_peatf in the fire code and update the corresponding documentation in doc/source/tech_note/Fire/CLM50_Tech_Note_Fire.rst: PR #3626 by Will Wieder and Fang Li
+
+Fix for RRTMGP errors caused by high surface temperatures: PR #3643 by Keith Oleson
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #3589 355+ K land temperature triggers RRTMGP error, by Keith Oleson
+Fixes #3598 Change default snow_thermal_cond_glc_method, by Will Wieder
+Fixes #3608 Fire calibration for CLM6 release, by Will Wieder and Fang Li
+Fixes #3594 Update NEON data to v4, by Will Wieder
+Fixes #3321 Crop calendar inputs needed with CRU-JRA climate, by Sam Rabin
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Namelist defaults changes listed in "Purpose and description of changes"
+Changes to the datasets (e.g., parameter, surface or initial files):
+ References to new crop calendar inputs and new paramfile in "Purpose and description of changes"
+Changes to documentation:
+ Updates to documentation mentioned in "Purpose and description of changes"
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ I will mention here something that took effect with ctsm5.4.000 (today's discussion reminded me):
+ We made two history fields default inactive (VEGWPLN, VEGWPPD) to allow LII2* tests to pass the COMPARE_base_no_interp phase. The problem and suggested solution appear in issues #3617 #3620.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (the usual 2 tests expected to fail)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm60 due to updates to CLM6 and Clm50*G due to updated cism
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff, possibly new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: post-5.4.n02.ctsm5.4.000_HIST_test0 and an issue including links to diagnostics is expeced soon with most likely url https://github.com/NCAR/LMWG_dev/issues/130
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ cismwrap_2_2_010 to cismwrap_2_2_011
+ ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to ccs_config_cesm1.0.66
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3655
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.002
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Dec 10 03:35:12 PM MST 2025
