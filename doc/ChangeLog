@@ -45,6 +45,7 @@ Fixes #3598 Change default snow_thermal_cond_glc_method, by Will Wieder
 Fixes #3608 Fire calibration for CLM6 release, by Will Wieder and Fang Li
 Fixes #3594 Update NEON data to v4, by Will Wieder
 Fixes #3321 Crop calendar inputs needed with CRU-JRA climate, by Sam Rabin
+Fixes #3658 Move c14_meshfile_none warning test to fatal error (resolves a build_namelist failure)
 
 Notes of particular relevance for users
 ---------------------------------------
