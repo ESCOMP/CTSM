@@ -33,7 +33,6 @@ module CLMFatesInterfaceMod
 #include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
-   use shr_file_mod      , only : shr_file_getUnit,shr_file_freeUnit
    use decompMod         , only : bounds_type, subgrid_level_column
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
