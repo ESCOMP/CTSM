@@ -93,7 +93,7 @@ module histFileMod
                                          ! select fields on top of this.
 
   logical, public :: &
-       hist_all_htapes  = .false.        ! namelist: enable all possible history fields on history
+       hist_all_fields  = .false.        ! namelist: enable all possible history fields on history
                                          ! tape 1. Use hist_fexcl1 to remove select fields on top
                                          ! of this.
 
@@ -970,7 +970,7 @@ contains
 
                 ! if field is in exclude list, ff > 0.
 
-                if (ff == 0 .and. (allhistfldlist(fld)%actflag(t,f) .or. (hist_all_htapes .and. t == 1))) then
+                if (ff == 0 .and. (allhistfldlist(fld)%actflag(t,f) .or. (hist_all_fields .and. t == 1))) then
                    call htape_addfld (t, f, fld, ' ')
                 end if
 

@@ -1071,7 +1071,7 @@ If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
 </entry>
 
-<entry id="hist_all_htapes" type="logical" category="history"
+<entry id="hist_all_fields" type="logical" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, indicates output ALL history fields on the primary tape.
 </entry>

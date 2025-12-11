@@ -6,4 +6,4 @@ fates_spitfire_mode = 1
 fates_history_dimlevel = 2,2
 use_fates_tree_damage = .true.
 hist_ndens = 1
-hist_all_htapes = .true.
+hist_all_fields = .true.
