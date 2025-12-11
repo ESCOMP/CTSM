@@ -1,4 +1,4 @@
-# What's new in CTSM 5.4 (tag `ctsm5.4.0xx`)
+# What's new in CTSM 5.4 (tag `ctsm5.4.002`)
 
 # Purpose and description of changes since CTSM 5.3 (tag `ctsm5.3.021`)
 
