@@ -1026,13 +1026,6 @@ module CLMFatesInterfaceMod
 
       call this%init_history_io(bounds_proc)
 
-      ! Check through FATES parameters
-      ! THis step is performed after the parameter
-      ! reads because we need to cross-reference
-      ! these against namelist settings
-      !call FatesCheckParameters(masterproc)
-      
-      
       ! Fire data to send to FATES
       call create_fates_fire_data_method( this%fates_fire_data_method )
 
