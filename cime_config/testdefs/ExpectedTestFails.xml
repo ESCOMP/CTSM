@@ -388,13 +388,6 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld5.5x5_amazon.I2000Clm60FatesRs.betzy_intel.clm-FatesCold">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>NorESMhub/CTSM#163</issue>
-    </phase>
-  </test>
-
   <test name="ERI_D_Ld80_P1024.ne16pg3_ne16pg3_mtn14.I2000Clm60Fates.betzy_gnu.clm-FatesCold">
     <phase name="COMPARE_base_hybrid">
       <status>FAIL</status>
