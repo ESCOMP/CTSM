@@ -313,7 +313,7 @@ contains
             ptr_patch=this%zeta_patch, default='inactive')
        this%vpd_patch(begp:endp) = spval
        call hist_addfld1d (fname='VPD', units='kPa', &
-            avgflag='A', long_name='vapour pressure deficit', &
+            avgflag='A', long_name='vapor pressure deficit', &
             ptr_patch=this%vpd_patch, default='inactive')
        this%num_iter_patch(begp:endp) = spval
        call hist_addfld1d (fname='num_iter', units='unitless', &
