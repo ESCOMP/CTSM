@@ -1,8 +1,12 @@
 This points to an alternate params file with
-rf_cwdl2     = 0.5
-rf_cwdl3_bgc = 0.5
-while by default these parameters equal zero.
+ceta = 450 (default = 358)
 
+The README used to say that the alternate paramfile contained
+rf_cwdl2     = 0.5 (default 0)
+rf_cwdl3_bgc = 0.5 (default 0)
+but now 0.5 is the default.
+
+The README also used to say:
 The test outputs inactive history fields that would contain zeros
 when running with the default params file and should be greater than zero
 when running with the alternate params file.

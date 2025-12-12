@@ -42,7 +42,8 @@ contains
     ! The particular type is determined based on a namelist parameter.
     !
     ! !USES:
-    use clm_varctl, only: fates_spitfire_mode
+    use clm_varctl, only: fates_spitfire_mode, use_fates_sp, use_fates_ed_st3
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
     use FATESFireBase,      only: fates_fire_base_type
     use FATESFireNoDataMod, only: fates_fire_no_data_type
     use FATESFireDataMod, only: fates_fire_data_type
@@ -51,25 +52,69 @@ contains
     class(fates_fire_base_type), allocatable, intent(inout) :: fates_fire_data_method  ! function result
     !
     ! !LOCAL VARIABLES:
-    integer :: current_case
-
-    character(len=*), parameter :: subname = 'create_fates_fire_data_method'
     !-----------------------------------------------------------------------
 
-    current_case = fates_spitfire_mode
+    !
+    ! For FATES options that bypass fire...
+    !
+    if ( use_fates_sp .or. use_fates_ed_st3 )then
+      !
+      ! Make sure fire-emissions is NOT on
+      !
+      if ( shr_fire_emis_mechcomps_n > 0 )then
+         if ( use_fates_sp )then
+            write(iulog,*) "Fire emissions can NOT be on with FATES-SP mode: ", &
+                        errMsg(sourcefile, __LINE__)
+            call endrun(msg="Fire emission with FATES requires FATES to NOT be in Satellite Phenology (SP) mode" )
+         else if ( use_fates_ed_st3 )then
+            write(iulog,*) "Fire emissions can NOT be on with FATES ST3 mode: ", &
+                        errMsg(sourcefile, __LINE__)
+            call endrun(msg="Fire emission with FATES requires FATES to NOT be in Static Stand Structure mode" )
+         end if
+         ! For unit-testing return with a FATESFireData type, so there isn't a run-time error
+         ! Also do the FATESFireData type, as using FATESFireNoData type will fail with an error
+         allocate(fates_fire_data_type :: fates_fire_data_method)
+         return
+      end if
+      allocate(fates_fire_no_data_type :: fates_fire_data_method)
+    else
+      !
+      ! For regular FATES options that include fire
+      !
+      select case (fates_spitfire_mode)
 
-    select case (current_case)
+         ! No-fire, scalar-lightning and successful_ignitions ALL do NOT need input data from the base class
+         case (no_fire:scalar_lightning)
+            allocate(fates_fire_no_data_type :: fates_fire_data_method)
+         case (successful_ignitions)
+            allocate(fates_fire_no_data_type :: fates_fire_data_method)
+         ! Lightning from data, and the anthro types (ignition and suppression) need lightning data from the base class
+         case (lightning_from_data)
+            allocate(fates_fire_data_type :: fates_fire_data_method)
+         case (anthro_ignitions:anthro_suppression)
+            allocate(fates_fire_data_type :: fates_fire_data_method)
 
-    case (no_fire:scalar_lightning)
-       allocate(fates_fire_no_data_type :: fates_fire_data_method)
-    case (lightning_from_data:anthro_suppression)
-       allocate(fates_fire_data_type :: fates_fire_data_method)
+         case default
+            write(iulog,*) 'Unrecognized fates_spitfire_mode option = ', fates_spitfire_mode, ' in: ', &
+                           errMsg(sourcefile, __LINE__)
+            call endrun(msg="Unknown option for namelist item fates_spitfire_mode:")
+            ! For unit-testing, make sure a valid fates_fire_data_method is set and return, otherwise it fails with a seg-fault
+            allocate(fates_fire_no_data_type :: fates_fire_data_method)
 
-    case default
-       write(iulog,*) subname//' ERROR: unknown method: ', fates_spitfire_mode
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-
-    end select
+      end select
+      ! -------------------------------------------------------------------------------------------------------
+      ! For now we die with a error whenever fire-emissions are turned on -- because this isn't setup in FATES
+      !
+      if ( fates_spitfire_mode /= no_fire ) then
+         if ( shr_fire_emis_mechcomps_n > 0 )then
+            write(iulog,*) "Fire emissions can NOT be on with FATES currently: ", &
+                        errMsg(sourcefile, __LINE__)
+            call endrun(msg="Fire emission with FATES can NOT currently be turned on (see issue #1045)" )
+            return
+         end if
+      end if
+      ! -------------------------------------------------------------------------------------------------------
+    end if
 
   end subroutine create_fates_fire_data_method
 

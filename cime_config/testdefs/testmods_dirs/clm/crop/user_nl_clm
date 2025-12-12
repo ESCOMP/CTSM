@@ -17,4 +17,5 @@ hist_fincl3 = 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GRAINC_TO
 hist_nhtfrq = -24,-8,-24
 hist_mfilt  = 1,1,1
 hist_type1d_pertape(3) = 'PFTS'
+hist_avgflag_pertape(3) = 'I'
 hist_dov2xy    = .true.,.false.,.false.

@@ -19,6 +19,7 @@ from ctsm.site_and_regional.mesh_type import MeshType
 from ctsm.utils import add_tag_to_filename
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
+from ctsm.longitude import Longitude, detect_lon_type
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +133,47 @@ class RegionalCase(BaseCase):
         self.ni = None
         self.nj = None
 
+    def _subset_lon_lat(self, x_dim, y_dim, f_in):
+        """
+        subset longitude and latitude arrays
+        """
+        lat = f_in["lat"]
+        lon = f_in["lon"]
+
+        # Detect longitude type (180 or 360) of input file, throwing a helpful error if it can't be
+        # determined.
+        f_lon_type = detect_lon_type(lon)
+        lon1_type = self.lon1.lon_type()
+        lon2_type = self.lon2.lon_type()
+        if lon1_type != lon2_type:
+            raise RuntimeError(f"lon1 type ({lon1_type}) doesn't match lon2 type ({lon2_type})")
+        if f_lon_type != lon1_type:
+            # This may be overly strict; we might want to allow conversion to lon1 type.
+            raise RuntimeError(
+                f"File lon type ({f_lon_type}) doesn't match boundary lon type ({lon1_type})"
+            )
+
+        # Convert input file longitudes to Longitude class, then trim where it's in region bounds
+        lon = Longitude(lon, lon1_type)
+        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f_out = f_in.isel({y_dim: yind, x_dim: xind})
+        return f_out
+
+    def _get_lon_strings(self):
+        """
+        Get the string versions of the region's longitudes
+        """
+        if isinstance(self.lon1, Longitude):
+            lon1_str = self.lon1.get_str(self.lon1.lon_type())
+        else:
+            lon1_str = str(self.lon1)
+        if isinstance(self.lon2, Longitude):
+            lon2_str = self.lon2.get_str(self.lon2.lon_type())
+        else:
+            lon2_str = str(self.lon2)
+        return lon1_str, lon2_str
+
     def create_tag(self):
         """
         Create a tag for a region which is either the region name
@@ -141,9 +183,8 @@ class RegionalCase(BaseCase):
         if self.reg_name:
             self.tag = self.reg_name
         else:
-            self.tag = "{}-{}_{}-{}".format(
-                str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2)
-            )
+            lon1_str, lon2_str = self._get_lon_strings()
+            self.tag = "{}-{}_{}-{}".format(lon1_str, lon2_str, str(self.lat1), str(self.lat2))
 
     def check_region_bounds(self):
         """
@@ -151,10 +192,11 @@ class RegionalCase(BaseCase):
         """
         # If you're calling this, lat/lon bounds need to have been provided
         if any(x is None for x in [self.lon1, self.lon2, self.lat1, self.lat2]):
+            lon1_str, lon2_str = self._get_lon_strings()
             raise argparse.ArgumentTypeError(
                 "Latitude and longitude bounds must be provided and not None.\n"
-                + f"   lon1: {self.lon1}\n"
-                + f"   lon2: {self.lon2}\n"
+                + f"   lon1: {lon1_str}\n"
+                + f"   lon2: {lon2_str}\n"
                 + f"   lat1: {self.lat1}\n"
                 + f"   lat2: {self.lat2}"
             )
@@ -192,14 +234,12 @@ class RegionalCase(BaseCase):
         logger.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "ni"
+        y_dim = "nj"
+        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(nj=yind, ni=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -240,14 +280,12 @@ class RegionalCase(BaseCase):
         logger.info("fsurf_out: %s", os.path.join(self.out_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)
@@ -304,14 +342,12 @@ class RegionalCase(BaseCase):
         logger.info("fluse_out: %s", os.path.join(self.out_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
-        lat = f_in["lat"]
-        lon = f_in["lon"]
+        x_dim = "lsmlon"
+        y_dim = "lsmlat"
+        f_in = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", x_dim, y_dim)
 
         # subset longitude and latitude arrays
-        xind = np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
-        yind = np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
-        f_out = f_in.isel(lsmlat=yind, lsmlon=xind)
+        f_out = self._subset_lon_lat(x_dim, y_dim, f_in)
 
         # update attributes
         self.update_metadata(f_out)

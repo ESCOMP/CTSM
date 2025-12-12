@@ -23,6 +23,7 @@ The list of generally important scripts and programs are as follows.
 
 .. todo::
     Update the below, as domain files aren't needed with nuopc.
+
 #. *$CIMEROOT/tools/mapping/gen_domain_files/gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
 
 #. ``$CIMEROOT/tools/mapping/gen_domain_files/gen_domain`` to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.

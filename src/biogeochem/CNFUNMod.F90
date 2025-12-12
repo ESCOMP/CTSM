@@ -23,7 +23,7 @@ module CNFUNMod
   use clm_varctl                      , only : iulog
   use PatchType                       , only : patch
   use ColumnType                      , only : col
-  use pftconMod                       , only : pftcon, npcropmin
+  use pftconMod                       , only : pftcon
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
   use CNSharedParamsMod               , only : use_matrixcn
@@ -216,7 +216,7 @@ module CNFUNMod
 
 ! Set local pointers
   associate(ivt                    => patch%itype                                          , & ! Input:  [integer  (:)   ]  p
-         leafcn                 => pftcon%leafcn                                        , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch     , & ! Input:  leaf C:N (gC/gN)
          leafcn_offset          => cnveg_state_inst%leafcn_offset_patch                 , & ! Output:
          !  [real(r8) (:)   ]  Leaf C:N used by FUN  
          leafc_storage_xfer_acc => cnveg_carbonstate_inst%leafc_storage_xfer_acc_patch  , & ! Output: [real(r8) (:)
@@ -249,7 +249,7 @@ module CNFUNMod
   !---
   numofyear = nstep/nstep_fun
   if (mod(nstep,nstep_fun) == 0) then
-     leafcn_offset(bounds%begp:bounds%endp)          = leafcn(ivt(bounds%begp:bounds%endp))
+     leafcn_offset(bounds%begp:bounds%endp)          = leafcn_t_evolving(bounds%begp:bounds%endp)
      storage_cdemand(bounds%begp:bounds%endp)        = 0._r8
      storage_ndemand(bounds%begp:bounds%endp)        = 0._r8
      leafn_storage_xfer_acc(bounds%begp:bounds%endp) = 0._r8
@@ -284,7 +284,7 @@ module CNFUNMod
    use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
-   use pftconMod       , only : npcropmin
+   use pftconMod       , only : is_prognostic_crop
    use CNVegMatrixMod  , only : matrix_update_phn
 !
 ! !ARGUMENTS: 
@@ -573,7 +573,7 @@ module CNFUNMod
   !--------------------------------------------------------------------
   !---------------------------------
   associate(ivt                 => patch%itype                                          , & ! Input:   [integer  (:) ]  p
-         leafcn                 => pftcon%leafcn                                        , & ! Input:   leaf C:N (gC/gN)
+         leafcn_t_evolving      => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch     , & ! Input:   leaf C:N (gC/gN)
          season_decid           => pftcon%season_decid                                  , & ! Input:   binary flag for seasonal
          ! -deciduous leaf habit (0 or 1)
          stress_decid           => pftcon%stress_decid                                  , & ! Input:   binary flag for stress
@@ -1271,12 +1271,12 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !           Calculate appropriate degree of retranslocation
                !-------------------------------------------------------------------------------
       
-               if(leafc(p).gt.0.0_r8.and.litterfall_n_step(p,istp)* fixerfrac>0.0_r8.and.ivt(p) <npcropmin)then
+               if (leafc(p) > 0.0_r8 .and. (litterfall_n_step(p,istp) * fixerfrac) > 0.0_r8 .and. (.not. is_prognostic_crop(ivt(p)))) then
                   call fun_retranslocation(p,dt,npp_to_spend,&
                                 litterfall_c_step(p,istp)* fixerfrac,&
                                 litterfall_n_step(p,istp)* fixerfrac,&
                                 total_n_resistance, total_c_spent_retrans,total_c_accounted_retrans, &
-                                free_n_retrans,paid_for_n_retrans, leafcn(ivt(p)), & 
+                                free_n_retrans,paid_for_n_retrans, leafcn_t_evolving(p), &
                                 grperc(ivt(p)), plantCN(p))
                                  
                else
@@ -1307,7 +1307,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                      if (leafn(p) == 0.0_r8) then   ! to avoid division by zero
                        delta_CN = fun_cn_flex_c(ivt(p))   ! Max CN ratio over standard
                      else
-                       delta_CN = (leafc(p)+leafc_storage(p))/(leafn(p)+leafn_storage(p)) - leafcn(ivt(p)) ! leaf CN ratio                                                              
+                       delta_CN = (leafc(p)+leafc_storage(p))/(leafn(p)+leafn_storage(p)) - leafcn_t_evolving(p) ! leaf CN ratio
                      end if
                      ! C used for uptake is reduced if the cost of N is very high
                      frac_ideal_C_use = max(0.0_r8,1.0_r8 - (total_N_resistance-fun_cn_flex_a(ivt(p)))/fun_cn_flex_b(ivt(p)) )

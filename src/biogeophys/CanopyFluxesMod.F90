@@ -13,7 +13,7 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_cndv, use_fates, &
                                      use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan, mxpft
   use pftconMod             , only : pftcon
@@ -41,6 +41,7 @@ module CanopyFluxesMod
   use HumanIndexMod         , only : humanindex_type
   use ch4Mod                , only : ch4_type
   use PhotosynthesisMod     , only : photosyns_type
+  use CNVegnitrogenstateType, only : cnveg_nitrogenstate_type
   use GridcellType          , only : grc                
   use ColumnType            , only : col                
   use PatchType             , only : patch                
@@ -192,7 +193,7 @@ contains
        energyflux_inst, frictionvel_inst, soilstate_inst, solarabs_inst, surfalb_inst,   &
        temperature_inst, waterfluxbulk_inst, waterstatebulk_inst,                        &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
-       photosyns_inst, &
+       photosyns_inst, cnveg_nitrogenstate_inst, &
        humanindex_inst, soil_water_retention_curve, &
        downreg_patch, leafn_patch, froot_carbon, croot_carbon)
     !
@@ -228,7 +229,7 @@ contains
     use clm_time_manager   , only : get_step_size_real, get_prev_date, is_near_local_noon
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
-    use clm_varcon         , only : c14ratio, spval
+    use clm_varcon         , only : spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use clm_varcon         , only : nu_param, cd1_param
     use perf_mod           , only : t_startf, t_stopf
@@ -264,6 +265,7 @@ contains
     type(ch4_type)                         , intent(inout)         :: ch4_inst
     class(ozone_base_type)                 , intent(inout)         :: ozone_inst
     type(photosyns_type)                   , intent(inout)         :: photosyns_inst
+    type(cnveg_nitrogenstate_type)         , intent(in)            :: cnveg_nitrogenstate_inst
     type(humanindex_type)                  , intent(inout)         :: humanindex_inst
     class(soil_water_retention_curve_type) , intent(in)            :: soil_water_retention_curve
     real(r8), intent(in) :: downreg_patch(bounds%begp:) ! fractional reduction in GPP due to N limitation (dimensionless)
@@ -352,7 +354,6 @@ contains
     real(r8) :: err(bounds%begp:bounds%endp)         ! balance error
     real(r8) :: erre                                 ! balance error
     real(r8) :: co2(bounds%begp:bounds%endp)         ! atmospheric co2 partial pressure (pa)
-    real(r8) :: c13o2(bounds%begp:bounds%endp)       ! atmospheric c13o2 partial pressure (pa)
     real(r8) :: o2(bounds%begp:bounds%endp)          ! atmospheric o2 partial pressure (pa)
     real(r8) :: svpts(bounds%begp:bounds%endp)       ! saturation vapor pressure at t_veg (pa)
     real(r8) :: eah(bounds%begp:bounds%endp)         ! canopy air vapor pressure (pa)
@@ -477,7 +478,6 @@ contains
          forc_u                 => atm2lnd_inst%forc_u_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)                        
          forc_v                 => atm2lnd_inst%forc_v_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)                       
          forc_pco2              => atm2lnd_inst%forc_pco2_grc                   , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
-         forc_pc13o2            => atm2lnd_inst%forc_pc13o2_grc                 , & ! Input:  [real(r8) (:)   ]  partial pressure c13o2 (Pa)                                           
          forc_po2               => atm2lnd_inst%forc_po2_grc                    , & ! Input:  [real(r8) (:)   ]  partial pressure o2 (Pa)                                              
 
          tc_ref2m               => humanindex_inst%tc_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
@@ -959,10 +959,6 @@ bioms:   do f = 1, fn
          co2(p) = forc_pco2(g)
          o2(p)  = forc_po2(g)
 
-         if ( use_c13 ) then
-            c13o2(p) = forc_pc13o2(g)
-         end if
-
          ! Initialize flux profile
 
          nmozsgn(p) = 0
@@ -1126,6 +1122,7 @@ bioms:   do f = 1, fn
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), bsun(begp:endp), &
                     bsha(begp:endp), btran(begp:endp), dayl_factor(begp:endp), leafn_patch(begp:endp), &
                     qsatl(begp:endp), qaf(begp:endp),     &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, waterfluxbulk_inst, &
                     froot_carbon(begp:endp), croot_carbon(begp:endp))
@@ -1133,6 +1130,7 @@ bioms:   do f = 1, fn
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                     dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sun')
             endif
@@ -1147,6 +1145,7 @@ bioms:   do f = 1, fn
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
                     dayl_factor(begp:endp), leafn_patch(begp:endp), &
+                    cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, phase='sha')
             end if
@@ -1640,7 +1639,7 @@ bioms:   do f = 1, fn
 
          ! Determine total photosynthesis
          
-         call PhotosynthesisTotal(fn, filterp, &
+         call PhotosynthesisTotal(bounds, fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate water use efficiency

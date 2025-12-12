@@ -27,5 +27,6 @@
    trouble-shooting/index.rst
    testing/index.rst
    using-mesh-maker/index.rst
+   working-with-documentation/index.rst
 
 Documentation was built: |today|
