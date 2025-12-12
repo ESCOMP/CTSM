@@ -62,6 +62,20 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdAllVars">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3660</issue>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+    </phase>
+  </test>
+  <test name="ERP_P36x2_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_gnu.clm-default--clm-all_outputs">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3661</issue>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+    </phase>
+  </test>
   <test name="MKSURFDATAESMF_P128x1.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel">
     <phase name="NLCOMP">
       <status>FAIL</status>
