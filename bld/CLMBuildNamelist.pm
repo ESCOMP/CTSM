@@ -4498,6 +4498,8 @@ sub setup_logic_cropcal_streams {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_start');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldFileName_swindow_end');
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cultivar_gdds',
+       'cropcals_rx'=>$cropcals_rx,
+       'cropcals_rx_adapt'=>$cropcals_rx_adapt,
        'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}
        );
     if ( &value_is_true($cropcals_rx_adapt) ) {
