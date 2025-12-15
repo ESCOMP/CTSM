@@ -424,7 +424,9 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
