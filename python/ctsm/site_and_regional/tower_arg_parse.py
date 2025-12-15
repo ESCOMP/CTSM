@@ -195,7 +195,7 @@ def get_parser(args, description, valid_neon_sites, valid_plumber_sites):
         dest="user_version",
         required=False,
         type=str,
-        choices=["v1", "v2", "v3"],
+        choices=["v1", "v2", "v3", "v4"],
     )
 
     parser.add_argument(
