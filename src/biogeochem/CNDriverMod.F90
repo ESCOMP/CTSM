@@ -44,6 +44,7 @@ module CNDriverMod
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
   use CropReprPoolsMod                , only : nrepr
+  use SoilHydrologyType               , only: soilhydrology_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1013,7 +1014,7 @@ contains
        c13_cnveg_carbonstate_inst,c14_cnveg_carbonstate_inst, &
        c13_cnveg_carbonflux_inst,c14_cnveg_carbonflux_inst, &
        c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
-       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
+       c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Update the nitrogen leaching rate as a function of soluble mineral N and total soil water outflow.
@@ -1028,6 +1029,8 @@ contains
     use clm_time_manager          , only: is_first_step_of_this_run_segment,is_beg_curr_year,is_end_curr_year,get_curr_date
     use CNSharedParamsMod         , only: use_matrixcn
     use SoilBiogeochemDecompCascadeConType, only: use_soil_matrixcn
+    use SoilNitrogenMovementMod           , only: SoilNitrogenMovement
+    use clm_varctl, only : use_nvmovement
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -1045,6 +1048,7 @@ contains
     type(cnveg_carbonflux_type)             , intent(inout) :: cnveg_carbonflux_inst
     type(cnveg_carbonstate_type)            , intent(inout) :: cnveg_carbonstate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
+    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -1062,8 +1066,16 @@ contains
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     integer p,fp,yr,mon,day,sec
     !-----------------------------------------------------------------------
-  
-    ! Mineral nitrogen dynamics (deposition, fixation, leaching)
+ 
+    ! soil nitrate fast aqueous movement, leaching will be evaluted here
+    if (use_nitrif_denitrif .and. use_nvmovement) then
+       call t_startf('SoilNitrogenMovementMod')
+       call SoilNitrogenMovement(bounds, num_bgc_soilc, filter_bgc_soilc, waterstatebulk_inst, &
+            soilstate_inst, soilhydrology_inst, soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       call t_stopf('SoilNitrogenMovementMod')
+    end if
+ 
+    ! Mineral nitrogen dynamics: deposition, fixation. If use_nvmoment  false, also leaching.
     
     call t_startf('SoilBiogeochemNLeaching')
     call SoilBiogeochemNLeaching(bounds, num_bgc_soilc, filter_bgc_soilc, &
