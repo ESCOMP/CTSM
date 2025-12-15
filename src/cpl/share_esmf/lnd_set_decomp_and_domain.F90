@@ -121,10 +121,8 @@ contains
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: Before lnd mesh create in ")
 #endif
-          call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF_MeshCreate')
           mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF_MeshCreate')
 #ifdef DEBUG
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
           call ESMF_VMLogMemInfo("clm: After lnd mesh create in ")
@@ -204,7 +202,6 @@ contains
 
     ! Generate a new mesh on the gindex decomposition
     ! NOTE: The distgrid_ctsm will be used later in lnd_import_export, even though it appears to just be local
-    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -213,7 +210,6 @@ contains
     ! Set ldomain%lonc, ldomain%latc and ldomain%area
     call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh on new decomposition')
 
     ! Set ldomain%lfrac
     ! Create fields on the input decomp and ctsm decomp
@@ -222,7 +218,6 @@ contains
     ! Redistribute field_lnd to field_ctsm
 
     ! Determine ldomain%frac using ctsm decomposition
-    call t_startf('lnd_set_decomp_and_domain_from_readmesh: land frac')
     if (trim(driver) == 'cmeps') then
 
        if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
@@ -262,11 +257,10 @@ contains
        deallocate(lndfrac_glob)
 
     end if
-    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: land frac')
 
     ! Deallocate local pointer memory including ESMF objects
     call from_readmesh_dealloc( rc )
-    if (chkerr(rc,__LINE__,u_FILE_u)) return 
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
@@ -556,14 +550,12 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! create route handle to map ocean mask from mask mesh to land mesh
-       call t_startf('lnd_set_lndmask_from_maskmesh::ESMF_FieldRegridStore')
        call ESMF_FieldRegridStore(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
             srcMaskValues=(/srcMaskValue/), dstMaskValues=(/dstMaskValue/), &
             regridmethod=ESMF_REGRIDMETHOD_CONSERVE, normType=ESMF_NORMTYPE_DSTAREA, &
             srcTermProcessing=srcTermProcessing_Value, &
             ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call t_stopf('lnd_set_lndmask_from_maskmesh::ESMF_FieldRegridStore')
 
        ! fill in values for field_mask with mask on mask mesh
        call ESMF_MeshGet(mesh_mask, elementdistGrid=distgrid_mask, rc=rc)
@@ -579,11 +571,9 @@ contains
        dataptr1d(:) = maskmask_loc(:)
 
        ! map mask mask to land mesh
-       call t_startf('lnd_set_lndmask_from_maskmesh::ESMF_FieldRegrid')
        call ESMF_FieldRegrid(field_mask, field_lnd, routehandle=rhandle_mask2lnd, &
             termorderflag=ESMF_TERMORDER_SRCSEQ, checkflag=checkflag, zeroregion=ESMF_REGION_TOTAL, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
-       call t_stopf('lnd_set_lndmask_from_maskmesh::ESMF_FieldRegrid')
 
        call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -611,13 +601,11 @@ contains
        do n = 1,lsize_lnd
           lndmask_glob(gindex_input(n)) = lndmask_loc(n)
        end do
-       call t_startf('lnd_set_lndmask_from_maskmesh::ESMF_VMAllReduce')
        allocate(itemp_glob(gsize))
        call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
             reduceflag=ESMF_REDUCE_SUM, rc=rc)
        lndmask_glob(:) = int(itemp_glob(:))
        deallocate(itemp_glob)
-       call t_stopf('lnd_set_lndmask_from_maskmesh::ESMF_VMAllReduce')
 
        ! deallocate memory
        deallocate(maskmask_loc)
