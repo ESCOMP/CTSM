@@ -53,11 +53,7 @@ contains
     use clm_varctl , only : nsegspc
     use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
-    ! Temporary testing stuff
     use Assertions, only : assert_equal
-    use decompMod  , only : processor_type, get_global_index, subgrid_level_gridcell
-    use decompMod  , only : clump_type
-    ! end temporary testing stuff
     !
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
@@ -139,7 +135,6 @@ contains
           call endrun(msg="Round robin pid error", file=sourcefile, line=__LINE__)
           return
        endif
-       !clumps(n)%owner = pid   ! This line should be able to be removed when clumps is only for the local task
        if (iam == pid) then
           clumps(n)%owner = pid
           cid = cid + 1
@@ -250,8 +245,8 @@ contains
           if ( procinfo%cid(lc) == cid ) then
              if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
                 write(iulog,*) ' iam, g = ', iam, g
-                call endrun(msg='g out of bounds for MPI_SCAN test', file=sourcefile, line=__LINE__)
-             end if  
+                call endrun(msg='g out of bounds for MPI_SCAN', file=sourcefile, line=__LINE__)
+             end if
              procinfo%ggidx(g) = ln
              g = g + 1
           end if
@@ -408,9 +403,7 @@ contains
       !------------------------------------------------------------------------------
 
       subroutine decompInit_lnd_clean()
-         ! Deallocate the temporary variables used in decompInit_lnd
-         !deallocate(clumpcnt)
-         !deallocate(gdc2glo)
+         ! Currently there isn't any memory to clean up here
          !--- NOTE: Can only deallocate lcid after decompInit_clumps ----
          ! TODO: Move the deallocate for lcid to here, after decompInit_clumps only calculates the local taskj
       end subroutine decompInit_lnd_clean
