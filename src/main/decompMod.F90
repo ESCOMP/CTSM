@@ -84,7 +84,7 @@ module decompMod
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   contains
      procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
-     procedure, public :: calc_globalxy_indices
+     procedure, public :: calc_globalxy_indices     ! Get the global i/j indices from the global vector grid index
   end type processor_type
   public processor_type
   type(processor_type),public :: procinfo
@@ -128,7 +128,7 @@ module decompMod
 
 contains
 
-
+  !-----------------------------------------------------------------------
   function calc_global_index_fromij( this, g, ni, nj ) result(global_index)
     ! Returns the full grid global vector index from the gridcell on this processor
     ! !ARGUMENTS:
@@ -171,6 +171,7 @@ contains
 
   end function calc_global_index_fromij
 
+  !-----------------------------------------------------------------------
   subroutine calc_ijindices_from_full_global_index( g, ni, nj, i, j )
      ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
      integer, intent(in) :: g    ! Input processor global full 2D vector index
@@ -199,8 +200,9 @@ contains
     end if
   end subroutine calc_ijindices_from_full_global_index
 
-
+  !-----------------------------------------------------------------------
   subroutine calc_globalxy_indices( this, g, ni, nj, i, j )
+    ! Get the global i/j indices from the global vector grid index
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
     integer, intent(in) :: g ! gridcell index on this processor
