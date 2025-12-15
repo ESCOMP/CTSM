@@ -82,7 +82,6 @@ contains
     integer :: cell_id_offset               ! The offset for the starting gridcell number for this processor
     integer :: begcid, endcid               ! Beginning and ending cid's for this processor
     !------------------------------------------------------------------------------
-    call t_startf('decompInit_lnd')
     ! Set some global scalars: nclumps, numg and lns
     call decompInit_lnd_set_nclumps_numg_lns( )
 
@@ -197,12 +196,6 @@ contains
        end if
     enddo
 
-    ! clumpcnt is the ending gdc index of each clump
-    ! Set gindex_global
-
-    gdc2glo(:) = 0
-
-    ! Temporary testing for MPI_SCAN, for just the local PE
     !---------------------------------------------------------------------
     !
     ! Do an MPI_SCAN to get the starting index for each processor ----
@@ -309,7 +302,6 @@ contains
        write(iulog,*)
     end if
     call shr_sys_flush(iulog)
-    call t_stopf('decompInit_lnd')
 
   !------------------------------------------------------------------------------
   ! Internal subroutines for this subroutine
@@ -320,6 +312,7 @@ contains
       subroutine decompInit_lnd_allocate( ier )
          ! Allocate the temporary and long term variables set and used in decompInit_lnd
          integer, intent(out) :: ier ! error code
+         !------------------------------------------------------------------------------
          !
          ! Long-term allocation:
          ! Arrays from decompMod are allocated here
@@ -331,8 +324,11 @@ contains
          !
          ! NOTE: nclumps, numg, and lns must be set before calling this routine!
          ! So decompInit_lnd_set_nclumps_numg_lns must be called first
+         !------------------------------------------------------------------------------
 
+         !------------------------------------------------------------------------------
          ! Allocate the longer term decompMod data
+         !------------------------------------------------------------------------------
          allocate(procinfo%cid(clump_pproc), stat=ier)
          if (ier /= 0) then
             call endrun(msg='allocation error for procinfo%cid', file=sourcefile, line=__LINE__)
@@ -343,7 +339,7 @@ contains
             call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
          end if
-         ! This will be moved to the other allocate and for a smaller size ----
+         ! TODO: This will be moved to the other allocate and for a smaller size ----
          allocate(clumps(nclumps), stat=ier)
          if (ier /= 0) then
             write(iulog,*) 'allocation error for clumps: nclumps, ier=', nclumps, ier
@@ -351,7 +347,9 @@ contains
             return
          end if
 
+         !-------------------------------------------------------------
          ! Temporary arrays that are just used in decompInit_lnd
+         !-------------------------------------------------------------
          if ( numg < 1 )then
             call endrun(msg="numg is NOT set before allocation", file=sourcefile, line=__LINE__)
             return
@@ -386,6 +384,7 @@ contains
             call endrun(msg="allocation error for gindex_global", file=sourcefile, line=__LINE__)
             return
          end if
+         ! TODO: Remove the data, and only use the subroutine to calculate when needed
          allocate(procinfo%ggidx(procinfo%begg:procinfo%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg='allocation error for procinfo%ggidx', file=sourcefile, line=__LINE__)
@@ -412,7 +411,8 @@ contains
          ! Deallocate the temporary variables used in decompInit_lnd
          !deallocate(clumpcnt)
          !deallocate(gdc2glo)
-         !--- NOTE: Can only deallocate after decompInit_clumps ----
+         !--- NOTE: Can only deallocate lcid after decompInit_clumps ----
+         ! TODO: Move the deallocate for lcid to here, after decompInit_clumps only calculates the local taskj
       end subroutine decompInit_lnd_clean
 
       !------------------------------------------------------------------------------
