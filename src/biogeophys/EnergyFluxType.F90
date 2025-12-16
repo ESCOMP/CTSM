@@ -510,7 +510,7 @@ contains
     this%eflx_soil_grnd_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_U', units='W/m^2',  &
          avgflag='A', long_name='Urban heat flux into soil/snow including snow melt', &
-         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%netrad_patch(begp:endp) = spval
     call hist_addfld1d (fname='Rnet', units='W/m^2',  &
