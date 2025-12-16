@@ -393,7 +393,7 @@ contains
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
          avgflag='A', long_name='Rural daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval)
 
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
@@ -408,7 +408,7 @@ contains
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval)
 
     if (use_biomass_heat_storage) then 
        this%t_stem_patch(begp:endp) = spval
