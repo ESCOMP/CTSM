@@ -386,14 +386,14 @@ contains
   end subroutine get_clump_bounds
 
   !------------------------------------------------------------------------------
-  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region, allow_errors)
+  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region, only_gridcell)
     !
     ! !DESCRIPTION:
     ! Retrieve processor bounds
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(out) :: bounds ! processor bounds bounds
-    logical, intent(in), optional :: allow_errors ! Don't do the normal error checking
+    logical, intent(in), optional :: only_gridcell ! Only return the gridcell bounds, other subgrid info assumed to not be set yet
 
     ! Normally this routine will abort if it is called from within a threaded region,
     ! because in most cases you should be calling get_clump_bounds in that situation. If
@@ -443,8 +443,8 @@ contains
     end if
 
     ! Exit before checking if errors should be allowed
-    if ( present(allow_errors) ) then
-      if ( allow_errors ) return
+    if ( present(only_gridcell) ) then
+      if ( only_gridcell ) return
     end if
     if ( bounds%endp <= 0 )then
        call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)

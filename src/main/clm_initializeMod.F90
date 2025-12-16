@@ -223,7 +223,7 @@ contains
 
     call t_startf('clm_init2_part1')
     ! Get processor bounds for gridcells, just for gridcells
-    call get_proc_bounds(bounds_proc, allow_errors=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until adter decompInit_clumps
+    call get_proc_bounds(bounds_proc, only_gridcell=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until after decompInit_clumps
     begg = bounds_proc%begg; endg = bounds_proc%endg
 
     ! Initialize glc behavior

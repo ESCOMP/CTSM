@@ -226,7 +226,7 @@ contains
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
-    call get_proc_bounds(bounds, allow_errors=.true.)    ! This has to be done after procinfo is finalized
+    call get_proc_bounds(bounds, only_gridcell=.true.)    ! This has to be done after procinfo is finalized
     call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after procinfo is finalized
     if (ier /= 0) return
 
@@ -526,7 +526,7 @@ contains
 
     call t_startf('decompInit_clumps')
     !--- assign gridcells to clumps (and thus pes) ---
-    call get_proc_bounds(bounds, allow_errors=.true.)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
     begg = bounds%begg; endg = bounds%endg
 
     allocate(allvecl(nclumps,5))   ! local  clumps [gcells,lunit,cols,patches,coh]
