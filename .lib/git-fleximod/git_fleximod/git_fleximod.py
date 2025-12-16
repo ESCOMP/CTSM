@@ -245,7 +245,6 @@ def git_toplevelroot(root_dir, llogger):
 async def submodules_update(gitmodules, root_dir, requiredlist, force):
     async def update_submodule(name, requiredlist, force):
         submod = init_submodule_from_gitmodules(gitmodules, name, root_dir, logger)
-
         if not submod.fxrequired:
             submod.fxrequired = "AlwaysRequired"
         fxrequired = submod.fxrequired
