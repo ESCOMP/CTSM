@@ -51,7 +51,7 @@ module controlMod
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
   use clm_varctl
-  use PRTGenericMod, only : fates_cn, fates_c_only
+  use PRTGenericMod, only : fates_cnp, fates_c_only
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -499,10 +499,10 @@ contains
              call endrun(msg=' ERROR: fates_parteh_mode=fates_c_only must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
-          if (fates_parteh_mode == fates_cn .and. suplnitro == suplnAll .and. use_fates_bgc )then
-             write(iulog,*) ' When fates_parteh_mode == fates_cn,'
+          if (fates_parteh_mode == fates_cnp .and. suplnitro == suplnAll .and. use_fates_bgc )then
+             write(iulog,*) ' When fates_parteh_mode == fates_cnp,'
              write(iulog,*) '  you must have supplemental nitrogen turned off.'
-             call endrun(msg=' ERROR: fates_parteh_mode=fates_cn must have suplnitro set to suplnNon.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=fates_cnp must have suplnitro set to suplnNon.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           

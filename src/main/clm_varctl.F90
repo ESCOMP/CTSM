@@ -325,7 +325,7 @@ module clm_varctl
   integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
   integer, public            :: fates_parteh_mode = -9                  ! = 1 indicated by fates_c_only is carbon only
-                                                                        ! = 2 indicated by fates_cn is C+N (P not enabled)
+                                                                        ! = 2 indicated by fates_cnp is C+N+P, though clm cannot enable phosphorus yet, so clm needs fates_cnp_prescribed_puptake > 1 (recommended value 10) in the fates paramfile
                                                                         ! no others enabled
   integer, public            :: fates_spitfire_mode = 0                
                                                                         ! 0 for no fire; 1 for constant ignitions;

@@ -46,7 +46,7 @@ module CLMFatesInterfaceMod
    use CNProductsMod     , only : cn_products_type
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
-   use PRTGenericMod     , only : fates_cn
+   use PRTGenericMod     , only : fates_cnp
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_tree_damage
@@ -2814,7 +2814,7 @@ module CLMFatesInterfaceMod
            this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
 
       ! If N cycling is on
-      if (fates_parteh_mode == fates_cn) then
+      if (fates_parteh_mode == fates_cnp) then
          
          n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
               n_products_inst%hrv_deadstem_to_prod10_grc(g) + &
