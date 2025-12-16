@@ -347,7 +347,7 @@ contains
          units='%',  &
          avgflag='A', &
          long_name=this%info%lname('Rural 2m relative humidity'), &
-         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval)
 
     this%rh_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d ( &
