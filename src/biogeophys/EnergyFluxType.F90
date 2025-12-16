@@ -480,7 +480,7 @@ contains
     this%eflx_lwrad_net_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA_U', units='W/m^2',  &
          avgflag='A', long_name='Urban net infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
