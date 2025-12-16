@@ -373,7 +373,7 @@ contains
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
          avgflag='A', long_name='Rural 2m air temperature', &
-         ptr_patch=this%t_ref2m_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_r_patch, set_spec=spval)
 
     this%t_ref2m_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
@@ -398,7 +398,7 @@ contains
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
          avgflag='A', long_name='Urban 2m air temperature', &
-         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval)
 
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
