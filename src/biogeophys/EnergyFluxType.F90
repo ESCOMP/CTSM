@@ -490,7 +490,7 @@ contains
     this%eflx_lwrad_out_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRE_U', units='W/m^2',  &
          avgflag='A', long_name='Urban emitted infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_sh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_U', units='W/m^2',  &
