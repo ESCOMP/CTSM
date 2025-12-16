@@ -505,7 +505,7 @@ contains
     this%eflx_lh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_U', units='W/m^2',  &
          avgflag='A', long_name='Urban total evaporation', &
-         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_U', units='W/m^2',  &
