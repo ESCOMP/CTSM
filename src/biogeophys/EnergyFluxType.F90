@@ -340,7 +340,7 @@ contains
     this%eflx_snomelt_u_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_U',  units='W/m^2',  &
          avgflag='A', long_name='Urban snow melt heat flux', &
-         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_lwrad_net_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA', units='W/m^2',  &
