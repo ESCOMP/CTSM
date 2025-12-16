@@ -11,6 +11,7 @@ module decompMod
   use shr_sys_mod , only : shr_sys_abort ! use shr_sys_abort instead of endrun here to avoid circular dependency
   use shr_abort_mod , only : shr_abort_abort ! as above
   use clm_varctl  , only : iulog
+  use clm_varctl  , only : use_fates
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -248,8 +249,6 @@ contains
     integer, intent(in) :: subgrid_level
     !
     ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'get_beg'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
@@ -289,7 +288,6 @@ contains
     integer           , intent(in) :: subgrid_level
     !
     ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'get_end'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
@@ -353,9 +351,10 @@ contains
     bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
     bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
     bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
-    bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
-    bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
-
+    if ( use_fates )then
+      bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
+      bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
+    end if
 
     if ( bounds%endp <= 0 )then
        call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
@@ -373,12 +372,13 @@ contains
        call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
        return
     end if
-    ! End Cohort isn't necessarily valid, so don't do this error check
-    !if ( bounds%endCohort <= 0 )then
-    !   write(iulog,*) 'endCohort = ', bounds%endCohort
-    !   call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
-    !   return
-    !end if
+    if ( use_fates )then
+       if ( bounds%endCohort <= 0 )then
+          write(iulog,*) 'endCohort = ', bounds%endCohort
+          call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
 
     bounds%level = bounds_level_clump
     bounds%clump_index = n
@@ -429,20 +429,22 @@ contains
     bounds%endl = procinfo%endl - procinfo%begl + 1
     bounds%begg = 1
     bounds%endg = procinfo%endg - procinfo%begg + 1
-    bounds%begCohort = 1
-    bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
+    if ( use_fates )then
+       bounds%begCohort = 1
+       bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
+    end if
 
     bounds%level = bounds_level_proc
     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
 
-    ! Soem final error checking
+    ! Some final error checking
     ! Always check that gridcells are set
     if ( bounds%endg <= 0 )then
        call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
        return
     end if
 
-    ! Exit before checking if errors should be allowed
+    ! Exit before checking subgrid levels if only_gridcell is requested as these won't be set yet
     if ( present(only_gridcell) ) then
       if ( only_gridcell ) return
     end if
@@ -458,11 +460,12 @@ contains
        call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
        return
     end if
-    ! End Cohort isn't necessarily valid, so don't do this error check
-    !if ( bounds%endCohort <= 0 )then
-       !call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
-       !return
-    !end if
+    if ( use_fates )then
+      if ( bounds%endCohort <= 0 )then
+         call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+         return
+       end if
+    end if
 
   end subroutine get_proc_bounds
 
@@ -651,7 +654,6 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'get_subgrid_level_from_name'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level_name)
@@ -667,9 +669,13 @@ contains
        subgrid_level = subgrid_level_patch
     case(nameCohort)
        subgrid_level = subgrid_level_cohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort(file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) subname//': unknown subgrid_level_name: ', trim(subgrid_level_name)
-       call shr_sys_abort()
+       write(iulog,*) 'unknown subgrid_level_name: ', trim(subgrid_level_name)
+       call shr_sys_abort(file=sourcefile, line=__LINE__ )
     end select
 
   end function get_subgrid_level_from_name
@@ -701,9 +707,13 @@ contains
        get_subgrid_level_gsize = nump
     case(subgrid_level_cohort)
        get_subgrid_level_gsize = numCohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort(file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) 'get_subgrid_level_gsize: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort()
+       write(iulog,*) 'unknown subgrid_level: ', subgrid_level
+       call shr_sys_abort(file=sourcefile, line=__LINE__ )
     end select
 
   end function get_subgrid_level_gsize
@@ -733,9 +743,13 @@ contains
        gindex => gindex_patch
     case(subgrid_level_cohort)
        gindex => gindex_cohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort( file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) 'get_subgrid_level_gindex: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort('bad subgrid_level')
+       write(iulog,*) 'unknown subgrid_level: ', subgrid_level
+       call shr_sys_abort('bad subgrid_level', file=sourcefile, line=__LINE__)
     end select
 
   end subroutine get_subgrid_level_gindex
