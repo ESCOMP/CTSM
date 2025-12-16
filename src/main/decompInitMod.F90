@@ -1,5 +1,7 @@
 module decompInitMod
 
+#include "shr_assert.h"
+
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module provides a descomposition into a clumped data structure which can
@@ -53,7 +55,6 @@ contains
     use clm_varctl , only : nsegspc
     use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
-    use Assertions, only : assert_equal
     !
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
@@ -269,19 +270,19 @@ contains
     !---------------------------------------------------------------------
     begcid = procinfo%cid(1)
     endcid = procinfo%cid(clump_pproc)
-    call assert_equal(clumps(begcid)%begg, procinfo%begg, &
+    call shr_assert(clumps(begcid)%begg == procinfo%begg, &
                       msg='decompInit_lnd(): clumps(begcid) begg does not match procinfo begg')
-    call assert_equal(clumps(endcid)%endg, procinfo%endg, &
+    call shr_assert(clumps(endcid)%endg == procinfo%endg, &
                       msg='decompInit_lnd(): clumps(endcid) endg does not match procinfo endg')
-    call assert_equal(sum(clumps(procinfo%cid)%ncells), procinfo%ncells, &
+    call shr_assert(sum(clumps(procinfo%cid)%ncells) == procinfo%ncells, &
                       msg='decompInit_lnd(): sum of clumps ncells does not match procinfo ncells')
 
     do lc = 1, clump_pproc
        cid = procinfo%cid(lc)
-       call assert_equal( (clumps(cid)%endg-clumps(cid)%begg+1), clumps(cid)%ncells, &
+       call shr_assert( (clumps(cid)%endg-clumps(cid)%begg+1) == clumps(cid)%ncells, &
                          msg='decompInit_lnd(): clumps(cid) endg-begg+1 does not match clumps ncells')
     end do
-    call assert_equal( (procinfo%endg-procinfo%begg+1), procinfo%ncells, &
+    call shr_assert( (procinfo%endg-procinfo%begg+1) == procinfo%ncells, &
                       msg='decompInit_lnd(): procinfo endg-begg+1 does not match procinfo ncells')
 
     call decompInit_lnd_clean()
