@@ -656,6 +656,7 @@ contains
     deallocate(lcid)
 
     ! ------ Reset the clump type array for all non-local cid's to -1 to show it can be made smaller
+    ! TODO: Remove this when https://github.com/ESCOMP/CTSM/issues/3466 is done
     do cid = 1, nclumps
          if (clumps(cid)%owner /= iam) then
             clumps(cid)%owner     = -1
