@@ -388,7 +388,7 @@ contains
     this%t_ref2m_min_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_R', units='K',  &
          avgflag='A', long_name='Rural daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval)
 
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
@@ -403,7 +403,7 @@ contains
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
          avgflag='A', long_name='Urban daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval)
 
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
