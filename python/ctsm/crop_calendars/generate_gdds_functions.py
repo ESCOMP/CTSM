@@ -6,12 +6,12 @@ Functions to support generate_gdds.py
 import warnings
 import os
 import glob
-import datetime as dt
 from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
 from ctsm.utils import is_instantaneous
+from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
@@ -52,23 +52,6 @@ try:
 except ModuleNotFoundError:
     print("Will NOT produce harvest requirement map figure files.")
     CAN_PLOT = False
-
-
-def log(logger, string):
-    """
-    Simultaneously print INFO messages to console and to log file
-    """
-    print(string)
-    logger.info(string)
-
-
-def error(logger, string):
-    """
-    Simultaneously print ERROR messages to console and to log file
-    """
-    print(string)
-    logger.error(string)
-    raise RuntimeError(string)
 
 
 def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
@@ -271,7 +254,6 @@ def import_and_process_1yr(
     """
     save_figs = True
     log(logger, f"netCDF year {this_year}...")
-    log(logger, dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -308,6 +290,7 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
+        logger=logger,
     )
     for timestep in dates_ds["time"].values:
         print(timestep)
@@ -579,6 +562,7 @@ def import_and_process_1yr(
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
+        logger=logger,
     )
 
     # Restrict to patches we're including
@@ -604,7 +588,7 @@ def import_and_process_1yr(
     incl_vegtype_indices = []
     for var, vegtype_str in enumerate(incl_vegtypes_str):
         if vegtype_str in skip_crops:
-            log(logger, f"      SKIPPING {vegtype_str}")
+            log(logger, f"SKIPPING {vegtype_str}")
             continue
 
         vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
@@ -619,7 +603,7 @@ def import_and_process_1yr(
             check_gddharv = True
         if not this_crop_gddaccum_da.size:
             continue
-        log(logger, f"      {vegtype_str}...")
+        log(logger, f"{vegtype_str}...")
         incl_vegtype_indices = incl_vegtype_indices + [var]
 
         # Get prescribed harvest dates for these patches
@@ -1116,7 +1100,9 @@ if CAN_PLOT:
         if land_use_file:
             year_1_lu = year_1 if first_land_use_year is None else first_land_use_year
             year_n_lu = year_n if last_land_use_year is None else last_land_use_year
-            lu_ds = cc.open_lu_ds(land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, ungrid=False)
+            lu_ds = cc.open_lu_ds(
+                land_use_file, year_1_lu, year_n_lu, gdd_maps_ds, logger=logger, ungrid=False
+            )
             lu_years_text = f" (masked by {year_1_lu}-{year_n_lu} area)"
             lu_years_file = f"_mask{year_1_lu}-{year_n_lu}"
         else:

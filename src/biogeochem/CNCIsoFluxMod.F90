@@ -1357,7 +1357,7 @@ contains
     !
     ! !USES:
 !DML
-    use pftconMod  , only : npcropmin
+    use pftconMod  , only : is_prognostic_crop
     use clm_varctl , only : use_grainproduct
 !DML
 
@@ -1404,7 +1404,7 @@ contains
             end do
 
 !DML
-            if (ivt(p) >= npcropmin) then ! add livestemc to litter
+            if (is_prognostic_crop(ivt(p))) then ! add livestemc to litter
                ! stem litter carbon fluxes
                do i = i_litr_min, i_litr_max
                   phenology_c_to_litr_c(c,j,i) = &

@@ -579,7 +579,8 @@ contains
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
          icefrac           =>    soilhydrology_inst%icefrac_col     , & ! Input:  [real(r8) (:,:) ]  fraction of ice                                 
          hkdepth           =>    soilhydrology_inst%hkdepth_col     , & ! Input:  [real(r8) (:)   ]  decay factor (m)                                  
-
+         qout_col          =>    soilhydrology_inst%qout_col        , & ! Output: [real(r8) (:,:) ]  soil water out of the bottom, mm h2o/s 
+         qin_col           =>    soilhydrology_inst%qin_col         , & ! Output: [real(r8) (:,:) ]  soil water into the bottom, mm h2o/s 
          smpmin            =>    soilstate_inst%smpmin_col          , & ! Input:  [real(r8) (:)   ]  restriction for min of soil potential (mm)        
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
          hksat             =>    soilstate_inst%hksat_col           , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
@@ -787,7 +788,8 @@ contains
          amx(c,j) =  0._r8
          bmx(c,j) =  dzmm(c,j)*(sdamp+1._r8/dtime) + dqodw1(c,j)
          cmx(c,j) =  dqodw2(c,j)
-         
+         qin_col(c,j) = qin(c,j)
+         qout_col(c,j) = qout(c,j)   
       end do
 
       ! Nodes j=2 to j=nlevsoi-1
@@ -811,7 +813,8 @@ contains
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  dqodw2(c,j)
-            
+            qin_col(c,j) = qin(c,j)
+            qout_col(c,j) = qout(c,j)            
          end do
       end do
 
@@ -833,6 +836,8 @@ contains
             amx(c,j)    = -dqidw0(c,j)
             bmx(c,j)    =  dzmm(c,j)/dtime - dqidw1(c,j) + dqodw1(c,j)
             cmx(c,j)    =  0._r8
+            qin_col(c,j) = qin(c,j)
+            qout_col(c,j) = qout(c,j)
 
             ! next set up aquifer layer; hydrologically inactive
             rmx(c,j+1) = 0._r8
@@ -883,6 +888,8 @@ contains
             amx(c,j+1) = -dqidw0(c,j+1)
             bmx(c,j+1) =  dzmm(c,j+1)/dtime - dqidw1(c,j+1) + dqodw1(c,j+1)
             cmx(c,j+1) =  0._r8
+            qin_col(c,j) = qin(c,j)
+            qout_col(c,j) = qout(c,j)
          endif
       end do
 
@@ -1154,7 +1161,8 @@ contains
 
          qcharge           =>    soilhydrology_inst%qcharge_col     , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
-
+         qout_col          =>    soilhydrology_inst%qout_col        , & ! Output: [real(r8) (:,:) ]  soil water out of the bottom, mm h2o/s
+         qin_col           =>    soilhydrology_inst%qin_col         , & ! Output: [real(r8) (:,:) ]  soil water into the bottom, mm h2o/s
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
@@ -1402,7 +1410,8 @@ contains
                !      call endrun(subname // ':: negative soil moisture values found!')
             endif
          end do
-
+         qin_col(c,1:nlayers) = qin(c,1:nlayers)
+         qout_col(c,1:nlayers) = qout(c,1:nlayers)
       end do  ! spatial loop
 
 

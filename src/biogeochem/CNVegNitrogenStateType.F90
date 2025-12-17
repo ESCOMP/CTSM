@@ -10,7 +10,7 @@ module CNVegNitrogenStateType
   use clm_varctl                         , only : use_crop
   use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
-  use pftconMod                          , only : npcropmin, noveg, pftcon
+  use pftconMod                          , only : is_prognostic_crop, noveg, pftcon
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use LandunitType                       , only : lun                
@@ -2251,7 +2251,7 @@ contains
             this%npool_patch(p)              + &
             this%retransn_patch(p)
 
-       if ( use_crop .and. patch%itype(p) >= npcropmin )then
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) )then
           do k = 1, nrepr
              this%dispvegn_patch(p) = &
                   this%dispvegn_patch(p) + &

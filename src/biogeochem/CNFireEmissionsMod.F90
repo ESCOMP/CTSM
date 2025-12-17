@@ -347,7 +347,7 @@ contains
     use pftconMod       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
     use pftconMod       , only : nc3_arctic_grass, nc3_nonarctic_grass
     use pftconMod       , only : nc3crop, nc3irrig
-    use pftconMod       , only : npcropmin, npcropmax
+    use pftconMod       , only : is_prognostic_crop
     implicit none
     integer, intent(in) :: veg_type
 
@@ -376,7 +376,7 @@ contains
     else if ( veg_type == nc3crop             .or.  veg_type <= nc3irrig             ) then
        ztop = 1.e3_r8 ! m
     ! Prognostic crops
-    else if ( veg_type >= npcropmin           .and. veg_type <= npcropmax            ) then
+    else if (is_prognostic_crop(veg_type)) then
        ztop = 1.e3_r8 ! m
     else
        call endrun('ERROR:: undefined veg_type' )
