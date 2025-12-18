@@ -575,25 +575,28 @@ class TestCompareAttrs(unittest.TestCase):
 
 
 class TestArrayEqualNanSafe(unittest.TestCase):
-    """Unit tests for array_equal_nan_safe()"""
+    """Unit tests for array_equal_nan_safe() and _array__eq__nan_safe()"""
 
     def test_aens_float_withnan(self):
         """Test float data with NaN"""
         a = np.array([1.0, 2.2, 3.14, np.nan])
         b = a
         self.assertTrue(cp._array_equal_nan_safe(a, b))
+        self.assertListEqual(list(cp._array__eq__nan_safe(a, b)), [True, True, True, True])
 
     def test_aens_str(self):
         """Test string data, which can't be NaN"""
         a = np.array(["foo", "bar", "baz"])
         b = a
         self.assertTrue(cp._array_equal_nan_safe(a, b))
+        self.assertListEqual(list(cp._array__eq__nan_safe(a, b)), [True, True, True])
 
     def test_aens_str_float(self):
         """Test comparing string to float"""
         a = np.array(["foo", "bar", "baz"])
-        b = np.array([1.0, 2.2, 3.14, np.nan])
+        b = np.array([1.0, 3.14, np.nan])
         self.assertFalse(cp._array_equal_nan_safe(a, b))
+        self.assertListEqual(list(cp._array__eq__nan_safe(a, b)), [False, False, False])
 
 
 class TestOneUnequalValueMsg(unittest.TestCase):
@@ -1142,6 +1145,36 @@ class TestCompareDaValues(unittest.TestCase):
         """Test with scalar values that differ"""
         da0 = xr.DataArray(42)
         da1 = xr.DataArray(99)
+        da0_ms = xr.DataArray(42)
+        da1_ms = xr.DataArray(99)
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("42 → 99", result)
+
+    def test_scalar_values_differ_only_before_ms(self):
+        """Test with scalar values that differ only BEFORE masking/scaling"""
+        da0 = xr.DataArray(42)
+        da1 = xr.DataArray(99)
+        da0_ms = xr.DataArray(42)
+        da1_ms = xr.DataArray(42)
+
+        result = cp._compare_da_values(da0_ms, da1_ms, da0, da1, "")
+
+        # Should have 2 lines including header
+        self.assertEqual(result.count("\n"), 2)
+
+        self.assertIn("Values differ:", result)
+        self.assertIn("42 → 99", result)
+
+    def test_scalar_values_differ_only_after_ms(self):
+        """Test with scalar values that differ only AFTER masking/scaling"""
+        da0 = xr.DataArray(42)
+        da1 = xr.DataArray(42)
         da0_ms = xr.DataArray(42)
         da1_ms = xr.DataArray(99)
 

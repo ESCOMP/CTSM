@@ -363,7 +363,7 @@ def _compare_da_values(
     # If not, loop through mismatches and add them to message
     if not values_match:
         # Find where they're unequal
-        where_unequal = np.where(np0 != np1)
+        where_unequal = np.where(~_array__eq__nan_safe(np0, np1) | ~_array__eq__nan_safe(np0_ms, np1_ms))
         if where_unequal:
             msg += INDENT + "Values differ:\n"
 
@@ -394,6 +394,22 @@ def _compare_da_values(
                 msg=msg,
             )
     return msg
+
+
+def _array__eq__nan_safe(np_a, np_b):
+    """
+    A way to check numpy array == where you want NaNs to be equal but the arrays might be of
+    a type where np.isnan() will fail.
+    """
+    try:
+        result = (np_a == np_b) | (np.isnan(np_a) & np.isnan(np_b))
+    except TypeError as e:
+        # Some data types will TypeError at np.array_equal(..., equal_nan=True). If TypeError
+        # happened for a different reason, raise it.
+        if "ufunc 'isnan' not supported for the input types" not in str(e):
+            raise e
+        result = np_a == np_b
+    return result
 
 
 def _array_equal_nan_safe(np_a, np_b):
