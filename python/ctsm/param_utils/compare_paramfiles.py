@@ -483,7 +483,7 @@ def _one_unequal_value_msg(
     if ms_equal and not raw_equal:
         msg += (
             2 * INDENT
-            + f"{indices_list} raw: {v0} → {v1} (raw; both {v0_ms} after masking/scaling)\n"
+            + f"{indices_list} {v0} → {v1} (raw; both {v0_ms} after masking/scaling)\n"
         )
 
     # Raw values are the same, but they differ after masking/scaling
