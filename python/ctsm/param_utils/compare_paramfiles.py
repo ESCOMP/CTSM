@@ -458,6 +458,7 @@ def _one_unequal_value_msg(
         if dimnames:
             indices_parts = []
             for i, (dimname, idx) in enumerate(zip(dimnames, indices)):
+                # Convert from numpy int to regular int
                 idx_int = int(idx)
                 # If this dimension is pft/pftname and we have pftnames, include the PFT name
                 if pftnames and dimname.lower() in ["pft", "pftname"]:
@@ -467,6 +468,7 @@ def _one_unequal_value_msg(
                     indices_parts.append(f"{dimname} {idx_int}")
             indices_list = "[" + ", ".join(indices_parts) + "]"
         else:
+            # Convert from numpy int to regular int
             indices_list = str([int(i) for i in indices])
 
     raw_equal = v0 == v1
