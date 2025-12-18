@@ -63,6 +63,14 @@ class TestCompareParamfilesMain(unittest.TestCase):
                         "coordinates": "pftname",
                     },
                 ),
+                "nonpft_param": xr.DataArray(
+                    [1.2, 3.4, 8.7],
+                    dims=["dimx"],
+                    attrs={
+                        "units": "fake units",
+                        "long_name": "1d non-pft param",
+                    },
+                ),
                 # PFT names coordinate
                 "pftname": xr.DataArray(
                     pft_names, dims=["pft"], attrs={"long_name": "PFT names", "units": "unitless"}
@@ -131,6 +139,13 @@ class TestCompareParamfilesMain(unittest.TestCase):
         ds9["new_var2"] = xr.DataArray(123, attrs={"units": "m/s", "long_name": "New variable 2"})
         ds9.to_netcdf(self.file9, format=NETCDF_TYPE)
 
+        # Create 10th paramfile with some differences
+        self.file10 = os.path.join(self.tempdir, "params9.nc")
+        ds2 = ds0.copy(deep=True)
+        # Change a non-PFT-specific value
+        ds2["nonpft_param"].values[1] = -5.0
+        ds2.to_netcdf(self.file10, format=NETCDF_TYPE)
+
     def tearDown(self):
         """Clean up test fixtures"""
         shutil.rmtree(self.tempdir)
@@ -187,6 +202,20 @@ class TestCompareParamfilesMain(unittest.TestCase):
         self.assertRegex(
             output,
             r"pft_param1:\n\s+Values differ:\n\s+\[pft 1 \(grass1\)\] 2\.0 → 5\.0",
+        )
+
+    def test_nonpft_value_difference_with_index(self):
+        """Test that 1-d non-PFT-specific value differences show indices"""
+        sys.argv = ["compare_paramfiles.py", self.file0, self.file10]
+
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.main()
+            output = mock_stdout.getvalue()
+
+        # Should report nonpft_param difference with index only
+        self.assertRegex(
+            output,
+            r"nonpft_param:\n\s+Values differ:\n\s+\[dimx 1\] 3\.4 → -5\.0",
         )
 
     def test_variable_missing_from_first_file(self):
