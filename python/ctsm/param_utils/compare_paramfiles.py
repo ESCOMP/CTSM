@@ -461,11 +461,11 @@ def _one_unequal_value_msg(
                 # Convert from numpy int to regular int
                 idx_int = int(idx)
                 # If this dimension is pft/pftname and we have pftnames, include the PFT name
+                this_part = f"{dimname} {idx_int}"
                 if pftnames and dimname.lower() in ["pft", "pftname"]:
                     pft_name = pftnames[idx_int]
-                    indices_parts.append(f"{dimname} {idx_int} ({pft_name})")
-                else:
-                    indices_parts.append(f"{dimname} {idx_int}")
+                    this_part += f" ({pft_name})"
+                indices_parts.append(this_part)
             indices_list = "[" + ", ".join(indices_parts) + "]"
         else:
             # Convert from numpy int to regular int
