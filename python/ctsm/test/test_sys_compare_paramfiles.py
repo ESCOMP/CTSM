@@ -234,7 +234,13 @@ class TestCompareParamfilesMain(unittest.TestCase):
 
     def test_variable_missing_from_first_file_but_ignoring(self):
         """Test that variables missing from first file are ignored if not given in --params"""
-        sys.argv = ["compare_paramfiles.py", self.file0, self.file2, "--params", "scalar_int,scalar_float"]
+        sys.argv = [
+            "compare_paramfiles.py",
+            self.file0,
+            self.file2,
+            "--params",
+            "scalar_int,scalar_float",
+        ]
 
         with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             cp.main()

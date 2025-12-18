@@ -363,7 +363,9 @@ def _compare_da_values(
     # If not, loop through mismatches and add them to message
     if not values_match:
         # Find where they're unequal
-        where_unequal = np.where(~_array__eq__nan_safe(np0, np1) | ~_array__eq__nan_safe(np0_ms, np1_ms))
+        where_unequal = np.where(
+            ~_array__eq__nan_safe(np0, np1) | ~_array__eq__nan_safe(np0_ms, np1_ms)
+        )
         if where_unequal:
             msg += INDENT + "Values differ:\n"
 
@@ -515,8 +517,7 @@ def _one_unequal_value_msg(
     # Raw values differ, but they're the same after masking/scaling
     if ms_equal and not raw_equal:
         msg += (
-            2 * INDENT
-            + f"{indices_list} {v0} → {v1} (raw; both {v0_ms} after masking/scaling)\n"
+            2 * INDENT + f"{indices_list} {v0} → {v1} (raw; both {v0_ms} after masking/scaling)\n"
         )
 
     # Raw values are the same, but they differ after masking/scaling
