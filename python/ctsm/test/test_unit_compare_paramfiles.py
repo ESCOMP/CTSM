@@ -27,7 +27,7 @@ class TestGetArguments(unittest.TestCase):
     """Unit tests for get_arguments"""
 
     def test_get_arguments(self):
-        """Test get_arguments correctly parses command line arguments"""
+        """Test get_arguments correctly parses command line arguments (or lack thereof)"""
         file0 = "/path/to/first/file.nc"
         file1 = "/path/to/second/file.nc"
         sys.argv = ["compare_paramfiles.py", file0, file1]
@@ -35,7 +35,17 @@ class TestGetArguments(unittest.TestCase):
 
         self.assertEqual(args.file0, file0)
         self.assertEqual(args.file1, file1)
+        self.assertEqual(args.params, [])
         self.assertIsInstance(args, argparse.Namespace)
+
+    def test_get_arguments_params(self):
+        """Test get_arguments parsing --params and synonyms"""
+        for arg_name in ["--params", "--param", "--parameters"]:
+            expected = ["param0", "param1"]
+            arg_val = ",".join(expected)
+            sys.argv = ["compare_paramfiles.py", "file0", "file1", arg_name, arg_val]
+            args = cp.get_arguments()
+            self.assertEqual(args.params, expected)
 
 
 class TestCheckArguments(unittest.TestCase):
