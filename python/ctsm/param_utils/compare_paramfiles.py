@@ -355,12 +355,7 @@ def _compare_da_values(
     np1_ms = np.atleast_1d(da1_ms)
 
     # Do values match?
-    values_match = np.array_equal(np0, np1)
-    try:
-        values_match = values_match and np.array_equal(np0_ms, np1_ms, equal_nan=True)
-    except TypeError:
-        # Some data types will TypeError at np.array_equal(..., equal_nan=True)
-        values_match = values_match and np.array_equal(np0_ms, np1_ms)
+    values_match = _array_equal_nan_safe(np0, np1) and _array_equal_nan_safe(np0_ms, np1_ms)
 
     # If not, loop through mismatches and add them to message
     if not values_match:
@@ -396,6 +391,19 @@ def _compare_da_values(
                 msg=msg,
             )
     return msg
+
+
+def _array_equal_nan_safe(np_a, np_b):
+    """
+    A way to check numpy array equality where you want NaNs to be equal but the arrays might be of
+    a type where np.array_equal(..., equal_nan=True) will fail.
+    """
+    try:
+        values_match = np.array_equal(np_a, np_b, equal_nan=True)
+    except TypeError:
+        # Some data types will TypeError at np.array_equal(..., equal_nan=True)
+        values_match = np.array_equal(np_a, np_b)
+    return values_match
 
 
 def _one_unequal_value_msg(
