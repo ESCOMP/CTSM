@@ -186,10 +186,13 @@ def _print_variables_in_only_one_ds(
         Updated any_diffs flag - True if any variables were printed, otherwise unchanged.
     """
     if vars_in_only_one:
-        print(header)
+        printed_header = False
         for var in vars_in_only_one:
             if args_params and var not in args_params:
                 continue
+            if not printed_header:
+                print(header)
+                printed_header = True
             if not any_diffs:
                 any_diffs = True
             print(INDENT + var)

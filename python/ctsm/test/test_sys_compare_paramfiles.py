@@ -232,6 +232,20 @@ class TestCompareParamfilesMain(unittest.TestCase):
             r"Variable\(s\) present in File 1 but not File 0:\n\s+new_var",
         )
 
+    def test_variable_missing_from_first_file_but_ignoring(self):
+        """Test that variables missing from first file are ignored if not given in --params"""
+        sys.argv = ["compare_paramfiles.py", self.file0, self.file2, "--params", "scalar_int,scalar_float"]
+
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp.main()
+            output = mock_stdout.getvalue()
+
+        # Should report new_var only in file 1
+        self.assertNotRegex(
+            output,
+            r"Variable\(s\) present in File 1 but not File 0:",
+        )
+
     def test_variable_missing_from_second_file(self):
         """Test that variables missing from second file are reported"""
         sys.argv = ["compare_paramfiles.py", self.file0, self.file4]

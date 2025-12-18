@@ -165,6 +165,25 @@ class TestGetVariablesInOnlyOneDs(unittest.TestCase):
 
         self.assertEqual(result, ["apple", "middle", "zebra"])
 
+class TestPrintVariablesInOnlyOneDs(unittest.TestCase):
+    """Unit tests for _print_variables_in_only_one_ds"""
+    
+    def test_var_in_only_one_but_not_requested(self):
+        """
+        Nothing should be printed if there was a variable missing from one but that wasn't in
+        what the user requested.
+        """
+        header = "this is my header"
+        vars_in_only_one = ["var_missing_from_one"]
+        dummy_any_diffs = True
+        args_params = ["requested_param0", "requested_param1"]
+        with unittest.mock.patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            cp._print_variables_in_only_one_ds(
+                header, vars_in_only_one, dummy_any_diffs, args_params
+            )
+            output = mock_stdout.getvalue()
+        self.assertEqual(output, "\n")
+
 
 class TestGetVariablesInBothDs(unittest.TestCase):
     """Unit tests for _get_variables_in_both_ds"""
