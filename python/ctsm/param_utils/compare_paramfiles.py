@@ -403,8 +403,11 @@ def _array_equal_nan_safe(np_a, np_b):
     """
     try:
         values_match = np.array_equal(np_a, np_b, equal_nan=True)
-    except TypeError:
-        # Some data types will TypeError at np.array_equal(..., equal_nan=True)
+    except TypeError as e:
+        # Some data types will TypeError at np.array_equal(..., equal_nan=True). If TypeError
+        # happened for a different reason, raise it.
+        if "ufunc 'isnan' not supported for the input types" not in str(e):
+            raise e
         values_match = np.array_equal(np_a, np_b)
     return values_match
 
