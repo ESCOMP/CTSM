@@ -367,6 +367,22 @@ class TestCompareAttrs(unittest.TestCase):
         self.assertIn("attr1, file 0: value1", lines[header_idx + 1])
         self.assertIn("attr1, file 1: value2", lines[header_idx + 2])
 
+    def test_different_attribute_value_types(self):
+        """Test when attributes have different data types"""
+        da0 = xr.DataArray([1, 2, 3], attrs={"attr1": 1987})
+        da1 = xr.DataArray([4, 5, 6], attrs={"attr1": "value2"})
+
+        result = cp._compare_attrs(da0, da1, "")
+        lines = result.split("\n")
+
+        # Should have 3 lines: header + 2 attribute value lines
+        self.assertEqual(result.count("\n"), 3)
+
+        self.assertIn("Attribute(s) with different values:", result)
+        header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
+        self.assertIn("attr1, file 0: 1987", lines[header_idx + 1])
+        self.assertIn("attr1, file 1: value2", lines[header_idx + 2])
+
     def test_numeric_attribute_values(self):
         """Test when attributes have numeric values that differ"""
         da0 = xr.DataArray([1, 2, 3], attrs={"scale_factor": 1.0, "add_offset": 0.0})
@@ -537,6 +553,28 @@ class TestCompareAttrs(unittest.TestCase):
         self.assertIn("Attribute(s) with different values:", result)
         header_idx = next(i for i, line in enumerate(lines) if "different values:" in line)
         self.assertIn("attr1", lines[header_idx + 1])
+
+
+class TestArrayEqualNanSafe(unittest.TestCase):
+    """Unit tests for array_equal_nan_safe()"""
+
+    def test_aens_float_withnan(self):
+        """Test float data with NaN"""
+        a = np.array([1.0, 2.2, 3.14, np.nan])
+        b = a
+        self.assertTrue(cp._array_equal_nan_safe(a, b))
+
+    def test_aens_str(self):
+        """Test string data, which can't be NaN"""
+        a = np.array(["foo", "bar", "baz"])
+        b = a
+        self.assertTrue(cp._array_equal_nan_safe(a, b))
+
+    def test_aens_str_float(self):
+        """Test comparing string to float"""
+        a = np.array(["foo", "bar", "baz"])
+        b = np.array([1.0, 2.2, 3.14, np.nan])
+        self.assertFalse(cp._array_equal_nan_safe(a, b))
 
 
 class TestOneUnequalValueMsg(unittest.TestCase):
