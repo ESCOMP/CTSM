@@ -486,8 +486,9 @@ def _one_unequal_value_msg(
     ms_equal = v0_ms == v1_ms
     try:
         ms_equal = ms_equal or (np.isnan(v0_ms) and np.isnan(v1_ms))
-    except TypeError:
-        pass
+    except TypeError as e:
+        if "ufunc 'isnan' not supported for the input types" not in str(e):
+            raise e
 
     # Raw values differ, but they're the same after masking/scaling
     if ms_equal and not raw_equal:
