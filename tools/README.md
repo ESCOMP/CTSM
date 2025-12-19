@@ -1,12 +1,12 @@
-#### CTSM Tools for Preprocessing of Input Datasets or Postprocessing of History Output
-# $CTSMROOT/tools/README
+# CTSM Tools for Preprocessing of Input Datasets or Postprocessing of History Output
+#### $CTSMROOT/tools/README
 
 CTSM tools for analysis of CTSM history files -- or for creation or
 modification of CTSM input files.
 	
 I.  General directory structure:
 
-    $CTSMROOT/tools
+    `$CTSMROOT/tools`
 	mksurfdata_esmf -- Create surface datasets.
 
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
@@ -25,10 +25,6 @@ I.  General directory structure:
                            Typically these are contributed by anyone who has something
                            they think might be helpful to the community. They may not
                            be as well tested or supported as other tools.
-
-    cime-tools ($CIMEROOT/tools/) (CIMEROOT is ../cime for a CTSM checkout and ../../../cime for a CESM checkout)
-        $CIMEROOT/mapping/gen_domain_files
-            gen_domain ------- Create data model domain datasets from SCRIP mapping datasets.
 
 II. Notes on building/running for each of the above tools:
 

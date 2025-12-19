@@ -1,19 +1,19 @@
-#### CTSM Tools Site and Regional Directory
+# CTSM Tools Site and Regional Directory
 
-#$CTSMROOT/tools/site_and_regional/README
+#### $CTSMROOT/tools/site_and_regional/README
 
 The purpose of this directory is to contain all of the scripts that involve creating CTSM input data files
 for single site as well as regional cases.
 
 The python scripts require the following settings before running:
 
-(Do what's needed to make conda available on your system)
 ``` shell
+# Do what's needed to make conda available on your system
 ../../py_env_create
 conda activate ctsm_pylib
 ```
 
-Brief description of scripts:
+## Brief description of scripts:
 
 subset_data
     This script extracts domain files, surface dataset, and DATM files
@@ -51,7 +51,7 @@ neon_gcs_upload
     Script to rename and upload NEON site finidat files to NEON server
     for use in transient startup cases
 
-DEPRECATED SCRIPTS:
+## DEPRECATED SCRIPTS:
 
 mknoocnmap.pl 
         Script to create unity mapping dataset for single-point

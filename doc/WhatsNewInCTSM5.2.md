@@ -18,7 +18,7 @@
 
 [!NOTE] See the section below about the new datasets used in their creation. Improvements in how landunits on coastal areas were also made.
 
-## Fields added to the surface datasets in ctsm5.2:
+### Fields added to the surface datasets in ctsm5.2:
 
 - ORGC, BULK, CFRAG, PHAQ (soil data) (currently NOT used by CTSM)
 - mapunits (map units from the soil dataset)
@@ -29,7 +29,7 @@
    - AREA
    - PFTDATA_MASK
 
-## New input data used for making surface datasets
+### New input data used for making surface datasets
 - New soil dataset: ISRIC/WISE dataset (Batjes, 2016; https://doi.org/10.1016/j.geoderma.2016.01.034)
 - New PFT, soil-color, LAI datasets: Created by Peter J. Lawrence (2022)
 - New Glacier datasets: Glacier outlines from RGI version 6 (Arendt et al., 2017).
@@ -42,12 +42,12 @@
 
 The build for the tool is based on the CESM/CIME build system and uses cmake. This allows the build to be kept up with changes in CESM. Currently it's only setup and working on Derecho, but this design will enable it to be built and run on any CESM-supported machine (or a machine that a user ports to).
 
-Any input grid from ccs_config can be used, or the user can supply their own mesh file to define the output grid. The user no longer has to add to the list of valid resolutions (as in the now-deprecated mksurfdata_map).
+Any input grid from ccs_config can be used, or the user can supply their own mesh file to define the output grid. The user no longer has to add to the list of valid resolutions.
 
 Creation of supported single point datasets. These datasets are created through the use of subset_data.
 
 Test datasets for dynUrban, dynLake, and dynPFT is done with a simple NCO script.
 
-All datasets can be easily made by running make all in the tools/mksurfdata_esmf/ directory.
+All datasets can be easily made by running make all in the `tools/mksurfdata_esmf/` directory.
 
-For detailed instructions, see tools/mksurfdata_esmf/README.md.
+For detailed instructions, see `tools/mksurfdata_esmf/README.md`.

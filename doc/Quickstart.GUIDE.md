@@ -1,7 +1,7 @@
-#### Quick-Start to Using NUOPC Scripts for ctsm6_0
+# Quick-Start to Using NUOPC Scripts for ctsm6_0
 ==============================================
 
-### Assumptions: 
+## Assumptions:
 
 You want to use Derecho with ctsm6_0 BGC
 to do a CTSM climate simulation with data atmosphere and the
@@ -9,9 +9,9 @@ latest CRJRA atm forcing files and settings. You also want to cycle
 the CRUJRA atm data between 1950 to 2010 and you want to run at
 0.9x1.25 degree resolution.
 
-### Process:
+## Process:
 
-   # Create the case
+   ### Create the case
 
 ``` shell
    cd cime/scripts
@@ -40,22 +40,22 @@ the CRUJRA atm data between 1950 to 2010 and you want to run at
 
 ```
 
-### Information on Compsets:
+## Information on Compsets:
 
      "I" compsets are the ones with CTSM and NUOPC driver and CDEPS data models without ice and ocean.
-     Most of the "I" compsets for ctsm5.0 physics and use the GSWP3v1 data with solar following
+     Most of the "I" compsets are for clm6_0 physics and use the CRUJRA-2024 data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linear interpolated in time (and with appropriate time-stamps on
-     the date). 
+     the date). Previous CMIP6 simulations wtih clm5_0 physics used GSWP3 atmospheric forcing.
 
-     To get a list of the "I" compsets use the "query_config" utility in cime/scripts
+     To get a list of the "I" compsets use the `query_config` utility in `cime/scripts`
 
 ``` shell
     cd cime/scripts
     ./query_config --compsets clm
 ```
 
-### Automatically resubmitting jobs:
+## Automatically resubmitting jobs:
 
    After doing a short simulation that you believe is correct
 

@@ -1,4 +1,4 @@
-### Important Notes on Experimental Features of CTSM
+# Important Notes on Experimental Features of CTSM
 
 Namelist items that are not regularly tested or used. Some aren't even implemented.
 
