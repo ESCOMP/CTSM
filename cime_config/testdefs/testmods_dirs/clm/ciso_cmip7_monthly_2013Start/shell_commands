@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./xmlchange CLM_BLDNML_OPTS=-ignore_warnings --append
+
