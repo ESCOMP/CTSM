@@ -28,7 +28,8 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    3d -- Check the log file for run_sys_tests (`../run_sys_test.log`, to make sure that
          submodules are correct (see 2c above)
    3e -- When Izumi’s baseline is ready, manually open read permissions to all.
-[!TIP] Always test on your fork with a feature-branch so that we can change tag order if needed. Put
+[!TIP]
+Always test on your fork with a feature-branch so that we can change tag order if needed. Put
 baselines in the next tag name, as we can easily change afterwards if needed.
 
 - [ ] 4. Use diff and status to make sure any new files are in the repo and only the correct
@@ -56,9 +57,11 @@ baselines in the next tag name, as we can easily change afterwards if needed.
     sure all your changes are correct, changes that shouldn't have gone in don't, and all new
     files are added in.
 
-[!NOTE] ---- THE FOLLOWING CAN ONLY BE DONE BY INTEGRATORS ----
+[!NOTE]
+ ---- THE FOLLOWING CAN ONLY BE DONE BY INTEGRATORS ----
 
-[!TIP] (especially for new integrators): Be sure to follow the recommended
+[!TIP] 
+(especially for new integrators): Be sure to follow the recommended
 git setup in
 https://github.com/ESCOMP/CTSM/wiki/Recommended-git-setup#24additional-recommended-settings-for-integrators.
 Especially note that you should never use something like `git merge
