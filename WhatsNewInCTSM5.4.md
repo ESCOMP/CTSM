@@ -53,7 +53,7 @@ Changes for all physics versions:
 * History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs https://github.com/ESCOMP/ctsm/pull/2445 https://github.com/ESCOMP/MOSART/pull/117 https://github.com/ESCOMP/RTM/pull/61 and the corresponding issues.  
 * Adding time to 1d weighting fields in transient simulations PR https://github.com/ESCOMP/CTSM/pull/3328  
 * Regarding CMIP7 vs. CMIP6 inputs:  
-  * C13/C14 isotope datasets are the new CMIP7 datasets using streams, when CLM_CMIP_ERA==cmip6, the older cmip6 files are used
+  * C13/C14 isotope datasets are the new CMIP7 datasets using streams, while when CLM_CMIP_ERA==cmip6, the older cmip6 files are used
   * We supply only CMIP7 population density with clm6 physics in non-SSP cases, because the fire model is calibrated to that; conversely, we supply only CMIP6 population density for pre-clm6 physics and for SSP cases.  
   * We supply only CESM2 nitrogen deposition (ndep), so this gets used regardless of CLM\_CMIP\_ERA setting.  
   * For DATM we supply only CMIP6 aerosols.  

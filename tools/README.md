@@ -7,7 +7,7 @@ modification of CTSM input files.
 I.  General directory structure:
 
     `$CTSMROOT/tools`
-	mksurfdata_esmf -- Create surface datasets.
+        mksurfdata_esmf -- Create surface datasets.
 
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
 
@@ -35,7 +35,7 @@ II. Notes on building/running for each of the above tools:
         Makefile ---------------- GNU makefile to link the program together
         cmake ------------------- CMake macros for finding libraries
 
-    mkmapgrids, and site_and_regional only contain scripts so don't have the above build files.
+    mkmapgrids and site_and_regional only contain scripts that do not need build files.
 
     Some tools have copies of files from other directories -- see the README.filecopies
     file for more information on this.
@@ -48,7 +48,7 @@ II. Notes on building/running for each of the above tools:
     README.testing) file.
 
 > [!NOTE]
-> Be sure to change the path of the datasets references by these namelists to
+> Be sure to change the path of the datasets referenced by these namelists to
 > point to where you have exported your CESM inputdata datasets.
 
 III. Process sequence to create input datasets needed to run CTSM
@@ -69,7 +69,7 @@ III. Process sequence to create input datasets needed to run CTSM
 
         You'll need to convert or create MESH grid files on your own (using scripts
         or other tools) for the general case where you have an unstructured grid, or
-        a grid that is not regular in latitude and longitude. And that grid is custom
+        a grid that is not regular in latitude and longitude, and that grid is custom
         and not merely subset from one of the global grids.
 
     2. Create surface datasets with mksurfdata_esmf on Derecho
@@ -80,7 +80,7 @@ III. Process sequence to create input datasets needed to run CTSM
        - gen_mksurfdata_jobscript_single to build a batch script to run on Derecho
        - Submit the batch script just created above
 
-       - This step uses the results of step 1. entered into the XML database.
+       - This step uses the results of step (1) entered into the XML database.
        - If datasets were NOT entered into the XML database, set the resolution
          by entering the mesh file using the options: --model-mesh --model-mesh-nx --model-mesh-ny
 
@@ -91,7 +91,7 @@ III. Process sequence to create input datasets needed to run CTSM
        cd mksurfdata_esmf
        ./gen_mksurfdata_build
        ./gen_mksurfdata_namelist --res 0.9x1.25 --start-year 1850 --end-year 1850
-       ./gen_mksurfdata_jobscript_single --number-of-nodes 24 --tasks-per-node 12 --namelist-file target.namelist
+       ./gen_mksurfdata_jobscript_single --number-of-nodes 2 --tasks-per-node 128 --namelist-file target.namelist
        qsub mksurfdata_jobscript_single.sh
 ```
 
