@@ -1,92 +1,88 @@
-Checklist of steps to do to make a CTSM Trunk Tag        Oct/1st/2018
+### Checklist of Steps to do to Make a CTSM Development Tag
 
-CTSM Software Management team.
+## CTSM Software Engineering Management Team
 
 See the wiki page for this on:
 
 https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 
-(1) Update your branch to latest version of ESCOMP/ctsm master branch (git fetch followed
-    by git merge)
+1. [ ] Update your branch to latest version of ESCOMP/ctsm master branch (`git fetch` followed
+    by `git merge`)
 
-(2) Make sure you have the latest version of code in your testing sandbox
+2. [ ] Make sure you have the latest version of code in your testing sandbox
 
-   2a -- run 'git pull' to pull in the latest version from GitHub
-   2b -- run 'git status' and/or 'git diff' to make sure you don't have any uncommitted
+   2a -- run `git pull` to pull in the latest version from GitHub
+   2b -- run `git status` and/or `git diff` to make sure you don't have any uncommitted
          local changes
-   2c -- run './bin/git-fleximod status' to make sure all submodules are
+   2c -- run `./bin/git-fleximod status` to make sure all submodules are
          updated and don't have any uncommitted changes. If any are marked with 's' in
-         the first column, run './bin/git-fleximod update'.
+         the first column, run `./bin/git-fleximod update`.
 
-(3) Do all testing on your fork/feature-branch
+3. [ ] Do all testing on your fork/feature-branch
 
    3a -- make sure any new failing tests are either fixed or approved as a new expected
          fail
    3b -- update the ExpectedFails list if expected fails changes in 1a
-        $EDITOR cime_config/testdefs/ExpectedTestFails.xml
+        `$EDITOR cime_config/testdefs/ExpectedTestFails.xml`
    3c -- make sure you understand any changes to the baselines -- to document in ChangeLog
-   3d -- Check the log file for run_sys_tests (../run_sys_test.log), to make sure that 
+   3d -- Check the log file for run_sys_tests (`../run_sys_test.log`, to make sure that
          submodules are correct (see 2c above)
+   3e -- When Izumi’s baseline is ready, manually open read permissions to all.
+[!TIP] Always test on your fork with a feature-branch so that we can change tag order if needed. Put
+baselines in the next tag name, as we can easily change afterwards if needed.
 
-(4) Use diff and status to make sure any new files are in the repo and only the correct
+4. [ ] Use diff and status to make sure any new files are in the repo and only the correct
     changes are on the branch
 
-   4a -- 'git status' to check that you've added any new files and haven't
+   4a -- `git status` to check that you've added any new files and haven't
          added any non source files that aren't needed in the repository
-   4b -- 'git diff' to check that your changes are correct and you didn't accidentally
+   4b -- `git diff` to check that your changes are correct and you didn't accidentally
          add something unintentionally
 
-(5) Update ChangeLog
+5. [ ] Update ChangeLog
 
-   5a -- From the 'doc' directory, run './UpdateChangelog.pl TAGNAME "one-line summary"'.
+   5a -- From the 'doc' directory, run `./UpdateChangelog.pl TAGNAME "one-line summary"`.
          This will open an editor with the ChangeLog. You can edit it now (step 4b) or
          exit your editor and then reopen it manually.
    5b -- Fill in the ChangeLog entry
    5c -- Update date stamp on ChangeLog
-        ./UpDateChangeLog.pl -update
+        `./UpDateChangeLog.pl -update`
    5d -- Commit new change files
    5e -- Push all the changes on your local branches to the branch on your fork
 
-(6) Submit a pull request (PR) for the changes
+6. [ ] Submit a pull request (PR) for the changes
     Have someone review it if you are able. At minimum review it youself. The PR mechanism
     on git is an excellent way to code review code for both yourself and others. Also make
     sure all your changes are correct, changes that shouldn't have gone in don't, and all new
     files are added in.
 
----- THE FOLLOWING CAN ONLY BE DONE BY INTEGRATORS ----
+[!NOTE] ---- THE FOLLOWING CAN ONLY BE DONE BY INTEGRATORS ----
 
-NOTE (especially for new integrators): Be sure to follow the recommended
+[!TIP] (especially for new integrators): Be sure to follow the recommended
 git setup in
-<https://github.com/ESCOMP/CTSM/wiki/Recommended-git-setup#24additional-recommended-settings-for-integrators>.
+https://github.com/ESCOMP/CTSM/wiki/Recommended-git-setup#24additional-recommended-settings-for-integrators.
 Especially note that you should never use something like `git merge
 escomp/master` to merge the upstream master branch into your local copy:
 instead, you should always use `git pull` with the recommended
 configuration settings (or `git merge --ff-only`) for that scenario.
 
-(7) Merge the PR to master when review is approved
+7. [ ] Merge the PR to master when review is approved
 
-(8) Compare master to branch show that they are identical
+8. [ ] Compare master to branch show that they are identical
 
-git diff master remote/feature-branch
+`git diff master remote/feature-branch`
 
 This should show no diffs
 
-(9) Make an annotated tag on master
+9. [ ] Make an annotated tag on master
 
-(10) Push tag to ESCOMP/ctsm
+10. [ ] Push tag to ESCOMP/ctsm
 
-(10a) Push to master (if needed because you changed something in master after PR was merged, or 
+(10a) Push to master (if needed because you changed something in master after PR was merged, or
 if you did step 7 above using git commands that require this step)
 
-(11) Update the CTSM upcoming tags project, if necessary
+11. [ ] Update the CTSM upcoming tags project, if necessary
      (https://github.com/ESCOMP/ctsm/projects/6)
 
-(12) Add tag to the CESM test database
+12. [ ] Add tag to the CESM test database
      (https://csegweb.cgd.ucar.edu/testdb)
-
----- NOTES ----
-
-(3a) -- When izumi’s baseline is ready, manually open read permissions to all.
-(3b) -- Always test on your fork with a feature-branch so that we can change tag order if needed. Put 
-baselines in the next tag name, as we can easily change afterwards if needed.
-
