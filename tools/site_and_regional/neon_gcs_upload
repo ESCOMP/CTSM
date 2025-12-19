@@ -154,7 +154,7 @@ def main(description):
                 continue
             with Case(case_path) as case:
                 archive_dir = os.path.join(case.get_value("DOUT_S_ROOT"),"lnd","hist")
-                for histfile in glob.iglob(archive_dir + "/*.h1.*"):
+                for histfile in glob.iglob(archive_dir + "/*.h1a.*"):
                     newfile = os.path.basename(histfile)
                     upload_blob("neon-ncar-artifacts", histfile, os.path.join("NEON","archive",site,"lnd","hist",newfile))
                         

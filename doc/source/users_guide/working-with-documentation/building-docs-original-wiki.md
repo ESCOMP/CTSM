@@ -2,7 +2,7 @@
 
 # ⚠️ Original docs documentation from the GitHub Wiki
 
-.. todo::
+.. warning::
 
    ⚠️⚠️⚠️WARNING⚠️⚠️⚠️
    The linked page contains documentation that (a) is more complicated than you probably require and (b) has not been fully checked for accuracy with the latest documentation setup. Unless you have a very good reason, you should probably go to :ref:`docs-intro-and-recommended`.

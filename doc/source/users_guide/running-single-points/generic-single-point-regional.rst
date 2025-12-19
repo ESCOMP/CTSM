@@ -41,7 +41,7 @@ You can also have the script subset land-use data. See the help (``tools/site_an
 .. note::
    This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024 DATM data. It can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. 
    
-   Also, to subset GSWP3 instead of CRUJRA2024 DATM data, you currently need to hardwire ``datm_type = "datm_gswp3"`` (instead of the default ``"datm_crujra"``) in ``python/ctsm/subset_data.py``.
+   Using ``--create-datm`` with GSWP3 data is no longer supported; see `CTSM issue #3269 <https://github.com/ESCOMP/CTSM/issues/3269>`_.
 
 
 

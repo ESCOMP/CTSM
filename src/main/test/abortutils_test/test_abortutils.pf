@@ -1,0 +1,200 @@
+module test_abortutils
+
+  ! Tests of abortutils
+
+  use funit
+  use abortutils
+  use unittestUtils, only : endrun_msg
+  use shr_kind_mod, only : CL => shr_kind_cl
+  use clm_varctl, only : iulog
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestAbortUtils
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestAbortUtils
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+    use GridcellType , only : grc
+    class(TestAbortUtils), intent(inout) :: this
+
+    ! NOTE: Setup a single gridcell with one vegetated patch
+    ! So there's only one: gridcell, landunit, column, patch
+    ! This isn't needed for some tests, but doesn't hurt to do it
+    call setup_single_veg_patch(pft_type=1)
+    ! NOTE: Set lat and lon for this gridcell, so something is printed in the log
+    grc%londeg(1) = 255.0
+    grc%latdeg(1) = 30.0
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    use unittestSubgridMod, only : unittest_subgrid_teardown
+    class(TestAbortUtils), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+
+  end subroutine tearDown
+
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+  @Test
+  subroutine endrun_plain_vanilla_aborts(this)
+    ! Test vanilla operation of endrun
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun()
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_plain_vanilla_aborts
+
+  @Test
+  subroutine endrun_nomsg_file_line_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with file and line number input
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun(line=1000, file='test_file.F90')
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_file_line_vanilla_aborts
+
+  @Test
+  subroutine endrun_nomsg_onlyfile_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with only file input
+    class(TestAbortUtils), intent(inout) :: this
+
+    call endrun(file='test_file.F90')
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_onlyfile_vanilla_aborts
+
+  @Test
+  subroutine endrun_msg_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with a message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+
+    call endrun( msg = msg)
+    @assertExceptionRaised(endrun_msg(msg))
+
+  end subroutine endrun_msg_vanilla_aborts
+
+  @Test
+  subroutine endrun_addmsg_vanilla_aborts(this)
+    ! Test vanilla operation of endrun with an additional message sent in
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+    character(len=CL) :: add_msg = "additional_test_message"
+
+    call endrun(msg=msg, additional_msg=add_msg)
+    @assertExceptionRaised(endrun_msg(msg))
+
+  end subroutine endrun_addmsg_vanilla_aborts
+
+  @Test
+  subroutine endrun_addmsg_pt_context_aborts(this)
+    ! Test pt_context operation of endrun with an additional message sent in
+    use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
+    use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
+    use decompMod, only : subgrid_level_cohort
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+    character(len=CL) :: add_msg = "additional_test_message"
+    integer :: p = 1, l
+    integer, parameter :: nlevel = 6
+    integer :: subgrid_lvl(nlevel) = (/ subgrid_level_lndgrid, subgrid_level_gridcell, &
+         subgrid_level_landunit, subgrid_level_column, subgrid_level_patch, &
+         subgrid_level_cohort /)
+
+    ! Loop over all the subgrid level types
+    ! Skip the first one and the last one which are: lndgrid and cohort
+    do l = 2, nlevel-1
+       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l), msg=msg, additional_msg=add_msg)
+       @assertExceptionRaised(endrun_msg(msg))
+    end do
+
+  end subroutine endrun_addmsg_pt_context_aborts
+
+  @Test
+  subroutine endrun_nomsg_pt_context_bad_pt_aborts(this)
+    ! Test pt_context operation of endrun with an additional message sent in
+    use decompMod, only : subgrid_level_lndgrid, subgrid_level_gridcell
+    use decompMod, only : subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
+    use decompMod, only : subgrid_level_cohort
+    class(TestAbortUtils), intent(inout) :: this
+    integer :: p = 2, l
+    integer, parameter :: nlevel = 6
+    integer :: subgrid_lvl(nlevel) = (/ subgrid_level_lndgrid, subgrid_level_gridcell, &
+         subgrid_level_landunit, subgrid_level_column, subgrid_level_patch, &
+         subgrid_level_cohort /)
+
+    ! Loop over all the subgrid level types
+    ! Skip the first one and the last one which are: lndgrid and cohort
+    do l = 2, nlevel-1
+       call endrun(subgrid_index=p, subgrid_level=subgrid_lvl(l))
+       @assertExceptionRaised(endrun_msg(''))
+    end do
+
+  end subroutine endrun_nomsg_pt_context_bad_pt_aborts
+
+  @Test
+  subroutine endrun_pt_context_lndgrid_aborts(this)
+    use decompMod, only : subgrid_level_lndgrid
+    class(TestAbortUtils), intent(inout) :: this
+    character(len=CL) :: msg = "test_message"
+    integer :: p = 1
+
+    ! NOTE: Also test without an additional msg
+    call endrun(subgrid_index=p, subgrid_level=subgrid_level_lndgrid, msg=msg)
+    @assertExceptionRaised(endrun_msg(msg))
+
+  end subroutine endrun_pt_context_lndgrid_aborts
+
+  @Test
+  subroutine endrun_nomsg_pt_context_cohort_aborts(this)
+    use decompMod, only : subgrid_level_cohort
+    class(TestAbortUtils), intent(inout) :: this
+    integer :: p = 1
+
+    ! NOTE: Also test without either msg or additional msg
+    call endrun(subgrid_index=p, subgrid_level=subgrid_level_cohort)
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_pt_context_cohort_aborts
+
+  @Test
+  subroutine endrun_nomsg_addmsg_pt_context_unspec_aborts(this)
+    use decompMod, only : subgrid_level_unspecified
+    class(TestAbortUtils), intent(inout) :: this
+    integer :: p = 1
+    character(len=CL) :: add_msg = "additional_test_message"
+
+    ! NOTE: Don't use msg but do use additional_msg
+    call endrun(subgrid_index=p, subgrid_level=subgrid_level_unspecified, additional_msg=add_msg)
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_addmsg_pt_context_unspec_aborts
+
+  @Test
+  subroutine endrun_nomsg_pt_context_badlvl_aborts(this)
+    use decompMod, only : subgrid_level_unspecified
+    class(TestAbortUtils), intent(inout) :: this
+    integer :: p = 1
+
+    call endrun(subgrid_index=p, subgrid_level=-9999)
+    @assertExceptionRaised(endrun_msg(''))
+
+  end subroutine endrun_nomsg_pt_context_badlvl_aborts
+
+end module test_abortutils

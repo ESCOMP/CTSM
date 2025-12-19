@@ -1,0 +1,30 @@
+! Turn Zender on so that the streams file will be used, no matter the compset
+dust_emis_method = 'Zender_2003'
+zender_soil_erod_source = 'lnd'
+
+! Make sure excess ice streams are on, no matter the compset
+use_excess_ice = .true.
+use_excess_ice_streams = .true.
+
+! Don't turn on prescribed LAI or soil-moisture to reduce complexity here and keep it in the prescribed testmod
+
+! Turn on any optional streams though
+
+use_prigent_roughness = .true.
+
+! Try all the different mapalgo options in the various stream files
+! NOTE: The options with redist assume that the data grid is the same resolution as the model
+!       Which is why the testmod name starts with f09
+ndepmapalgo = 'redist'
+ch4finundatedmapalgo = 'redist'
+zendersoilerod_mapalgo = 'nn'
+lightngmapalgo = 'consf'
+popdensmapalgo = 'consd'
+urbantvmapalgo = 'redist'
+stream_mapalgo_exice = 'nn'
+prigentroughnessmapalgo = 'consf'
+! Likewise try all the different tintalgo options
+ndep_tintalgo = 'lower'
+lightng_tintalgo = 'nearest'
+popdens_tintalgo = 'linear'   ! The default for this is nearest
+urbantv_tintalgo = 'upper'

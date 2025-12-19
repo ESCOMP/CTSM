@@ -1,0 +1,9 @@
+ stream_fldfilename_atm_c13 = '$DIN_LOC_ROOT/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C13_CMIP7_global_1700-2023_yearly_v3.0_c251013.nc'
+ ! NOTE: This file is the one with only 4 latitude bands, and can't be used by streams for regridding
+ ! The one copied to a half degree grid can be used to regrid the bands properly
+ stream_fldfilename_atm_c14 = '$DIN_LOC_ROOT/lnd/clm2/isotopes/ctsmforc.Graven.atm_delta_C14_CMIP7_4x1_global_1700-2023_yearly_v3.0_c251013.nc'
+ stream_year_first_atm_c14 = 2013
+ stream_meshfile_atm_c14 = 'none' ! NOTE: By NOT using a mesh file this means the first value will be copied to the whole grid rather than regridded
+ stream_model_year_align_atm_c14 = 2013
+ stream_year_first_atm_c13 = 2013
+ stream_model_year_align_atm_c13 = 2013

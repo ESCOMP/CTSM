@@ -13,7 +13,7 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_cndv, use_fates, &
                                      use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan, mxpft
   use pftconMod             , only : pftcon
@@ -229,7 +229,7 @@ contains
     use clm_time_manager   , only : get_step_size_real, get_prev_date, is_near_local_noon
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
-    use clm_varcon         , only : c14ratio, spval
+    use clm_varcon         , only : spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use clm_varcon         , only : nu_param, cd1_param
     use perf_mod           , only : t_startf, t_stopf
@@ -346,7 +346,7 @@ contains
     real(r8) :: efpot                                ! potential latent energy flux [kg/m2/s]
     real(r8) :: efe(bounds%begp:bounds%endp)         ! water flux from leaf [mm/s]
     real(r8) :: efsh                                 ! sensible heat from leaf [mm/s]
-    real(r8) :: obuold(bounds%begp:bounds%endp)      ! monin-obukhov length from previous iteration
+    real(r8) :: obuold(bounds%begp:bounds%endp)      ! Obukhov length scale from previous iteration
     real(r8) :: tlbef(bounds%begp:bounds%endp)       ! leaf temperature from previous iteration [K]
     real(r8) :: tl_ini(bounds%begp:bounds%endp)      ! leaf temperature from beginning of time step [K]
     real(r8) :: ts_ini(bounds%begp:bounds%endp)      ! stem temperature from beginning of time step [K]
@@ -354,7 +354,6 @@ contains
     real(r8) :: err(bounds%begp:bounds%endp)         ! balance error
     real(r8) :: erre                                 ! balance error
     real(r8) :: co2(bounds%begp:bounds%endp)         ! atmospheric co2 partial pressure (pa)
-    real(r8) :: c13o2(bounds%begp:bounds%endp)       ! atmospheric c13o2 partial pressure (pa)
     real(r8) :: o2(bounds%begp:bounds%endp)          ! atmospheric o2 partial pressure (pa)
     real(r8) :: svpts(bounds%begp:bounds%endp)       ! saturation vapor pressure at t_veg (pa)
     real(r8) :: eah(bounds%begp:bounds%endp)         ! canopy air vapor pressure (pa)
@@ -479,7 +478,6 @@ contains
          forc_u                 => atm2lnd_inst%forc_u_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)                        
          forc_v                 => atm2lnd_inst%forc_v_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)                       
          forc_pco2              => atm2lnd_inst%forc_pco2_grc                   , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
-         forc_pc13o2            => atm2lnd_inst%forc_pc13o2_grc                 , & ! Input:  [real(r8) (:)   ]  partial pressure c13o2 (Pa)                                           
          forc_po2               => atm2lnd_inst%forc_po2_grc                    , & ! Input:  [real(r8) (:)   ]  partial pressure o2 (Pa)                                              
 
          tc_ref2m               => humanindex_inst%tc_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
@@ -625,9 +623,9 @@ contains
          uaf                    => frictionvel_inst%uaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air speed [m/s]
          taf                    => frictionvel_inst%taf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air temperature [K]
          qaf                    => frictionvel_inst%qaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air humidity [kg/kg]
-         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Monin-Obukhov length [m]
+         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Obukhov length scale [m]
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter 
-         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [Pa]
+         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [kPa]
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
 
          begp                   => bounds%begp                                  , &
@@ -961,10 +959,6 @@ bioms:   do f = 1, fn
          co2(p) = forc_pco2(g)
          o2(p)  = forc_po2(g)
 
-         if ( use_c13 ) then
-            c13o2(p) = forc_pc13o2(g)
-         end if
-
          ! Initialize flux profile
 
          nmozsgn(p) = 0
@@ -998,7 +992,7 @@ bioms:   do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
 
-         ! Initialize Monin-Obukhov length and wind speed
+         ! Initialize Obukhov length scale and wind speed
 
          call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
          num_iter(p) = 0
@@ -1102,15 +1096,15 @@ bioms:   do f = 1, fn
             ! Stomatal resistances for sunlit and shaded fractions of canopy.
             ! Done each iteration to account for differences in eah, tv.
 
-            svpts(p) = el(p)                         ! pa
-            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
+            svpts(p) = el(p)                         ! Pa
+            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! Pa
             rhaf(p) = eah(p)/svpts(p)
             ! variables for history fields
             rah1(p)  = rah(p,above_canopy)
             raw1(p)  = raw(p,above_canopy)
             rah2(p)  = rah(p,below_canopy)
             raw2(p)  = raw(p,below_canopy)
-            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
+            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8 ! kPa
 
          end do
 
@@ -1380,7 +1374,7 @@ bioms:   do f = 1, fn
             taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(p) + wtl0(p)*t_veg(p) + wtstem0(p)*t_stem(p)
             qaf(p) = wtlq0(p)*qsatl(p) + wtgq0*qg(c) + forc_q(c)*wtaq0(p)
 
-            ! Update Monin-Obukhov length and wind speed including the
+            ! Update Obukhov length scale and wind speed including the
             ! stability effect
 
             dth(p) = thm(p)-taf(p)
@@ -1645,7 +1639,7 @@ bioms:   do f = 1, fn
 
          ! Determine total photosynthesis
          
-         call PhotosynthesisTotal(fn, filterp, &
+         call PhotosynthesisTotal(bounds, fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate water use efficiency

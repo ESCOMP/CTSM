@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
       - id: run-fleximod
         run: |
-          $GITHUB_WORKSPACE/bin/git-fleximod update
+          $GITHUB_WORKSPACE/bin/git-fleximod update -o
           echo
           echo "Update complete, checking status"
           echo
@@ -32,4 +32,4 @@ jobs:
           echo
           echo "Checking if git fleximod matches expected externals"
           echo
-          git diff --exit-code
+          git add . && git diff --exit-code && git diff --cached --exit-code
