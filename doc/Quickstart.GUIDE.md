@@ -1,5 +1,5 @@
 # Quick-Start to Using NUOPC Scripts for ctsm6_0
-==============================================
+---
 
 ## Assumptions:
 
