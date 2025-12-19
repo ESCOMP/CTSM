@@ -39,12 +39,12 @@ run_tower
     NEON or PLUMBER2 sites for spin-up or transient run types.
 
 neon_surf_wrapper
-    Wrapper script that run `subset_data` to extract data for all neon points and then
+    Wrapper script that runs `subset_data` to extract data for all neon points and then
     use modify_singlept_site_neon to update site-specific fields.
     This code uses neon_sites_dompft.csv to determine --dompft (dominant pft types) values.
 
 plumber2_surf_wrapper
-    Wrapper script that run `subset_data` to extract data for all PLUMBER2 points.
+    Wrapper script that runs `subset_data` to extract data for all PLUMBER2 points.
     This code uses PLUMBER2_sites.csv to determine --dompft (dominant pft types) values.
 
 neon_gcs_upload

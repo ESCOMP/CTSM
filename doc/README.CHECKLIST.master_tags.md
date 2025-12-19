@@ -1,8 +1,8 @@
-# Checklist of Steps to do to Make a CTSM Development Tag
+# Checklist of Steps to Make a CTSM Development Tag
 
 ## CTSM Software Engineering Management Team
 
-See the wiki page for this on:
+See the wiki page for this at:
 
 https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 
@@ -40,7 +40,7 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    4b -- `git diff` to check that your changes are correct and you didn't accidentally
          add something unintentionally
 
-- [ ] 5. Update ChangeLog
+- [ ] 5. Update the ChangeLog and ChangeSum files
 
    5a -- From the 'doc' directory, run `./UpdateChangelog.pl TAGNAME "one-line summary"`.
          This will open an editor with the ChangeLog. You can edit it now (step 4b) or
@@ -71,15 +71,15 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 
 - [ ] 7. Merge the PR to master when review is approved
 
-- [ ] 8. Compare master to branch show that they are identical
+- [ ] 8. Compare master to branch to show that they are identical
 
 `git diff master remote/feature-branch`
 
 This should show no diffs
 
-- [ ] 9. Make an annotated tag on master
+- [ ] 9. Make an annotated tag on master: `git tag -a TAGNAME`
 
-- [ ] 10. Push tag to ESCOMP/ctsm
+- [ ] 10. Push tag to ESCOMP/ctsm: (i.e. `git push escomp TAGNAME`)
 
 (10a) Push to master (if needed because you changed something in master after PR was merged, or
 if you did step 7 above using git commands that require this step)

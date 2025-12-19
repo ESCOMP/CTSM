@@ -220,7 +220,7 @@ Index of rooting profile for soil carbon
 
 Changes rooting profile from Zeng 2001 double exponential (0) to
 Jackson 1996 single exponential (1) to Koven uniform exponential (2).
-(REMOVE NOT in the CODE)
+(REMOVE, NOT in the CODE)
 </entry>
 
 <entry id="rooting_profile_varindex_water" type="integer" category="clm_physics"

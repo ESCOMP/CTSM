@@ -4,8 +4,8 @@
 ## Assumptions:
 
 You want to use Derecho with ctsm6_0 BGC
-to do a CTSM climate simulation with data atmosphere and the
-latest CRJRA atm forcing files and settings. You also want to cycle
+to do a CTSM simulation with data atmosphere and the
+latest CRUJRA atm forcing files and settings. You also want to cycle
 the CRUJRA atm data between 1950 to 2010 and you want to run at
 0.9x1.25 degree resolution.
 
@@ -16,7 +16,7 @@ the CRUJRA atm data between 1950 to 2010 and you want to run at
 ``` shell
    cd cime/scripts
 
-   ./create_newcase --case <testcase> --mach derecho --res f09_g16_gl4 -compset I2000Clm60BgcCrop
+   ./create_newcase --case <testcase> --mach derecho --res f09_t232 -compset I2000Clm60BgcCrop
    # (./create_newcase -help -- to get help on the script)
 
    # Setup the case
@@ -45,8 +45,8 @@ the CRUJRA atm data between 1950 to 2010 and you want to run at
      "I" compsets are the ones with CTSM and NUOPC driver and CDEPS data models without ice and ocean.
      Most of the "I" compsets are for clm6_0 physics and use the CRUJRA-2024 data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
-     variables linear interpolated in time (and with appropriate time-stamps on
-     the date). Previous CMIP6 simulations wtih clm5_0 physics used GSWP3 atmospheric forcing.
+     variables linearly interpolated in time (and with appropriate time-stamps on
+     the date). Previous CMIP6 simulations with clm5_0 physics used GSWP3 atmospheric forcing.
 
      To get a list of the "I" compsets use the `query_config` utility in `cime/scripts`
 
