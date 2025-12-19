@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.005
 Originator(s): rgknox (Ryan Knox, LAWRENCE BERKELEY NATIONAL LABORATORY, rgknox@lbl.gov)
-Date: Thu Dec 18 05:31:04 PM MST 2025
+Date: Fri Dec 19 11:33:00 AM MST 2025
 One-line Summary: FATES JSON parameter files
 
 Purpose and description of changes
@@ -17,10 +17,6 @@ Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
 Does this tag change answers significantly for any of the following physics configurations?
-
-The FATES JSON updates have B4B results in all configurations (i.e. no changes).
-FATES tag sci.1.88.6_api.42.0.0, a key bug fix, generated subtle but non-signficant answer changes
-in non-SP FATES configurations: https://github.com/NGEET/fates/releases/tag/sci.1.88.6_api.42.0.0
 
 (Details of any changes will be given in the "Answer changes" section below.)
 
@@ -52,16 +48,10 @@ Changes to the datasets (e.g., parameter, surface or initial files): No values c
 
 Changes to documentation: https://fates-users-guide.readthedocs.io/en/latest/user/users-guide.html
 
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
-
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 The API related to parameter I/O between FATES and CTSM is way less complicated. CTSM simply passes FATES the file-path to the parameter file, FATES handles the rest.
-
-Changes to tests or testing:
 
 
 Testing summary:
@@ -71,44 +61,26 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - 
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on derecho - 
+    derecho - OK
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     derecho ----- OK
-    izumi -------
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     derecho ----- OK
-
-  any other testing (give details below):
-
-  ctsm_sci
-     derecho ----
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+    izumi ------- OK compared against fates-sci.1.88.0_api.42.0.0-ctsm5.4.001
 
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes
 
-As mentioned above, FATES tag sci.1.88.6_api.42.0.0 introduced a bug-fix to promotion and demotion, which should generate subtle yet non scientifically meaningful changes to simulation output in non-SP and non-st3 FATES runs.
+- The FATES JSON updates have B4B results in all configurations (i.e. no changes).
+- FATES tag sci.1.88.6_api.42.0.0, a key bug fix, generated subtle but non-signficant answer changes
+in non-SP and non-st3 FATES configurations: https://github.com/NGEET/fates/releases/tag/sci.1.88.6_api.42.0.0
 
 Other details
 -------------
