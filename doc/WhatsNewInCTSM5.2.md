@@ -16,8 +16,8 @@
 - New surface datasets
 - The new surface datasets are incompatible with previous versions (for example the ctsm5.1 series)—ctsm5.2.0 and following versions can NOT use the previous ctsm5.1 datasets, and vice versa.
 
-[!NOTE]
-See the section below about the new datasets used in their creation. Improvements in how landunits on coastal areas were also made.
+> [!NOTE]
+> See the section below about the new datasets used in their creation. Improvements in how landunits on coastal areas were also made.
 
 ### Fields added to the surface datasets in ctsm5.2:
 

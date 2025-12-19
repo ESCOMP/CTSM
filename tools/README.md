@@ -47,9 +47,9 @@ II. Notes on building/running for each of the above tools:
     These files are also used by the test scripts to test the tools (see the
     README.testing) file.
 
-[!NOTE]
-Be sure to change the path of the datasets references by these namelists to
-    point to where you have exported your CESM inputdata datasets.
+> [!NOTE]
+> Be sure to change the path of the datasets references by these namelists to
+> point to where you have exported your CESM inputdata datasets.
 
 III. Process sequence to create input datasets needed to run CTSM
 
