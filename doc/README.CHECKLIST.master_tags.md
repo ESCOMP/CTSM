@@ -64,7 +64,9 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 > (especially for new integrators): Be sure to follow the recommended
 > git setup in
 > https://github.com/ESCOMP/CTSM/wiki/Recommended-git-setup#24additional-recommended-settings-for-integrators.
-> Especially note that you should never use something like `git merge
+> Especially note that it helps to keep your local copy of the master branch pristine without accidentally adding
+> commits to it that were intended to your feature branch.
+> So don't use something like `git merge
 > escomp/master` to merge the upstream master branch into your local copy:
 > instead, you should always use `git pull` with the recommended
 > configuration settings (or `git merge --ff-only`) for that scenario.
