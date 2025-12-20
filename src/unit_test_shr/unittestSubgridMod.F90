@@ -238,7 +238,7 @@ contains
     ! object (if other routines want a clump-level bounds). (For the sake of unit
     ! testing, proc-level and clump-level bounds objects can probably be the same except
     ! for bounds%level and bounds%clump_index.)
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
 
   end subroutine create_bounds_object
 
@@ -357,11 +357,11 @@ contains
 
     call add_landunit(li=li, gi=my_gi, ltype=ltype, wtgcell=wtgcell)
     lun%active(li) = .true.
-    
+
   end subroutine unittest_add_landunit
 
   !-----------------------------------------------------------------------
-  subroutine unittest_add_column(my_li, ctype, wtlunit)
+  subroutine unittest_add_column(my_li, ctype, wtlunit, add_simple_patch)
     !
     ! !DESCRIPTION:
     ! Add a column, and make it active. The index of the just-added column can be obtained
@@ -377,11 +377,13 @@ contains
     !
     ! !USES:
     use initSubgridMod, only : add_column
+    use pftconMod, only : noveg
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: my_li   ! landunit index on which this column should be placed
     integer  , intent(in)    :: ctype   ! column type
     real(r8) , intent(in)    :: wtlunit ! weight of the column relative to the land unit
+    logical  , intent(in), optional :: add_simple_patch ! whether to add a simple baresoil patch under the column
     !
     ! !LOCAL VARIABLES:
     
@@ -390,6 +392,13 @@ contains
 
     call add_column(ci=ci, li=my_li, ctype=ctype, wtlunit=wtlunit)
     col%active(ci) = .true.
+
+    if ( present(add_simple_patch) ) then
+       if (add_simple_patch) then
+          ! Add a simple baresoil patch to this column
+          call unittest_add_patch(my_ci=ci, ptype=noveg, wtcol=1.0_r8)
+       end if
+    end if
     
   end subroutine unittest_add_column
 
