@@ -70,6 +70,10 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
 > escomp/master` to merge the upstream master branch into your local copy:
 > instead, you should always use `git pull` with the recommended
 > configuration settings (or `git merge --ff-only`) for that scenario.
+> "--ff" means fast-forward which can only be done if there aren't potential conflicts and nothing committed to the local copy of master that isn't in the escomp remote.
+> It also helps prevent extra merge commits to keep the history cleaner.
+> The settings make doing
+> "--ff" the default for a pull, and "--no-ff" for a merge. So when you pull from master you normally want "--ff-only" to be set so your copy of master remains pristine, and git will notify you if you accidentally committed to your local master branch.
 
 - [ ] 7. Merge the PR to master when review is approved
 
