@@ -128,12 +128,10 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
-   use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
-!   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
    use FatesInterfaceMod , only : fates_interface_type
-   use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+   use FatesInterfaceMod, only : FatesInterfaceInit
    use FatesInterfaceMod, only : SetFatesGlobalElements1
    use FatesInterfaceMod, only : SetFatesGlobalElements2
    use FatesInterfaceMod     , only : allocate_bcin
@@ -145,10 +143,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
-   
-   use FatesParametersInterface, only : fates_param_reader_type
-   use FatesParametersInterface, only : fates_parameters_type
-
+   use clm_varctl            , only : fates_paramfile
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
@@ -311,16 +306,15 @@ module CLMFatesInterfaceMod
      ! in CTSM
      ! --------------------------------------------------------------------------------
 
-     integer,intent(in)                             :: surf_numpft
-     integer,intent(in)                             :: surf_numcft
-     integer,intent(out)                            :: maxsoil_patches
-     integer                                        :: pass_use_fixed_biogeog
-     integer                                        :: pass_use_nocomp
-     integer                                        :: pass_use_sp
-     integer                                        :: pass_masterproc
-     integer                                        :: pass_use_luh2
-     logical                                        :: verbose_output
-     type(fates_param_reader_ctsm_impl)             :: var_reader
+     integer,intent(in)  :: surf_numpft
+     integer,intent(in)  :: surf_numcft
+     integer,intent(out) :: maxsoil_patches
+     integer             :: pass_use_fixed_biogeog
+     integer             :: pass_use_nocomp
+     integer             :: pass_use_sp
+     integer             :: pass_masterproc
+     integer             :: pass_use_luh2
+     logical             :: verbose_output
      
      call t_startf('fates_globals1')
 
@@ -369,9 +363,11 @@ module CLMFatesInterfaceMod
            pass_use_luh2 = 0
         end if
         call set_fates_ctrlparms('use_luh2',ival=pass_use_luh2)
+
+        
+        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         
      end if
-
 
      ! The following call reads in the parameter file
      ! and then uses that to determine the number of patches
@@ -381,8 +377,9 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,var_reader)
 
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,fates_paramfile)
+     
      maxsoil_patches = fates_maxPatchesPerSite
      
      call t_stopf('fates_globals1')
@@ -436,22 +433,15 @@ module CLMFatesInterfaceMod
 
      if (use_fates) then
 
-        
-
         ! Send parameters individually
         call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
         call set_fates_ctrlparms('vis_sw_index',ival=ivis)
         call set_fates_ctrlparms('nir_sw_index',ival=inir)
-
         call set_fates_ctrlparms('num_lev_soil',ival=nlevsoi)
         call set_fates_ctrlparms('hlm_name',cval='CLM')
         call set_fates_ctrlparms('hio_ignore_val',rval=spval)
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
-        
-        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
-
-
         call set_fates_ctrlparms('hist_hifrq_dimlevel',ival=fates_history_dimlevel(1))
         call set_fates_ctrlparms('hist_dynam_dimlevel',ival=fates_history_dimlevel(2))
         
@@ -1035,9 +1025,6 @@ module CLMFatesInterfaceMod
       !$OMP END PARALLEL DO
 
       call this%init_history_io(bounds_proc)
-
-      ! Report Fates Parameters (debug flag in lower level routines)
-      call FatesReportParameters(masterproc)
 
       ! Fire data to send to FATES
       call create_fates_fire_data_method( this%fates_fire_data_method )

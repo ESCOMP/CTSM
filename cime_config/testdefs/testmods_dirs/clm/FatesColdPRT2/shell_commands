@@ -1,9 +1,10 @@
 SRCDIR=`./xmlquery SRCROOT --value`
 CASEDIR=`./xmlquery CASEROOT --value`
 FATESDIR=$SRCDIR/src/fates/
-FATESPARAMFILE=$CASEDIR/fates_params_prt2_prescribed_p.nc
+FATESPARAMFILE=$CASEDIR/fates_params_prt2_prescribed_p.json
 
-ncgen -o $FATESPARAMFILE $FATESDIR/parameter_files/fates_params_default.cdl
+cp $FATESDIR/parameter_files/fates_params_default.json $FATESPARAMFILE
 
-$FATESDIR/tools/modify_fates_paramfile.py --O --fin $FATESPARAMFILE --fout $FATESPARAMFILE --var fates_cnp_prescribed_puptake --val 10.0 --allpfts
+$FATESDIR/tools/modify_fates_paramfile.py --overwrite --fin $FATESPARAMFILE --param fates_cnp_prescribed_puptake --values 10.0 --indices all
 
+echo "fates_paramfile = '$FATESPARAMFILE'" >> $CASEDIR/user_nl_clm
