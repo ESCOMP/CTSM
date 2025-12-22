@@ -437,6 +437,8 @@ contains
     real(r8), parameter :: k_cyl_area = 1.0_r8         !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0_r8         !self-absorbtion of leaf/stem longwave
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: min_lai    = 0.1_r8         !minimum elai threshold to add esai to sa_leaf calculation
+                                                       !value is arbitrary but has been effective in avoiding RRTMGP errors in CESM3 development simulations
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -745,15 +747,26 @@ bioms:   do f = 1, fn
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
-            !
             ! only calculate separate leaf/stem heat capacity for trees
-            ! and shrubs if dbh is greater than some minimum value
-            ! (set surface area for stem, and fraction absorbed by stem to zero)
+            ! and shrubs if dbh is greater than some minimum value.
+            ! otherwise, set surface area for stem and fraction absorbed by stem to zero,
+            ! and add esai to sa_leaf.
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
                sa_leaf(p) = sa_leaf(p) + esai(p)
+            else
+               ! Add esai to sa_leaf if elai is less than threshold.
+               ! Intended to avoid small sa_leaf which leads to small leaf conductance
+               ! and high leaf temperature. This in turn can lead to unrealistically
+               ! high surface temperatures passed to the atmospheric model (The RRTMGP
+               ! component in particular, which returns an error and stops the model
+               ! if the surface temperature is greater than 355K).
+               ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
+               if(elai(p) < min_lai) then
+                  sa_leaf(p) = sa_leaf(p) + esai(p)
+               endif
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass

@@ -187,7 +187,6 @@ contains
          rswf_min           => pftcon%rswf_min                                 , & ! Input:
          rswf_max           => pftcon%rswf_max                                 , & ! Input:
          btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness
-         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface
          wf2                => waterdiagnosticbulk_inst%wf2_col                , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m
 
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool
@@ -517,10 +516,6 @@ contains
         g = col%gridcell(c)
 
         ! For crop
-        ! cropf_col(c) * col%wtgcell(c) > 0.1_r8 is added because fires are rare in
-        ! gridcells with limited cropland coverage based on GFED5. Also, this helps to 
-        ! avoid abm (crop fire peak month) regridding error from 0.05 degree to lower resolution
-        ! The condition could be removed if CLM supports the use of mode in abm inputs regridding
         if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. patch%itype(p)  >  nc4_grass .and.  &
              kmo == abm_lf(c) .and. &
              burndate(p) >= 999 .and. patch%wtcol(p)  >  0._r8 )then ! catch  crop burn time
@@ -556,8 +551,7 @@ contains
             end if
         else
            baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/borpeat_fire_soilmoist_denom))* &
-                max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
-                (1._r8-fsat(c))
+                max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)
         end if
      end do
      !

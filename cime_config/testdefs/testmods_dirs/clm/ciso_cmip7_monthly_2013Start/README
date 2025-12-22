@@ -1,6 +1,1 @@
 This tests with the new CMIP7 Carbon isotope datasets as streams.
-
-However, this uses the initial version of C14 and hence C14 is constant with the value
-over the southern pole latitude band. When we can change answers the ignore-warning should
-be removed and the CMIP7 defaults setup to use the streams rather than default to the
-CMIP6 version.

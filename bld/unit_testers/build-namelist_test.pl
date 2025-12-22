@@ -845,6 +845,11 @@ my %failtest = (
                                      namelst=>"stream_fldfilename_atm_c14='/dev/null'",
                                      phys=>"clm6_0",
                                    },
+     "c14_meshfile_none"         =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"stream_fldfilename_atm_c14='/dev/null', " .
+                                              "stream_meshfile_atm_c14='none'",
+                                     phys=>"clm6_0",
+                                   },
      "lightres no cn"            =>{ options=>"-bgc sp -envxml_dir . -light_res 360x720",
                                      namelst=>"",
                                      phys=>"clm5_0",
@@ -1446,11 +1451,6 @@ my %warntest = (
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      phys=>"clm5_0",
-                                   },
-     "c14_meshfile_none"         =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"stream_fldfilename_atm_c14='/dev/null', " .
-                                              "stream_meshfile_atm_c14='none'",
-                                     phys=>"clm6_0",
                                    },
      "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
                                      namelst=>"",
