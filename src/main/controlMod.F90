@@ -492,7 +492,7 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == fates_c_only .and. suplnitro == suplnNon .and. use_fates_bgc )then
+          if (fates_parteh_mode == fates_c_only .and. suplnitro == suplnNon)then
              write(iulog,*) ' When fates_parteh_mode == fates_c_only,'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
@@ -500,10 +500,11 @@ contains
              call endrun(msg=' ERROR: fates_parteh_mode=fates_c_only must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
-          if (fates_parteh_mode == fates_cnp .and. suplnitro == suplnAll .and. use_fates_bgc )then
+          if (fates_parteh_mode == fates_cnp .and. use_fates_sp )then
              write(iulog,*) ' When fates_parteh_mode == fates_cnp,'
-             write(iulog,*) '  you must have supplemental nitrogen turned off.'
-             call endrun(msg=' ERROR: fates_parteh_mode=fates_cnp must have suplnitro set to suplnNon.'//&
+             write(iulog,*) '  you must have use_fates_bgc and not use_fates_sp.'
+             write(iulog,*) ' When you have use_fates_sp, then fates_parteh_mode should equal fates_c_only.'
+             call endrun(msg=' ERROR: fates_parteh_mode=fates_cnp and use_fates_sp are inconsistent.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           
