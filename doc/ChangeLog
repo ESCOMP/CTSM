@@ -1,13 +1,22 @@
 ===============================================================
 Tag name: ctsm5.4.006
 Originator(s): erik (Erik Kluzek)
-Date: Fri Dec 26 20:08:57 MST 2025
+Date: Wed Jan  7 04:09:34 AM MST 2026
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
 ----------------------------------
 
+Bring in b4b-dev to master
 
+Some documentation updates: Update the ctsm5.4 What's New file with text around the Carbon isotopes
+Fixes to names and units of canopy turbulence variables.
+
+New CTSM Tool: compare_parmfiles to nicely compare CTSM NetCDF parameter files in a clear way
+
+New namelist option: hist_all_fields == TRUE flags to output ALL available history fields by default
+
+Test-mod updates: Add a test-mod so that transient ERI tests work
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -39,15 +48,13 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
-
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., parameter, surface or initial files):
+   New namelist item: hist_all_fields to output all history fields even if inactive
 
 Changes to documentation:
+   Some README type files updated to markdown and clarified
+   paramfile tools documentation updated
+   Fixes to names and units of canopy turbulence variables
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -57,8 +64,9 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
 Changes to tests or testing:
    FatesColdAllVars -- testmod uses hist_all_fields==TRUE rather the explicitly listing all variables
    all_outputs -- testmod uses hist_all_fields==TRUE to output all history fields
+   extra_outputs -- turn on more history options
 
-   add a I1850Clm50BgcCrop test with all_outputs for it
+   add a IHistClm60BgcCropCrujra test with all_outputs for it
 
 Testing summary: regular
 ----------------
