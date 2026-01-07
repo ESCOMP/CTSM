@@ -45,7 +45,7 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    5a -- From the 'doc' directory, run `./UpdateChangelog.pl TAGNAME "one-line summary"`.
          This will open an editor with the ChangeLog. You can edit it now (step 4b) or
          exit your editor and then reopen it manually.
-   5b -- Fill in the ChangeLog entry
+   5b -- Fill in the ChangeLog entry (include output from compare_paramfiles if parameter file was updated)
    5c -- Update date stamp on ChangeLog
         `./UpDateChangeLog.pl -update`
    5d -- Commit new change files
