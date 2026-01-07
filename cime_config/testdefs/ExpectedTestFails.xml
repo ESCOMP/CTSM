@@ -69,7 +69,7 @@
       <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
     </phase>
   </test>
-  <test name="ERP_P36x2_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_gnu.clm-default--clm-all_outputs">
+  <test name="ERP_P64x2_D_Ld3.f10_f10_mt232.IHistClm60BgcCropCrujra.derecho_gnu.clm-default--clm-all_outputs">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#3661</issue>
