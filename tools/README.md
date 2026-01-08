@@ -7,6 +7,7 @@ modification of CTSM input files.
 I.  General directory structure:
 
     `$CTSMROOT/tools`
+        CUPiD ------------ Postprocessing of cases (CESM Unified Postprocessing and Diagnostics)
         mksurfdata_esmf -- Create surface datasets.
 
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
