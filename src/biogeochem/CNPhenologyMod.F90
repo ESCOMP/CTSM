@@ -3005,7 +3005,7 @@ contains
       end do
 
       ! Initialize other stuff
-      max_tlai = 0._r8
+      max_tlai(p) = 0._r8
       crop_inst%frootc_emergence_patch(p) = -1._r8
       crop_inst%frootc_anthesis_patch(p) = -1._r8
       crop_inst%frootc_maturity_patch(p) = -1._r8
