@@ -354,9 +354,9 @@ The burned area due to peat fires is given as :math:`{A}_{b}`:
 .. math::
    :label: 23.37
 
-   A_{b} = c \ f_{cli,p} f_{peat} (1 - f_{sat} ) A_{g}
+   A_{b} = c \ f_{cli,p} f_{peat} A_{g}
 
-where :math:`c` (s\ :sup:`-1`) is a constant; :math:`f_{cli,p}` represents the effect of climate on the burned area; :math:`f_{peat}` is the fractional coverage of peatland in the grid cell; and :math:`f_{sat}` is the fraction of the grid cell with a water table at the surface or higher. :math:`c` = 0.17 :math:`\times` 10 :sup:`-3` hr\ :sup:`-1` for tropical peat fires and :math:`c` = 0.9 :math:`\times` 10 :sup:`-5` hr :sup:`-1` for boreal peat fires are derived using an inverse method, by matching simulations to earlier studies: about 2.4 Mha peatland was burned over Indonesia in 1997 (:ref:`Page et al. 2002 <Pageetal2002>`) and the average burned area of peat fires in Western Canada was 0.2 Mha yr :sup:`-1` for 1980-1999 (:ref:`Turetsky et al. 2004 <Turetskyetal2004>`).
+where :math:`c` (s\ :sup:`-1`) is a constant; :math:`f_{cli,p}` represents the effect of climate on the burned area; and :math:`f_{peat}` is the fractional coverage of peatland in the grid cell. :math:`c` = 0.17 :math:`\times` 10 :sup:`-3` hr\ :sup:`-1` for tropical peat fires and :math:`c` = 0.9 :math:`\times` 10 :sup:`-5` hr :sup:`-1` for boreal peat fires are derived using an inverse method, by matching simulations to earlier studies: about 2.4 Mha peatland was burned over Indonesia in 1997 (:ref:`Page et al. 2002 <Pageetal2002>`) and the average burned area of peat fires in Western Canada was 0.2 Mha yr :sup:`-1` for 1980-1999 (:ref:`Turetsky et al. 2004 <Turetskyetal2004>`).
 
 For tropical peat fires, :math:`f_{cli,p}` is set as a function of long-term precipitation :math:`P_{60d}` :
 

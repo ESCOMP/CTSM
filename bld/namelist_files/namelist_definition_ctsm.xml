@@ -220,6 +220,7 @@ Index of rooting profile for soil carbon
 
 Changes rooting profile from Zeng 2001 double exponential (0) to
 Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+(REMOVE, NOT in the CODE)
 </entry>
 
 <entry id="rooting_profile_varindex_water" type="integer" category="clm_physics"
@@ -1016,7 +1017,7 @@ constants for biogeochem modules
 </entry>
 
 <entry id="fates_paramfile" type="char*512" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
+       input_pathname="landroot" group="clm_inparm" valid_values="" >
 Full pathname datafile with fates parameters
 (Only relevant if FATES is on).
 </entry>
@@ -1215,6 +1216,8 @@ number of segments per clump for decomposition
 <entry id="pertlim" type="real" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Perturbation limit when doing error growth test
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+(deprecated -- will be removed)
 </entry>
 
 <entry id="rest_flag" type="logical" category="clm_restart"
@@ -1237,7 +1240,8 @@ If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux a
 
 <entry id="urban_traffic" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
-If TRUE, urban traffic flux will be activated (Currently NOT implemented).
+If TRUE, urban traffic flux will be activated
+(Currently NOT implemented).
 </entry>
 
 <entry id="building_temp_method" type="integer" category="clm_physics"
@@ -1363,6 +1367,7 @@ CLM Biogeochemistry mode : Carbon Nitrogen model (CN)
        group="clm_inparm" valid_values="" value=".false.">
 CLM Biogeochemistry mode : Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
 (or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+(deprecated -- will be removed)
 </entry>
 
 <entry id="use_fun" type="logical" category="bgc"
@@ -1404,6 +1409,7 @@ Toggle to use 25 lake layers instead of 10
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the VIC hydrologic parameterizations
 (vichydro=".true." is EXPERIMENTAL, UNSUPPORTED!)
+(deprecated -- will be removed)
 </entry>
 
 <entry id="use_crop" type="logical" category="physics"
@@ -2546,6 +2552,7 @@ If TRUE, add extra diagnostics for methane model to the history files
 Profile over which to distribute C and N coming from surface pools (leaves, stem, grain).
 </entry>
 
+
 <!-- some N cycle flags  -->
 <entry id="no_frozen_nitrif_denitrif" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
@@ -2755,6 +2762,7 @@ If TRUE, turn on methane biogeochemistry model for lake columns, using a simplif
 <entry id="usephfact" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, apply a limitation to methane production based on the soil pH dataset.
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="vmax_oxid_unsat" type="real" category="clm_methane"
