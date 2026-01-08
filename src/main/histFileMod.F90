@@ -92,6 +92,11 @@ module histFileMod
                                          ! only exist on history tape 1). Use hist_fincl1 to enable
                                          ! select fields on top of this.
 
+  logical, public :: &
+       hist_all_fields  = .false.        ! namelist: enable all possible history fields on history
+                                         ! tape 1. Use hist_fexcl1 to remove select fields on top
+                                         ! of this.
+
   character(len=max_namlen+2), public :: &
        hist_fincl1(max_flds) = ' '       ! namelist: list of fields to include in history tape 1
                                          !            aka 'h0' history file.
@@ -927,10 +932,8 @@ contains
              allhistfldname = allhistfldlist(fld)%field%name
              call list_index (fincl(1,t), allhistfldname, ff)
 
+             ! if field is in include list, ff > 0
              ff_gt_0: if (ff > 0) then
-
-                ! if field is in include list, ff > 0 and htape_addfld
-                ! will be called for field
 
                 avgflag = getflag (fincl(ff,t))
 
@@ -961,18 +964,13 @@ contains
 
              else if (.not. hist_empty_htapes) then
 
-                ! find index of field in exclude list
+                ! field not explicitly included. check exclude list
 
                 call list_index (fexcl(1,t), allhistfldname, ff)
 
-                ! if field is in exclude list, ff > 0 and htape_addfld
-                ! will not be called for field
-                ! if field is not in exclude list, ff =0 and htape_addfld
-                ! will be called for field (note that htape_addfld will be
-                ! called below only if field is not in exclude list OR in
-                ! include list
+                ! if field is in exclude list, ff > 0.
 
-                if (ff == 0 .and. allhistfldlist(fld)%actflag(t,f)) then
+                if (ff == 0 .and. (allhistfldlist(fld)%actflag(t,f) .or. (hist_all_fields .and. t == 1))) then
                    call htape_addfld (t, f, fld, ' ')
                 end if
 
