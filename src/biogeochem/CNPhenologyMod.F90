@@ -2072,6 +2072,7 @@ contains
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical vernalization_forces_harvest ! Was the crop killed by freezing during vernalization?
+    logical is_mature  ! Has the crop reached maturity?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2466,6 +2467,7 @@ contains
                 mxmat = 999
             end if
 
+            is_mature = .false.
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
@@ -2504,7 +2506,8 @@ contains
                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
             else
                ! Original harvest rule
-               do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
+               is_mature = hui(p) >= gddmaturity(p)
+               do_harvest = is_mature .or. idpp >= mxmat
 
                ! Always harvest the day before the next prescribed sowing date, if still alive.
                ! WARNING: This implementation assumes that prescribed sowing dates don't change over time!
@@ -2512,7 +2515,7 @@ contains
                ! sowing dates.
                do_harvest = do_harvest .or. do_plant_prescribed_tomorrow
 
-               if (hui(p) >= gddmaturity(p)) then
+               if (is_mature) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
