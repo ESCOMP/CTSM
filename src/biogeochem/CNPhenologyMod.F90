@@ -2191,18 +2191,23 @@ contains
                crop_inst%frootc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%frootc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%frootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%livecrootc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%livecrootc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%livecrootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%livestemc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%livestemc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%livestemc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%leafc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%leafc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%leafc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%reprc_emergence_thisyr_patch(p,s) = -1._r8
                crop_inst%reprc_anthesis_thisyr_patch(p,s) = -1._r8
                crop_inst%reprc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2561,7 +2566,7 @@ contains
 
             else if (do_harvest) then
                cphase(p) = cphase_harvest
-               call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst)
+               call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst, is_mature)
 
                ! Don't update these if you're just harvesting because of incorrect Dec.
                ! 31 planting
@@ -2583,18 +2588,23 @@ contains
                   crop_inst%frootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_emergence_patch(p)
                   crop_inst%frootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_anthesis_patch(p)
                   crop_inst%frootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_maturity_patch(p)
+                  crop_inst%frootc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_harvest_patch(p)
                   crop_inst%livecrootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_emergence_patch(p)
                   crop_inst%livecrootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_anthesis_patch(p)
                   crop_inst%livecrootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_maturity_patch(p)
+                  crop_inst%livecrootc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_harvest_patch(p)
                   crop_inst%livestemc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_emergence_patch(p)
                   crop_inst%livestemc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_anthesis_patch(p)
                   crop_inst%livestemc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_maturity_patch(p)
+                  crop_inst%livestemc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_harvest_patch(p)
                   crop_inst%leafc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_emergence_patch(p)
                   crop_inst%leafc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_anthesis_patch(p)
                   crop_inst%leafc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_maturity_patch(p)
+                  crop_inst%leafc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_harvest_patch(p)
                   crop_inst%reprc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_emergence_patch(p)
                   crop_inst%reprc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_anthesis_patch(p)
                   crop_inst%reprc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_maturity_patch(p)
+                  crop_inst%reprc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_harvest_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
@@ -3012,18 +3022,23 @@ contains
       crop_inst%frootc_emergence_patch(p) = -1._r8
       crop_inst%frootc_anthesis_patch(p) = -1._r8
       crop_inst%frootc_maturity_patch(p) = -1._r8
+      crop_inst%frootc_harvest_patch(p) = -1._r8
       crop_inst%livecrootc_emergence_patch(p) = -1._r8
       crop_inst%livecrootc_anthesis_patch(p) = -1._r8
       crop_inst%livecrootc_maturity_patch(p) = -1._r8
+      crop_inst%livecrootc_harvest_patch(p) = -1._r8
       crop_inst%livestemc_emergence_patch(p) = -1._r8
       crop_inst%livestemc_anthesis_patch(p) = -1._r8
       crop_inst%livestemc_maturity_patch(p) = -1._r8
+      crop_inst%livestemc_harvest_patch(p) = -1._r8
       crop_inst%leafc_emergence_patch(p) = -1._r8
       crop_inst%leafc_anthesis_patch(p) = -1._r8
       crop_inst%leafc_maturity_patch(p) = -1._r8
+      crop_inst%leafc_harvest_patch(p) = -1._r8
       crop_inst%reprc_emergence_patch(p) = -1._r8
       crop_inst%reprc_anthesis_patch(p) = -1._r8
       crop_inst%reprc_maturity_patch(p) = -1._r8
+      crop_inst%reprc_harvest_patch(p) = -1._r8
 
     end associate
 
