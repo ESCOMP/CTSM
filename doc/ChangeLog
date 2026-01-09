@@ -1,4 +1,65 @@
 ===============================================================
+Tag name: ctsm5.4.007
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Jan  9 11:53:19 MST 2026
+One-line Summary: Update (irrigated_)rice grnfill and lfemerg
+
+Purpose and description of changes
+----------------------------------
+
+This brings the parameter file in line with what I used for my AGU 2025 simulations.
+- Increases grnfill from ~0.4 to 0.6.
+- Increases lfemerg from ~0.01 to 0.05.
+
+These changes should decrease rice yields.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- New clm6_0 paramfile: ctsm60_params.c260108.nc
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm60 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): At least larger than roundoff
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [ESCOMP/CTSM Pull Request #3686: ctsm5.4.007: Update (irrigated_)rice grnfill and lfemerg](https://github.com/ESCOMP/CTSM/pull/3686)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.006
 Originator(s): erik (Erik Kluzek)
 Date: Wed Jan  7 02:49:18 PM MST 2026
