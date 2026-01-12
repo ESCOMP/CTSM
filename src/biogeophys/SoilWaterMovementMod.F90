@@ -1147,8 +1147,7 @@ contains
     real(r8) :: vLiqIter(bounds%begc:bounds%endc,1:nlevsoi)   !  iteration increment for the volumetric liquid water content (v/v)
     real(r8) :: vLiqRes(bounds%begc:bounds%endc,1:nlevsoi)   ! residual for the volumetric liquid water content (v/v)
 
-    real(r8) :: dwat_temp
-    real(r8) :: over_saturation 
+    real(r8) :: over_saturation  ! Amount of water that over saturates this soil layer [kg/m2]
     !-----------------------------------------------------------------------
 
     associate(&
@@ -1183,8 +1182,6 @@ contains
 
          ! set number of layers over which to solve soilwater movement
          nlayers = nbedrock(c)
-
-         dwat_temp = 0.
 
          ! initialize the number of substeps
          nsubstep=0
