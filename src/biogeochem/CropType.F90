@@ -1366,19 +1366,24 @@ contains
     ! sum over all grain tisues and destinations
     reprc = sum(cnveg_carbonstate_inst%reproductivec_patch(p,:))
 
-    if (this%cphase_patch(p) == cphase_leafemerge) then
+    if (this%cphase_patch(p) >= cphase_leafemerge .and. this%frootc_emergence_patch(p) < 0._r8) then
        this%frootc_emergence_patch(p) = frootc
        this%livecrootc_emergence_patch(p) = livecrootc
        this%livestemc_emergence_patch(p) = livestemc
        this%leafc_emergence_patch(p) = leafc
        this%reprc_emergence_patch(p) = reprc
-    else if (this%cphase_patch(p) == cphase_grainfill) then
+    end if
+
+    if (this%cphase_patch(p) >= cphase_grainfill .and. this%frootc_anthesis_patch(p) < 0._r8) then
        this%frootc_anthesis_patch(p) = frootc
        this%livecrootc_anthesis_patch(p) = livecrootc
        this%livestemc_anthesis_patch(p) = livestemc
        this%leafc_anthesis_patch(p) = leafc
        this%reprc_anthesis_patch(p) = reprc
-    else if (this%cphase_patch(p) == cphase_harvest) then
+    end if
+
+    ! Don't need >= etc. here because harvest is the maximum (final) phase
+    if (this%cphase_patch(p) == cphase_harvest) then
        this%frootc_harvest_patch(p) = frootc
        this%livecrootc_harvest_patch(p) = livecrootc
        this%livestemc_harvest_patch(p) = livestemc
