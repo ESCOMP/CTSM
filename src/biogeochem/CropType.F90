@@ -1076,31 +1076,31 @@ contains
                 long_name='Reproductive C at maturity for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=this%reprc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='frootc_maturity_thisyr_patch', xtype=ncd_double,  &
+           call restartvar(ncid=ncid, flag=flag, varname='frootc_harvest_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Fine root C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Fine root C at harvest for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%frootc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='livecrootc_maturity_thisyr_patch', xtype=ncd_double,  &
+                interpinic_flag='interp', readvar=readvar, data=this%frootc_harvest_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='livecrootc_harvest_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Live coarse root C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Live coarse root C at harvest for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%livecrootc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='livestemc_maturity_thisyr_patch', xtype=ncd_double,  &
+                interpinic_flag='interp', readvar=readvar, data=this%livecrootc_harvest_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='livestemc_harvest_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Live stem C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Live stem C at harvest for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%livestemc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='leafc_maturity_thisyr_patch', xtype=ncd_double,  &
+                interpinic_flag='interp', readvar=readvar, data=this%livestemc_harvest_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='leafc_harvest_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Leaf C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Leaf C at harvest for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%leafc_maturity_thisyr_patch)
-           call restartvar(ncid=ncid, flag=flag, varname='reprc_maturity_thisyr_patch', xtype=ncd_double,  &
+                interpinic_flag='interp', readvar=readvar, data=this%leafc_harvest_thisyr_patch)
+           call restartvar(ncid=ncid, flag=flag, varname='reprc_harvest_thisyr_patch', xtype=ncd_double,  &
                 dim1name='pft', dim2name='mxharvests', switchdim=.true., &
-                long_name='Reproductive C at maturity for harvests in this patch this year', units='unitless', &
+                long_name='Reproductive C at harvest for harvests in this patch this year', units='unitless', &
                 scale_by_thickness=.false., &
-                interpinic_flag='interp', readvar=readvar, data=this%reprc_maturity_thisyr_patch)
+                interpinic_flag='interp', readvar=readvar, data=this%reprc_harvest_thisyr_patch)
 
            ! Fill variable(s) derived from read-in variable(s)
            if (flag == 'read') then
