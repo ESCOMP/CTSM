@@ -346,7 +346,7 @@ contains
     real(r8) :: efpot                                ! potential latent energy flux [kg/m2/s]
     real(r8) :: efe(bounds%begp:bounds%endp)         ! water flux from leaf [mm/s]
     real(r8) :: efsh                                 ! sensible heat from leaf [mm/s]
-    real(r8) :: obuold(bounds%begp:bounds%endp)      ! monin-obukhov length from previous iteration
+    real(r8) :: obuold(bounds%begp:bounds%endp)      ! Obukhov length scale from previous iteration
     real(r8) :: tlbef(bounds%begp:bounds%endp)       ! leaf temperature from previous iteration [K]
     real(r8) :: tl_ini(bounds%begp:bounds%endp)      ! leaf temperature from beginning of time step [K]
     real(r8) :: ts_ini(bounds%begp:bounds%endp)      ! stem temperature from beginning of time step [K]
@@ -437,6 +437,8 @@ contains
     real(r8), parameter :: k_cyl_area = 1.0_r8         !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0_r8         !self-absorbtion of leaf/stem longwave
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: min_lai    = 0.1_r8         !minimum elai threshold to add esai to sa_leaf calculation
+                                                       !value is arbitrary but has been effective in avoiding RRTMGP errors in CESM3 development simulations
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -623,9 +625,9 @@ contains
          uaf                    => frictionvel_inst%uaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air speed [m/s]
          taf                    => frictionvel_inst%taf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air temperature [K]
          qaf                    => frictionvel_inst%qaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air humidity [kg/kg]
-         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Monin-Obukhov length [m]
+         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Obukhov length scale [m]
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter 
-         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [Pa]
+         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [kPa]
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
 
          begp                   => bounds%begp                                  , &
@@ -745,15 +747,26 @@ bioms:   do f = 1, fn
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
-            !
             ! only calculate separate leaf/stem heat capacity for trees
-            ! and shrubs if dbh is greater than some minimum value
-            ! (set surface area for stem, and fraction absorbed by stem to zero)
+            ! and shrubs if dbh is greater than some minimum value.
+            ! otherwise, set surface area for stem and fraction absorbed by stem to zero,
+            ! and add esai to sa_leaf.
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
                sa_leaf(p) = sa_leaf(p) + esai(p)
+            else
+               ! Add esai to sa_leaf if elai is less than threshold.
+               ! Intended to avoid small sa_leaf which leads to small leaf conductance
+               ! and high leaf temperature. This in turn can lead to unrealistically
+               ! high surface temperatures passed to the atmospheric model (The RRTMGP
+               ! component in particular, which returns an error and stops the model
+               ! if the surface temperature is greater than 355K).
+               ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
+               if(elai(p) < min_lai) then
+                  sa_leaf(p) = sa_leaf(p) + esai(p)
+               endif
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
@@ -992,7 +1005,7 @@ bioms:   do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
 
-         ! Initialize Monin-Obukhov length and wind speed
+         ! Initialize Obukhov length scale and wind speed
 
          call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
          num_iter(p) = 0
@@ -1096,15 +1109,15 @@ bioms:   do f = 1, fn
             ! Stomatal resistances for sunlit and shaded fractions of canopy.
             ! Done each iteration to account for differences in eah, tv.
 
-            svpts(p) = el(p)                         ! pa
-            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
+            svpts(p) = el(p)                         ! Pa
+            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! Pa
             rhaf(p) = eah(p)/svpts(p)
             ! variables for history fields
             rah1(p)  = rah(p,above_canopy)
             raw1(p)  = raw(p,above_canopy)
             rah2(p)  = rah(p,below_canopy)
             raw2(p)  = raw(p,below_canopy)
-            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
+            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8 ! kPa
 
          end do
 
@@ -1374,7 +1387,7 @@ bioms:   do f = 1, fn
             taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(p) + wtl0(p)*t_veg(p) + wtstem0(p)*t_stem(p)
             qaf(p) = wtlq0(p)*qsatl(p) + wtgq0*qg(c) + forc_q(c)*wtaq0(p)
 
-            ! Update Monin-Obukhov length and wind speed including the
+            ! Update Obukhov length scale and wind speed including the
             ! stability effect
 
             dth(p) = thm(p)-taf(p)
