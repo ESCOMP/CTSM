@@ -1307,7 +1307,7 @@ contains
   end subroutine CropIncrementYear
 
   !-----------------------------------------------------------------------
-  subroutine CropPhaseTransitionBiomass (this, p, cnveg_carbonstate_inst, is_mature_in)
+  subroutine CropPhaseTransitionBiomass (this, p, cnveg_carbonstate_inst, is_mature)
     !
     ! !DESCRIPTION:
     ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
@@ -1320,17 +1320,10 @@ contains
     class(crop_type) :: this
     integer , intent(in) :: p  ! Patch index
     type(cnveg_carbonstate_type) , intent(in) :: cnveg_carbonstate_inst
-    logical , intent(in), optional :: is_mature_in
+    logical , intent(in), optional :: is_mature
     !
     ! !LOCALS:
     real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
-    logical :: is_mature
-
-    if (present(is_mature_in)) then
-       is_mature = is_mature_in
-    else
-       is_mature = .false.
-    end if
 
     frootc = cnveg_carbonstate_inst%frootc_patch(p)
     livecrootc = cnveg_carbonstate_inst%livecrootc_patch(p)
@@ -1357,6 +1350,10 @@ contains
        this%livestemc_harvest_patch(p) = livestemc
        this%leafc_harvest_patch(p) = leafc
        this%reprc_harvest_patch(p) = reprc
+
+       if (.not. present(is_mature)) then
+          call endrun(msg=' ERROR: When called at harvest, CropPhaseTransitionBiomass() needs argument is_mature')
+       end if
        if (is_mature) then
           this%frootc_maturity_patch(p) = frootc
           this%livecrootc_maturity_patch(p) = livecrootc
