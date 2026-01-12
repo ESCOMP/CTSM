@@ -1359,6 +1359,11 @@ contains
     ! !LOCALS:
     real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
 
+    call shr_assert(this%cphase_patch(p) >= cphase_not_planted, msg="cphase < cphase_not_planted", &
+       file=__FILE__, line=__LINE__)
+    call shr_assert(this%cphase_patch(p) <= cphase_harvest, msg="cphase > cphase_harvest", &
+       file=__FILE__, line=__LINE__)
+
     frootc = cnveg_carbonstate_inst%frootc_patch(p)
     livecrootc = cnveg_carbonstate_inst%livecrootc_patch(p)
     livestemc = cnveg_carbonstate_inst%livestemc_patch(p)
@@ -1382,7 +1387,7 @@ contains
        this%reprc_anthesis_patch(p) = reprc
     end if
 
-    ! Don't need >= etc. here because harvest is the maximum (final) phase
+    ! Don't need >= etc. here because harvest is the maximum (final) phase (as checked above)
     if (this%cphase_patch(p) == cphase_harvest) then
        this%frootc_harvest_patch(p) = frootc
        this%livecrootc_harvest_patch(p) = livecrootc
