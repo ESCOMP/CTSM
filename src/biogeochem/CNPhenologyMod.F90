@@ -2566,6 +2566,10 @@ contains
 
             else if (do_harvest) then
                cphase(p) = cphase_harvest
+
+               ! Unlike other calls of CropPhaseTransitionBiomass(), we don't need a check for
+               ! cphase(p) /= cphase_orig here. This is because do_harvest already implies we're at
+               ! a phase transition: "cphase(p) isn't cphase_harvest but now it should be."
                call crop_inst%CropPhaseTransitionBiomass(p, cnveg_carbonstate_inst, is_mature)
 
                ! Don't update these if you're just harvesting because of incorrect Dec.
