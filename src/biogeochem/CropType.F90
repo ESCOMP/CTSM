@@ -1315,7 +1315,6 @@ contains
     !
     ! !USES:
     use CNVegCarbonStateType, only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType, only : cnveg_carbonflux_type
     !
     ! !ARGUMENTS:
     class(crop_type) :: this
