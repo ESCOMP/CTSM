@@ -43,7 +43,9 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Changes made to namelist defaults (e.g., changed parameter values):
 
-Changes to the datasets (e.g., parameter, surface or initial files):
+Changes to the datasets (e.g., streams, surface or initial files):
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
 
 Changes to documentation:
 
