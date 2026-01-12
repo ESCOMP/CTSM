@@ -2874,7 +2874,6 @@ contains
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          sowing_reason     =>    crop_inst%sowing_reason_thisyr_patch            , & ! Output:  [real(r8)  (:) ]  reason for each sowing this year for this patch
-         max_tlai          =>    crop_inst%max_tlai_patch                       , & ! Output:  [real(r8)  (:) ]  maximum total projected leaf area seen this season
          gddmaturity       =>    cnveg_state_inst%gddmaturity_patch            , & ! Output: [real(r8) (:) ]  gdd needed to harvest
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting
          iyop              =>    cnveg_state_inst%iyop_patch                     , & ! Output: [integer  (:) ]  year of planting
@@ -3021,28 +3020,8 @@ contains
          arepr(p,k) = 0._r8
       end do
 
-      ! Initialize other stuff
-      max_tlai(p) = 0._r8
-      crop_inst%frootc_emergence_patch(p) = -1._r8
-      crop_inst%frootc_anthesis_patch(p) = -1._r8
-      crop_inst%frootc_maturity_patch(p) = -1._r8
-      crop_inst%frootc_harvest_patch(p) = -1._r8
-      crop_inst%livecrootc_emergence_patch(p) = -1._r8
-      crop_inst%livecrootc_anthesis_patch(p) = -1._r8
-      crop_inst%livecrootc_maturity_patch(p) = -1._r8
-      crop_inst%livecrootc_harvest_patch(p) = -1._r8
-      crop_inst%livestemc_emergence_patch(p) = -1._r8
-      crop_inst%livestemc_anthesis_patch(p) = -1._r8
-      crop_inst%livestemc_maturity_patch(p) = -1._r8
-      crop_inst%livestemc_harvest_patch(p) = -1._r8
-      crop_inst%leafc_emergence_patch(p) = -1._r8
-      crop_inst%leafc_anthesis_patch(p) = -1._r8
-      crop_inst%leafc_maturity_patch(p) = -1._r8
-      crop_inst%leafc_harvest_patch(p) = -1._r8
-      crop_inst%reprc_emergence_patch(p) = -1._r8
-      crop_inst%reprc_anthesis_patch(p) = -1._r8
-      crop_inst%reprc_maturity_patch(p) = -1._r8
-      crop_inst%reprc_harvest_patch(p) = -1._r8
+      ! Initialize other things in crop_inst
+      call crop_inst%InitPlantCrop(p)
 
     end associate
 

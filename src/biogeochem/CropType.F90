@@ -124,6 +124,7 @@ module CropType
      procedure, public  :: Init               ! Initialize the crop type
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
+     procedure, public  :: InitPlantCrop
      procedure, public  :: Restart
      procedure, public  :: ReadNML            ! Read in the crop_inparm namelist
 
@@ -713,6 +714,39 @@ contains
     deallocate(rbufslp)
 
   end subroutine InitAccVars
+
+  subroutine InitPlantCrop(this, p)
+    !
+    ! !DESCRIPTION:
+    ! Initialize some things as they are needed during PlantCrop().
+    !
+    ! !ARGUMENTS:
+    class(crop_type),  intent(inout) :: this
+    integer, intent(in) :: p  ! patch index
+
+    this%max_tlai_patch(p) = 0._r8
+    this%frootc_emergence_patch(p) = -1._r8
+    this%frootc_anthesis_patch(p) = -1._r8
+    this%frootc_maturity_patch(p) = -1._r8
+    this%frootc_harvest_patch(p) = -1._r8
+    this%livecrootc_emergence_patch(p) = -1._r8
+    this%livecrootc_anthesis_patch(p) = -1._r8
+    this%livecrootc_maturity_patch(p) = -1._r8
+    this%livecrootc_harvest_patch(p) = -1._r8
+    this%livestemc_emergence_patch(p) = -1._r8
+    this%livestemc_anthesis_patch(p) = -1._r8
+    this%livestemc_maturity_patch(p) = -1._r8
+    this%livestemc_harvest_patch(p) = -1._r8
+    this%leafc_emergence_patch(p) = -1._r8
+    this%leafc_anthesis_patch(p) = -1._r8
+    this%leafc_maturity_patch(p) = -1._r8
+    this%leafc_harvest_patch(p) = -1._r8
+    this%reprc_emergence_patch(p) = -1._r8
+    this%reprc_anthesis_patch(p) = -1._r8
+    this%reprc_maturity_patch(p) = -1._r8
+    this%reprc_harvest_patch(p) = -1._r8
+
+  end subroutine InitPlantCrop
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, cnveg_state_inst, flag)
