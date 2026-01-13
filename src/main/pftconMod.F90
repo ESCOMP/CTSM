@@ -537,7 +537,6 @@ contains
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
     use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_biomass_heat_storage, z0param_method
     use spmdMod     , only : masterproc
-    use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
@@ -1159,8 +1158,6 @@ contains
     end if
 
     call ncd_pio_closefile(ncid)
-
-    call FatesReadPFTs()
 
     do i = 0, mxpft
        if (.not. use_fates)then
