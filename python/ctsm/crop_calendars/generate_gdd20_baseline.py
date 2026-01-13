@@ -25,6 +25,10 @@ STREAM_YEAR = 2000  # The year specified for stream_yearFirst and stream_yearLas
 # shr_strdata_init_from_inline() for sdat_cropcal_gdd20_baseline
 MGDCROP_LIST = utils.define_crop_list()
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def _parse_args():
     """
@@ -249,7 +253,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     input_files.sort()
 
     # Import history files and ensure they have lat/lon dims
-    ds_in = import_ds(input_files, var_list_in + GRIDDING_VAR_LIST, time_slice=time_slice)
+    ds_in = import_ds(input_files, my_vars=var_list_in + GRIDDING_VAR_LIST, time_slice=time_slice)
     if not all(x in ds_in.dims for x in ["lat", "lon"]):
         raise RuntimeError("Input files must have lat and lon dimensions")
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for gen_mksurfdata_jobscript_multi
-
-"""
+"""System tests for gen_mksurfdata_jobscript_multi"""
 
 import os
 
@@ -72,7 +70,6 @@ class TestSysGenMkSurfJSMulti(unittest.TestCase):
         """
         Test that a standard simple namelist works
         """
-        # pylint: disable=no-self-use
         self.createJS(nodes="4", tasks_per_node="12", scenario="crop-global-present")
 
 

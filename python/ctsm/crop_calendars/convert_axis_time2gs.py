@@ -1,6 +1,7 @@
 """
 Convert time*mxharvests axes to growingseason axis
 """
+
 import warnings
 import sys
 import numpy as np
@@ -11,6 +12,10 @@ try:
     import pandas as pd
 except ModuleNotFoundError:
     pass
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 
 def pym_to_pg(pym_array, quiet=False):

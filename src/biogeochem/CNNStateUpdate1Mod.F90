@@ -12,11 +12,12 @@ module CNNStateUpdate1Mod
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
+  use clm_varpar                      , only : i_met_lit, i_str_lit, i_phys_som, i_chem_som
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+  use SoilBiogeochemDecompCascadeConType, only : decomp_method, mimics_decomp, use_soil_matrixcn
   use CNSharedParamsMod               , only : use_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
-  use pftconMod                       , only : npcropmin, pftcon
+  use pftconMod                       , only : is_prognostic_crop, pftcon
   use decompMod                       , only : bounds_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -129,6 +130,7 @@ contains
     associate(                                                                   & 
          ivt                   => patch%itype                                    , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
+         mimics_fi             => pftcon%mimics_fi                             , & ! Input:  MIMICS parameter fi
          woody                 => pftcon%woody                                 , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
 
          nf_veg                => cnveg_nitrogenflux_inst                      , & ! Input:
@@ -163,10 +165,21 @@ contains
             ! State update without the matrix solution
             !
             if (.not. use_soil_matrixcn) then ! to be consistent with C
-               do i = i_litr_min, i_litr_max
-                  nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
-                     nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
-               end do
+               if (decomp_method == mimics_decomp) then
+                  do i = i_litr_min, i_litr_max  ! in MIMICS these are 1 and 2
+                     nf_soil%decomp_npools_sourcesink_col(c,j,i) = (1 - mimics_fi(i)) * &
+                        nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
+                  end do
+                  nf_soil%decomp_npools_sourcesink_col(c,j,i_phys_som) = mimics_fi(1) * &
+                     nf_veg%phenology_n_to_litr_n_col(c,j,i_met_lit) * dt
+                  nf_soil%decomp_npools_sourcesink_col(c,j,i_chem_som) = mimics_fi(2) * &
+                     nf_veg%phenology_n_to_litr_n_col(c,j,i_str_lit) * dt
+               else
+                  do i = i_litr_min, i_litr_max
+                     nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
+                        nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
+                  end do
+               end if
 
                ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
                ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
@@ -215,7 +228,7 @@ contains
                ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p) - nf_veg%deadcrootn_xfer_to_deadcrootn_patch(p)*dt
             end if
 
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
                ! lines here for consistency; the transfer terms are zero
                ns_veg%livestemn_patch(p)       = ns_veg%livestemn_patch(p)      + nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
                ns_veg%livestemn_xfer_patch(p)  = ns_veg%livestemn_xfer_patch(p) - nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
@@ -274,7 +287,7 @@ contains
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if 
-         if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
+         if (is_prognostic_crop(ivt(p))) then ! Beth adds retrans from froot
             !
             ! State update without the matrix solution
             !
@@ -378,7 +391,7 @@ contains
             end if ! not use_matrixcn
          end if
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_storage_patch(p)*dt
             do k = 1, nrepr
@@ -439,7 +452,7 @@ contains
             ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if  ! not use_matrixcn
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             ! lines here for consistency; the transfer terms are zero
 
             !

@@ -6,6 +6,7 @@
 
 .. todo::
   Update the below, as domain files aren't needed with nuopc.
+
 The tools **cprnc** and **gen_domain** use the CIME configure/build system which is described in the next section.
 
 The only CLM FORTRAN tool is mksurfdata_esmf which has it's own build system that takes advantage of the cime build.

@@ -5,6 +5,10 @@ For variables that should stay constant, make sure they are
 import numpy as np
 from ctsm.crop_calendars.cropcal_module import import_rx_dates
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def check_one_constant_var_setup(this_ds, case, var):
     """
@@ -135,11 +139,7 @@ def ensure_all_patches_checked(this_ds, this_da, ra_sp, incl_patches):
     incl_patches += list(
         np.where(
             np.all(
-                np.isnan(
-                    ra_sp[
-                        :-1,
-                    ]
-                ),
+                np.isnan(ra_sp[:-1,]),
                 axis=0,
             )
         )[0]
@@ -337,7 +337,7 @@ def check_one_constant_var(
 
 
 def check_constant_vars(
-    this_ds, case, ignore_nan, const_growing_seasons=None, verbose=True, throw_error=True
+    this_ds, case, ignore_nan, *, const_growing_seasons=None, verbose=True, throw_error=True
 ):
     """
     For variables that should stay constant, make sure they are

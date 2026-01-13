@@ -62,6 +62,38 @@
   </test>
 
   <!-- aux_clm test suite failures -->
+  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdAllVars">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3660</issue>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+    </phase>
+  </test>
+  <test name="ERP_P64x2_D_Ld3.f10_f10_mt232.IHistClm60BgcCropCrujra.derecho_gnu.clm-default--clm-all_outputs">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3661</issue>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+    </phase>
+  </test>
+  <test name="MKSURFDATAESMF_P128x1.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>#3453</issue>
+    </phase>
+  </test>
+  <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>#3454</issue>
+    </phase>
+  </test>
+  <test name="SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>#3454</issue>
+    </phase>
+  </test>
   <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
     <phase name="RUN">
       <status>FAIL</status>
@@ -81,6 +113,22 @@
       <status>FAIL</status>
       <issue>#2787</issue>
       <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_D_Ld9.f10_f10_mg37.I1850Clm60BgcCrop.izumi_nag.clm-clm60cam7LndTuningModeLDust">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_D_Ld9.f10_f10_mt232.IHistClm60BgcCrop.derecho_intel.clm-clm60cam7LndTuningModeLDust--clm-nnStreamMapAlgo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
     </phase>
   </test>
 
@@ -114,7 +162,7 @@
   </test>
 
   <test name="SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="SHAREDLIB_BUILD">
+    <phase name="RUN">
       <status>FAIL</status>
       <issue>#1733</issue>
     </phase>
@@ -138,6 +186,13 @@
     </phase>
   </test>
   
+  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3182</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Bgc.izumi_nag.clm-default--clm-NEON-HARV--clm-matrixcnOn">
     <phase name="RUN">
       <status>FAIL</status>
@@ -178,24 +233,6 @@
     </phase>
   </test>
 
-  <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2453</issue>
-    </phase>
-  </test>
-
-  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-FatesColdTwoStream">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdST3">
     <phase name="RUN">
       <status>FAIL</status>
@@ -226,6 +263,15 @@
   </test>
 
   <!-- fates test suite failures -->
+
+  <!-- This is commented out because cime currently does NOT allow longnames in the XML in the XSD for this file
+  <test name="ERS_D_Ld30.f45_f45_mg37.HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP.izumi_nag.clm-FatesColdLandUse">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3500</issue>
+    </phase>
+  </test>
+  -->
 
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
     <phase name="RUN">
@@ -263,13 +309,6 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld20.f10_f10_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
-    <phase name="COMPARE_base_modpes">
-      <status>FAIL</status>
-      <issue>FATES#1089</issue>
-    </phase>
-  </test>
-
   <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdSeedDisp">
     <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
@@ -277,28 +316,21 @@
     </phase>
   </test>
 
-  <test name="ERI_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdTwoStream">
-    <phase name="COMPARE_base_rest">
+  <test name="PEM_D_Ld20.5x5_amazon.I2000Clm50FatesRs.derecho_intel.clm-FatesColdSeedDisp">
+    <phase name="COMPARE_base_modpes">
       <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2325</issue>
+      <issue>FATES#1089</issue>
     </phase>
   </test>
 
-  <test name="ERS_D_Ld20.f45_f45_mg37.I2000Clm50FatesRs.derecho_gnu.clm-FatesColdTwoStreamNoCompFixedBioGeo">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#2325</issue>
-    </phase>
-  </test>
-  
   <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="SHAREDLIB_BUILD">
       <status>FAIL</status>
       <issue>#2310</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3038</issue>
     </phase>
   </test>
 
@@ -332,4 +364,47 @@
     </phase>
   </test>
 
+  <!-- decomp_init test list-->
+
+  <test name="SMS_Ln1_PL.mpasa15_mpasa15.I2000Clm45Sp.derecho_intel.clm-run_self_tests">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3316</issue>
+    </phase>
+  </test>
+
+  <!-- interim_restart (and aux_clm) test list-->
+
+  <test name="ERR_Ld7.f10_f10_mg37.I2000Clm50BgcCropRtm.derecho_gnu.clm-default">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3383</issue>
+    </phase>
+  </test>
+
+  <test name="ERR_Ld7.f10_f10_mg37.IHistClm60BgcCrop.derecho_gnu.clm-default">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3383</issue>
+    </phase>
+  </test>
+  <test name="ERI_Ld41.f10_f10_mg37.I2000Clm60BgcCrop.derecho_gnu.clm-default">
+    <phase name="COMPARE_base_hybrid">
+     <status>FAIL</status>
+     <issue>#3494</issue>
+    </phase>
+  </test>
+
+  <test name="ERI_D_Ld9.f45_f45_mg37.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhenCamLndTuningMode">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3496</issue>
+    </phase>
+  </test>
+  <test name="ERI_D_Ld9.f45_f45_mg37.I2000Clm60FatesSpCruRsGs.derecho_intel.clm-FatesColdSatPhenCamLndTuningMode">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3507</issue>
+    </phase>
+  </test>  
 </expectedFails>

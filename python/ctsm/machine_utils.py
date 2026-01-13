@@ -1,5 +1,4 @@
-"""Various machine-related utility functions
-"""
+"""Various machine-related utility functions"""
 
 from __future__ import print_function
 

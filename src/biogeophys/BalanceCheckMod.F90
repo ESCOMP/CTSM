@@ -956,6 +956,7 @@ contains
 
            indexp = maxloc( abs(errsol(bounds%begp:bounds%endp)), 1 , mask = (errsol(bounds%begp:bounds%endp) /= spval) ) + bounds%begp -1
            indexg = patch%gridcell(indexp)
+           indexc = patch%column(indexp)
            write(iulog,*)'WARNING:: BalanceCheck, solar radiation balance error (W/m2)'
            write(iulog,*)'nstep         = ',nstep
            write(iulog,*)'errsol        = ',errsol(indexp)
@@ -969,7 +970,18 @@ contains
                write(iulog,*)'forc_solai(1) = ',forc_solai(indexg,1)
                write(iulog,*)'forc_solai(2) = ',forc_solai(indexg,2)
                write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
-                  +forc_solai(indexg,1)+forc_solai(indexg,2)
+                    +forc_solai(indexg,1)+forc_solai(indexg,2)
+
+               write(iulog,*)'coszen_col:',surfalb_inst%coszen_col(indexc)
+               write(iulog,*)'fabd:',fabd(indexp,:)
+               write(iulog,*)'fabi:',fabi(indexp,:)
+               write(iulog,*)'albd:',albd(indexp,:)
+               write(iulog,*)'albi:',albi(indexp,:)
+               write(iulog,*)'ftdd:',ftdd(indexp,:)
+               write(iulog,*)'ftid:',ftid(indexp,:)
+               write(iulog,*)'ftii:',ftii(indexp,:)
+
+               
                write(iulog,*)'CTSM is stopping'
                call endrun(subgrid_index=indexp, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
            end if

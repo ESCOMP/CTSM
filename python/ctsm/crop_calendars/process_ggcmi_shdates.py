@@ -20,6 +20,10 @@ from ctsm import ctsm_logging
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.regrid_ggcmi_shdates as regrid
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 logger = logging.getLogger(__name__)
 
 
@@ -447,7 +451,7 @@ def process_ggcmi_shdates(
     ### Process all crops ###
     #########################
 
-    for thiscrop_clm in crop_dict:
+    for thiscrop_clm in crop_dict:  # pylint: disable=consider-using-dict-items
 
         # Which crop are we on?
         crop_int = list(crop_dict.keys()).index(thiscrop_clm) + 1
@@ -496,9 +500,9 @@ def process_ggcmi_shdates(
             # Flip latitude to match destination
             cropcal_ds = cropcal_ds.reindex(lat=cropcal_ds.lat[::-1])
             # Rearrange longitude to match destination (does nothing if not needed)
-            cropcal_ds = utils.lon_idl2pm(cropcal_ds, fail_silently=True)
+            cropcal_ds = utils.lon_axis_type180_to_type360(cropcal_ds, fail_silently=True)
 
-        for thisvar_clm in variable_dict:
+        for thisvar_clm in variable_dict:  # pylint: disable=consider-using-dict-items
             # Get GGCMI netCDF info
             varname_ggcmi = variable_dict[thisvar_clm]["name_ggcmi"]
             logger.info("    Processing %s...", varname_ggcmi)
@@ -507,7 +511,7 @@ def process_ggcmi_shdates(
             varname_clm = thisvar_clm + "1_" + str(thiscrop_int)
             file_clm = variable_dict[thisvar_clm]["outfile"]
             if not os.path.exists(file_clm):
-                raise Exception("Output file not found: " + file_clm)
+                raise FileNotFoundError("Output file not found: " + file_clm)
 
             # Strip dataset to just this variable
             strip_dataset(cropcal_ds, varname_ggcmi)

@@ -9,7 +9,8 @@ module CNCStateUpdate1Mod
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp
   use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwd
-  use pftconMod                          , only : npcropmin, nc3crop, pftcon
+  use clm_varpar                         , only : i_met_lit, i_str_lit, i_phys_som, i_chem_som
+  use pftconMod                          , only : is_prognostic_crop, nc3crop, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
@@ -17,7 +18,7 @@ module CNCStateUpdate1Mod
   use CropType                           , only : crop_type
   use CropReprPoolsMod                   , only : nrepr, repr_grain_min, repr_grain_max
   use CropReprPoolsMod                   , only : repr_structure_min, repr_structure_max
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, decomp_method, mimics_decomp, use_soil_matrixcn
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use PatchType                          , only : patch
@@ -170,6 +171,7 @@ contains
     associate(                                                               & 
          ivt                   => patch%itype                                , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
+         mimics_fi             => pftcon%mimics_fi                         , & ! Input: MIMICS parameter fi
          woody                 => pftcon%woody                             , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
 
          cascade_donor_pool    => decomp_cascade_con%cascade_donor_pool    , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
@@ -206,10 +208,21 @@ contains
                !
                if (.not. use_soil_matrixcn) then
                   ! phenology and dynamic land cover fluxes
-                  do i = i_litr_min, i_litr_max
-                     cf_soil%decomp_cpools_sourcesink_col(c,j,i) = &
-                          cf_veg%phenology_c_to_litr_c_col(c,j,i) * dt
-                  end do
+                  if (decomp_method == mimics_decomp) then
+                     do i = i_litr_min, i_litr_max  ! in MIMICS these are 1 and 2
+                        cf_soil%decomp_cpools_sourcesink_col(c,j,i) = (1 - mimics_fi(i)) * &
+                           cf_veg%phenology_c_to_litr_c_col(c,j,i) * dt
+                     end do
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,i_phys_som) = mimics_fi(1) * &
+                        cf_veg%phenology_c_to_litr_c_col(c,j,i_met_lit) * dt
+                     cf_soil%decomp_cpools_sourcesink_col(c,j,i_chem_som) = mimics_fi(2) * &
+                        cf_veg%phenology_c_to_litr_c_col(c,j,i_str_lit) * dt
+                  else
+                     do i = i_litr_min, i_litr_max
+                        cf_soil%decomp_cpools_sourcesink_col(c,j,i) = &
+                             cf_veg%phenology_c_to_litr_c_col(c,j,i) * dt
+                     end do
+                  end if
 
                   ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
                   ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
@@ -277,7 +290,7 @@ contains
               cs_veg%deadcrootc_patch(p)      = cs_veg%deadcrootc_patch(p)      + cf_veg%deadcrootc_xfer_to_deadcrootc_patch(p)*dt
               cs_veg%deadcrootc_xfer_patch(p) = cs_veg%deadcrootc_xfer_patch(p) - cf_veg%deadcrootc_xfer_to_deadcrootc_patch(p)*dt
            end if
-           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
              ! lines here for consistency; the transfer terms are zero
               cs_veg%livestemc_patch(p)       = cs_veg%livestemc_patch(p)      + cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
               cs_veg%livestemc_xfer_patch(p)  = cs_veg%livestemc_xfer_patch(p) - cf_veg%livestemc_xfer_to_livestemc_patch(p)*dt
@@ -300,7 +313,7 @@ contains
               cs_veg%livecrootc_patch(p) = cs_veg%livecrootc_patch(p) - cf_veg%livecrootc_to_deadcrootc_patch(p)*dt
               cs_veg%deadcrootc_patch(p) = cs_veg%deadcrootc_patch(p) + cf_veg%livecrootc_to_deadcrootc_patch(p)*dt
            end if
-           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - &
                    (cf_veg%livestemc_to_biofuelc_patch(p) + cf_veg%livestemc_to_removedresiduec_patch(p))*dt
@@ -324,7 +337,7 @@ contains
 
            ! This part below MUST match exactly the code for the non-matrix part
            ! above!
-           if (ivt(p) >= npcropmin) then
+           if (is_prognostic_crop(ivt(p))) then
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt
               do k = repr_grain_min, repr_grain_max
@@ -346,7 +359,7 @@ contains
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livecroot_curmr_patch(p)*dt
            end if
-           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+           if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
               cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
               do k = 1, nrepr
                  cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%reproductive_curmr_patch(p,k)*dt
@@ -419,7 +432,7 @@ contains
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             if (carbon_resp_opt == 1) then
                cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
                cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
@@ -455,7 +468,7 @@ contains
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livecroot_gr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_deadcroot_gr_patch(p)*dt
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_gr_patch(p)*dt
             do k = 1, nrepr
                cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_reproductive_gr_patch(p,k)*dt
@@ -471,7 +484,7 @@ contains
             cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_livecroot_gr_patch(p)*dt
             cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_deadcroot_gr_patch(p)*dt
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_livestem_gr_patch(p)*dt
             do k = 1, nrepr
                cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p) - cf_veg%transfer_reproductive_gr_patch(p,k)*dt
@@ -488,7 +501,7 @@ contains
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livecroot_storage_gr_patch(p)*dt
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_deadcroot_storage_gr_patch(p)*dt
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_livestem_storage_gr_patch(p)*dt
 
             do k = 1, nrepr
@@ -526,7 +539,7 @@ contains
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             ! lines here for consistency; the transfer terms are zero
             if(.not. use_matrixcn)then
                ! lines here for consistency; the transfer terms are zero
@@ -543,7 +556,7 @@ contains
             end if !not use_matrixcn
          end if
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
             do k = 1, nrepr
                cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%reproductive_xsmr_patch(p,k)*dt
