@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.008
 Originator(s): swensosc (Sean Swenson)
-Date: Mon Jan 12 05:27:29 PM MST 2026
+Date: Mon Jan 12 11:19:38 PM MST 2026
 One-line Summary: Add a correction for oversaturated soil layers in SoilWaterMovement
 
 Purpose and description of changes
@@ -45,21 +45,12 @@ Testing summary: regular
 ----------------
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho - 
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho - 
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
 
 Answer changes
 --------------
