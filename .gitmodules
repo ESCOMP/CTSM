@@ -123,11 +123,9 @@ fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 
 [submodule "cupid"]
 # CUPiD does model post-processing
-	path = tools/CUPiD
-	url = https://github.com/NCAR/CUPiD.git
-#fxtag = v0.4.0
-# Use the hash that enables building the cupid-analysis environment
-fxtag = 7ce65b295acd7b8b9baed0633a124c1e2fa9f224
+path = tools/CUPiD
+url = https://github.com/NCAR/CUPiD.git
+fxtag = v0.4.1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/CUPiD.git
