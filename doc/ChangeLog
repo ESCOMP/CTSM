@@ -1,4 +1,93 @@
 ===============================================================
+Tag name: ctsm5.4.008
+Originator(s): swensosc (Sean Swenson)
+Date: Mon Jan 12 05:27:29 PM MST 2026
+One-line Summary: Add a correction for oversaturated soil layers in SoilWaterMovement
+
+Purpose and description of changes
+----------------------------------
+
+Add a correction for oversaturated soil layers immediately after the soil water flux calculation in SoilWaterMovementMod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Second checkbox in #3879 -- placeholder issue soil water movement
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - 
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! Changes in most fields
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (larger than roundoff/same climate)
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate (from https://github.com/NCAR/LMWG_dev)
+       - issue number: 132
+
+   URL for LMWG diagnostics output used to validate new climate:
+       - https://webext.cgd.ucar.edu/I20TR/ctsm5.4.004_bgc_f09_131_HIST/lnd/ctsm5.4.004_bgc_f09_Oversaturation_131b_HIST_1994_2023_vs_ctsm5.4.004_bgc_f09_131_HIST_1994_2023/website/
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3683 -- Oversaturation
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.007
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Jan  9 11:53:19 MST 2026
