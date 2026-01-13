@@ -19,7 +19,7 @@ Before working with |version| read the `CESM QuickStart Guide <https://escomp.gi
 For some of the details of setting up cases for |version| read the README and text files available from the ``$CTSMROOT/doc`` directory (see the "CLM Web pages" section for a link to the list of these files). Here are the important ones that you should be familiar with:
 
 - :ref:`readme` describing the directory structure.
-- The IMPORTANT_NOTES file talks about important things for users to know about using the model scientifically. It content is given in the next chapter on :ref:`scientific-validiation`.
+- The IMPORTANT_NOTES.md file covers important things for users to know when using the model. Its content is given in the next chapter on :ref:`scientific-validiation`.
 - The ChangeLog/ChangeSum talk about advances in different versions of CLM. The content of these files is largely explained in the previous chapter on :ref:`what-is-new-with-clm`.
 - The release-clm5.0.ChangeLog gives the specific changes that have gone on the release-clm5.0 branch. clm3_0_ChangeLog, clm4_0_ChangeLog, clm4_5_ChangeLog gives the changes that culimated in that given version of the CLM.
 
@@ -27,5 +27,5 @@ Note other directories have README files that explain different components and t
 
 The Quickstart.GUIDE (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../../Quickstart.GUIDE
-   :literal:
+.. include:: ../../../Quickstart.GUIDE.md
+   :code: markdown
