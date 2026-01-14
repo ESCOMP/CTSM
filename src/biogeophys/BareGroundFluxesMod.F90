@@ -146,6 +146,8 @@ contains
     real(r8) :: www                              ! surface soil wetness [-]
     real(r8) :: forc_dewpoint                    ! dewpoint temperature at forcing height [K]
     real(r8) :: forc_e                           ! vapor pressure at forcing height [Pa]
+    real(r8) :: forc_qs                          ! saturated specific humidity at forcing height [kg/kg]
+    real(r8) :: forc_esat                        ! saturated vapor pressure at forcing height [Pa]
     ! Coefficients from Alduchov and Eskridge (1996) as used by Lawrence (2005) for Magnus dewpoint
     ! equation over liquid
     real(r8) :: A1_liq = 17.625_r8                   ! [-]
@@ -416,7 +418,13 @@ contains
          www = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
          www = min(max(www,0.0_r8),1._r8)
 
-         forc_e = (forc_q(c)*forc_pbot(c)) / (forc_q(c)+0.622_r8)
+         ! Get saturated vapor pressure at forcing height
+         call QSat(forc_t(c), forc_pbot(c), qs = forc_qs, es = forc_esat)
+
+         ! Calculate vapor pressure at forcing height and restrict to no less than value 
+         ! corresponding to 1% relative humidity
+         forc_e = max( (forc_q(c)*forc_pbot(c)) / (forc_q(c)+0.622_r8), 0.01_r8*forc_esat)
+
          ! Magnus expression for dew point
          ! Equation (7) from Lawrence (2005)
          if (t_grnd(c) < 0._r8) then ! ice coefficients
