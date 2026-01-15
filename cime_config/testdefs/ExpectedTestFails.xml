@@ -69,7 +69,7 @@
       <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
     </phase>
   </test>
-  <test name="ERP_P36x2_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_gnu.clm-default--clm-all_outputs">
+  <test name="ERP_P64x2_D_Ld3.f10_f10_mt232.IHistClm60BgcCropCrujra.derecho_gnu.clm-default--clm-all_outputs">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#3661</issue>
@@ -113,6 +113,22 @@
       <status>FAIL</status>
       <issue>#2787</issue>
       <comment>The issue shows how to fix it.</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_D_Ld9.f10_f10_mg37.I1850Clm60BgcCrop.izumi_nag.clm-clm60cam7LndTuningModeLDust">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_D_Ld9.f10_f10_mt232.IHistClm60BgcCrop.derecho_intel.clm-clm60cam7LndTuningModeLDust--clm-nnStreamMapAlgo">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3654</issue>
+      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
     </phase>
   </test>
 

@@ -696,8 +696,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: g   ! Indices
 
-    ! TODO: Keep the Advance commented out until we can change answers
-    !call atm_c13_stream%Advance( )
+    call atm_c13_stream%Advance( )
     call atm_c13_stream%Interp( bounds)
 
     do g = bounds%begg, bounds%endg

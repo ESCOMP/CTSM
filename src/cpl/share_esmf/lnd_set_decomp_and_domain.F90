@@ -84,7 +84,7 @@ contains
     integer  , pointer     :: gindex_ctsm(:)  ! global index space for land and ocean points
     integer  , pointer     :: lndmask_glob(:)
     real(r8) , pointer     :: lndfrac_glob(:)
-    real(r8) , pointer     :: lndfrac_loc_input(:)
+    real(r8) , pointer     :: lndfrac_loc_input(:) => null()
     real(r8) , pointer     :: dataptr1d(:)
     !-------------------------------------------------------------------------------
 
@@ -278,7 +278,7 @@ contains
 
        rc = ESMF_SUCCESS
 
-       deallocate(lndfrac_loc_input)
+       if ( associated(lndfrac_loc_input) ) deallocate(lndfrac_loc_input)
        deallocate(gindex_lnd)
        deallocate(gindex_ocn)
        deallocate(gindex_ctsm)
