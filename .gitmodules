@@ -126,9 +126,9 @@ fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 path = tools/CUPiD
 #url = https://github.com/NCAR/CUPiD.git
 url = https://github.com/TeaganKing/CUPiD.git
-#fxtag = v0.4.1
-#fxtag = lnd_gen_config
-fxtag = 50c3157079bba234b90a6783b6528c670a3f4e58
+#fxtag = v0.5.0
+#fxtag = cesm-workflow-fixes
+fxtag = 78147810891530c6ed3a89e1d197cfca7586974b
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/CUPiD.git
