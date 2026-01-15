@@ -11,9 +11,17 @@ LND_ROOT=`./xmlquery --value COMP_ROOT_DIR_LND`
 CUPID_ROOT=`./xmlquery --value CUPID_ROOT`
 # IF CUPID_ROOT is not set, it means case.setup hasn't run yet so run the generate script to get it configured
 # This will result in env_postprocess.xml to be created in the case which is then edited below
+# TODO: Make sure this is really needed!
 if [ -z "$CUPID_ROOT" ]; then
    CUPID_ROOT="$LND_ROOT/tools/CUPiD"
    $CUPID_ROOT/helper_scripts/generate_cupid_config_for_cesm_case.py --cesm-root $SRCROOT --case-root .
+fi
+
+# For a test case, make sure DOUT_S is TRUE
+# TODO: Add a proper SystemTest so this is handled correctly in the test
+TEST=`./xmlquery --value TEST`
+if [ "$TEST" == "TRUE" ]; then
+   ./xmlchange DOUT_S=TRUE --file env_test.xml
 fi
 
 #
@@ -31,10 +39,14 @@ fi
 ./xmlchange --force CUPID_STARTDATE='$RUN_STARTDATE'
 ./xmlchange --force CUPID_STOP_N='$STOP_N'
 ./xmlchange --force CUPID_STOP_OPTION='$STOP_OPTION'
+# TODO: This should maybe be turned on as a smoke test, and to check for the appropriate files in testing
 ./xmlchange CUPID_GEN_HTML=FALSE
+# TODO: Test with running more tasks
 ./xmlchange CUPID_NTASKS=1
 ./xmlchange CUPID_RUN_ADF=FALSE
 ./xmlchange CUPID_RUN_ALL=FALSE
-./xmlchange CUPID_RUN_LDF=TRUE
+# TODO: Get CUPiD working with LDF under CESM
+./xmlchange CUPID_RUN_LDF=FALSE
 ./xmlchange CUPID_RUN_LND=TRUE
-./xmlchange CUPID_RUN_ROF=TRUE
+#TOD: Test if ROF can be run
+./xmlchange CUPID_RUN_ROF=FALSE
