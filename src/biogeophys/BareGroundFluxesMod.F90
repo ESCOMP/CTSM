@@ -427,7 +427,7 @@ contains
 
          ! Magnus expression for dew point
          ! Equation (7) from Lawrence (2005)
-         if (t_grnd(c) < 0._r8) then ! ice coefficients
+         if (t_grnd(c) < tfrz) then  ! ice coefficients
             forc_dewpoint = B1_ice*log(forc_e/C1_ice) / (A1_ice - log(forc_e/C1_ice))
          else                        ! liquid water coefficients
             forc_dewpoint = B1_liq*log(forc_e/C1_liq) / (A1_liq - log(forc_e/C1_liq))
