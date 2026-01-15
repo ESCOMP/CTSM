@@ -23,6 +23,13 @@ which cupid-diagnostics
 # Should return something like:
 # $HOME/conda-envs/cupid-infrastructure/bin/cupid-diagnostics
 # If it returns "Command not found." something is wrong with the environment
+
+
+# Now make sure the conda environments can be used by Jupyter notebooks
+conda activate cupid-analysis
+python -m ipykernel install --user --name=cupid-analysis
+conda activate cupid-infrastructure
+python -m ipykernel install --user --name=cupid-infrastructure
 ```
 
 ## Create your case using the CUPiD user-mod
