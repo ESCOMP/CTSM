@@ -100,12 +100,12 @@
       <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_Ly1_PS" grid="f09_t232" compset="I2000Clm60BgcCrujra" testmods="clm/CUPiD">
+  <test name="SMS_Ly1_PS" grid="f19_f19_mt232" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">01:20:00</option>
+      <option name="wallclock">00:20:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on</option>
     </options>
   </test>
