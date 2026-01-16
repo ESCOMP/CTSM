@@ -9,9 +9,13 @@ Purpose and description of changes
 
 Implement dewpoint temperature check for bare ground to fix RRTMG error
 
-The description of the problem from @adamher is: "I've gotten out of bounds surface temperature errors from RRTMGP in 3 of 5 coupled
-runs I've performed this week. I tracked down 1 of those errors to 355+ K surface temperatures at a point in S.America (RRTMGP
-triggers an error when temperatures fall outside of 160 K - 355 K)."
+Cecile Hannay reported an RRTMGP crash in this 4xCO2 experiment at year 37:
+
+NCAR/cesm_dev#246
+
+Output from placing write statements in the CAM radiation code show that it's a baresoil patch in
+a grid cell in the Arabian Penninsula. The bare soil patch occupies 99.28% of the gridcell.
+Solar and longwave forcing and absorbed solar don't appear to be unreasonable, but t_grnd is 358K.
 
 This bug fix eliminates dew flux (sets evaporation conductance to zero) x if t_grnd > forc_dewpoint, where forc_dewpoint is the dewpoint temperature at the forcing height.
 This prevents large spurious negative latent heat fluxes that increase heat flux into the soil and signficantly increase surface soil temperature (t_grnd) such that soil temperature > 355K, triggering a RRTMGP error.
