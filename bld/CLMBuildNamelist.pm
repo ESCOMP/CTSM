@@ -3351,12 +3351,12 @@ sub setup_logic_supplemental_nitrogen {
     }
 
     my $parteh_mode = $nl->get_value('fates_parteh_mode');
-    if ( ($parteh_mode == 1) &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+    if ( ($parteh_mode == 'carbon_only') &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
       $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
                         "and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active. " .
                         "Change suplnitro back to ALL");
     }
-    if ( ($parteh_mode == 2) &&  ($suplnitro !~ /NONE/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+    if ( ($parteh_mode == 'carbon_nitrogen') &&  ($suplnitro !~ /NONE/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
       $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to NONE, FATES is on, " .
                         "and FATES-SP is not active, but fates_parteh_mode is 2, so Nitrogen is active; " .
                         "change suplnitro back to NONE");

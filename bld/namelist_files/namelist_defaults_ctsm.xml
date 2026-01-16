@@ -2687,7 +2687,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 
 <!-- Supplmental Nitrogen mode -->
 <suplnitro >NONE</suplnitro>
-<suplnitro fates_parteh_mode="1" >ALL</suplnitro>
+<suplnitro fates_parteh_mode="carbon_only" >ALL</suplnitro>
 
 <!-- =========================================  -->
 <!-- Defaults for dynamic subgrid               -->

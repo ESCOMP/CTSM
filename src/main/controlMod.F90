@@ -20,6 +20,8 @@ module controlMod
   use decompInitMod                    , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
+  use clm_varpar                       , only: clmfates_carbon_only
+  use clm_varpar                       , only: clmfates_carbon_nitrogen
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
@@ -51,7 +53,7 @@ module controlMod
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
   use clm_varctl
-  use PRTGenericMod, only : fates_cnp, fates_c_only
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -492,18 +494,20 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == fates_c_only .and. suplnitro == suplnNon .and. use_fates_bgc )then
-             write(iulog,*) ' When fates_parteh_mode == fates_c_only,'
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_only) .and. &
+               suplnitro == suplnNon .and. use_fates_bgc )then
+             write(iulog,*) ' When fates_parteh_mode == carbon_only'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
              write(iulog,*) '  meaningful limitations to nitrogen.'
-             call endrun(msg=' ERROR: fates_parteh_mode=fates_c_only must have suplnitro set to suplnAll.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_only must have suplnitro set to suplnAll.'//&
                    errMsg(sourcefile, __LINE__))
           end if
-          if (fates_parteh_mode == fates_cnp .and. suplnitro == suplnAll .and. use_fates_bgc )then
-             write(iulog,*) ' When fates_parteh_mode == fates_cnp,'
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_nitrogen) .and. &
+               suplnitro == suplnAll .and. use_fates_bgc )then
+             write(iulog,*) ' When fates_parteh_mode == carbon_nitrogen,'
              write(iulog,*) '  you must have supplemental nitrogen turned off.'
-             call endrun(msg=' ERROR: fates_parteh_mode=fates_cnp must have suplnitro set to suplnNon.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_nitrogen must have suplnitro set to suplnNon.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           
@@ -855,7 +859,7 @@ contains
     call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_managed_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_parteh_mode, len(fates_parteh_mode), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
 

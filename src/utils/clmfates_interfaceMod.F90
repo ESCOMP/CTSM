@@ -46,7 +46,7 @@ module CLMFatesInterfaceMod
    use CNProductsMod     , only : cn_products_type
    use clm_varctl        , only : iulog
    use clm_varctl        , only : fates_parteh_mode
-   use PRTGenericMod     , only : fates_cnp
+   use PRTGenericMod     , only : carbon_only,carbon_nitrogen_phosphorus
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_managed_fire
@@ -93,6 +93,8 @@ module CLMFatesInterfaceMod
    use clm_varpar        , only : nlevdecomp
    use clm_varpar        , only : nlevdecomp_full
    use clm_varpar        , only : nlevsoi
+   use clm_varpar        , only : clmfates_carbon_only
+   use clm_varpar        , only : clmfates_carbon_nitrogen
    use PhotosynthesisMod , only : photosyns_type
    use atm2lndType       , only : atm2lnd_type
    use SurfaceAlbedoType , only : surfalb_type
@@ -314,6 +316,7 @@ module CLMFatesInterfaceMod
      integer             :: pass_use_sp
      integer             :: pass_masterproc
      integer             :: pass_use_luh2
+     integer             :: pass_parteh_mode
      logical             :: verbose_output
      
      call t_startf('fates_globals1')
@@ -364,8 +367,24 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_luh2',ival=pass_use_luh2)
 
-        
-        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+        if(trim(fates_parteh_mode)==trim(clmfates_carbon_only))then
+           pass_parteh_mode = carbon_only
+        elseif(trim(fates_parteh_mode)==trim(clmfates_carbon_nitrogen))then
+           ! FATES has NO carbon_nitrogen mode. It cycles
+           ! either carbon alone, or carbon with both nutrients
+           ! If we want to couple nitrogen, we tell FATES
+           ! to use synthetic uptake conditions for phosphorus, which
+           ! most likely will be ample so that P stores in plants
+           ! are saturated and non-limiting          
+           pass_parteh_mode = carbon_nitrogen_phosphorus
+        else
+           write(iulog,*) 'FATES coupling mode must be either'
+           write(iulog,*) trim(clmfates_carbon_only),' or '
+           write(iulog,*) trim(clmfates_carbon_nitrogen)
+           write(iulog,*) 'you specified: ',trim(fates_parteh_mode)
+           call endrun(msg=errMsg(sourcefile, __LINE__))
+        end if
+        call set_fates_ctrlparms('parteh_mode',ival=pass_parteh_mode)
         
      end if
 
@@ -2809,7 +2828,7 @@ module CLMFatesInterfaceMod
            this%fates(ci)%bc_out(s)%hrv_deadstemc_to_prod100c
 
       ! If N cycling is on
-      if (fates_parteh_mode == fates_cnp) then
+      if ( trim(fates_parteh_mode)==trim(clmfates_carbon_nitrogen) ) then
          
          n_products_inst%hrv_deadstem_to_prod10_grc(g) = &
               n_products_inst%hrv_deadstem_to_prod10_grc(g) + &

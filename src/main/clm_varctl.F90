@@ -324,9 +324,16 @@ module clm_varctl
 
   integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
-  integer, public            :: fates_parteh_mode = -9                  ! = 1 indicated by fates_c_only is carbon only
-                                                                        ! = 2 indicated by fates_cnp is C+N+P, though clm cannot enable phosphorus yet, so clm needs fates_cnp_prescribed_puptake > 1 (recommended value 10) in the fates paramfile
-                                                                        ! no others enabled
+  character(len=256), public :: fates_parteh_mode = ''                  ! FATES Plant Allocation Reactions and Transport Hypotheses
+                                                                        ! = carbon_only : Cycle carbon in FATES only
+                                                                        ! = carbon_nitrogen: Cycle both carbon and nitrogen
+                                                                        ! in FATES. FATES will cycle phosphorus as well,
+                                                                        ! to do this, FATES will generate synthetic uptake
+                                                                        ! conditions to make sure that phosphorus is saturated
+                                                                        ! in the plant stores
+                                                                        ! so clm needs fates_cnp_prescribed_puptake > 1
+                                                                        ! (recommended value 10) in the fates paramfile
+
   integer, public            :: fates_spitfire_mode = 0                
                                                                         ! 0 for no fire; 1 for constant ignitions;
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
