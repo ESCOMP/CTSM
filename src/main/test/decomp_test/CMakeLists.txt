@@ -1,5 +1,5 @@
 set(pfunit_sources
-  test_decompInit.pf)
+  test_decompMod.pf)
 
 add_pfunit_ctest(decomp
   TEST_SOURCES "${pfunit_sources}"

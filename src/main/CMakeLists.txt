@@ -19,7 +19,6 @@ list(APPEND clm_sources
   clm_varsur.F90 
   column_varcon.F90
   decompMod.F90
-  decompInitMod.F90
   filterColMod.F90
   FireMethodType.F90
   glc2lndMod.F90
@@ -31,7 +30,6 @@ list(APPEND clm_sources
   ncdio_utils.F90
   organicFileMod.F90
   paramUtilMod.F90
-  subgridMod.F90
   subgridAveMod.F90
   subgridWeightsMod.F90
   surfrdUtilsMod.F90
