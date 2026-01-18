@@ -1,3 +1,4 @@
+add_subdirectory(csm_share)
 add_subdirectory(dyn_subgrid)
 add_subdirectory(main)
 add_subdirectory(share_esmf)
