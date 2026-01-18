@@ -3330,7 +3330,12 @@ sub setup_logic_supplemental_nitrogen {
   } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
       # Or... if its fates but not fates-sp
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-		  'suplnitro', 'fates_parteh_mode'=>$nl->get_value('fates_parteh_mode'));
+		  'suplnitro', 'fates_parteh_mode'=>$nl_flags->{'fates_parteh_mode'},
+	          'use_fates'=>$nl_flags->{'use_fates'});
+      $log->warning("suplnitro: $nl->get_value('suplnitro')") ;
+      $log->warning("suplnitro2: $nl_flags->{'splnitro'}") ;
+      $log->warning("parteh_mode: $nl->get_value('fates_parteh_mode')") ;
+      $log->warning("parteh_mode2: $nl_flags->{'fates_parteh_mode'}") ;
   }
   #
   # Error checking for suplnitro
@@ -3352,14 +3357,11 @@ sub setup_logic_supplemental_nitrogen {
 
     my $parteh_mode = $nl->get_value('fates_parteh_mode');
     if ( ($parteh_mode == 'carbon_only') &&  ($suplnitro !~ /ALL/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-      $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
-                        "and FATES-SP is not active, but fates_parteh_mode is 1, so Nitrogen is not active. " .
-                        "Change suplnitro back to ALL");
-    }
-    if ( ($parteh_mode == 'carbon_nitrogen') &&  ($suplnitro !~ /NONE/) && not &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
-      $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to NONE, FATES is on, " .
-                        "and FATES-SP is not active, but fates_parteh_mode is 2, so Nitrogen is active; " .
-                        "change suplnitro back to NONE");
+	$log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, " .
+			  "it is set to = $suplnitro.  Yet, FATES is on, " .
+			  "fates_parteh_mode = $parteh_mode" .
+			  "and FATES-SP is not active.  So Nitrogen should NOT be limiting. " .
+			  "Change suplnitro back to ALL");
     }
   }
 }
