@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.009
 Originator(s): olyson (Keith Oleson)
-Date: Fri Jan 16 02:27:00 PM MST 2026
+Date: Mon Jan 19 12:53:18 PM MST 2026
 One-line Summary: Dewpoint Temperature check for bare ground
 
 Purpose and description of changes
@@ -87,9 +87,7 @@ Changes answers relative to baseline: Yes! Almost ALL cases if run long enough
     - nature of change: same climate
 
    climate (from https://github.com/NCAR/LMWG_dev)
-       - issue number:
-
-       casename (oleson): b.e30_alpha07g.B1850C_LTso.ne30_t232_wgx3.276_4xco2.test
+       - issue number(s): 135 and 136
 
    URL for LDF diagnostics output used to validate new climate:
 
