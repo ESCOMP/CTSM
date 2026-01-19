@@ -4,8 +4,8 @@ module decompInitMod
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module provides a descomposition into a clumped data structure which can
-  ! be mapped back to atmosphere physics chunks.
+  ! Module provides a decomposition into a clumped data structure for the land
+  ! model with gridcells assigned to clumps in a round-robin fashion to processors.
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
@@ -33,7 +33,6 @@ module decompInitMod
   !
   ! !PRIVATE TYPES:
   integer, pointer   :: lcid(:)          ! temporary for setting decomposition, allocated set and used in decompInit_lnd, and used and deallocated in decompInit_clumps  (Can make it allocatable)
-  integer            :: nglob_x, nglob_y ! global sizes
   integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -55,6 +54,7 @@ contains
     use clm_varctl , only : nsegspc
     use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
+    use decompMod  , only : nglob_x, nglob_y
     !
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)

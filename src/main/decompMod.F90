@@ -108,6 +108,7 @@ module decompMod
   type(clump_type),public, allocatable :: clumps(:)
 
   ! ---global sizes
+  integer,public :: nglob_x, nglob_y ! global sizes on the full 2D grid
   integer,public :: nclumps          ! total number of clumps across all processors
   integer,public :: numg             ! total number of gridcells on all procs
   integer,public :: numl             ! total number of landunits on all procs
@@ -130,12 +131,11 @@ module decompMod
 contains
 
   !-----------------------------------------------------------------------
-  function calc_global_index_fromij( this, g, ni, nj ) result(global_index)
+  function calc_global_index_fromij( this, g ) result(global_index)
     ! Returns the full grid global vector index from the gridcell on this processor
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
     integer, intent(in) :: g       ! gridcell index on this processor
-    integer, intent(in) :: ni, nj  ! Global 2D size of full grid
     integer :: global_index        ! function result, full vector index on the full global grid
 
     if ( .not. associated(this%gi) )then
@@ -150,22 +150,22 @@ contains
        call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( (ni < 1) .or. (nj < 1) ) then
-       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( (this%gi(g) < 1) .or. (this%gi(g) > ni) ) then
+    if ( (this%gi(g) < 1) .or. (this%gi(g) > nglob_x) ) then
        write(iulog,*) 'this%gi(g) = ', this%gi(g)
        call shr_sys_abort( 'Global gi index is out of bounds', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( (this%gj(g) < 1) .or. (this%gj(g) > ni) ) then
+    if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_x) ) then
        write(iulog,*) 'this%gj(g) = ', this%gj(g)
        call shr_sys_abort( 'Global gj index is out of bounds', file=sourcefile, line=__LINE__)
        return
     end if
-    global_index = (this%gj(g)-1)*ni + this%gi(g)
-    if ( (global_index < 1) .or. (global_index > ni*nj) ) then
+    global_index = (this%gj(g)-1)*nglob_x + this%gi(g)
+    if ( (global_index < 1) .or. (global_index > nglob_x*nglob_y) ) then
        call shr_sys_abort( 'global_index is out of bounds for this processor', file=sourcefile, line=__LINE__)
        return
     end if
@@ -173,41 +173,39 @@ contains
   end function calc_global_index_fromij
 
   !-----------------------------------------------------------------------
-  subroutine calc_ijindices_from_full_global_index( g, ni, nj, i, j )
+  subroutine calc_ijindices_from_full_global_index( g, i, j )
      ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
      integer, intent(in) :: g    ! Input processor global full 2D vector index
-     integer, intent(in) :: ni, nj   ! Size of the full 2D grid
      integer, intent(out) :: i, j  ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
 
-     if ( (g < 1) .or. (g > ni*nj) ) then
-        write(iulog,*) 'g, ni, nj = ', g, ni, nj
+     if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
+        write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
         call shr_sys_abort( 'Input index g is out of bounds', file=sourcefile, line=__LINE__)
         return
      end if
-    if ( (ni < 1) .or. (nj < 1) ) then
-       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
        return
     end if
-    j = floor( real(g, r8) / real(ni, r8) ) + 1
-    if ( mod(g,ni) == 0 ) j = j - 1
-    i = g - (j-1)*ni
-    if ( (i < 1) .or. (i > ni) ) then
+    j = floor( real(g, r8) / real(nglob_x, r8) ) + 1
+    if ( mod(g,nglob_x) == 0 ) j = j - 1
+    i = g - (j-1)*nglob_x
+    if ( (i < 1) .or. (i > nglob_x) ) then
        call shr_sys_abort( 'Computed global i value out of range', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( (j < 1) .or. (j > nj) ) then
+    if ( (j < 1) .or. (j > nglob_y) ) then
        call shr_sys_abort( 'Computed global j value out of range', file=sourcefile, line=__LINE__)
        return
     end if
   end subroutine calc_ijindices_from_full_global_index
 
   !-----------------------------------------------------------------------
-  subroutine calc_globalxy_indices( this, g, ni, nj, i, j )
+  subroutine calc_globalxy_indices( this, g, i, j )
     ! Get the global i/j indices from the global vector grid index
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
     integer, intent(in) :: g ! gridcell index on this processor
-    integer, intent(in) :: ni, nj ! Global 2D size of full grid
     integer, intent(out) :: i, j ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
 
     integer :: global_index
@@ -220,12 +218,12 @@ contains
        call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
        return
     end if
-    if ( (ni < 1) .or. (nj < 1) ) then
-       call shr_sys_abort( 'Global gridsize ni/nj is not set', file=sourcefile, line=__LINE__)
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
        return
     end if
     global_index = this%ggidx(g)
-    call calc_ijindices_from_full_global_index( global_index, ni, nj, i, j )
+    call calc_ijindices_from_full_global_index( global_index, i, j )
 
   end subroutine calc_globalxy_indices
 
