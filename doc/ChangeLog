@@ -1,4 +1,110 @@
 ===============================================================
+Tag name: ctsm5.4.009
+Originator(s): olyson (Keith Oleson)
+Date: Mon Jan 19 12:53:18 PM MST 2026
+One-line Summary: Dewpoint Temperature check for bare ground
+
+Purpose and description of changes
+----------------------------------
+
+Implement dewpoint temperature check for bare ground to fix RRTMG error
+
+Cecile Hannay reported an RRTMGP crash in this 4xCO2 experiment at year 37:
+
+NCAR/cesm_dev#246
+
+Output from placing write statements in the CAM radiation code show that it's a baresoil patch in
+a grid cell in the Arabian Penninsula. The bare soil patch occupies 99.28% of the gridcell.
+Solar and longwave forcing and absorbed solar don't appear to be unreasonable, but t_grnd is 358K.
+
+This bug fix eliminates dew flux (sets evaporation conductance to zero) x if t_grnd > forc_dewpoint, where forc_dewpoint is the dewpoint temperature at the forcing height.
+This prevents large spurious negative latent heat fluxes that increase heat flux into the soil and signficantly increase surface soil temperature (t_grnd) such that soil temperature > 355K, triggering a RRTMGP error.
+
+Contributors:
+-------------
+@swensosc , @wwieder , @slevis-lmwg , @dlawrenncar, ekluzek
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3589 355+ K land temperature triggers RRTMGP error
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This is currently ONLY done for bare-soil, probably should be done for other landunits.
+
+Changes to documentation: None, but needs to be added
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   https://github.com/ESCOMP/CTSM/issues/3694
+   Documents making this a function added to QSat
+   This should especially be done when this is added for other landunit types
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! Almost ALL cases if run long enough
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+   climate (from https://github.com/NCAR/LMWG_dev)
+       - issue number(s): 135 and 136
+
+   URL for LDF diagnostics output used to validate new climate:
+
+     - ILAMB: https://webext.cgd.ucar.edu/I2000/Clm60SP_ctsmdew_1deg_Dew_2000/lnd/BUGFIX/_build_DEW/
+     - LDF: https://webext.cgd.ucar.edu/I2000/Clm60SP_ctsmdew_1deg_Dew_2000/lnd/BUGFIX/Clm60SP_ctsmdew_1deg_Dew_2000_2005_2019-Clm60SP_ctsmdew_1deg_Control_2000_2005_2019/setsIndex.html
+
+Standard diagnostics results are here
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3688 -- Implement dewpoint temperature check for bare ground to fix RRTMGP error   
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.008
 Originator(s): swensosc (Sean Swenson)
 Date: Mon Jan 12 11:19:38 PM MST 2026
