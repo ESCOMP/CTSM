@@ -148,10 +148,8 @@ Changes answers relative to baseline:
 
    If this tag changes climate list the run(s) done to evaluate the new
    climate (from https://github.com/NCAR/LMWG_dev)
-       - issue number:
+       - issue number(s):
 
-   URL for LDF diagnostics output used to validate new climate:
-       - 
 Other details
 -------------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
