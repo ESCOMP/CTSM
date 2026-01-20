@@ -83,9 +83,9 @@ To run CTSM at a PLUMBER site, change directories to where the run_tower tool is
 
 The output for a PLUMBER case will be set up similarly to the output for a NEON case, as described above.
 
-## General notes 
+## Notes 
 
-A few notes regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
+A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 
 
 1) By default, the tools call for surfdata files in a default location. These might not be available for all sites or all machines. Users can create their own surfdata files, using tools/site_and_regional/plumber2_usermods. 
@@ -93,16 +93,16 @@ A few notes regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 :: 
     > ./run_tower --plumber-sites ${site} --setup-only 
 
-3) It is suggested to add ``echo "baseflow_scalar = 0" >> user_nl_clm`` to the user_nl_clm file to avoid issues with the baseflow in the wetland sites.
+3) It is suggested to add ``echo "baseflow_scalar = 0" >> user_nl_clm`` to the user_nl_clm file to avoid issues with the baseflow at the wetland sites.
 4) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to review the usermods in detail and adjust them as needed. Key items to be considered include the variables to save. 
 5) Combining these notes, an example of running a PLUMBER site would look like this:
 :: 
     > ./run_tower --plumber-sites ${site} --output-root {folder-to-save-results} --overwrite --run-type {ad | postad | transient} --setup-only
 
 
-## Spin-up
+### Spin-up notes
 
-1) By default, all simulations (e.g., ad, post-ad, transient) are designed to run for 1 hour of wall clock time. For the spin-up simulations, we recommend extending the time to match the length of the simulations. Wieder et al., (2024) used 300 years for AD and 100 years for post-ad. Users should keep in mind that colder areas might need longer spin-up times. 
+1) By default, all simulations (e.g., ad, post-ad, transient) are designed to run for 1 hour of wall clock time. For the spin-up simulations, we recommend extending the time to match the length of the simulations. `Lombardozzi et al. 2023 <https://doi.org/10.5194/gmd-16-5979-2023>`_ used 300 years for AD and 100 years for post-ad. Users should keep in mind that colder areas might need longer spin-up times. 
 2) By default, the initial period of the simulations differs for the spin-up (e.g., ad and post-ad) and transient simulations. It is important to revisit for each site the best period to use for the spin-up simulations.
 3) We recommended spinning up with the no_leap calendar to avoid issues with Feb 28th and 29th on leap years. See below.
 
@@ -112,7 +112,7 @@ A few notes regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 4) In AD and post-ad simulations, we recommend setting dtlimit=50 in the user_nl_datm_streams files to avoid time step issues. 
 
 
-## MPI related 
+### MPI related notes
 
 We recommend running the following lines to avoid MPI related issues. By default, these lines are included in the usermods; however, sometimes is needed to include them again. 
 
@@ -121,3 +121,28 @@ We recommend running the following lines to avoid MPI related issues. By default
     > ./xmlchange --force PIO_TYPENAME=netcdf
     > ./xmlchange --force MAX_MPITASKS_PER_NODE=1
 
+
+### Potential modifications 
+
+The ``run_tower``  tool is designed to provided a streamlined way to run single point simulations at supported tower sites. In that way, it can be quickly modified to accommodate different needs. A few potential modifications include:
+1) Running FATES enabled simulations. 
+2) Running satellite phenology enabled simulations.
+
+At the moment, these modifications are not included in the tool; however, users can modify the usermods files to accommodate these needs.
+
+### A practical example
+
+Here is an example of running a PLUMBER site with the ``run_tower`` tool, including the notes mentioned above
+
+:: 
+    > cd CTSM/tools/site_and_regional
+    > tower="AU-ASM"
+    >  ./run_tower --plumber-sites ${tower} --output-root /path/to/save/results --overwrite --run-type ad --setup-only # first ad, then post-ad, then transient
+    >  cd case_name
+    >  echo "baseflow_scalar = 0" >> user_nl_clm
+    >  ./xmlchange CALENDAR=NO_LEAP
+    >  ./xmlchange --force MPILIB=mpi-serial
+    >  ./xmlchange --force PIO_TYPENAME=netcdf
+    >  ./xmlchange --force MAX_MPITASKS_PER_NODE=1
+    
+Once these instructions are followed, it is key to check (a) the user_nl_data_streams to ensure that the right dt_limit is set and the right forcing files are being used, (b) the user_nl_clm to ensure that the right variables are being saved. Then, the case can be setup, built and submitted. 
