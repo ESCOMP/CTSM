@@ -494,13 +494,19 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (trim(fates_parteh_mode) == trim(clmfates_carbon_only) .and. &
-               suplnitro == suplnNon .and. use_fates_bgc )then
-             write(iulog,*) ' When fates_parteh_mode == carbon_only'
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_only) .and. suplnitro == suplnNon)then
+             write(iulog,*) ' When fates_parteh_mode == carbon_only,'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
              write(iulog,*) '  meaningful limitations to nitrogen.'
              call endrun(msg=' ERROR: fates_parteh_mode=carbon_only must have suplnitro set to suplnAll.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_nitrogen) .and. use_fates_sp )then
+             write(iulog,*) ' When fates_parteh_mode == carbon_nirogen,'
+             write(iulog,*) '  you must have use_fates_bgc and not use_fates_sp.'
+             write(iulog,*) ' When you have use_fates_sp, then fates_parteh_mode should equal carbon_only.'
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_nitrogen and use_fates_sp are inconsistent.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           
