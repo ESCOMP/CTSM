@@ -49,7 +49,7 @@ contains
     allocate(procinfo%cid(clump_pproc))
     allocate(clumps(nclumps))
     ! Set the procinfo and clumps values
-    ! TOD: Use initialization method when available (currently in decompInitMod)
+    ! TODO: Use initialization method when available (currently in decompInitMod)
     procinfo%cid = 1
     procinfo%ncells = ni*nj
     procinfo%begg = 1
