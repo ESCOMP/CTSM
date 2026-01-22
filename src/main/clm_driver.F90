@@ -667,9 +667,6 @@ contains
             temperature_inst, urbanparams_inst, &
             solarabs_inst, surfalb_inst, energyflux_inst)
 
-       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
-            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
-
        call t_stopf('surfrad')
 
        ! ============================================================================
@@ -1273,6 +1270,9 @@ contains
           deallocate(agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch)
           call t_stopf('ch4')
        end if
+
+       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
+            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
 
        ! ============================================================================
        ! Determine albedos for next time step
