@@ -61,6 +61,9 @@ module BalanceCheckMod
   private :: WaterGridcellBalanceSingle  ! Grid cell-level water balance check for bulk or a single tracer
   private :: BeginWaterColumnBalanceSingle  ! Initialize column-level water balance check for bulk or a single tracer
 
+  ! !PRIVATE PARAMETERS
+  real(r8), parameter :: error_thresh  = 1.e-5_r8  ! Error threshold for conservation error
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -500,8 +503,7 @@ contains
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
 
-     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow 
-     real(r8), parameter :: error_thresh             = 1.e-5_r8                       ! Error threshhold for conservation error
+     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow
 
      !-----------------------------------------------------------------------
 
@@ -892,7 +894,6 @@ contains
      real(r8) :: errsoi_col_max_val                     ! Maximum value of column-level soil/lake energy conservation error over all columns [W m-2]
 
      real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! Warning threshhold for error in errsol, errsol, errseb, errlonv
-     real(r8), parameter :: error_thresh             = 1.e-5_r8                       ! Error threshhold for conservation error
 
      !-----------------------------------------------------------------------
 
