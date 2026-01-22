@@ -30,6 +30,7 @@ module clm_driver
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
+  use BalanceCheckMod        , only : EnergyBalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -653,7 +654,7 @@ contains
             filter(nc)%num_urbanc, filter(nc)%urbanc,                      &
             atm2lnd_inst, water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst, surfalb_inst, &
-            solarabs_inst, surfrad_inst, energyflux_inst)
+            solarabs_inst, surfrad_inst)
 
        ! Surface Radiation for only urban columns
 
@@ -665,6 +666,9 @@ contains
             atm2lnd_inst, water_inst%waterdiagnosticbulk_inst, &
             temperature_inst, urbanparams_inst, &
             solarabs_inst, surfalb_inst, energyflux_inst)
+
+       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
+            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
 
        call t_stopf('surfrad')
 
