@@ -1147,8 +1147,7 @@ contains
     real(r8) :: vLiqIter(bounds%begc:bounds%endc,1:nlevsoi)   !  iteration increment for the volumetric liquid water content (v/v)
     real(r8) :: vLiqRes(bounds%begc:bounds%endc,1:nlevsoi)   ! residual for the volumetric liquid water content (v/v)
 
-    real(r8) :: dwat_temp
-    real(r8) :: over_saturation 
+    real(r8) :: over_saturation  ! Amount of water that over saturates this soil layer [kg/m2]
     !-----------------------------------------------------------------------
 
     associate(&
@@ -1163,6 +1162,7 @@ contains
          zwt               =>    soilhydrology_inst%zwt_col         , & ! Input:  [real(r8) (:)   ]  water table depth (m)                             
          qout_col          =>    soilhydrology_inst%qout_col        , & ! Output: [real(r8) (:,:) ]  soil water out of the bottom, mm h2o/s
          qin_col           =>    soilhydrology_inst%qin_col         , & ! Output: [real(r8) (:,:) ]  soil water into the bottom, mm h2o/s
+         eff_porosity      =>    soilstate_inst%eff_porosity_col    , & ! Input:  [real(r8) (:,:) ]  effective porosity = porosity - vol_ice         
          watsat            =>    soilstate_inst%watsat_col          , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
@@ -1182,8 +1182,6 @@ contains
 
          ! set number of layers over which to solve soilwater movement
          nlayers = nbedrock(c)
-
-         dwat_temp = 0.
 
          ! initialize the number of substeps
          nsubstep=0
@@ -1402,6 +1400,13 @@ contains
 
          !  save number of adaptive substeps used during time step
          nsubsteps(c) = nsubstep
+
+         ! check for over-saturated layers and move excess upward
+         do j = nlayers,2,-1
+            over_saturation   = max(h2osoi_liq(c,j)-(eff_porosity(c,j)*m_to_mm*dz(c,j)),0._r8)
+            h2osoi_liq(c,j)   = min(eff_porosity(c,j)*m_to_mm*dz(c,j), h2osoi_liq(c,j))
+            h2osoi_liq(c,j-1) = h2osoi_liq(c,j-1) + over_saturation
+         end do
 
          ! check for negative moisture values
          do j = 2, nlayers
