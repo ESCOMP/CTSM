@@ -4039,6 +4039,8 @@ module CLMFatesInterfaceMod
    integer, intent(in)                            :: nc              ! clump number
 
    ! Locals
+   integer :: i_cel_lit       ! Index for cellulose litter pool
+   integer :: i_lig_lit       ! Index for lignin litter pool
    integer :: r               ! Register index
    integer :: p               ! HLM patch index
    integer :: c               ! Column index
@@ -4046,6 +4048,17 @@ module CLMFatesInterfaceMod
    logical :: is_first        ! Is this register associated with the first patch on the column, landunit, etc
                               ! This is necessary to ensure that accumulation variables are zero'd properly
 
+   ! Set the cellulose and lignin litter pool indices
+   i_cel_lit = i_met_lit + 1
+
+   if (decomp_method == mimics_decomp) then
+      ! Mimics has a structural pool, which is cellulose and lignan
+      i_lig_lit = i_cel_lit
+   elseif(decomp_method == century_decomp ) then
+      ! CENTURY has a separate lignan pool from cellulose
+      i_lig_lit = i_cel_lit + 1
+   end if
+   
    ! Iterate over the number of vegetated patches
    do r = 1, this%fates(nc)%npatches
       p = this%fates(nc)%registry(r)%GetHLMPatchIndex()
