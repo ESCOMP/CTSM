@@ -457,7 +457,7 @@ contains
   subroutine SurfaceRadiation(bounds, num_nourbanp, filter_nourbanp, &
        num_urbanp, filter_urbanp, num_urbanc, filter_urbanc, &
        atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst, &
-       surfalb_inst, solarabs_inst, surfrad_inst)
+       surfalb_inst, solarabs_inst, surfrad_inst, energyflux_inst)
      !
      ! !DESCRIPTION:
      ! Solar fluxes absorbed by vegetation and ground surface
@@ -482,6 +482,8 @@ contains
      use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE, do_sno_oc
      use clm_time_manager , only : get_step_size_real, is_near_local_noon
      use abortutils       , only : endrun
+     use BalanceCheckMod  , only : EnergyBalanceCheck
+     use EnergyFluxType   , only : energyflux_type
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)            :: bounds
@@ -497,6 +499,7 @@ contains
      type(canopystate_type) , intent(inout)         :: canopystate_inst
      type(solarabs_type)    , intent(inout)         :: solarabs_inst
      type(surfrad_type)     , intent(inout)         :: surfrad_inst
+     type(energyflux_type)  , intent(inout)         :: energyflux_inst
      !
      ! !LOCAL VARIABLES:
      integer , parameter :: nband = numrad           ! number of solar radiation waveband classes
@@ -1019,6 +1022,9 @@ contains
           endif
           fsr(p) = fsr_vis_d(p) + fsr_nir_d(p) + fsr_vis_i(p) + fsr_nir_i(p)
        end do
+
+       call EnergyBalanceCheck(bounds, atm2lnd_inst, solarabs_inst, surfalb_inst, energyflux_inst, &
+        canopystate_inst, waterdiagnosticbulk_inst)
 
      end associate
 

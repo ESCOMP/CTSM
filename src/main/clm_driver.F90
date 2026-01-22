@@ -653,7 +653,7 @@ contains
             filter(nc)%num_urbanc, filter(nc)%urbanc,                      &
             atm2lnd_inst, water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst, surfalb_inst, &
-            solarabs_inst, surfrad_inst)
+            solarabs_inst, surfrad_inst, energyflux_inst)
 
        ! Surface Radiation for only urban columns
 
