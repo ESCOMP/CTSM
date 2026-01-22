@@ -2572,24 +2572,6 @@ contains
                      c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
                   endif
                end if
-               else                      ! plant never emerged from the ground
-                  ! Revert planting transfers; this will replenish the crop seed deficit.
-                  ! We subtract from any existing value in crop_seedc_to_leaf /
-                  ! crop_seedn_to_leaf in the unlikely event that we enter this block of
-                  ! code in the same time step where the planting transfer originally
-                  ! occurred.
-                  crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p)/dt
-                  leafc_xfer(p) = 0._r8
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn_t_evolving(p)
-                  if (use_c13) then
-                     c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
-                  endif
-                  if (use_c14) then
-                     c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
-                  endif
-
-               end if
 
                ! enter phase 3 while previous criteria fail and next is true;
                ! in terms of order, phase 3 occurs before harvest, but when
