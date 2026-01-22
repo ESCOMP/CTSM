@@ -561,6 +561,9 @@ contains
           qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col  & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
           )
 
+       ! Get time step
+       dtime = get_step_size_real()
+
        ! Determine column level incoming snow and rain
        ! Assume no incident precipitation on urban wall columns (as in CanopyHydrologyMod.F90).
 
