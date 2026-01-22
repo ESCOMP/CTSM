@@ -4032,9 +4032,7 @@ module CLMFatesInterfaceMod
 
    use FatesInterfaceParametersMod
 
-   use elm_varpar,  only : i_met_lit
-   use elm_varpar,  only : i_cel_lit
-   use elm_varpar,  only : i_lig_lit
+   use clm_varpar,  only : i_met_lit
 
    ! Arguments
    class(hlm_fates_interface_type), intent(inout) :: this
