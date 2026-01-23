@@ -1,4 +1,65 @@
 ===============================================================
+Tag name: ctsm5.4.0xx
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Jan 23 02:23:43 PM MST 2026
+One-line Summary: Fix C-balance error for partly emerged crops
+
+Purpose and description of changes
+----------------------------------
+
+ In CNPhenology, to the section "plant had emerged before harvest" I added a subsection "plant partly emerged from the ground" that repeats the code from the "else" section just after that's labeled "plant never emerged from the ground."
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #3678
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Four BASELINE tests show DIFFs. Three derecho_intel, one izumi_nag, all four I2000Clm60BgcCrop:
+ ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly BASELINE ctsm5.4.010: DIFF
+ ERS_Ly3.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel BASELINE ctsm5.4.010: DIFF
+ SMS_Ly2_PS.f19_g17.I2000Clm60BgcCrop.derecho_intel.clm-cropMonthOutput BASELINE ctsm5.4.010: DIFF
+ SMS_D_Ld65.f10_f10_mg37.I2000Clm60BgcCrop.izumi_nag.clm-FireLi2024GSWP BASELINE ctsm5.4.010: DIFF
+    - nature of change: Potentially larger than roundoff (certainly in B-cases) but same climate and rare.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3702
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.011
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu Jan 22 04:01:52 PM MST 2026
