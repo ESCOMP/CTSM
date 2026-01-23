@@ -2557,9 +2557,8 @@ contains
                   ! plant partly emerged from the ground
                   ! Revert planting transfers; this will replenish the crop seed deficit.
                   ! We subtract from any existing value in crop_seedc_to_leaf /
-                  ! crop_seedn_to_leaf in the unlikely event that we enter this block of
-                  ! code in the same time step where the planting transfer originally
-                  ! occurred.
+                  ! crop_seedn_to_leaf in the event that we enter this block of
+                  ! code soon after the planting transfer originally occurred.
                   if (leafc_xfer(p) > 0._r8) then
                      crop_seedc_to_leaf(p) = crop_seedc_to_leaf(p) - leafc_xfer(p) / dt
                      crop_seedn_to_leaf(p) = crop_seedn_to_leaf(p) - leafn_xfer(p) / dt
