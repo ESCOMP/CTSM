@@ -2692,7 +2692,7 @@ contains
           crop_phase = cphase_leafemerge
        else if (hui >= huigrain) then
           ! Since we know croplive is true, any hui greater than huigrain implies that
-          ! we're in the grainfill stage: if we were passt gddmaturity then croplive
+          ! we're in the grainfill stage: if we were past gddmaturity then croplive
           ! would be false.
           crop_phase = cphase_grainfill
        end if
