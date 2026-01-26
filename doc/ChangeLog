@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.4.0xx
+Tag name: ctsm5.4.012
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri Jan 23 02:23:43 PM MST 2026
+Date: Mon Jan 26 03:13:02 PM MST 2026
 One-line Summary: Fix C-balance error for partly emerged crops
 
 Purpose and description of changes
@@ -45,13 +45,12 @@ Answer changes
 
 Changes answers relative to baseline: Yes
 
-  Summarize any changes to answers, i.e.,
-    - what code configurations: Four BASELINE tests show DIFFs. Three derecho_intel, one izumi_nag, all four I2000Clm60BgcCrop:
- ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly BASELINE ctsm5.4.010: DIFF
- ERS_Ly3.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel BASELINE ctsm5.4.010: DIFF
- SMS_Ly2_PS.f19_g17.I2000Clm60BgcCrop.derecho_intel.clm-cropMonthOutput BASELINE ctsm5.4.010: DIFF
- SMS_D_Ld65.f10_f10_mg37.I2000Clm60BgcCrop.izumi_nag.clm-FireLi2024GSWP BASELINE ctsm5.4.010: DIFF
-    - nature of change: Potentially larger than roundoff (certainly in B-cases) but same climate and rare.
+    - Configurations: Four BASELINE tests show DIFFs. Three derecho_intel, one izumi_nag, all four I2000Clm60BgcCrop:
+ ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly BASELINE ctsm5.4.011: DIFF
+ ERS_Ly3.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel BASELINE ctsm5.4.011: DIFF
+ SMS_Ly2_PS.f19_g17.I2000Clm60BgcCrop.derecho_intel.clm-cropMonthOutput BASELINE ctsm5.4.011: DIFF
+ SMS_D_Ld65.f10_f10_mg37.I2000Clm60BgcCrop.izumi_nag.clm-FireLi2024GSWP BASELINE ctsm5.4.011: DIFF
+    - Nature of change: Potentially larger than roundoff (certainly in B-cases) but same climate and rare.
 
 Other details
 -------------
