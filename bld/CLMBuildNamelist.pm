@@ -3331,11 +3331,7 @@ sub setup_logic_supplemental_nitrogen {
       # Or... if its fates but not fates-sp
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
 		  'suplnitro', 'fates_parteh_mode'=>$nl_flags->{'fates_parteh_mode'},
-	          'use_fates'=>$nl_flags->{'use_fates'});
-      $log->warning("suplnitro: $nl->get_value('suplnitro')") ;
-      $log->warning("suplnitro2: $nl_flags->{'splnitro'}") ;
-      $log->warning("parteh_mode: $nl->get_value('fates_parteh_mode')") ;
-      $log->warning("parteh_mode2: $nl_flags->{'fates_parteh_mode'}") ;
+	          'use_fates'=>$nl_flags->{'use_fates'}, 'use_cn'=>$nl_flags->{'use_cn'});
   }
   #
   # Error checking for suplnitro

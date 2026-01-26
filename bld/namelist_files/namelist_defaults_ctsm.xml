@@ -221,8 +221,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <megan_min_gamma_sm>0.0d00</megan_min_gamma_sm>
 
 <suplnitro use_cn=".true." >NONE</suplnitro>
-<suplnitro use_fates=".true." >ALL</suplnitro>
-<suplnitro use_fates=".true." fates_parteh_mode='carbon_nitrogen' >NONE</suplnitro>
+<suplnitro use_cn=".false." use_fates=".true." >ALL</suplnitro>
+<suplnitro use_cn=".false." use_fates=".true." fates_parteh_mode="carbon_nitrogen" >NONE</suplnitro>
 
 <!-- Albedo for glaciers -->
 <albice               >0.50,0.30</albice>
