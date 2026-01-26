@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.011   slevis 01/22/2026 Merge b4b-dev to master
+       ctsm5.4.010     erik 01/21/2026 Update cime to version that changes answers for ERI tests
+       ctsm5.4.009   olyson 01/19/2026 Dewpoint Temperature check for bare ground
        ctsm5.4.008 swensosc 01/12/2026 Add a correction for oversaturated soil layers in SoilWaterMovement (erik)
        ctsm5.4.007 samrabin 01/09/2026 Update (irrigated_)rice grnfill and lfemerg
        ctsm5.4.006     erik 01/07/2026 Merge b4b-dev to master
