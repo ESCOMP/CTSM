@@ -125,10 +125,10 @@ fxDONOTUSEurl = https://github.com/ESMCI/mpi-serial
 # CUPiD does model post-processing
 path = tools/CUPiD
 #url = https://github.com/NCAR/CUPiD.git
-url = https://github.com/TeaganKing/CUPiD.git
-#fxtag = v0.5.0
-#fxtag = cesm-workflow-fixes
-fxtag = 78147810891530c6ed3a89e1d197cfca7586974b
+url = https://github.com/wwieder/CUPiD.git
+#fxtag = v0.6.0
+#fxtag = land_only
+fxtag = 30bd428b7139873382107b0a32624a7492e28a91
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/CUPiD.git
