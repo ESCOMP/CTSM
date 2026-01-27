@@ -375,7 +375,7 @@ module CLMFatesInterfaceMod
            ! If we want to couple nitrogen, we tell FATES
            ! to use synthetic uptake conditions for phosphorus, which
            ! most likely will be ample so that P stores in plants
-           ! are saturated and non-limiting          
+           ! are saturated and non-limiting
            pass_parteh_mode = carbon_nitrogen_phosphorus
         else
            write(iulog,*) 'FATES coupling mode must be either'
