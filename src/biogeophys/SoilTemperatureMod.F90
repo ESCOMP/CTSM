@@ -78,7 +78,7 @@ module SoilTemperatureMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilThermProp       ! Set therm conduct. and heat cap of snow/soil layers
   private :: PhaseChangeH2osfc   ! When surface water freezes move ice to bottom snow layer
-  private :: PhaseChange_beta    ! Calculation of the phase change within snow and soil layers
+  private :: PhaseChange         ! Calculation of the phase change within snow and soil layers
   private :: BuildingHAC         ! Building Heating and Cooling for simpler method (introduced in CLM4.5)
 
   real(r8), private, parameter :: thin_sfclayer = 1.0e-6_r8   ! Threshold for thin surface layer
@@ -517,7 +517,7 @@ contains
            dhsdT(bounds%begc:bounds%endc), &
            waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst,energyflux_inst)
 
-      call Phasechange_beta (bounds, num_nolakec, filter_nolakec, &
+      call Phasechange (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
            soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
 
@@ -1130,7 +1130,7 @@ contains
   end subroutine PhaseChangeH2osfc
 
   !-----------------------------------------------------------------------
-  subroutine Phasechange_beta (bounds, num_nolakec, filter_nolakec, dhsdT, &
+  subroutine Phasechange (bounds, num_nolakec, filter_nolakec, dhsdT, &
        soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
     !
     ! !DESCRIPTION:
@@ -1186,7 +1186,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    call t_startf( 'PhaseChangebeta' )
+    call t_startf( 'PhaseChange' )
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(dhsdT) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -1279,7 +1279,6 @@ contains
                ! If ice exists above melt point, melt some to liquid.
                if (h2osoi_ice(c,j) > 0._r8 .and. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
-                  !                tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j) 
                   t_soisno(c,j) = tfrz
                endif
@@ -1288,7 +1287,6 @@ contains
                ! If liquid exists below melt point, freeze some to ice.
                if (h2osoi_liq(c,j) > 0._r8 .AND. t_soisno(c,j) < tfrz) then
                   imelt(c,j) = 2
-                  !                tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j) 
                   t_soisno(c,j) = tfrz
                endif
@@ -1310,7 +1308,6 @@ contains
 
                if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
@@ -1334,7 +1331,6 @@ contains
 
                if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
                   imelt(c,j) = 2
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz
                   tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
@@ -1343,7 +1339,6 @@ contains
                if (h2osno_no_layers(c) > 0._r8 .AND. j == 1) then
                   if (t_soisno(c,j) > tfrz) then
                      imelt(c,j) = 1
-                     !                tincc,j) = t_soisno(c,j) - tfrz
                      tinc(c,j) = tfrz - t_soisno(c,j)
                      t_soisno(c,j) = tfrz
                   endif
@@ -1537,10 +1532,10 @@ contains
          end if
       end do
 
-      call t_stopf( 'PhaseChangebeta' )
+      call t_stopf( 'PhaseChange' )
     end associate
 
-  end subroutine Phasechange_beta
+  end subroutine Phasechange
 
   !-----------------------------------------------------------------------
   subroutine ComputeGroundHeatFluxAndDeriv(bounds, &
