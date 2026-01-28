@@ -16,6 +16,7 @@ module test_CropPhaseTransitionBiomass
   use shr_kind_mod , only : r8 => shr_kind_r8
   use CNVegCarbonStateType, only : cnveg_carbonstate_type
   use CropReprPoolsMod, only : nrepr
+  use CNPhenologyMod, only : CropPhaseTransitionBiomass
 
   implicit none
 
@@ -97,7 +98,7 @@ contains
     class(TestCropType), intent(inout) :: this
 
     this%crop_inst%cphase_patch(pi) = cphase_not_planted
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
     @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
@@ -131,7 +132,7 @@ contains
     class(TestCropType), intent(inout) :: this
 
     this%crop_inst%cphase_patch(pi) = cphase_planted
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
     @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
@@ -165,7 +166,7 @@ contains
     class(TestCropType), intent(inout) :: this
 
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -200,14 +201,14 @@ contains
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
     ! Now save status at anthesis
     this%crop_inst%cphase_patch(pi) = cphase_grainfill
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -242,21 +243,21 @@ contains
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
     ! Now save status at anthesis
     this%crop_inst%cphase_patch(pi) = cphase_grainfill
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
     ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -291,21 +292,21 @@ contains
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
     ! Now save status at anthesis
     this%crop_inst%cphase_patch(pi) = cphase_grainfill
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
     ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst, is_mature=.true.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.true.)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -341,7 +342,7 @@ contains
 
     ! Save status at anthesis
     this%crop_inst%cphase_patch(pi) = cphase_grainfill
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -376,7 +377,7 @@ contains
     class(TestCropType), intent(inout) :: this
 
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call this%crop_inst%CropPhaseTransitionBiomass(pi, this%cnveg_carbonstate_inst, is_mature=.true.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.true.)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))

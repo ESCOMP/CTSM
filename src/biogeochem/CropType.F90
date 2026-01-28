@@ -135,7 +135,6 @@ module CropType
      procedure, public  :: CropUpdateAccVars
 
      procedure, public  :: CropIncrementYear
-     procedure, public  :: CropPhaseTransitionBiomass
 
      ! Private routines
      procedure, private :: InitAllocate
@@ -1339,75 +1338,6 @@ contains
     end if
 
   end subroutine CropIncrementYear
-
-  !-----------------------------------------------------------------------
-  subroutine CropPhaseTransitionBiomass (this, p, cnveg_carbonstate_inst, is_mature)
-    !
-    ! !DESCRIPTION:
-    ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
-    ! the phase transition---i.e., immediately after cphase is changed.
-    !
-    ! !USES:
-    use CNVegCarbonStateType, only : cnveg_carbonstate_type
-    !
-    ! !ARGUMENTS:
-    class(crop_type) :: this
-    integer , intent(in) :: p  ! Patch index
-    type(cnveg_carbonstate_type) , intent(in) :: cnveg_carbonstate_inst
-    logical , intent(in), optional :: is_mature
-    !
-    ! !LOCALS:
-    real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
-
-    call shr_assert(this%cphase_patch(p) >= cphase_not_planted, msg="cphase < cphase_not_planted", &
-       file=__FILE__, line=__LINE__)
-    call shr_assert(this%cphase_patch(p) <= cphase_harvest, msg="cphase > cphase_harvest", &
-       file=__FILE__, line=__LINE__)
-
-    frootc = cnveg_carbonstate_inst%frootc_patch(p)
-    livecrootc = cnveg_carbonstate_inst%livecrootc_patch(p)
-    livestemc = cnveg_carbonstate_inst%livestemc_patch(p)
-    leafc = cnveg_carbonstate_inst%leafc_patch(p)
-    ! sum over all grain tisues and destinations
-    reprc = sum(cnveg_carbonstate_inst%reproductivec_patch(p,:))
-
-    if (this%cphase_patch(p) >= cphase_leafemerge .and. this%frootc_emergence_patch(p) < 0._r8) then
-       this%frootc_emergence_patch(p) = frootc
-       this%livecrootc_emergence_patch(p) = livecrootc
-       this%livestemc_emergence_patch(p) = livestemc
-       this%leafc_emergence_patch(p) = leafc
-       this%reprc_emergence_patch(p) = reprc
-    end if
-
-    if (this%cphase_patch(p) >= cphase_grainfill .and. this%frootc_anthesis_patch(p) < 0._r8) then
-       this%frootc_anthesis_patch(p) = frootc
-       this%livecrootc_anthesis_patch(p) = livecrootc
-       this%livestemc_anthesis_patch(p) = livestemc
-       this%leafc_anthesis_patch(p) = leafc
-       this%reprc_anthesis_patch(p) = reprc
-    end if
-
-    ! Don't need >= etc. here because harvest is the maximum (final) phase (as checked above)
-    if (this%cphase_patch(p) == cphase_harvest) then
-       this%frootc_harvest_patch(p) = frootc
-       this%livecrootc_harvest_patch(p) = livecrootc
-       this%livestemc_harvest_patch(p) = livestemc
-       this%leafc_harvest_patch(p) = leafc
-       this%reprc_harvest_patch(p) = reprc
-
-       if (.not. present(is_mature)) then
-          call endrun(msg=' ERROR: When called at harvest, CropPhaseTransitionBiomass() needs argument is_mature')
-       end if
-       if (is_mature) then
-          this%frootc_maturity_patch(p) = frootc
-          this%livecrootc_maturity_patch(p) = livecrootc
-          this%livestemc_maturity_patch(p) = livestemc
-          this%leafc_maturity_patch(p) = leafc
-          this%reprc_maturity_patch(p) = reprc
-       end if
-    end if
-
-  end subroutine CropPhaseTransitionBiomass
 
   !-----------------------------------------------------------------------
   subroutine checkDates( )
