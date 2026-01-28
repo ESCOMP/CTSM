@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.013
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Jan 27 12:42:48 AM MST 2026
+Date: Wed Jan 28 12:24:02 AM MST 2026
 One-line Summary: Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
 
 Purpose and description of changes
@@ -60,12 +60,12 @@ Testing summary: regular
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 

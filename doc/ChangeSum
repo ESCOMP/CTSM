@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.013     erik 01/27/2026 Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
+       ctsm5.4.013     erik 01/28/2026 Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
        ctsm5.4.012   slevis 01/26/2026 Fix C-balance error for partly emerged crops
        ctsm5.4.011   slevis 01/22/2026 Merge b4b-dev to master
        ctsm5.4.010     erik 01/21/2026 Update cime to version that changes answers for ERI tests
