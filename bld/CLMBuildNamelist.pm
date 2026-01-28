@@ -3325,13 +3325,12 @@ sub setup_logic_supplemental_nitrogen {
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" && &value_is_true($nl_flags->{'use_crop'}) ) {
       # If this is non-fates, non-sp and crop is active
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-		  'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
+                 'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
 
   } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
       # Or... if its fates but not fates-sp
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-		  'suplnitro', 'fates_parteh_mode'=>$nl_flags->{'fates_parteh_mode'},
-	          'use_fates'=>$nl_flags->{'use_fates'}, 'use_cn'=>$nl_flags->{'use_cn'});
+                 'suplnitro', 'fates_parteh_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_parteh_mode')));
   }
   #
   # Error checking for suplnitro
@@ -3352,12 +3351,12 @@ sub setup_logic_supplemental_nitrogen {
     }
 
     my $parteh_mode = $nl->get_value('fates_parteh_mode');
-    if ( ($parteh_mode == 'carbon_only') && ($suplnitro !~ /ALL/) ) {
+    if ( ($parteh_mode =~ /carbon_only/i) && ($suplnitro !~ /ALL/i) ) {
       $log->fatal_error("supplemental Nitrogen (suplnitro) is NOT set to ALL, FATES is on, " .
                         "and fates_parteh_mode = $parteh_mode, so Nitrogen is not active; " .
                         "change suplnitro back to ALL");
     }
-    if ( ($parteh_mode == 'carbon_nitrogen') && &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
+    if ( ($parteh_mode =~ /carbon_nitrogen/i) && &value_is_true( $nl_flags->{'use_fates_sp'}) ) {
       $log->fatal_error("FATES is on, " .
                         "FATES-SP is active, but fates_parteh_mode = $parteh_mode, so Nitrogen is active; " .
                         "change fates_parteh_mode to carbon_only or do not use FATES-SP");
