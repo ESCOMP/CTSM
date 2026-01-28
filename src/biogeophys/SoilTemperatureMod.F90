@@ -1433,7 +1433,9 @@ contains
                      heatr = 0._r8
                      if (xm(c,j) > 0._r8) then !if there is excess heat to melt the ice
                         h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
-                        xm2(c,j) = xm(c,j) - wice0(c,j) ! Leftover melt
+                        ! If xm > wice0, then all soil ice melts, 
+                        ! and the remaining heat (xm2) is used to melt excess ice
+                        xm2(c,j) = xm(c,j) - wice0(c,j) 
                         if (j>=1) then ! soil
                            if (excess_ice(c,j) >= 0._r8 .and. xm2(c,j)>0._r8) then ! if there is excess ice to melt
                                excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
