@@ -80,6 +80,7 @@ README ------------------- This file
 README.md ---------------- File that displays on github under https::/github.com/ESCOMP/CTSM.git
 README.rst --------------- File that displays under the project in github
 README_GITFLEXIMOD.rst --- Information on how to work with git-fleximod for CTSM
+README_DIAGNOSTICS.md ---- Quickstart on using CUPiD to plot diagnostics for your CTSM case
 WhatsNewInCTSM5.4.md ----- Overview document of the changes between ctsm5.3 and ctsm5.4
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
