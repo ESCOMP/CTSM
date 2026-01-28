@@ -245,7 +245,11 @@ contains
        return
     end if
     call procinfo%calc_globalxy_indices( igrc, i, j )
-    write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': 2D gridcell indices = (', i, ', ', j, ')'
+    if ( (i /= -1) .and. (j /= -1) ) then
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': 2D gridcell indices = (', i, ', ', j, ')'
+    else
+       write(iulog,'(a)') 'WARNING: Trouble getting the 2D gridcell indices'
+    end if
 
   end subroutine write_point_context
 

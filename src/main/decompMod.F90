@@ -131,78 +131,84 @@ module decompMod
 contains
 
   !-----------------------------------------------------------------------
-  function calc_global_index_fromij( this, g ) result(global_index)
+  pure function calc_global_index_fromij( this, g ) result(global_index)
     ! Returns the full grid global vector index from the gridcell on this processor
+    ! Make this a pure function so it can be called from endrun
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
     integer, intent(in) :: g       ! gridcell index on this processor
     integer :: global_index        ! function result, full vector index on the full global grid
 
+    global_index = -1
     if ( .not. associated(this%gi) )then
-       call shr_sys_abort( 'gi is not allocated yet', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: gi is not allocated yet'
        return
     end if
     if ( .not. associated(this%gj) )then
-       call shr_sys_abort( 'gj is not allocated yet', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: gj is not allocated yet'
        return
     end if
     if ( (g < this%begg) .or. (g > this%endg) ) then
-       call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
        return
     end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
-       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
     if ( (this%gi(g) < 1) .or. (this%gi(g) > nglob_x) ) then
-       write(iulog,*) 'this%gi(g) = ', this%gi(g)
-       call shr_sys_abort( 'Global gi index is out of bounds', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'this%gi(g) = ', this%gi(g)
+       !write(iulog,*) 'WARNING: Global gi index is out of bounds'
        return
     end if
     if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_x) ) then
-       write(iulog,*) 'this%gj(g) = ', this%gj(g)
-       call shr_sys_abort( 'Global gj index is out of bounds', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'this%gj(g) = ', this%gj(g)
+       !write(iulog,*) 'WARNING: Global gj index is out of bounds'
        return
     end if
     global_index = (this%gj(g)-1)*nglob_x + this%gi(g)
     if ( (global_index < 1) .or. (global_index > nglob_x*nglob_y) ) then
-       call shr_sys_abort( 'global_index is out of bounds for this processor', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: global_index is out of bounds for this processor'
        return
     end if
 
   end function calc_global_index_fromij
 
   !-----------------------------------------------------------------------
-  subroutine calc_ijindices_from_full_global_index( g, i, j )
+  pure subroutine calc_ijindices_from_full_global_index( g, i, j )
      ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
+     ! Make this a pure function so it can be called from endrun
      integer, intent(in) :: g    ! Input processor global full 2D vector index
      integer, intent(out) :: i, j  ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
 
+     i = -1
+     j = -1
      if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
-        write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
-        call shr_sys_abort( 'Input index g is out of bounds', file=sourcefile, line=__LINE__)
+        !write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
+        !write(iulog,*) 'WARNING: Input index g is out of bounds'
         return
      end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
-       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
     j = floor( real(g, r8) / real(nglob_x, r8) ) + 1
     if ( mod(g,nglob_x) == 0 ) j = j - 1
     i = g - (j-1)*nglob_x
     if ( (i < 1) .or. (i > nglob_x) ) then
-       call shr_sys_abort( 'Computed global i value out of range', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Computed global i value out of range'
        return
     end if
     if ( (j < 1) .or. (j > nglob_y) ) then
-       call shr_sys_abort( 'Computed global j value out of range', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Computed global j value out of range'
        return
     end if
   end subroutine calc_ijindices_from_full_global_index
 
   !-----------------------------------------------------------------------
-  subroutine calc_globalxy_indices( this, g, i, j )
+  pure subroutine calc_globalxy_indices( this, g, i, j )
     ! Get the global i/j indices from the global vector grid index
+    ! Make this a pure function so it can be called from endrun
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
     integer, intent(in) :: g ! gridcell index on this processor
@@ -210,16 +216,18 @@ contains
 
     integer :: global_index
 
+    i = -1
+    j = -1
     if ( .not. associated(this%ggidx) )then
-       call shr_sys_abort( 'ggidx is not allocated yet', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: ggidx is not allocated yet'
        return
     end if
     if ( (g < this%begg) .or. (g > this%endg) ) then
-       call shr_sys_abort( 'Input index g is out of bounds of this processor', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
        return
     end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
-       call shr_sys_abort( 'Global gridsize nglob_x/nglob_y is not set', file=sourcefile, line=__LINE__)
+       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
     global_index = this%ggidx(g)
