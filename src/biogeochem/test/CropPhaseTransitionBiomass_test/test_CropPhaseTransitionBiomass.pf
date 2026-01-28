@@ -237,8 +237,8 @@ contains
   end subroutine test_grainfill
 
   @Test
-  subroutine test_harvest_immature(this)
-    ! If called at harvest before maturity, only maturity variables should be set
+  subroutine test_harvest_never_mature(this)
+    ! If called at harvest before maturity, _maturity_ variables should be unset
     class(TestCropType), intent(inout) :: this
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
@@ -283,7 +283,77 @@ contains
     @assertEqual(14._r8, this%crop_inst%leafc_harvest_patch(pi))
     @assertEqual(15._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
 
-  end subroutine test_harvest_immature
+  end subroutine test_harvest_never_mature
+
+  @Test
+  subroutine test_direct_to_harvest_never_grainfill(this)
+    ! If calling during harvest that was reached without entering grain filling period, both
+    ! _anthesis_ and _maturity_ variables should be unset
+    class(TestCropType), intent(inout) :: this
+
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_direct_to_harvest_never_grainfill
+
+  @Test
+  subroutine test_direct_to_harvest_never_leafemerge(this)
+    ! If calling during harvest that was reached before leaf emergence, only _harvest_ variables
+    ! should be set
+    class(TestCropType), intent(inout) :: this
+
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+
+    @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_emergence_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_direct_to_harvest_never_leafemerge
 
   @Test
   subroutine test_harvest_mature(this)
