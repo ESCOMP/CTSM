@@ -2694,13 +2694,7 @@ contains
     ! !DESCRIPTION:
     ! Get the current phase of each crop patch.
     !
-    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
-    ! CropType. The returned values in crop_phase are only valid for patches where
-    ! croplive is true; the values are undefined where croplive is false and should not be
-    ! used there!
-    !
-    ! This has logic similar to that in CropPhenology. If you make changes here, you
-    ! should also check if similar changes need to be made in CropPhenology.
+    ! See CropPhase_OnePatch for more information.
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2717,35 +2711,58 @@ contains
     !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(crop_phase) == [bounds%endp]), sourcefile, __LINE__)
 
-    associate( &
-         croplive =>    crop_inst%croplive_patch        , & ! Input: [logical  (:) ]  Flag, true if planted, not harvested
-         hui      =>    crop_inst%hui_patch             , & ! Input: [real(r8) (:) ]  gdd since planting (gddplant)
-         leafout  =>    crop_inst%gddtsoi_patch         , & ! Input: [real(r8) (:) ]  gdd from top soil layer temperature
-         huileaf  =>    cnveg_state_inst%huileaf_patch  , & ! Input: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
-         huigrain =>    cnveg_state_inst%huigrain_patch   & ! Input: [real(r8) (:) ]  same to reach vegetative maturity
-         )
-
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
-
-       if (croplive(p)) then
-          ! Start with cphase_planted, but this might get changed in the later
-          ! conditional blocks.
-          crop_phase(p) = cphase_planted
-          if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
-             crop_phase(p) = cphase_leafemerge
-          else if (hui(p) >= huigrain(p)) then
-             ! Since we know croplive is true, any hui greater than huigrain implies that
-             ! we're in the grainfill stage: if we were passt gddmaturity then croplive
-             ! would be false.
-             crop_phase(p) = cphase_grainfill
-          end if
-       end if
+       call CropPhase_OnePatch( &
+            crop_phase(p), &
+            crop_inst%croplive_patch(p), &
+            crop_inst%gddtsoi_patch(p), &
+            crop_inst%hui_patch(p), &
+            cnveg_state_inst%huileaf_patch(p), &
+            cnveg_state_inst%huigrain_patch(p))
     end do
 
-    end associate
-
   end subroutine CropPhase
+
+
+  !-----------------------------------------------------------------------
+  subroutine CropPhase_OnePatch( &
+       crop_phase, croplive, leafout, hui, huileaf, huigrain &
+       )
+    !
+    ! !DESCRIPTION:
+    ! Get the current phase of a crop patch.
+    !
+    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
+    ! CropType. The returned values in crop_phase are only valid for patches where
+    ! croplive is true; the values are undefined where croplive is false and should not be
+    ! used there!
+    !
+    ! This has logic similar to that in CropPhenology. If you make changes here, you
+    ! should also check if similar changes need to be made in CropPhenology.
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(inout) :: crop_phase  ! In/out: [real(r8)]  crop phase
+    logical , intent(in) :: croplive  ! Input: [logical]  Flag, true if planted, not harvested
+    real(r8), intent(in) :: leafout   ! Input: [real(r8)]  gdd from top soil layer temperature
+    real(r8), intent(in) :: hui       ! Input: [real(r8)]  gdd since planting (gddplant)
+    real(r8), intent(in) :: huileaf   ! Input: [real(r8)]  heat unit index needed from planting to leaf emergence
+    real(r8), intent(in) :: huigrain  ! Input: [real(r8)]  same to reach vegetative maturity
+
+    if (croplive) then
+       ! Start with cphase_planted, but this might get changed in the later
+       ! conditional blocks.
+       crop_phase = cphase_planted
+       if (leafout >= huileaf .and. hui < huigrain) then
+          crop_phase = cphase_leafemerge
+       else if (hui >= huigrain) then
+          ! Since we know croplive is true, any hui greater than huigrain implies that
+          ! we're in the grainfill stage: if we were past gddmaturity then croplive
+          ! would be false.
+          crop_phase = cphase_grainfill
+       end if
+    end if
+  end subroutine CropPhase_OnePatch
 
 
   !-----------------------------------------------------------------------
