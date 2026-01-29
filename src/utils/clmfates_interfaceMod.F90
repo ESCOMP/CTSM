@@ -960,11 +960,11 @@ module CLMFatesInterfaceMod
          ! Initialize the FATES sites
          call this%fates(nc)%InitializeFatesSites(natpft_size)
 
-         ! Allocate the FATES boundary arrays (in)
-         allocate(this%fates(nc)%bc_in(this%fates(nc)%nsites))
+! Allocate the FATES boundary arrays (in) - TODO: to be moved to `InitializeBoundaryConditions`
+allocate(this%fates(nc)%bc_in(this%fates(nc)%nsites))
 
-         ! Allocate the FATES boundary arrays (out)
-         allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
+! Allocate the FATES boundary arrays (out) - TODO: to be moved to `InitializeBoundaryConditions`
+allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
 
          ! Initialize fates boundary conditions arrays
          call this%fates(nc)%InitializeBoundaryConditions(natpft_size)
