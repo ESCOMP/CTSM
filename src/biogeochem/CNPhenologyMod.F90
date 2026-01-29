@@ -35,6 +35,7 @@ module CNPhenologyMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   use CropType                        , only : crop_type
+  use CropType                        , only : cphase_not_planted
   use CropType                        , only : cphase_planted, cphase_leafemerge
   use CropType                        , only : cphase_grainfill, cphase_harvest
   use pftconMod                       , only : pftcon
@@ -70,6 +71,7 @@ module CNPhenologyMod
   public :: get_swindow
   public :: was_sown_in_this_window
   public :: CropPhaseTransitionBiomass
+  public :: CropPhase_OnePatch
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -2571,7 +2573,8 @@ contains
                ! Unlike other calls of CropPhaseTransitionBiomass(), we don't need a check for
                ! cphase(p) /= cphase_orig here. This is because do_harvest already implies we're at
                ! a phase transition: "cphase(p) isn't cphase_harvest but now it should be."
-               call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature)
+               call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature, &
+                 cnveg_state_inst%huileaf_patch(p), cnveg_state_inst%huigrain_patch(p))
 
                ! Don't update these if you're just harvesting because of incorrect Dec.
                ! 31 planting
@@ -2767,7 +2770,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature)
+  subroutine CropPhaseTransitionBiomass (crop_inst, p, cnveg_carbonstate_inst, is_mature, huileaf, huigrain)
     !
     ! !DESCRIPTION:
     ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
@@ -2775,21 +2778,45 @@ contains
     !
     ! !USES:
     use CNVegCarbonStateType, only : cnveg_carbonstate_type
-    use CropType, only : cphase_not_planted, cphase_planted, cphase_leafemerge
-    use CropType, only : cphase_grainfill, cphase_harvest
     !
     ! !ARGUMENTS:
     class(crop_type) :: crop_inst
     integer , intent(in) :: p  ! Patch index
     type(cnveg_carbonstate_type) , intent(in) :: cnveg_carbonstate_inst
     logical , intent(in), optional :: is_mature
+    real(r8), intent(in), optional :: huileaf   ! fractional maturity threshold for leaf emergence
+    real(r8), intent(in), optional :: huigrain  ! fractional maturity threshold for grain fill to start
     !
     ! !LOCALS:
     real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
+    logical  :: called_at_harvest  ! whether crop_inst subroutine is being called at time of harvest
+    real(r8) :: actual_cphase  ! the latest crop phase (not including "harvest") the crop has reached
 
-    call shr_assert(crop_inst%cphase_patch(p) >= cphase_not_planted, msg="cphase < cphase_not_planted", &
+    ! If we're calling at harvest, crop_inst%cphase_patch will not be informative as to which crop
+    ! development phases the crop actually reached during the growing season. Thus, we call
+    ! CropPhase_OnePatch() to get "actual" crop phase.
+    called_at_harvest = crop_inst%cphase_patch(p) == cphase_harvest
+    if (called_at_harvest) then
+       if (.not. (present(huileaf) .and. present(huigrain) .and. present(is_mature))) then
+          call endrun( msg=' ERROR: When called at harvest, CropPhaseTransitionBiomass() needs arguments is_mature, huileaf, and huigrain')
+       end if
+       call CropPhase_OnePatch(actual_cphase, crop_inst%croplive_patch(p), &
+         crop_inst%gddtsoi_patch(p), crop_inst%hui_patch(p), huileaf, huigrain)
+
+       ! Sense checks
+       if (is_mature) then
+          call shr_assert(actual_cphase == cphase_grainfill)
+       end if
+       if (actual_cphase < cphase_grainfill) then
+          call shr_assert(.not. is_mature)
+       end if
+    else
+       actual_cphase = crop_inst%cphase_patch(p)
+    end if
+
+    call shr_assert(actual_cphase >= cphase_not_planted, msg="cphase < cphase_not_planted", &
        file=__FILE__, line=__LINE__)
-    call shr_assert(crop_inst%cphase_patch(p) <= cphase_harvest, msg="cphase > cphase_harvest", &
+    call shr_assert(actual_cphase <= cphase_harvest, msg="cphase > cphase_harvest", &
        file=__FILE__, line=__LINE__)
 
     frootc = cnveg_carbonstate_inst%frootc_patch(p)
@@ -2799,7 +2826,7 @@ contains
     ! sum over all grain tisues and destinations
     reprc = sum(cnveg_carbonstate_inst%reproductivec_patch(p,:))
 
-    if (crop_inst%cphase_patch(p) >= cphase_leafemerge .and. crop_inst%frootc_emergence_patch(p) < 0._r8) then
+    if (actual_cphase >= cphase_leafemerge .and. crop_inst%frootc_emergence_patch(p) < 0._r8) then
        crop_inst%frootc_emergence_patch(p) = frootc
        crop_inst%livecrootc_emergence_patch(p) = livecrootc
        crop_inst%livestemc_emergence_patch(p) = livestemc
@@ -2807,7 +2834,7 @@ contains
        crop_inst%reprc_emergence_patch(p) = reprc
     end if
 
-    if (crop_inst%cphase_patch(p) >= cphase_grainfill .and. crop_inst%frootc_anthesis_patch(p) < 0._r8) then
+    if (actual_cphase >= cphase_grainfill .and. crop_inst%frootc_anthesis_patch(p) < 0._r8) then
        crop_inst%frootc_anthesis_patch(p) = frootc
        crop_inst%livecrootc_anthesis_patch(p) = livecrootc
        crop_inst%livestemc_anthesis_patch(p) = livestemc
@@ -2816,16 +2843,13 @@ contains
     end if
 
     ! Don't need >= etc. here because harvest is the maximum (final) phase (as checked above)
-    if (crop_inst%cphase_patch(p) == cphase_harvest) then
+    if (called_at_harvest) then
        crop_inst%frootc_harvest_patch(p) = frootc
        crop_inst%livecrootc_harvest_patch(p) = livecrootc
        crop_inst%livestemc_harvest_patch(p) = livestemc
        crop_inst%leafc_harvest_patch(p) = leafc
        crop_inst%reprc_harvest_patch(p) = reprc
 
-       if (.not. present(is_mature)) then
-          call endrun(msg=' ERROR: When called at harvest, CropPhaseTransitionBiomass() needs argument is_mature')
-       end if
        if (is_mature) then
           crop_inst%frootc_maturity_patch(p) = frootc
           crop_inst%livecrootc_maturity_patch(p) = livecrootc

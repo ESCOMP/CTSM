@@ -16,7 +16,7 @@ module test_CropPhaseTransitionBiomass
   use shr_kind_mod , only : r8 => shr_kind_r8
   use CNVegCarbonStateType, only : cnveg_carbonstate_type
   use CropReprPoolsMod, only : nrepr
-  use CNPhenologyMod, only : CropPhaseTransitionBiomass
+  use CNPhenologyMod, only : CropPhaseTransitionBiomass, CropPhase_OnePatch
 
   implicit none
 
@@ -53,6 +53,7 @@ contains
 
     call this%crop_inst%Init(bounds)
     call this%crop_inst%InitPlantCrop(pi)
+    this%crop_inst%croplive_patch(pi) = .true.
 
     call this%cnveg_carbonstate_inst%InitAllocate(bounds, .true.)
     this%cnveg_carbonstate_inst%frootc_patch(pi) = 1._r8
@@ -240,6 +241,7 @@ contains
   subroutine test_harvest_never_mature(this)
     ! If called at harvest before maturity, _maturity_ variables should be unset
     class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
@@ -255,9 +257,19 @@ contains
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8  ! aka "leafout"
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
     ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -290,9 +302,21 @@ contains
     ! If calling during harvest that was reached without entering grain filling period, both
     ! _anthesis_ and _maturity_ variables should be unset
     class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
 
+    ! We need "actual" crop phase to be cphase_leafemerge
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8  ! aka "leafout"
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.6_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_leafemerge)
+
+    ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -325,9 +349,21 @@ contains
     ! If calling during harvest that was reached before leaf emergence, only _harvest_ variables
     ! should be set
     class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
 
+    ! We need "actual" crop phase to be cphase_planted
+    this%crop_inst%gddtsoi_patch(pi) = 0.0_r8  ! aka "leafout"
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.0_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_planted)
+
+    ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.false.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
 
     @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
     @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
@@ -359,6 +395,7 @@ contains
   subroutine test_harvest_mature(this)
     ! If called at harvest after maturity, all variables should be set
     class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
 
     ! Before reaching grainfill, the crop should have gone through leafemerge
     this%crop_inst%cphase_patch(pi) = cphase_leafemerge
@@ -374,9 +411,19 @@ contains
     ! Increase biomass pools before moving to next phase
     call this%increase_biomass_pools(5._r8)
 
-    ! Now save status at harvest
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8  ! aka "leafout"
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
+    ! Now save status at harvest.
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.true.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.true., huileaf=huileaf, huigrain=huigrain)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
@@ -445,9 +492,21 @@ contains
     ! If calling during mature harvest that was reached without a timestep in leafemerge or
     ! grainfill, all variables should be filled.
     class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
 
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8  ! aka "leafout"
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
+    ! Now save status at harvest
     this%crop_inst%cphase_patch(pi) = cphase_harvest
-    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, is_mature=.true.)
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.true., huileaf=huileaf, huigrain=huigrain)
 
     @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
     @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
