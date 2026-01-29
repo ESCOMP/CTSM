@@ -175,7 +175,7 @@ contains
   end function calc_global_index_fromij
 
   !-----------------------------------------------------------------------
-  pure subroutine calc_ijindices_from_full_global_index( g, i, j )
+  subroutine calc_ijindices_from_full_global_index( g, i, j )
      ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
      ! Make this a pure function so it can be called from endrun
      integer, intent(in) :: g    ! Input processor global full 2D vector index
@@ -184,29 +184,29 @@ contains
      i = -1
      j = -1
      if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
-        !write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
-        !write(iulog,*) 'WARNING: Input index g is out of bounds'
+        write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
+        write(iulog,*) 'WARNING: Input index g is out of bounds'
         return
      end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
-       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
+       write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
     j = floor( real(g, r8) / real(nglob_x, r8) ) + 1
     if ( mod(g,nglob_x) == 0 ) j = j - 1
     i = g - (j-1)*nglob_x
     if ( (i < 1) .or. (i > nglob_x) ) then
-       !write(iulog,*) 'WARNING: Computed global i value out of range'
+       write(iulog,*) 'WARNING: Computed global i value out of range'
        return
     end if
     if ( (j < 1) .or. (j > nglob_y) ) then
-       !write(iulog,*) 'WARNING: Computed global j value out of range'
+       write(iulog,*) 'WARNING: Computed global j value out of range'
        return
     end if
   end subroutine calc_ijindices_from_full_global_index
 
   !-----------------------------------------------------------------------
-  pure subroutine calc_globalxy_indices( this, g, i, j )
+  subroutine calc_globalxy_indices( this, g, i, j )
     ! Get the global i/j indices from the global vector grid index
     ! Make this a pure function so it can be called from endrun
     ! !ARGUMENTS:
@@ -219,15 +219,15 @@ contains
     i = -1
     j = -1
     if ( .not. associated(this%ggidx) )then
-       !write(iulog,*) 'WARNING: ggidx is not allocated yet'
+       write(iulog,*) 'WARNING: ggidx is not allocated yet'
        return
     end if
     if ( (g < this%begg) .or. (g > this%endg) ) then
-       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
+       write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
        return
     end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
-       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
+       write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
     global_index = this%ggidx(g)

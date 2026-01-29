@@ -43,10 +43,14 @@ contains
     class(TestDecompMod), intent(inout) :: this
 
     integer :: clump_pproc
+    integer :: g
     ! TODO: When decompMod has it's own allocate method that could be used here
     nclumps = 1
     clump_pproc = nclumps
     allocate(procinfo%cid(clump_pproc))
+    allocate(procinfo%ggidx(ni*nj))
+    allocate(procinfo%gi(ni*nj))
+    allocate(procinfo%gj(ni*nj))
     allocate(clumps(nclumps))
     ! Set the procinfo and clumps values
     ! TODO: Use initialization method when available (currently in decompInitMod)
@@ -55,9 +59,14 @@ contains
     procinfo%begg = 1
     procinfo%endg = procinfo%ncells
     procinfo%nclumps = nclumps
+    nglob_x = ni
+    nglob_y = nj
     clumps(:)%owner = iam
     clumps(:)%begg = 1
     clumps(:)%endg = procinfo%ncells
+    do g = 1, ni*nj
+       procinfo%ggidx(g) = g
+    end do
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================
@@ -102,5 +111,36 @@ contains
     @assertEqual(bounds_proc%begg, bounds_clump%begg)
     @assertEqual(bounds_proc%endg, bounds_clump%endg)
   end subroutine test_proc_clump_bounds_equal
+
+  @Test
+  subroutine test_calc_globalxy_indices(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds
+    integer :: g
+    integer :: i, j
+    integer :: expect_i(ni*nj), expect_j(ni*nj)
+
+    ! Expected indices is just the pattern on the simple 2D grid with no mask
+    g = 0
+    do j = 1, nj
+      do i = 1, ni
+        g = g + 1
+        expect_i(g) = i
+        expect_j(g) = j
+      end do
+    end do
+    call get_proc_bounds(bounds)
+    ! Make sure begg is 1, as that is assumed here
+    @assertEqual(bounds%begg, 1)
+    @assertEqual(bounds%endg, ni*nj)
+    do g = bounds%begg, bounds%endg
+      write(*,*) 'g = ', g
+      call procinfo%calc_globalxy_indices( g, i, j )
+      @assertEqual(i, expect_i(g) )
+      @assertEqual(j, expect_j(g) )
+    end do
+
+  end subroutine test_calc_globalxy_indices
 
 end module test_decompMod
