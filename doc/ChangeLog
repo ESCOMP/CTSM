@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.014
 Originator(s): mvdebolskiy
-Date: Wed Jan 28 11:34:35 AM MST 2026
+Date: Thu Jan 29 03:28:03 PM MST 2026
 One-line Summary: Fix for xm2 and revise logic for excess ice melt
 
 Purpose and description of changes
@@ -14,6 +14,8 @@ since when all h2osoi_ice has been melted (xm2=xm). This fixed now, in
 addition Phasechange_beta subroutine in SoilTemperatureMod has been
 renamed to Phasechange by swensosc's suggestion.
 
+The changes are generally small and only to a few points, so NOT marking it as a
+significant change in answers.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -23,7 +25,7 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
-[x] clm6_0
+[ ] clm6_0
 
 [ ] clm5_0
 
@@ -35,35 +37,27 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed
 ----------
 
-Fixes #3678
+Fixes #3678 -- Logic error in excess ice melt calculation
 
 Notes of particular relevance for users
 ---------------------------------------
 
+Caveats for users (e.g., need to interpolate initial conditions):
+  The changes in short simulations are negligible, but a few points can show larger differences if run long enough. The following lists the min and max differences for a 40 year simulation.
+      https://github.com/ESCOMP/CTSM/pull/3718#issuecomment-3810263334
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing:
-
 
 Testing summary:
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho -
-
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -71,19 +65,19 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes! when excess_ice is TRUE
+Changes answers relative to baseline: Yes! when use_excess_ice is TRUE
 
   Summarize any changes to answers, i.e.,
       - any configuration with use_excess_ice=.true.
-      - larger than roundoff changes in the soil thermal and 
-        moisture state in gridcells where excess ice is present 
-        in the soil at the start of the simulations. Most of the 
-        most of the gridcells will have little differences (1e-6), 
+      - larger than roundoff changes in the soil thermal and
+        moisture state in gridcells where excess ice is present
+        in the soil at the start of the simulations. Most of the
+        most of the gridcells will have little differences (1e-6),
         however, the difference will grow for longer (>10y) runs.
 
    If this tag changes climate list the run(s) done to evaluate the new
    climate (from https://github.com/NCAR/LMWG_dev)
-       - issue number(s):
+       - issue number(s): 140
 
 Other details
 -------------
