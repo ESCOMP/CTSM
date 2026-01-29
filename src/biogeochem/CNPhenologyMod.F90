@@ -2100,7 +2100,7 @@ contains
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
          max_tlai          =>    crop_inst%max_tlai_patch                      , & ! Input:  [real(r8) (:) ]  maximum total projected leaf area seen this season (m2/m2); set to 0 at sowing and tracked until harvest
-         leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
+         gddtsoi           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
@@ -2538,7 +2538,7 @@ contains
             ! phase. However, despite these differences: if you make changes to the
             ! following conditionals, you should also check to see if you should make
             ! similar changes in CropPhase.
-            if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
+            if ((.not. do_harvest) .and. gddtsoi(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
                if (cphase(p) /= cphase_orig) then
                   call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst)
@@ -2731,7 +2731,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CropPhase_OnePatch( &
-       crop_phase, croplive, leafout, hui, huileaf, huigrain &
+       crop_phase, croplive, gddtsoi, hui, huileaf, huigrain &
        )
     !
     ! !DESCRIPTION:
@@ -2748,7 +2748,7 @@ contains
     ! !ARGUMENTS:
     real(r8), intent(inout) :: crop_phase  ! In/out: [real(r8)]  crop phase
     logical , intent(in) :: croplive  ! Input: [logical]  Flag, true if planted, not harvested
-    real(r8), intent(in) :: leafout   ! Input: [real(r8)]  gdd from top soil layer temperature
+    real(r8), intent(in) :: gddtsoi   ! Input: [real(r8)]  gdd from top soil layer temperature
     real(r8), intent(in) :: hui       ! Input: [real(r8)]  gdd since planting (gddplant)
     real(r8), intent(in) :: huileaf   ! Input: [real(r8)]  heat unit index needed from planting to leaf emergence
     real(r8), intent(in) :: huigrain  ! Input: [real(r8)]  same to reach vegetative maturity
@@ -2757,7 +2757,7 @@ contains
        ! Start with cphase_planted, but this might get changed in the later
        ! conditional blocks.
        crop_phase = cphase_planted
-       if (leafout >= huileaf .and. hui < huigrain) then
+       if (gddtsoi >= huileaf .and. hui < huigrain) then
           crop_phase = cphase_leafemerge
        else if (hui >= huigrain) then
           ! Since we know croplive is true, any hui greater than huigrain implies that
