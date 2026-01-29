@@ -258,6 +258,8 @@ module CLMFatesInterfaceMod
       procedure, public :: Init2  ! Initialization after determining subgrid weights
       procedure, public :: InitAccBuffer ! Initialize any accumulation buffers
       procedure, public :: InitAccVars   ! Initialize any accumulation variables
+      procedure, public :: RegisterInterfaceVariablesInit
+      procedure, public :: RegisterInterfaceVariablesColdStart
       procedure, public :: UpdateAccVars ! Update any accumulation variables
       procedure, private :: init_history_io
       procedure, private :: wrap_update_hlmfates_dyn
@@ -794,13 +796,14 @@ module CLMFatesInterfaceMod
       ! is not turned on
       ! ---------------------------------------------------------------------------------
 
-      use spmdMod,                only : npes
-      use decompMod,              only : procinfo
-      use FatesInterfaceTypesMod, only : numpft_fates => numpft
+      use spmdMod,                  only : npes
+      use decompMod,                only : procinfo
+      use FatesInterfaceTypesMod,   only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
-      use subgridMod, only :  natveg_patch_exists
-      use clm_instur       , only : wt_nat_patch
-      use FATESFireFactoryMod , only: create_fates_fire_data_method
+      use subgridMod,               only :  natveg_patch_exists
+      use clm_instur,               only : wt_nat_patch
+      use FATESFireFactoryMod,      only: create_fates_fire_data_method
+      use FatesConstantsMod,        only : fates_unset_int
 
       ! Input Arguments
       class(hlm_fates_interface_type), intent(inout) :: this
@@ -922,18 +925,49 @@ module CLMFatesInterfaceMod
          ! Deallocate the temporary arrays
          deallocate(collist)
 
-         ! Set the number of FATES sites
-         this%fates(nc)%nsites = s
+         ! Iterate over all patches in this clump and determine the maximum number of non-crop
+         ! vegetated patches.  These correspond to the fates patches.
+         num_veg_patches = 0
+         nmaxpatches = bounds_clump%endp - bounds_clump%begp + 1
+         allocate(patchlist(nmaxpatches))
+         patchlist(:) = fates_unset_int
 
-         ! Allocate the FATES sites
-         allocate (this%fates(nc)%sites(this%fates(nc)%nsites))
+         do p = bounds_clump%begp, bounds_clump%endp
+            c = veg_pp%column(p)
+            g = veg_pp%gridcell(p)
 
-         ! Allocate the FATES boundary arrays (in)
-         allocate(this%fates(nc)%bc_in(this%fates(nc)%nsites))
+            ! If the column is a soil type, then the patch associated with it a vegetated patch, per initGridCells()
+            ! We don't use lun_pp%itype == istsoil here as crops can live on landunits with this type
+            ! Record the patch index to the temporary patchlist
+            if ( (col_pp%itype(c) == istsoil) .and. (col_pp%active(c)) ) then
 
-         ! Allocate the FATES boundary arrays (out)
-         allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
+               num_veg_patches = num_veg_patches + 1
+               patchlist(num_veg_patches) = p
 
+            end if
+
+         end do
+
+         ! Initialize interface registries for each patch on the clump 
+         call this%fates(nc)%InitializeInterfaceRegistry(num_veg_patches, patchlist)
+
+         ! deallocate temporary patch list
+         deallocate(patchlist)
+
+         ! Register the HLM interface variables that we be used to populate the FATES boundary conditions
+         call this%RegisterInterfaceVariablesInit(nc)
+
+         ! Initialize the FATES sites
+         call this%fates(nc)%InitializeFatesSites(natpft_size)
+
+! Allocate the FATES boundary arrays (in) - TODO: to be moved to `InitializeBoundaryConditions`
+allocate(this%fates(nc)%bc_in(this%fates(nc)%nsites))
+
+! Allocate the FATES boundary arrays (out) - TODO: to be moved to `InitializeBoundaryConditions`
+allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
+
+         ! Initialize fates boundary conditions arrays
+         call this%fates(nc)%InitializeBoundaryConditions(natpft_size)
 
          ! Parameter Constants defined by FATES, but used in ELM
          ! Note that FATES has its parameters defined, so we can also set the values
@@ -1157,6 +1191,9 @@ module CLMFatesInterfaceMod
       ! Set the FATES global time and date variables
       call GetAndSetTime
 
+      ! Update boundary conditions that change on a daily basis
+      call this%fates(nc)%UpdateInterfaceVariables()
+
       ! Get harvest rates for CLM landuse timeseries driven rates
       if (trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
          call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
@@ -1204,15 +1241,6 @@ module CLMFatesInterfaceMod
          end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
-
-         ! Decomposition fluxes
-         if ( decomp_method /= no_soil_decomp )then
-            this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
-            this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
-         else
-            this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = 0.0_r8
-            this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = 0.0_r8
-         end if
 
          ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
@@ -1596,8 +1624,7 @@ module CLMFatesInterfaceMod
 
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
-            this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in)            
+            this%fates(nc)%sites)
 
        ! Canopy diagnostic outputs for HLM
        call update_hlm_dynamics(this%fates(nc)%nsites, &
@@ -2001,6 +2028,12 @@ module CLMFatesInterfaceMod
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
                     this%fates(nc)%sites )
 
+               ! Register interface variables handled normally during cold start
+               call this%RegisterInterfaceVariablesColdStart(nc, canopystate_inst)
+
+               ! Update the interface variables
+               call this%fates(nc)%UpdateInterfaceVariables(restarting=.true.)
+
                ! I think ed_update_site and update_hlmfates_dyn are doing some similar
                ! update type stuff, should consolidate (rgk 11-2016)
                do s = 1,this%fates(nc)%nsites
@@ -2021,6 +2054,12 @@ module CLMFatesInterfaceMod
                         this%fates(nc)%bc_in(s), &
                         this%fates(nc)%bc_out(s), &
                         is_restarting = .true. )
+
+                  ! This call sends internal fates variables into the
+                  ! output boundary condition structures. Note: this is called
+                  ! internally in fates dynamics as well.
+
+                  call FluxIntoLitterPools(this%fates(nc)%sites(s))
 
                end do
 
@@ -2162,6 +2201,12 @@ module CLMFatesInterfaceMod
 
         if ( this%fates(nc)%nsites>0 ) then
 
+           ! Register interface variables
+           call this%RegisterInterfaceVariablesColdStart(nc, canopystate_inst)
+
+           ! Update the interface variables
+           call this%fates(nc)%UpdateInterfaceVariables(initialize=.true.)
+
            call get_clump_bounds(nc, bounds_clump)
 
            do s = 1,this%fates(nc)%nsites
@@ -2273,6 +2318,12 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_out(s), &
                     is_restarting = .false.)
 
+              ! This call sends internal fates variables into the
+              ! output boundary condition structures. Note: this is called
+              ! internally in fates dynamics as well.
+
+              call FluxIntoLitterPools(this%fates(nc)%sites(s))
+
            end do
 
            ! ------------------------------------------------------------------------
@@ -2335,9 +2386,6 @@ module CLMFatesInterfaceMod
       integer  :: ifp                         ! FATEs patch index
                                               ! this is the order increment of patch
                                               ! on the site
-
-      type(fates_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
-                                              ! BE HIDDEN AS A FATES PRIVATE
 
      call t_startf('fates_wrapsunfrac')
 
@@ -2768,7 +2816,6 @@ module CLMFatesInterfaceMod
     call  AccumulateFluxes_ED(this%fates(nc)%nsites,  &
                                this%fates(nc)%sites, &
                                this%fates(nc)%bc_in,  &
-                               this%fates(nc)%bc_out, &
                                dtime)
 
    call t_stopf('fates_wrapaccfluxes')
@@ -3980,5 +4027,168 @@ module CLMFatesInterfaceMod
 
 
  !-----------------------------------------------------------------------
+
+ subroutine RegisterInterfaceVariablesInit(this, nc)
+
+   use FatesInterfaceParametersMod
+
+   use clm_varpar,  only : i_met_lit
+
+   ! Arguments
+   class(hlm_fates_interface_type), intent(inout) :: this
+   integer, intent(in)                            :: nc              ! clump number
+
+   ! Locals
+   integer :: i_cel_lit       ! Index for cellulose litter pool
+   integer :: i_lig_lit       ! Index for lignin litter pool
+   integer :: r               ! Register index
+   integer :: p               ! HLM patch index
+   integer :: c               ! Column index
+   logical :: is_bareground   ! Is this register associated with a bareground patch
+   logical :: is_first        ! Is this register associated with the first patch on the column, landunit, etc
+                              ! This is necessary to ensure that accumulation variables are zero'd properly
+
+   ! Set the cellulose and lignin litter pool indices
+   i_cel_lit = i_met_lit + 1
+
+   if (decomp_method == mimics_decomp) then
+      ! Mimics has a structural pool, which is cellulose and lignan
+      i_lig_lit = i_cel_lit
+   elseif(decomp_method == century_decomp ) then
+      ! CENTURY has a separate lignan pool from cellulose
+      i_lig_lit = i_cel_lit + 1
+   end if
+   
+   ! Iterate over the number of vegetated patches
+   do r = 1, this%fates(nc)%npatches
+      p = this%fates(nc)%registry(r)%GetHLMPatchIndex()
+
+      ! Determine if the HLM patch is the initial (i.e. bareground patch) on the column
+      is_bareground = .false.
+      if (col_pp%pfti(veg_pp%column(p)) == p) then
+         is_bareground = .true.
+      end if
+
+      ! Get the subgrid indices and assign them to the register metadata
+      call this%fates(nc)%registry(r)%SetSubgridIndices(gridcell = veg_pp%gridcell(p), &
+                                                        topounit = veg_pp%topounit(p), &
+                                                        landunit = veg_pp%landunit(p), &
+                                                        column = veg_pp%column(p), &
+                                                        bareground = is_bareground)
+
+      ! Register and initialize the boundary condition variables
+      ! Global variables
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_decomp, &
+                                               data=nlevdecomp, hlm_flag=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_decomp_max, &
+                                               data=nlevdecomp_full, hlm_flag=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_decomp_thickness, &
+                                               data=dzsoi_decomp, hlm_flag=.true.)
+
+      !! Column level variables
+      ! Get the column index
+      c = this%fates(nc)%registry(r)%GetColumnIndex()
+
+      ! Determine if this is the first register on the column
+      is_first = .false.
+      if (is_bareground) then
+         is_first = .true.
+      end if
+
+      ! Variables that do not need to accumulate
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_soil_level, &
+                                               data=col_pp%nlevbed(c), hlm_flag=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_decomp_frac_moisture, &
+                                               data=col_cf%w_scalar(c,:), hlm_flag=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_decomp_frac_temperature, &
+                                               data=col_cf%t_scalar(c,:), hlm_flag=.true.)
+
+      ! Variables that need to accumulate                                               
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_carbon_cellulose, &
+                                               data=soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit), &
+                                               hlm_flag=.true., accumulate=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_carbon_lignin, &
+                                               data=soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit), &
+                                               hlm_flag=.true., accumulate=.true.)
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_carbon_labile, &
+                                               data=soilbiogeochem_carbonflux_inst%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit), &
+                                               hlm_flag=.true., accumulate=.true.)
+
+      ! Pass is_first option to assure HLM updates are zero'd 
+      if (use_fates_sp) then 
+         litter_c_overwrite = 0.0_r8                                               
+      end if
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_carbon_total, &
+                                               data=soilbiogeochem_carbonflux_inst%fates_litter_flux(c), &
+                                               hlm_flag=.true., accumulate=.true., is_first=is_first, &
+                                               overwrite=litter_c_overwrite)
+
+      ! Register nitrogen and phosphorus litter fluxes if necessary
+      if (fates_parteh_mode == prt_cnp_flex_allom_hyp) then
+         ! Phosphorus
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_phosphorus_cellulose, &
+         !                                          data=soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col(c,:,i_cel_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_phosphorus_lignin, &
+         !                                          data=soilbiogeochem_phosphorusflux_inst%decomp_ppools_sourcesink_col(c,:,i_lig_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_phosphorus_labile, &
+         !                                          data=soilbiogeochem_phosphorusflux_inst%decomp_ppools_sourcesink_col(c,:,i_met_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+
+         ! Pass is_first option to assure HLM updates are zero'd
+         call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_phosphorus_total, &
+                                                  data=soilbiogeochem_phosphorusflux_inst%fates_litter_flux(c), &
+                                                  hlm_flag=.true., accumulate=.true., is_first=is_first, &
+                                                  overwrite=0.0_r8)
+
+         ! Nitrogen
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_nitrogen_cellulose, &
+         !                                          data=soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col(c,:,i_cel_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_nitrogen_lignin, &
+         !                                          data=soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col(c,:,i_lig_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+         ! call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_nitrogen_labile, &
+         !                                          data=soilbiogeochem_nitrogenflux_inst%decomp_npools_sourcesink_col(c,:,i_met_lit), &
+         !                                          hlm_flag=.true., accumulate=.true.)
+
+         ! Pass is_first option to assure HLM updates are zero'd
+         call this%fates(nc)%registry(r)%Register(key=hlm_fates_litter_nitrogen_total, &
+                                                  data=soilbiogeochem_nitrogenflux_inst%fates_litter_flux(c), &
+                                                  hlm_flag=.true., accumulate=.true., is_first=is_first, &
+                                                  overwrite=0.0_r8)
+      end if
+   end do
+
+end subroutine RegisterInterfaceVariablesInit
+
+!-----------------------------------------------------------------------
+
+subroutine RegisterInterfaceVariablesColdStart(this, nc, canopystate_inst)
+
+   use FatesInterfaceParametersMod, only : hlm_fates_thaw_max_depth_index
+
+   class(hlm_fates_interface_type), intent(inout) :: this
+   integer, intent(in)                            :: nc              
+   type(canopystate_type), intent(inout)          :: canopystate_inst
+
+   ! Locals
+   integer :: r   ! register index
+   integer :: c   ! column index
+
+   ! Iterate over the number of vegetated patches
+   do r = 1, this%fates(nc)%npatches
+
+      ! Column variables
+      c = this%fates(nc)%registry(r)%GetColumnIndex()
+
+      call this%fates(nc)%registry(r)%Register(key=hlm_fates_thaw_max_depth_index, &
+                                               data=canopystate_inst%altmax_lastyear_indx_col(c), hlm_flag=.true.)
+   end do
+
+end subroutine RegisterInterfaceVariablesColdStart
+
+!-----------------------------------------------------------------------
 
 end module CLMFatesInterfaceMod
