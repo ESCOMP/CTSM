@@ -2770,7 +2770,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine CropPhaseTransitionBiomass (crop_inst, p, cnveg_carbonstate_inst, is_mature, huileaf, huigrain)
+  subroutine CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature, huileaf, huigrain)
     !
     ! !DESCRIPTION:
     ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
