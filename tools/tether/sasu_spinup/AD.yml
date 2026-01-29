@@ -1,0 +1,45 @@
+# detailing the spinup case and stability thresholds
+case: CASE_AD
+hist_dir: HIST_AD
+cycle_years: 20
+pct_landarea: 3
+thresholds:
+#  TOTECOSYSC: 0.02
+#  TOTVEGC: 0.02
+  GPP: 0.1
+#  TLAI: 0.02
+#  TEC_gridded: 1
+#  TVC_gridded: 1
+#  TSC_gridded: 1
+cfs:  
+  TOTECOSYSC: 1e-9
+  TOTSOMC: 1e-9
+  TOTVEGC: 1e-9
+  GPP:
+    - 1e-9
+    - 86400
+    - 365
+  TLAI: 1/lasum
+  TWS: 1/lasum
+  TEC_gridded: 1
+  TSC_gridded: 1
+  TVC_gridded: 1
+units:  
+  TOTECOSYSC: PgC
+  TOTSOMC: PgC
+  TOTVEGC: PgC
+  GPP: PgC
+  TLAI: m2/m2
+  TEC_gridded: gC/m2
+  TSC_gridded: gC/m2
+  TVC_gridded: gC/m2
+  TWS: mm
+data_vars:
+  - TLAI
+  - GPP
+  - TOTECOSYSC
+  - TOTVEGC
+  - TOTSOMC
+  - TWS
+
+
