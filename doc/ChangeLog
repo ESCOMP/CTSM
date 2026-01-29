@@ -84,6 +84,7 @@ Changes answers relative to baseline: Yes! when excess_ice is TRUE
    If this tag changes climate list the run(s) done to evaluate the new
    climate (from https://github.com/NCAR/LMWG_dev)
        - issue number(s):
+         - NCAR/LMWG_dev#140
 
 Other details
 -------------
