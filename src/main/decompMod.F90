@@ -123,6 +123,9 @@ module decompMod
   integer, public, pointer :: gindex_col(:)      => null()
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
+
+  ! --- Only public for unit testing
+  public :: calc_ijindices_from_full_global_index
   !------------------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
@@ -183,13 +186,13 @@ contains
 
      i = -1
      j = -1
-     if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
-        write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
-        write(iulog,*) 'WARNING: Input index g is out of bounds'
-        return
-     end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
        write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
+       return
+    end if
+    if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
+       write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
+       write(iulog,*) 'WARNING: Input index g is out of bounds'
        return
     end if
     j = floor( real(g, r8) / real(nglob_x, r8) ) + 1
