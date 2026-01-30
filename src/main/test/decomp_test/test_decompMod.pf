@@ -143,4 +143,34 @@ contains
 
   end subroutine test_calc_globalxy_indices
 
+  @Test
+  subroutine test_calc_globalxy_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    ! IF g is less than begg i and j should be undefined as -1
+    g = 0
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! IF g is greater than endg i and j should be undefined as -1
+    g = ni*nj + 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_x is not set
+    nglob_x = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_y is not set
+    nglob_x = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails
+
 end module test_decompMod
