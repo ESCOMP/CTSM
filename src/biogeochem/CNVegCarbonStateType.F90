@@ -215,7 +215,7 @@ module CNVegCarbonStateType
      procedure , public  :: Summary => Summary_carbonstate
      procedure , public  :: DynamicPatchAdjustments   ! adjust state variables when patch areas change
      
-     procedure , private :: InitAllocate    ! Allocate arrays
+     procedure , public  :: InitAllocate    ! Allocate arrays. PUBLIC FOR UNIT TESTING ONLY
      procedure , private :: InitReadNML     ! Read in namelist
      procedure , private :: InitHistory     ! Initialize history
      procedure , private :: InitCold        ! Initialize arrays for a cold-start
