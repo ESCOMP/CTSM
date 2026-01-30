@@ -946,9 +946,9 @@ which processes the raw land use data from the THEMIS tool data sets
 </entry>
 
 <entry id="fates_lu_transition_logic" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4,5,6,7,8,9">
+        group="clm_inparm" valid_values="1,2,3,4,5,6,7,8,9">
 Select the logic for land use class transitions.
-Allowed values are 0 (off) and  1-9. See the FATES user guide for an explanation of the options.
+Allowed values are  1-9. See the FATES user guide for an explanation of the options.
 (Only relevant if FATES with land use is on)
 </entry>
 
