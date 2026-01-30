@@ -108,7 +108,7 @@ module decompMod
   type(clump_type),public, allocatable :: clumps(:)
 
   ! ---global sizes
-  integer,public :: nglob_x, nglob_y ! global sizes on the full 2D grid
+  integer,public :: nglob_x = -1, nglob_y  = -1 ! global sizes on the full 2D grid
   integer,public :: nclumps          ! total number of clumps across all processors
   integer,public :: numg             ! total number of gridcells on all procs
   integer,public :: numl             ! total number of landunits on all procs
