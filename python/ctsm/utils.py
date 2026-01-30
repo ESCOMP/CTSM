@@ -206,7 +206,7 @@ def write_output(file, file_in, file_out, file_type):
     )
 
     # mode 'w' overwrites file if it exists
-    file.to_netcdf(path=file_out, mode="w", format="NETCDF3_64BIT")
+    file.to_netcdf(path=file_out, mode="w", format="NETCDF4_CLASSIC")
     logger.info("Successfully created: %s", file_out)
     file.close()
 

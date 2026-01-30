@@ -35,6 +35,7 @@ module CNPhenologyMod
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
   use CropType                        , only : crop_type
+  use CropType                        , only : cphase_not_planted
   use CropType                        , only : cphase_planted, cphase_leafemerge
   use CropType                        , only : cphase_grainfill, cphase_harvest
   use pftconMod                       , only : pftcon
@@ -69,6 +70,8 @@ module CNPhenologyMod
   public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
   public :: get_swindow
   public :: was_sown_in_this_window
+  public :: CropPhaseTransitionBiomass
+  public :: CropPhase_OnePatch
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -146,6 +149,7 @@ module CNPhenologyMod
   real(r8)         :: min_gddmaturity = 1._r8     ! Weird things can happen if gddmaturity is tiny
   logical,  public :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
   logical,  public :: use_mxmat = .true.           ! If true, ignore crop maximum growing season length
+  logical,  private :: suppress_gddmaturity_warning = .false. ! If true, suppress warning when using min_gddmaturity
 
   ! For use with adapt_cropcal_rx_cultivar_gdds .true.
   real(r8), parameter :: min_gdd20_baseline = 0._r8  ! If gdd20_baseline_patch is ≤ this, do not consider baseline.
@@ -200,7 +204,7 @@ contains
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
                            min_critical_dayl_method, generate_crop_gdds, &
-                           use_mxmat
+                           use_mxmat, suppress_gddmaturity_warning
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -226,6 +230,7 @@ contains
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
     call shr_mpi_bcast (generate_crop_gdds,          mpicom)
     call shr_mpi_bcast (use_mxmat,                   mpicom)
+    call shr_mpi_bcast (suppress_gddmaturity_warning, mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -2054,6 +2059,7 @@ contains
     real(r8) avg_dayspyr ! average number of days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    real(r8) cphase_orig  ! crop phase before updating
     logical has_rx_sowing_date ! does the crop have a single sowing date instead of a window?
     logical is_in_sowing_window ! is the crop in its sowing window?
     logical is_end_sowing_window ! is it the last day of the crop's sowing window?
@@ -2069,6 +2075,7 @@ contains
     logical fake_harvest  ! Dealing with incorrect Dec. 31 planting
     logical did_plant_prescribed_today    ! Was the crop sown today?
     logical vernalization_forces_harvest ! Was the crop killed by freezing during vernalization?
+    logical is_mature  ! Has the crop reached maturity?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2092,7 +2099,8 @@ contains
 
          fertnitro         =>    crop_inst%fertnitro_patch                     , & ! Input:  [real(r8) (:) ]  fertilizer nitrogen
          hui               =>    crop_inst%hui_patch                           , & ! Input:  [real(r8) (:) ]  crop patch heat unit index (growing degree-days); set to 0 at sowing and accumulated until harvest
-         leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
+         max_tlai          =>    crop_inst%max_tlai_patch                      , & ! Input:  [real(r8) (:) ]  maximum total projected leaf area seen this season (m2/m2); set to 0 at sowing and tracked until harvest
+         gddtsoi           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
@@ -2154,6 +2162,8 @@ contains
          ! Should never be saved as zero, but including this so it's initialized just in case
          harvest_reason = 0._r8
 
+         cphase_orig = cphase(p)
+
          ! ---------------------------------
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
@@ -2180,6 +2190,27 @@ contains
                cnveg_state_inst%gddmaturity_thisyr(p,s) = -1._r8
                crop_inst%gddaccum_thisyr_patch(p,s) = -1._r8
                crop_inst%hui_thisyr_patch(p,s) = -1._r8
+               crop_inst%max_tlai_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%frootc_harvest_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livecrootc_harvest_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%livestemc_harvest_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%leafc_harvest_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_emergence_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_anthesis_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_maturity_thisyr_patch(p,s) = -1._r8
+               crop_inst%reprc_harvest_thisyr_patch(p,s) = -1._r8
                crop_inst%sowing_reason_perharv_patch(p,s) = -1._r8
                crop_inst%harvest_reason_thisyr_patch(p,s) = -1._r8
                do k = repr_grain_min, repr_grain_max
@@ -2444,6 +2475,7 @@ contains
                 mxmat = 999
             end if
 
+            is_mature = .false.
             if (jday == 1 .and. croplive(p) .and. idop(p) == 1 .and. sowing_count(p) == 0) then
                 ! BACKWARDS_COMPATIBILITY(ssr, 2022-02-03): To get rid of crops incorrectly planted in last time step of Dec. 31. That was fixed in commit dadbc62 ("Call CropPhenology regardless of doalb"), but this handles restart files with the old behavior. fake_harvest ensures that outputs aren't polluted.
                 do_harvest = .true.
@@ -2482,7 +2514,8 @@ contains
                harvest_reason = HARVEST_REASON_VERNFREEZEKILL
             else
                ! Original harvest rule
-               do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat
+               is_mature = hui(p) >= gddmaturity(p)
+               do_harvest = is_mature .or. idpp >= mxmat
 
                ! Always harvest the day before the next prescribed sowing date, if still alive.
                ! WARNING: This implementation assumes that prescribed sowing dates don't change over time!
@@ -2490,7 +2523,7 @@ contains
                ! sowing dates.
                do_harvest = do_harvest .or. do_plant_prescribed_tomorrow
 
-               if (hui(p) >= gddmaturity(p)) then
+               if (is_mature) then
                    harvest_reason = HARVEST_REASON_MATURE
                else if (idpp >= mxmat) then
                    harvest_reason = HARVEST_REASON_MAXSEASLENGTH
@@ -2505,8 +2538,11 @@ contains
             ! phase. However, despite these differences: if you make changes to the
             ! following conditionals, you should also check to see if you should make
             ! similar changes in CropPhase.
-            if ((.not. do_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
+            if ((.not. do_harvest) .and. gddtsoi(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat) then
                cphase(p) = cphase_leafemerge
+               if (cphase(p) /= cphase_orig) then
+                  call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst)
+               end if
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
                   onset_counter(p) = dt
@@ -2532,6 +2568,14 @@ contains
                ! changes to the offset subroutine below
 
             else if (do_harvest) then
+               cphase(p) = cphase_harvest
+
+               ! Unlike other calls of CropPhaseTransitionBiomass(), we don't need a check for
+               ! cphase(p) /= cphase_orig here. This is because do_harvest already implies we're at
+               ! a phase transition: "cphase(p) isn't cphase_harvest but now it should be."
+               call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature, &
+                 cnveg_state_inst%huileaf_patch(p), cnveg_state_inst%huigrain_patch(p))
+
                ! Don't update these if you're just harvesting because of incorrect Dec.
                ! 31 planting
                if (.not. fake_harvest) then
@@ -2546,10 +2590,32 @@ contains
                   crop_inst%sowing_reason_perharv_patch(p, harvest_count(p)) = real(crop_inst%sowing_reason_patch(p), r8)
                   crop_inst%sowing_reason_patch(p) = -1 ! "Reason for most recent sowing of this patch." So in the line above we save, and here we reset.
                   crop_inst%harvest_reason_thisyr_patch(p, harvest_count(p)) = harvest_reason
+                  crop_inst%max_tlai_thisyr_patch(p, harvest_count(p)) = crop_inst%max_tlai_patch(p)
+
+                  ! Crop phase transition biomass sizes
+                  crop_inst%frootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_emergence_patch(p)
+                  crop_inst%frootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_anthesis_patch(p)
+                  crop_inst%frootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_maturity_patch(p)
+                  crop_inst%frootc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%frootc_harvest_patch(p)
+                  crop_inst%livecrootc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_emergence_patch(p)
+                  crop_inst%livecrootc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_anthesis_patch(p)
+                  crop_inst%livecrootc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_maturity_patch(p)
+                  crop_inst%livecrootc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%livecrootc_harvest_patch(p)
+                  crop_inst%livestemc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_emergence_patch(p)
+                  crop_inst%livestemc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_anthesis_patch(p)
+                  crop_inst%livestemc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_maturity_patch(p)
+                  crop_inst%livestemc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%livestemc_harvest_patch(p)
+                  crop_inst%leafc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_emergence_patch(p)
+                  crop_inst%leafc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_anthesis_patch(p)
+                  crop_inst%leafc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_maturity_patch(p)
+                  crop_inst%leafc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%leafc_harvest_patch(p)
+                  crop_inst%reprc_emergence_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_emergence_patch(p)
+                  crop_inst%reprc_anthesis_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_anthesis_patch(p)
+                  crop_inst%reprc_maturity_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_maturity_patch(p)
+                  crop_inst%reprc_harvest_thisyr_patch(p, harvest_count(p)) = crop_inst%reprc_harvest_patch(p)
                endif
 
                croplive(p) = .false.     ! no re-entry in greater if-block
-               cphase(p) = cphase_harvest
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
                   offset_flag(p) = 1._r8
                   offset_counter(p) = dt
@@ -2580,6 +2646,9 @@ contains
 
             else if (hui(p) >= huigrain(p)) then
                cphase(p) = cphase_grainfill
+               if (cphase(p) /= cphase_orig) then
+                  call CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst)
+               end if
                bglfr(p) = 1._r8/(leaf_long(ivt(p))*avg_dayspyr*secspday)
             end if
 
@@ -2629,13 +2698,7 @@ contains
     ! !DESCRIPTION:
     ! Get the current phase of each crop patch.
     !
-    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
-    ! CropType. The returned values in crop_phase are only valid for patches where
-    ! croplive is true; the values are undefined where croplive is false and should not be
-    ! used there!
-    !
-    ! This has logic similar to that in CropPhenology. If you make changes here, you
-    ! should also check if similar changes need to be made in CropPhenology.
+    ! See CropPhase_OnePatch for more information.
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2652,35 +2715,151 @@ contains
     !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(crop_phase) == [bounds%endp]), sourcefile, __LINE__)
 
-    associate( &
-         croplive =>    crop_inst%croplive_patch        , & ! Input: [logical  (:) ]  Flag, true if planted, not harvested
-         hui      =>    crop_inst%hui_patch             , & ! Input: [real(r8) (:) ]  gdd since planting (gddplant)
-         leafout  =>    crop_inst%gddtsoi_patch         , & ! Input: [real(r8) (:) ]  gdd from top soil layer temperature
-         huileaf  =>    cnveg_state_inst%huileaf_patch  , & ! Input: [real(r8) (:) ]  heat unit index needed from planting to leaf emergence
-         huigrain =>    cnveg_state_inst%huigrain_patch   & ! Input: [real(r8) (:) ]  same to reach vegetative maturity
-         )
-
     do fp = 1, num_pcropp
        p = filter_pcropp(fp)
-
-       if (croplive(p)) then
-          ! Start with cphase_planted, but this might get changed in the later
-          ! conditional blocks.
-          crop_phase(p) = cphase_planted
-          if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p)) then
-             crop_phase(p) = cphase_leafemerge
-          else if (hui(p) >= huigrain(p)) then
-             ! Since we know croplive is true, any hui greater than huigrain implies that
-             ! we're in the grainfill stage: if we were passt gddmaturity then croplive
-             ! would be false.
-             crop_phase(p) = cphase_grainfill
-          end if
-       end if
+       call CropPhase_OnePatch( &
+            crop_phase(p), &
+            crop_inst%croplive_patch(p), &
+            crop_inst%gddtsoi_patch(p), &
+            crop_inst%hui_patch(p), &
+            cnveg_state_inst%huileaf_patch(p), &
+            cnveg_state_inst%huigrain_patch(p))
     end do
 
-    end associate
-
   end subroutine CropPhase
+
+
+  !-----------------------------------------------------------------------
+  subroutine CropPhase_OnePatch( &
+       crop_phase, croplive, gddtsoi, hui, huileaf, huigrain &
+       )
+    !
+    ! !DESCRIPTION:
+    ! Get the current phase of a crop patch.
+    !
+    ! The returned values (in crop_phase) are from the set of cphase_* values defined in
+    ! CropType. The returned values in crop_phase are only valid for patches where
+    ! croplive is true; the values are undefined where croplive is false and should not be
+    ! used there!
+    !
+    ! This has logic similar to that in CropPhenology. If you make changes here, you
+    ! should also check if similar changes need to be made in CropPhenology.
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(inout) :: crop_phase  ! In/out: [real(r8)]  crop phase
+    logical , intent(in) :: croplive  ! Input: [logical]  Flag, true if planted, not harvested
+    real(r8), intent(in) :: gddtsoi   ! Input: [real(r8)]  gdd from top soil layer temperature
+    real(r8), intent(in) :: hui       ! Input: [real(r8)]  gdd since planting (gddplant)
+    real(r8), intent(in) :: huileaf   ! Input: [real(r8)]  heat unit index needed from planting to leaf emergence
+    real(r8), intent(in) :: huigrain  ! Input: [real(r8)]  same to reach vegetative maturity
+
+    if (croplive) then
+       ! Start with cphase_planted, but this might get changed in the later
+       ! conditional blocks.
+       crop_phase = cphase_planted
+       if (gddtsoi >= huileaf .and. hui < huigrain) then
+          crop_phase = cphase_leafemerge
+       else if (hui >= huigrain) then
+          ! Since we know croplive is true, any hui greater than huigrain implies that
+          ! we're in the grainfill stage: if we were past gddmaturity then croplive
+          ! would be false.
+          crop_phase = cphase_grainfill
+       end if
+    end if
+  end subroutine CropPhase_OnePatch
+
+
+  !-----------------------------------------------------------------------
+  subroutine CropPhaseTransitionBiomass(crop_inst, p, cnveg_carbonstate_inst, is_mature, huileaf, huigrain)
+    !
+    ! !DESCRIPTION:
+    ! Update crop-phase-transition biomass history outputs for a patch. Should only be called AT
+    ! the phase transition---i.e., immediately after cphase is changed.
+    !
+    ! !USES:
+    use CNVegCarbonStateType, only : cnveg_carbonstate_type
+    !
+    ! !ARGUMENTS:
+    class(crop_type) :: crop_inst
+    integer , intent(in) :: p  ! Patch index
+    type(cnveg_carbonstate_type) , intent(in) :: cnveg_carbonstate_inst
+    logical , intent(in), optional :: is_mature
+    real(r8), intent(in), optional :: huileaf   ! fractional maturity threshold for leaf emergence
+    real(r8), intent(in), optional :: huigrain  ! fractional maturity threshold for grain fill to start
+    !
+    ! !LOCALS:
+    real(r8) :: frootc, livecrootc, livestemc, leafc, reprc
+    logical  :: called_at_harvest  ! whether crop_inst subroutine is being called at time of harvest
+    real(r8) :: actual_cphase  ! the latest crop phase (not including "harvest") the crop has reached
+
+    ! If we're calling at harvest, crop_inst%cphase_patch will not be informative as to which crop
+    ! development phases the crop actually reached during the growing season. Thus, we call
+    ! CropPhase_OnePatch() to get "actual" crop phase.
+    called_at_harvest = crop_inst%cphase_patch(p) == cphase_harvest
+    if (called_at_harvest) then
+       if (.not. (present(huileaf) .and. present(huigrain) .and. present(is_mature))) then
+          call endrun( msg=' ERROR: When called at harvest, CropPhaseTransitionBiomass() needs arguments is_mature, huileaf, and huigrain')
+       end if
+       call CropPhase_OnePatch(actual_cphase, crop_inst%croplive_patch(p), &
+         crop_inst%gddtsoi_patch(p), crop_inst%hui_patch(p), huileaf, huigrain)
+
+       ! Sense checks
+       if (is_mature) then
+          call shr_assert(actual_cphase == cphase_grainfill)
+       end if
+       if (actual_cphase < cphase_grainfill) then
+          call shr_assert(.not. is_mature)
+       end if
+    else
+       actual_cphase = crop_inst%cphase_patch(p)
+    end if
+
+    call shr_assert(actual_cphase >= cphase_not_planted, msg="cphase < cphase_not_planted", &
+       file=__FILE__, line=__LINE__)
+    call shr_assert(actual_cphase <= cphase_harvest, msg="cphase > cphase_harvest", &
+       file=__FILE__, line=__LINE__)
+
+    frootc = cnveg_carbonstate_inst%frootc_patch(p)
+    livecrootc = cnveg_carbonstate_inst%livecrootc_patch(p)
+    livestemc = cnveg_carbonstate_inst%livestemc_patch(p)
+    leafc = cnveg_carbonstate_inst%leafc_patch(p)
+    ! sum over all grain tisues and destinations
+    reprc = sum(cnveg_carbonstate_inst%reproductivec_patch(p,:))
+
+    if (actual_cphase >= cphase_leafemerge .and. crop_inst%frootc_emergence_patch(p) < 0._r8) then
+       crop_inst%frootc_emergence_patch(p) = frootc
+       crop_inst%livecrootc_emergence_patch(p) = livecrootc
+       crop_inst%livestemc_emergence_patch(p) = livestemc
+       crop_inst%leafc_emergence_patch(p) = leafc
+       crop_inst%reprc_emergence_patch(p) = reprc
+    end if
+
+    if (actual_cphase >= cphase_grainfill .and. crop_inst%frootc_anthesis_patch(p) < 0._r8) then
+       crop_inst%frootc_anthesis_patch(p) = frootc
+       crop_inst%livecrootc_anthesis_patch(p) = livecrootc
+       crop_inst%livestemc_anthesis_patch(p) = livestemc
+       crop_inst%leafc_anthesis_patch(p) = leafc
+       crop_inst%reprc_anthesis_patch(p) = reprc
+    end if
+
+    ! Don't need >= etc. here because harvest is the maximum (final) phase (as checked above)
+    if (called_at_harvest) then
+       crop_inst%frootc_harvest_patch(p) = frootc
+       crop_inst%livecrootc_harvest_patch(p) = livecrootc
+       crop_inst%livestemc_harvest_patch(p) = livestemc
+       crop_inst%leafc_harvest_patch(p) = leafc
+       crop_inst%reprc_harvest_patch(p) = reprc
+
+       if (is_mature) then
+          crop_inst%frootc_maturity_patch(p) = frootc
+          crop_inst%livecrootc_maturity_patch(p) = livecrootc
+          crop_inst%livestemc_maturity_patch(p) = livestemc
+          crop_inst%leafc_maturity_patch(p) = leafc
+          crop_inst%reprc_maturity_patch(p) = reprc
+       end if
+    end if
+
+  end subroutine CropPhaseTransitionBiomass
 
 
   !-----------------------------------------------------------------------
@@ -2932,7 +3111,7 @@ contains
 
       if (gddmaturity(p) < min_gddmaturity) then
          if (use_cropcal_rx_cultivar_gdds .or. generate_crop_gdds) then
-             if (did_rx_gdds) then
+             if (did_rx_gdds .and. .not. suppress_gddmaturity_warning) then
                  write(iulog,*) 'Some patch with ivt ',ivt(p),' has rx gddmaturity ',gddmaturity(p),'; using min_gddmaturity instead (',min_gddmaturity,')'
              end if
              gddmaturity(p) = min_gddmaturity
@@ -2954,6 +3133,9 @@ contains
       do k = 1, nrepr
          arepr(p,k) = 0._r8
       end do
+
+      ! Initialize other things in crop_inst
+      call crop_inst%InitPlantCrop(p)
 
     end associate
 

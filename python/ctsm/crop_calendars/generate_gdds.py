@@ -313,7 +313,7 @@ def main(
             for var in template_ds:
                 if "sdate" in var:
                     template_ds = template_ds.drop(var)
-            template_ds.to_netcdf(path=outfile, format="NETCDF3_CLASSIC")
+            template_ds.to_netcdf(path=outfile, format="NETCDF4_CLASSIC")
             template_ds.close()
 
             # Add global attributes
@@ -332,7 +332,7 @@ def main(
                 gdd_maps_ds["time_bounds"] = sdates_rx.time_bounds
 
             # Save cultivar GDDs
-            gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF3_CLASSIC")
+            gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF4_CLASSIC")
 
         save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx)
 
