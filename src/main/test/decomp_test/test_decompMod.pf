@@ -173,4 +173,40 @@ contains
 
   end subroutine test_calc_globalxy_fails
 
+  @Test
+  subroutine test_calc_globalxy_fails_when_not_allocated(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    call decompmod_clean()
+    g = 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails_when_not_allocated
+
+  @Test
+  subroutine test_calc_ijindices_from_full_global_index_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: gidx ! Global idnex
+    integer :: i, j
+
+    ! IF gidx is less than 1 i and j should be undefined as -1
+    gidx = 0
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+    ! IF gidx is greater than grid size  i and j should be undefined as -1
+    gidx = ni*nj + 1
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_ijindices_from_full_global_index_fails
+
 end module test_decompMod
