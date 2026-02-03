@@ -667,22 +667,21 @@ The numerical solution for the fluxes of momentum, sensible heat, and water vapo
 #. An initial guess for the Monin-Obukhov length :math:`L` is obtained
    from the bulk Richardson number using :eq:`5.46` and :eq:`5.48`.
 
-#. The following system of equations (4-10) is iterated three times:
+#. The following system of equations is iterated three times:
 
-#. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
+   #. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Potential temperature scale :math:`\theta _{*}`  (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
+   #. Potential temperature scale :math:`\theta _{*}`  (:eq:`5.37` , :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Humidity scale :math:`q_{*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
+   #. Humidity scale :math:`q_{*}`  (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
-#. Roughness lengths for sensible :math:`z_{0h,\, g}`  and latent heat
-   :math:`z_{0w,\, g}`  (:eq:`5.81a` , :eq:`5.81b` , :eq:`5.82`)
+   #. Roughness lengths for sensible :math:`z_{0h,\, g}`  and latent heat :math:`z_{0w,\, g}`  (:eq:`5.81a` , :eq:`5.81b` , :eq:`5.82`)
 
-#. Virtual potential temperature scale :math:`\theta _{v*}`  ( :eq:`5.17`)
+   #. Virtual potential temperature scale :math:`\theta _{v*}`  ( :eq:`5.17`)
 
-#. Wind speed including the convective velocity, :math:`V_{a}`  ( :eq:`5.24`)
+   #. Wind speed including the convective velocity, :math:`V_{a}`  ( :eq:`5.24`)
 
-#. Monin-Obukhov length :math:`L` (:eq:`5.49`)
+   #. Monin-Obukhov length :math:`L` (:eq:`5.49`)
 
 #. Aerodynamic resistances :math:`r_{am}` , :math:`r_{ah}` , and
    :math:`r_{aw}`  (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
