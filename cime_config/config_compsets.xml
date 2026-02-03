@@ -703,6 +703,21 @@
 
   <!-- Latest CLM version -->
   <compset>
+    <alias>I1850Clm60SpG</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm60SpGa</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_CISM2%AIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm60SpGag</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>I1850Clm60BgcCropG</alias>
     <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
     <science_support grid="f09_g17"/>
@@ -729,6 +744,11 @@
   <compset>
     <alias>I1850Clm50SpRsGag</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm60SpRsGag</alias>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
   <compset>
