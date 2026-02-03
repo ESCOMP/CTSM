@@ -603,6 +603,24 @@ where :math:`\Phi_{air}` (mm\ :sup:`3` mm\ :sup:`-3`) is the air filled pore spa
 
 where :math:`T_{1}` (K) is the temperature of the top soil layer and :math:`T_{f}` (K) is the freezing temperature of water (:numref:`Table Physical Constants`).
 
+In :eq:`5.67`, if :math:`q_{atm} - q_{soil} < 0`, then :math:`r_{soil}=0`. Furthermore, if :math:`q_{atm} - q_{soil} < 0` and :math:`T_{g} > T_{atm,\,dp}`, then :math:`E_{g}=E_{soil}=E_{sno}=E_{h2osfc}=0`.
+
+:math:`T_{atm,\, dp}` is the dewpoint temperature at the forcing height (K) determined from Equation (7) in :ref:`Lawrence (2005) <Lawrence2005>`
+
+.. math::
+   :label: 5.81aa
+
+   T_{atm,\, dp} = \frac{B_{1} \ln(e_{atm}/C_{1})} {A_{1}-\ln(e_{atm}/C_{1})} + T_{f}
+
+where :math:`e_{atm}` is the vapor pressure at the forcing height (Pa) restricted to be no less than the value corresponding to 1% relative humidity
+
+.. math::
+   :label: 5.81ab
+
+   e_{atm} = \max(\frac{q_{atm} P_{atm}} {q_{atm}+0.622}, 0.01e_{atm,\, sat})
+
+where :math:`e_{atm,\, sat}` is the saturated vapor pressure at the forcing height (section :numref:`Saturation Vapor Pressure`).  Over liquid water (:math:`T_{g} >= T_{f}`), :math:`A_{1}=17.625`, :math:`B_{1}=243.04`, :math:`C_{1}=610.94` (:ref:`Lawrence (2005) <Lawrence2005>`), and over ice (:math:`T_{g} < T_{f}`), :math:`A_{1}=22.587`, :math:`B_{1}=273.86`, :math:`C_{1}=611.21` (:ref:`Alduchov and Eskridge (1996) <AlduchovandEskridge1996>`).
+
 The roughness lengths used to calculate :math:`r_{am}`, :math:`r_{ah}`, and :math:`r_{aw}` are :math:`z_{0m} =z_{0m,\, g}`, :math:`z_{0h} =z_{0h,\, g}`, and :math:`z_{0w} =z_{0w,\, g}`. The displacement height :math:`d=0`. The momentum roughness length is :math:`z_{0m,\, g} =0.0023` for glaciers without snow (:math:`f_{sno} =0) {\rm }`, and :math:`z_{0m,\, g} =0.00085` for bare soil surfaces without snow (:math:`f_{sno} =0) {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`).
 
 For bare soil and glaciers with snow ( :math:`f_{sno} > 0` ), the momentum roughness length is evaluated based on accumulated snow melt :math:`M_{a} {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`). For :math:`M_{a} >=1\times 10^{-5}`
@@ -649,7 +667,7 @@ The numerical solution for the fluxes of momentum, sensible heat, and water vapo
 #. An initial guess for the Monin-Obukhov length :math:`L` is obtained
    from the bulk Richardson number using :eq:`5.46` and :eq:`5.48`.
 
-#. The following system of equations is iterated three times:
+#. The following system of equations (4-10) is iterated three times:
 
 #. Friction velocity :math:`u_{*}`  (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
@@ -696,6 +714,8 @@ where
    :label: 5.85
 
    \frac{dq_{g} }{dT_{g} } =\left(1-f_{sno} -f_{h2osfc} \right)\alpha _{soil} \frac{dq_{sat}^{T_{soil} } }{dT_{soil} } +f_{sno} \frac{dq_{sat}^{T_{sno} } }{dT_{sno} } +f_{h2osfc} \frac{dq_{sat}^{T_{h2osfc} } }{dT_{h2osfc} } .
+
+Note that :math:`\frac{\partial E_{g} }{\partial T_{g} } = 0` if :math:`q_{atm} - q_{soil} < 0` and :math:`T_{g} > T_{atm,\, dp}`. 
 
 The partial derivatives :math:`\frac{\partial r_{ah} }{\partial T_{g} }` and :math:`\frac{\partial r_{aw} }{\partial T_{g} }`, which cannot be determined analytically, are ignored for :math:`\frac{\partial H_{g} }{\partial T_{g} }` and :math:`\frac{\partial E_{g} }{\partial T_{g} }`.
 
