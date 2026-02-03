@@ -603,7 +603,7 @@ where :math:`\Phi_{air}` (mm\ :sup:`3` mm\ :sup:`-3`) is the air filled pore spa
 
 where :math:`T_{1}` (K) is the temperature of the top soil layer and :math:`T_{f}` (K) is the freezing temperature of water (:numref:`Table Physical Constants`).
 
-In :eq:`5.67`, if :math:`q_{atm} - q_{soil} < 0`, then :math:`r_{soil}=0`. Furthermore, if :math:`q_{atm} - q_{soil} < 0` and :math:`T_{g} > T_{atm,\,dp}`, then :math:`E_{g}=E_{soil}=E_{sno}=E_{h2osfc}=0`.
+In :eq:`5.67`, if :math:`q_{atm} - q_{soil} < 0`, then :math:`r_{soil}=0`. Furthermore, if :math:`q_{atm} - q_{soil} < 0` and :math:`T_{g} > T_{atm,\,dp}`, then :math:`E_{g}=E_{soil}=E_{sno}=E_{h2osfc}=0`. This limits sporadic large dew fluxes that can result in unrealistically high surface temperatures passed to the atmospheric model (The RRTMGP component in particular, which returns an error and stops the model if the surface temperature is greater than 355K).  See discussion beginning 12/30/2025 in https://github.com/ESCOMP/CTSM/issues/3589).
 
 :math:`T_{atm,\, dp}` is the dewpoint temperature at the forcing height (K) determined from Equation (7) in :ref:`Lawrence (2005) <Lawrence2005>`
 
