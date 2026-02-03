@@ -1,4 +1,1672 @@
 ===============================================================
+Tag name: ctsm5.4.015
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Feb  3 12:29:48 AM MST 2026
+One-line Summary: Update CISM to latest version with answer changes
+
+Purpose and description of changes
+----------------------------------
+
+Update the CISM submodule to the latest tag used in cesm3_0_beta0b. This includes cismwrap_2_2_012 and cismwrap_2_2_013, both of which includes answer changes for CISM due to changes in namelist defaults. Add a new test for running both Antarctic and Greenland ice sheets. Add new compsets for CISM with Clm60.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+ Fixes #3731 -- Add a CISM test for both AIS and GIS
+ Fixes #3732 -- Add CISM compsets for Clm60 physics
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+   Added a test that runs both the Antarctic Ice Sheet (AIS) and Greenland Ice Sheet (GIS)
+
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, for compsets using CISM
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: compsets with CISM active (end in G, Ga, or Gag)
+    - what platforms/compilers: all
+    - nature of change: new climate over glaciers
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cism
+   cism to cismwrap_2_2_013
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #3733 -- Update to cismwrap_2_2_013
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.014
+Originator(s): mvdebolskiy
+Date: Thu Jan 29 03:28:03 PM MST 2026
+One-line Summary: Fix for xm2 and revise logic for excess ice melt
+
+Purpose and description of changes
+----------------------------------
+
+A bug fix in excess ice melt calculation. Previously, we have set
+incorrectly xm2=xm-h2osoi_ice after h2osoi_ice has already been updated.
+This resulted in extra heat being available to spend on melting excess_ice
+since when all h2osoi_ice has been melted (xm2=xm). This fixed now, in
+addition Phasechange_beta subroutine in SoilTemperatureMod has been
+renamed to Phasechange by swensosc's suggestion.
+
+The changes are generally small and only to a few points, so NOT marking it as a
+significant change in answers.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+Fixes #3678 -- Logic error in excess ice melt calculation
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  The changes in short simulations are negligible, but a few points can show larger differences if run long enough. The following lists the min and max differences for a 40 year simulation.
+      https://github.com/ESCOMP/CTSM/pull/3718#issuecomment-3810263334
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! when use_excess_ice is TRUE
+
+  Summarize any changes to answers, i.e.,
+      - any configuration with use_excess_ice=.true.
+      - larger than roundoff changes in the soil thermal and
+        moisture state in gridcells where excess ice is present
+        in the soil at the start of the simulations. Most of the
+        most of the gridcells will have little differences (1e-6),
+        however, the difference will grow for longer (>10y) runs.
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate (from https://github.com/NCAR/LMWG_dev)
+       - issue number(s):
+         - NCAR/LMWG_dev#140
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+
+   https://github.com/ESCOMP/CTSM/pull/3718
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.013
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Jan 28 12:24:02 AM MST 2026
+One-line Summary: Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
+
+Purpose and description of changes
+----------------------------------
+
+Point to tweaked C14 Isotope file so that the latitude line is straight and regrid doesn't change depending on processor count.
+
+Also bring in a new ne30 finidat (Initial Conditions or IC) file so that the Greenland snow hole won't exist in ne30 initial conditions.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+   Fixes #3708 -- Patch Greenland snow "hole"
+   Fixes #3716 -- Use "tweaked" lat/lon C14 dataset so that the lattitude line will be straight and answers same on PE layout change
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   ONLY the ne30 IC file was updated, so this doesn't fix other resolutions
+   And the datm forcing still has the problem of too low snow over Greenland
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Updated: stream_fldfilename_atm_c14 and stream_meshfile_atm_c14
+   Updated: finidat for ne30np4.pg3 grid (use the BgcCrop file for both BGC and SP cases)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Removed some expected fails that have been passing
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! for f10 ciso cases, and ne30.pg3 cases
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: 
+       minor for f10 Carbon Isotope C14 (the latitude line is straightened)
+       New IC for ne30.pg3 cases, so startup is different
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   https://github.com/ESCOMP/CTSM/pull/3711 "ne30 IC to patch Greenland snow hole, Tweaked C14 isotope file"
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.012
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Jan 26 03:13:02 PM MST 2026
+One-line Summary: Fix C-balance error for partly emerged crops
+
+Purpose and description of changes
+----------------------------------
+
+ In CNPhenology, to the section "plant had emerged before harvest" I added a subsection "plant partly emerged from the ground" that repeats the code from the "else" section just after that's labeled "plant never emerged from the ground."
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #3678
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+    - Configurations: Four BASELINE tests show DIFFs. Three derecho_intel, one izumi_nag, all four I2000Clm60BgcCrop:
+ ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly BASELINE ctsm5.4.011: DIFF
+ ERS_Ly3.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel BASELINE ctsm5.4.011: DIFF
+ SMS_Ly2_PS.f19_g17.I2000Clm60BgcCrop.derecho_intel.clm-cropMonthOutput BASELINE ctsm5.4.011: DIFF
+ SMS_D_Ld65.f10_f10_mg37.I2000Clm60BgcCrop.izumi_nag.clm-FireLi2024GSWP BASELINE ctsm5.4.011: DIFF
+    - Nature of change: Potentially larger than roundoff (certainly in B-cases) but same climate and rare.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3702
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.011
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu Jan 22 04:01:52 PM MST 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+ Change some _U and _R history fields to be on by default PR #3667 by Keith Oleson
+ Update to cime version that fixes the check_input_data --download issue PR #3647 by Erik Kluzek; #3647 updated to cime6.1.145, while updating b4b-dev to master in this PR gets us to cime6.1.146.
+ Initial fixes to generate_gdd20_baseline PR #3543
+ Decomp mod unittest PR #3699
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ No issues were opened for the PRs listed above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3709
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.010
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Jan 21 11:49:59 AM MST 2026
+One-line Summary: Update cime to version that changes answers for ERI tests
+
+Purpose and description of changes
+----------------------------------
+
+This just updates the cime version to one that changes answers for ERI tests.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #3651 -- update to cime6.1.146 changes answers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+
+   The details of the ERI tests was changed, so that you can't compare to the previous baselines.
+   This means that it registers them as all failing the baseline compare with a DIFF
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (other than the ERI tests!)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only ERI tests
+    - what platforms/compilers: All
+    - nature of change: test details changed so can't be compared to the baseline
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cime
+   Update to cime6.1.146
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   https://github.com/ESCOMP/CTSM/pull/3698
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.009
+Originator(s): olyson (Keith Oleson)
+Date: Mon Jan 19 12:53:18 PM MST 2026
+One-line Summary: Dewpoint Temperature check for bare ground
+
+Purpose and description of changes
+----------------------------------
+
+Implement dewpoint temperature check for bare ground to fix RRTMG error
+
+Cecile Hannay reported an RRTMGP crash in this 4xCO2 experiment at year 37:
+
+NCAR/cesm_dev#246
+
+Output from placing write statements in the CAM radiation code show that it's a baresoil patch in
+a grid cell in the Arabian Penninsula. The bare soil patch occupies 99.28% of the gridcell.
+Solar and longwave forcing and absorbed solar don't appear to be unreasonable, but t_grnd is 358K.
+
+This bug fix eliminates dew flux (sets evaporation conductance to zero) x if t_grnd > forc_dewpoint, where forc_dewpoint is the dewpoint temperature at the forcing height.
+This prevents large spurious negative latent heat fluxes that increase heat flux into the soil and signficantly increase surface soil temperature (t_grnd) such that soil temperature > 355K, triggering a RRTMGP error.
+
+Contributors:
+-------------
+@swensosc , @wwieder , @slevis-lmwg , @dlawrenncar, ekluzek
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3589 355+ K land temperature triggers RRTMGP error
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   This is currently ONLY done for bare-soil, probably should be done for other landunits.
+
+Changes to documentation: None, but needs to be added
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   https://github.com/ESCOMP/CTSM/issues/3694
+   Documents making this a function added to QSat
+   This should especially be done when this is added for other landunit types
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! Almost ALL cases if run long enough
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+   climate (from https://github.com/NCAR/LMWG_dev)
+       - issue number(s): 135 and 136
+
+   URL for LDF diagnostics output used to validate new climate:
+
+     - ILAMB: https://webext.cgd.ucar.edu/I2000/Clm60SP_ctsmdew_1deg_Dew_2000/lnd/BUGFIX/_build_DEW/
+     - LDF: https://webext.cgd.ucar.edu/I2000/Clm60SP_ctsmdew_1deg_Dew_2000/lnd/BUGFIX/Clm60SP_ctsmdew_1deg_Dew_2000_2005_2019-Clm60SP_ctsmdew_1deg_Control_2000_2005_2019/setsIndex.html
+
+Standard diagnostics results are here
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3688 -- Implement dewpoint temperature check for bare ground to fix RRTMGP error   
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.008
+Originator(s): swensosc (Sean Swenson)
+Date: Mon Jan 12 11:19:38 PM MST 2026
+One-line Summary: Add a correction for oversaturated soil layers in SoilWaterMovement
+
+Purpose and description of changes
+----------------------------------
+
+Add a correction for oversaturated soil layers immediately after the soil water flux calculation in SoilWaterMovementMod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Second checkbox in #3879 -- placeholder issue soil water movement
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! Changes in most fields
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change (larger than roundoff/same climate)
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate (from https://github.com/NCAR/LMWG_dev)
+       - issue number: 132
+
+   URL for LMWG diagnostics output used to validate new climate:
+       - https://webext.cgd.ucar.edu/I20TR/ctsm5.4.004_bgc_f09_131_HIST/lnd/ctsm5.4.004_bgc_f09_Oversaturation_131b_HIST_1994_2023_vs_ctsm5.4.004_bgc_f09_131_HIST_1994_2023/website/
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3683 -- Oversaturation
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.007
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Jan  9 11:53:19 MST 2026
+One-line Summary: Update (irrigated_)rice grnfill and lfemerg
+
+Purpose and description of changes
+----------------------------------
+
+This brings the parameter file in line with what I used for my AGU 2025 simulations.
+- Increases grnfill from ~0.4 to 0.6.
+- Increases lfemerg from ~0.01 to 0.05.
+
+These changes should decrease rice yields.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- New clm6_0 paramfile: ctsm60_params.c260108.nc
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm60 compsets
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): At least larger than roundoff
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [ESCOMP/CTSM Pull Request #3686: ctsm5.4.007: Update (irrigated_)rice grnfill and lfemerg](https://github.com/ESCOMP/CTSM/pull/3686)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.006
+Originator(s): erik (Erik Kluzek)
+Date: Wed Jan  7 02:49:18 PM MST 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Bring in b4b-dev to master
+
+Some documentation updates: Update the ctsm5.4 What's New file with text around the Carbon isotopes
+Fixes to names and units of canopy turbulence variables.
+
+New CTSM Tool: compare_parmfiles to nicely compare CTSM NetCDF parameter files in a clear way
+
+New namelist option: hist_all_fields == TRUE flags to output ALL available history fields by default
+
+Test-mod updates: Add a test-mod so that transient ERI tests work
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Work on #2761 change README files to markdown
+  Fixes #3112 Updates to names and units of canopy turbulence vars
+  Fixes #29 Namelist option to run on all history fields, testmod for it
+  Fixes #3284 ERI tests fail for transient cases
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist item: hist_all_fields to output all history fields even if inactive
+
+Changes to documentation:
+   Some README type files updated to markdown and clarified
+   paramfile tools documentation updated
+   Fixes to names and units of canopy turbulence variables
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+   FatesColdAllVars -- testmod uses hist_all_fields==TRUE rather the explicitly listing all variables
+   all_outputs -- testmod uses hist_all_fields==TRUE to output all history fields
+   extra_outputs -- turn on more history options
+
+   add a IHistClm60BgcCropCrujra test with all_outputs for it
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3670 Update ctm5.4 What's new and some README files
+#3622 compare_parmfiles tool
+#3113 Fixes to names and units of canopy turbulence vars
+#2061 Add hist_all_fields to output ALL history fields by default
+#3645 Have mosart history output daily so that ERI transient tests work
+#3299 Testmod that allows transient ERI tests to work
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.005
+Originator(s): rgknox (Ryan Knox, LAWRENCE BERKELEY NATIONAL LABORATORY, rgknox@lbl.gov)
+Date: Fri Dec 19 11:33:00 AM MST 2025
+One-line Summary: FATES JSON parameter files
+
+Purpose and description of changes
+----------------------------------
+
+These changes accommodate a JSON format to the FATES parameter file.
+
+New documentation has been updated in the FATES User's Guide:
+https://fates-users-guide.readthedocs.io/en/latest/user/Parameter-File.html
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Work on #2126
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):  Please see documentation.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Yes, the FATES parameter file is now a different format.  Again, see documentation.
+
+Changes made to namelist defaults (e.g., changed parameter values): The path to the FATES default parameter file is now the file FATES version control, i.e src/fates/parameter_files/fates_params_default.json
+
+Changes to the datasets (e.g., parameter, surface or initial files): No values changed
+
+Changes to documentation: https://fates-users-guide.readthedocs.io/en/latest/user/users-guide.html
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+The API related to parameter I/O between FATES and CTSM is way less complicated. CTSM simply passes FATES the file-path to the parameter file, FATES handles the rest.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK compared against fates-sci.1.88.0_api.42.0.0-ctsm5.4.001
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+- The FATES JSON updates have B4B results in all configurations (i.e. no changes).
+- FATES tag sci.1.88.6_api.42.0.0, a key bug fix, generated subtle but non-signficant answer changes
+in non-SP and non-st3 FATES configurations: https://github.com/NGEET/fates/releases/tag/sci.1.88.6_api.42.0.0
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+fates from sci.1.88.0_api.42.0.0 to ... sci.1.89.0_api.43.0.0
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3570
+ https://github.com/NGEET/fates/pull/1493
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.004
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Dec 12 10:42:15 MST 2025
+One-line Summary: Update crop parameters and maturity requirements
+
+Purpose and description of changes
+----------------------------------
+
+Update crop parameters and maturity requirements.
+
+allconss:
+      [pft 23 (temperate_soybean)] 5.0 → 2.0
+      [pft 24 (irrigated_temperate_soybean)] 5.0 → 2.0
+
+arootf:
+      [pft 67 (sugarcane)] 0.05 → 0.1
+      [pft 68 (irrigated_sugarcane)] 0.05 → 0.1
+
+arooti:
+      [pft 67 (sugarcane)] 0.1 → 0.3
+      [pft 68 (irrigated_sugarcane)] 0.1 → 0.3
+
+fleafi:
+      [pft 17 (temperate_corn)] 0.6 → 0.75
+      [pft 18 (irrigated_temperate_corn)] 0.6 → 0.75
+
+laimx:
+      [pft 17 (temperate_corn)] 5.0 → 6.2
+      [pft 18 (irrigated_temperate_corn)] 5.0 → 6.2
+
+mxmat:
+      [pft 23 (temperate_soybean)] 150 → 180
+      [pft 24 (irrigated_temperate_soybean)] 150 → 180
+      [pft 41 (cotton)] 270 → 225
+      [pft 42 (irrigated_cotton)] 270 → 225
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+* New stream_fldfilename_cultivar_gdds for cropcals_rx(_adapt) true, except with GSWP3 tuning.
+* New clm6_0 paramfile.
+
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6_0 physics with crops
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): new climate
+
+
+Other details
+-------------
+
+Pull Requests that document the changes:
+- [ESCOMP/CTSM Pull Request #3662: ctsm5.4.004: Update crop parameters and maturity requirements](https://github.com/ESCOMP/CTSM/pull/3662)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.003
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu Dec 11 12:02:28 PM MST 2025
+One-line Summary: Merge post5.4 branch to master
+
+Purpose and description of changes
+----------------------------------
+
+Update namelist_defaults:
+- parameters for the li2024crujra fire method: PR Post 5.4 namelist updates #3626 by Will Wieder
+- snow_thermal_cond_glc_method to Sturm1997 for clm6: PR #3626 by Will Wieder
+- clm paramfile to ctsm60_params.c251124.nc for clm6: PR #3626 by Will Wieder
+- stream_fldfilename_cultivar_gdds and stream_fldFileName_gdd20_baseline to latest files: PR post-5.4.n00: New crop calendar inputs and updated params (omni02) #3618 by Sam Rabin
+- Update default NEON inputs to v4: PR #3626 by Will Wieder
+
+Update cismwrap_2_2_010 to cismwrap_2_2_011 and ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to ccs_config_cesm1.0.66: PR #3626 by Will Wieder
+
+Remove fsat effect on baf_peatf in the fire code and update the corresponding documentation in doc/source/tech_note/Fire/CLM50_Tech_Note_Fire.rst: PR #3626 by Will Wieder and Fang Li
+
+Fix for RRTMGP errors caused by high surface temperatures: PR #3643 by Keith Oleson
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Fixes #3589 355+ K land temperature triggers RRTMGP error, by Keith Oleson
+Fixes #3598 Change default snow_thermal_cond_glc_method, by Will Wieder
+Fixes #3608 Fire calibration for CLM6 release, by Will Wieder and Fang Li
+Fixes #3594 Update NEON data to v4, by Will Wieder
+Fixes #3321 Crop calendar inputs needed with CRU-JRA climate, by Sam Rabin
+Fixes #3658 Move c14_meshfile_none warning test to fatal error (resolves a build_namelist failure)
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Namelist defaults changes listed in "Purpose and description of changes"
+Changes to the datasets (e.g., parameter, surface or initial files):
+ References to new crop calendar inputs and new paramfile in "Purpose and description of changes"
+Changes to documentation:
+ Updates to documentation mentioned in "Purpose and description of changes"
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ I will mention here something that took effect with ctsm5.4.000 (today's discussion reminded me):
+ We made two history fields default inactive (VEGWPLN, VEGWPPD) to allow LII2* tests to pass the COMPARE_base_no_interp phase. The problem and suggested solution appear in issues #3617 #3620.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (the usual 2 tests expected to fail)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm60 due to updates to CLM6 and Clm50*G due to updated cism
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff, possibly new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: post-5.4.n02.ctsm5.4.000_HIST_test0 and an issue including links to diagnostics is expeced soon with most likely url https://github.com/NCAR/LMWG_dev/issues/130
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ cismwrap_2_2_010 to cismwrap_2_2_011
+ ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to ccs_config_cesm1.0.66
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3655
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.002
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Dec 10 03:35:12 PM MST 2025
+One-line Summary: Start using CMIP7 Carbon Isotope datasets
+
+Purpose and description of changes
+----------------------------------
+
+By default read in the cmip7 c13/c14 stream files rather than the previous cmip6 ones. Read in the cmip6 ones if CLM_CMIP_ERA=cmip6 and use_c13/use_c14 are on.
+
+Found problems with the "nn" nearest-neighbor interpolation in streams. Added a new test on Derecho
+to turn on nn for several of the streams. These problems go away when using ESMF-8.9.0 or later.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #182 -- c13/c14 isotope time-series is awkward for 1850 control (convert to streams file)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   CLM_CMIP_ERA also changes Carbon isotope streams from cmip6 or cmip7
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   CMIP7 Carbon Isoptope datasets are used when use_c13/c14 is on and CLM_CMIP_ERA==cmip7
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   cmip_era is now an attribute for C13/C14 timeseries files
+Changes to tests or testing:
+   Added stream input history output to the f09_ObscureStreams testmod
+   Added a new test with nn for streams
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! (Just when Carbon Isotopes and timeseries is turned on)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Any physics with use_c13/c14 on and use_c13_timeseries/c14_bombspike on, CLM_CMIP_ERA=cmip7
+    - what platforms/compilers: All
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): adjusted climate for C13/C14
+    Changes answers for clm4_5, clm5_0 and clm6_0 physics options when Carbon Isotopes are on
+    Doesn't change answers for non C13/C14 fields
+    Doesn't change answers if CLM_CMIP_ERA=cmip6
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #3634 -- CMIP7 Carbon Isotopes on by default
+
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.001
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Mon Dec  8 10:10:15 MST 2025
+One-line Summary: Merge b4b-dev
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev
+
+Includes these PRs:
+- [ESCOMP/CTSM Pull Request #3299: Add a testmod that allows transient ERI tests to work](https://github.com/ESCOMP/CTSM/pull/3299)
+- [ESCOMP/CTSM Pull Request #3627: Carbon isotopes in streams](https://github.com/ESCOMP/CTSM/pull/3627)
+- [ESCOMP/CTSM Pull Request #3640: Restructure Carbon Isotope streams for OpenMP](https://github.com/ESCOMP/CTSM/pull/3640)
+- [ESCOMP/CTSM Pull Request #3645: Fix eri transient jump tests by having mosart history daily by ekluzek](https://github.com/ESCOMP/CTSM/pull/3645)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [ESCOMP/CTSM Issue #3284: ERI tests fail for transient cases](https://github.com/ESCOMP/CTSM/issues/3284)
+- [ESCOMP/CTSM Issue #3483: aux_clm has no IHistClm60BgcCropCrujra tests](https://github.com/ESCOMP/CTSM/issues/3483)
+- [ESCOMP/CTSM Issue #3564: Update git-fleximod to v1.1.1](https://github.com/ESCOMP/CTSM/issues/3564)
+- [ESCOMP/CTSM Issue #3599: Update CDEPS to cdeps1.0.84 or later](https://github.com/ESCOMP/CTSM/issues/3599)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- New test ERI_D_Ld20.f10_f10_mg37.IHistClm60Bgc.izumi_nag.clm-default--clm-midDecStart--clm-allowTransientYearJump
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+List any git submodules updated:
+- mizuRoute: cesm-coupling.n03_v2.2.0 to v3.0.1
+- cime: cime6.1.128 to cime6.1.144
+- cmeps: cmeps1.1.20 cmeps1.1.24
+- cdeps: cdeps1.0.81 to cdeps1.0.84
+
+Pull Requests that document the changes:
+- [ESCOMP/CTSM Pull Request #3652: b4b-dev merge 2025-12-05](https://github.com/ESCOMP/CTSM/pull/3652)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.000
+Originator(s): slevis (Samuel Levis,UCAR/TSS), ekluzek (Erik Kluzek,UCAR/TSS)
+Date: Thu Dec  4 12:15:31 PM MST 2025
+One-line Summary: Merge alpha-ctsm5.4.CMIP7 to master
+
+Purpose and description of changes
+----------------------------------
+
+ Merging alpha-ctsm5.4.CMIP7 to master in preparation for the official ctsm5.4 release.
+
+ WhatsNewInCTSM5.4.md documents the updates from ctsm5.3.021 (the official ctsm5.3 release) to present and will be updated with the exact ctsm5.4 release tag in the near future, once we identify such tag.
+
+ Here we summarize updates from ctsm5.3.085 (the most recent tag) to ctsm5.4.000 (the current tag):
+ - Updating ALL the fsurdat/landuse files to version ctsm5.4, though this version is backwards compatible with ctsm5.3 datasets, so ctsm5.3 files can still be used.
+ - Updating "agricultural fire peak month" raw dataset, as well as the algorithm determining this field's dominant values in mksurfdata_esmf
+ - Future scenarios are done using the cmip6 ctsm5.3 surface datasets. The new XML variable CLM_CMIP_ERA controls this.
+ - A few other updates come in as well for clm6_0:
+   * New Initial Condition (IC) files
+   * New parameter file
+   * New crop calendar datasets
+   * Changes to fire parameters along with new fire_method "li2024crujra"
+   * New population density file
+
+Contributors: Sam Levis @slevis-lmwg, Peter Lawrence @lawrencepj1, Erik Kluzek @ekluzek, Will Wieder @wwieder, Keith Oleson @olyson, Sam Rabin @samsrabin, Fang Li @lifang0209
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2851 Update to CMIP7 LULCC forcings (umbrella issue with the main ctsm5.4 checklist)
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ The new ctsm5.4 fsurdat/flanduse_timeseries datasets are used by default, but the model will work with previous ctsm5.3 datasets. The new initial conditions (finidat) for clm6_0 will work without having to interpolate them. The initial conditions for previous physics (so previous finidat files you've been using) do need to be interpolated (so add use_init_interp=TRUE to user_nl_clm).
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New XML variable: CLM_CMIP_ERA (can be cmip6 or cmip7)
+ Defaults to cmip7 except for the SSP scenarios which use cmip6
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ init_interp_fill_missing_urban_with_HD is set to TRUE all of the time even when not needed
+
+ Fire parameters update: (li2024gswp3, and li2024crujra fire_method):
+   - defo_fire_precip_thresh_bet
+   - cli_scale
+   - cropfire_a1
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ New fsurdat/landuse files
+ For clm6: New paramfile, finidat files, crop calendar datasets, population density stream file
+
+Changes to documentation:
+ Updates about history files splitting into separate non-instantaneous and instantaneous files
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ ccs_config points to temporary tag ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 to allow use of a new grid. The temporary tag will get replaced appropriately in the next merge of b4b-dev to master.
+
+ fsurdat/landuse files are associated with a cmip_era flag in namelist_defaults to describe if it's a cmip6 or cmip7 version.
+
+Changes to tests or testing:
+ The ctsm_sci test-suite now includes new tests for a few newly introduced grids.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+    Also namelist comparisons as outlined here:
+    https://github.com/ESCOMP/CTSM/wiki/Minor-Version-Update-Protocols#namelist-validation
+    We compared against ctsm5.3.021 namelists, i.e. against the ctsm5.3 release tag
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests compared to fates-sci.1.88.0_api.42.0.0-ctsm5.3.083 on derecho and fates-sci.1.88.0_api.41.0.0-ctsm5.3.082 on izumi
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci compared to ctsm_sci-alpha-ctsm5.4.CMIP7.19.ctsm5.3.082
+     derecho ---- OK
+
+  mosart tests compared to mosart1.1.12-ctsm5.3.066
+    derecho ----- OK
+    izumi ------- OK
+
+  rtm tests compared to rtm1_0_89-ctsm5.3.065
+    derecho ----- OK
+    izumi ------- OK
+
+  mksurfdata_esmf
+    derecho ----- OK tested a single resolution for b4b with different number of cpus; ran "make all" to create all datasets (completes in 6 hours, longest mksrf_crop-global-hist-low-res)
+
+  fsurdat verification
+    derecho ----- OK validate_fsurdat_files.sh script added in tools/mksurfdata_esmf
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff/same climate; possibly new climate in clm6
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - https://github.com/NCAR/LMWG_dev/issues/123
+       - https://github.com/NCAR/LMWG_dev/issues/124
+       - https://github.com/NCAR/LMWG_dev/issues/125
+       - https://github.com/NCAR/LMWG_dev/issues/126
+       - https://github.com/NCAR/LMWG_dev/issues/127
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ ccs_config_cesm1.0.61 to ccs_config_cesm1.0.61_add_domain_ne3np4.pg2_1 as explained in "Caveats for developers" above
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3638
+
+ 35 PRs went onto the alpha-ctsm5.4.CMIP7 branch
+ Dates span from Apr/23/2025 to Dec/4/2025 (7.5 months)
+ 29 Tags on the branch from alpha-ctsm5.4.CMIP7.01.ctsm5.3.040 to alpha-ctsm5.4.CMIP7.21.ctsm5.3.085
+
+ For the list of PRs see:
+ https://github.com/ESCOMP/CTSM/pulls?page=2&q=is%3Apr+base%3Aalpha-ctsm5.4.CMIP7+is%3Aclosed
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.085
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri Nov 14 11:08:54 AM MST 2025
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+ PRs
+ #3581 by Bill Sacks: Generalize some paths so unit testing works in a CESM checkout, previously assumed standalone CTSM checkout.
+ #3561 by Erik Kluzek: Start adding streams infrastructure for carbon isotopes.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2837
+ Resolves #3502
+ Design notes in #3546
+ Some work on #3346
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3609
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.084
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri 31 Oct 2025 01:12:26 PM MDT
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Bring changes on b4b-dev to master
+
+- Fix FUNIT testing on Mac's
+- Some fixes to set_paramfile
+- Don't auto build documentation on personal forks, only on ESCOMP
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Fixes #3571 -- set_paramfile ordering of PFT's from user doesn't have to match paramfile order
+  Fixes #3559 -- Correct Ndims error
+  Fixes #3369 -- Docs build and deploy only runs on ESCOMP not personal forks
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation:
+   Some changes to set_paramfile documentation
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  -- #3577 unit testing on Mac
+  -- #3572 set_paramfile ordering
+  -- #3560 Fix Ndim error in set_paramfile
+  -- #3557 doc/build/run/deploy only on ESCOMP
+
+===============================================================
+===============================================================
+Tag name: ctsm5.3.083
+Originator(s): rgknox (Ryan Knox,LAWRENCE BERKELEY NATIONAL LABORATORY,510-495-2153)
+Date: Wed 29 Oct 2025 03:35:50 PM MDT
+One-line Summary: Changes to coupling of supplementation status with FATES.
+
+Purpose and description of changes
+----------------------------------
+
+Supplementation status is now passed to FATES as a run-time boundary condition. This set of changes is synchronized with FATES-side changes that were oriented around how supplementation status impacts whether or not fine-root proportions are allowed to change during CNP runs.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+
+Bugs fixed
+----------
+
+No bugs were fixed.
+
+Notes of particular relevance for users
+---------------------------------------
+
+When CTSM-FATES has nutrient coupling, note that FATES plants will default to not changing L2FR when supplementing nitrogen.
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Changes to documentation: None necessary.
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+We had been passing a stealth namelist variable from CTSM to FATES, it gave FATES information about what types of mineralized nutrient were available (ie NO3 or NH4), but FATES has never used this information, so it was removed.
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No answer changes with one exception. Some FATES-specific variables related to radiation diagnostics and error tracking changed with updating the FATES tag. These were diagnostic only changes, and not related to FATES internals changing in any way.
+
+ther details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/3348
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.3.082
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Fri 24 Oct 2025 11:17:41 AM MDT

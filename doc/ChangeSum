@@ -1,5 +1,24 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.015     erik 02/03/2026 Update CISM to latest version with answer changes
+       ctsm5.4.014 mvdebols 01/29/2026 Fix for xm2 and revise logic for excess ice melt
+       ctsm5.4.013     erik 01/28/2026 Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
+       ctsm5.4.012   slevis 01/26/2026 Fix C-balance error for partly emerged crops
+       ctsm5.4.011   slevis 01/22/2026 Merge b4b-dev to master
+       ctsm5.4.010     erik 01/21/2026 Update cime to version that changes answers for ERI tests
+       ctsm5.4.009   olyson 01/19/2026 Dewpoint Temperature check for bare ground
+       ctsm5.4.008 swensosc 01/12/2026 Add a correction for oversaturated soil layers in SoilWaterMovement (erik)
+       ctsm5.4.007 samrabin 01/09/2026 Update (irrigated_)rice grnfill and lfemerg
+       ctsm5.4.006     erik 01/07/2026 Merge b4b-dev to master
+       ctsm5.4.005   rgknox 12/19/2025 FATES JSON parameter files
+       ctsm5.4.004 samrabin 12/12/2025 Update crop parameters and maturity requirements
+       ctsm5.4.003 multiple 12/11/2025 Merge post5.4 branch to master
+       ctsm5.4.002     erik 12/10/2025 Start using CMIP7 Carbon Isotope datasets
+       ctsm5.4.001 samrabin 12/08/2025 Merge b4b-dev
+       ctsm5.4.000 multiple 12/04/2025 Merge alpha-ctsm5.4.CMIP7 to master
+       ctsm5.3.085   slevis 11/14/2025 Merge b4b-dev to master
+       ctsm5.3.084     erik 10/31/2025 Merge b4b-dev to master
+       ctsm5.3.083   rgknox 10/29/2025 Changes to coupling of supplementation status with FATES.
        ctsm5.3.082   slevis 10/24/2025 Update to CMIP7 population density file for non-SSP cases
        ctsm5.3.081     erik 10/22/2025 Change defaults for when Carbon isotopes are turned on, and turn on irrigate for Sp/Bgc cases for clm6_0 historical transient cases
        ctsm5.3.080 samrabin 10/16/2025 Merge b4b-dev to master

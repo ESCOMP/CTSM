@@ -167,6 +167,15 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
+  <test name="ERP_D_Ld9" grid="f10_f10_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">CESM3 development Exact restart test with Nearest Neighbor streams mapalgo and change in the processor count at f10</option>
+    </options>
+  </test>
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -193,6 +202,25 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Testing that a initial condition file with an missing urban landunit will be filled with another urban landunit</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Testing a few years with CMIP6 carbon isotopes</option>
+    </options>
+  </test>
+  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Testing a few years with CMIP7 carbon isotopes</option>
     </options>
   </test>
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
@@ -231,6 +259,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat CESM3 development test with Crujra while Gswp is still the default</option>
+    </options>
+  </test>
+  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mg37" compset="I1850Clm60SpGag">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">1:00:00</option>
+      <option name="comment">Mid-year exact restart test. Also covers multiple ice sheets in a multi-year I compset test.</option>
     </options>
   </test>
   <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
@@ -409,6 +446,15 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Repeat higher resolution mpasa test with Crujra while Gswp is still the default</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="mpasa30_mpasa30" compset="I2000Clm60SpCrujraRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">mpasa test with Crujra while Gswp is still the default, also nofireemis for SP</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
@@ -802,6 +848,16 @@
       <option name="comment">Repeat last ERP_D...decStart test with matrixcnOn</option>
     </options>
   </test>
+  <test name="ERI_D_Ld20" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm-default--clm/midDecStart--clm-allowTransientYearJump">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side (DEBUG to work on izumi_nag)</option>
+    </options>
+  </test>
   <test name="ERP_D_Ld3_P64x2" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -929,6 +985,24 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Repeat this low res SE grid test with Crujra while Gswp is still the default</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="I2000Clm60SpCrujraRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">Low res SE grid test with Crujra while Gswp is still the default, also nofireemis for SP</option>
+    </options>
+  </test>
+  <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="IHistClm60SpCrujraRs" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:60:00</option>
+      <option name="comment">ne3pg2 test with IHist compset, also nofireemis for SP</option>
     </options>
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1100,6 +1174,15 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Repeat this high res SE grid test with Crujra while Gswp is still the default</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne120pg3_t13" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">high res SE grid test with Hist Crujra while Gswp is still the default, also nofireemis for SP</option>
     </options>
   </test>
   <!-- Historical clm5_0 physics BgcCrop science support -->
@@ -2051,6 +2134,15 @@
       <option name="comment">Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure</option>
     </options>
   </test>
+  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test writing all history fields</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -2511,6 +2603,16 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat POLARCAP test with Crujra while Gswp is still the default</option>
       <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+    </options>
+  </test>
+  <test name="SMS_Ln9" grid="ne0NATLne30x8_ne0NATLne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">NATL test with Crujra while Gswp is still the default</option>
+      <option name="comment">Also --nofireemis for SP compsets</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -4399,6 +4501,7 @@
   <test name="FUNITCTSM_P1x1" grid="f10_f10_mg37" compset="I2000Clm50Sp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>

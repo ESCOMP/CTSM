@@ -81,7 +81,7 @@ contains
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
     use clm_varpar           , only : nlevgrnd
-    use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
+    use clm_varcon           , only : cpair, vkc, grav, denice, denh2o, tfrz
     use clm_varcon           , only : beta_param, nu_param, meier_param3
     use clm_varctl           , only : use_lch4, z0param_method
     use landunit_varcon      , only : istsoil, istcrop
@@ -123,7 +123,7 @@ contains
     real(r8) :: dth(bounds%begp:bounds%endp)     ! diff of virtual temp. between ref. height and surface
     real(r8) :: dthv                             ! diff of vir. poten. temp. between ref. height and surface
     real(r8) :: dqh(bounds%begp:bounds%endp)     ! diff of humidity between ref. height and surface
-    real(r8) :: obu(bounds%begp:bounds%endp)     ! Monin-Obukhov length (m)
+    real(r8) :: obu(bounds%begp:bounds%endp)     ! Obukhov length scale (m)
     real(r8) :: ur(bounds%begp:bounds%endp)      ! wind speed at reference height [m/s]
     real(r8) :: um(bounds%begp:bounds%endp)      ! wind speed including the stablity effect [m/s]
     real(r8) :: temp1(bounds%begp:bounds%endp)   ! relation for potential temperature profile
@@ -144,6 +144,19 @@ contains
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: www                              ! surface soil wetness [-]
+    real(r8) :: forc_dewpoint                    ! dewpoint temperature at forcing height [K]
+    real(r8) :: forc_e                           ! vapor pressure at forcing height [Pa]
+    real(r8) :: forc_qs                          ! saturated specific humidity at forcing height [kg/kg]
+    real(r8) :: forc_esat                        ! saturated vapor pressure at forcing height [Pa]
+    ! Coefficients from Alduchov and Eskridge (1996) as used by Lawrence (2005) for Magnus dewpoint
+    ! equation over liquid
+    real(r8), parameter :: A1_liq = 17.625_r8                   ! [-]
+    real(r8), parameter :: B1_liq = 243.04_r8                   ! [degC]
+    real(r8), parameter :: C1_liq = 610.94_r8                   ! [Pa]
+    ! Coefficients from Alduchov and Eskridge (1996) for Magnus dewpoint equation over ice
+    real(r8), parameter :: A1_ice = 22.587_r8                   ! [-]
+    real(r8), parameter :: B1_ice = 273.86_r8                   ! [degC]
+    real(r8), parameter :: C1_ice = 611.21_r8                   ! [Pa]
     !------------------------------------------------------------------------------
 
     associate(                                                                    & 
@@ -323,7 +336,7 @@ contains
          z0hg_patch(p) = z0hg_col(c)
          z0qg_patch(p) = z0qg_col(c)
 
-         ! Initialize Monin-Obukhov length and wind speed
+         ! Initialize Obukhov length scale and wind speed
 
          call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mg_patch(p), um(p), obu(p))
 
@@ -405,13 +418,37 @@ contains
          www = (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice)/dz(c,1)/watsat(c,1)
          www = min(max(www,0.0_r8),1._r8)
 
+         ! Get saturated vapor pressure at forcing height
+         call QSat(forc_t(c), forc_pbot(c), qs = forc_qs, es = forc_esat)
+
+         ! Calculate vapor pressure at forcing height and restrict to no less than value 
+         ! corresponding to 1% relative humidity
+         forc_e = max( (forc_q(c)*forc_pbot(c)) / (forc_q(c)+0.622_r8), 0.01_r8*forc_esat)
+
+         ! Magnus expression for dew point
+         ! Equation (7) from Lawrence (2005)
+         if (t_grnd(c) < tfrz) then  ! ice coefficients
+            forc_dewpoint = B1_ice*log(forc_e/C1_ice) / (A1_ice - log(forc_e/C1_ice))
+         else                        ! liquid water coefficients
+            forc_dewpoint = B1_liq*log(forc_e/C1_liq) / (A1_liq - log(forc_e/C1_liq))
+         end if
+         forc_dewpoint = forc_dewpoint + tfrz
+
          !changed by K.Sakaguchi. Soilbeta is used for evaporation
          if (dqh(p) > 0._r8) then  !dew  (beta is not applied, just like rsoil used to be) 
-            raiw = forc_rho(c)/(raw)
+            if (t_grnd(c) > forc_dewpoint) then ! no dew
+               raiw = 0._r8 
+            else                                ! dew
+               raiw = forc_rho(c)/(raw)
+            end if 
          else
             if(do_soilevap_beta())then
-               ! Lee and Pielke 1992 beta is applied
-               raiw    = soilbeta(c)*forc_rho(c)/(raw)
+               if (t_grnd(c) > forc_dewpoint) then ! no dew
+                  raiw = 0._r8 
+               else                                ! dew
+                  ! Lee and Pielke 1992 beta is applied
+                  raiw    = soilbeta(c)*forc_rho(c)/(raw)
+               end if 
             endif
             if(do_soil_resistance_sl14())then
                ! Swenson & Lawrence 2014 soil resistance is applied
