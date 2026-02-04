@@ -493,7 +493,7 @@ class TestFindInstHistFiles(unittest.TestCase):
         self._create_test_file("test.clm2.h0.2000-01-01-00000.nc")
 
         # Should raise a FileNotFoundError error
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(FileNotFoundError, "No files found matching patterns"):
             gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
 
     def test_find_inst_hist_files_different_case_names(self):
@@ -504,7 +504,7 @@ class TestFindInstHistFiles(unittest.TestCase):
         self._create_test_file("longcasename.clm2.h1i.2000-01-01-00000.nc")
 
         # Should raise RuntimeError due to multiple case names
-        with self.assertRaises(RuntimeError):
+        with self.assertRaisesRegex(RuntimeError, "Found files from multiple case names"):
             gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2000)
 
     def test_find_inst_hist_files_different_case_names_with_logger(self):
@@ -521,7 +521,7 @@ class TestFindInstHistFiles(unittest.TestCase):
         self._create_test_file("longcasename.clm2.h1i.2000-01-01-00000.nc")
 
         # Should raise RuntimeError due to multiple case names, even with logger
-        with self.assertRaises(RuntimeError):
+        with self.assertRaisesRegex(RuntimeError, "Found files from multiple case names"):
             gf.find_inst_hist_files(self.temp_dir, h=1, this_year=2000, logger=logger)
 
     def test_find_inst_hist_files_no_files_found_with_logger(self):
@@ -534,7 +534,7 @@ class TestFindInstHistFiles(unittest.TestCase):
         self._create_test_file("test.clm2.h0.2000-01-01-00000.nc")
 
         # Should raise a FileNotFoundError even with logger
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(FileNotFoundError, "No files found matching patterns"):
             gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None, logger=logger)
 
     def test_find_inst_hist_files_h_str_with_logger(self):
@@ -545,7 +545,7 @@ class TestFindInstHistFiles(unittest.TestCase):
 
         self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
 
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "must be an integer, not"):
             gf.find_inst_hist_files(self.temp_dir, h="1", this_year=2000, logger=logger)
 
     def test_find_inst_hist_files_h_float_with_logger(self):
@@ -556,7 +556,7 @@ class TestFindInstHistFiles(unittest.TestCase):
 
         self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
 
-        with self.assertRaises(TypeError):
+        with self.assertRaisesRegex(TypeError, "must be an integer, not"):
             gf.find_inst_hist_files(self.temp_dir, h=1.0, this_year=2000, logger=logger)
 
 
@@ -685,7 +685,7 @@ class TestGetFileLists(unittest.TestCase):
         time_slice_list = [slice("2000-01-01", "2000-12-31")]
 
         # Should raise FileNotFoundError when h1 files are not found
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(FileNotFoundError, "No files found matching patterns"):
             gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
     def test_get_file_lists_no_h2_files(self):
@@ -696,7 +696,7 @@ class TestGetFileLists(unittest.TestCase):
         time_slice_list = [slice("2000-01-01", "2000-12-31")]
 
         # Should raise FileNotFoundError when h2 files are not found
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(FileNotFoundError, "No files found matching patterns"):
             gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
     def test_get_file_lists_h1_outside_time_slice(self):
@@ -709,7 +709,7 @@ class TestGetFileLists(unittest.TestCase):
         time_slice_list = [slice("2001-01-01", "2001-12-31")]
 
         # Should raise FileNotFoundError when h1 files have no timesteps in slice
-        with self.assertRaisesRegex(FileNotFoundError, "h1"):
+        with self.assertRaisesRegex(FileNotFoundError, "No h1 timesteps found in"):
             gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
     def test_get_file_lists_h2_outside_time_slice(self):
@@ -722,7 +722,7 @@ class TestGetFileLists(unittest.TestCase):
         time_slice_list = [slice("2001-01-01", "2001-12-31")]
 
         # Should raise FileNotFoundError when h2 files have no timesteps in slice
-        with self.assertRaisesRegex(FileNotFoundError, "h2"):
+        with self.assertRaisesRegex(FileNotFoundError, "No h2 timesteps found in"):
             gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
     def test_get_file_lists_partial_overlap(self):
@@ -738,7 +738,7 @@ class TestGetFileLists(unittest.TestCase):
         ]
 
         # Should raise FileNotFoundError when second time slice has no files
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(FileNotFoundError, "No h1 timesteps found in"):
             gg._get_file_lists(self.temp_dir, time_slice_list, logger=None)
 
 
