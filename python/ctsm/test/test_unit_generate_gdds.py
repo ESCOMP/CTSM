@@ -462,12 +462,13 @@ class TestFindInstHistFiles(unittest.TestCase):
         """Test that .nc files are preferred over .nc.base files"""
         # Create both .nc and .nc.base files
         file_nc = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
+        file_nc_base = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc.base")
 
         result = gf.find_inst_hist_files(self.temp_dir, h=1, this_year=None)
 
         # Should find .nc files first (pattern order preference)
         self.assertIn(file_nc, result)
-        # .nc.base should only be found if no .nc files exist
+        self.assertNotIn(file_nc_base, result)
 
     def test_find_inst_hist_files_multiple_months_same_year(self):
         """Test finding multiple files from the same year"""
