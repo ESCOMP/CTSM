@@ -22,8 +22,8 @@ from ctsm.ctsm_logging import log, error  # pylint: disable=wrong-import-positio
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
 from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
-    get_files_in_time_slice,                 # pylint: disable=wrong-import-position
-)                                            # pylint: disable=wrong-import-position
+    get_files_in_time_slice,  # pylint: disable=wrong-import-position
+)  # pylint: disable=wrong-import-position
 
 # Functions here were written with too many positional arguments. At some point that should be
 # fixed. For now, we'll just disable the warning.
