@@ -26,10 +26,20 @@ import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=w
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
 
-# Global constants
-PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
-MY_CLM_VER = 51
-MY_CLM_SUBVER = "c211112"
+
+def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile, cushion):
+    """
+    Import maximum growing season lengths from paramfile, if doing so.
+    """
+    if max_season_length_from_hdates_file:
+        return None
+
+    mxmats = cc.import_max_gs_length(paramfile)
+
+    if cushion:
+        mxmats = cc.cushion_gs_length(mxmats, cushion)
+
+    return mxmats
 
 
 def main(
@@ -47,10 +57,12 @@ def main(
     land_use_file=None,
     first_land_use_year=None,
     last_land_use_year=None,
-    unlimited_season_length=False,
+    max_season_length_from_hdates_file=False,
     skip_crops=None,
     logger=None,
     no_pickle=None,
+    paramfile=None,
+    max_season_length_cushion=None,
 ):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
@@ -58,7 +70,7 @@ def main(
             output_dir = input_dir
         else:
             output_dir = os.path.join(input_dir, "generate_gdds")
-            if not unlimited_season_length:
+            if not max_season_length_from_hdates_file:
                 output_dir += ".mxmat"
             output_dir += "." + dt.datetime.now().strftime("%Y-%m-%d-%H%M%S")
     if not os.path.exists(output_dir):
@@ -146,10 +158,9 @@ def main(
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
-        if not unlimited_season_length:
-            mxmats = cc.import_max_gs_length(PARAMFILE_DIR, MY_CLM_VER, MY_CLM_SUBVER)
-        else:
-            mxmats = None
+        mxmats = _get_max_growing_season_lengths(
+            max_season_length_from_hdates_file, paramfile, max_season_length_cushion
+        )
 
         h1_instantaneous = None
         for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
@@ -390,11 +401,34 @@ def main(
         )
 
 
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        description=(
+            "A script to generate maturity requirements for CLM crops in units of growing degree-"
+            "days (GDDs)."
+        )
+    )
+
+    # Required but mutually exclusive
+    max_growing_season_length_group = parser.add_mutually_exclusive_group(required=True)
+    max_growing_season_length_group.add_argument(
+        "--paramfile",
+        help=(
+            "Path to parameter file with maximum growing season lengths (mxmat)."
+            " Mutually exclusive with --max-season-length-from-hdates-file."
+        ),
+    )
+    max_growing_season_length_group.add_argument(
+        "--max-season-length-from-hdates-file",
+        help=(
+            "Rather than limiting growing season length based on mxmat values from a CLM parameter"
+            " file, use the season lengths from --hdates-file. Not recommended unless you use the"
+            "results of this script in a run with sufficiently long mxmat values!"
+            " Mutually exclusive with --paramfile."
+        ),
+        action="store_true",
+        default=False,
+    )
 
     # Required
     parser.add_argument(
@@ -468,12 +502,6 @@ if __name__ == "__main__":
         type=int,
     )
     parser.add_argument(
-        "--unlimited-season-length",
-        help="Limit mean growing season length based on CLM CFT parameter mxmat.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--skip-crops",
         help="Skip processing of these crops. Comma- or space-separated list.",
         type=str,
@@ -485,11 +513,39 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--max-season-length-cushion",
+        help=(
+            "How much to reduce the maximum growing season length (mxmat) for each crop in the"
+            " parameter file. This might be useful for helping avoid high rates of immature"
+            " harvests for gridcells where the observed harvest date is longer than mxmat."
+            " Incompatible with --max-season-length-from-hdates-file."
+        ),
+        default=0,
+        type=int,
+    )
 
     # Get arguments
-    args = parser.parse_args(sys.argv[1:])
-    for k, v in sorted(vars(args).items()):
+    args_parsed = parser.parse_args(argv)
+    for k, v in sorted(vars(args_parsed).items()):
         print(f"{k}: {v}")
+
+    # Check arguments
+    if args_parsed.max_season_length_from_hdates_file and args_parsed.max_season_length_cushion:
+        raise argparse.ArgumentError(
+            None,
+            "--max-season-length-from-hdates-file is incompatible with --max-season-length-cushion"
+            " ≠ 0.",
+        )
+
+    return args_parsed
+
+
+if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    args = _parse_args(sys.argv[1:])
 
     # Call main()
     main(
@@ -506,7 +562,9 @@ if __name__ == "__main__":
         land_use_file=args.land_use_file,
         first_land_use_year=args.first_land_use_year,
         last_land_use_year=args.last_land_use_year,
-        unlimited_season_length=args.unlimited_season_length,
+        max_season_length_from_hdates_file=args.max_season_length_from_hdates_file,
         skip_crops=args.skip_crops,
         no_pickle=args.no_pickle,
+        paramfile=args.paramfile,
+        max_season_length_cushion=args.max_season_length_cushion,
     )

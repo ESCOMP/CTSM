@@ -22,6 +22,9 @@ from ctsm.crop_calendars.import_ds import import_ds
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
 
+# Tolerance (degrees) for checking lat/lon grid matches
+GRID_TOL_DEG = 1e-6
+
 CAN_PLOT = True
 try:
     # pylint: disable=wildcard-import,unused-wildcard-import
@@ -54,6 +57,31 @@ except ModuleNotFoundError:
     CAN_PLOT = False
 
 
+def check_grid_match(grid0, grid1, tol=GRID_TOL_DEG):
+    """
+    Check whether latitude or longitude values match
+    """
+    if grid0.shape != grid1.shape:
+        return False, None
+
+    if hasattr(grid0, "values"):
+        grid0 = grid0.values
+    if hasattr(grid1, "values"):
+        grid1 = grid1.values
+
+    abs_diff = np.abs(grid1 - grid0)
+    if np.any(np.isnan(abs_diff)):
+        if np.any(np.isnan(grid0) != np.isnan(grid1)):
+            warnings.warn("NaN(s) in grid don't match", RuntimeWarning)
+            return False, None
+        warnings.warn("NaN(s) in grid", RuntimeWarning)
+
+    max_abs_diff = np.nanmax(abs_diff)
+    match = max_abs_diff < tol
+
+    return match, max_abs_diff
+
+
 def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     """
     Checking that input and output sdates match
@@ -61,6 +89,29 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     log(logger, "   Checking that input and output sdates match...")
 
     sdates_grid = grid_one_variable(dates_ds, "SDATES")
+
+    # In this script, we assume that you used prescribed sowing dates on the same grid as the
+    # CLM run
+    # Check that latitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(sdates_rx["lat"], sdates_grid["lat"])
+    assert bool(
+        match
+    ), f"CLM lat grid doesn't match rx sdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lat abs diff: {max_abs_diff}. Coercing match.")
+        # sdates_grid comes from the CLM outputs, so we coerce the prescribed sowing date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        sdates_rx["lat"] = sdates_grid["lat"]
+    # Check that longitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(sdates_rx["lon"], sdates_grid["lon"])
+    assert bool(
+        check_grid_match(sdates_rx["lon"], sdates_grid["lon"])
+    ), f"CLM lon grid doesn't match rx sdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lon abs diff: {max_abs_diff}. Coercing match.")
+        # sdates_grid comes from the CLM outputs, so we coerce the prescribed sowing date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        sdates_rx["lon"] = sdates_grid["lon"]
 
     all_ok = True
     any_found = False
@@ -83,8 +134,16 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
         # Output
         out_map = sdates_grid.sel(ivt_str=vegtype_str).squeeze(drop=True)
 
-        # Check for differences
+        # Calculate differences
         diff_map = out_map - in_map
+        assert (
+            diff_map.shape == in_map.shape
+        ), f"Diff map shape {diff_map.shape} doesn't match in_map shape {in_map.shape}"
+        assert (
+            diff_map.shape == out_map.shape
+        ), f"Diff map shape {diff_map.shape} doesn't match out_map shape {out_map.shape}"
+
+        # Check for differences
         diff_map_notnan = diff_map.values[np.invert(np.isnan(diff_map.values))]
         if np.any(diff_map_notnan):
             log(logger, f"Difference(s) found in {vegtype_str}")
@@ -495,6 +554,29 @@ def import_and_process_1yr(
     hdates_rx_orig = import_rx_dates(
         "h", hdates_rx, incl_patches1d_itype_veg, mxsowings, logger
     )  # Yes, mxsowings even when importing harvests
+
+    # In this script, we assume that you have prescribed harvest dates on the same grid as the
+    # CLM run
+    # Check that latitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(hdates_rx_orig["lat"], dates_incl_ds["lat"])
+    assert bool(
+        match
+    ), f"CLM lat grid doesn't match rx hdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lat abs diff: {max_abs_diff}. Coercing match.")
+        # dates_incl_ds comes from the CLM outputs, so we coerce the prescribed harvest date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        hdates_rx_orig["lat"] = dates_incl_ds["lat"]
+    # Check that longitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(hdates_rx_orig["lon"], dates_incl_ds["lon"])
+    assert bool(
+        match
+    ), f"CLM lon grid doesn't match rx hdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lon abs diff: {max_abs_diff}. Coercing match.")
+        # dates_incl_ds comes from the CLM outputs, so we coerce the prescribed harvest date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        hdates_rx_orig["lon"] = dates_incl_ds["lon"]
 
     # Limit growing season to CLM max growing season length, if needed
     if mxmats and (imported_sdates or imported_hdates):
