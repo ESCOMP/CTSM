@@ -148,15 +148,6 @@ contains
     real(r8) :: forc_e                           ! vapor pressure at forcing height [Pa]
     real(r8) :: forc_qs                          ! saturated specific humidity at forcing height [kg/kg]
     real(r8) :: forc_esat                        ! saturated vapor pressure at forcing height [Pa]
-    ! Coefficients from Alduchov and Eskridge (1996) as used by Lawrence (2005) for Magnus dewpoint
-    ! equation over liquid
-    real(r8), parameter :: A1_liq = 17.625_r8                   ! [-]
-    real(r8), parameter :: B1_liq = 243.04_r8                   ! [degC]
-    real(r8), parameter :: C1_liq = 610.94_r8                   ! [Pa]
-    ! Coefficients from Alduchov and Eskridge (1996) for Magnus dewpoint equation over ice
-    real(r8), parameter :: A1_ice = 22.587_r8                   ! [-]
-    real(r8), parameter :: B1_ice = 273.86_r8                   ! [degC]
-    real(r8), parameter :: C1_ice = 611.21_r8                   ! [Pa]
     !------------------------------------------------------------------------------
 
     associate(                                                                    & 
@@ -425,14 +416,8 @@ contains
          ! corresponding to 1% relative humidity
          forc_e = max( (forc_q(c)*forc_pbot(c)) / (forc_q(c)+0.622_r8), 0.01_r8*forc_esat)
 
-         ! Magnus expression for dew point
-         ! Equation (7) from Lawrence (2005)
-         if (t_grnd(c) < tfrz) then  ! ice coefficients
-            forc_dewpoint = B1_ice*log(forc_e/C1_ice) / (A1_ice - log(forc_e/C1_ice))
-         else                        ! liquid water coefficients
-            forc_dewpoint = B1_liq*log(forc_e/C1_liq) / (A1_liq - log(forc_e/C1_liq))
-         end if
-         forc_dewpoint = forc_dewpoint + tfrz
+         ! Calculate dewpoint at forcing height
+         forc_dewpoint = dewpoint(forc_e,t_grnd(c))
 
          !changed by K.Sakaguchi. Soilbeta is used for evaporation
          if (dqh(p) > 0._r8) then  !dew  (beta is not applied, just like rsoil used to be) 
@@ -558,5 +543,39 @@ contains
     end associate
 
   end subroutine BareGroundFluxes
+
+  !------------------------------------------------------------------------------
+  real(r8) function dewpoint(e,t)
+    !
+    !  DESCRIPTION:
+    !  Calculates dewpoint (degK) from input vapor pressure
+    !  Uses Equation 7 from Lawrence 2005, https://doi.org/10.1175/BAMS-86-2-225
+
+    use clm_varcon, only : tfrz
+
+    ! ARGUMENTS
+    real(r8), intent(in) :: e      ! vapor pressure [Pa]
+    real(r8), intent(in) :: t      ! temperature (K)
+    ! Coefficients from Alduchov and Eskridge (1996) as used by Lawrence (2005) for Magnus dewpoint
+    ! equation over liquid
+    real(r8), parameter :: A1_liq = 17.625_r8                   ! [-]
+    real(r8), parameter :: B1_liq = 243.04_r8                   ! [degC]
+    real(r8), parameter :: C1_liq = 610.94_r8                   ! [Pa]
+    ! Coefficients from Alduchov and Eskridge (1996) for Magnus dewpoint equation over ice
+    real(r8), parameter :: A1_ice = 22.587_r8                   ! [-]
+    real(r8), parameter :: B1_ice = 273.86_r8                   ! [degC]
+    real(r8), parameter :: C1_ice = 611.21_r8                   ! [Pa]
+
+    ! Magnus expression for dew point
+    ! Equation (7) from Lawrence (2005)
+    if (t < tfrz) then  ! ice coefficients
+       dewpoint = B1_ice*log(e/C1_ice) / (A1_ice - log(e/C1_ice))
+    else                        ! liquid water coefficients
+       dewpoint = B1_liq*log(e/C1_liq) / (A1_liq - log(e/C1_liq))
+    end if
+    dewpoint = dewpoint + tfrz
+
+  end function dewpoint
+  !------------------------------------------------------------------------------
 
 end module BareGroundFluxesMod
