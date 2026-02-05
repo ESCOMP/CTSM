@@ -381,6 +381,11 @@ contains
        call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_ndep, ungridded_lbound=1, ungridded_ubound=ndep_nflds)
        ! This sets a variable in clm_varctl
        ndep_from_cpl = .true.
+       if ( masterproc ) then
+         write(iulog,*) 'Nitrogen Deposition is coming from the ATM model'
+       end if
+    else if ( masterproc ) then
+       write(iulog,*) 'Nitrogen Deposition will be read in by CTSM'
     end if
 
     ! from atm - co2 exchange scenarios
