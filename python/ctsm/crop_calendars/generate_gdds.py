@@ -195,6 +195,9 @@ def main(
             + "(years are +1 because of CTSM output naming)",
         )
 
+        # This script uses pickle to save work in progress. In case of interruption, when the script
+        # is resumed, it will look for a pickle file. It will resume from the year after
+        # pickle_year, which is the last processed year in the pickle file.
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
         h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
         if os.path.exists(pickle_file) and not no_pickle:
@@ -236,6 +239,8 @@ def main(
         h1_file_lists, h2_file_lists = _get_file_lists(input_dir, time_slice_list, logger)
 
         for yr_index, this_yr in enumerate(_get_history_yr_range(first_season, last_season)):
+            # If resuming from a pickled file, we continue until we reach a year that hasn't yet
+            # been processed.
             if this_yr <= pickle_year:
                 continue
             log(logger, f"netCDF year {this_yr}...")
