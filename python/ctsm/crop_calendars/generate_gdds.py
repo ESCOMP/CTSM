@@ -21,6 +21,9 @@ sys.path.insert(1, _CTSM_PYTHON)
 from ctsm.ctsm_logging import log, error  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
+    get_files_in_time_slice,  # pylint: disable=wrong-import-position
+)  # pylint: disable=wrong-import-position
 
 # Functions here were written with too many positional arguments. At some point that should be
 # fixed. For now, we'll just disable the warning.
@@ -40,6 +43,72 @@ def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfil
         mxmats = cc.cushion_gs_length(mxmats, cushion)
 
     return mxmats
+
+
+def _get_history_yr_range(first_season, last_season):
+    """
+    Get a range object that can be used for looping over all years we need to process timestamps
+    from.
+    """
+    # Saving at the end of a year receive the timestamp of the END of the year's final timestep,
+    # which means it will actually be 00:00 of Jan. 1 of the next year.
+    first_history_yr = first_season + 1
+
+    # Same deal for the last history timestep, but we have to read an extra year in that case,
+    # because in some places the last growing season won't complete until the year after it was
+    # planted.
+    last_history_yr = last_season + 2
+
+    # last_history_yr + 1 because range() will iterate up to but not including the second value.
+    history_yr_range = range(first_history_yr, last_history_yr + 1)
+
+    return history_yr_range
+
+
+def _get_time_slice_list(first_season, last_season):
+    """
+    Given the requested first and last seasons, get the list of time slices that the script should
+    look for. The assumptions here, as in import_and_process_1yr and as instructed in the docs, are
+    that the user (a) is saving instantaneous annual files and (b) started on Jan. 1.
+    """
+
+    # Input checks
+    if not all(isinstance(i, int) for i in [first_season, last_season]):
+        raise TypeError("_get_time_slice_list() arguments must be integers")
+    if first_season > last_season:
+        raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
+
+    slice_list = []
+    for history_yr in _get_history_yr_range(first_season, last_season):
+        slice_start = f"{history_yr}-01-01"
+        # Stop could probably be the same as start, since there should just be one value saved per
+        # year and that should get the Jan. 1 timestamp.
+        slice_stop = f"{history_yr}-12-31"
+        slice_list.append(slice(slice_start, slice_stop))
+
+    # We should be reading one more than the total number of years in [first_season, last_season].
+    assert len(slice_list) == last_season - first_season + 2
+
+    return slice_list
+
+
+def _get_file_lists(input_dir, time_slice_list, logger):
+    """
+    For each time slice in a list, find the file(s) that need to be read to get all history
+    timesteps in the slice. Returns both h1i and h2i file lists.
+    """
+    output_file_lists_list = [None, None]
+    for i, h in enumerate([1, 2]):
+        all_h_files = gddfn.find_inst_hist_files(input_dir, h=h, logger=logger)
+        h_file_lists = []
+        for time_slice in time_slice_list:
+            try:
+                h_file_lists.append(get_files_in_time_slice(all_h_files, time_slice, logger=logger))
+            except FileNotFoundError as e:
+                raise FileNotFoundError(f"No h{h} timesteps found in {time_slice}") from e
+        output_file_lists_list[i] = h_file_lists
+    h1_file_lists, h2_file_lists = tuple(output_file_lists_list)
+    return h1_file_lists, h2_file_lists
 
 
 def main(
@@ -126,6 +195,9 @@ def main(
             + "(years are +1 because of CTSM output naming)",
         )
 
+        # This script uses pickle to save work in progress. In case of interruption, when the script
+        # is resumed, it will look for a pickle file. It will resume from the year after
+        # pickle_year, which is the last processed year in the pickle file.
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
         h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
         if os.path.exists(pickle_file) and not no_pickle:
@@ -162,10 +234,20 @@ def main(
             max_season_length_from_hdates_file, paramfile, max_season_length_cushion
         )
 
-        h1_instantaneous = None
-        for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
+        # Get lists of history timesteps and files to read
+        time_slice_list = _get_time_slice_list(first_season, last_season)
+        h1_file_lists, h2_file_lists = _get_file_lists(input_dir, time_slice_list, logger)
+
+        for yr_index, this_yr in enumerate(_get_history_yr_range(first_season, last_season)):
+            # If resuming from a pickled file, we continue until we reach a year that hasn't yet
+            # been processed.
             if this_yr <= pickle_year:
                 continue
+            log(logger, f"netCDF year {this_yr}...")
+
+            # Get h1 and h2 files to read for this year
+            h1_file_list = h1_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
+            h2_file_list = h2_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
 
             (
                 h2_ds,
@@ -179,12 +261,10 @@ def main(
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
-                h1_instantaneous,
             ) = gddfn.import_and_process_1yr(
                 first_season,
                 last_season,
                 yr_index,
-                this_yr,
                 sdates_rx,
                 hdates_rx,
                 gddaccum_yp_list,
@@ -192,7 +272,6 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastyear_active_patch_indices_list,
                 incorrectly_daily,
-                input_dir,
                 incl_vegtypes_str,
                 h2_ds_file,
                 mxmats,
@@ -200,7 +279,8 @@ def main(
                 skip_crops,
                 outdir_figs,
                 logger,
-                h1_instantaneous,
+                h1_file_list,
+                h2_file_list,
             )
 
             log(logger, f"   Saving pickle file ({pickle_file})...")
