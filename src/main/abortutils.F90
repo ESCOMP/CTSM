@@ -108,7 +108,7 @@ contains
     !
     use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
-    use decompMod    , only : get_global_index
+    use decompMod    , only : get_global_index, procinfo
     use GridcellType , only : grc
     use LandunitType , only : lun
     use ColumnType   , only : col
@@ -124,6 +124,7 @@ contains
     integer :: igrc=unset, ilun=unset, icol=unset, ipft=unset   ! Local index for grid-cell, landunit, column, and patch
     integer :: ggrc=unset, glun=unset, gcol=unset, gpft=unset   ! Global index for grid-cell, landunit, column, and patch
     logical :: bad_point = .false. ! Flag to indicate if the point is bad (i.e., global index is -1)
+    integer :: i, j  ! 2D global gridcell indices
     !-----------------------------------------------------------------------
 
     if (subgrid_level == subgrid_level_gridcell) then
@@ -242,6 +243,12 @@ contains
        write(iulog,*) errMsg(sourcefile, __LINE__)
        write(iulog,*) 'Continuing the endrun without writing point context information'
        return
+    end if
+    call procinfo%calc_globalxy_indices( igrc, i, j )
+    if ( (i /= -1) .and. (j /= -1) ) then
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': 2D gridcell indices = (', i, ', ', j, ')'
+    else
+       write(iulog,'(a)') 'WARNING: Trouble getting the 2D gridcell indices'
     end if
 
   end subroutine write_point_context
