@@ -147,8 +147,10 @@ Changes answers relative to baseline:
    changes to state fields usually grow to greater than roundoff as the simulation progresses.
 
    If this tag changes climate list the run(s) done to evaluate the new
-   climate (from https://github.com/NCAR/LMWG_dev)
-       - issue number(s):
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - LMWG_dev issue number(s):
+
+       - details (casename, machine, user, link to plots etc.) [if not in LMWG_dev]
 
 Other details
 -------------
