@@ -247,23 +247,7 @@ def import_ds(
     # elements through end-1 will be selected, but that seems not to be the case in the xarray
     # implementation.
     if time_slice:
-        new_filelist = []
-        for file in sorted(filelist):
-            log(logger, f"Getting filetime from file: {file}")
-            filetime = xr.open_dataset(file).time
-            filetime_sel = utils.safer_timeslice(filetime, time_slice)
-            include_this_file = filetime_sel.size
-            if include_this_file:
-                log(logger, f"Including filetime : {filetime_sel['time'].values}")
-                new_filelist.append(file)
-
-            # If you found some matching files, but then you find one that doesn't, stop going
-            # through the list.
-            elif new_filelist:
-                break
-        if not new_filelist:
-            raise RuntimeError(f"No files found in time_slice {time_slice}")
-        filelist = new_filelist
+        filelist = get_files_in_time_slice(filelist, time_slice, logger)
 
     # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one
     # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
@@ -324,3 +308,29 @@ def import_ds(
 
     log(logger, "End")
     return this_ds
+
+
+def get_files_in_time_slice(filelist, time_slice, logger=None):
+    """
+    For a given list of files, find the files that need to be read in order to get all history
+    timesteps in the slice.
+    """
+    new_filelist = []
+    for file in sorted(filelist):
+        if logger:
+            log(logger, f"Getting filetime from file: {file}")
+        filetime = xr.open_dataset(file).time
+        filetime_sel = utils.safer_timeslice(filetime, time_slice)
+        include_this_file = filetime_sel.size
+        if include_this_file:
+            if logger:
+                log(logger, f"Including filetime : {filetime_sel['time'].values}")
+            new_filelist.append(file)
+
+            # If you found some matching files, but then you find one that doesn't, stop going
+            # through the list.
+        elif new_filelist:
+            break
+    if not new_filelist:
+        raise FileNotFoundError(f"No files found in time_slice {time_slice}")
+    return new_filelist
