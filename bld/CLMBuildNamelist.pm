@@ -1758,10 +1758,10 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ###############################
-  # namelist group: ndepdyn_nml #
-  ###############################
-  setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl);
+  ######################################################
+  # Handle Nitrogen Deposition either from CPL or CTSM #
+  ######################################################
+  setup_logic_nitrogen_deposition($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -3916,10 +3916,31 @@ sub setup_logic_c14_streams {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_nitrogen_deposition {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
+
+  # Determine if we are using ndep from the CPL or internal to CTSM
+  # and if it's needed
+  $nl_flags->{'ndep_from_cpl'} = logical_to_fortran( $envxml_ref->{'CLM_NDEP_FROM_CPL'} );
+  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
+    $nl_flags->{'ndep_needed'} = ".true."
+  } else {
+    $nl_flags->{'ndep_needed'} = ".false."
+  }
+  # Handle the ndep_inparm namelist in drv_flds_in
+  if ( &value_is_true($nl_flags->{'ndep_from_cpl'}) && &value_is_true($nl_flags->{'ndep_needed'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "ndep_list", val=>"'noy','nhx'" );
+  }
+  # Handle the internal ndep-streams namelist
+  setup_logic_nitrogen_deposition_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_nitrogen_deposition_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   #
-  # Nitrogen deposition for bgc=CN or fates
+  # Nitrogen deposition streams for bgc=CN or fates
   #
   if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
