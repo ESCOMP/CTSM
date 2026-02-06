@@ -8,7 +8,7 @@ Purpose and description of changes
 ----------------------------------
 
  Introduce CRUJRA2024b option:
- - Includes corresponding changes in cdeps by updating to cdeps1.0.90
+ - Includes corresponding changes in cdeps by updating to cdeps1.0.91
  - Includes renaming of CRUJRA2024 files present in /python/ctsm/test/testinputs/expected_result_files to permit all tests to pass
 
 Significant changes to scientifically-supported configurations
@@ -93,7 +93,7 @@ Changes answers relative to baseline: Yes
 Other details
 -------------
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
- cdeps1.0.84 --> cdeps1.0.90
+ cdeps1.0.84 --> cdeps1.0.91
  cmeps1.1.24 --> cmeps1.1.29 (required for the cdeps update to work)
 
 Pull Requests that document the changes (include PR ids):
