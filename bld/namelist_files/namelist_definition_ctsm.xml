@@ -714,8 +714,8 @@ Toggle to turn on the FATES model
 Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
 </entry>
 
-<entry id="fates_parteh_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="1,2">
+<entry id="fates_parteh_mode" type="char*256" category="physics"
+       group="clm_inparm" valid_values="carbon_only,carbon_nitrogen">
 Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
 </entry>
