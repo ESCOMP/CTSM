@@ -3940,9 +3940,9 @@ sub setup_logic_nitrogen_deposition_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   #
-  # Nitrogen deposition streams for bgc=CN or fates
+  # Nitrogen deposition streams when needed to be read internally for BGC
   #
-  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
+  if ( (not &value_is_true($nl_flags->{'ndep_from_cpl'})) and &value_is_true($nl_flags->{'ndep_needed'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3965,7 +3965,7 @@ sub setup_logic_nitrogen_deposition_streams {
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'sim_year'=>$nl_flags->{'sim_year'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
         # Also check at f19 resolution
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
@@ -3995,7 +3995,7 @@ sub setup_logic_nitrogen_deposition_streams {
         }
     }
   } else {
-    # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
+    # If ndep is NOT required then make sure none of the ndep settings are set!
     if ( defined($nl->get_value('stream_year_first_ndep')) ||
          defined($nl->get_value('stream_year_last_ndep'))  ||
          defined($nl->get_value('model_year_align_ndep'))  ||
@@ -4003,7 +4003,7 @@ sub setup_logic_nitrogen_deposition_streams {
          defined($nl->get_value('ndep_varlist'         ))  ||
          defined($nl->get_value('stream_fldfilename_ndep'))
        ) {
-      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
+      $log->fatal_error("When ndep isn't required or coming from the CPL none of: stream_year_first_ndep," .
                   "stream_year_last_ndep, model_year_align_ndep, ndep_taxmod, " .
                   "ndep_varlist, nor stream_fldfilename_ndep" .
                   " can be set!");
