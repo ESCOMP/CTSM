@@ -2660,7 +2660,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_spitfire_mode            use_fates=".true.">0</fates_spitfire_mode>
 <fates_spitfire_mode            use_fates=".true." use_fates_managed_fire=".true." >1</fates_spitfire_mode>
 <fates_harvest_mode             use_fates=".true.">no_harvest</fates_harvest_mode>
-<fates_lu_transition_logic      use_fates=".true.">1</fates_lu_transition_logic>
+<fates_lu_transition_logic      use_fates=".true.">4</fates_lu_transition_logic>
 <fates_stomatal_model           use_fates=".true.">ballberry1987</fates_stomatal_model>
 <fates_stomatal_assimilation    use_fates=".true.">net</fates_stomatal_assimilation>
 <fates_leafresp_model           use_fates=".true.">ryan1991</fates_leafresp_model>
