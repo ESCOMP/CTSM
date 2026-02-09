@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.017
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Fri Feb  6 03:24:42 PM MST 2026
+Date: Mon Feb  9 12:34:51 PM MST 2026
 One-line Summary: Introduce CRUJRA2024b datm option (Greenand snow hole filled)
 
 Purpose and description of changes
@@ -79,7 +79,7 @@ Changes answers relative to baseline: Yes
   Summarize any changes to answers, i.e.,
     - what code configurations: All
     - what platforms/compilers: All
-    - nature of change: New climate over Greenland due to the new datm files; also roundoff or same climate diffs due to the submodule updates listed below
+    - nature of change: New climate over Greenland due to the new datm files; cpl output diffs due to the submodule updates listed below
 
    If this tag changes climate list the run(s) done to evaluate the new
    climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
