@@ -51,6 +51,7 @@ module CNPhenologyMod
   use atm2lndType                     , only : atm2lnd_type             
   use CNVegMatrixMod                  , only : matrix_update_phc, matrix_update_phn
   use CNVegMatrixMod                  , only : matrix_update_gmc, matrix_update_gmn
+  use CIsoAtmTimeseriesMod, only : C14BombSpike, nsectors_c14, C13TimeSeries
   !
   implicit none
   private
@@ -130,6 +131,9 @@ module CNPhenologyMod
   real(r8) :: p1d, p1v                      ! photoperiod factor constants for crop vernalization
   real(r8) :: hti                           ! cold hardening index threshold for vernalization
   real(r8) :: tbase                         ! base temperature for vernalization
+
+  real(r8) :: rc14_atm(nsectors_c14)
+  real(r8) :: rc13_atm
 
   integer, parameter :: NOT_Planted   = 999 ! If not planted   yet in year
   integer, parameter :: NOT_Harvested = 999 ! If not harvested yet in year
@@ -342,6 +346,7 @@ contains
     ! !USES:
     use clm_time_manager , only: is_first_step
     use CNSharedParamsMod, only: use_fun
+    use clm_varctl       , only : use_c13, use_c14
     !
     ! !DESCRIPTION:
     ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
@@ -378,9 +383,11 @@ contains
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)  == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
 
+    if ( use_c13 ) call C13TimeSeries( rc13_atm )
+    if ( use_c14 ) call C14BombSpike( rc14_atm )
+
     ! each of the following phenology type routines includes a filter
     ! to operate only on the relevant patches
-
 
     if ( phase == 1 ) then
        call CNPhenologyClimate(num_soilp, filter_soilp, &
@@ -2019,7 +2026,6 @@ contains
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
-    use clm_varcon       , only : c13ratio, c14ratio
     use clm_varctl       , only : use_cropcal_rx_swindows
     !
     ! !ARGUMENTS:
@@ -2963,7 +2969,6 @@ contains
     ! !USES:
     use clm_varctl       , only : use_c13, use_c14
     use clm_varctl       , only : use_cropcal_rx_cultivar_gdds, adapt_cropcal_rx_cultivar_gdds
-    use clm_varcon       , only : c13ratio, c14ratio
     use clm_varpar       , only : mxsowings
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
@@ -3060,7 +3065,7 @@ contains
             c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
          else
-            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * rc13_atm
          endif
       endif
       if (use_c14) then
@@ -3068,7 +3073,8 @@ contains
             c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
                c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
          else
-            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+            ! TODO: This should use the proper gridcell values rather than the global average
+            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * sum(rc14_atm(:))/real(nsectors_c14, r8)
          endif
       endif
 
