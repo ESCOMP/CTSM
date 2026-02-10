@@ -270,6 +270,15 @@
       <option name="comment">Repeat CESM3 development test with Crujra while Gswp is still the default</option>
     </options>
   </test>
+  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mg37" compset="I1850Clm60SpGag">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">1:00:00</option>
+      <option name="comment">Mid-year exact restart test. Also covers multiple ice sheets in a multi-year I compset test.</option>
+    </options>
+  </test>
   <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>

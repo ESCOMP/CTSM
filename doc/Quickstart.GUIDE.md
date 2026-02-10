@@ -43,7 +43,7 @@ the CRUJRA atm data between 1950 to 2010 and you want to run at
 ## Information on Compsets:
 
      "I" compsets are the ones with CTSM and NUOPC driver and CDEPS data models without ice and ocean.
-     Most of the "I" compsets are for clm6_0 physics and use the CRUJRA-2024 data with solar following
+     Most of the "I" compsets are for clm6_0 physics and use the CRUJRA2024b data with solar following
      the cosine of solar zenith angle, precipitation constant, and other
      variables linearly interpolated in time (and with appropriate time-stamps on
      the date). Previous CMIP6 simulations with clm5_0 physics used GSWP3 atmospheric forcing.
