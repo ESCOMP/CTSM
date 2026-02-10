@@ -4513,6 +4513,7 @@
   <test name="RXCROPMATURITY_Lm61" grid="f09_t232" compset="IHistClm60BgcCropCrujra"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
     </machines>
     <options>
       <option name="wallclock">12:00:00</option>
