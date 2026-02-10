@@ -494,8 +494,8 @@ class TestFindInstHistFiles(unittest.TestCase):
     def test_find_inst_hist_files(self):
         """Test finding only h2 files when h1i files present too"""
         # Create test files
-        file1 = self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
-        file2 = self._create_test_file("test.clm2.h2i.2001-01-01-00000.nc")
+        file1 = self._create_test_file("test.clm2.h2i.2000-01-02-00000.nc")
+        file2 = self._create_test_file("test.clm2.h2i.2001-01-02-00000.nc")
         # Create h1 file that should not be found
         self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
 
