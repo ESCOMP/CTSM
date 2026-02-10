@@ -420,6 +420,9 @@ sub print_categories {
          my ($expect, $expectFails) = &expectedFails( $key, "EXPECTED", @failfiles );
          if ( $expect ne "" ) { $expect = "$expect ($expectFails)"; }
          my $fails = $csstatus{$key}{'FAIL'};
+         # Remove NLCOMP and BASELINE from fails
+         $fails =~ s/NLCOMP//;
+         $fails =~ s/BASELINE//;
          print( "$key\t($fails)\t\t$expect\n" );
       }
    }
