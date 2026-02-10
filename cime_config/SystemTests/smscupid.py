@@ -1,7 +1,15 @@
 from CIME.SystemTests.sms import SMS
+from ctsm_test_status import *
 
 
-class SMS_CUPID(SMS):
+class SMSCUPID(SMS):
+    def __init__(self, case):
+        super().__init__(case)
+        self._test_status = CTSMTestStatus(
+            test_dir=self._case.get_value("CASEROOT"),
+            test_name=self._case.get_value("CASEBASEID"),
+        )
+
     def setup_indv(
         self, clean=False, test_mode=False, reset=False, keep=False, disable_git=False
     ):
@@ -21,7 +29,8 @@ class SMS_CUPID(SMS):
     def run_indv(
         self,
         suffix="base",
-        st_archive=False,
+        st_archive=True,
+        cupid=True,
         submit_resubmits=None,
         keep_init_generated_files=False,
     ):
@@ -47,7 +56,7 @@ class SMS_CUPID(SMS):
         cupid_dir = os.path.join(self._case.get_value("CASEROOT"), "cupid-postprocessing" )
         notebooks_dir = os.path.join(cupid_dir, "compute_notebooks")
         data_dir = os.path.join(cupid_dir, "temp_data")
-        foreach dir in [cupid_dir, notebooks_dir, data_dir]:
+        for dir in [cupid_dir, notebooks_dir, data_dir]:
            expect( os.isdir(dir),
                    "CUPiD postprocessing directory {} does not exist".format(dir) )
         cupid_config = os.path.join(cupid_dir, "config.yml")
@@ -57,6 +66,8 @@ class SMS_CUPID(SMS):
 
 
         # TODO: Populate the testdir with data files, config files and notebooks from the cupid-postprocessing directory
+
+        # TODO: Save various files to the baseline directory to use for BASELINE comparison
 
         return True
 
