@@ -890,6 +890,13 @@ class TestGenInstDailyYear(unittest.TestCase):
         dates_str = [str(d) for d in result.values]
         self.assertNotIn("2000-02-29", dates_str)
 
+        # Check that all timestamps are at exactly midnight
+        for t in result.values:
+            assert t.hour == 0
+            assert t.minute == 0
+            assert t.second == 0
+            assert t.microsecond == 0
+
     def test_gen_inst_daily_year_leap(self):
         """Test gen_inst_daily_year with a leap year"""
         cal_type = DatetimeAllLeap
@@ -906,6 +913,13 @@ class TestGenInstDailyYear(unittest.TestCase):
         # Verify Feb 29 is there
         dates_str = [str(d) for d in result.values]
         self.assertIn(f"{year}-02-29 00:00:00", dates_str)
+
+        # Check that all timestamps are at exactly midnight
+        for t in result.values:
+            assert t.hour == 0
+            assert t.minute == 0
+            assert t.second == 0
+            assert t.microsecond == 0
 
     def test_gen_inst_daily_year_consecutive_days(self):
         """Test that gen_inst_daily_year produces consecutive days"""
