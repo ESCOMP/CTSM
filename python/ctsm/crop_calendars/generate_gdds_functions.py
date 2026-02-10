@@ -10,7 +10,6 @@ from importlib import util as importlib_util
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import is_instantaneous
 from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
 import ctsm.crop_calendars.cropcal_module as cc
@@ -21,6 +20,9 @@ from ctsm.crop_calendars.import_ds import import_ds
 # Functions here were written with too many positional arguments. At some point that should be
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
+
+# Tolerance (degrees) for checking lat/lon grid matches
+GRID_TOL_DEG = 1e-6
 
 CAN_PLOT = True
 try:
@@ -54,6 +56,31 @@ except ModuleNotFoundError:
     CAN_PLOT = False
 
 
+def check_grid_match(grid0, grid1, tol=GRID_TOL_DEG):
+    """
+    Check whether latitude or longitude values match
+    """
+    if grid0.shape != grid1.shape:
+        return False, None
+
+    if hasattr(grid0, "values"):
+        grid0 = grid0.values
+    if hasattr(grid1, "values"):
+        grid1 = grid1.values
+
+    abs_diff = np.abs(grid1 - grid0)
+    if np.any(np.isnan(abs_diff)):
+        if np.any(np.isnan(grid0) != np.isnan(grid1)):
+            warnings.warn("NaN(s) in grid don't match", RuntimeWarning)
+            return False, None
+        warnings.warn("NaN(s) in grid", RuntimeWarning)
+
+    max_abs_diff = np.nanmax(abs_diff)
+    match = max_abs_diff < tol
+
+    return match, max_abs_diff
+
+
 def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     """
     Checking that input and output sdates match
@@ -61,6 +88,29 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
     log(logger, "   Checking that input and output sdates match...")
 
     sdates_grid = grid_one_variable(dates_ds, "SDATES")
+
+    # In this script, we assume that you used prescribed sowing dates on the same grid as the
+    # CLM run
+    # Check that latitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(sdates_rx["lat"], sdates_grid["lat"])
+    assert bool(
+        match
+    ), f"CLM lat grid doesn't match rx sdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lat abs diff: {max_abs_diff}. Coercing match.")
+        # sdates_grid comes from the CLM outputs, so we coerce the prescribed sowing date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        sdates_rx["lat"] = sdates_grid["lat"]
+    # Check that longitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(sdates_rx["lon"], sdates_grid["lon"])
+    assert bool(
+        check_grid_match(sdates_rx["lon"], sdates_grid["lon"])
+    ), f"CLM lon grid doesn't match rx sdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lon abs diff: {max_abs_diff}. Coercing match.")
+        # sdates_grid comes from the CLM outputs, so we coerce the prescribed sowing date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        sdates_rx["lon"] = sdates_grid["lon"]
 
     all_ok = True
     any_found = False
@@ -83,8 +133,16 @@ def check_sdates(dates_ds, sdates_rx, outdir_figs, logger, verbose=False):
         # Output
         out_map = sdates_grid.sel(ivt_str=vegtype_str).squeeze(drop=True)
 
-        # Check for differences
+        # Calculate differences
         diff_map = out_map - in_map
+        assert (
+            diff_map.shape == in_map.shape
+        ), f"Diff map shape {diff_map.shape} doesn't match in_map shape {in_map.shape}"
+        assert (
+            diff_map.shape == out_map.shape
+        ), f"Diff map shape {diff_map.shape} doesn't match out_map shape {out_map.shape}"
+
+        # Check for differences
         diff_map_notnan = diff_map.values[np.invert(np.isnan(diff_map.values))]
         if np.any(diff_map_notnan):
             log(logger, f"Difference(s) found in {vegtype_str}")
@@ -231,7 +289,6 @@ def import_and_process_1yr(
     year_1,
     year_n,
     year_index,
-    this_year,
     sdates_rx,
     hdates_rx,
     gddaccum_yp_list,
@@ -239,7 +296,6 @@ def import_and_process_1yr(
     skip_patches_for_isel_nan_last_year,
     last_year_active_patch_indices_list,
     incorrectly_daily,
-    indir,
     incl_vegtypes_str_in,
     h2_ds_file,
     mxmats,
@@ -247,13 +303,13 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
-    h1_instantaneous,
+    h1_filelist,
+    h2_filelist,
 ):
     """
     Import one year of CLM output data for GDD generation
     """
     save_figs = True
-    log(logger, f"netCDF year {this_year}...")
 
     # Without dask, this can take a LONG time at resolutions finer than 2-deg
     if importlib_util.find_spec("dask"):
@@ -261,34 +317,17 @@ def import_and_process_1yr(
     else:
         chunks = None
 
-    # Get h1 file (list)
-    h1_pattern = os.path.join(indir, "*h1i.*.nc")
-    h1_filelist = glob.glob(h1_pattern)
-    if not h1_filelist:
-        h1_pattern = os.path.join(indir, "*h1i.*.nc.base")
-        h1_filelist = glob.glob(h1_pattern)
-        if not h1_filelist:
-            error(logger, "No files found matching pattern '*h1i.*.nc(.base)'")
-
     # Get list of crops to include
     if skip_crops is not None:
         crops_to_read = [c for c in utils.define_mgdcrop_list_withgrasses() if c not in skip_crops]
     else:
         crops_to_read = utils.define_mgdcrop_list_withgrasses()
 
-    # Are h1 files instantaneous?
-    if h1_instantaneous is None:
-        h1_instantaneous = is_instantaneous(xr.open_dataset(h1_filelist[0])["time"])
-
-    if h1_instantaneous:
-        slice_year = this_year
-    else:
-        slice_year = this_year - 1
+    # Read h1 file(s)
     dates_ds = import_ds(
         h1_filelist,
         my_vars=["SDATES", "HDATES"],
         my_vegtypes=crops_to_read,
-        time_slice=slice(f"{slice_year}-01-01", f"{slice_year}-12-31"),
         chunks=chunks,
         logger=logger,
     )
@@ -496,6 +535,29 @@ def import_and_process_1yr(
         "h", hdates_rx, incl_patches1d_itype_veg, mxsowings, logger
     )  # Yes, mxsowings even when importing harvests
 
+    # In this script, we assume that you have prescribed harvest dates on the same grid as the
+    # CLM run
+    # Check that latitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(hdates_rx_orig["lat"], dates_incl_ds["lat"])
+    assert bool(
+        match
+    ), f"CLM lat grid doesn't match rx hdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lat abs diff: {max_abs_diff}. Coercing match.")
+        # dates_incl_ds comes from the CLM outputs, so we coerce the prescribed harvest date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        hdates_rx_orig["lat"] = dates_incl_ds["lat"]
+    # Check that longitudes match, coercing a match if difference is acceptable
+    match, max_abs_diff = check_grid_match(hdates_rx_orig["lon"], dates_incl_ds["lon"])
+    assert bool(
+        match
+    ), f"CLM lon grid doesn't match rx hdates's within {GRID_TOL_DEG}; max abs diff {max_abs_diff}"
+    if max_abs_diff > 0:
+        log(logger, f"Max lon abs diff: {max_abs_diff}. Coercing match.")
+        # dates_incl_ds comes from the CLM outputs, so we coerce the prescribed harvest date file
+        # coordinate to match, because we want the outputs of this script to have CLM's coordinates.
+        hdates_rx_orig["lon"] = dates_incl_ds["lon"]
+
     # Limit growing season to CLM max growing season length, if needed
     if mxmats and (imported_sdates or imported_hdates):
         print("   Limiting growing season length...")
@@ -549,16 +611,8 @@ def import_and_process_1yr(
     log(logger, "   Importing accumulated GDDs...")
     clm_gdd_var = "GDDACCUM"
     my_vars = [clm_gdd_var, "GDDHARV"]
-    patterns = [f"*h2i.{this_year-1}-01*.nc", f"*h2i.{this_year-1}-01*.nc.base"]
-    for pat in patterns:
-        pattern = os.path.join(indir, pat)
-        h2_files = glob.glob(pattern)
-        if h2_files:
-            break
-    if not h2_files:
-        error(logger, f"No files found matching patterns: {patterns}")
     h2_ds = import_ds(
-        h2_files,
+        h2_filelist,
         my_vars=my_vars,
         my_vegtypes=crops_to_read,
         chunks=chunks,
@@ -810,8 +864,78 @@ def import_and_process_1yr(
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
-        h1_instantaneous,
     )
+
+
+def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
+    """
+    Find all the instantaneous history files for a given tape number, optionally looking just for
+    one year in filename.
+
+    Args:
+        indir: Directory to search for history files
+        h: History tape number (must be an integer, e.g., 1 for h1, 2 for h2)
+        this_year: Optional year to filter files by. If provided, only files with dates starting
+                   with "{this_year}-01" will be returned. If None, all files matching the
+                   history tape number will be returned.
+        logger: Optional logger for error messages. If None, errors are raised without logging.
+
+    Returns:
+        List of file paths matching the search criteria
+
+    Raises:
+        TypeError: If h is not an integer
+        FileNotFoundError: If no files matching the patterns are found
+        RuntimeError: If files from multiple case names are found (indicates mixed output from
+                     different simulations, which is pathological)
+
+    Notes:
+        - Searches for files matching patterns: "*h{h}i.*.nc" or "*h{h}i.*.nc.base"
+        - When this_year is specified, searches for: "*h{h}i.{this_year}-01*.nc" or
+          "*h{h}i.{this_year}-01*.nc.base"
+        - Prefers .nc files over .nc.base files (searches .nc pattern first)
+        - All returned files must be from the same case name (extracted from filename before
+          ".clm2.h#i.")
+    """
+    if this_year is None:
+        patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
+    else:
+        if not isinstance(h, int):
+            err_msg = f"h ({h}) must be an integer, not {type(h)}"
+            err_type = TypeError
+            if logger:
+                error(logger, err_msg, error_type=err_type)
+            raise err_type(err_msg)
+        patterns = [f"*h{h}i.{this_year}-01*.nc", f"*h{h}i.{this_year}-01*.nc.base"]
+    for pat in patterns:
+        pattern = os.path.join(indir, pat)
+        file_list = glob.glob(pattern)
+        if file_list:
+            break
+    if not file_list:
+        err_msg = f"No files found matching patterns: {patterns}"
+        err_type = FileNotFoundError
+        if logger:
+            error(logger, err_msg, error_type=err_type)
+        raise err_type(err_msg)
+
+    # Error if files found from multiple cases
+    case_names = set()
+    for file in file_list:
+        basename = os.path.basename(file)
+        # Extract case name (everything before .clm2.h#i.)
+        parts = basename.split(".clm2.")
+        if len(parts) > 1:
+            case_name = parts[0]
+            case_names.add(case_name)
+    if len(case_names) > 1:
+        err_msg = f"Found files from multiple case names: {sorted(case_names)}"
+        err_type = RuntimeError
+        if logger:
+            error(logger, err_msg, error_type=err_type)
+        raise err_type(err_msg)
+
+    return file_list
 
 
 def get_multicrop_maps(this_ds, these_vars, crop_fracs_yx, dummy_fill, gdd_units):

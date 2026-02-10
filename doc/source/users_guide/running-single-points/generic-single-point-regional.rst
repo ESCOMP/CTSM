@@ -33,13 +33,13 @@ To subset surface data and climate forcings (DATM) for a single point, use the c
 -  ``$my_lon_type``: 180 if your longitude is in the [-180, 180] format (i.e., centered at the Prime/0th Meridian); 360 if it's in the [0, 360] format (i.e., centered at the 180th Meridian). Note that ``--lon-type $my_lon_type`` is not necessary if your longitude is unambiguous---i.e., it's only needed if your longitude is in the range [0, 180].
 -  ``$my_site_name``: name of site, *used for file naming*
 -  ``$my_start_year``: start year for DATM data to subset, *default between 1901 and 2014*
--  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024 DATM data ends in 2023, while the old default GSWP3 ends in 2014; see note below about switching the default DATM data*
+-  ``$my_end_year``: end year for DATM data to subset, *default between 1901 and 2014; the default CRUJRA2024b DATM data ends in 2023, while the old default GSWP3 ends in 2014; see note below about switching the default DATM data*
 -  ``$my_output_dir``: output directory to place the subset data and user_mods directory. This should be something specific to *just* your data for ``$my_site_name``.
 
 You can also have the script subset land-use data. See the help (``tools/site_and_regional/subset_data --help``) for all argument options. For example, depending on your application, it may be helpful to specify a dominant PFT using ``--dompft`` and ``--pctpft`` flags. This allows you to control the PFTs that are present on your surface dataset
 
 .. note::
-   This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024 DATM data. It can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is. 
+   This script defaults to subsetting specific surface data, land-use timeseries, and the CRUJRA2024b DATM data. It can currently only be run as-is on Derecho. If you're not on Derecho, use ``--inputdata-dir`` to specify where the top level of your CESM input data is.
    
    Using ``--create-datm`` with GSWP3 data is no longer supported; see `CTSM issue #3269 <https://github.com/ESCOMP/CTSM/issues/3269>`_.
 
