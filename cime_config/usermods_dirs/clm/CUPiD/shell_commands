@@ -46,7 +46,7 @@ fi
 # Use the land_only example
 ./xmlchange CUPID_EXAMPLE=land_only
 # TODO: Get CUPiD working with LDF under CESM
-./xmlchange CUPID_RUN_LDF=TRUE
+./xmlchange CUPID_RUN_LDF=FALSE
 ./xmlchange CUPID_RUN_LND=TRUE
 # TODO: Test if ROF can be run
 ./xmlchange CUPID_RUN_ROF=TRUE
