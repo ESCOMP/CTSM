@@ -100,13 +100,31 @@
       <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_Ly1_PS" grid="f19_f19_mt232" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD">
+  <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Simple smoke test running st_archive with CUPiD on</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for LND</option>
+    </options>
+  </test>
+  <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD_LDF">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for the LDF</option>
+    </options>
+  </test>
+  <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD_ILAMB">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for the ILAMB</option>
     </options>
   </test>
   <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
