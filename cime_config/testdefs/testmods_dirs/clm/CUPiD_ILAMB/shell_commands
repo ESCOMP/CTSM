@@ -1,4 +1,3 @@
 #!/bin/bash
 ./xmlchange CUPID_RUN_ILAMB=TRUE
-./xmlchange CUPID_RUN_LND=FALSE
 

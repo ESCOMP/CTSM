@@ -49,4 +49,4 @@ fi
 ./xmlchange CUPID_RUN_LDF=FALSE
 ./xmlchange CUPID_RUN_LND=TRUE
 # TODO: Test if ROF can be run
-./xmlchange CUPID_RUN_ROF=TRUE
+./xmlchange CUPID_RUN_ROF=FALSE
