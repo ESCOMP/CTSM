@@ -17,6 +17,7 @@
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+        aux_cupic: Tests that run the CUPiD postprocessing workflow
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -103,28 +104,38 @@
   <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Simple smoke test running st_archive with CUPiD on for LND</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for LND, requires cupid conda environment</option>
+    </options>
+  </test>
+  <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD_web">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_cupid"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for LND and create web-pages, requires cupid conda environment</option>
     </options>
   </test>
   <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD_LDF">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Simple smoke test running st_archive with CUPiD on for the LDF</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for the LDF, requires cupid conda environment</option>
     </options>
   </test>
   <test name="SMSAR_PS" grid="f45_f45_mg37" compset="IHistClm60BgcCrujra" testmods="clm/CUPiD_ILAMB">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Simple smoke test running st_archive with CUPiD on for the ILAMB</option>
+      <option name="comment">Simple smoke test running st_archive with CUPiD on for the ILAMB, requires cupid conda environment</option>
     </options>
   </test>
   <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
