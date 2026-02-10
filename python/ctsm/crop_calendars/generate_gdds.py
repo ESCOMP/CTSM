@@ -65,11 +65,11 @@ def _get_history_yr_range(first_season, last_season):
     return history_yr_range
 
 
-def _get_time_slice_list(first_season, last_season):
+def _get_time_slice_lists(first_season, last_season):
     """
     Given the requested first and last seasons, get the list of time slices that the script should
-    look for. The assumptions here, as in import_and_process_1yr and as instructed in the docs, are
-    that the user (a) is saving instantaneous annual files and (b) started on Jan. 1.
+    look for. The assumption here, as in _get_file_lists() and as instructed in the docs, is
+    that the user is saving instantaneous files.
     """
 
     # Input checks
@@ -78,27 +78,41 @@ def _get_time_slice_list(first_season, last_season):
     if first_season > last_season:
         raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
 
-    slice_list = []
-    for history_yr in _get_history_yr_range(first_season, last_season):
-        slice_start = f"{history_yr}-01-01"
-        # Stop could probably be the same as start, since there should just be one value saved per
-        # year and that should get the Jan. 1 timestamp.
-        slice_stop = f"{history_yr}-12-31"
-        slice_list.append(slice(slice_start, slice_stop))
+    slice_lists_list = [None, None]
+    for i, h in enumerate([1, 2]):
+        slice_list = []
+        for history_yr in _get_history_yr_range(first_season, last_season):
+            if h == 1:
+                # Annual timesteps
+                slice_start = f"{history_yr}-01-01"
+                slice_stop = f"{history_yr}-01-01"
+            elif h == 2:
+                # Daily timesteps of instantaneous variables will go from Jan. 2 through Jan. 1
+                # because they will get the time at the end of each timestep.
+                slice_start = f"{history_yr}-01-02"
+                slice_stop = f"{history_yr + 1}-01-01"
+            else:
+                raise NotImplementedError(f"What frequency are h{h}i files saved at?")
+            slice_list.append(slice(slice_start, slice_stop))
 
-    # We should be reading one more than the total number of years in [first_season, last_season].
-    assert len(slice_list) == last_season - first_season + 2
+        # We should be reading one more than the total number of years in
+        # [first_season, last_season].
+        assert len(slice_list) == last_season - first_season + 2
 
-    return slice_list
+        # Save
+        slice_lists_list[i] = slice_list
+
+    return tuple(slice_lists_list)
 
 
-def _get_file_lists(input_dir, time_slice_list, logger):
+def _get_file_lists(input_dir, time_slice_lists_list, logger):
     """
     For each time slice in a list, find the file(s) that need to be read to get all history
     timesteps in the slice. Returns both h1i and h2i file lists.
     """
     output_file_lists_list = [None, None]
     for i, h in enumerate([1, 2]):
+        time_slice_list = time_slice_lists_list[i]
         all_h_files = gddfn.find_inst_hist_files(input_dir, h=h, logger=logger)
         h_file_lists = []
         for time_slice in time_slice_list:
@@ -235,8 +249,10 @@ def main(
         )
 
         # Get lists of history timesteps and files to read
-        time_slice_list = _get_time_slice_list(first_season, last_season)
-        h1_file_lists, h2_file_lists = _get_file_lists(input_dir, time_slice_list, logger)
+        h1_time_slices, h2_time_slices = _get_time_slice_lists(first_season, last_season)
+        h1_file_lists, h2_file_lists = _get_file_lists(
+            input_dir, (h1_time_slices, h2_time_slices), logger
+        )
 
         for yr_index, this_yr in enumerate(_get_history_yr_range(first_season, last_season)):
             # If resuming from a pickled file, we continue until we reach a year that hasn't yet
@@ -245,7 +261,9 @@ def main(
                 continue
             log(logger, f"netCDF year {this_yr}...")
 
-            # Get h1 and h2 files to read for this year
+            # Get time slice and files to read for this year
+            h1_time_slice = h1_time_slices[yr_index]  # pylint: disable=unsubscriptable-object
+            h2_time_slice = h2_time_slices[yr_index]  # pylint: disable=unsubscriptable-object
             h1_file_list = h1_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
             h2_file_list = h2_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
 
@@ -281,6 +299,8 @@ def main(
                 logger,
                 h1_file_list,
                 h2_file_list,
+                h1_time_slice,
+                h2_time_slice,
             )
 
             log(logger, f"   Saving pickle file ({pickle_file})...")

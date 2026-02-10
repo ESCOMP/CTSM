@@ -305,6 +305,8 @@ def import_and_process_1yr(
     logger,
     h1_filelist,
     h2_filelist,
+    h1_time_slice,
+    h2_time_slice,
 ):
     """
     Import one year of CLM output data for GDD generation
@@ -330,6 +332,7 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         chunks=chunks,
         logger=logger,
+        time_slice=h1_time_slice,
     )
     for timestep in dates_ds["time"].values:
         print(timestep)
@@ -617,6 +620,7 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         chunks=chunks,
         logger=logger,
+        time_slice=h2_time_slice,
     )
 
     # Restrict to patches we're including
