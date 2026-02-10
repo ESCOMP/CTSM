@@ -536,13 +536,13 @@ class TestFindInstHistFiles(unittest.TestCase):
     def test_find_inst_hist_files_multiple_months_same_year(self):
         """Test finding multiple files from the same year"""
         # Create multiple files from 2000
-        file1 = self._create_test_file("test.clm2.h1i.2000-01-01-00000.nc")
-        file2 = self._create_test_file("test.clm2.h1i.2000-01-15-00000.nc")
-        file3 = self._create_test_file("test.clm2.h1i.2000-01-31-00000.nc")
+        file1 = self._create_test_file("test.clm2.h2i.2000-01-01-00000.nc")
+        file2 = self._create_test_file("test.clm2.h2i.2000-01-15-00000.nc")
+        file3 = self._create_test_file("test.clm2.h2i.2000-01-31-00000.nc")
         # Create file from different year
-        file4 = self._create_test_file("test.clm2.h1i.2001-01-01-00000.nc")
+        file4 = self._create_test_file("test.clm2.h2i.2001-01-01-00000.nc")
 
-        result = gf.find_inst_hist_files(self.temp_dir, h=1)
+        result = gf.find_inst_hist_files(self.temp_dir, h=2)
 
         # Should find all files
         self.assertEqual(len(result), 4)
