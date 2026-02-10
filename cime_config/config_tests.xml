@@ -185,6 +185,32 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+  <test NAME="SMSAR">
+    <DESC>Run a smoke startup test with st_archive on</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>TRUE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <STOP_OPTION>nyears</STOP_OPTION>
+    <STOP_N>5</STOP_N>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
+  <test NAME="SMSCUPID">
+    <DESC>Run a smoke startup test with CUPiD on</DESC>
+    <INFO_DBUG>1</INFO_DBUG>
+    <DOUT_S>TRUE</DOUT_S>
+    <CONTINUE_RUN>FALSE</CONTINUE_RUN>
+    <RUN_POSTPROCESSING>TRUE</RUN_POSTPROCESSING>
+    <!-- TODO: Add CUPID Settings -->
+    <STOP_OPTION>nyears</STOP_OPTION>
+    <STOP_N>5</STOP_N>
+    <REST_OPTION>never</REST_OPTION>
+    <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
+    <HIST_N>$STOP_N</HIST_N>
+  </test>
+
 <!--
 SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
