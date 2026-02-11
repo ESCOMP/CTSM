@@ -53,8 +53,16 @@ module clm_varpar
   integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
   integer, public, parameter :: mxsowings   =   1     ! maximum number of crop growing seasons to begin in any year;
   integer, public            :: mxharvests            ! maximum number of crop harvests in any year
-                                                      ! (allows for multiple harvests in a calendar year in case harvest occurs near
+                                                      ! (allows for multiple harvests in a calendar
+                                                      ! year in case harvest occurs near
                                                       ! beginning/end of year);
+
+  ! These strings define the clm-fates coupling, i.e. which chemical species
+  ! are cycled between the two, see corresponding values for fates_parteh_mode:
+  ! bld/namelist_files/namelist_definition_ctsm.xml
+  character(len=256), public, parameter :: clmfates_carbon_only = 'carbon_only'
+  character(len=256), public, parameter :: clmfates_carbon_nitrogen = 'carbon_nitrogen'
+
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
