@@ -146,12 +146,11 @@ Changes answers relative to baseline:
    only by roundoff level (because order of operation changes for example). Roundoff
    changes to state fields usually grow to greater than roundoff as the simulation progresses.
 
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename:
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - LMWG_dev issue number(s):
 
-   URL for LMWG diagnostics output used to validate new climate:
-
+       - details (casename, machine, user, link to plots etc.) [if not in LMWG_dev]
 
 Other details
 -------------

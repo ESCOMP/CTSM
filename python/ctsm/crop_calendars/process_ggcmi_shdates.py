@@ -529,7 +529,7 @@ def process_ggcmi_shdates(
 
             # Save
             logger.info("    Saving %s...", varname_ggcmi)
-            thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
+            thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF4_CLASSIC")
 
         cropcal_ds.close()
 
