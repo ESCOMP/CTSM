@@ -18,17 +18,97 @@ _CTSM_PYTHON = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, os.pardir, "python"
 )
 sys.path.insert(1, _CTSM_PYTHON)
+from ctsm.ctsm_logging import log, error  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.cropcal_module as cc  # pylint: disable=wrong-import-position
 import ctsm.crop_calendars.generate_gdds_functions as gddfn  # pylint: disable=wrong-import-position
+from ctsm.crop_calendars.import_ds import (  # pylint: disable=wrong-import-position
+    get_files_in_time_slice,  # pylint: disable=wrong-import-position
+)  # pylint: disable=wrong-import-position
 
 # Functions here were written with too many positional arguments. At some point that should be
 # fixed. For now, we'll just disable the warning.
 # pylint: disable=too-many-positional-arguments
 
-# Global constants
-PARAMFILE_DIR = "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/paramdata"
-MY_CLM_VER = 51
-MY_CLM_SUBVER = "c211112"
+
+def _get_max_growing_season_lengths(max_season_length_from_hdates_file, paramfile, cushion):
+    """
+    Import maximum growing season lengths from paramfile, if doing so.
+    """
+    if max_season_length_from_hdates_file:
+        return None
+
+    mxmats = cc.import_max_gs_length(paramfile)
+
+    if cushion:
+        mxmats = cc.cushion_gs_length(mxmats, cushion)
+
+    return mxmats
+
+
+def _get_history_yr_range(first_season, last_season):
+    """
+    Get a range object that can be used for looping over all years we need to process timestamps
+    from.
+    """
+    # Saving at the end of a year receive the timestamp of the END of the year's final timestep,
+    # which means it will actually be 00:00 of Jan. 1 of the next year.
+    first_history_yr = first_season + 1
+
+    # Same deal for the last history timestep, but we have to read an extra year in that case,
+    # because in some places the last growing season won't complete until the year after it was
+    # planted.
+    last_history_yr = last_season + 2
+
+    # last_history_yr + 1 because range() will iterate up to but not including the second value.
+    history_yr_range = range(first_history_yr, last_history_yr + 1)
+
+    return history_yr_range
+
+
+def _get_time_slice_list(first_season, last_season):
+    """
+    Given the requested first and last seasons, get the list of time slices that the script should
+    look for. The assumptions here, as in import_and_process_1yr and as instructed in the docs, are
+    that the user (a) is saving instantaneous annual files and (b) started on Jan. 1.
+    """
+
+    # Input checks
+    if not all(isinstance(i, int) for i in [first_season, last_season]):
+        raise TypeError("_get_time_slice_list() arguments must be integers")
+    if first_season > last_season:
+        raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
+
+    slice_list = []
+    for history_yr in _get_history_yr_range(first_season, last_season):
+        slice_start = f"{history_yr}-01-01"
+        # Stop could probably be the same as start, since there should just be one value saved per
+        # year and that should get the Jan. 1 timestamp.
+        slice_stop = f"{history_yr}-12-31"
+        slice_list.append(slice(slice_start, slice_stop))
+
+    # We should be reading one more than the total number of years in [first_season, last_season].
+    assert len(slice_list) == last_season - first_season + 2
+
+    return slice_list
+
+
+def _get_file_lists(input_dir, time_slice_list, logger):
+    """
+    For each time slice in a list, find the file(s) that need to be read to get all history
+    timesteps in the slice. Returns both h1i and h2i file lists.
+    """
+    output_file_lists_list = [None, None]
+    for i, h in enumerate([1, 2]):
+        all_h_files = gddfn.find_inst_hist_files(input_dir, h=h, logger=logger)
+        h_file_lists = []
+        for time_slice in time_slice_list:
+            try:
+                h_file_lists.append(get_files_in_time_slice(all_h_files, time_slice, logger=logger))
+            except FileNotFoundError as e:
+                raise FileNotFoundError(f"No h{h} timesteps found in {time_slice}") from e
+        output_file_lists_list[i] = h_file_lists
+    h1_file_lists, h2_file_lists = tuple(output_file_lists_list)
+    return h1_file_lists, h2_file_lists
 
 
 def main(
@@ -46,10 +126,12 @@ def main(
     land_use_file=None,
     first_land_use_year=None,
     last_land_use_year=None,
-    unlimited_season_length=False,
+    max_season_length_from_hdates_file=False,
     skip_crops=None,
     logger=None,
     no_pickle=None,
+    paramfile=None,
+    max_season_length_cushion=None,
 ):  # pylint: disable=missing-function-docstring,too-many-statements
     # Directories to save output files and figures
     if not output_dir:
@@ -57,7 +139,7 @@ def main(
             output_dir = input_dir
         else:
             output_dir = os.path.join(input_dir, "generate_gdds")
-            if not unlimited_season_length:
+            if not max_season_length_from_hdates_file:
                 output_dir += ".mxmat"
             output_dir += "." + dt.datetime.now().strftime("%Y-%m-%d-%H%M%S")
     if not os.path.exists(output_dir):
@@ -85,11 +167,11 @@ def main(
                 raise RuntimeError(
                     "only_make_figs True but not all plotting modules are available"
                 ) from exc
-            gddfn.log(logger, "Not all plotting modules are available; disabling save_figs")
+            log(logger, "Not all plotting modules are available; disabling save_figs")
             save_figs = False
 
     # Print some info
-    gddfn.log(logger, f"Saving to {output_dir}")
+    log(logger, f"Saving to {output_dir}")
 
     # Parse list of crops to skip
     if "," in skip_crops:
@@ -107,12 +189,15 @@ def main(
         yr_1_import_str = f"{first_season+1}-01-01"
         yr_n_import_str = f"{last_season+2}-01-01"
 
-        gddfn.log(
+        log(
             logger,
             f"Importing netCDF time steps {yr_1_import_str} through {yr_n_import_str} "
             + "(years are +1 because of CTSM output naming)",
         )
 
+        # This script uses pickle to save work in progress. In case of interruption, when the script
+        # is resumed, it will look for a pickle file. It will resume from the year after
+        # pickle_year, which is the last processed year in the pickle file.
         pickle_file = os.path.join(output_dir, f"{first_season}-{last_season}.pickle")
         h2_ds_file = os.path.join(output_dir, f"{first_season}-{last_season}.h2_ds.nc")
         if os.path.exists(pickle_file) and not no_pickle:
@@ -145,15 +230,24 @@ def main(
         sdates_rx = sdates_file
         hdates_rx = hdates_file
 
-        if not unlimited_season_length:
-            mxmats = cc.import_max_gs_length(PARAMFILE_DIR, MY_CLM_VER, MY_CLM_SUBVER)
-        else:
-            mxmats = None
+        mxmats = _get_max_growing_season_lengths(
+            max_season_length_from_hdates_file, paramfile, max_season_length_cushion
+        )
 
-        h1_instantaneous = None
-        for yr_index, this_yr in enumerate(np.arange(first_season + 1, last_season + 3)):
+        # Get lists of history timesteps and files to read
+        time_slice_list = _get_time_slice_list(first_season, last_season)
+        h1_file_lists, h2_file_lists = _get_file_lists(input_dir, time_slice_list, logger)
+
+        for yr_index, this_yr in enumerate(_get_history_yr_range(first_season, last_season)):
+            # If resuming from a pickled file, we continue until we reach a year that hasn't yet
+            # been processed.
             if this_yr <= pickle_year:
                 continue
+            log(logger, f"netCDF year {this_yr}...")
+
+            # Get h1 and h2 files to read for this year
+            h1_file_list = h1_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
+            h2_file_list = h2_file_lists[yr_index]  # pylint: disable=unsubscriptable-object
 
             (
                 h2_ds,
@@ -167,12 +261,10 @@ def main(
                 incl_vegtypes_str,
                 incl_patches1d_itype_veg,
                 mxsowings,
-                h1_instantaneous,
             ) = gddfn.import_and_process_1yr(
                 first_season,
                 last_season,
                 yr_index,
-                this_yr,
                 sdates_rx,
                 hdates_rx,
                 gddaccum_yp_list,
@@ -180,7 +272,6 @@ def main(
                 skip_patches_for_isel_nan_lastyear,
                 lastyear_active_patch_indices_list,
                 incorrectly_daily,
-                input_dir,
                 incl_vegtypes_str,
                 h2_ds_file,
                 mxmats,
@@ -188,10 +279,11 @@ def main(
                 skip_crops,
                 outdir_figs,
                 logger,
-                h1_instantaneous,
+                h1_file_list,
+                h2_file_list,
             )
 
-            gddfn.log(logger, f"   Saving pickle file ({pickle_file})...")
+            log(logger, f"   Saving pickle file ({pickle_file})...")
             with open(pickle_file, "wb") as file:
                 pickle.dump(
                     [
@@ -219,9 +311,10 @@ def main(
             [i for i, c in enumerate(gddaccum_yp_list) if not isinstance(c, type(None))]
         ]
 
-        gddfn.log(logger, "Done")
+        log(logger, "Done")
 
         if not h2_ds:
+            log(logger, f"Opening h2_ds: {h2_ds_file}")
             h2_ds = xr.open_dataset(h2_ds_file)
 
     ######################################################
@@ -236,7 +329,7 @@ def main(
             "s", sdates_rx, incl_patches1d_itype_veg, mxsowings, logger
         )
 
-        gddfn.log(logger, "Getting and gridding mean GDDs...")
+        log(logger, "Getting and gridding mean GDDs...")
         gdd_maps_ds = gddfn.yp_list_to_ds(
             gddaccum_yp_list, h2_ds, incl_vegtypes_str, sdates_rx, longname_prefix, logger
         )
@@ -247,10 +340,10 @@ def main(
         # Fill NAs with dummy values
         dummy_fill = -1
         gdd_maps_ds = gdd_maps_ds.fillna(dummy_fill)
-        gddfn.log(logger, "Done getting and gridding means.")
+        log(logger, "Done getting and gridding means.")
 
         # Add dummy variables for crops not actually simulated
-        gddfn.log(logger, "Adding dummy variables...")
+        log(logger, "Adding dummy variables...")
         # Unnecessary?
         template_ds = xr.open_dataset(sdates_file, decode_times=True)
         all_vars = [v.replace("sdate", "gdd") for v in template_ds if "sdate" in v]
@@ -278,9 +371,7 @@ def main(
 
         for var_index, this_var in enumerate(dummy_vars):
             if this_var in gdd_maps_ds:
-                gddfn.error(
-                    logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?"
-                )
+                error(logger, f"{this_var} is already in gdd_maps_ds. Why overwrite it with dummy?")
             dummy_gridded.name = this_var
             dummy_gridded.attrs["long_name"] = dummy_longnames[var_index]
             gdd_maps_ds[this_var] = dummy_gridded
@@ -294,14 +385,14 @@ def main(
         gdd_maps_ds = add_lonlat_attrs(gdd_maps_ds)
         gddharv_maps_ds = add_lonlat_attrs(gddharv_maps_ds)
 
-        gddfn.log(logger, "Done.")
+        log(logger, "Done.")
 
     ######################
     ### Save to netCDF ###
     ######################
 
     if not only_make_figs:
-        gddfn.log(logger, "Saving...")
+        log(logger, "Saving...")
 
         # Get output file path
         datestr = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -313,7 +404,7 @@ def main(
             for var in template_ds:
                 if "sdate" in var:
                     template_ds = template_ds.drop(var)
-            template_ds.to_netcdf(path=outfile, format="NETCDF3_CLASSIC")
+            template_ds.to_netcdf(path=outfile, format="NETCDF4_CLASSIC")
             template_ds.close()
 
             # Add global attributes
@@ -332,11 +423,11 @@ def main(
                 gdd_maps_ds["time_bounds"] = sdates_rx.time_bounds
 
             # Save cultivar GDDs
-            gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF3_CLASSIC")
+            gdd_maps_ds.to_netcdf(outfile, mode="w", format="NETCDF4_CLASSIC")
 
         save_gdds(sdates_file, hdates_file, outfile, gdd_maps_ds, sdates_rx)
 
-        gddfn.log(logger, "Done saving.")
+        log(logger, "Done saving.")
 
     ########################################
     ### Save things needed for mapmaking ###
@@ -390,11 +481,34 @@ def main(
         )
 
 
-if __name__ == "__main__":
-    ###############################
-    ### Process input arguments ###
-    ###############################
-    parser = argparse.ArgumentParser(description="ADD DESCRIPTION HERE")
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        description=(
+            "A script to generate maturity requirements for CLM crops in units of growing degree-"
+            "days (GDDs)."
+        )
+    )
+
+    # Required but mutually exclusive
+    max_growing_season_length_group = parser.add_mutually_exclusive_group(required=True)
+    max_growing_season_length_group.add_argument(
+        "--paramfile",
+        help=(
+            "Path to parameter file with maximum growing season lengths (mxmat)."
+            " Mutually exclusive with --max-season-length-from-hdates-file."
+        ),
+    )
+    max_growing_season_length_group.add_argument(
+        "--max-season-length-from-hdates-file",
+        help=(
+            "Rather than limiting growing season length based on mxmat values from a CLM parameter"
+            " file, use the season lengths from --hdates-file. Not recommended unless you use the"
+            "results of this script in a run with sufficiently long mxmat values!"
+            " Mutually exclusive with --paramfile."
+        ),
+        action="store_true",
+        default=False,
+    )
 
     # Required
     parser.add_argument(
@@ -468,12 +582,6 @@ if __name__ == "__main__":
         type=int,
     )
     parser.add_argument(
-        "--unlimited-season-length",
-        help="Limit mean growing season length based on CLM CFT parameter mxmat.",
-        action="store_true",
-        default=False,
-    )
-    parser.add_argument(
         "--skip-crops",
         help="Skip processing of these crops. Comma- or space-separated list.",
         type=str,
@@ -485,11 +593,39 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--max-season-length-cushion",
+        help=(
+            "How much to reduce the maximum growing season length (mxmat) for each crop in the"
+            " parameter file. This might be useful for helping avoid high rates of immature"
+            " harvests for gridcells where the observed harvest date is longer than mxmat."
+            " Incompatible with --max-season-length-from-hdates-file."
+        ),
+        default=0,
+        type=int,
+    )
 
     # Get arguments
-    args = parser.parse_args(sys.argv[1:])
-    for k, v in sorted(vars(args).items()):
+    args_parsed = parser.parse_args(argv)
+    for k, v in sorted(vars(args_parsed).items()):
         print(f"{k}: {v}")
+
+    # Check arguments
+    if args_parsed.max_season_length_from_hdates_file and args_parsed.max_season_length_cushion:
+        raise argparse.ArgumentError(
+            None,
+            "--max-season-length-from-hdates-file is incompatible with --max-season-length-cushion"
+            " ≠ 0.",
+        )
+
+    return args_parsed
+
+
+if __name__ == "__main__":
+    ###############################
+    ### Process input arguments ###
+    ###############################
+    args = _parse_args(sys.argv[1:])
 
     # Call main()
     main(
@@ -506,7 +642,9 @@ if __name__ == "__main__":
         land_use_file=args.land_use_file,
         first_land_use_year=args.first_land_use_year,
         last_land_use_year=args.last_land_use_year,
-        unlimited_season_length=args.unlimited_season_length,
+        max_season_length_from_hdates_file=args.max_season_length_from_hdates_file,
         skip_crops=args.skip_crops,
         no_pickle=args.no_pickle,
+        paramfile=args.paramfile,
+        max_season_length_cushion=args.max_season_length_cushion,
     )

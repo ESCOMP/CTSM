@@ -46,6 +46,7 @@ module decompMod
   public :: get_subgrid_level_from_name ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
   public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
   public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
+  public :: decompmod_clean             ! Deallocate memory used by decompMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   !
@@ -361,7 +362,7 @@ contains
   end function get_proc_clumps
 
   !-----------------------------------------------------------------------
-  integer function get_global_index(subgrid_index, subgrid_level)
+  integer function get_global_index(subgrid_index, subgrid_level, donot_abort_on_badindex)
 
     !----------------------------------------------------------------
     ! Description
@@ -373,23 +374,47 @@ contains
     ! Arguments
     integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
     integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined above
+    logical , intent(in), optional :: donot_abort_on_badindex ! Don't abort if given a bad index
     !
     ! Local Variables:
     type(bounds_type) :: bounds_proc   ! processor bounds
     integer           :: beg_index     ! beginning proc index for subgrid_level
+    integer           :: end_index     ! ending proc index for subgrid_level
+    integer           :: index         ! index of the point to get
     integer, pointer  :: gindex(:)
+    logical           :: abort_on_badindex = .true.
     !----------------------------------------------------------------
 
+    if (present(donot_abort_on_badindex)) then
+       abort_on_badindex = .not. donot_abort_on_badindex
+    end if
     call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
     beg_index = get_beg(bounds_proc, subgrid_level)
+    end_index = get_end(bounds_proc, subgrid_level)
     if (beg_index == -1) then
        write(iulog,*) 'get_global_index: subgrid_level not supported: ', subgrid_level
-       call shr_sys_abort('subgrid_level not supported' // &
-            errmsg(sourcefile, __LINE__))
+       if (abort_on_badindex) then
+          call shr_sys_abort('subgrid_level not supported')
+       else
+          get_global_index = -1
+          return
+       end if
     end if
 
     call get_subgrid_level_gindex(subgrid_level=subgrid_level, gindex=gindex)
-    get_global_index = gindex(subgrid_index - beg_index + 1)
+    index = subgrid_index - beg_index + 1
+    if ( (index < beg_index) .or. (index > end_index) ) then
+       if (abort_on_badindex) then
+          write(iulog,*) 'get_global_index: subgrid_index out of bounds: ', &
+               'subgrid_index = ', subgrid_index, ', beg_index = ', beg_index, &
+               ', end_index = ', end_index, ', subgrid_level = ', subgrid_level
+          call shr_sys_abort('subgrid_index out of bounds')
+       else
+          get_global_index = -1
+          return
+       end if
+    end if
+    get_global_index = gindex(index)
 
   end function get_global_index
 
@@ -537,9 +562,52 @@ contains
        gindex => gindex_cohort
     case default
        write(iulog,*) 'get_subgrid_level_gindex: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort()
+       call shr_sys_abort('bad subgrid_level')
     end select
 
   end subroutine get_subgrid_level_gindex
+
+  !-----------------------------------------------------------------------
+  subroutine decompmod_clean()
+    ! Deallocate the decompMod long-term variables created in decompInit_lnd
+
+    ! Set the total counts to zero
+    nclumps = 0
+    numg = 0
+    numl = 0
+    numc = 0
+    nump = 0
+    numCohort = 0
+
+    ! Deallocate and set the pointers to null
+    if ( allocated(clumps) )then
+      deallocate(clumps)
+    end if
+    if ( associated(procinfo%cid) )then
+      deallocate(procinfo%cid)
+      procinfo%cid => null()
+    end if
+    if ( associated(gindex_global) )then
+      deallocate(gindex_global)
+      gindex_global => null()
+    end if
+    if ( associated(gindex_grc) )then
+      deallocate( gindex_grc )
+      gindex_grc => null()
+    end if
+    if ( associated(gindex_lun) )then
+      deallocate( gindex_lun )
+      gindex_lun => null()
+    end if
+    if ( associated(gindex_col) )then
+      deallocate( gindex_col )
+      gindex_col => null()
+    end if
+    if ( associated(gindex_patch) )then
+      deallocate( gindex_patch )
+      gindex_patch => null()
+    end if
+  end subroutine decompMod_clean
+  !-----------------------------------------------------------------------
 
 end module decompMod

@@ -1,5 +1,53 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.016 samrabin 02/06/2026 Merge b4b-dev to master
+       ctsm5.4.015     erik 02/03/2026 Update CISM to latest version with answer changes
+       ctsm5.4.014 mvdebols 01/29/2026 Fix for xm2 and revise logic for excess ice melt
+       ctsm5.4.013     erik 01/28/2026 Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
+       ctsm5.4.012   slevis 01/26/2026 Fix C-balance error for partly emerged crops
+       ctsm5.4.011   slevis 01/22/2026 Merge b4b-dev to master
+       ctsm5.4.010     erik 01/21/2026 Update cime to version that changes answers for ERI tests
+       ctsm5.4.009   olyson 01/19/2026 Dewpoint Temperature check for bare ground
+       ctsm5.4.008 swensosc 01/12/2026 Add a correction for oversaturated soil layers in SoilWaterMovement (erik)
+       ctsm5.4.007 samrabin 01/09/2026 Update (irrigated_)rice grnfill and lfemerg
+       ctsm5.4.006     erik 01/07/2026 Merge b4b-dev to master
+       ctsm5.4.005   rgknox 12/19/2025 FATES JSON parameter files
+       ctsm5.4.004 samrabin 12/12/2025 Update crop parameters and maturity requirements
+       ctsm5.4.003 multiple 12/11/2025 Merge post5.4 branch to master
+       ctsm5.4.002     erik 12/10/2025 Start using CMIP7 Carbon Isotope datasets
+       ctsm5.4.001 samrabin 12/08/2025 Merge b4b-dev
+       ctsm5.4.000 multiple 12/04/2025 Merge alpha-ctsm5.4.CMIP7 to master
+       ctsm5.3.085   slevis 11/14/2025 Merge b4b-dev to master
+       ctsm5.3.084     erik 10/31/2025 Merge b4b-dev to master
+       ctsm5.3.083   rgknox 10/29/2025 Changes to coupling of supplementation status with FATES.
+       ctsm5.3.082   slevis 10/24/2025 Update to CMIP7 population density file for non-SSP cases
+       ctsm5.3.081     erik 10/22/2025 Change defaults for when Carbon isotopes are turned on, and turn on irrigate for Sp/Bgc cases for clm6_0 historical transient cases
+       ctsm5.3.080 samrabin 10/16/2025 Merge b4b-dev to master
+       ctsm5.3.079 samrabin 10/06/2025 Update submodules to match versions in cesm3_0_alpha07e
+       ctsm5.3.078   slevis 10/03/2025 Merge b4b-dev to master
+       ctsm5.3.077   rgknox 10/02/2025 Adjustment of timestep albedo filtering with FATES
+       ctsm5.3.076     erik 09/24/2025 Merge b4b-dev to master
+       ctsm5.3.075   slevis 09/10/2025 Change default glcmec_downscale_longwave from true to false for clm6
+       ctsm5.3.074   slevis 09/09/2025 Update ctsm6 default paramfile and finidat files
+       ctsm5.3.073   slevis 08/28/2025 Update .gitmodules to cesm3_0_alpha07c
+       ctsm5.3.072 jinmuluo 08/26/2025 New vertical movement scheme for soil nitrate
+       ctsm5.3.071 samrabin 08/22/2025 Merge b4b-dev to master
+       ctsm5.3.070 glemieux 08/22/2025 Update default FATES parameter file and add FATES managed fire namelist option
+       ctsm5.3.069 samrabin 08/12/2025 Add SystemTests to run subset_data and then CTSM
+       ctsm5.3.068   slevis 08/11/2025 Change megan_use_gamma_sm to default false
+       ctsm5.3.067 samrabin 08/08/2025 (Mostly) fix interim restarts
+       ctsm5.3.066   slevis 08/08/2025 Merge b4b-dev to master
+       ctsm5.3.065     erik 07/28/2025 Merge b4b-dev to master
+       ctsm5.3.064   slevis 07/24/2025 Add time dimension to 1d_wt fields in transient runs
+       ctsm5.3.063 samrabin 07/10/2025 Merge b4b-dev to master
+       ctsm5.3.062   slevis 07/09/2025 Put inst. and non-inst. fields on separate hist files
+       ctsm5.3.061   slevis 06/26/2025 Merge b4b-dev to master
+       ctsm5.3.060   slevis 06/24/2025 Preliminary update of ctsm54 defaults (answer changing)
+       ctsm5.3.059     erik 06/23/2025 Bring in various cleanup efforts found in previous testing after the chill changes came in
+       ctsm5.3.058 samrabin 06/16/2025 Fix clm6 compset aliases
+       ctsm5.3.057 glemieux 06/13/2025 Fix PEM test for on-the-fly parameter file generation
+       ctsm5.3.056     erik 06/12/2025 Merge b4b-dev to master
+       ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
        ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
        ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
        ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases

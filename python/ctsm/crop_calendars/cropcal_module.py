@@ -2,8 +2,8 @@
 Helper functions for various crop calendar stuff
 """
 
-import os
-import glob
+import warnings
+
 import numpy as np
 import xarray as xr
 
@@ -13,6 +13,7 @@ from ctsm.crop_calendars.check_rx_obeyed import check_rx_obeyed
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 from ctsm.crop_calendars.import_ds import import_ds
 from ctsm.utils import is_instantaneous
+from ctsm.ctsm_logging import log
 
 MISSING_RX_GDD_VAL = -1
 
@@ -49,11 +50,12 @@ def check_and_trim_years(year_1, year_n, ds_in):
     return ds_in
 
 
-def open_lu_ds(filename, year_1, year_n, existing_ds, ungrid=True):
+def open_lu_ds(filename, year_1, year_n, existing_ds, *, logger, ungrid=True):
     """
     Open land-use dataset
     """
     # Open and trim to years of interest
+    log(logger, f"Opening this_ds_gridded: {filename}")
     this_ds_gridded = xr.open_dataset(filename).sel(time=slice(year_1, year_n))
 
     # Assign actual lon/lat coordinates
@@ -201,16 +203,12 @@ def get_gs_len_da(this_da):
     return this_da
 
 
-def import_max_gs_length(paramfile_dir, my_clm_ver, my_clm_subver):
+def import_max_gs_length(paramfile):
     """
     Import maximum growing season length
     """
     # Get parameter file
-    pattern = os.path.join(paramfile_dir, f"*{my_clm_ver}_params.{my_clm_subver}.nc")
-    paramfile = glob.glob(pattern)
-    if len(paramfile) != 1:
-        raise RuntimeError(f"Expected to find 1 match of {pattern}; found {len(paramfile)}")
-    paramfile_ds = xr.open_dataset(paramfile[0])
+    paramfile_ds = xr.open_dataset(paramfile)
 
     # Import max growing season length (stored in netCDF as nanoseconds!)
     paramfile_mxmats = paramfile_ds["mxmat"].values / np.timedelta64(1, "D")
@@ -230,6 +228,56 @@ def import_max_gs_length(paramfile_dir, my_clm_ver, my_clm_subver):
             mxmat_dict[pftname] = np.inf
 
     return mxmat_dict
+
+
+def cushion_gs_length(mxmat_dict_in, cushion, *, min_mxmat=1, max_mxmat=365):
+    """
+    Given a dictionary of maximum growing season lengths, apply a "cushion". This is useful for
+    generating crop maturity requirements: If observed growing season is longer than maximum,
+    and you're limiting growing seasons based on the maximum, then you'd expect about 50% of
+    growing seasons to fail to reach maturity (assuming a normal distribution of seasonal
+    growing degree-days).
+    """
+
+    mxmat_dict_out = mxmat_dict_in.copy()
+
+    for pftname, mxmat in mxmat_dict_in.items():
+        # Skip PFTs without max growing season length
+        if np.isinf(mxmat):
+            continue
+
+        assert mxmat >= min_mxmat, f"{pftname} input mxmat ({mxmat}) is < min_mxmat ({min_mxmat})"
+        assert mxmat <= max_mxmat, f"{pftname} input mxmat ({mxmat}) is > max_mxmat ({max_mxmat})"
+
+        new_mxmat = mxmat - cushion
+
+        # Apply limits
+        msg = None
+        if new_mxmat < min_mxmat:
+            msg = (
+                f"Applying cushion of {cushion} to {pftname}'s mxmat ({mxmat}) resulted in new"
+                f" mxmat of {new_mxmat}; increasing that to min_mxmat {min_mxmat}"
+            )
+            new_mxmat = min_mxmat
+        elif new_mxmat > max_mxmat:
+            msg = (
+                f"Applying cushion of {cushion} to {pftname}'s mxmat ({mxmat}) resulted in new"
+                f" mxmat of {new_mxmat}; decreasing that to max_mxmat {max_mxmat}"
+            )
+            new_mxmat = max_mxmat
+        if msg:
+            warnings.warn(msg, RuntimeWarning)
+
+        assert (
+            new_mxmat >= min_mxmat
+        ), f"{pftname} new_mxmat ({new_mxmat}) < min_mxmat ({min_mxmat})"
+        assert (
+            new_mxmat <= max_mxmat
+        ), f"{pftname} new_mxmat ({new_mxmat}) > max_mxmat ({max_mxmat})"
+
+        mxmat_dict_out[pftname] = new_mxmat
+
+    return mxmat_dict_out
 
 
 def unexpected_negative_rx_gdd(data_array):
@@ -347,6 +395,7 @@ def import_output(
     gdds_rx_ds=None,
     verbose=False,
     throw_errors=True,
+    logger=None,
 ):
     """
     Import CLM output
@@ -354,7 +403,7 @@ def import_output(
     any_bad = False
 
     # Import
-    this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes)
+    this_ds = import_ds(filename, my_vars=my_vars, my_vegtypes=my_vegtypes, logger=logger)
 
     # Trim to years of interest (do not include extra year needed for finishing last growing season)
     if year_1 and year_n:
