@@ -446,7 +446,7 @@ def main(
             template_ds = xr.open_dataset(sdates_file, decode_times=True)
             for var in template_ds:
                 if "sdate" in var:
-                    template_ds = template_ds.drop(var)
+                    template_ds = template_ds.drop_vars(var)
             template_ds.to_netcdf(path=outfile, format="NETCDF4_CLASSIC")
             template_ds.close()
 

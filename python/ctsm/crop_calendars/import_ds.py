@@ -33,7 +33,7 @@ def compute_derived_vars(ds_in, var, logger=None):
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),
-            (1, ds_in.dims["mxharvests"], ds_in.dims["patch"]),
+            (1, ds_in.sizes["mxharvests"], ds_in.sizes["patch"]),
         )
         with np.errstate(invalid="ignore"):
             is_le_zero = ~np.isnan(ds_in.HDATES.values) & (ds_in.HDATES.values <= 0)
