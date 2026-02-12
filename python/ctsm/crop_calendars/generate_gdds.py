@@ -266,14 +266,18 @@ def main(
         h1_file_lists, h2_file_lists = _get_file_lists(
             input_dir, (h1_time_slices, h2_time_slices), logger
         )
-        history_yr_range_h1 = _get_history_yr_range(first_season, last_season, "annual")
-        history_yr_range_h2 = _get_history_yr_range(first_season, last_season, "daily")
+        history_yr_range_h1 = _get_history_yr_range(first_season, last_season, H_FREQ_DICT[1])
+        history_yr_range_h2 = _get_history_yr_range(first_season, last_season, H_FREQ_DICT[2])
         # Check
         assert len(history_yr_range_h1) == len(history_yr_range_h2)
         log(logger, "Checking h1 files")
-        gddfn.check_file_lists(history_yr_range_h1, h1_file_lists, h1_time_slices, "annual", logger)
+        gddfn.check_file_lists(
+            history_yr_range_h1, h1_file_lists, h1_time_slices, H_FREQ_DICT[1], logger
+        )
         log(logger, "Checking h2 files")
-        gddfn.check_file_lists(history_yr_range_h2, h2_file_lists, h2_time_slices, "daily", logger)
+        gddfn.check_file_lists(
+            history_yr_range_h2, h2_file_lists, h2_time_slices, H_FREQ_DICT[2], logger
+        )
         log(logger, "Done")
 
         for y, history_yr_h1 in enumerate(history_yr_range_h1):
