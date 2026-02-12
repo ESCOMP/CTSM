@@ -336,8 +336,5 @@ def get_files_in_time_slice(filelist, time_slice, logger=None, quiet=False):
             break
     if not new_filelist:
         err_msg = f"No files found in time_slice {time_slice}"
-        err_type = FileNotFoundError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=FileNotFoundError)
     return new_filelist

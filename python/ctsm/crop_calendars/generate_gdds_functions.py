@@ -887,10 +887,7 @@ def find_inst_hist_files(indir, *, h, logger=None):
     """
     if not isinstance(h, int):
         err_msg = f"h ({h}) must be an integer, not {type(h)}"
-        err_type = TypeError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=TypeError)
 
     patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
     for pat in patterns:
@@ -900,10 +897,7 @@ def find_inst_hist_files(indir, *, h, logger=None):
             break
     if not file_list:
         err_msg = f"No files found matching patterns: {patterns}"
-        err_type = FileNotFoundError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=FileNotFoundError)
 
     # Error if files found from multiple cases
     case_names = set()
@@ -916,10 +910,7 @@ def find_inst_hist_files(indir, *, h, logger=None):
             case_names.add(case_name)
     if len(case_names) > 1:
         err_msg = f"Found files from multiple case names: {sorted(case_names)}"
-        err_type = RuntimeError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=RuntimeError)
 
     return file_list
 
