@@ -304,7 +304,7 @@ class TestGetTimeSliceLists(unittest.TestCase):
         # Should be last_season - first_season + 2
         self.assertEqual(len(h1_slices), 2005 - 2000 + 2)
 
-    def test_generate_gdds_get_time_slice_lists_h1_single_day(self):
+    def test_generate_gdds_get_time_slice_lists_h1_start_equals_stop(self):
         """Test that h1 slices are single-day (start == stop)"""
         h1_slices, _ = gg._get_time_slice_lists(2000, 2002)
         for s in h1_slices:  # pylint: disable=not-an-iterable
