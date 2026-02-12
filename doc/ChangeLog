@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.018
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Feb 11 11:54:03 AM MST 2026
+Date: Thu Feb 12 11:28:51 AM MST 2026
 One-line Summary: Quick fix so that we can use Nitrogen Deposition sent from the ATM model
 
 Purpose and description of changes
@@ -73,7 +73,7 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
 
 Changes to tests or testing:
    clm*cam*LndTuningMode testmods changed to have ndep come from the ATM model (so DATM)
-   build-namelist tester updated to accomidate the addition of CLM_NDEP_FROM_CPL
+   build-namelist tester updated to accommodate the addition of CLM_NDEP_FROM_CPL
 
 
 Testing summary: regular
@@ -83,7 +83,7 @@ Testing summary: regular
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - OK (some changes relative to ctsm5.4.018)
+    derecho - OK (some changes relative to ctsm5.4.017)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
