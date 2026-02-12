@@ -322,7 +322,7 @@ def get_files_in_time_slice(filelist, time_slice, logger=None, quiet=False):
         filetime_sel = utils.safer_timeslice(filetime, time_slice)
         include_this_file = filetime_sel.size
         if include_this_file:
-            if logger and not quiet:
+            if not quiet:
                 f = os.path.basename(file)
                 first_str = str(filetime_sel["time"].isel(time=0).values)
                 last_str = str(filetime_sel["time"].isel(time=-1).values)
