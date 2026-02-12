@@ -83,9 +83,8 @@ def _get_history_yr_range(first_season, last_season, freq):
 
 def _get_time_slice_lists(first_season, last_season):
     """
-    Given the requested first and last seasons, get the list of time slices that the script should
-    look for. The assumption here, as in _get_file_lists() and as instructed in the docs, is
-    that the user is saving instantaneous tapes.
+    Given the requested first and last seasons, get the list of instantaneous time slices that the
+    script should look for.
     """
 
     # Input checks
@@ -94,11 +93,11 @@ def _get_time_slice_lists(first_season, last_season):
     if first_season > last_season:
         raise ValueError(f"first_season ({first_season}) > last_season ({last_season})")
 
-    # Initialize list with None for each history tape. Could avoid by starting with empty list and
+    # Initialize list with None for each history file. Could avoid by starting with empty list and
     # doing .append(), but pylint gets confused by that for some reason.
     slice_lists_list = [None for x in range(len(H_FREQ_DICT))]
 
-    # Get time slice for each required history year in each history tape.
+    # Get time slice for each required history year in each history file.
     for i, h in enumerate(list(H_FREQ_DICT.keys())):
         slice_list = []
         freq = H_FREQ_DICT[h]
