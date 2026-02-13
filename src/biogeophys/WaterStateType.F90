@@ -40,6 +40,9 @@ module WaterStateType
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: h2osoi_vol_prs_grc     (:,:) ! grc volumetric soil water prescribed (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
+     real(r8), pointer :: h2osoi_vol_old_col     (:,:) ! col volumetric soil water for previous time step (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+     real(r8), pointer :: ldry_col               (:,:) ! col dry period rain pulses for NOx from nitrification as state variable [hours]
+ 
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
 
@@ -142,6 +145,15 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
+    call AllocateVar2d(var = this%h2osoi_vol_old_col, name = 'h2osoi_vol_old_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)
+    call AllocateVar2d(var = this%ldry_col, name = 'ldry_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
+         dim2beg = 1, dim2end = nlevmaxurbgrnd)       
+    
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
