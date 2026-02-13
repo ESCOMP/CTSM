@@ -5,7 +5,7 @@ Land Diagnostics Cheat Sheet is here:
 
 This document has more details on more options and such
 
-https://docs.google.com/document/d/1ziZWGgaj9FxgR6WRHyCAZnzIc6-4ezqfUDDpQv4MzUI/edit?tab=t.0
+https://ncar.github.io/CUPiD/run_cesm.html
 
 ## Initial setup steps to do first time
 
@@ -13,10 +13,10 @@ This step is something you need to do the first time you want to run CUPiD for a
 And you only need to do it again if the CUPiD environment changes.
 
 ``` shell
-# Setup the conda environments
-# TODO: Make this use py_env_create?
-mamba env create --yes -f tools/cupid/environments/cupid-infrastructure.yml
-mamba env create --yes -f tools/cupid/environments/cupid-analysis.yml
+# CUPiD instructions for this is here: https://ncar.github.io/CUPiD/index.html#installing
+cd tools/CUPiD
+mamba env create --yes -f environments/cupid-infrastructure.yml
+mamba env create --yes -f environments/cupid-analysis.yml
 # Check that the environment is valid
 conda activate cupid-infrastructure
 which cupid-diagnostics
@@ -24,7 +24,8 @@ which cupid-diagnostics
 # $HOME/conda-envs/cupid-infrastructure/bin/cupid-diagnostics
 # If it returns "Command not found." something is wrong with the environment
 
-
+# Instructions for the next part are here:
+# https://ncar.github.io/CUPiD/index.html#note
 # Now make sure the conda environments can be used by Jupyter notebooks
 conda activate cupid-analysis
 python -m ipykernel install --user --name=cupid-analysis
