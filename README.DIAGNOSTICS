@@ -10,7 +10,8 @@ https://ncar.github.io/CUPiD/run_cesm.html
 ## Initial setup steps to do first time
 
 This step is something you need to do the first time you want to run CUPiD for a case.
-And you only need to do it again if the CUPiD environment changes.
+And you only need to do it again if the CUPiD environment changes -- or if you need to
+setup the environment for a different CTSM checkout.
 
 ``` shell
 # CUPiD instructions for this is here: https://ncar.github.io/CUPiD/index.html#installing
@@ -32,6 +33,14 @@ python -m ipykernel install --user --name=cupid-analysis
 conda activate cupid-infrastructure
 python -m ipykernel install --user --name=cupid-infrastructure
 ```
+
+<!-- ========================================================================================== -->
+#### IMPORTANT NOTE: You have to REMAKE THE CUPiD ENVIRONMENTS for a different CTSM Checkout
+<!-- ========================================================================================== -->
+
+
+> [!IMPORTANT]
+> If you want to use CUPiD in a different clone of CTSM -- you'll need to remake the environments there.
 
 ## Create your case using the CUPiD user-mod
 
