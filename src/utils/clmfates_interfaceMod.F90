@@ -3067,24 +3067,34 @@ module CLMFatesInterfaceMod
 
  subroutine wrap_update_hifrq_hist(this, bounds_clump, &
                                    soilbiogeochem_carbonflux_inst,     &
-                                   soilbiogeochem_carbonstate_inst)
+                                   soilbiogeochem_carbonstate_inst,    &
+                                   solarabs_inst, energyflux_inst,     &
+                                   temperature_inst)
 
     ! Arguments
     class(hlm_fates_interface_type), intent(inout)    :: this
     type(bounds_type), intent(in)                     :: bounds_clump
     type(soilbiogeochem_carbonflux_type), intent(in)  :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
+    type(solarabs_type),                   intent(in) :: solarabs_inst
+    type(energyflux_type),                 intent(in) :: energyflux_inst
+    type(temperature_type),                intent(in) :: temperature_inst
 
     ! locals
     real(r8) :: dtime
-    integer  :: s, c, nc
+    integer  :: s, c, nc, ifp, p
 
     call t_startf('fates_wrap_update_hifrq_hist')
 
     associate(&
         hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration
         totsomc       => soilbiogeochem_carbonstate_inst%totsomc_col, & ! (gC/m2) total soil organic matter carbon
-        totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col)   ! (gC/m2) total litter carbon in BGC pools
+        totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col, & ! (gC/m2) total litter carbon in BGC pools
+        eflx_lh_tot   => energyflux_inst%eflx_lh_tot_patch(p), &    ! (W/m2) latent heat flux
+        eflx_sh_tot   => energyflux_inst%eflx_sh_tot_patch(p), &    ! (W/m2) sensible heat flux
+        fsa_patch     => solarabs_inst%fsa_patch(p), &              ! (W/m2) absorbed solar flux
+        eflx_lwrad_net=> energyflux_inst%eflx_lwrad_net_patch(p), & ! (W/m2) net longwave radiative flux
+        t_ref2m       => temperature_inst%t_ref2m_patch)            ! (K) 2-m air temperature
 
       nc = bounds_clump%clump_index
 
@@ -3104,6 +3114,19 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%tot_litc     = 0.0_r8
          end do
       end if
+
+
+      ! summarize biophysical variables that we want to output on FATES dimensions
+      do s = 1, this%fates(nc)%nsites
+         c = this%f2hmap(nc)%fcolumn(s)
+         do ifp = 0, this%fates(nc)%sites(s)%youngest_patch%patchno
+            p = ifp + col_pp%pfti(c)
+            this%fates(nc)%bc_in(s)%lhflux_pa(ifp) = eflx_lh_tot(p)
+            this%fates(nc)%bc_in(s)%shflux_pa(ifp) = eflx_sh_tot(p)
+            this%fates(nc)%bc_in(s)%swabs_pa(ifp)  = fsa_patch(p)
+            this%fates(nc)%bc_in(s)%t2m_pa(ifp)    = t_ref2m(p)
+         end do
+      end do
 
       dtime = get_step_size_real()
 
