@@ -185,10 +185,11 @@ This defines various CTSM-specific system tests
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
-  <test NAME="SMSAR">
-    <DESC>Run a smoke startup test with st_archive on</DESC>
+  <test NAME="SMSPOSTPROC">
+    <DESC>Run a smoke startup test with st_archive and post-processing on</DESC>
     <INFO_DBUG>1</INFO_DBUG>
     <DOUT_S>TRUE</DOUT_S>
+    <RUN_POSTPROCESSING>TRUE</RUN_POSTPROCESSING>
     <CONTINUE_RUN>FALSE</CONTINUE_RUN>
     <STOP_OPTION>nyears</STOP_OPTION>
     <STOP_N>5</STOP_N>
