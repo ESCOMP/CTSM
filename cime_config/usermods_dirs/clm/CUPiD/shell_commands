@@ -20,7 +20,7 @@ fi
 #
 
 # Set the standard CUPiD baseline case to compare to
-./xmlchange CUPID_BASELINE_CASE='CESM_output_for_testing/ctsm5.4.002_clm6_BGCcrop_crujra_4x5_HIST"
+./xmlchange CUPID_BASELINE_CASE='CESM_output_for_testing/ctsm5.4.002_clm6_BGCcrop_crujra_4x5_HIST'
 # NOTE: This is currently only valid on Derecho
 # TODO: Look into having this available under GDEX and available anywhere via download
 ./xmlchange CUPID_BASELINE_ROOT='/glade/campaign/cesm/development/cross-wg/diagnostic_framework'
