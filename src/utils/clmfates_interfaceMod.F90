@@ -3348,7 +3348,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
-   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8
+   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8, site_lupft_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -3454,7 +3454,7 @@ module CLMFatesInterfaceMod
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
              site_cdsc_r8, site_cdpf_r8, &
-             site_landuse_r8, site_lulu_r8)
+             site_landuse_r8, site_lulu_r8, site_lupft_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3808,6 +3808,9 @@ module CLMFatesInterfaceMod
 
    fates%lulu_begin = 1
    fates%lulu_end   = n_landuse_cats * n_landuse_cats
+
+   fates%lupft_begin = 1
+   fates%lupft_end = n_landuse_cats * numpft_fates
    
    call t_stopf('fates_hlm2fatesbnds')
 
