@@ -33,14 +33,14 @@ fi
 # TODO: Make sure STOP_OPTION is nyears
 ./xmlchange --force CUPID_BASE_STOP_OPTION='$STOP_OPTION'
 # TODO: Have this set based on what CLM_BLDNML_OPTS has
-./xmlchange CUPID_RUN_TYPE=SP
+#./xmlchange CUPID_RUN_TYPE=SP
 ./xmlchange --force CUPID_STARTDATE='$RUN_STARTDATE'
 ./xmlchange --force CUPID_STOP_N='$STOP_N'
 ./xmlchange --force CUPID_STOP_OPTION='$STOP_OPTION'
 # TODO: This should maybe be turned on as a smoke test, and to check for the appropriate files in testing
-./xmlchange CUPID_GEN_HTML=TRUE
+./xmlchange CUPID_GEN_HTML=FALSE
 # TODO: Test with running more tasks
-./xmlchange CUPID_NTASKS=1
+#./xmlchange CUPID_NTASKS=1
 ./xmlchange CUPID_RUN_ADF=FALSE
 ./xmlchange CUPID_RUN_ALL=FALSE
 # Use the land_only example
