@@ -1,4 +1,69 @@
 ===============================================================
+Tag name: ctsm5.4.019
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Feb 12 16:21:47 MST 2026
+One-line Summary: Fix years used by generate_gdds
+
+Purpose and description of changes
+----------------------------------
+
+This fixes a bug where the generate_gdds script (used for producing crop maturity requirement input files) was looking for the wrong timestamps.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- Resolves [ESCOMP/CTSM Issue #3740: RXCROPMATURITY tests broken](https://github.com/ESCOMP/CTSM/issues/3740)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Deletes f09_g17 version of RXCROPMATURITY test (was redundant with f09_t232) version.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+  rxcropmaturity suite:
+    derecho ----- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #3749: ctsm5.4.019: Fix years used by generate_gdds](https://github.com/ESCOMP/CTSM/pull/3749)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.018
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu Feb 12 11:28:51 AM MST 2026
