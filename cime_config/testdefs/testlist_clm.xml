@@ -107,7 +107,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on for LND, requires cupid conda environment</option>
     </options>
   </test>
@@ -116,7 +116,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on for LND and create web-pages, requires cupid conda environment</option>
     </options>
   </test>
@@ -125,7 +125,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on for the LDF, requires cupid conda environment</option>
     </options>
   </test>
@@ -134,7 +134,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test for a I2000 case running st_archive with CUPiD on for the LDF, requires cupid conda environment</option>
     </options>
   </test>
@@ -143,7 +143,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test for a I2000 SP case running st_archive with CUPiD on for the LDF, requires cupid conda environment</option>
     </options>
   </test>
@@ -152,7 +152,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on for the ILAMB, requires cupid conda environment</option>
     </options>
   </test>
@@ -161,7 +161,7 @@
       <machine name="derecho" compiler="intel" category="aux_cupid"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">Simple smoke test running st_archive with CUPiD on for the ROF model requires cupid conda environment</option>
     </options>
   </test>
