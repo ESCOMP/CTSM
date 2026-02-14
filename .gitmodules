@@ -99,8 +99,11 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
 
 [submodule "share"]
 path = share
-url = https://github.com/ESCOMP/CESM_share
-fxtag = share1.1.15
+#url = https://github.com/ESCOMP/CESM_share
+url = https://github.com/ekluzek/CESM_share
+#fxtag = share1.1.15
+#fxtag = add_jdennis_procstatus_module
+fxtag = 9637775cebb7ce7805716bb5ecb5d40545cba4d9
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share

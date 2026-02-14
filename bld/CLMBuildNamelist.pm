@@ -5439,6 +5439,7 @@ sub write_output_files {
   push @groups, "clm_canopy_inparm";
   push @groups, "prigentroughness";
   push @groups, "zendersoilerod";
+  push @groups, "for_testing_options";
   if ( &value_is_true($nl_flags->{'use_cn'}) ) {
     push @groups, "carbon_isotope_streams";
   }
