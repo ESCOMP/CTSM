@@ -17,9 +17,6 @@ from ctsm import unit_testing
 
 logger = logging.getLogger(__name__)
 
-MYDIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(MYDIR)
-
 # Helpful message explaining the fact that our -s differs from pytest -s
 SYS_TESTS_DISAMBIGUATION = "If you want to use pytest's -s option, use --capture=no instead."
 
