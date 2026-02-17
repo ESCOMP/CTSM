@@ -331,6 +331,20 @@ Caveats:
       This is an advanced flag and should only be used by expert users.</desc>
   </entry>
 
+  <entry id="CLM_NDEP_FROM_CPL">
+    <type>logical</type>
+    <valid_values>TRUE,FALSE</valid_values>
+    <default_value>FALSE</default_value>
+    <values>
+      <value compset="_CAM" >TRUE</value>
+    </values>
+    <group>run_component_ctsm</group>
+    <file>env_run.xml</file>
+    <desc>Determines whether Nitrogen Deposition fluxes will come from the ATM model via the CESM Coupler
+    or if a dataset will be read in by CTSM. Nitrogen Deposition is only needed for BGC cases.
+    </desc>
+  </entry>
+
   <entry id="CLM_ACCELERATED_SPINUP">
     <type>char</type>
     <valid_values>on,sasu,off</valid_values>

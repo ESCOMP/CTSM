@@ -492,15 +492,8 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
         )
 
     def _get_conda_env(self):
-        conda_setup_commands = stu.cmds_to_setup_conda(self._get_caseroot())
-
-        # If npl conda environment is available, use that (It has dask, which
-        # enables chunking, which makes reading daily 1-degree netCDF files
-        # much more efficient.
-        if "npl " in os.popen(conda_setup_commands + "conda env list").read():
-            self._this_conda_env = "npl"
-        else:
-            self._this_conda_env = "ctsm_pylib"
+        stu.cmds_to_setup_conda(self._get_caseroot())
+        self._this_conda_env = "ctsm_pylib"
 
     def _append_to_user_nl_clm(self, additions):
         caseroot = self._get_caseroot()
