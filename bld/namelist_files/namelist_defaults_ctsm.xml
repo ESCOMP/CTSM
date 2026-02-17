@@ -624,6 +624,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
 <paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c260204.nc</paramfile>
+<paramfile phys="clm6_0" lnd_tuning_mode="clm6_0_cam7.0">ctsm60-cam70_params.c260204.nc</paramfile>
 <paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c250311.nc</paramfile>
 <paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c250311.nc</paramfile>
 
