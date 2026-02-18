@@ -2,6 +2,7 @@
   <comp_archive_spec compname="clm" compclass="lnd">
     <rest_file_extension>r</rest_file_extension>
     <rest_file_extension>rh\d?</rest_file_extension>
+    <!-- History files including those for LILAC, optionally include gzipped files which is needed for DART -->
     <hist_file_extension>h\d*.*\.nc(\.gz)?$</hist_file_extension>
     <hist_file_extension>lilac_hi.*\.nc(\.gz)?$</hist_file_extension>
     <hist_file_extension>lilac_atm_driver_h\d*.*\.nc(\.gz)?$</hist_file_extension>
