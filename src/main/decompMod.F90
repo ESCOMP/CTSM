@@ -9,7 +9,9 @@ module decompMod
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   use shr_sys_mod , only : shr_sys_abort ! use shr_sys_abort instead of endrun here to avoid circular dependency
+  use shr_abort_mod , only : shr_abort_abort ! as above
   use clm_varctl  , only : iulog
+  use clm_varctl  , only : use_fates
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -67,7 +69,10 @@ module decompMod
   !---global information on each pe
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
-     integer,pointer :: cid(:)       ! clump indices
+     integer,pointer :: cid(:) => null()  ! clump indices
+     integer,pointer :: ggidx(:) => null()   ! global vector index on the full 2D grid
+     integer,pointer :: gi(:) => null()   ! global index on the full 2D grid in "x" (longitude for structured)
+     integer,pointer :: gj(:) => null()   ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -78,6 +83,9 @@ module decompMod
      integer :: begc, endc           ! beginning and ending column index
      integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
+  contains
+     procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
+     procedure, public :: calc_globalxy_indices     ! Get the global i/j indices from the global vector grid index
   end type processor_type
   public processor_type
   type(processor_type),public :: procinfo
@@ -100,6 +108,7 @@ module decompMod
   type(clump_type),public, allocatable :: clumps(:)
 
   ! ---global sizes
+  integer,public :: nglob_x = -1, nglob_y  = -1 ! global sizes on the full 2D grid
   integer,public :: nclumps          ! total number of clumps across all processors
   integer,public :: numg             ! total number of gridcells on all procs
   integer,public :: numl             ! total number of landunits on all procs
@@ -114,12 +123,125 @@ module decompMod
   integer, public, pointer :: gindex_col(:)      => null()
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
+
+  ! --- Only public for unit testing
+  public :: calc_ijindices_from_full_global_index
   !------------------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  pure function calc_global_index_fromij( this, g ) result(global_index)
+    ! Returns the full grid global vector index from the gridcell on this processor
+    ! Make this a pure function so it can be called from endrun
+    ! !ARGUMENTS:
+    class(processor_type), intent(in) :: this
+    integer, intent(in) :: g       ! gridcell index on this processor
+    integer :: global_index        ! function result, full vector index on the full global grid
+
+    global_index = -1
+    if ( .not. associated(this%gi) )then
+       !write(iulog,*) 'WARNING: gi is not allocated yet'
+       return
+    end if
+    if ( .not. associated(this%gj) )then
+       !write(iulog,*) 'WARNING: gj is not allocated yet'
+       return
+    end if
+    if ( (g < this%begg) .or. (g > this%endg) ) then
+       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
+       return
+    end if
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
+       return
+    end if
+    if ( (this%gi(g) < 1) .or. (this%gi(g) > nglob_x) ) then
+       !write(iulog,*) 'this%gi(g) = ', this%gi(g)
+       !write(iulog,*) 'WARNING: Global gi index is out of bounds'
+       return
+    end if
+    if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_x) ) then
+       !write(iulog,*) 'this%gj(g) = ', this%gj(g)
+       !write(iulog,*) 'WARNING: Global gj index is out of bounds'
+       return
+    end if
+    global_index = (this%gj(g)-1)*nglob_x + this%gi(g)
+    if ( (global_index < 1) .or. (global_index > nglob_x*nglob_y) ) then
+       !write(iulog,*) 'WARNING: global_index is out of bounds for this processor'
+       return
+    end if
+
+  end function calc_global_index_fromij
+
+  !-----------------------------------------------------------------------
+  pure subroutine calc_ijindices_from_full_global_index( g, i, j )
+     ! Local private subroutine to calculate the full 2D grid i,j indices from the 1D global vector index
+     ! Make this a pure function so it can be called from endrun
+     integer, intent(in) :: g    ! Input processor global full 2D vector index
+     integer, intent(out) :: i, j  ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
+
+     i = -1
+     j = -1
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       return
+    end if
+    if ( (g < 1) .or. (g > nglob_x*nglob_y) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'g, nglob_x, nglob_y = ', g, nglob_x, nglob_y
+       !write(iulog,*) 'WARNING: Input index g is out of bounds'
+       return
+    end if
+    j = floor( real(g, r8) / real(nglob_x, r8) ) + 1
+    if ( mod(g,nglob_x) == 0 ) j = j - 1
+    i = g - (j-1)*nglob_x
+    if ( (i < 1) .or. (i > nglob_x) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Computed global i value out of range'
+       return
+    end if
+    if ( (j < 1) .or. (j > nglob_y) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Computed global j value out of range'
+       return
+    end if
+  end subroutine calc_ijindices_from_full_global_index
+
+  !-----------------------------------------------------------------------
+  pure subroutine calc_globalxy_indices( this, g, i, j )
+    ! Get the global i/j indices from the global vector grid index
+    ! Make this a pure function so it can be called from endrun
+    ! !ARGUMENTS:
+    class(processor_type), intent(in) :: this
+    integer, intent(in) :: g ! gridcell index on this processor
+    integer, intent(out) :: i, j ! 2D indices in x and y on the full global 2D grid (j will be 1 for an unstructured grid)
+
+    integer :: global_index
+
+    i = -1
+    j = -1
+    if ( .not. associated(this%ggidx) )then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: ggidx is not allocated yet'
+       return
+    end if
+    if ( (g < this%begg) .or. (g > this%endg) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
+       return
+    end if
+    if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
+       return
+    end if
+    global_index = this%ggidx(g)
+    call calc_ijindices_from_full_global_index( global_index, i, j )
+
+  end subroutine calc_globalxy_indices
 
   !-----------------------------------------------------------------------
   pure function get_beg(bounds, subgrid_level) result(beg_index)
@@ -141,8 +263,6 @@ contains
     integer, intent(in) :: subgrid_level
     !
     ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'get_beg'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
@@ -182,7 +302,6 @@ contains
     integer           , intent(in) :: subgrid_level
     !
     ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'get_end'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
@@ -224,8 +343,18 @@ contains
 #ifdef _OPENMP
     if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
+       return
     end if
 #endif
+    if ( .not. associated(procinfo%cid) )then
+       call shr_sys_abort( 'procinfo%cid) is NOT allocated yet', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( n < 1 .or. n > procinfo%nclumps )then
+       write(iulog,*) 'Input clump index out of bounds: n = ', n
+       call shr_sys_abort( 'Input clump is out of bounds', file=sourcefile, line=__LINE__)
+       return
+    end if
 
     cid  = procinfo%cid(n)
     bounds%begp      = clumps(cid)%begp - procinfo%begp + 1
@@ -236,8 +365,34 @@ contains
     bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
     bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
     bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
-    bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
-    bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
+    if ( use_fates )then
+      bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
+      bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
+    end if
+
+    if ( bounds%endp <= 0 )then
+       call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endc <= 0 )then
+       call shr_sys_abort( 'bounds%endc is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endl <= 0 )then
+       call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endg <= 0 )then
+       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( use_fates )then
+       if ( bounds%endCohort <= 0 )then
+          write(iulog,*) 'endCohort = ', bounds%endCohort
+          call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+          return
+       end if
+    end if
 
     bounds%level = bounds_level_clump
     bounds%clump_index = n
@@ -245,13 +400,14 @@ contains
   end subroutine get_clump_bounds
 
   !------------------------------------------------------------------------------
-  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
+  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region, only_gridcell)
     !
     ! !DESCRIPTION:
     ! Retrieve processor bounds
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(out) :: bounds ! processor bounds bounds
+    logical, intent(in), optional :: only_gridcell ! Only return the gridcell bounds, other subgrid info assumed to not be set yet
 
     ! Normally this routine will abort if it is called from within a threaded region,
     ! because in most cases you should be calling get_clump_bounds in that situation. If
@@ -275,6 +431,7 @@ contains
 #ifdef _OPENMP
     if ( OMP_GET_NUM_THREADS() > 1 .and. .not. l_allow_call_from_threaded_region )then
        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
+       return
     end if
 #endif
 
@@ -286,11 +443,43 @@ contains
     bounds%endl = procinfo%endl - procinfo%begl + 1
     bounds%begg = 1
     bounds%endg = procinfo%endg - procinfo%begg + 1
-    bounds%begCohort = 1
-    bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
+    if ( use_fates )then
+       bounds%begCohort = 1
+       bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
+    end if
 
     bounds%level = bounds_level_proc
     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
+
+    ! Some final error checking
+    ! Always check that gridcells are set
+    if ( bounds%endg <= 0 )then
+       call shr_sys_abort( 'bounds%endg is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+
+    ! Exit before checking subgrid levels if only_gridcell is requested as these won't be set yet
+    if ( present(only_gridcell) ) then
+      if ( only_gridcell ) return
+    end if
+    if ( bounds%endp <= 0 )then
+       call shr_sys_abort( 'bounds%endp is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endc <= 0 )then
+       call shr_sys_abort( 'bounds%endc is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( bounds%endl <= 0 )then
+       call shr_sys_abort( 'bounds%endl is not valid', file=sourcefile, line=__LINE__)
+       return
+    end if
+    if ( use_fates )then
+      if ( bounds%endCohort <= 0 )then
+         call shr_sys_abort( 'bounds%endCohort is not valid', file=sourcefile, line=__LINE__)
+         return
+       end if
+    end if
 
   end subroutine get_proc_bounds
 
@@ -381,7 +570,7 @@ contains
     integer           :: beg_index     ! beginning proc index for subgrid_level
     integer           :: end_index     ! ending proc index for subgrid_level
     integer           :: index         ! index of the point to get
-    integer, pointer  :: gindex(:)
+    integer, pointer  :: gindex(:) => null()
     logical           :: abort_on_badindex = .true.
     !----------------------------------------------------------------
 
@@ -445,7 +634,7 @@ contains
     type(bounds_type) :: bounds_proc   ! processor bounds
     integer           :: beg_index     ! beginning proc index for subgrid_level
     integer           :: i
-    integer , pointer :: gindex(:)
+    integer , pointer :: gindex(:) => null()
     !----------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(subgrid_index) == (/bounds2/)), sourcefile, __LINE__)
@@ -479,7 +668,6 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'get_subgrid_level_from_name'
     !-----------------------------------------------------------------------
 
     select case (subgrid_level_name)
@@ -495,9 +683,13 @@ contains
        subgrid_level = subgrid_level_patch
     case(nameCohort)
        subgrid_level = subgrid_level_cohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort(file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) subname//': unknown subgrid_level_name: ', trim(subgrid_level_name)
-       call shr_sys_abort()
+       write(iulog,*) 'unknown subgrid_level_name: ', trim(subgrid_level_name)
+       call shr_sys_abort(file=sourcefile, line=__LINE__ )
     end select
 
   end function get_subgrid_level_from_name
@@ -529,9 +721,13 @@ contains
        get_subgrid_level_gsize = nump
     case(subgrid_level_cohort)
        get_subgrid_level_gsize = numCohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort(file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) 'get_subgrid_level_gsize: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort()
+       write(iulog,*) 'unknown subgrid_level: ', subgrid_level
+       call shr_sys_abort(file=sourcefile, line=__LINE__ )
     end select
 
   end function get_subgrid_level_gsize
@@ -547,6 +743,7 @@ contains
     integer         , pointer    :: gindex(:)
     !----------------------------------------------------------------------
 
+    gindex => null()   ! Make sure gindex is initiatled to null
     select case (subgrid_level)
     case(subgrid_level_lndgrid)
        gindex => gindex_global
@@ -560,9 +757,13 @@ contains
        gindex => gindex_patch
     case(subgrid_level_cohort)
        gindex => gindex_cohort
+       if ( .not. use_fates ) then
+          write(iulog,*) 'FATES is not enabled, so cohort level is not valid'
+          call shr_sys_abort( file=sourcefile, line=__LINE__ )
+       end if
     case default
-       write(iulog,*) 'get_subgrid_level_gindex: unknown subgrid_level: ', subgrid_level
-       call shr_sys_abort('bad subgrid_level')
+       write(iulog,*) 'unknown subgrid_level: ', subgrid_level
+       call shr_sys_abort('bad subgrid_level', file=sourcefile, line=__LINE__)
     end select
 
   end subroutine get_subgrid_level_gindex
@@ -582,6 +783,18 @@ contains
     ! Deallocate and set the pointers to null
     if ( allocated(clumps) )then
       deallocate(clumps)
+    end if
+    if ( associated(procinfo%ggidx) )then
+      deallocate(procinfo%ggidx)
+      procinfo%ggidx => null()
+    end if
+    if ( associated(procinfo%gi) )then
+      deallocate(procinfo%gi)
+      procinfo%gi => null()
+    end if
+    if ( associated(procinfo%gj) )then
+      deallocate(procinfo%gj)
+      procinfo%gj => null()
     end if
     if ( associated(procinfo%cid) )then
       deallocate(procinfo%cid)

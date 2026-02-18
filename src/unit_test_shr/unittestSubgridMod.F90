@@ -40,7 +40,6 @@ module unittestSubgridMod
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod    , only : bounds_type, procinfo, get_proc_bounds
-  use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch
   use GridcellType , only : grc                
   use LandunitType , only : lun                
   use ColumnType   , only : col                
@@ -63,6 +62,7 @@ module unittestSubgridMod
   public :: unittest_add_column          ! add a column
   public :: unittest_add_patch           ! add a patch
   public :: get_ltype_special            ! get a landunit type corresponding to a special landunit
+  public :: set_decomp_info              ! set up decomp info in decompMod
 
   ! bounds info, which can be passed to routines that need it
   ! Note that the end indices here (endg, endl, endc, endp) will be the final indices in
@@ -168,15 +168,25 @@ contains
   end subroutine unittest_subgrid_setup_end
 
   !-----------------------------------------------------------------------
-  subroutine set_decomp_info
+  subroutine set_decomp_info( ni, nj )
     !
     ! !DESCRIPTION:
     ! Set up decomp info in decompMod.
     !
     ! We need to do this (in addition to just making sure that the bounds derived type
     ! object is set up correctly) for the sake of callers of get_proc_bounds.
+    ! NOTE:
+    ! TODO: Use decompMod/decompInitMod initialization methods instead of doing this by hand
     !
+    ! USES:
+    use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, nglob_x, nglob_y
+    use decompMod    , only : clumps
+    use spmdMod      , only : iam
+    ! !ARGUMENTS:
+    integer, intent(in), optional :: ni ! number of grid cells in the x direction;
+    integer, intent(in), optional :: nj ! number of grid cells in the y direction;
     ! !LOCAL VARIABLES:
+    integer :: g
 
     character(len=*), parameter :: subname = 'set_decomp_info'
     !-----------------------------------------------------------------------
@@ -185,8 +195,24 @@ contains
     ! may have to fix this in the future.
     procinfo%nclumps = 1
     allocate(procinfo%cid(procinfo%nclumps))
-    procinfo%cid(:) = -1
+    procinfo%cid(:) = 1
+    allocate(clumps(procinfo%nclumps))
+    clumps(:)%owner = iam
 
+    if ( present(ni) .and. present(nj) ) then
+       gi = ni * nj
+    end if
+    ! If landunits, or columns, or patches not set, set it to the lower subgrid level
+    ! So assume there's one higher level subgrid element per lower level
+    if ( li == 0 )then
+      li = gi
+    end if
+    if ( ci == 0 )then
+      ci = li
+    end if
+    if ( pi == 0 )then
+      pi = ci
+    end if
     procinfo%begg = begg
     procinfo%endg = gi
     procinfo%begl = begl
@@ -200,6 +226,17 @@ contains
     procinfo%nlunits = procinfo%endl - procinfo%begl + 1
     procinfo%ncols = procinfo%endc - procinfo%begc + 1
     procinfo%npatches = procinfo%endp - procinfo%begp + 1
+
+    if ( present(ni) .and. present(nj) ) then
+       nglob_x = ni
+       nglob_y = nj
+    else
+       nglob_x = 1
+       nglob_y = procinfo%ncells
+    end if
+    allocate(procinfo%ggidx(nglob_x*nglob_y))
+    allocate(procinfo%gi(nglob_x*nglob_y))
+    allocate(procinfo%gj(nglob_x*nglob_y))
 
     ! Currently leaving cohort info unset because it isn't needed in any unit tests. We
     ! may have to fix this in the future.
@@ -215,6 +252,19 @@ contains
     gindex_lun(:) = 0
     gindex_col(:) = 0
     gindex_patch(:) = 0
+
+    do g = 1, procinfo%endg
+       procinfo%ggidx(g) = g
+    end do
+    ! Set clump to procinfo
+    clumps(1)%begg = procinfo%begg
+    clumps(1)%endg = procinfo%endg
+    clumps(1)%begl = procinfo%begl
+    clumps(1)%endl = procinfo%endl
+    clumps(1)%begc = procinfo%begc
+    clumps(1)%endc = procinfo%endc
+    clumps(1)%begp = procinfo%begp
+    clumps(1)%endp = procinfo%endp
 
   end subroutine set_decomp_info
 
@@ -238,7 +288,7 @@ contains
     ! object (if other routines want a clump-level bounds). (For the sake of unit
     ! testing, proc-level and clump-level bounds objects can probably be the same except
     ! for bounds%level and bounds%clump_index.)
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
 
   end subroutine create_bounds_object
 
@@ -283,6 +333,7 @@ contains
     ! Do any teardown needed for the subgrid stuff
     !
     ! !USES:
+    use decompMod, only: decompMod_clean
     !
     ! !ARGUMENTS:
     !
@@ -298,6 +349,8 @@ contains
        call patch%clean
 
        call reset_nlevsno()
+
+       call decompmod_clean()
 
        unittest_subgrid_needs_teardown = .false.
     end if
@@ -357,11 +410,11 @@ contains
 
     call add_landunit(li=li, gi=my_gi, ltype=ltype, wtgcell=wtgcell)
     lun%active(li) = .true.
-    
+
   end subroutine unittest_add_landunit
 
   !-----------------------------------------------------------------------
-  subroutine unittest_add_column(my_li, ctype, wtlunit)
+  subroutine unittest_add_column(my_li, ctype, wtlunit, add_simple_patch)
     !
     ! !DESCRIPTION:
     ! Add a column, and make it active. The index of the just-added column can be obtained
@@ -377,11 +430,13 @@ contains
     !
     ! !USES:
     use initSubgridMod, only : add_column
+    use pftconMod, only : noveg
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: my_li   ! landunit index on which this column should be placed
     integer  , intent(in)    :: ctype   ! column type
     real(r8) , intent(in)    :: wtlunit ! weight of the column relative to the land unit
+    logical  , intent(in), optional :: add_simple_patch ! whether to add a simple baresoil patch under the column
     !
     ! !LOCAL VARIABLES:
     
@@ -390,6 +445,13 @@ contains
 
     call add_column(ci=ci, li=my_li, ctype=ctype, wtlunit=wtlunit)
     col%active(ci) = .true.
+
+    if ( present(add_simple_patch) ) then
+       if (add_simple_patch) then
+          ! Add a simple baresoil patch to this column
+          call unittest_add_patch(my_ci=ci, ptype=noveg, wtcol=1.0_r8)
+       end if
+    end if
     
   end subroutine unittest_add_column
 

@@ -222,8 +222,8 @@ contains
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init2_part1')
-    ! Get processor bounds for gridcells
-    call get_proc_bounds(bounds_proc)
+    ! Get processor bounds for gridcells, just for gridcells
+    call get_proc_bounds(bounds_proc, only_gridcell=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until after decompInit_clumps
     begg = bounds_proc%begg; endg = bounds_proc%endg
 
     ! Initialize glc behavior
@@ -283,7 +283,7 @@ contains
     call t_stopf('clm_decompInit_clumps')
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
-    call get_proc_bounds(bounds_proc)
+    call get_proc_bounds(bounds_proc)   ! This has to be done after decompInit_clumps is called
 
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells
@@ -424,7 +424,9 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run
