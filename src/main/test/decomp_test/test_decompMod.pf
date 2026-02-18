@@ -39,34 +39,10 @@ contains
   end subroutine tearDown
 
   subroutine create_simpleSingleDecomp(this)
-    use spmdMod, only : iam
+    use unittestSubgridMod, only : set_decomp_info
     class(TestDecompMod), intent(inout) :: this
 
-    integer :: clump_pproc
-    integer :: g
-    ! TODO: When decompMod has it's own allocate method that could be used here
-    nclumps = 1
-    clump_pproc = nclumps
-    allocate(procinfo%cid(clump_pproc))
-    allocate(procinfo%ggidx(ni*nj))
-    allocate(procinfo%gi(ni*nj))
-    allocate(procinfo%gj(ni*nj))
-    allocate(clumps(nclumps))
-    ! Set the procinfo and clumps values
-    ! TODO: Use initialization method when available (currently in decompInitMod)
-    procinfo%cid = 1
-    procinfo%ncells = ni*nj
-    procinfo%begg = 1
-    procinfo%endg = procinfo%ncells
-    procinfo%nclumps = nclumps
-    nglob_x = ni
-    nglob_y = nj
-    clumps(:)%owner = iam
-    clumps(:)%begg = 1
-    clumps(:)%endg = procinfo%ncells
-    do g = 1, ni*nj
-       procinfo%ggidx(g) = g
-    end do
+    call set_decomp_info( ni=ni, nj=nj )
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================
