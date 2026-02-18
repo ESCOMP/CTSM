@@ -2,7 +2,7 @@
 Tag name: ctsm5.4.020
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Tue Feb 17 03:57:22 PM MST 2026
-One-line Summary: Update namelist defaults: paramfile, rh_hgh, defo_fire_precip_thresh_bet, IC
+One-line Summary: Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
 
 Purpose and description of changes
 ----------------------------------
@@ -11,10 +11,10 @@ Purpose and description of changes
  defo_fire_precip_thresh_bet = 1.4d00
  rh_hgh = 80.0d00
 
- - New default paramfiles for clm6 and lnd_tuning_mode="clm6_0_cam7.0" respectively
- /glade/work/linnia/CLM6-PPE/ctsm6_cal/paramfiles/ctsm60_params.c260204.nc
- /glade/u/home/slevis/paramfiles/iss3725_forFang/ctsm60_params.c260204.cesm3-01.nc
- The second got renamed to ctsm60-cam70_params.c260204.nc
+ - New default paramfiles
+ for clm6: /glade/work/linnia/CLM6-PPE/ctsm6_cal/paramfiles/ctsm60_params.c260204.nc
+ for lnd_tuning_mode="clm6_0_cam7.0": /glade/u/home/slevis/paramfiles/iss3725_forFang/ctsm60_params.c260204.cesm3-01.nc
+ The latter got renamed to ctsm60-cam70_params.c260204.nc and it increases pft-specific values of "rswf_max" and "rswf_min"
 
  - New default finidat for ne30 and 1850
  /glade/derecho/scratch/wwieder/archive/ctsm5.4.015_BGCcrop_ne30_144_pSASU/rest/0181-01-01-00000/ctsm5.4.015_BGCcrop_ne30_144_pSASU.clm2.r.0181-01-01-00000.nc

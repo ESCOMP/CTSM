@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.020   slevis 02/17/2026 Update namelist defaults: paramfile, rh_hgh, defo_fire_precip_thresh_bet, IC
+       ctsm5.4.020   slevis 02/17/2026 Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
        ctsm5.4.019 samrabin 02/12/2026 Fix years used by generate_gdds
        ctsm5.4.018     erik 02/12/2026 Quick fix so that we can use Nitrogen Deposition sent from the ATM model
        ctsm5.4.017   slevis 02/09/2026 Introduce CRUJRA2024b datm option (Greenand snow hole filled)
