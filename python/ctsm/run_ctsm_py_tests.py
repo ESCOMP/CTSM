@@ -78,7 +78,7 @@ def _commandline_args(description):
         nargs="?",
         type=str,
         const="",
-        metavar="DEBUG_FILE_NAME",  # Sam as pytest
+        metavar="DEBUG_FILE_NAME",  # Same as pytest
         help=(
             "If given with no argument, uses old unittest-based run_ctsm_py_tests behavior: Run"
             " tests with maximum verbosity, equivalent to ``pylint -v --capture=no``. If given"
