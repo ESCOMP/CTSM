@@ -500,7 +500,7 @@ def process_ggcmi_shdates(
             # Flip latitude to match destination
             cropcal_ds = cropcal_ds.reindex(lat=cropcal_ds.lat[::-1])
             # Rearrange longitude to match destination (does nothing if not needed)
-            cropcal_ds = utils.lon_idl2pm(cropcal_ds, fail_silently=True)
+            cropcal_ds = utils.lon_axis_type180_to_type360(cropcal_ds, fail_silently=True)
 
         for thisvar_clm in variable_dict:  # pylint: disable=consider-using-dict-items
             # Get GGCMI netCDF info
@@ -529,7 +529,7 @@ def process_ggcmi_shdates(
 
             # Save
             logger.info("    Saving %s...", varname_ggcmi)
-            thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF3_CLASSIC")
+            thisvar_da.to_netcdf(file_clm, mode="a", format="NETCDF4_CLASSIC")
 
         cropcal_ds.close()
 

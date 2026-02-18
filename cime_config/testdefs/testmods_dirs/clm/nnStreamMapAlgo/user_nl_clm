@@ -1,0 +1,42 @@
+! Make sure excess ice streams are on, no matter the compset
+use_excess_ice = .true.
+use_excess_ice_streams = .true.
+
+! Make sure the Prigent roughness stream is on
+use_prigent_roughness = .true.
+
+! Make sure use_c13 and use_c14 and their streams are on
+! C14 streams use nn mapalgo
+use_c13 = .true.
+use_c14 = .true.
+use_c13_timeseries = .true.
+use_c14_bombspike = .true.
+
+! Make sure crop calendar streams are all on
+! They all use nn mapalgo
+cropcals_rx = .true.
+cropcals_rx_adapt = .false.      ! If cropcals_rx is on, rx_adapt must be off
+stream_gdd20_seasons = .true.
+stream_fldFileName_swindow_start = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc'
+stream_fldFileName_swindow_end = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc'
+
+stream_year_first_urbantv = 2106  ! Set urban time varying streams to a late year so that it has values
+
+! This doesn't use nn for the Zender dust streams (f09_ObscureSteams does other testing for it)
+! Prescribed LAI is not on, since most of the mapalgo options require BGC
+
+ndepmapalgo = 'nn'
+ch4finundatedmapalgo = 'nn'
+lightngmapalgo = 'nn'
+popdensmapalgo = 'nn'
+urbantvmapalgo = 'nn'
+stream_mapalgo_exice = 'nn'
+prigentroughnessmapalgo = 'nn'
+
+! Turn on any optional history output that outputs the optional streams
+hist_fincl1 = 'DPFCT_ROCK'
+hist_fincl1 += 'SDATES', 'SWINDOW_STARTS', 'SWINDOW_ENDS', 'GDD20_SEASON_START', 'GDD20_SEASON_END'
+hist_fincl1 += 'RC13_CANAIR', 'RC14_CANAIR'
+hist_fincl1 += 'HDM', 'LNFM'
+hist_fincl1 += 'TBUILD_MAX', 'P_AC'
+hist_fincl1 += 'EXCESS_ICE'

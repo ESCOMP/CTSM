@@ -9,15 +9,17 @@ module SatellitePhenologyMod
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
-  use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
+  use shr_kind_mod , only : r8 => shr_kind_r8, CS => shr_kind_CS
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use decompMod    , only : bounds_type
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_lai_streams
+  use clm_varctl   , only : iulog, use_lai_streams, single_column
   use perf_mod     , only : t_startf, t_stopf
   use spmdMod      , only : masterproc, mpicom, iam
   use laiStreamMod , only : lai_init, lai_advance, lai_interp
-  use ncdio_pio
+  use clm_varctl   , only : use_fates
+  use ncdio_pio    , only : ncd_pio_openfile, ncd_inqfdims, check_dim_size, ncd_io
+  use ncdio_pio    , only : ncd_pio_closefile, file_desc_t
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -55,6 +57,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
+    use shr_fire_emis_mod, only : shr_fire_emis_mechcomps_n
+    use shr_log_mod, only : errMsg => shr_log_errMsg
+    use clm_varctl, only : use_cn
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -62,6 +67,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ier    ! error code
     !-----------------------------------------------------------------------
+    if ( (shr_fire_emis_mechcomps_n > 0) .and. (.not. use_cn) ) then
+       write(iulog,*) "Fire emissions can NOT be active for Satellite Phenology mode (SP)" // &
+                   errMsg(sourcefile, __LINE__)
+       call endrun(msg="Fire emission requires BGC to be on rather than a Satelitte Pheonology (SP) case")
+       return
+    end if
 
     InterpMonths1 = -999  ! saved month index
 
@@ -170,7 +181,7 @@ contains
     use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
     use CanopyStateType         , only : canopystate_type
     use PatchType               , only : patch
-    use clm_varctl              , only : use_fates
+
     
     !
     ! !ARGUMENTS:
@@ -362,7 +373,7 @@ contains
     call ncd_pio_openfile (ncid, trim(locfn), 0)
     call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
 
-    if (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj) then
+    if (.not. single_column .and. (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj)) then
        write(iulog,*)trim(subname), 'ldomain and input file do not match dims '
        write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
        write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
@@ -415,7 +426,9 @@ contains
     use clm_time_manager , only : get_nstep
     use CanopyStateType  , only : canopystate_type
     use PatchType        , only : patch
+    use ColumnType       , only : col
     use clm_varcon       , only : grlnd
+    use clm_varpar       , only : surfpft_lb,surfpft_ub
     use netcdf
     !
     ! !ARGUMENTS:
@@ -428,6 +441,7 @@ contains
     character(len=256) :: locfn           ! local file name
     type(file_desc_t)  :: ncid            ! netcdf id
     integer :: g,n,k,l,m,p,ni,nj,ns       ! indices
+    integer :: c,ft                       ! indices
     integer :: dimid,varid                ! input netCDF id's
     integer :: ntim                       ! number of input data time samples
     integer :: nlon_i                     ! number of input data longitudes
@@ -485,25 +499,40 @@ contains
        ! Assign lai/sai/hgtt/hgtb to the top [maxsoil_patches] patches
        ! as determined in subroutine surfrd
 
-       do p = bounds%begp,bounds%endp
-          g =patch%gridcell(p)
-          if (patch%itype(p) /= noveg) then     ! vegetated pft
-             do l = 0, maxveg
-                if (l == patch%itype(p)) then
-                   mlai2t(p,k) = mlai(g,l)
-                   msai2t(p,k) = msai(g,l)
-                   mhvt2t(p,k) = mhgtt(g,l)
-                   mhvb2t(p,k) = mhgtb(g,l)
-                end if
-             end do
-          else                        ! non-vegetated pft
-             mlai2t(p,k) = 0._r8
-             msai2t(p,k) = 0._r8
-             mhvt2t(p,k) = 0._r8
-             mhvb2t(p,k) = 0._r8
-          end if
-       end do   ! end of loop over patches
-
+       if_fates: if(use_fates)then
+          do c = bounds%begc,bounds%endc
+             if(col%is_fates(c))then
+                do ft = surfpft_lb,surfpft_ub
+                   p = ft + col%patchi(c)
+                   g = patch%gridcell(p)
+                   mlai2t(p,k) = mlai(g,ft)
+                   msai2t(p,k) = msai(g,ft)
+                   mhvt2t(p,k) = mhgtt(g,ft)
+                   mhvb2t(p,k) = mhgtb(g,ft)
+                end do
+             end if
+          end do
+       else          
+          do p = bounds%begp,bounds%endp
+             g = patch%gridcell(p)
+             if (patch%itype(p) /= noveg ) then     ! vegetated pft
+                do l = 0, maxveg
+                   if (l == patch%itype(p)) then
+                      mlai2t(p,k) = mlai(g,l)
+                      msai2t(p,k) = msai(g,l)
+                      mhvt2t(p,k) = mhgtt(g,l)
+                      mhvb2t(p,k) = mhgtb(g,l)
+                   end if
+                end do
+             else                        ! non-vegetated pft
+                mlai2t(p,k) = 0._r8
+                msai2t(p,k) = 0._r8
+                mhvt2t(p,k) = 0._r8
+                mhvb2t(p,k) = 0._r8
+             end if
+          end do   ! end of loop over patches
+       end if if_fates
+    
     end do   ! end of loop over months
 
     call ncd_pio_closefile(ncid)

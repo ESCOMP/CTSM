@@ -448,6 +448,7 @@ class RXCROPMATURITYSHARED(SystemTestsCommon):
                 f"--hdates-file {hdates_file}",
                 f"--output-dir generate_gdds_out",
                 f"--skip-crops miscanthus,irrigated_miscanthus,switchgrass,irrigated_switchgrass",
+                "--max-season-length-from-hdates-file",
             ]
         )
         stu.run_python_script(

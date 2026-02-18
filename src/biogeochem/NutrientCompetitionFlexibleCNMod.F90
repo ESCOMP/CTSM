@@ -24,7 +24,7 @@ module NutrientCompetitionFlexibleCNMod
   use LandunitType        , only : lun
   use ColumnType          , only : col
   use PatchType           , only : patch
-  use pftconMod           , only : pftcon, npcropmin
+  use pftconMod           , only : pftcon, is_prognostic_crop
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use CropReprPoolsMod    , only : nrepr
   use CNPhenologyMod      , only : CropPhase
@@ -275,7 +275,7 @@ contains
          croot_stem                   => pftcon%croot_stem                                         , & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf                    => pftcon%stem_leaf                                          , & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd                      => pftcon%flivewd                                            , & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn                       => pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving            => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch          , & ! Input:  leaf C:N (gC/gN)
          frootcn                      => pftcon%frootcn                                            , & ! Input:  fine root C:N (gC/gN)
          livewdcn                     => pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          fcur2                        => pftcon%fcur                                               , & ! Input:  allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
@@ -413,7 +413,7 @@ contains
             fcur = 0.0_r8
          end if
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             if (croplive(p)) then
                f1 = aroot(p) / aleaf(p)
                f3 = astem(p) / aleaf(p)
@@ -497,7 +497,7 @@ contains
                             + cpool_to_deadcrootc(p) + cpool_to_deadcrootc_storage(p)
             end if
          end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cpool_to_livestemc(p)          = nlc * f3 * f4 * fcur
             cpool_to_livestemc_storage(p)  = nlc * f3 * f4 * (1._r8 - fcur)
             cpool_to_deadstemc(p)          = nlc * f3 * (1._r8 - f4) * fcur
@@ -548,7 +548,7 @@ contains
                   matrix_alloc(p,ideadcroot_st) = cpool_to_deadcrootc_storage(p)  / cpool_to_veg
                end if
             end if
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
                if(cpool_to_veg .ne. 0)then
                   matrix_alloc(p,ilivestem)     = cpool_to_livestemc(p)  / cpool_to_veg
                   matrix_alloc(p,ilivestem_st)  = cpool_to_livestemc_storage(p)  / cpool_to_veg
@@ -586,7 +586,7 @@ contains
             gresp_storage = gresp_storage + cpool_to_livecrootc_storage(p)
             gresp_storage = gresp_storage + cpool_to_deadcrootc_storage(p)
          end if
-         if (ivt(p) >= npcropmin) then     ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then     ! skip 2 generic crops
             gresp_storage = gresp_storage + cpool_to_livestemc_storage(p)
             do k = 1, nrepr
                gresp_storage = gresp_storage + cpool_to_reproductivec_storage(p,k)
@@ -594,7 +594,7 @@ contains
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
-         if (use_crop_agsys .and. ivt(p) >= npcropmin) then
+         if (use_crop_agsys .and. is_prognostic_crop(ivt(p))) then
             call calc_npool_to_components_agsys( &
                  ! Inputs
                  npool = npool(p), &
@@ -635,6 +635,7 @@ contains
                  f3 = f3, &
                  f4 = f4, &
                  f5 = f5, &
+                 leafcn_t_evolving = leafcn_t_evolving(p), &
 
                  ! Outputs
                  npool_to_leafn = npool_to_leafn(p), &
@@ -707,7 +708,7 @@ contains
                end if
             end if
 
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
 
                if (cnveg_nitrogenstate_inst%livestemn_storage_patch(p) == 0.0_r8) then
                   ! to avoid division by zero, and also to make livestemcn_actual(p) a very large number if livestemc(p) is zero
@@ -728,7 +729,7 @@ contains
                end if
             end if
 
-            leafcn_max = leafcn(ivt(p)) + 15.0_r8
+            leafcn_max = leafcn_t_evolving(p) + 15.0_r8
             frootcn_max = frootcn(ivt(p)) + 15.0_r8
 
             ! Note that for high CN ratio stress the plant part does not retranslocate nitrogen as the plant part will need the N
@@ -794,7 +795,7 @@ contains
 
             end if
 
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
 
                livewdcn_max = livewdcn(ivt(p)) + 15.0_r8
 
@@ -875,7 +876,7 @@ contains
                          + npool_to_deadstemn(p) + npool_to_deadstemn_storage(p) &
                          + npool_to_livecrootn(p) + npool_to_livecrootn_storage(p)  &
                          + npool_to_deadcrootn(p) + npool_to_deadcrootn_storage(p)   
-           if (ivt(p) >= npcropmin)then
+           if (is_prognostic_crop(ivt(p)))then
                npool_to_veg = npool_to_veg + npool_to_reproductiven(p,1) + npool_to_reproductiven_storage(p,1)
            end if
            if(npool_to_veg .ne. 0._r8)then
@@ -891,7 +892,7 @@ contains
                matrix_nalloc(p,ilivecroot_st ) = npool_to_livecrootn_storage(p) / npool_to_veg
                matrix_nalloc(p,ideadcroot    ) = npool_to_deadcrootn(p)         / npool_to_veg
                matrix_nalloc(p,ideadcroot_st ) = npool_to_deadcrootn_storage(p) / npool_to_veg
-               if (ivt(p) >= npcropmin)then
+               if (is_prognostic_crop(ivt(p)))then
                   matrix_nalloc(p,igrain     ) = npool_to_reproductiven(p,1)             / npool_to_veg 
                   matrix_nalloc(p,igrain_st  ) = npool_to_reproductiven_storage(p,1)     / npool_to_veg 
                end if
@@ -915,7 +916,7 @@ contains
                tmp = matrix_update_phn(p,iretransn_to_ilivecrootst      ,matrix_nalloc(p,ilivecroot_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                tmp = matrix_update_phn(p,iretransn_to_ideadcroot        ,matrix_nalloc(p,ideadcroot )    * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                tmp = matrix_update_phn(p,iretransn_to_ideadcrootst      ,matrix_nalloc(p,ideadcroot_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
-               if(ivt(p) >= npcropmin)then
+               if(is_prognostic_crop(ivt(p)))then
                  tmp = matrix_update_phn(p,iretransn_to_igrain   ,matrix_nalloc(p,igrain    ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                  tmp = matrix_update_phn(p,iretransn_to_igrainst ,matrix_nalloc(p,igrain_st ) * retransn_to_npool(p) / retransn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                end if
@@ -930,7 +931,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_npool_to_components_flexiblecn( &
-       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, &
+       npool, ivt, nlc, fcur, f1, f2, f3, f4, f5, leafcn_t_evolving, &
        npool_to_leafn, npool_to_leafn_storage, &
        npool_to_frootn, npool_to_frootn_storage, &
        npool_to_livestemn, npool_to_livestemn_storage, &
@@ -952,6 +953,7 @@ contains
     real(r8), intent(in) :: f3 ! C allocation parameter - stem:leaf ratio
     real(r8), intent(in) :: f4 ! C allocation parameter - fraction of new wood that is live
     real(r8), intent(in) :: f5(:) ! C allocation parameter - repr:leaf ratio for each crop reproductive pool
+    real(r8), intent(in) :: leafcn_t_evolving  ! leaf C:N (gC/gN)
 
     ! Each of the following output variables is in units of gN/m2/s; they are
     ! intent(inout) because some may remain unchanged in some circumstances.
@@ -1018,7 +1020,6 @@ contains
 
     associate( &
          woody    => pftcon%woody    , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
-         leafcn   => pftcon%leafcn   , & ! Input:  leaf C:N (gC/gN)
          frootcn  => pftcon%frootcn  , & ! Input:  fine root C:N (gC/gN)
          livewdcn => pftcon%livewdcn , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn => pftcon%deadwdcn , & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -1027,7 +1028,7 @@ contains
 
     dt = get_step_size_real()
 
-    cnl  = leafcn(ivt)
+    cnl  = leafcn_t_evolving
     cnfr = frootcn(ivt)
     cnlw = livewdcn(ivt)
     cndw = deadwdcn(ivt)
@@ -1050,7 +1051,7 @@ contains
        npool_to_deadcrootn_demand         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
        npool_to_deadcrootn_storage_demand = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
     end if
-    if (ivt >= npcropmin) then ! skip 2 generic crops
+    if (is_prognostic_crop(ivt)) then ! skip 2 generic crops
 
        cng = graincn(ivt)
        npool_to_livestemn_demand          = (nlc * f3 * f4 / cnlw) * fcur
@@ -1083,7 +1084,7 @@ contains
             npool_to_deadcrootn_storage_demand
 
     end if
-    if (ivt >= npcropmin) then ! skip 2 generic crops
+    if (is_prognostic_crop(ivt)) then ! skip 2 generic crops
 
        npool_to_reproductiven_demand_tot = 0._r8
        npool_to_reproductiven_storage_demand_tot = 0._r8
@@ -1121,7 +1122,7 @@ contains
           frNdemand_npool_to_deadcrootn = 0.0_r8
           frNdemand_npool_to_deadcrootn_storage = 0.0_r8
        end if
-       if (ivt >= npcropmin) then ! skip 2 generic crops
+       if (is_prognostic_crop(ivt)) then ! skip 2 generic crops
 
           frNdemand_npool_to_livestemn = 0.0_r8
           frNdemand_npool_to_livestemn_storage = 0.0_r8
@@ -1154,7 +1155,7 @@ contains
           frNdemand_npool_to_deadcrootn = npool_to_deadcrootn_demand / total_plant_Ndemand
           frNdemand_npool_to_deadcrootn_storage = npool_to_deadcrootn_storage_demand / total_plant_Ndemand
        end if
-       if (ivt >= npcropmin) then ! skip 2 generic crops
+       if (is_prognostic_crop(ivt)) then ! skip 2 generic crops
 
           frNdemand_npool_to_livestemn = npool_to_livestemn_demand / total_plant_Ndemand
           frNdemand_npool_to_livestemn_storage = npool_to_livestemn_storage_demand / total_plant_Ndemand
@@ -1193,7 +1194,7 @@ contains
        npool_to_deadcrootn = frNdemand_npool_to_deadcrootn * npool / dt
        npool_to_deadcrootn_storage = frNdemand_npool_to_deadcrootn_storage * npool / dt
     end if
-    if (ivt >= npcropmin) then ! skip 2 generic crops
+    if (is_prognostic_crop(ivt)) then ! skip 2 generic crops
        npool_to_livestemn = frNdemand_npool_to_livestemn * npool / dt
        npool_to_livestemn_storage = frNdemand_npool_to_livestemn_storage * npool / dt
        npool_to_deadstemn = frNdemand_npool_to_deadstemn * npool / dt
@@ -1455,7 +1456,7 @@ contains
     associate(                                                                        &
          ivt                   => patch%itype                                        ,  & ! Input:  [integer  (:) ]  patch vegetation type
 
-         leafcn                => pftcon%leafcn                                    ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving     => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch  , & ! Input:  leaf C:N (gC/gN)
          fleafcn               => pftcon%fleafcn                                    , & ! Input:  leaf c:n during organ fill
          ffrootcn              => pftcon%ffrootcn                                   , & ! Input:  froot c:n during organ fill
          fstemcn               => pftcon%fstemcn                                    , & ! Input:  stem c:n during organ fill
@@ -1520,8 +1521,8 @@ contains
             this%actual_leafcn(p) = leafc(p)  / leafn(p)
          end if
 
-         leafcn_min = leafcn(ivt(p)) - 10.0_r8
-         leafcn_max = leafcn(ivt(p)) + 10.0_r8
+         leafcn_min = leafcn_t_evolving(p) - 10.0_r8
+         leafcn_max = leafcn_t_evolving(p) + 10.0_r8
 
          this%actual_leafcn(p) = max( this%actual_leafcn(p), leafcn_min-0.0001_r8 )
          this%actual_leafcn(p) = min( this%actual_leafcn(p), leafcn_max )
@@ -1563,7 +1564,6 @@ contains
 
          ! retranslocated N deployment depends on seasonal cycle of potential GPP
          ! (requires one year run to accumulate demand)
-
          tempsum_potential_gpp(p) = tempsum_potential_gpp(p) + gpp(p)
 
          ! Adding the following line to carry max retransn info to CN Annual Update

@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 from ctsm.utils import abort
-from ctsm.config_utils import lon_range_0_to_360
+from ctsm.longitude import Longitude
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,15 @@ class ModifyMeshMask:
     # ... /islas_examples/modify_fsurdat/fill_indian_ocean/
     # Read mod_lnd_props here only for consistency checks
     def __init__(
-        self, my_data, *, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname
+        self,
+        my_data,
+        *,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lat_varname,
+        lon_varname,
+        lon_type,
     ):
 
         self.file = my_data
@@ -48,6 +56,7 @@ class ModifyMeshMask:
         self.lonvar = self._landmask_file[lon_varname][..., :]
         self.lsmlat = self._landmask_file.dims[lat_dimname]
         self.lsmlon = self._landmask_file.dims[lon_dimname]
+        self.lon_type = lon_type
 
         lonvar_first = self.lonvar[..., 0].data.max()
         lonvar_last = self.lonvar[..., -1].data.max()
@@ -77,7 +86,7 @@ class ModifyMeshMask:
 
     @classmethod
     def init_from_file(
-        cls, *, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname
+        cls, *, file_in, landmask_file, lat_dimname, lon_dimname, lat_varname, lon_varname, lon_type
     ):
         """Initialize a ModifyMeshMask object from file_in"""
         logger.info("Opening file to be modified: %s", file_in)
@@ -89,6 +98,7 @@ class ModifyMeshMask:
             lon_dimname=lon_dimname,
             lat_varname=lat_varname,
             lon_varname=lon_varname,
+            lon_type=lon_type,
         )
 
     def set_mesh_mask(self, var):
@@ -144,13 +154,12 @@ class ModifyMeshMask:
                         + f"{len(self.latvar.sizes)}"
                     )
                     abort(errmsg)
-                # ensure lon range of 0-360 rather than -180 to 180
-                lonvar_scalar = lon_range_0_to_360(lonvar_scalar)
+
                 # lon and lat from the mesh file
                 lat_mesh = float(self.file["centerCoords"][ncount, 1])
                 lon_mesh = float(self.file["centerCoords"][ncount, 0])
                 # ensure lon range of 0-360 rather than -180 to 180
-                lon_mesh = lon_range_0_to_360(lon_mesh)
+                lonvar_scalar = Longitude(lonvar_scalar, self.lon_type).get(360)
 
                 errmsg = (
                     "Must be equal: "

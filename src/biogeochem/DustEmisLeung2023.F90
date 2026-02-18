@@ -429,7 +429,7 @@ contains
          h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)
 
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)
-         obu                 => frictionvel_inst%obu_patch           , & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module          obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Monin-Obukhov length from the friction Velocity module 
+         obu                 => frictionvel_inst%obu_patch           , & ! Input:  [real(r8) (:)   ] Obukhov length scale from the friction Velocity module          obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Obukhov length scale from the friction Velocity module 
 
          dpfct_rock          => this%dpfct_rock_patch                , & ! Input:  rock drag partition factor defined in Marticorena and Bergametti 1995. A fraction between 0 and 1.
 

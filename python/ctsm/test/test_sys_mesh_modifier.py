@@ -57,6 +57,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_varname = None
         self._lat_dimname = None
         self._lon_dimname = None
+        self._lon_type = 360
 
         self._previous_dir = os.getcwd()
         os.chdir(self._tempdir)  # cd to tempdir
@@ -233,6 +234,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
                         line = f"\nlat_varname = {self._lat_varname}"
                     elif re.match(r" *lon_varname *=", line):
                         line = f"\nlon_varname = {self._lon_varname}"
+                    elif re.match(r" *lon_type *=", line):
+                        line = f"\nlon_type = {self._lon_type}"
                     cfg_out.write(line)
 
 

@@ -1,0 +1,24 @@
+# This file is used by py_env_create to install the previous version of the ctsm_pylib environment,
+# which used Python 3.7.9. Doing so is only useful for running CTSM python tools in repos from
+# before the new ctsm_pylib version (with Python 3.13.2) was introduced.
+#
+name: ctsm_pylib_3_7_9
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7.9
+  - pandas=1.3.5
+  - tqdm=4.67.1
+  - scipy=1.7.3
+  - netcdf4=1.6.0
+  - requests=2.32.2
+  - packaging=21.3
+  - numpy=1.19.5
+  - xarray=0.17.0
+  - xesmf=0.7.0
+  - numba=0.55.2
+  - pylint=2.8.3
+  - black=22.3.0
+  - cartopy=0.20.2
+  - matplotlib=3.3.2

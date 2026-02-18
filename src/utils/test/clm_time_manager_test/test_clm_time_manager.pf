@@ -452,7 +452,7 @@ contains
        londeg = londeg + 0.1_r8
        ! Start at 0 Z
        secs = 0
-       call set_date(yr=1, mon=1, day=1, tod=secs)
+       call set_date(yr=2, mon=1, day=1, tod=secs)
        do while ( .not. is_end_curr_year() )
           @assertEqual( get_local_time( londeg, starttime=0 ), get_local_timestep_time( londeg ) )
           call advance_timestep()

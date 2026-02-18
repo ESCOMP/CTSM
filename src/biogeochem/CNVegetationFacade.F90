@@ -96,6 +96,7 @@ module CNVegetationFacade
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
+  use SoilHydrologyType               , only : soilhydrology_type
   !
   implicit none
   private
@@ -204,10 +205,12 @@ contains
     !
     ! !USES:
     use CNFireFactoryMod , only : create_cnfire_method
+    use CNFireNoFireMod  , only : cnfire_nofire_type
     use clm_varcon       , only : c13ratio, c14ratio
     use ncdio_pio        , only : file_desc_t
     use filterMod        , only : filter
     use decompMod        , only : get_proc_clumps
+
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -282,7 +285,7 @@ contains
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &
             this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            alloc_full_veg=alloc_full_veg)
+            alloc_full_veg=alloc_full_veg, params_ncid=params_ncid)
        call this%cnveg_nitrogenflux_inst%Init(bounds,alloc_full_veg=alloc_full_veg) 
        
        call this%c_products_inst%Init(bounds, species_non_isotope_type('C'))
@@ -302,10 +305,21 @@ contains
        ! use_cndv is true so that it can be used in associate statements (nag compiler
        ! complains otherwise)
        call this%dgvs_inst%Init(bounds)
-    end if
     
-    call create_cnfire_method(NLFilename, this%cnfire_method)
-    call this%cnfire_method%CNFireReadParams( params_ncid )
+       call create_cnfire_method( this%cnfire_method )
+       call this%cnfire_method%FireInit( bounds )
+       call this%cnfire_method%FireReadNML( bounds, NLFilename )
+       call this%cnfire_method%CNFireReadParams( params_ncid )
+    end if
+
+    !
+    ! For FATES we HAVE to allocate a cnfire_method even through it won't be used
+    ! cnfire_method is passed down to CN routines that are used for FATES
+    ! so there has to be something allocated that is passed down
+    !
+    if ( use_fates_bgc )then
+      allocate(cnfire_nofire_type :: this%cnfire_method)
+    end if
 
   end subroutine Init
 
@@ -584,7 +598,7 @@ contains
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
-    call CNDriverInit(bounds, NLFilename, this%cnfire_method)
+    call CNDriverInit(bounds, NLFilename)
 
     if (use_cndv) then
        call dynCNDV_init(bounds, this%dgvs_inst)
@@ -1061,7 +1075,7 @@ contains
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+       soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
     !
     ! !DESCRIPTION:
     ! Do the main science for CN vegetation that needs to be done after hydrology-drainage
@@ -1100,6 +1114,7 @@ contains
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilhydrology_type)                , intent(in)    :: soilhydrology_inst
     !
     ! !LOCAL VARIABLES:
 
@@ -1122,7 +1137,7 @@ contains
          this%c13_cnveg_carbonstate_inst,this%c14_cnveg_carbonstate_inst, &
          this%c13_cnveg_carbonflux_inst,this%c14_cnveg_carbonflux_inst, &
          c13_soilbiogeochem_carbonstate_inst,c14_soilbiogeochem_carbonstate_inst,&
-         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst)
+         c13_soilbiogeochem_carbonflux_inst,c14_soilbiogeochem_carbonflux_inst, soilhydrology_inst)
 
     ! Set controls on very low values in critical state variables 
 

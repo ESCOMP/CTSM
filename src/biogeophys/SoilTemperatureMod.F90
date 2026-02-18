@@ -11,6 +11,7 @@ module SoilTemperatureMod
   use shr_infnan_mod          , only : nan => shr_infnan_nan, assignment(=)
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
+  use shr_log_mod             , only : errMsg => shr_log_errMsg
   use perf_mod                , only : t_startf, t_stopf
   use clm_varctl              , only : iulog
   use UrbanParamsType         , only : urbanparams_type
@@ -77,7 +78,7 @@ module SoilTemperatureMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: SoilThermProp       ! Set therm conduct. and heat cap of snow/soil layers
   private :: PhaseChangeH2osfc   ! When surface water freezes move ice to bottom snow layer
-  private :: PhaseChange_beta    ! Calculation of the phase change within snow and soil layers
+  private :: PhaseChange         ! Calculation of the phase change within snow and soil layers
   private :: BuildingHAC         ! Building Heating and Cooling for simpler method (introduced in CLM4.5)
 
   real(r8), private, parameter :: thin_sfclayer = 1.0e-6_r8   ! Threshold for thin surface layer
@@ -516,7 +517,7 @@ contains
            dhsdT(bounds%begc:bounds%endc), &
            waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, temperature_inst,energyflux_inst)
 
-      call Phasechange_beta (bounds, num_nolakec, filter_nolakec, &
+      call Phasechange (bounds, num_nolakec, filter_nolakec, &
            dhsdT(bounds%begc:bounds%endc), &
            soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
 
@@ -619,12 +620,11 @@ contains
     ! flux from the interface to the node j+1.
     !
     ! !USES:
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog, snow_thermal_cond_method
+    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -649,8 +649,6 @@ contains
     real(r8) :: fl                        ! volume fraction of liquid or unfrozen water to total water
     real(r8) :: satw                      ! relative total water content of soil.
     real(r8) :: zh2osfc
-
-    character(len=*),parameter :: subname = 'SoilThermProp'
     !-----------------------------------------------------------------------
 
     call t_startf( 'SoilThermProp' )
@@ -742,24 +740,46 @@ contains
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
-               select case (snow_thermal_cond_method)
-               case ('Jordan1991')
-                  thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
-               case ('Sturm1997')
-                  ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
-                  ! Leanne Wake (LMW)
-                  ! https://tc.copernicus.org/articles/16/4201/2022/
-                  ! Code provided by Adrien Dams to Will Wieder
-                  if (bw(c,j) <= 156) then !LMW or 0.156 ?
-                     thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
-                  else !LMW
-                     thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) ! LMW Sturm I think
-                  end if
-               case default
-                  write(iulog,*) subname//' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
-                  call endrun(msg=errMsg(sourcefile, __LINE__))
-               end select
-            end if
+               l = col%landunit(c)
+
+               ! Select method over glacier land unit 
+               if (lun%itype(l) == istice) then
+                  select case (snow_thermal_cond_glc_method)
+                  ! TODO, this code duplication isn't ideal and should likely be in it's own subroutine
+                  case('Jordan1991')
+                     thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+                  case ('Sturm1997')
+                     if (bw(c,j) <= 156) then !LMW or 0.156 ?
+                        thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
+                     else 
+                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
+                     end if
+                  case default
+                     write(iulog,*) ' ERROR: unknown snow_thermal_cond_glc_method value: ', snow_thermal_cond_glc_method
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end select
+
+               else
+                  select case (snow_thermal_cond_method)
+                  case ('Jordan1991')
+                     thk(c,j) = tkair + (7.75e-5_r8 *bw(c,j) + 1.105e-6_r8*bw(c,j)*bw(c,j))*(tkice-tkair)
+                  case ('Sturm1997')
+                     ! Implemented by Vicky Dutch (VRD), Nick Rutter, and
+                     ! Leanne Wake (LMW)
+                     ! https://tc.copernicus.org/articles/16/4201/2022/
+                     ! See also https://tc.copernicus.org/articles/19/1539/2025/
+                     ! Code provided by Adrien Dams to Will Wieder
+                     if (bw(c,j) <= 156) then !LMW or 0.156 ?
+                        thk(c,j) = 0.023 + 0.234*(bw(c,j)/1000) !LMW - units changed by VRD
+                     else 
+                        thk(c,j) = 0.138 - 1.01*(bw(c,j)/1000) +(3.233*((bw(c,j)/1000)*(bw(c,j)/1000))) 
+                     end if
+                  case default
+                     write(iulog,*) ' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
+                     call endrun(msg=errMsg(sourcefile, __LINE__))
+                  end select
+               end if ! close land unit if statement 
+          end if
 
          end do
       end do
@@ -1110,7 +1130,7 @@ contains
   end subroutine PhaseChangeH2osfc
 
   !-----------------------------------------------------------------------
-  subroutine Phasechange_beta (bounds, num_nolakec, filter_nolakec, dhsdT, &
+  subroutine Phasechange (bounds, num_nolakec, filter_nolakec, dhsdT, &
        soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, energyflux_inst, temperature_inst)
     !
     ! !DESCRIPTION:
@@ -1166,7 +1186,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    call t_startf( 'PhaseChangebeta' )
+    call t_startf( 'PhaseChange' )
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(dhsdT) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -1259,7 +1279,6 @@ contains
                ! If ice exists above melt point, melt some to liquid.
                if (h2osoi_ice(c,j) > 0._r8 .and. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
-                  !                tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j) 
                   t_soisno(c,j) = tfrz
                endif
@@ -1268,7 +1287,6 @@ contains
                ! If liquid exists below melt point, freeze some to ice.
                if (h2osoi_liq(c,j) > 0._r8 .AND. t_soisno(c,j) < tfrz) then
                   imelt(c,j) = 2
-                  !                tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j) 
                   t_soisno(c,j) = tfrz
                endif
@@ -1290,7 +1308,6 @@ contains
 
                if (h2osoi_ice(c,j) > 0. .AND. t_soisno(c,j) > tfrz) then
                   imelt(c,j) = 1
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz 
                   tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
@@ -1314,7 +1331,6 @@ contains
 
                if (h2osoi_liq(c,j) > supercool(c,j) .AND. t_soisno(c,j) < tfrz) then
                   imelt(c,j) = 2
-                  !             tinc(c,j) = t_soisno(c,j) - tfrz
                   tinc(c,j) = tfrz - t_soisno(c,j)
                   t_soisno(c,j) = tfrz
                endif
@@ -1323,7 +1339,6 @@ contains
                if (h2osno_no_layers(c) > 0._r8 .AND. j == 1) then
                   if (t_soisno(c,j) > tfrz) then
                      imelt(c,j) = 1
-                     !                tincc,j) = t_soisno(c,j) - tfrz
                      tinc(c,j) = tfrz - t_soisno(c,j)
                      t_soisno(c,j) = tfrz
                   endif
@@ -1418,14 +1433,18 @@ contains
                      heatr = 0._r8
                      if (xm(c,j) > 0._r8) then !if there is excess heat to melt the ice
                         h2osoi_ice(c,j) = max(0._r8, wice0(c,j)-xm(c,j))
-                        heatr = hm(c,j) - hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
-                        xm2(c,j) = xm(c,j) - h2osoi_ice(c,j) !excess ice melting
-                        if (h2osoi_ice(c,j) == 0._r8) then ! this might be redundant 
-                           if (excess_ice(c,j) >= 0._r8 .and. xm2(c,j)>0._r8 .and. j>=2) then ! if there is excess ice to melt
-                              excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
-                              heatr = hm(c,j) - hfus * (wexice0(c,j)-excess_ice(c,j)+wice0(c,j)-h2osoi_ice(c,j)) / dtime
+                        ! If xm > wice0, then all soil ice melts, 
+                        ! and the remaining heat (xm2) is used to melt excess ice
+                        xm2(c,j) = xm(c,j) - wice0(c,j) 
+                        if (j>=1) then ! soil
+                           if (excess_ice(c,j) >= 0._r8 .and. xm2(c,j)>0._r8) then ! if there is excess ice to melt
+                               excess_ice(c,j) = max(0._r8,wexice0(c,j) - xm2(c,j))
                            endif
-                        endif !end of excess ice block
+                           heatr = hm(c,j) - hfus * (wexice0(c,j)-excess_ice(c,j)+ &
+                                                  wice0(c,j)-h2osoi_ice(c,j)) / dtime
+                        else !snow
+                           heatr = hm(c,j) - hfus * (wice0(c,j)-h2osoi_ice(c,j)) / dtime
+                        endif
                      else if (xm(c,j) < 0._r8) then
                         if (j <= 0) then
                            h2osoi_ice(c,j) = min(wmass0(c,j), wice0(c,j)-xm(c,j))  ! snow
@@ -1515,10 +1534,10 @@ contains
          end if
       end do
 
-      call t_stopf( 'PhaseChangebeta' )
+      call t_stopf( 'PhaseChange' )
     end associate
 
-  end subroutine Phasechange_beta
+  end subroutine Phasechange
 
   !-----------------------------------------------------------------------
   subroutine ComputeGroundHeatFluxAndDeriv(bounds, &

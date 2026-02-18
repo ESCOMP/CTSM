@@ -5,14 +5,14 @@ module clm_varctl
   ! Module containing run control variables
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CX
   use shr_sys_mod , only: shr_sys_abort ! cannot use endrun here due to circular dependency
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   public :: clm_varctl_set    ! Set variables
-  public :: cnallocate_carbon_only_set
-  public :: cnallocate_carbon_only
+  public :: allocate_carbon_only_set
+  public :: allocate_carbon_only
   !
   private
   save
@@ -21,7 +21,7 @@ module clm_varctl
   !
   integer , parameter, public ::  iundef = -9999999
   real(r8), parameter, public ::  rundef = -9999999._r8
-  integer , parameter, public ::  fname_len = SHR_KIND_CL   ! max length of file names in this module
+  integer , parameter, public ::  fname_len = SHR_KIND_CX   ! max length of file names in this module
   !----------------------------------------------------------
   !
   ! Run control variables
@@ -238,6 +238,8 @@ module clm_varctl
   character(len=64), public :: snow_cover_fraction_method
   ! which snow thermal conductivity parameterization to use
   character(len=25), public :: snow_thermal_cond_method
+  character(len=25), public :: snow_thermal_cond_glc_method
+  character(len=25), public :: snow_thermal_cond_lake_method
 
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
@@ -329,6 +331,7 @@ module clm_varctl
                                                                         ! 0 for no fire; 1 for constant ignitions;
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_managed_fire = .false.        ! true => turn on managed fire
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
   character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   character(len=256), public :: fates_stomatal_model = ''               ! stomatal conductance model, Ball-berry or Medlyn
@@ -519,6 +522,7 @@ module clm_varctl
 
   logical, public :: use_lch4            = .true.
   logical, public :: use_nitrif_denitrif = .true.
+  logical, public :: use_nvmovement      = .false.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
   logical, public :: use_cn              = .false.
@@ -535,7 +539,7 @@ module clm_varctl
   !----------------------------------------------------------
   ! To retrieve namelist
   !----------------------------------------------------------
-  character(len=SHR_KIND_CL), public :: NLFilename_in ! Namelist filename
+  character(len=SHR_KIND_CX), public :: NLFilename_in ! Namelist filename
   !
   logical, private :: clmvarctl_isset = .false.
  !-----------------------------------------------------------------------
@@ -581,15 +585,15 @@ contains
 
   end subroutine clm_varctl_set
 
-  ! Set module carbon_only flag
-  subroutine cnallocate_carbon_only_set(carbon_only_in)
+  ! Set module carbon_only flag (applies to both CN and FATES)
+  subroutine allocate_carbon_only_set(carbon_only_in)
     logical, intent(in) :: carbon_only_in
     carbon_only = carbon_only_in
-  end subroutine cnallocate_carbon_only_set
+  end subroutine allocate_carbon_only_set
 
-  ! Get module carbon_only flag
-  logical function CNAllocate_Carbon_only()
-    cnallocate_carbon_only = carbon_only
-  end function CNAllocate_Carbon_only
+  ! Get module carbon_only flag (applies to both CN and FATES)
+  logical function Allocate_Carbon_only()
+    allocate_carbon_only = carbon_only
+  end function Allocate_Carbon_only
 
 end module clm_varctl
