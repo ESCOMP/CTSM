@@ -129,7 +129,7 @@ def _commandline_args(description):
 
     # Warn user about ambiguous -s
     if args.sys:
-        print(f"Running system tests only. {SYS_TESTS_DISAMBIGUATION}")
+        logger.info("Running system tests only. %s", SYS_TESTS_DISAMBIGUATION)
 
     # Pass any unknown args to pytest directly
     pytest_args += unknown
