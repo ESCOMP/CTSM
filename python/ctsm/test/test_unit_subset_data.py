@@ -78,14 +78,14 @@ class TestSubsetData(unittest.TestCase):
 
     def setUp(self):
         sys.argv = ["subset_data", "point", "--create-surface"]
-        DEFAULTS_FILE = os.path.join(
-            os.getcwd(), "../tools/site_and_regional/default_data_2000.cfg"
-        )
         self.parser = get_parser()
         self.args = self.parser.parse_args()
         self.cesmroot = path_to_ctsm_root()
         self.defaults = configparser.ConfigParser()
-        self.defaults.read(os.path.join(self.cesmroot, "tools/site_and_regional", DEFAULTS_FILE))
+        config_file = os.path.join(
+            self.cesmroot, "tools", "site_and_regional", "default_data_2000.cfg"
+        )
+        self.defaults.read(config_file)
 
         # Work in temporary directory
         self._previous_dir = os.getcwd()
@@ -260,8 +260,7 @@ class TestSubsetData(unittest.TestCase):
         for an existing dataset without the overwrite option
         """
         outfile = os.path.join(
-            _CTSM_PYTHON,
-            "ctsm/test/testinputs/",
+            unit_testing.get_test_input_data_dir(),
             "surfdata_1x1_mexicocityMEX_hist_16pfts_CMIP6_2000_c231103.nc",
         )
         self.assertTrue(os.path.exists(outfile), str(outfile) + " outfile should exist")
