@@ -10,6 +10,7 @@ import argparse
 import logging
 import io
 import contextlib
+import re
 
 import pytest
 
@@ -158,7 +159,7 @@ def get_pytest_help_item(pytest_help_text: str, option: str) -> str:
     Extract a single pytest CLI option (e.g. "--debug") from the full ``pytest --help`` output and
     collapse its multi-line description into a single line.
 
-    The function locates the first line containing ``option`` and then collects all immediately
+    The function locates the first line starting with ``option`` and then collects all immediately
     following lines that are more indented than that header line. These indented lines are treated
     as the option's description. The first line break is replaced with a colon and the description
     lines are joined with single spaces.
@@ -180,36 +181,67 @@ def get_pytest_help_item(pytest_help_text: str, option: str) -> str:
     Raises
     ------
     RuntimeError
-        If no line containing ``option`` is found in the help text.
+        If no line starting with ``option`` is found in the help text.
 
     Notes
     -----
-    This function relies on pytest's help formatting convention that
-    description lines are indented more deeply than their corresponding
-    option header line.
+    This function relies on pytest's help formatting convention that description lines are indented
+    more deeply than their corresponding option header line.
     """
     lines = pytest_help_text.splitlines()
 
+    # Create regex pattern to match the option at the start of a line (after whitespace).
+    # Use word boundary \b to ensure we match exact options (e.g., "--pdb" won't match "--pdbcls").
+    option_pattern = re.compile(r"^\s*" + re.escape(option) + r"\b")
+
     for i, line in enumerate(lines):
-        if option in line:
-            header = line.rstrip()
+        if option_pattern.match(line):
+            # Found line starting with the option
+
+            # Split the line into option header and description.
+            # Description typically starts after 2+ consecutive spaces.
+            match = re.match(r"^(\s*\S+(?:\s+\S+)*?)\s{2,}(.*)$", line)
+
+            if match:
+                # Line has both option header and description
+                option_header = match.group(1).strip()
+                first_desc = match.group(2)
+            else:
+                # No description on this line (or only single spaces)
+                option_header = line.strip()
+                first_desc = ""
+
+            # Calculate the indentation level of the first matched ("header") line.
+            # This will be used to identify continuation lines.
             header_indent = len(line) - len(line.lstrip())
 
-            body_lines = []
+            # Collect all description text, starting with any on the header line
+            description_lines = []
+            if first_desc:
+                description_lines.append(first_desc)
+
+            # Collect all continuation lines that are more indented than the header
             for next_line in lines[i + 1 :]:
-                # Stop if blank
+                # Stop if we hit a blank line
                 if not next_line.strip():
                     break
 
+                # Calculate indentation of this line
                 indent = len(next_line) - len(next_line.lstrip())
 
-                # Stop if indentation is not deeper than header
+                # Stop if indentation is not deeper than header (indicates we've reached the next
+                # option or section)
                 if indent <= header_indent:
                     break
 
-                body_lines.append(next_line.strip())
+                # This is a continuation line - add it to the description
+                description_lines.append(next_line.strip())
 
-            body = " ".join(body_lines)
-            return f"{header.strip()}: {body}"
+            # Join all description lines into a single string with spaces
+            description = " ".join(description_lines)
 
+            # Return formatted result: "option_header: description"
+            return f"{option_header}: {description}"
+
+    # If we get here, the option was not found
     raise RuntimeError(f"Failed to get pytest help for {option}")
