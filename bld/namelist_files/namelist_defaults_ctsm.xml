@@ -2484,11 +2484,11 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_urbantv phys="clm6_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_0.9x1.25_simyr1849-2106_c200605.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm6_0"  hgrid="0.9x1.25" urban_explicit_ac=".true."
->lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20260217.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".false."
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" urban_explicit_ac=".true."
->lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20230621.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CTSM52_urbantv_Li_2024_0.9x1.25_simyr1849-2106_c20260217.nc</stream_fldfilename_urbantv>
 <stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25"
 >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
@@ -2636,7 +2636,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_prigent_roughness dust_emis_method="Leung_2023">.true.</use_prigent_roughness>
 <use_prigent_roughness                              >.false.</use_prigent_roughness>
 <stream_fldfilename_prigentroughness
->lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c240127.nc</stream_fldfilename_prigentroughness>
+>lnd/clm2/dustemisdata/Prigent_2005_roughness_0.25x0.25_cdf5_c260218.nc</stream_fldfilename_prigentroughness>
 <stream_meshfile_prigentroughness
 >lnd/clm2/dustemisdata/dust_0.25x0.25_ESMFmesh_cdf5_c240222.nc</stream_meshfile_prigentroughness>
 
