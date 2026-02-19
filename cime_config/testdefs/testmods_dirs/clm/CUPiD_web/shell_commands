@@ -1,0 +1,3 @@
+#!/bin/bash
+./xmlchange CUPID_GEN_HTML=TRUE
+
