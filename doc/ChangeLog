@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.020
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
-Date: Tue Feb 17 03:57:22 PM MST 2026
+Date: Thu Feb 19 08:28:59 AM MST 2026
 One-line Summary: Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
 
 Purpose and description of changes
