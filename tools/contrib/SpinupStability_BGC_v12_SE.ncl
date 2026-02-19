@@ -2,8 +2,9 @@
 ; SpinupStability_BGC_v12_SE.ncl
 ; Script to examine stability of spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
-; and supports ne30 grids only
+; it supports "ne" grids only, and it supports FATES simulations
 ; Keith Oleson, July 2025
+; Sam Levis, Feb 2026
 ;
 ; ARH mods, April 2020 - modified to work for unstructured grids via remapping to FV 1 deg. grid.
 ; KO mods, March 2025 - regrid history file using ncremap to get area and landfrac instead of 
@@ -35,24 +36,27 @@ begin
 ;=======================================================================;
 
 ; GLOBAL EXAMPLE
- caseid = "ctsm53n02ctsm52027_ne30pg3t232_AD"
- username = "oleson"
- annual_hist = True
+ caseid = "ctsm60_fates_nocomp_adspinup"
+ username = "afoster"
+ annual_hist = False
  region = "Global"              ; Global
  subper = 20                    ; Subsampling period in years
  paleo = False                  ; Use paleo map ; UNTESTED IN THIS VERSION
+ fates = True                   ; FATES simulation?
  hist_ext = "h0a"               ; Valid options: h0a, h0
 
 ;--- ARH mods ---
  map_method = "conserve"      ;bilinear,conserve or patch
- dout_s = False               ;short term storage (archive) directory structure
+ dout_s = True                ;short term storage (archive) directory structure
 
 ;srcGrid = "ne120pg3"
 ;srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne120pg3_scrip_c170628.nc"
- srcGrid = "ne30pg3"
- srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne30pg3_scrip_170604.nc"
+;srcGrid = "ne30pg3"
+;srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne30pg3_scrip_170604.nc"
 ;srcGrid = "ne30pg2"
 ;srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne30pg2_scrip_c170608.nc"
+ srcGrid = "ne16pg3"
+ srcGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/cam/coords/ne16pg3_scrip_170725.nc"
 
  dstGrid = "f09"
  dstGridName="/glade/campaign/cesm/cesmdata/cseg/inputdata/share/scripgrids/0.9x1.25_SCRIP_desc.181018.nc"
@@ -144,9 +148,15 @@ begin
     if (isfilevardim(data[0],"landfrac","lndgrid")) then
       totecosysc              = data[:]->TOTECOSYSC(year,:)
       totsomc                 = data[:]->TOTSOMC(year,:)
-      totvegc                 = data[:]->TOTVEGC(year,:)
-      tlai                    = data[:]->TLAI(year,:)
-      gpp                     = data[:]->GPP(year,:)
+      if (fates) then
+        totvegc               = data[:]->FATES_VEGC(year,:) * 1000  ; kg -> g
+        tlai                  = data[:]->FATES_LAI(year,:)
+        gpp                   = data[:]->FATES_GPP(year,:) * 1000  ; kg -> g
+      else
+        totvegc               = data[:]->TOTVEGC(year,:)
+        tlai                  = data[:]->TLAI(year,:)
+        gpp                   = data[:]->GPP(year,:)
+      end if
       tws                     = data[:]->TWS(year,:)
       if (isfilevar(data[0],"H2OSNO")) then
         h2osno                = data[:]->H2OSNO(year,:)
@@ -157,9 +167,15 @@ begin
     else
       totecosysc              = data[:]->TOTECOSYSC(year,:,:)
       totsomc                 = data[:]->TOTSOMC(year,:,:)
-      totvegc                 = data[:]->TOTVEGC(year,:,:)
-      tlai                    = data[:]->TLAI(year,:,:)
-      gpp                     = data[:]->GPP(year,:,:)
+      if (fates) then
+        totvegc               = data[:]->FATES_VEGC(year,:,:) * 1000  ; kg -> g
+        tlai                  = data[:]->FATES_LAI(year,:,:)
+        gpp                   = data[:]->FATES_GPP(year,:,:) * 1000  ; kg -> g
+      else
+        totvegc               = data[:]->TOTVEGC(year,:,:)
+        tlai                  = data[:]->TLAI(year,:,:)
+        gpp                   = data[:]->GPP(year,:,:)
+      end if
       tws                     = data[:]->TWS(year,:,:)
       if (isfilevar(data[0],"H2OSNO")) then
         h2osno                = data[:]->H2OSNO(year,:,:)
@@ -171,9 +187,15 @@ begin
   else
     totecosysc              = month_to_annual(data[:]->TOTECOSYSC,1)
     totsomc                 = month_to_annual(data[:]->TOTSOMC,1)
-    totvegc                 = month_to_annual(data[:]->TOTVEGC,1)
-    tlai                    = month_to_annual(data[:]->TLAI,1)
-    gpp                     = month_to_annual(data[:]->GPP,1)
+    if (fates) then
+      totvegc               = month_to_annual(data[:]->FATES_VEGC,1) * 1000  ; kg -> g
+      tlai                  = month_to_annual(data[:]->FATES_LAI,1)
+      gpp                   = month_to_annual(data[:]->FATES_GPP,1) * 1000  ; kg -> g
+    else
+      totvegc               = month_to_annual(data[:]->TOTVEGC,1)
+      tlai                  = month_to_annual(data[:]->TLAI,1)
+      gpp                   = month_to_annual(data[:]->GPP,1)
+    end if
     if (isfilevar(data[0],"TWS")) then
       tws              = month_to_annual(data[:]->TWS,1)
     else
