@@ -11,6 +11,7 @@ This script:
 
 import xml.etree.ElementTree as ET
 import os
+import subprocess
 import sys
 
 import numpy as np
@@ -141,37 +142,89 @@ def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
     return result
 
 
-def get_fill_value_from_user(var_name, target_type):
+def show_ncdump_for_variable(file_path, var_name):
+    """
+    Run ncdump -h on a file and display lines matching the variable name.
+
+    Args:
+        file_path: Path to the netCDF file
+        var_name: Name of the variable to search for in ncdump output
+    """
+    if not file_path:
+        print("    No file path available for ncdump")
+        print()
+        return
+
+    try:
+        print(f"    Running: ncdump -h {file_path}")
+        result = subprocess.run(
+            ["ncdump", "-h", file_path], capture_output=True, text=True, check=True
+        )
+        # Filter lines containing the variable name
+        matching_lines = [line for line in result.stdout.split("\n") if var_name in line]
+        if matching_lines:
+            print(f"    Lines matching '{var_name}':")
+            for line in matching_lines:
+                print(f"      {line}")
+        else:
+            print(f"    No lines found matching '{var_name}'")
+    except subprocess.CalledProcessError as e:
+        print(f"    Error running ncdump: {e}")
+    except FileNotFoundError:
+        print("    Error: ncdump command not found")
+
+    print()  # Empty line for readability
+
+
+def get_fill_value_from_user(var_name, target_type, file_path=None):
     """
     Prompt user for a new fill value and convert it to the target type.
 
     Args:
         var_name: Name of the variable
         target_type: Type to convert the user input to (e.g., float, int)
+        file_path: Optional path to the netCDF file for ncdump on Ctrl-C
 
     Returns:
         Converted fill value of the specified type
+
+    Raises:
+        KeyboardInterrupt: If user presses Ctrl-C twice
     """
+    ctrl_c_count = 0
+
     while True:
-        user_input = input(f"    New fill value for '{var_name}': ").strip()
-        if user_input:
-            try:
-                # Convert user input to the target type
-                converted_value = target_type(user_input)
-
-                # Make sure it's not NaN
+        try:
+            user_input = input(f"    New fill value for '{var_name}': ").strip()
+            if user_input:
                 try:
-                    converted_value_is_nan = np.isnan(converted_value)
-                except TypeError:
-                    converted_value_is_nan = False
-                if converted_value_is_nan:
-                    raise ValueError(f"Input '{user_input}' would produce a NaN {ATTR}")
+                    # Convert user input to the target type
+                    converted_value = target_type(user_input)
 
-                return converted_value
-            except (ValueError, TypeError) as e:
-                print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
-        else:
-            print("    Please enter a value.")
+                    # Make sure it's not NaN
+                    try:
+                        converted_value_is_nan = np.isnan(converted_value)
+                    except TypeError:
+                        converted_value_is_nan = False
+                    if converted_value_is_nan:
+                        raise ValueError(f"Input '{user_input}' would produce a NaN {ATTR}")
+
+                    return converted_value
+                except (ValueError, TypeError) as e:
+                    print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
+            else:
+                print("    Please enter a value.")
+        except KeyboardInterrupt:
+            ctrl_c_count += 1
+
+            # If this is the second Ctrl-C, exit
+            if ctrl_c_count >= 2:
+                print("\n    [Ctrl-C pressed again - exiting]")
+                sys.exit(1)
+
+            # First Ctrl-C: show ncdump output for this variable
+            print("\n    [Ctrl-C detected - press again to exit]")
+            show_ncdump_for_variable(file_path, var_name)
 
 
 def collect_new_fill_values(matches):
@@ -234,7 +287,7 @@ def collect_new_fill_values(matches):
             print(f"    nanmax:    {nanmax}")
 
             # Ask user for new fill value
-            new_fill_value = get_fill_value_from_user(var_name, type(nanmin))
+            new_fill_value = get_fill_value_from_user(var_name, type(nanmin), abs_path)
             new_fill_values[var_name] = new_fill_value
 
         # Close the dataset
