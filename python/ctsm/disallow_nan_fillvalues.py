@@ -320,7 +320,6 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 da = ds[var]
 
                 # Get variable metadata
-                var_name = var
                 long_name = da.attrs.get("long_name", "N/A")
                 units = da.attrs.get("units", "N/A")
 
@@ -329,7 +328,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 nanmax = float(np.nanmax(da.values))
 
                 # Print variable summary
-                print(f"\n  Variable: {var_name}")
+                print(f"\n  Variable: {var}")
                 print(f"    long_name: {long_name}")
                 print(f"    units:     {units}")
                 print(f"    nanmin:    {nanmin}")
@@ -337,15 +336,15 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
 
                 # Ask user for new fill value
                 try:
-                    new_fill_value = get_fill_value_from_user(var_name, type(nanmin), abs_path)
-                    new_fill_values[var_name] = new_fill_value
+                    new_fill_value = get_fill_value_from_user(var, type(nanmin), abs_path)
+                    new_fill_values[var] = new_fill_value
 
                     # Save progress after each variable
                     save_progress(all_new_fill_values, progress_file)
                 except ValueError as e:
                     # Check if this is the skip signal
                     if str(e) == "SKIP_VARIABLE":
-                        print(f"    Skipping variable '{var_name}'")
+                        print(f"    Skipping variable '{var}'")
                         continue
                     # Otherwise re-raise
                     raise
@@ -356,8 +355,8 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             # Print summary for this file
             if new_fill_values:
                 print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
-                for var_name, fill_val in new_fill_values.items():
-                    print(f"    {var_name}: {fill_val}")
+                for var, fill_val in new_fill_values.items():
+                    print(f"    {var}: {fill_val}")
             else:
                 print("\n  No variables with NaN fill values found in this file.")
 
