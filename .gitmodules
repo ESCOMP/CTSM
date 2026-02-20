@@ -128,7 +128,7 @@ path = tools/CUPiD
 url = https://github.com/wwieder/CUPiD.git
 #fxtag = v0.6.0
 #fxtag = land_only
-fxtag = 0adf7677e1f3189951d3d1766617bb96c5aa9686
+fxtag = 1c907b4e35968ed40fa9a84f240048e6780fdb13
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/CUPiD.git
