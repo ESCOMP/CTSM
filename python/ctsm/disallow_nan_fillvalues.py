@@ -231,7 +231,9 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
                         raise
                     print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
             else:
-                print(f"    Please enter a value (or '{USER_REQ_SKIP}' to skip, '{USER_REQ_QUIT}' to save and exit).")
+                print(
+                    f"    Please enter a value (or '{USER_REQ_SKIP}' to skip, '{USER_REQ_QUIT}' to save and exit)."
+                )
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
@@ -255,7 +257,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     For each file in matches, opens the file, identifies variables with NaN fill values,
     displays their properties, and prompts the user to enter new fill values.
 
-    Progress is automatically saved after each file. User can type $USER_REQ_QUIT to save and exit,
+    Progress is automatically saved after each variable. User can type $USER_REQ_QUIT to save and exit,
     or $USER_REQ_SKIP to skip a variable.
 
     Args:
@@ -274,7 +276,8 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     all_new_fill_values = load_progress(progress_file)
     if all_new_fill_values:
         print(f"\nLoaded progress from {progress_file}")
-        print(f"Already processed {len(all_new_fill_values)} file(s)")
+        total_vars = sum(len(vars_dict) for vars_dict in all_new_fill_values.values())
+        print(f"Already processed {total_vars} variable(s) in {len(all_new_fill_values)} file(s)")
         response = input("Continue from where you left off? [Y/n]: ").strip().lower()
         if response and response not in ("y", "yes"):
             all_new_fill_values = {}
@@ -286,18 +289,15 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
 
     try:
         for path_from_xml, abs_path in matches:
-            # Skip files we've already processed
-            if abs_path in all_new_fill_values:
-                print(f"\nSkipping already processed: {path_from_xml}")
-                continue
-
             print(f"\n{'=' * SEP_LENGTH}")
             print(f"Processing: {path_from_xml}")
             print(f"Full path:  {abs_path}")
             print(f"{'=' * SEP_LENGTH}")
 
-            # Dictionary to store new fill values for this file
-            new_fill_values = {}
+            # Get or create dictionary for this file's fill values
+            if abs_path not in all_new_fill_values:
+                all_new_fill_values[abs_path] = {}
+            new_fill_values = all_new_fill_values[abs_path]
 
             # Open the dataset
             ds = xr.open_dataset(
@@ -310,6 +310,11 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             # Loop through all variables
             for var in all_vars:
                 if not var_has_nan_fill(ds, var):
+                    continue
+
+                # Skip variables we've already processed
+                if var in new_fill_values:
+                    print(f"\n  Variable: {var} [already processed, skipping]")
                     continue
 
                 da = ds[var]
@@ -334,6 +339,9 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 try:
                     new_fill_value = get_fill_value_from_user(var_name, type(nanmin), abs_path)
                     new_fill_values[var_name] = new_fill_value
+
+                    # Save progress after each variable
+                    save_progress(all_new_fill_values, progress_file)
                 except ValueError as e:
                     # Check if this is the skip signal
                     if str(e) == "SKIP_VARIABLE":
@@ -345,21 +353,15 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             # Close the dataset
             ds.close()
 
-            # Store the new fill values for this file
+            # Print summary for this file
             if new_fill_values:
-                all_new_fill_values[abs_path] = new_fill_values
                 print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
                 for var_name, fill_val in new_fill_values.items():
                     print(f"    {var_name}: {fill_val}")
             else:
                 print("\n  No variables with NaN fill values found in this file.")
 
-            # Save progress after each file
-            save_progress(all_new_fill_values, progress_file)
-
     except KeyboardInterrupt:
-        print("\n\nSaving progress before exit...")
-        save_progress(all_new_fill_values, progress_file)
         print("Exiting.")
         sys.exit(0)
 
@@ -485,14 +487,8 @@ def main():
     print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
-    # Load progress if available
-    progress = load_progress(PROGRESS_FILE)
-
     # Collect new fill values from user
     all_new_fill_values = collect_new_fill_values(matches)
-
-    # Save progress
-    save_progress(all_new_fill_values, PROGRESS_FILE)
 
     return 0
 
