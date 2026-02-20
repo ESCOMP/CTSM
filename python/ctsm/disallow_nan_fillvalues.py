@@ -182,7 +182,7 @@ def show_ncdump_for_variable(file_path, var_name):
     print()  # Empty line for readability
 
 
-def get_fill_value_from_user(var_name, target_type, file_path=None):
+def get_fill_value_from_user(var_name, target_type, file_path=None, default_value=None):
     """
     Prompt user for a new fill value and convert it to the target type.
 
@@ -190,6 +190,7 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
         var_name: Name of the variable
         target_type: Type to convert the user input to (e.g., float, int)
         file_path: Optional path to the netCDF file for ncdump on Ctrl-C
+        default_value: Optional default value to use if user presses enter
 
     Returns:
         Converted fill value of the specified type
@@ -203,7 +204,13 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
     while True:
         user_input = None
         try:
-            user_input = input(f"    New fill value for '{var_name}': ").strip()
+            # Build prompt with default value if available
+            if default_value is not None:
+                prompt = f"    New fill value for '{var_name}' [default: {default_value}]: "
+            else:
+                prompt = f"    New fill value for '{var_name}': "
+
+            user_input = input(prompt).strip()
 
             # Check for special commands
             if user_input.lower() == USER_REQ_QUIT:
@@ -231,6 +238,10 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
                         raise
                     print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
             else:
+                # User pressed enter without input
+                if default_value is not None:
+                    print(f"    Using default: {default_value}")
+                    return default_value
                 print(
                     f"    Please enter a value (or '{USER_REQ_SKIP}' to skip, '{USER_REQ_QUIT}' to save and exit)."
                 )
@@ -327,6 +338,11 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 nanmin = float(np.nanmin(da.values))
                 nanmax = float(np.nanmax(da.values))
 
+                # Calculate default fill value
+                default_fill = None
+                if nanmin >= 0 or nanmin == -1 or units.startswith("degrees") or var in ["lat", "lon"]:
+                    default_fill = type(nanmin)(-999)
+
                 # Print variable summary
                 print(f"\n  Variable: {var}")
                 print(f"    long_name: {long_name}")
@@ -336,7 +352,9 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
 
                 # Ask user for new fill value
                 try:
-                    new_fill_value = get_fill_value_from_user(var, type(nanmin), abs_path)
+                    new_fill_value = get_fill_value_from_user(
+                        var, type(nanmin), abs_path, default_value=default_fill
+                    )
                     new_fill_values[var] = new_fill_value
 
                     # Save progress after each variable
