@@ -28,10 +28,6 @@ PYLINT_SRC = \
 #       ../cime_config/buildnml
 
 all: test black lint
-# ----------------------------------------------------------------
-# See the stest target about this issue
-	@echo "Run './run_ctsm_py_tests --sys' by hand afterwards"
-# ----------------------------------------------------------------
 	@echo
 	@echo
 	@echo "Successfully ran all standard tests"
@@ -45,13 +41,7 @@ utest: FORCE
 .PHONY: stest
 stest: FORCE
 # ----------------------------------------------------------------
-# EBK 2024-03-19: Comment out running here because of this issue:
-# https://github.com/ESCOMP/CTSM/pull/2363#issuecomment-1967884908
-#$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --sys
-# Instead run by hand which seems to be working for now...
-# ----------------------------------------------------------------
-	@echo "System tests currently don't run under Make so..."
-	@echo "Run './run_ctsm_py_tests --sys' by hand afterwards"
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --sys
 
 .PHONY: lint
 lint: FORCE
