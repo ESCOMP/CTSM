@@ -197,6 +197,7 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
     ctrl_c_count = 0
 
     while True:
+        user_input = None
         try:
             user_input = input(f"    New fill value for '{var_name}': ").strip()
 
@@ -230,9 +231,12 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
-            # If this is the second Ctrl-C, exit
-            if ctrl_c_count >= 2:
-                print("\n    [Ctrl-C pressed again - exiting]")
+            # If this is the second Ctrl-C or the user requested quit, exit
+            if ctrl_c_count >= 2 or user_input == "quit":
+                if ctrl_c_count >= 2:
+                    print("\n    [Ctrl-C pressed again - exiting]")
+                else:
+                    print("\n    User requested quit")
                 raise
 
             # First Ctrl-C: show ncdump output for this variable
