@@ -32,6 +32,17 @@ ATTR = "_FillValue"
 USER_REQ_QUIT = "quit"
 USER_REQ_SKIP_VAR = "skip"
 USER_REQ_SKIP_FILE = "skipfile"
+USER_REQ_DELETE = "delete"
+
+VARS_TO_DELETE = [
+    "lat",
+    "lon",
+    "time",
+    "patches1d_ixy",
+    "patches1d_jxy",
+    "nodeCoords",
+    "centerCoords",
+]
 
 
 def extract_file_paths_from_xml(xml_file):
@@ -194,7 +205,8 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
         default_value: Optional default value to use if user presses enter
 
     Returns:
-        Converted fill value of the specified type
+        Converted fill value of the specified type, or $USER_REQ_DELETE if user wants to delete the
+        attribute
 
     Raises:
         KeyboardInterrupt: If user presses Ctrl-C twice or types $USER_REQ_QUIT
@@ -221,7 +233,10 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
                 raise ValueError("SKIP_VARIABLE")
             if user_input.lower() == USER_REQ_SKIP_FILE:
                 raise ValueError("SKIP_FILE")
-
+            if user_input.lower() == USER_REQ_DELETE:
+                # Return the delete command as a string
+                print(f"    Will delete {ATTR} attribute")
+                return USER_REQ_DELETE
             if user_input:
                 try:
                     # Convert user input to the target type
@@ -247,8 +262,9 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
                     print(f"    Using default: {default_value}")
                     return default_value
                 print(
-                    f"    Please enter a value (or '{USER_REQ_SKIP_VAR}' to skip variable, "
-                    f"'{USER_REQ_SKIP_FILE}' to skip file, '{USER_REQ_QUIT}' to save and exit)."
+                    f"    Please enter a value (or '{USER_REQ_DELETE}' to delete attribute, "
+                    f"'{USER_REQ_SKIP_VAR}' to skip variable, '{USER_REQ_SKIP_FILE}' to skip file, "
+                    f"'{USER_REQ_QUIT}' to save and exit)."
                 )
         except KeyboardInterrupt:
             ctrl_c_count += 1
@@ -300,8 +316,9 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             print("Starting fresh...")
 
     print(
-        f"\nCommands: Type a number for fill value, '{USER_REQ_SKIP_VAR}' to skip variable, "
-        f"'{USER_REQ_SKIP_FILE}' to skip file, '{USER_REQ_QUIT}' to save and exit"
+        f"\nCommands: Type a number for fill value, '{USER_REQ_DELETE}' to delete attribute, "
+        f"'{USER_REQ_SKIP_VAR}' to skip variable, '{USER_REQ_SKIP_FILE}' to skip file, "
+        f"'{USER_REQ_QUIT}' to save and exit"
     )
 
     try:
@@ -348,11 +365,13 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 # Calculate default fill value
                 default_fill = None
                 if (
-                    nanmin >= 0
-                    or nanmin == -1
+                    da.shape == ()
                     or units.startswith("degrees")
-                    or var in ["lat", "lon"]
+                    or var.endswith("_bnds")
+                    or var in VARS_TO_DELETE
                 ):
+                    default_fill = "delete"
+                elif nanmin >= 0 or nanmin == -1:
                     default_fill = type(nanmin)(-999)
 
                 # Print variable summary
