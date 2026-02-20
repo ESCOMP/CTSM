@@ -9,6 +9,8 @@ This script:
 4. Prints the matching paths
 """
 
+import argparse
+import re
 import xml.etree.ElementTree as ET
 import json
 import os
@@ -202,7 +204,12 @@ def show_ncdump_for_variable(file_path, var_name):
 
 
 def get_fill_value_from_user(
-    var_name, target_type, file_path=None, default_value=None, allow_delete=True
+    var_name,
+    target_type,
+    file_path=None,
+    default_value=None,
+    allow_delete=True,
+    delete_if_none_filled=False,
 ):
     """
     Prompt user for a new fill value and convert it to the target type.
@@ -213,6 +220,7 @@ def get_fill_value_from_user(
         file_path: Optional path to the netCDF file for ncdump on Ctrl-C
         default_value: Optional default value to use if user presses enter
         allow_delete: Whether to allow deleting the fill value attribute (default: True)
+        delete_if_none_filled: If True, automatically use delete when it's the default (default: False)
 
     Returns:
         Converted fill value of the specified type, or $USER_REQ_DELETE if user wants to delete the
@@ -223,6 +231,11 @@ def get_fill_value_from_user(
         ValueError: If user types $USER_REQ_SKIP_VAR to skip this variable or $USER_REQ_SKIP_FILE
                     to skip the file
     """
+    # If delete_if_none_filled is enabled and default is delete, use it automatically
+    if delete_if_none_filled and default_value == USER_REQ_DELETE:
+        print(f"    Auto-deleting {ATTR} attribute, since no elements are filled")
+        return USER_REQ_DELETE
+
     ctrl_c_count = 0
 
     while True:
@@ -304,7 +317,7 @@ def get_fill_value_from_user(
             show_ncdump_for_variable(file_path, var_name)
 
 
-def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
+def collect_new_fill_values(matches, progress_file=PROGRESS_FILE, delete_if_none_filled=False):
     """
     Interactively collect new fill values for variables with NaN fill values.
 
@@ -317,6 +330,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
         progress_file: Path to save/load progress (default: PROGRESS_FILE)
+        delete_if_none_filled: If True, automatically use delete when it's the default (default: False)
 
     Returns:
         dict: Dictionary mapping absolute file paths to dictionaries of
@@ -413,6 +427,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                         abs_path,
                         default_value=default_fill,
                         allow_delete=not data_has_nan,
+                        delete_if_none_filled=delete_if_none_filled,
                     )
                     new_fill_values[var] = new_fill_value
 
@@ -510,6 +525,17 @@ def load_progress(progress_file):
 def main():
     """Main function to find matching file paths."""
 
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Find and fix files with NaN fill values in CTSM namelist defaults"
+    )
+    parser.add_argument(
+        "--delete-if-none-filled",
+        action="store_true",
+        help="Automatically use 'delete' if variable has no filled elements (no prompt)",
+    )
+    args = parser.parse_args()
+
     # Check write access to progress file before starting
     print("Checking write access for progress file...")
     if not check_write_access(PROGRESS_FILE):
@@ -565,7 +591,9 @@ def main():
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
     # Collect new fill values from user
-    all_new_fill_values = collect_new_fill_values(matches)
+    all_new_fill_values = collect_new_fill_values(
+        matches, delete_if_none_filled=args.delete_if_none_filled
+    )
 
     return 0
 
