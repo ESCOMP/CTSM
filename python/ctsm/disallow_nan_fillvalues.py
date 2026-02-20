@@ -30,7 +30,8 @@ ATTR = "_FillValue"
 
 # Special commands
 USER_REQ_QUIT = "quit"
-USER_REQ_SKIP = "skip"
+USER_REQ_SKIP_VAR = "skip"
+USER_REQ_SKIP_FILE = "skipfile"
 
 
 def extract_file_paths_from_xml(xml_file):
@@ -197,7 +198,8 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
 
     Raises:
         KeyboardInterrupt: If user presses Ctrl-C twice or types $USER_REQ_QUIT
-        ValueError: If user types $USER_REQ_SKIP to skip this variable
+        ValueError: If user types $USER_REQ_SKIP_VAR to skip this variable or $USER_REQ_SKIP_FILE
+                    to skip the file
     """
     ctrl_c_count = 0
 
@@ -215,8 +217,10 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
             # Check for special commands
             if user_input.lower() == USER_REQ_QUIT:
                 raise KeyboardInterrupt("User requested quit")
-            if user_input.lower() == USER_REQ_SKIP:
+            if user_input.lower() == USER_REQ_SKIP_VAR:
                 raise ValueError("SKIP_VARIABLE")
+            if user_input.lower() == USER_REQ_SKIP_FILE:
+                raise ValueError("SKIP_FILE")
 
             if user_input:
                 try:
@@ -243,7 +247,8 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
                     print(f"    Using default: {default_value}")
                     return default_value
                 print(
-                    f"    Please enter a value (or '{USER_REQ_SKIP}' to skip, '{USER_REQ_QUIT}' to save and exit)."
+                    f"    Please enter a value (or '{USER_REQ_SKIP_VAR}' to skip variable, "
+                    f"'{USER_REQ_SKIP_FILE}' to skip file, '{USER_REQ_QUIT}' to save and exit)."
                 )
         except KeyboardInterrupt:
             ctrl_c_count += 1
@@ -269,7 +274,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     displays their properties, and prompts the user to enter new fill values.
 
     Progress is automatically saved after each variable. User can type $USER_REQ_QUIT to save and exit,
-    or $USER_REQ_SKIP to skip a variable.
+    or $USER_REQ_SKIP_VAR to skip a variable.
 
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
@@ -295,7 +300,8 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             print("Starting fresh...")
 
     print(
-        f"\nCommands: Type a number for fill value, '{USER_REQ_SKIP}' to skip variable, '{USER_REQ_QUIT}' to save and exit"
+        f"\nCommands: Type a number for fill value, '{USER_REQ_SKIP_VAR}' to skip variable, "
+        f"'{USER_REQ_SKIP_FILE}' to skip file, '{USER_REQ_QUIT}' to save and exit"
     )
 
     try:
@@ -340,7 +346,12 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
 
                 # Calculate default fill value
                 default_fill = None
-                if nanmin >= 0 or nanmin == -1 or units.startswith("degrees") or var in ["lat", "lon"]:
+                if (
+                    nanmin >= 0
+                    or nanmin == -1
+                    or units.startswith("degrees")
+                    or var in ["lat", "lon"]
+                ):
                     default_fill = type(nanmin)(-999)
 
                 # Print variable summary
@@ -360,10 +371,14 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                     # Save progress after each variable
                     save_progress(all_new_fill_values, progress_file)
                 except ValueError as e:
-                    # Check if this is the skip signal
+                    # Check if this is the skip variable signal
                     if str(e) == "SKIP_VARIABLE":
                         print(f"    Skipping variable '{var}'")
                         continue
+                    # Check if this is the skip file signal
+                    if str(e) == "SKIP_FILE":
+                        print("    Skipping rest of file")
+                        break
                     # Otherwise re-raise
                     raise
 
@@ -371,12 +386,9 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             ds.close()
 
             # Print summary for this file
-            if new_fill_values:
-                print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
-                for var, fill_val in new_fill_values.items():
-                    print(f"    {var}: {fill_val}")
-            else:
-                print("\n  No variables with NaN fill values found in this file.")
+            print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+            for var, fill_val in new_fill_values.items():
+                print(f"    {var}: {fill_val}")
 
     except KeyboardInterrupt:
         print("Exiting.")
