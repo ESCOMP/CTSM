@@ -37,6 +37,8 @@ USER_REQ_DELETE = "delete"
 VARS_TO_DELETE = [
     "lat",
     "lon",
+    "lat_tweak",
+    "lon_tweak",
     "time",
     "patches1d_ixy",
     "patches1d_jxy",
@@ -160,6 +162,23 @@ def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
     return result
 
 
+def var_data_has_nan(da: xr.DataArray) -> bool:
+    """
+    Check if a variable's data contains any NaN values.
+
+    Args:
+        da: xarray DataArray to check
+
+    Returns:
+        bool: True if the data contains any NaN values, False otherwise
+    """
+    try:
+        return bool(np.any(np.isnan(da.values)))
+    except TypeError:
+        # If isnan fails (e.g., for string data), assume no NaN
+        return False
+
+
 def show_ncdump_for_variable(file_path, var_name):
     """
     Run ncdump -h on a file and display lines matching the variable name.
@@ -194,7 +213,9 @@ def show_ncdump_for_variable(file_path, var_name):
     print()  # Empty line for readability
 
 
-def get_fill_value_from_user(var_name, target_type, file_path=None, default_value=None):
+def get_fill_value_from_user(
+    var_name, target_type, file_path=None, default_value=None, allow_delete=True
+):
     """
     Prompt user for a new fill value and convert it to the target type.
 
@@ -203,6 +224,7 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
         target_type: Type to convert the user input to (e.g., float, int)
         file_path: Optional path to the netCDF file for ncdump on Ctrl-C
         default_value: Optional default value to use if user presses enter
+        allow_delete: Whether to allow deleting the fill value attribute (default: True)
 
     Returns:
         Converted fill value of the specified type, or $USER_REQ_DELETE if user wants to delete the
@@ -234,6 +256,10 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
             if user_input.lower() == USER_REQ_SKIP_FILE:
                 raise ValueError("SKIP_FILE")
             if user_input.lower() == USER_REQ_DELETE:
+                # Check if delete is allowed for this variable
+                if not allow_delete:
+                    print(f"    Error: Cannot delete {ATTR} - variable contains NaN values")
+                    continue
                 # Return the delete command as a string
                 print(f"    Will delete {ATTR} attribute")
                 return USER_REQ_DELETE
@@ -261,11 +287,19 @@ def get_fill_value_from_user(var_name, target_type, file_path=None, default_valu
                 if default_value is not None:
                     print(f"    Using default: {default_value}")
                     return default_value
-                print(
-                    f"    Please enter a value (or '{USER_REQ_DELETE}' to delete attribute, "
-                    f"'{USER_REQ_SKIP_VAR}' to skip variable, '{USER_REQ_SKIP_FILE}' to skip file, "
-                    f"'{USER_REQ_QUIT}' to save and exit)."
+
+                # Build help message based on what's allowed
+                options = []
+                if allow_delete:
+                    options.append(f"'{USER_REQ_DELETE}' to delete attribute")
+                options.extend(
+                    [
+                        f"'{USER_REQ_SKIP_VAR}' to skip variable",
+                        f"'{USER_REQ_SKIP_FILE}' to skip file",
+                        f"'{USER_REQ_QUIT}' to save and exit",
+                    ]
                 )
+                print(f"    Please enter a value (or {', '.join(options)}).")
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
@@ -362,15 +396,19 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 nanmin = float(np.nanmin(da.values))
                 nanmax = float(np.nanmax(da.values))
 
+                # Check if data contains any NaN values
+                data_has_nan = var_data_has_nan(da)
+
                 # Calculate default fill value
                 default_fill = None
-                if (
+                # Only suggest delete if data has no NaN values
+                if not data_has_nan and (
                     da.shape == ()
                     or units.startswith("degrees")
                     or var.endswith("_bnds")
                     or var in VARS_TO_DELETE
                 ):
-                    default_fill = "delete"
+                    default_fill = USER_REQ_DELETE
                 elif nanmin >= 0 or nanmin == -1:
                     default_fill = type(nanmin)(-999)
 
@@ -381,11 +419,17 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 print(f"    units:     {units}")
                 print(f"    nanmin:    {nanmin}")
                 print(f"    nanmax:    {nanmax}")
+                if data_has_nan:
+                    print(f"    WARNING: Data contains NaN values - cannot delete {ATTR}")
 
                 # Ask user for new fill value
                 try:
                     new_fill_value = get_fill_value_from_user(
-                        var, type(nanmin), abs_path, default_value=default_fill
+                        var,
+                        type(nanmin),
+                        abs_path,
+                        default_value=default_fill,
+                        allow_delete=not data_has_nan,
                     )
                     new_fill_values[var] = new_fill_value
 
