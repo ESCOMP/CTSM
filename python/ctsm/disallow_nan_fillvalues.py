@@ -67,12 +67,14 @@ def extract_file_paths_from_xml(xml_file):
     return file_paths
 
 
-def load_bad_files(bad_files_log):
+def load_bad_files(bad_files_log, path_filter=None):
     """
     Load the list of bad files from the log.
 
     Args:
         bad_files_log: Path to the bad files log
+        path_filter: Optional string that must be in the file path to include it.
+                     If None, all bad files are included.
 
     Returns:
         set: Set of absolute file paths from the log
@@ -86,7 +88,9 @@ def load_bad_files(bad_files_log):
                 # Each line starts with the file path followed by " : NaN_FillValue : "
                 if bad_line_contents in line:
                     file_path = line.split(bad_line_contents)[0].strip()
-                    bad_files.add(file_path)
+                    # Only add files that match our filter (if specified)
+                    if path_filter is None or path_filter in file_path:
+                        bad_files.add(file_path)
 
     except FileNotFoundError:
         print(f"Bad files log not found: {bad_files_log}", file=sys.stderr)
@@ -121,8 +125,9 @@ def main():
     print(f"Found {len(xml_paths)} file paths in XML")
 
     print("\nLoading bad files from log...")
-    bad_files = load_bad_files(BAD_FILES_LOG)
-    print(f"Found {len(bad_files)} bad files in log")
+    # Only load bad files that match our path prefix to improve performance
+    bad_files = load_bad_files(BAD_FILES_LOG, path_filter=OUR_PATH)
+    print(f"Found {len(bad_files)} bad files in log matching '{OUR_PATH}'")
 
     print("\nFinding matches...")
     matches = []
@@ -163,7 +168,7 @@ def main():
     # Summary
     print("\nSummary:")
     print(f"  Total paths in XML: {len(xml_paths)}")
-    print(f"  Total bad files: {len(bad_files)}")
+    print(f"  Total bad files matching '{OUR_PATH}': {len(bad_files)}")
     print(f"  Matching files: {len(matches)}")
 
     return 0
