@@ -36,6 +36,8 @@ USER_REQ_SKIP_VAR = "skip"
 USER_REQ_SKIP_FILE = "skipfile"
 USER_REQ_DELETE = "delete"
 
+VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
+
 
 def extract_file_paths_from_xml(xml_file):
     """
@@ -406,7 +408,12 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE, delete_if_none
                 # Suggest delete if data has no NaN values
                 if not data_has_nan:
                     default_fill = USER_REQ_DELETE
-                elif nanmin >= 0 or nanmin == -1:
+                elif (
+                    nanmin >= 0
+                    or nanmin == -1
+                    or any(var.startswith(x) for x in VARSTARTS_TO_DEFAULT_NEG999)
+                    or ("/surfdata_map/" in abs_path and bool(re.match(r"[a-z0-9]{5}_to_[a-z0-9]{5}", var)))
+                ):
                     default_fill = type(nanmin)(-999)
 
                 # Print variable summary
