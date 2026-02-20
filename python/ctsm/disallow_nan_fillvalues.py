@@ -134,7 +134,101 @@ def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
     da = ds[var]
     if not attr in da.attrs:
         return False
-    return np.isnan(da.attrs[attr])
+    try:
+        result = np.isnan(da.attrs[attr])
+    except TypeError:
+        return False
+    return result
+
+
+def collect_new_fill_values(matches):
+    """
+    Interactively collect new fill values for variables with NaN fill values.
+
+    For each file in matches, opens the file, identifies variables with NaN fill values,
+    displays their properties, and prompts the user to enter new fill values.
+
+    Args:
+        matches: List of tuples (relative_path, absolute_path) for files to process
+
+    Returns:
+        dict: Dictionary mapping absolute file paths to dictionaries of
+              {variable_name: new_fill_value}
+    """
+    print("\n" + "=" * SEP_LENGTH)
+    print("COLLECTING NEW FILL VALUES")
+    print("=" * SEP_LENGTH)
+
+    # Dictionary to store new fill values for all files
+    all_new_fill_values = {}
+
+    for path_from_xml, abs_path in matches:
+        print(f"\n{'=' * SEP_LENGTH}")
+        print(f"Processing: {path_from_xml}")
+        print(f"Full path:  {abs_path}")
+        print(f"{'=' * SEP_LENGTH}")
+
+        # Dictionary to store new fill values for this file
+        new_fill_values = {}
+
+        # Open the dataset
+        ds = xr.open_dataset(abs_path, decode_cf=False, decode_timedelta=False, decode_times=False)
+
+        # Get all variables (both data and coordinate variables)
+        all_vars = list(ds.data_vars) + list(ds.coords)
+
+        # Loop through all variables
+        for var in all_vars:
+            if not var_has_nan_fill(ds, var):
+                continue
+
+            da = ds[var]
+
+            # Get variable metadata
+            var_name = var
+            long_name = da.attrs.get("long_name", "N/A")
+            units = da.attrs.get("units", "N/A")
+
+            # Get data statistics
+            nanmin = float(np.nanmin(da.values))
+            nanmax = float(np.nanmax(da.values))
+
+            # Print variable summary
+            print(f"\n  Variable: {var_name}")
+            print(f"    long_name: {long_name}")
+            print(f"    units:     {units}")
+            print(f"    nanmin:    {nanmin}")
+            print(f"    nanmax:    {nanmax}")
+
+            # Ask user for new fill value
+            while True:
+                user_input = input(f"    New fill value for '{var_name}': ").strip()
+                if user_input:
+                    try:
+                        # Convert user input to the same type as nanmin
+                        converted_value = type(nanmin)(user_input)
+                        new_fill_values[var_name] = converted_value
+                        break
+                    except (ValueError, TypeError) as e:
+                        print(
+                            f"    Invalid input: {e}. Please enter a valid {type(nanmin).__name__}."
+                        )
+                else:
+                    print("    Please enter a value.")
+
+        # Close the dataset
+        ds.close()
+
+        # Store the new fill values for this file
+        if new_fill_values:
+            all_new_fill_values[abs_path] = new_fill_values
+            print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+            for var_name, fill_val in new_fill_values.items():
+                print(f"    {var_name}: {fill_val}")
+        else:
+            print("\n  No variables with NaN fill values found in this file.")
+
+    return all_new_fill_values
 
 
 def main():
@@ -182,6 +276,9 @@ def main():
     print(f"  {len(xml_paths)}\tTotal paths in XML")
     print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
+
+    # Collect new fill values from user
+    all_new_fill_values = collect_new_fill_values(matches)
 
     return 0
 
