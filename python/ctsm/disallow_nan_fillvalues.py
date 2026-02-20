@@ -23,6 +23,7 @@ INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
 
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
+ATTR = "_FillValue"
 
 
 def extract_file_paths_from_xml(xml_file):
@@ -117,6 +118,25 @@ def convert_to_absolute_path(relative_path):
     return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
+def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
+    """
+    Check if a variable has a NaN fill value attribute.
+
+    Args:
+        ds: xarray Dataset containing the variable
+        var: Name of the variable to check
+        attr: Name of the attribute to check (typically '_FillValue')
+
+    Returns:
+        bool: True if the variable has the specified attribute and its value is NaN,
+              False otherwise
+    """
+    da = ds[var]
+    if not attr in da.attrs:
+        return False
+    return np.isnan(da.attrs[attr])
+
+
 def main():
     """Main function to find matching file paths."""
 
@@ -125,7 +145,6 @@ def main():
     print(f"Found {len(xml_paths)} file paths in XML")
 
     print("\nLoading bad files from log...")
-    # Only load bad files that match our path prefix to improve performance
     bad_files = load_bad_files(BAD_FILES_LOG, path_filter=OUR_PATH)
     print(f"Found {len(bad_files)} bad files in log matching '{OUR_PATH}'")
 
@@ -148,16 +167,12 @@ def main():
                 abs_path, decode_cf=False, decode_timedelta=False, decode_times=False
             )
             any_nan_fill = False
-            attr = "_FillValue"
             for var in ds:
-                da = ds[var]
-                if not attr in da.attrs:
-                    continue
-                if np.isnan(da.attrs[attr]):
+                if var_has_nan_fill(ds, var):
                     any_nan_fill = True
                     break
             if not any_nan_fill:
-                print(f"No variable in file has NaN {attr}; skipping")
+                print(f"No variable in file has NaN {ATTR}; skipping")
 
             matches.append((path_from_xml, abs_path))
     print("-" * SEP_LENGTH)
@@ -166,7 +181,7 @@ def main():
     print("\nSummary:")
     print(f"  {len(xml_paths)}\tTotal paths in XML")
     print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
-    print(f"  {len(matches)}\tMatching files with NaN {attr}")
+    print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
     return 0
 
