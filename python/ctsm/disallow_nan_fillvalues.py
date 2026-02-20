@@ -141,6 +141,30 @@ def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
     return result
 
 
+def get_fill_value_from_user(var_name, target_type):
+    """
+    Prompt user for a new fill value and convert it to the target type.
+
+    Args:
+        var_name: Name of the variable
+        target_type: Type to convert the user input to (e.g., float, int)
+
+    Returns:
+        Converted fill value of the specified type
+    """
+    while True:
+        user_input = input(f"    New fill value for '{var_name}': ").strip()
+        if user_input:
+            try:
+                # Convert user input to the target type
+                converted_value = target_type(user_input)
+                return converted_value
+            except (ValueError, TypeError) as e:
+                print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
+        else:
+            print("    Please enter a value.")
+
+
 def collect_new_fill_values(matches):
     """
     Interactively collect new fill values for variables with NaN fill values.
@@ -201,20 +225,8 @@ def collect_new_fill_values(matches):
             print(f"    nanmax:    {nanmax}")
 
             # Ask user for new fill value
-            while True:
-                user_input = input(f"    New fill value for '{var_name}': ").strip()
-                if user_input:
-                    try:
-                        # Convert user input to the same type as nanmin
-                        converted_value = type(nanmin)(user_input)
-                        new_fill_values[var_name] = converted_value
-                        break
-                    except (ValueError, TypeError) as e:
-                        print(
-                            f"    Invalid input: {e}. Please enter a valid {type(nanmin).__name__}."
-                        )
-                else:
-                    print("    Please enter a value.")
+            new_fill_value = get_fill_value_from_user(var_name, type(nanmin))
+            new_fill_values[var_name] = new_fill_value
 
         # Close the dataset
         ds.close()
