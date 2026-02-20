@@ -10,6 +10,7 @@ This script:
 """
 
 import xml.etree.ElementTree as ET
+import json
 import os
 import subprocess
 import sys
@@ -22,6 +23,7 @@ XML_FILE = "bld/namelist_files/namelist_defaults_ctsm.xml"
 BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
+PROGRESS_FILE = "fillvalue_progress.json"  # File to save progress
 
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
 ATTR = "_FillValue"
@@ -189,13 +191,21 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
         Converted fill value of the specified type
 
     Raises:
-        KeyboardInterrupt: If user presses Ctrl-C twice
+        KeyboardInterrupt: If user presses Ctrl-C twice or types 'quit'
+        ValueError: If user types 'skip' to skip this variable
     """
     ctrl_c_count = 0
 
     while True:
         try:
             user_input = input(f"    New fill value for '{var_name}': ").strip()
+
+            # Check for special commands
+            if user_input.lower() == "quit":
+                raise KeyboardInterrupt("User requested quit")
+            if user_input.lower() == "skip":
+                raise ValueError("SKIP_VARIABLE")
+
             if user_input:
                 try:
                     # Convert user input to the target type
@@ -211,31 +221,38 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
 
                     return converted_value
                 except (ValueError, TypeError) as e:
+                    # Re-raise if it's the SKIP_VARIABLE signal
+                    if str(e) == "SKIP_VARIABLE":
+                        raise
                     print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
             else:
-                print("    Please enter a value.")
+                print("    Please enter a value (or 'skip' to skip, 'quit' to save and exit).")
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
             # If this is the second Ctrl-C, exit
             if ctrl_c_count >= 2:
                 print("\n    [Ctrl-C pressed again - exiting]")
-                sys.exit(1)
+                raise
 
             # First Ctrl-C: show ncdump output for this variable
             print("\n    [Ctrl-C detected - press again to exit]")
             show_ncdump_for_variable(file_path, var_name)
 
 
-def collect_new_fill_values(matches):
+def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     """
     Interactively collect new fill values for variables with NaN fill values.
 
     For each file in matches, opens the file, identifies variables with NaN fill values,
     displays their properties, and prompts the user to enter new fill values.
 
+    Progress is automatically saved after each file. User can type 'quit' to save and exit,
+    or 'skip' to skip a variable.
+
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
+        progress_file: Path to save/load progress (default: PROGRESS_FILE)
 
     Returns:
         dict: Dictionary mapping absolute file paths to dictionaries of
@@ -245,68 +262,177 @@ def collect_new_fill_values(matches):
     print("COLLECTING NEW FILL VALUES")
     print("=" * SEP_LENGTH)
 
-    # Dictionary to store new fill values for all files
-    all_new_fill_values = {}
+    # Load existing progress if available
+    all_new_fill_values = load_progress(progress_file)
+    if all_new_fill_values:
+        print(f"\nLoaded progress from {progress_file}")
+        print(f"Already processed {len(all_new_fill_values)} file(s)")
+        response = input("Continue from where you left off? [Y/n]: ").strip().lower()
+        if response and response not in ("y", "yes"):
+            all_new_fill_values = {}
+            print("Starting fresh...")
 
-    for path_from_xml, abs_path in matches:
-        print(f"\n{'=' * SEP_LENGTH}")
-        print(f"Processing: {path_from_xml}")
-        print(f"Full path:  {abs_path}")
-        print(f"{'=' * SEP_LENGTH}")
+    print(
+        "\nCommands: Type a number for fill value, 'skip' to skip variable, 'quit' to save and exit"
+    )
 
-        # Dictionary to store new fill values for this file
-        new_fill_values = {}
-
-        # Open the dataset
-        ds = xr.open_dataset(abs_path, decode_cf=False, decode_timedelta=False, decode_times=False)
-
-        # Get all variables (both data and coordinate variables)
-        all_vars = list(ds.data_vars) + list(ds.coords)
-
-        # Loop through all variables
-        for var in all_vars:
-            if not var_has_nan_fill(ds, var):
+    try:
+        for path_from_xml, abs_path in matches:
+            # Skip files we've already processed
+            if abs_path in all_new_fill_values:
+                print(f"\nSkipping already processed: {path_from_xml}")
                 continue
 
-            da = ds[var]
+            print(f"\n{'=' * SEP_LENGTH}")
+            print(f"Processing: {path_from_xml}")
+            print(f"Full path:  {abs_path}")
+            print(f"{'=' * SEP_LENGTH}")
 
-            # Get variable metadata
-            var_name = var
-            long_name = da.attrs.get("long_name", "N/A")
-            units = da.attrs.get("units", "N/A")
+            # Dictionary to store new fill values for this file
+            new_fill_values = {}
 
-            # Get data statistics
-            nanmin = float(np.nanmin(da.values))
-            nanmax = float(np.nanmax(da.values))
+            # Open the dataset
+            ds = xr.open_dataset(
+                abs_path, decode_cf=False, decode_timedelta=False, decode_times=False
+            )
 
-            # Print variable summary
-            print(f"\n  Variable: {var_name}")
-            print(f"    long_name: {long_name}")
-            print(f"    units:     {units}")
-            print(f"    nanmin:    {nanmin}")
-            print(f"    nanmax:    {nanmax}")
+            # Get all variables (both data and coordinate variables)
+            all_vars = list(ds.data_vars) + list(ds.coords)
 
-            # Ask user for new fill value
-            new_fill_value = get_fill_value_from_user(var_name, type(nanmin), abs_path)
-            new_fill_values[var_name] = new_fill_value
+            # Loop through all variables
+            for var in all_vars:
+                if not var_has_nan_fill(ds, var):
+                    continue
 
-        # Close the dataset
-        ds.close()
+                da = ds[var]
 
-        # Store the new fill values for this file
-        if new_fill_values:
-            all_new_fill_values[abs_path] = new_fill_values
-            print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
-            for var_name, fill_val in new_fill_values.items():
-                print(f"    {var_name}: {fill_val}")
-        else:
-            print("\n  No variables with NaN fill values found in this file.")
+                # Get variable metadata
+                var_name = var
+                long_name = da.attrs.get("long_name", "N/A")
+                units = da.attrs.get("units", "N/A")
+
+                # Get data statistics
+                nanmin = float(np.nanmin(da.values))
+                nanmax = float(np.nanmax(da.values))
+
+                # Print variable summary
+                print(f"\n  Variable: {var_name}")
+                print(f"    long_name: {long_name}")
+                print(f"    units:     {units}")
+                print(f"    nanmin:    {nanmin}")
+                print(f"    nanmax:    {nanmax}")
+
+                # Ask user for new fill value
+                try:
+                    new_fill_value = get_fill_value_from_user(var_name, type(nanmin), abs_path)
+                    new_fill_values[var_name] = new_fill_value
+                except ValueError as e:
+                    # Check if this is the skip signal
+                    if str(e) == "SKIP_VARIABLE":
+                        print(f"    Skipping variable '{var_name}'")
+                        continue
+                    # Otherwise re-raise
+                    raise
+
+            # Close the dataset
+            ds.close()
+
+            # Store the new fill values for this file
+            if new_fill_values:
+                all_new_fill_values[abs_path] = new_fill_values
+                print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+                for var_name, fill_val in new_fill_values.items():
+                    print(f"    {var_name}: {fill_val}")
+            else:
+                print("\n  No variables with NaN fill values found in this file.")
+
+            # Save progress after each file
+            save_progress(all_new_fill_values, progress_file)
+
+    except KeyboardInterrupt:
+        print("\n\nSaving progress before exit...")
+        save_progress(all_new_fill_values, progress_file)
+        print("Exiting.")
+        sys.exit(0)
 
     return all_new_fill_values
 
 
+def check_write_access(file_path):
+    """
+    Check if we have write access to create/update a file.
+
+    Args:
+        file_path: Path to the file to check
+
+    Returns:
+        bool: True if we have write access, False otherwise
+    """
+    # Get the directory where the file would be created
+    directory = os.path.dirname(file_path) or "."
+
+    # Check if directory exists and is writable
+    if os.path.exists(directory):
+        return os.access(directory, os.W_OK)
+
+    # If directory doesn't exist, check parent directories
+    parent = os.path.dirname(directory)
+    while parent and not os.path.exists(parent):
+        parent = os.path.dirname(parent)
+
+    return os.access(parent or ".", os.W_OK)
+
+
+def save_progress(all_new_fill_values, progress_file):
+    """
+    Save progress to a JSON file.
+
+    Args:
+        all_new_fill_values: Dictionary of collected fill values
+        progress_file: Path to the progress file
+    """
+    try:
+        with open(progress_file, "w", encoding="utf-8") as f:
+            json.dump(all_new_fill_values, f, indent=2)
+        print(f"  [Progress saved to {progress_file}]")
+    except (IOError, OSError) as e:
+        print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
+
+
+def load_progress(progress_file):
+    """
+    Load progress from a JSON file if it exists.
+
+    Args:
+        progress_file: Path to the progress file
+
+    Returns:
+        dict: Previously saved fill values, or empty dict if file doesn't exist
+    """
+    if not os.path.exists(progress_file):
+        return {}
+
+    try:
+        with open(progress_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (IOError, OSError, json.JSONDecodeError) as e:
+        print(f"Warning: Could not load progress file: {e}", file=sys.stderr)
+        return {}
+
+
 def main():
     """Main function to find matching file paths."""
+
+    # Check write access to progress file before starting
+    print("Checking write access for progress file...")
+    if not check_write_access(PROGRESS_FILE):
+        print(f"Error: No write access to create/update {PROGRESS_FILE}", file=sys.stderr)
+        print(
+            f"Please check permissions in directory: {os.path.dirname(PROGRESS_FILE) or '.'}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(f"✓ Write access confirmed for {PROGRESS_FILE}\n")
 
     print("Extracting file paths from XML...")
     xml_paths = extract_file_paths_from_xml(XML_FILE)
@@ -351,8 +477,14 @@ def main():
     print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
+    # Load progress if available
+    progress = load_progress(PROGRESS_FILE)
+
     # Collect new fill values from user
     all_new_fill_values = collect_new_fill_values(matches)
+
+    # Save progress
+    save_progress(all_new_fill_values, PROGRESS_FILE)
 
     return 0
 
