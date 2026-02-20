@@ -28,6 +28,10 @@ PROGRESS_FILE = "fillvalue_progress.json"  # File to save progress
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
 ATTR = "_FillValue"
 
+# Special commands
+USER_REQ_QUIT = "quit"
+USER_REQ_SKIP = "skip"
+
 
 def extract_file_paths_from_xml(xml_file):
     """
@@ -191,8 +195,8 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
         Converted fill value of the specified type
 
     Raises:
-        KeyboardInterrupt: If user presses Ctrl-C twice or types 'quit'
-        ValueError: If user types 'skip' to skip this variable
+        KeyboardInterrupt: If user presses Ctrl-C twice or types $USER_REQ_QUIT
+        ValueError: If user types $USER_REQ_SKIP to skip this variable
     """
     ctrl_c_count = 0
 
@@ -202,9 +206,9 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
             user_input = input(f"    New fill value for '{var_name}': ").strip()
 
             # Check for special commands
-            if user_input.lower() == "quit":
+            if user_input.lower() == USER_REQ_QUIT:
                 raise KeyboardInterrupt("User requested quit")
-            if user_input.lower() == "skip":
+            if user_input.lower() == USER_REQ_SKIP:
                 raise ValueError("SKIP_VARIABLE")
 
             if user_input:
@@ -227,12 +231,12 @@ def get_fill_value_from_user(var_name, target_type, file_path=None):
                         raise
                     print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
             else:
-                print("    Please enter a value (or 'skip' to skip, 'quit' to save and exit).")
+                print(f"    Please enter a value (or '{USER_REQ_SKIP}' to skip, '{USER_REQ_QUIT}' to save and exit).")
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
             # If this is the second Ctrl-C or the user requested quit, exit
-            if ctrl_c_count >= 2 or user_input == "quit":
+            if ctrl_c_count >= 2 or user_input == USER_REQ_QUIT:
                 if ctrl_c_count >= 2:
                     print("\n    [Ctrl-C pressed again - exiting]")
                 else:
@@ -251,8 +255,8 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
     For each file in matches, opens the file, identifies variables with NaN fill values,
     displays their properties, and prompts the user to enter new fill values.
 
-    Progress is automatically saved after each file. User can type 'quit' to save and exit,
-    or 'skip' to skip a variable.
+    Progress is automatically saved after each file. User can type $USER_REQ_QUIT to save and exit,
+    or $USER_REQ_SKIP to skip a variable.
 
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
@@ -277,7 +281,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
             print("Starting fresh...")
 
     print(
-        "\nCommands: Type a number for fill value, 'skip' to skip variable, 'quit' to save and exit"
+        f"\nCommands: Type a number for fill value, '{USER_REQ_SKIP}' to skip variable, '{USER_REQ_QUIT}' to save and exit"
     )
 
     try:
