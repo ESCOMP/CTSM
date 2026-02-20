@@ -34,18 +34,6 @@ USER_REQ_SKIP_VAR = "skip"
 USER_REQ_SKIP_FILE = "skipfile"
 USER_REQ_DELETE = "delete"
 
-VARS_TO_DELETE = [
-    "lat",
-    "lon",
-    "lat_tweak",
-    "lon_tweak",
-    "time",
-    "patches1d_ixy",
-    "patches1d_jxy",
-    "nodeCoords",
-    "centerCoords",
-]
-
 
 def extract_file_paths_from_xml(xml_file):
     """
@@ -401,13 +389,8 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
 
                 # Calculate default fill value
                 default_fill = None
-                # Only suggest delete if data has no NaN values
-                if not data_has_nan and (
-                    da.shape == ()
-                    or units.startswith("degrees")
-                    or var.endswith("_bnds")
-                    or var in VARS_TO_DELETE
-                ):
+                # Suggest delete if data has no NaN values
+                if not data_has_nan:
                     default_fill = USER_REQ_DELETE
                 elif nanmin >= 0 or nanmin == -1:
                     default_fill = type(nanmin)(-999)
