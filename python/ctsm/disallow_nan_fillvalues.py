@@ -173,7 +173,7 @@ def var_data_has_nan(da: xr.DataArray) -> bool:
         bool: True if the data contains any NaN values, False otherwise
     """
     try:
-        return bool(np.any(np.isnan(da.values)))
+        return bool(da.isnull().any())
     except TypeError:
         # If isnan fails (e.g., for string data), assume no NaN
         return False
