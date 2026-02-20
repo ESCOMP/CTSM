@@ -339,6 +339,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 # Get variable metadata
                 long_name = da.attrs.get("long_name", "N/A")
                 units = da.attrs.get("units", "N/A")
+                shape = da.shape
 
                 # Get data statistics
                 nanmin = float(np.nanmin(da.values))
@@ -357,6 +358,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE):
                 # Print variable summary
                 print(f"\n  Variable: {var}")
                 print(f"    long_name: {long_name}")
+                print(f"    shape:     {shape}")
                 print(f"    units:     {units}")
                 print(f"    nanmin:    {nanmin}")
                 print(f"    nanmax:    {nanmax}")
