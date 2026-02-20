@@ -158,6 +158,15 @@ def get_fill_value_from_user(var_name, target_type):
             try:
                 # Convert user input to the target type
                 converted_value = target_type(user_input)
+
+                # Make sure it's not NaN
+                try:
+                    converted_value_is_nan = np.isnan(converted_value)
+                except TypeError:
+                    converted_value_is_nan = False
+                if converted_value_is_nan:
+                    raise ValueError(f"Input '{user_input}' would produce a NaN {ATTR}")
+
                 return converted_value
             except (ValueError, TypeError) as e:
                 print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
