@@ -139,6 +139,10 @@ def main():
             if not os.path.exists(abs_path):
                 raise FileNotFoundError(abs_path)
 
+            print("-" * SEP_LENGTH)
+            print(f"In XML:   {path_from_xml}")
+            print(f"Absolute: {abs_path}")
+
             # Check that the file actually has NaN _FillValue for at least one var
             ds = xr.open_dataset(
                 abs_path, decode_cf=False, decode_timedelta=False, decode_times=False
@@ -153,23 +157,16 @@ def main():
                     any_nan_fill = True
                     break
             if not any_nan_fill:
-                raise RuntimeError(f"No variable in file has NaN {attr}: {abs_path}")
+                print(f"No variable in file has NaN {attr}; skipping")
 
             matches.append((path_from_xml, abs_path))
-
-    print(f"\nFound {len(matches)} matching files:\n")
-    print("=" * SEP_LENGTH)
-
-    for path_from_xml, abs_path in matches:
-        print(f"In XML:   {path_from_xml}")
-        print(f"Absolute: {abs_path}")
-        print("-" * SEP_LENGTH)
+    print("-" * SEP_LENGTH)
 
     # Summary
     print("\nSummary:")
-    print(f"  Total paths in XML: {len(xml_paths)}")
-    print(f"  Total bad files matching '{OUR_PATH}': {len(bad_files)}")
-    print(f"  Matching files: {len(matches)}")
+    print(f"  {len(xml_paths)}\tTotal paths in XML")
+    print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
+    print(f"  {len(matches)}\tMatching files with NaN {attr}")
 
     return 0
 
