@@ -25,7 +25,7 @@ To obtain the CTSM code you need to do the following:
    Additional documentation for git-fleximod appears here:
    https://github.com/ESMCI/git-fleximod?tab=readme-ov-file#git-fleximod
 
-"components" here refers to seperate git repositories for seperable parts of 
+"components" here refers to separate git repositories for separable parts of 
 the code (such as the MOSART or mizuRoute river models). Because they are
 managed with "submodule" in git hereafter we will refer to them as "submodule(s)".
 
