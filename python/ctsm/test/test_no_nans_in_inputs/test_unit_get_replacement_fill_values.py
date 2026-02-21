@@ -138,3 +138,49 @@ class TestGetFillValueFromUser:
         monkeypatch.setattr("builtins.input", lambda _: next(inputs))
         result = get_fill_value_from_user(TEST_VAR_NAME, float)
         assert result == valid_value
+
+    def test_ctrl_c_twice_raises(self, monkeypatch):
+        """Test that pressing Ctrl-C twice raises KeyboardInterrupt."""
+
+        def raise_keyboard_interrupt(_):
+            raise KeyboardInterrupt
+
+        monkeypatch.setattr("builtins.input", raise_keyboard_interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            get_fill_value_from_user(TEST_VAR_NAME, float)
+
+    def test_ctrl_c_then_valid_input(self, monkeypatch):
+        """Test that Ctrl-C followed by valid input works."""
+        valid_value = 123.0
+        # call_count is defined in the outer (test method) scope
+        call_count = 0
+
+        def input_with_ctrl_c(_):
+            # nonlocal lets us modify call_count from the enclosing scope
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                # First call: simulate Ctrl-C. get_fill_value_from_user will
+                # catch this, show ncdump output, and loop back to prompt again.
+                raise KeyboardInterrupt
+            # Second call: return valid input, which should be accepted
+            return str(valid_value)
+
+        monkeypatch.setattr("builtins.input", input_with_ctrl_c)
+        result = get_fill_value_from_user(TEST_VAR_NAME, float)
+        assert result == valid_value
+
+    def test_ctrl_c_then_quit(self, monkeypatch):
+        """Test that Ctrl-C followed by 'quit' raises KeyboardInterrupt."""
+        call_count = 0
+
+        def input_with_ctrl_c_then_quit(_):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise KeyboardInterrupt
+            return USER_REQ_QUIT
+
+        monkeypatch.setattr("builtins.input", input_with_ctrl_c_then_quit)
+        with pytest.raises(KeyboardInterrupt):
+            get_fill_value_from_user(TEST_VAR_NAME, float)
