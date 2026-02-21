@@ -10,6 +10,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
 import pytest
 import xarray as xr
@@ -17,6 +18,7 @@ import xarray as xr
 from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
+    execute_command,
     get_output_filename,
     load_new_fillvalues,
     main,
@@ -355,3 +357,108 @@ class TestReplaceFullWorkflow:
         captured = capsys.readouterr()
         assert "WARNING: Output file is a symlink - SKIPPING" in captured.out
         assert "Symlinks will never be overwritten" in captured.out
+
+
+class TestExecuteCommand:
+    """Test the execute_command function."""
+
+    @pytest.mark.parametrize(
+        "netcdf_format",
+        [
+            "NETCDF4",
+            "NETCDF4_CLASSIC",
+            "NETCDF3_CLASSIC",
+        ],
+    )
+    def test_execute_preserves_format(self, tmp_path, netcdf_format):
+        """Test execute_command preserves NetCDF format from input to output."""
+        # Create input file with specified format
+        input_file = str(tmp_path / f"test_input_{netcdf_format}.nc")
+        ds = xr.Dataset(
+            {
+                TEST_VAR_TEMP: xr.DataArray(
+                    np.array([1.0, 2.0, 3.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(np.nan)},
+                ),
+            }
+        )
+        ds.to_netcdf(input_file, format=netcdf_format)
+        ds.close()
+
+        output_file = str(tmp_path / f"test_output_{netcdf_format}.nc")
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+
+        # Execute the command without XML update
+        files_processed = execute_command(None, input_file, output_file, cmd)
+
+        # Should have processed 1 file
+        assert files_processed == 1
+
+        # Output file should exist
+        assert os.path.exists(output_file)
+
+        # Verify the output file is valid NetCDF with correct fill value
+        ds_out = xr.open_dataset(
+            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert TEST_VAR_TEMP in ds_out
+        assert ATTR in ds_out[TEST_VAR_TEMP].attrs
+        assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
+
+        # Verify NetCDF format matches input
+        ds_in = xr.open_dataset(
+            input_file, decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+
+        # Check the actual file format using netCDF4 library
+        nc_in = Dataset(input_file, "r")
+        nc_out = Dataset(output_file, "r")
+
+        # Get the actual format from the files
+        input_format = nc_in.data_model
+        output_format = nc_out.data_model
+
+        nc_in.close()
+        nc_out.close()
+        ds_out.close()
+        ds_in.close()
+
+        # Verify formats match
+        assert output_format == input_format
+        assert output_format == netcdf_format
+
+    def test_execute_without_xml_update(self, tmp_path, create_mock_xml_file):
+        """Test that XML file is not touched when xml_file is None."""
+        # Create input file
+        input_file = str(tmp_path / "test_input.nc")
+        ds = xr.Dataset(
+            {
+                TEST_VAR_TEMP: xr.DataArray(
+                    np.array([1.0, 2.0, 3.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(np.nan)},
+                ),
+            }
+        )
+        ds.to_netcdf(input_file)
+        ds.close()
+
+        output_file = str(tmp_path / "test_output.nc")
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+
+        # Read original XML content
+        with open(create_mock_xml_file, "r", encoding="utf-8") as f:
+            original_xml = f.read()
+
+        # Execute without xml_file parameter
+        files_processed = execute_command(None, input_file, output_file, cmd)
+
+        assert files_processed == 1
+
+        # XML file should be unchanged
+        with open(create_mock_xml_file, "r", encoding="utf-8") as f:
+            current_xml = f.read()
+        assert current_xml == original_xml
