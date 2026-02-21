@@ -5,9 +5,15 @@ System tests for get_replacement_fill_values.py script.
 Tests functions that require file I/O.
 """
 
+import numpy as np
 import pytest
+import xarray as xr
 
-from ctsm.no_nans_in_inputs.get_replacement_fill_values import extract_file_paths_from_xml
+from ctsm.no_nans_in_inputs.constants import ATTR
+from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
+    extract_file_paths_from_xml,
+    var_has_nan_fill,
+)
 
 
 # Test constants
@@ -135,3 +141,127 @@ class TestExtractFilePathsFromXml:
         )
         result = extract_file_paths_from_xml(xml_path)
         assert result == {TEST_PATH_PARAM, TEST_PATH_SURF}
+
+
+class TestVarHasNanFill:
+    """Test the var_has_nan_fill function."""
+
+    def test_true_for_nan_fill_float32(self, tmp_path):
+        """Test that a float32 variable with NaN fill value returns True."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "temp": xr.DataArray(
+                    np.array([1.0, 2.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(np.nan)},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert var_has_nan_fill(ds_read, "temp")
+        ds_read.close()
+
+    def test_true_for_nan_fill_float64(self, tmp_path):
+        """Test that a float64 variable with NaN fill value returns True."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "pressure": xr.DataArray(
+                    np.array([1000.0, 1010.0], dtype=np.float64),
+                    dims=["time"],
+                    attrs={ATTR: np.float64(np.nan)},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert var_has_nan_fill(ds_read, "pressure")
+        ds_read.close()
+
+    def test_false_for_numeric_fill(self, tmp_path):
+        """Test that a variable with a numeric (non-NaN) fill value returns False."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "temp": xr.DataArray(
+                    np.array([1.0, 2.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(-999.0)},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert not var_has_nan_fill(ds_read, "temp")
+        ds_read.close()
+
+    def test_false_for_no_fill_attr(self, tmp_path):
+        """Test that a variable without a _FillValue attribute returns False."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "temp": xr.DataArray(
+                    np.array([1.0, 2.0], dtype=np.float32),
+                    dims=["time"],
+                ),
+            }
+        )
+        # Use encoding to prevent xarray from adding a default _FillValue
+        ds.to_netcdf(str(test_file), encoding={"temp": {ATTR: None}})
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert not var_has_nan_fill(ds_read, "temp")
+        ds_read.close()
+
+    def test_false_for_integer_fill(self, tmp_path):
+        """Test that an integer variable with a fill value returns False (can't be NaN)."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "count": xr.DataArray(
+                    np.array([1, 2, 3], dtype=np.int32),
+                    dims=["time"],
+                    attrs={ATTR: np.int32(-999)},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert not var_has_nan_fill(ds_read, "count")
+        ds_read.close()
+
+    def test_checks_correct_variable(self, tmp_path):
+        """Test that only the specified variable is checked."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                "has_nan": xr.DataArray(
+                    np.array([1.0, 2.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(np.nan)},
+                ),
+                "no_nan": xr.DataArray(
+                    np.array([3.0, 4.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(-999.0)},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds_read = xr.open_dataset(
+            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert var_has_nan_fill(ds_read, "has_nan")
+        assert not var_has_nan_fill(ds_read, "no_nan")
+        ds_read.close()
