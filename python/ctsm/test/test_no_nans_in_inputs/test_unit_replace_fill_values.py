@@ -17,6 +17,15 @@ from ctsm.no_nans_in_inputs.replace_fill_values import (
 )
 
 
+# Test constants
+TEST_PARAM_CLM60 = "lnd/clm2/paramdata/ctsm60_params.c260108.nc"
+TEST_PARAM_CLM50 = "lnd/clm2/paramdata/clm50_params.c250311.nc"
+TEST_PARAM_CLM45 = "lnd/clm2/paramdata/clm45_params.c250311.nc"
+TEST_PHYS_CLM60 = "clm6_0"
+TEST_PHYS_CLM50 = "clm5_0"
+TEST_PHYS_CLM45 = "clm4_5"
+
+
 class TestGetOutputFilename:
     """Test the get_output_filename function."""
 
@@ -122,3 +131,134 @@ class TestUpdateXmlFile:
 
         with pytest.raises(ValueError, match="not found"):
             update_xml_file(mock_xml_file_path, "nonexistent/path.nc", "new/path.nc")
+
+    def test_update_xml_with_multiple_same_tag(self, mock_xml_file_path):
+        """Test updating path when multiple elements have the same tag name."""
+        # Simulate the real XML structure with multiple paramfile elements
+        xml_content = f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile phys="{TEST_PHYS_CLM60}">{TEST_PARAM_CLM60}</paramfile>
+    <paramfile phys="{TEST_PHYS_CLM50}">{TEST_PARAM_CLM50}</paramfile>
+    <paramfile phys="{TEST_PHYS_CLM45}">{TEST_PARAM_CLM45}</paramfile>
+</namelist_defaults>
+"""
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+
+        # Update one specific path
+        old_path = TEST_PARAM_CLM60
+        new_path = TEST_PARAM_CLM60.replace(".nc", ".no_nan_fill.nc")
+
+        update_xml_file(mock_xml_file_path, old_path, new_path)
+
+        # Read and verify the updated XML
+        tree = ET.parse(mock_xml_file_path)
+        root = tree.getroot()
+
+        # Find all paramfile elements
+        paramfiles = root.findall("paramfile")
+        assert len(paramfiles) == 3
+
+        # Check that only the clm6_0 one was updated
+        clm60_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM60][0]
+        assert clm60_param.text == new_path
+
+        # Check that others are unchanged
+        clm50_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM50][0]
+        assert clm50_param.text == TEST_PARAM_CLM50
+
+        clm45_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM45][0]
+        assert clm45_param.text == TEST_PARAM_CLM45
+
+    def test_update_xml_replaces_within_element_text(self, mock_xml_file_path):
+        """Test that all occurrences within a single element's text are replaced."""
+        # Create XML with a path appearing multiple times in one element's text
+        test_path = "lnd/clm2/test/file.nc"
+        xml_content = f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <multi_path>{test_path} {test_path}</multi_path>
+</namelist_defaults>
+"""
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+
+        new_path = test_path.replace(".nc", ".no_nan_fill.nc")
+        update_xml_file(mock_xml_file_path, test_path, new_path)
+
+        # Verify both occurrences were replaced
+        tree = ET.parse(mock_xml_file_path)
+        root = tree.getroot()
+        multi_path = root.find("multi_path")
+        assert multi_path is not None
+        assert multi_path.text == f"{new_path} {new_path}"
+        # Verify old path is completely gone
+        assert test_path not in multi_path.text
+
+    def test_update_xml_replaces_across_different_tags(self, mock_xml_file_path):
+        """Test that same path in different element types are all replaced."""
+        # Create XML with same path in multiple different element types
+        test_path = "lnd/clm2/test/shared_file.nc"
+        xml_content = f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile>{test_path}</paramfile>
+    <surfdata>{test_path}</surfdata>
+    <initdata>{test_path}</initdata>
+</namelist_defaults>
+"""
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+
+        new_path = test_path.replace(".nc", ".no_nan_fill.nc")
+        update_xml_file(mock_xml_file_path, test_path, new_path)
+
+        # Verify all three elements were updated
+        tree = ET.parse(mock_xml_file_path)
+        root = tree.getroot()
+
+        paramfile = root.find("paramfile")
+        assert paramfile is not None
+        assert paramfile.text == new_path
+
+        surfdata = root.find("surfdata")
+        assert surfdata is not None
+        assert surfdata.text == new_path
+
+        initdata = root.find("initdata")
+        assert initdata is not None
+        assert initdata.text == new_path
+
+    def test_update_xml_replaces_across_same_tag_different_attrs(self, mock_xml_file_path):
+        """Test that same path in elements with same tag but different attributes are all replaced."""
+        # Simulate scenario where two paramfile elements with different attributes point to same file
+        # (like if lines 625 and 626 in the real XML both had the same path)
+        test_path = "lnd/clm2/paramdata/shared_params.nc"
+        xml_content = f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile phys="{TEST_PHYS_CLM60}">{test_path}</paramfile>
+    <paramfile phys="{TEST_PHYS_CLM50}">{test_path}</paramfile>
+    <surfdata>lnd/clm2/surfdata/different_file.nc</surfdata>
+</namelist_defaults>
+"""
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+
+        new_path = test_path.replace(".nc", ".no_nan_fill.nc")
+        update_xml_file(mock_xml_file_path, test_path, new_path)
+
+        # Verify both paramfile elements were updated
+        tree = ET.parse(mock_xml_file_path)
+        root = tree.getroot()
+
+        paramfiles = root.findall("paramfile")
+        assert len(paramfiles) == 2
+
+        # Both should have the new path
+        clm60_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM60][0]
+        assert clm60_param.text == new_path
+
+        clm50_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM50][0]
+        assert clm50_param.text == new_path
+
+        # Surfdata should be unchanged
+        surfdata = root.find("surfdata")
+        assert surfdata.text == "lnd/clm2/surfdata/different_file.nc"
