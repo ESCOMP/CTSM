@@ -14,11 +14,13 @@ import json
 import os
 import sys
 
+import xarray as xr
+
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 print(_CTSM_PYTHON)
 sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
-from ctsm.no_nans_in_inputs.constants import NEW_FILLVALUES_FILE
+from ctsm.no_nans_in_inputs.constants import ATTR, NEW_FILLVALUES_FILE, USER_REQ_DELETE
 
 
 def load_new_fillvalues(fillvalues_file):
@@ -80,6 +82,93 @@ def get_output_filename(input_file):
     return os.path.join(directory, output_basename)
 
 
+def get_ncatted_type_code(dtype):
+    """
+    Get ncatted type code from numpy dtype.
+
+    Args:
+        dtype: numpy dtype object
+
+    Returns:
+        str: ncatted type code (f, d, i, s, b, c)
+
+    Raises:
+        ValueError: If dtype is not recognized
+    """
+    dtype_str = str(dtype)
+
+    # Float types
+    if "float64" in dtype_str or "float_" in dtype_str:
+        return "d"  # double
+    if "float32" in dtype_str:
+        return "f"  # float
+
+    # Integer types
+    if "int64" in dtype_str or "int_" in dtype_str:
+        return "i"  # int (will use 32-bit in ncatted)
+    if "int32" in dtype_str:
+        return "i"  # int
+    if "int16" in dtype_str:
+        return "s"  # short
+    if "int8" in dtype_str or "byte" in dtype_str:
+        return "b"  # byte
+
+    # String/char
+    if "str" in dtype_str or "char" in dtype_str or "U" in dtype_str or "S" in dtype_str:
+        return "c"  # char
+
+    # Unknown type - raise error
+    raise ValueError(f"Unknown dtype for ncatted: {dtype}")
+
+
+def build_ncatted_command(input_file, output_file, var_fillvalues):
+    """
+    Build ncatted command to modify or delete fill values.
+
+    Args:
+        input_file: Path to input NetCDF file
+        output_file: Path to output NetCDF file
+        var_fillvalues: Dictionary mapping variable names to new fill values
+                        (or USER_REQ_DELETE to delete the attribute)
+
+    Returns:
+        list: Command as list of arguments for subprocess
+    """
+    # Open the input file to get actual data types
+    ds = xr.open_dataset(input_file, decode_cf=False, decode_timedelta=False, decode_times=False)
+
+    cmd = ["ncatted"]
+
+    for var, fill_val in var_fillvalues.items():
+        if fill_val == USER_REQ_DELETE:
+            # Delete the attribute: -a attr_name,var_name,d,,
+            cmd.extend(["-a", f"{ATTR},{var},d,,"])
+        else:
+            # Get the actual data type from the file
+            if var in ds.data_vars:
+                dtype = ds[var].dtype
+            elif var in ds.coords:
+                dtype = ds[var].dtype
+            else:
+                # Variable not found - raise error
+                ds.close()
+                raise ValueError(f"Variable '{var}' not found in {input_file}")
+
+            # Get the appropriate type code for ncatted
+            type_code = get_ncatted_type_code(dtype)
+
+            # Modify the attribute: -a attr_name,var_name,o,type,value
+            cmd.extend(["-a", f"{ATTR},{var},o,{type_code},{fill_val}"])
+
+    # Close the dataset
+    ds.close()
+
+    # Add input and output files
+    cmd.extend([input_file, output_file])
+
+    return cmd
+
+
 def main():
     """Main function to replace fill values."""
 
@@ -104,7 +193,7 @@ def main():
 
     # Process each file
     print("=" * 80)
-    print("FILE MAPPING")
+    print("NCATTED COMMANDS")
     print("=" * 80)
 
     for input_file, var_fillvalues in new_fillvalues.items():
@@ -115,6 +204,11 @@ def main():
         print(f"Variables to modify: {len(var_fillvalues)}")
         for var, fill_val in var_fillvalues.items():
             print(f"  {var}: {fill_val}")
+
+        # Build and print the ncatted command
+        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+        print("\nCommand:")
+        print("  " + " ".join(cmd))
 
     print("\n" + "=" * 80)
     print("\nSummary:")
