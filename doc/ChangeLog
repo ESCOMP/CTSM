@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.021
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Fri Feb 20 12:46:50 PM MST 2026
+Date: Fri Feb 20 08:19:42 PM MST 2026
 One-line Summary: Bring b4b-dev to master
 
 Purpose and description of changes
@@ -11,8 +11,12 @@ Some fixes to use the ifx compiler. Added handling of gzipped files in the short
 needed for DART. Use a CMake funciton for the PfUnit build. Make sure mksurfdata_esmf PIO library is
 used as shared in the build. Fix to a typo in the Technical Note.
 
-Use pytest instead of unittest in our python unit test framework.
+Use pytest instead of unittest in our python unit test framework, which allows many modern features.
+One test file, test_unit_longitude.py, has been modified to use pytest's "parametrize" functionality as an example. Most of the changed lines in that file are just whitespace differences.
 
+Existing run_ctsm_py_tests arguments have been ported to replicate the same functionality in pytest. Unknown arguments will be passed to pytest directly.
+
+Also: Made it so that the tests can be called from anywhere in the checkout, instead of only python/.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
