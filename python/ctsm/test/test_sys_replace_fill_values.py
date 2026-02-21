@@ -17,6 +17,14 @@ from ctsm.no_nans_in_inputs.replace_fill_values import (
     load_new_fillvalues,
 )
 
+# Test constants
+TEST_VAR_TEMP = "temp"
+TEST_VAR_PRESSURE = "pressure"
+TEST_OUTPUT_FILE = "output.nc"
+TEST_FILL_VALUE = -999.0
+NCATTED_CMD = "ncatted"
+NCATTED_FLAG = "-a"
+
 
 class TestLoadNewFillvalues:
     """Test the load_new_fillvalues function."""
@@ -52,12 +60,12 @@ class TestBuildNcattedCommand:
         # variables that already have NaN fill values)
         ds = xr.Dataset(
             {
-                "temp": xr.DataArray(
+                TEST_VAR_TEMP: xr.DataArray(
                     np.array([1.0, 2.0, 3.0], dtype=np.float32),
                     dims=["time"],
                     attrs={ATTR: np.float32(np.nan)},
                 ),
-                "pressure": xr.DataArray(
+                TEST_VAR_PRESSURE: xr.DataArray(
                     np.array([1000.0, 1010.0, 1020.0], dtype=np.float64),
                     dims=["time"],
                     attrs={ATTR: np.float64(np.nan)},
@@ -71,47 +79,47 @@ class TestBuildNcattedCommand:
 
     def test_delete_attribute(self, test_netcdf_file):
         """Test building command to delete an attribute."""
-        var_fillvalues = {"temp": USER_REQ_DELETE}
-        cmd = build_ncatted_command(test_netcdf_file, "output.nc", var_fillvalues)
+        var_fillvalues = {TEST_VAR_TEMP: USER_REQ_DELETE}
+        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
 
-        assert "ncatted" in cmd
-        assert "-a" in cmd
-        assert f"{ATTR},temp,d,," in cmd
+        assert NCATTED_CMD in cmd
+        assert NCATTED_FLAG in cmd
+        assert f"{ATTR},{TEST_VAR_TEMP},d,," in cmd
         assert test_netcdf_file in cmd
-        assert "output.nc" in cmd
+        assert TEST_OUTPUT_FILE in cmd
 
     def test_modify_float_attribute(self, test_netcdf_file):
         """Test building command to modify a float attribute."""
-        var_fillvalues = {"temp": -999.0}
-        cmd = build_ncatted_command(test_netcdf_file, "output.nc", var_fillvalues)
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
 
-        assert "ncatted" in cmd
-        assert "-a" in cmd
+        assert NCATTED_CMD in cmd
+        assert NCATTED_FLAG in cmd
         # Should use 'f' for float32
-        assert f"{ATTR},temp,o,f,-999.0" in cmd
+        assert f"{ATTR},{TEST_VAR_TEMP},o,f,{TEST_FILL_VALUE}" in cmd
 
     def test_modify_double_attribute(self, test_netcdf_file):
         """Test building command to modify a double (float64) attribute."""
-        var_fillvalues = {"pressure": -999.0}
-        cmd = build_ncatted_command(test_netcdf_file, "output.nc", var_fillvalues)
+        var_fillvalues = {TEST_VAR_PRESSURE: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
 
-        assert "ncatted" in cmd
-        assert "-a" in cmd
+        assert NCATTED_CMD in cmd
+        assert NCATTED_FLAG in cmd
         # Should use 'd' for float64
-        assert f"{ATTR},pressure,o,d,-999.0" in cmd
+        assert f"{ATTR},{TEST_VAR_PRESSURE},o,d,{TEST_FILL_VALUE}" in cmd
 
     def test_multiple_variables(self, test_netcdf_file):
         """Test building command with multiple variables."""
-        var_fillvalues = {"temp": -999.0, "pressure": USER_REQ_DELETE}
-        cmd = build_ncatted_command(test_netcdf_file, "output.nc", var_fillvalues)
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE, TEST_VAR_PRESSURE: USER_REQ_DELETE}
+        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
 
         # Should have two -a flags
-        assert cmd.count("-a") == 2
-        assert f"{ATTR},temp,o,f,-999.0" in cmd
-        assert f"{ATTR},pressure,d,," in cmd
+        assert cmd.count(NCATTED_FLAG) == 2
+        assert f"{ATTR},{TEST_VAR_TEMP},o,f,{TEST_FILL_VALUE}" in cmd
+        assert f"{ATTR},{TEST_VAR_PRESSURE},d,," in cmd
 
     def test_variable_not_found(self, test_netcdf_file):
         """Test that missing variable raises ValueError."""
-        var_fillvalues = {"nonexistent_var": -999.0}
+        var_fillvalues = {"nonexistent_var": TEST_FILL_VALUE}
         with pytest.raises(ValueError, match="not found"):
-            build_ncatted_command(test_netcdf_file, "output.nc", var_fillvalues)
+            build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
