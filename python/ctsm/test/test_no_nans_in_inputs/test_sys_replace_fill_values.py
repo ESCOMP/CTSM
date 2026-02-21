@@ -287,9 +287,9 @@ class TestReplaceFullWorkflow:
         tree = ET.parse(create_mock_xml_file)
         root = tree.getroot()
         # Add a new element with our test input file
-        new_elem = ET.SubElement(root, 'test_paramfile')
+        new_elem = ET.SubElement(root, "test_paramfile")
         new_elem.text = input_file
-        tree.write(create_mock_xml_file, encoding='utf-8', xml_declaration=True)
+        tree.write(create_mock_xml_file, encoding="utf-8", xml_declaration=True)
 
         # Create a dummy output file
         with open(output_file, "w", encoding="utf-8") as f:
@@ -319,7 +319,7 @@ class TestReplaceFullWorkflow:
         # Verify XML was updated
         tree = ET.parse(create_mock_xml_file)
         root = tree.getroot()
-        test_paramfile = root.find('test_paramfile')
+        test_paramfile = root.find("test_paramfile")
         assert test_paramfile is not None
         assert test_paramfile.text == output_file
 

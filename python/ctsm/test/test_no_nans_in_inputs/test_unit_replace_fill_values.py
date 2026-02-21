@@ -90,7 +90,7 @@ class TestUpdateXmlFile:
     <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
 </namelist_defaults>
 """
-        with open(mock_xml_file_path, 'w', encoding='utf-8') as f:
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
             f.write(xml_content)
 
         # Update one of the paths
@@ -117,7 +117,7 @@ class TestUpdateXmlFile:
     <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
 </namelist_defaults>
 """
-        with open(mock_xml_file_path, 'w', encoding='utf-8') as f:
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
             f.write(xml_content)
 
         with pytest.raises(ValueError, match="not found"):

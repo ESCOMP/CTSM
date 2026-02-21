@@ -414,7 +414,10 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE, delete_if_none
                     nanmin >= 0
                     or nanmin == -1
                     or any(var.startswith(x) for x in VARSTARTS_TO_DEFAULT_NEG999)
-                    or ("/surfdata_map/" in abs_path and bool(re.match(r"[a-z0-9]{5}_to_[a-z0-9]{5}", var)))
+                    or (
+                        "/surfdata_map/" in abs_path
+                        and bool(re.match(r"[a-z0-9]{5}_to_[a-z0-9]{5}", var))
+                    )
                 ):
                     default_fill = type(nanmin)(-999)
 

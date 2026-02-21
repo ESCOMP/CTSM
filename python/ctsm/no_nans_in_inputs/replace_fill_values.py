@@ -194,23 +194,23 @@ def update_xml_file(xml_file, old_path, new_path):
     try:
         tree = ET.parse(xml_file)
         root = tree.getroot()
-        
+
         replacements_made = 0
-        
+
         # Iterate through all elements
         for elem in root.iter():
             if elem.text and old_path in elem.text:
                 # Replace the old path with the new path
                 elem.text = elem.text.replace(old_path, new_path)
                 replacements_made += 1
-        
+
         if replacements_made == 0:
             raise ValueError(f"Path '{old_path}' not found in {xml_file}")
-        
+
         # Write the updated XML back to file
-        tree.write(xml_file, encoding='utf-8', xml_declaration=True)
+        tree.write(xml_file, encoding="utf-8", xml_declaration=True)
         print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
-        
+
     except ET.ParseError as e:
         raise ValueError(f"Error parsing XML file: {e}") from e
     except (IOError, OSError) as e:
@@ -352,7 +352,7 @@ def main():
         args.fillvalues_file,
         dry_run=args.dry_run,
         overwrite=args.overwrite,
-        xml_file=xml_file_to_update
+        xml_file=xml_file_to_update,
     )
 
     return 0
