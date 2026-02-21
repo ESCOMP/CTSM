@@ -20,21 +20,23 @@ import sys
 import numpy as np
 import xarray as xr
 
+from ctsm.no_nans_in_inputs.constants import (
+    ATTR,
+    NEW_FILLVALUES_FILE,
+    USER_REQ_DELETE,
+    USER_REQ_QUIT,
+    USER_REQ_SKIP_FILE,
+    USER_REQ_SKIP_VAR,
+)
+
 # File paths
 XML_FILE = "bld/namelist_files/namelist_defaults_ctsm.xml"
 BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
-PROGRESS_FILE = "fillvalue_progress.json"  # File to save progress
+PROGRESS_FILE = NEW_FILLVALUES_FILE  # Alias for clarity in this script
 
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
-ATTR = "_FillValue"
-
-# Special commands
-USER_REQ_QUIT = "quit"
-USER_REQ_SKIP_VAR = "skip"
-USER_REQ_SKIP_FILE = "skipfile"
-USER_REQ_DELETE = "delete"
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
