@@ -14,6 +14,7 @@ import json
 import os
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
 import xarray as xr
 
@@ -21,7 +22,7 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 print(_CTSM_PYTHON)
 sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
-from ctsm.no_nans_in_inputs.constants import ATTR, NEW_FILLVALUES_FILE, USER_REQ_DELETE
+from ctsm.no_nans_in_inputs.constants import ATTR, NEW_FILLVALUES_FILE, USER_REQ_DELETE, XML_FILE
 
 
 def load_new_fillvalues(fillvalues_file):
@@ -178,7 +179,45 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
     return cmd
 
 
-def process_files(fillvalues_file, dry_run=False, overwrite=False):
+def update_xml_file(xml_file, old_path, new_path):
+    """
+    Replace a file path in the XML file.
+
+    Args:
+        xml_file: Path to the XML file to update
+        old_path: Old file path to replace (can be relative or absolute)
+        new_path: New file path to use (can be relative or absolute)
+
+    Raises:
+        ValueError: If old_path not found in XML
+    """
+    try:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+        
+        replacements_made = 0
+        
+        # Iterate through all elements
+        for elem in root.iter():
+            if elem.text and old_path in elem.text:
+                # Replace the old path with the new path
+                elem.text = elem.text.replace(old_path, new_path)
+                replacements_made += 1
+        
+        if replacements_made == 0:
+            raise ValueError(f"Path '{old_path}' not found in {xml_file}")
+        
+        # Write the updated XML back to file
+        tree.write(xml_file, encoding='utf-8', xml_declaration=True)
+        print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
+        
+    except ET.ParseError as e:
+        raise ValueError(f"Error parsing XML file: {e}") from e
+    except (IOError, OSError) as e:
+        raise ValueError(f"Error updating XML file: {e}") from e
+
+
+def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None):
     """
     Process files to replace fill values.
 
@@ -186,6 +225,7 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False):
         fillvalues_file: Path to JSON file with new fill values
         dry_run: If True, show commands without executing (default: False)
         overwrite: If True, overwrite existing output files (default: False)
+        xml_file: Optional path to XML file to update with new paths (default: None)
 
     Returns:
         int: Number of files processed (0 if all skipped or dry-run)
@@ -247,6 +287,11 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False):
                 if result.stderr:
                     print(f"  stderr: {result.stderr}")
                 files_processed += 1
+
+                # Update XML file if provided
+                if xml_file:
+                    # Update the XML file with the new output path
+                    update_xml_file(xml_file, input_file, output_file)
             except subprocess.CalledProcessError as e:
                 print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
                 if e.stdout:
@@ -292,10 +337,23 @@ def main():
         action="store_true",
         help="Overwrite existing output files (default: skip if output exists)",
     )
+    parser.add_argument(
+        "--xml-file",
+        default=XML_FILE,
+        help=f"Path to XML file to update with new paths (default: {XML_FILE})",
+    )
     args = parser.parse_args()
 
+    # Don't update XML in dry-run mode unless explicitly specified
+    xml_file_to_update = args.xml_file if not args.dry_run else None
+
     # Process the files
-    process_files(args.fillvalues_file, dry_run=args.dry_run, overwrite=args.overwrite)
+    process_files(
+        args.fillvalues_file,
+        dry_run=args.dry_run,
+        overwrite=args.overwrite,
+        xml_file=xml_file_to_update
+    )
 
     return 0
 

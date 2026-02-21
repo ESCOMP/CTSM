@@ -5,12 +5,15 @@ System tests for replace_fill_values.py script.
 Tests the functionality of replacing NaN fill values in NetCDF files.
 """
 
+import xml.etree.ElementTree as ET
+
 import numpy as np
 import pytest
 
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     get_ncatted_type_code,
     get_output_filename,
+    update_xml_file,
 )
 
 
@@ -73,3 +76,49 @@ class TestGetNcattedTypeCode:
         """Test that unknown dtype raises ValueError."""
         with pytest.raises(ValueError, match="Unknown dtype"):
             get_ncatted_type_code(np.dtype("complex128"))
+
+
+class TestUpdateXmlFile:
+    """Test the update_xml_file function."""
+
+    def test_update_xml_path(self, tmp_path):
+        """Test updating a file path in XML."""
+        # Create a simple XML file
+        xml_file = tmp_path / "test.xml"
+        xml_content = """<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
+    <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
+</namelist_defaults>
+"""
+        xml_file.write_text(xml_content)
+
+        # Update one of the paths
+        old_path = "lnd/clm2/paramdata/test_params.nc"
+        new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
+
+        update_xml_file(str(xml_file), old_path, new_path)
+
+        # Read and verify the updated XML
+        tree = ET.parse(str(xml_file))
+        root = tree.getroot()
+        paramfile = root.find("paramfile")
+        assert paramfile is not None
+        assert paramfile.text == new_path
+
+        # Other paths should be unchanged
+        surfdata = root.find("surfdata")
+        assert surfdata.text == "lnd/clm2/surfdata/test_surf.nc"
+
+    def test_update_xml_path_not_found(self, tmp_path):
+        """Test that updating non-existent path raises ValueError."""
+        xml_file = tmp_path / "test.xml"
+        xml_content = """<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
+</namelist_defaults>
+"""
+        xml_file.write_text(xml_content)
+
+        with pytest.raises(ValueError, match="not found"):
+            update_xml_file(str(xml_file), "nonexistent/path.nc", "new/path.nc")

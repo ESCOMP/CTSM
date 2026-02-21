@@ -8,6 +8,7 @@ Tests the functionality of replacing NaN fill values in NetCDF files.
 import json
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 
 import numpy as np
 import pytest
@@ -276,11 +277,20 @@ class TestReplaceFullWorkflow:
         assert "Skipping (output exists)" in captured.out
         assert "Use --overwrite" in captured.out
 
-    def test_process_with_overwrite(self, test_setup, monkeypatch):
+    def test_process_with_overwrite(self, test_setup, monkeypatch, tmp_path):
         """Test that existing output files are overwritten with --overwrite flag."""
         input_file = test_setup["input_file"]
         fillvalues_file = test_setup["fillvalues_file"]
         output_file = get_output_filename(input_file)
+
+        # Create a test XML file
+        test_xml = tmp_path / "test.xml"
+        xml_content = f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <paramfile>{input_file}</paramfile>
+</namelist_defaults>
+"""
+        test_xml.write_text(xml_content)
 
         # Create a dummy output file
         with open(output_file, "w", encoding="utf-8") as f:
@@ -288,10 +298,10 @@ class TestReplaceFullWorkflow:
 
         assert os.path.exists(output_file)
 
-        # Mock sys.argv to simulate running with --overwrite
+        # Mock sys.argv to simulate running with --overwrite and test XML file
         monkeypatch.setattr(
             "sys.argv",
-            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite"],
+            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite", "--xml-file", str(test_xml)],
         )
 
         # Run main (should replace the file)
@@ -306,6 +316,13 @@ class TestReplaceFullWorkflow:
         assert ATTR in ds_out[TEST_VAR_TEMP].attrs
         assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
         ds_out.close()
+
+        # Verify XML was updated
+        tree = ET.parse(str(test_xml))
+        root = tree.getroot()
+        paramfile = root.find('paramfile')
+        assert paramfile is not None
+        assert paramfile.text == output_file
 
     def test_skip_symlink_output(self, test_setup, capsys, monkeypatch):
         """Test that symlinked output files are never overwritten, even with --overwrite."""

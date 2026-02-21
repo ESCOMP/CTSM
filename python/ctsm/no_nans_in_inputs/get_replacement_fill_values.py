@@ -27,10 +27,10 @@ from ctsm.no_nans_in_inputs.constants import (
     USER_REQ_QUIT,
     USER_REQ_SKIP_FILE,
     USER_REQ_SKIP_VAR,
+    XML_FILE,
 )
 
 # File paths
-XML_FILE = "bld/namelist_files/namelist_defaults_ctsm.xml"
 BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
