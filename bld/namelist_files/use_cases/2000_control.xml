@@ -12,9 +12,6 @@
 <irrigate use_crop=".true." use_cndv=".true." >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"     >.false.</irrigate>
 
-<stream_year_first_ndep use_cn=".true." >2000</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true." >2000</stream_year_last_ndep>
-
 <stream_year_first_popdens cnfireson=".true." >2000</stream_year_first_popdens>
 <stream_year_last_popdens  cnfireson=".true." >2000</stream_year_last_popdens>
 
