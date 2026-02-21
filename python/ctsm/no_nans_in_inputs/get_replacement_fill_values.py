@@ -459,10 +459,10 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
         user_input = None
         try:
             # Build prompt with default value if available
+            prompt = f"    New fill value for '{var_context.var_name}'"
             if config.default_value is not None:
-                prompt = f"    New fill value for '{var_context.var_name}' [default: {config.default_value}]: "
-            else:
-                prompt = f"    New fill value for '{var_context.var_name}': "
+                prompt += f" [default: {config.default_value}]"
+            prompt += ": "
 
             user_input = input(prompt).strip()
 
@@ -733,7 +733,7 @@ def main() -> int:
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
     # Collect new fill values from user
-    all_new_fill_values = collect_new_fill_values(
+    collect_new_fill_values(
         matches, delete_if_none_filled=args.delete_if_none_filled
     )
 
