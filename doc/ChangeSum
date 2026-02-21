@@ -1,5 +1,10 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.021     erik 02/20/2026 Bring b4b-dev to master
+       ctsm5.4.020   slevis 02/19/2026 Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
+       ctsm5.4.019 samrabin 02/12/2026 Fix years used by generate_gdds
+       ctsm5.4.018     erik 02/12/2026 Quick fix so that we can use Nitrogen Deposition sent from the ATM model
+       ctsm5.4.017   slevis 02/09/2026 Introduce CRUJRA2024b datm option (Greenand snow hole filled)
        ctsm5.4.016 samrabin 02/06/2026 Merge b4b-dev to master
        ctsm5.4.015     erik 02/03/2026 Update CISM to latest version with answer changes
        ctsm5.4.014 mvdebols 01/29/2026 Fix for xm2 and revise logic for excess ice melt

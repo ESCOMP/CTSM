@@ -5,8 +5,11 @@ Functions to support generate_gdds.py
 # pylint: disable=too-many-lines,too-many-statements,abstract-class-instantiated
 import warnings
 import os
+import sys
 import glob
+from datetime import timedelta
 from importlib import util as importlib_util
+
 import numpy as np
 import xarray as xr
 
@@ -54,6 +57,72 @@ try:
 except ModuleNotFoundError:
     print("Will NOT produce harvest requirement map figure files.")
     CAN_PLOT = False
+
+
+def gen_inst_daily_year(year, cal_type):
+    """
+    For a given history year, return the timesteps we expect to see for daily instantaneous files
+    """
+
+    # Generate list of datetimes
+    start_date = cal_type(year, 1, 2)  # Jan. 2 of given year
+    end_date = cal_type(year + 1, 1, 1)  # Jan. 1 of next year
+    date_list = [start_date]
+    d = start_date
+    while d < end_date:
+        d += timedelta(days=1)
+        date_list.append(d)
+
+    # Convert to DataArray
+    date_da = xr.DataArray(data=date_list, dims=["time"], coords={"time": date_list})
+
+    return date_da
+
+
+def check_file_lists(history_yr_range, h_file_lists, time_slice_list, freq, logger):
+    """
+    For each history year, check that the corresponding list of files has the requested time steps.
+    Could theoretically make this faster by starting with checks of the first and last history
+    years, but it's really fast already.
+    """
+    for history_yr, h_file_list, time_slice in zip(
+        list(history_yr_range), h_file_lists, time_slice_list
+    ):
+        # Get time across all included files
+        time_da = None
+        for h_file in h_file_list:
+            ds = xr.open_dataset(h_file).sel(time=time_slice)
+            if time_da is None:
+                time_da = ds["time"]
+            else:
+                time_da = xr.concat([time_da, ds["time"]], dim="time")
+
+        # Check whether the time variable exactly matches what we would expect based on frequency.
+        _check_time_da(freq, history_yr, time_da, logger)
+
+
+def _check_time_da(freq, history_yr, time_da, logger):
+    """
+    Check whether a given time variable exactly matches what we would expect based on frequency.
+    """
+    # Create the expected DataArray
+    cal_type = type(np.atleast_1d(time_da.values)[0])
+    if freq == "annual":
+        date_list = [cal_type(history_yr, 1, 1)]
+        time_da_exp = xr.DataArray(data=date_list, dims=["time"], coords={"time": date_list})
+    elif freq == "daily":
+        time_da_exp = gen_inst_daily_year(history_yr, cal_type)
+    else:
+        msg = f"What should the time DataArray look like for freq '{freq}'?"
+        error(logger, msg, error_type=NotImplementedError)
+        sys.exit()  # Because pylint doesn't know the script stops on error()
+
+    # Compare actual vs. expected
+    if not time_da.equals(time_da_exp):
+        log(logger, f"expected: {time_da_exp}")
+        log(logger, f"actual: {time_da}")
+        msg = "Unexpected time data after slicing; see logs above."
+        error(logger, msg, error_type=AssertionError)
 
 
 def check_grid_match(grid0, grid1, tol=GRID_TOL_DEG):
@@ -295,7 +364,6 @@ def import_and_process_1yr(
     gddharv_yp_list,
     skip_patches_for_isel_nan_last_year,
     last_year_active_patch_indices_list,
-    incorrectly_daily,
     incl_vegtypes_str_in,
     h2_ds_file,
     mxmats,
@@ -303,8 +371,12 @@ def import_and_process_1yr(
     skip_crops,
     outdir_figs,
     logger,
+    history_yr_h1,
+    history_yr_h2,
     h1_filelist,
     h2_filelist,
+    h1_time_slice,
+    h2_time_slice,
 ):
     """
     Import one year of CLM output data for GDD generation
@@ -330,21 +402,14 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         chunks=chunks,
         logger=logger,
+        time_slice=h1_time_slice,
     )
-    for timestep in dates_ds["time"].values:
-        print(timestep)
 
-    if dates_ds.dims["time"] > 1:
-        if dates_ds.dims["time"] == 365:
-            if not incorrectly_daily:
-                log(
-                    logger,
-                    "   ℹ️ You saved SDATES and HDATES daily, but you only needed annual. Fixing.",
-                )
-            incorrectly_daily = True
-            dates_ds = dates_ds.isel(time=-1)
-    else:
-        dates_ds = dates_ds.isel(time=0)
+    # Check included timesteps
+    _check_time_da("annual", history_yr_h1, dates_ds["time"], logger)
+
+    # Should now just be one timestep, so select it to remove dimension.
+    dates_ds = dates_ds.isel(time=0)
 
     # Make sure NaN masks match
     sdates_all_nan = (
@@ -405,41 +470,23 @@ def import_and_process_1yr(
     if np.sum(~np.isnan(dates_incl_ds.SDATES.values)) == 0:
         error(logger, "All SDATES are NaN after ignoring those patches!")
 
-    # Some patches can have -1 sowing date?? Hopefully just an artifact of me incorrectly saving
-    # SDATES/HDATES daily.
-    mxsowings = dates_ds.dims["mxsowings"]
-    mxsowings_dim = dates_ds.SDATES.dims.index("mxsowings")
+    # Some patches can have -1 sowing date??
+    mxsowings = dates_ds.sizes["mxsowings"]
     skip_patches_for_isel_sdatelt1 = np.where(dates_incl_ds.SDATES.values < 1)[1]
     skipping_patches_for_isel_sdatelt1 = len(skip_patches_for_isel_sdatelt1) > 0
     if skipping_patches_for_isel_sdatelt1:
         unique_hdates = np.unique(
             dates_incl_ds.HDATES.isel(mxharvests=0, patch=skip_patches_for_isel_sdatelt1).values
         )
-        if incorrectly_daily and list(unique_hdates) == [364]:
-            log(
-                logger,
-                f"   ❗ {len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1, but this"
-                + "might have just been because of incorrectly daily outputs. Setting them to 365.",
-            )
-            new_sdates_ar = dates_incl_ds.SDATES.values
-            if mxsowings_dim != 0:
-                error(logger, "Code this up")
-            new_sdates_ar[0, skip_patches_for_isel_sdatelt1] = 365
-            dates_incl_ds["SDATES"] = xr.DataArray(
-                data=new_sdates_ar,
-                coords=dates_incl_ds["SDATES"].coords,
-                attrs=dates_incl_ds["SDATES"].attrs,
-            )
-        else:
-            error(
-                logger,
-                f"{len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1. "
-                + f"Unique affected hdates: {unique_hdates}",
-            )
+        error(
+            logger,
+            f"{len(skip_patches_for_isel_sdatelt1)} patches have SDATE < 1. "
+            + f"Unique affected hdates: {unique_hdates}",
+        )
 
     # Some patches can have -1 harvest date?? Hopefully just an artifact of me incorrectly saving
     # SDATES/HDATES daily. Can also happen if patch wasn't active last year
-    mxharvests = dates_ds.dims["mxharvests"]
+    mxharvests = dates_ds.sizes["mxharvests"]
     mxharvests_dim = dates_ds.HDATES.dims.index("mxharvests")
     # If a patch was inactive last year but was either (a) harvested the last time it was active or
     # (b) was never active, it will have -1 as its harvest date this year. Such instances are okay.
@@ -481,30 +528,13 @@ def import_and_process_1yr(
         unique_sdates = np.unique(
             dates_incl_ds.SDATES.isel(patch=skip_patches_for_isel_hdatelt1).values
         )
-        if incorrectly_daily and list(unique_sdates) == [1]:
-            log(
-                logger,
-                f"   ❗ {len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1??? Seems like "
-                + "this might have just been because of incorrectly daily outputs; setting them to "
-                + "365.",
-            )
-            new_hdates_ar = dates_incl_ds.HDATES.values
-            if mxharvests_dim != 0:
-                error(logger, "Code this up")
-            new_hdates_ar[0, skip_patches_for_isel_hdatelt1] = 365
-            dates_incl_ds["HDATES"] = xr.DataArray(
-                data=new_hdates_ar,
-                coords=dates_incl_ds["HDATES"].coords,
-                attrs=dates_incl_ds["HDATES"].attrs,
-            )
-        else:
-            error(
-                logger,
-                f"{len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1. Possible causes:\n"
-                + "* Not using constant crop areas (e.g., flanduse_timeseries from "
-                + "make_lu_for_gddgen.py)\n   * Not skipping the first 2 years of output\n"
-                + f"Unique affected sdates: {unique_sdates}",
-            )
+        error(
+            logger,
+            f"{len(skip_patches_for_isel_hdatelt1)} patches have HDATE < 1. Possible causes:\n"
+            + "* Not using constant crop areas (e.g., flanduse_timeseries from "
+            + "make_lu_for_gddgen.py)\n   * Not skipping the first 2 years of output\n"
+            + f"Unique affected sdates: {unique_sdates}",
+        )
 
     # Make sure there was only one harvest per year
     n_extra_harv = np.sum(
@@ -560,7 +590,7 @@ def import_and_process_1yr(
 
     # Limit growing season to CLM max growing season length, if needed
     if mxmats and (imported_sdates or imported_hdates):
-        print("   Limiting growing season length...")
+        log(logger, "   Limiting growing season length...")
         hdates_rx = hdates_rx_orig.copy()
         for var in hdates_rx_orig:
             if var == "time_bounds":
@@ -578,14 +608,14 @@ def import_and_process_1yr(
 
             mxmat = mxmats[vegtype_str]
             if np.isinf(mxmat):
-                print(f"      Not limiting {vegtype_str}: No mxmat value")
+                log(logger, f"      Not limiting {vegtype_str}: No mxmat value")
                 continue
 
             # Get "prescribed" growing season length
             gs_len_rx_da = get_gs_len_da(hdates_rx_orig[var] - sdates_rx[var])
             not_ok = gs_len_rx_da.values > mxmat
             if not np.any(not_ok):
-                print(f"      Not limiting {vegtype_str}: No rx season > {mxmat} days")
+                log(logger, f"      Not limiting {vegtype_str}: No rx season > {mxmat} days")
                 continue
 
             hdates_limited = hdates_rx_orig[var].copy().values
@@ -600,10 +630,11 @@ def import_and_process_1yr(
                 coords=hdates_rx_orig[var].coords,
                 attrs=hdates_rx_orig[var].attrs,
             )
-            print(
+            log(
+                logger,
                 f"      Limited {vegtype_str} growing season length to {mxmat}. Longest was "
                 + f"{int(np.max(gs_len_rx_da.values))}, now "
-                + f"{int(np.max(get_gs_len_da(hdates_rx[var] - sdates_rx[var]).values))}."
+                + f"{int(np.max(get_gs_len_da(hdates_rx[var] - sdates_rx[var]).values))}.",
             )
     else:
         hdates_rx = hdates_rx_orig
@@ -617,7 +648,11 @@ def import_and_process_1yr(
         my_vegtypes=crops_to_read,
         chunks=chunks,
         logger=logger,
+        time_slice=h2_time_slice,
     )
+
+    # Check included timesteps
+    _check_time_da("daily", history_yr_h2, h2_ds["time"], logger)
 
     # Restrict to patches we're including
     if skipping_patches_for_isel_nan:
@@ -736,44 +771,20 @@ def import_and_process_1yr(
                 this_year_active_patch_indices[x] for x in where_gs_lastyr
             ]
             if not np.array_equal(last_year_active_patch_indices, this_year_active_patch_indices):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ This year's active patch indices differ from last year's. "
-                        + "Allowing because this might just be an artifact of incorrectly daily "
-                        + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "This year's active patch indices differ from last year's.")
+                error(logger, "This year's active patch indices differ from last year's.")
             # Make sure we're not about to overwrite any existing values.
             if np.any(
                 ~np.isnan(
                     gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected non-NaN for last season's GDD accumulation. "
-                        + "Allowing because this might just be an artifact of incorrectly daily "
-                        + "outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected non-NaN for last season's GDD accumulation")
+                error(logger, "Unexpected non-NaN for last season's GDD accumulation")
             if save_figs and np.any(
                 ~np.isnan(
                     gddharv_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected non-NaN for last season's GDDHARV. Allowing "
-                        + "because this might just be an artifact of incorrectly daily outputs, "
-                        + "BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected non-NaN for last season's GDDHARV")
+                error(logger, "Unexpected non-NaN for last season's GDDHARV")
             # Fill.
             gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices] = (
                 gddaccum_atharv_p[where_gs_lastyr]
@@ -788,15 +799,7 @@ def import_and_process_1yr(
                     gddaccum_yp_list[var][year_index - 1, active_this_year_where_gs_lastyr_indices]
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected NaN for last season's GDD accumulation. Allowing "
-                        + "because this might just be an artifact of incorrectly daily outputs, "
-                        + "BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected NaN for last season's GDD accumulation.")
+                error(logger, "Unexpected NaN for last season's GDD accumulation.")
             if (
                 save_figs
                 and check_gddharv
@@ -808,15 +811,7 @@ def import_and_process_1yr(
                     )
                 )
             ):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ Unexpected NaN for last season's GDDHARV. Allowing because "
-                        + "this might just be an artifact of incorrectly daily outputs, BUT "
-                        + "RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(logger, "Unexpected NaN for last season's GDDHARV.")
+                error(logger, "Unexpected NaN for last season's GDDHARV.")
         gddaccum_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddaccum
         if save_figs:
             gddharv_yp_list[var][year_index, this_year_active_patch_indices] = tmp_gddharv
@@ -831,19 +826,19 @@ def import_and_process_1yr(
             )
             nanmask_output_gdds_lastyr = np.isnan(gddaccum_yp_list[var][year_index - 1, :])
             if not np.array_equal(nanmask_output_gdds_lastyr, nanmask_output_sdates):
-                if incorrectly_daily:
-                    log(
-                        logger,
-                        "         ❗ NaN masks differ between this year's sdates and 'filled-out' "
-                        + "GDDs from last year. Allowing because this might just be an artifact of "
-                        + "incorrectly daily outputs, BUT RESULTS MUST NOT BE TRUSTED.",
-                    )
-                else:
-                    error(
-                        logger,
-                        "NaN masks differ between this year's sdates and 'filled-out' GDDs from "
-                        + "last year",
-                    )
+                n_lastyr_where_not_sdates = np.sum(
+                    nanmask_output_gdds_lastyr & ~nanmask_output_sdates
+                )
+                n_sdates_where_not_lastyr = np.sum(
+                    ~nanmask_output_gdds_lastyr & nanmask_output_sdates
+                )
+                msg = (
+                    "NaN masks differ between this year's sdates and 'filled-out' GDDs from last"
+                    f" year. {n_lastyr_where_not_sdates} NaN last year after filling out where not"
+                    f" NaN in sdates; {n_sdates_where_not_lastyr} vice versa. Out of size"
+                    f" {n_lastyr_where_not_sdates.size}."
+                )
+                error(logger, msg)
         last_year_active_patch_indices_list[var] = this_year_active_patch_indices
 
     skip_patches_for_isel_nan_last_year = skip_patches_for_isel_nan
@@ -860,24 +855,19 @@ def import_and_process_1yr(
         gddharv_yp_list,
         skip_patches_for_isel_nan_last_year,
         last_year_active_patch_indices_list,
-        incorrectly_daily,
         incl_vegtypes_str,
         incl_patches1d_itype_veg,
         mxsowings,
     )
 
 
-def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
+def find_inst_hist_files(indir, *, h, logger=None):
     """
-    Find all the instantaneous history files for a given tape number, optionally looking just for
-    one year in filename.
+    Find all the instantaneous history files for a given tape number.
 
     Args:
         indir: Directory to search for history files
         h: History tape number (must be an integer, e.g., 1 for h1, 2 for h2)
-        this_year: Optional year to filter files by. If provided, only files with dates starting
-                   with "{this_year}-01" will be returned. If None, all files matching the
-                   history tape number will be returned.
         logger: Optional logger for error messages. If None, errors are raised without logging.
 
     Returns:
@@ -887,26 +877,19 @@ def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
         TypeError: If h is not an integer
         FileNotFoundError: If no files matching the patterns are found
         RuntimeError: If files from multiple case names are found (indicates mixed output from
-                     different simulations, which is pathological)
+                     different simulations)
 
     Notes:
         - Searches for files matching patterns: "*h{h}i.*.nc" or "*h{h}i.*.nc.base"
-        - When this_year is specified, searches for: "*h{h}i.{this_year}-01*.nc" or
-          "*h{h}i.{this_year}-01*.nc.base"
         - Prefers .nc files over .nc.base files (searches .nc pattern first)
         - All returned files must be from the same case name (extracted from filename before
           ".clm2.h#i.")
     """
-    if this_year is None:
-        patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
-    else:
-        if not isinstance(h, int):
-            err_msg = f"h ({h}) must be an integer, not {type(h)}"
-            err_type = TypeError
-            if logger:
-                error(logger, err_msg, error_type=err_type)
-            raise err_type(err_msg)
-        patterns = [f"*h{h}i.{this_year}-01*.nc", f"*h{h}i.{this_year}-01*.nc.base"]
+    if not isinstance(h, int):
+        err_msg = f"h ({h}) must be an integer, not {type(h)}"
+        error(logger, err_msg, error_type=TypeError)
+
+    patterns = [f"*h{h}i.*.nc", f"*h{h}i.*.nc.base"]
     for pat in patterns:
         pattern = os.path.join(indir, pat)
         file_list = glob.glob(pattern)
@@ -914,10 +897,7 @@ def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
             break
     if not file_list:
         err_msg = f"No files found matching patterns: {patterns}"
-        err_type = FileNotFoundError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=FileNotFoundError)
 
     # Error if files found from multiple cases
     case_names = set()
@@ -930,10 +910,7 @@ def find_inst_hist_files(indir, *, h, this_year=None, logger=None):
             case_names.add(case_name)
     if len(case_names) > 1:
         err_msg = f"Found files from multiple case names: {sorted(case_names)}"
-        err_type = RuntimeError
-        if logger:
-            error(logger, err_msg, error_type=err_type)
-        raise err_type(err_msg)
+        error(logger, err_msg, error_type=RuntimeError)
 
     return file_list
 
