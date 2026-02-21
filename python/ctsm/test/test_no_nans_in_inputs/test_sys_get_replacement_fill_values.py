@@ -12,6 +12,7 @@ import xarray as xr
 from ctsm.no_nans_in_inputs.constants import ATTR
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     extract_file_paths_from_xml,
+    show_ncdump_for_variable,
     var_has_nan_fill,
 )
 
@@ -201,3 +202,51 @@ class TestVarHasNanFill:
         assert var_has_nan_fill(ds_read, "has_nan")
         assert not var_has_nan_fill(ds_read, "no_nan")
         ds_read.close()
+
+
+class TestShowNcdumpForVariable:
+    """Test the show_ncdump_for_variable function."""
+
+    TEST_VAR = "temp"
+
+    @pytest.fixture
+    def test_netcdf_file(self, tmp_path):
+        """Create a temporary NetCDF file for testing."""
+        test_file = tmp_path / "test.nc"
+        ds = xr.Dataset(
+            {
+                self.TEST_VAR: xr.DataArray(
+                    np.array([1.0, 2.0, 3.0], dtype=np.float32),
+                    dims=["time"],
+                    attrs={ATTR: np.float32(np.nan), "long_name": "temperature"},
+                ),
+            }
+        )
+        ds.to_netcdf(str(test_file))
+        ds.close()
+        return str(test_file)
+
+    def test_prints_matching_lines(self, test_netcdf_file, capsys):
+        """Test that matching lines from ncdump are printed."""
+        show_ncdump_for_variable(test_netcdf_file, self.TEST_VAR)
+        captured = capsys.readouterr()
+        assert self.TEST_VAR in captured.out
+        assert "Lines matching" in captured.out
+
+    def test_prints_no_match_message(self, test_netcdf_file, capsys):
+        """Test that a message is printed when no lines match."""
+        show_ncdump_for_variable(test_netcdf_file, "nonexistent_var")
+        captured = capsys.readouterr()
+        assert "No lines found matching" in captured.out
+
+    def test_none_file_path(self, capsys):
+        """Test that None file path prints a message and returns."""
+        show_ncdump_for_variable(None, self.TEST_VAR)
+        captured = capsys.readouterr()
+        assert "No file path available" in captured.out
+
+    def test_nonexistent_file(self, capsys):
+        """Test that a nonexistent file prints an error."""
+        show_ncdump_for_variable("/nonexistent/file.nc", self.TEST_VAR)
+        captured = capsys.readouterr()
+        assert "Error running ncdump" in captured.out
