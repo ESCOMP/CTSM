@@ -12,6 +12,7 @@ This script:
 import argparse
 import json
 import os
+import subprocess
 import sys
 
 import xarray as xr
@@ -214,6 +215,28 @@ def main():
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
         print("\nCommand:")
         print("  " + " ".join(cmd))
+
+        # Execute the command if not in dry-run mode
+        if not args.dry_run:
+            print("\nExecuting...")
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                print("  ✓ Success")
+                if result.stdout:
+                    print(f"  stdout: {result.stdout}")
+                if result.stderr:
+                    print(f"  stderr: {result.stderr}")
+            except subprocess.CalledProcessError as e:
+                print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
+                if e.stdout:
+                    print(f"  stdout: {e.stdout}", file=sys.stderr)
+                if e.stderr:
+                    print(f"  stderr: {e.stderr}", file=sys.stderr)
+                sys.exit(1)
+            except FileNotFoundError:
+                print("  ✗ Error: ncatted command not found", file=sys.stderr)
+                print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
+                sys.exit(1)
 
     # Only print summary in dry-run mode
     if args.dry_run:
