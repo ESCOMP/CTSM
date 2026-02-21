@@ -244,23 +244,11 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None
     for input_file, var_fillvalues in new_fillvalues.items():
         output_file = get_output_filename(input_file)
 
-        # Check if output is a symlink - never overwrite symlinks
-        if os.path.islink(output_file):
-            print(f"\n{'!' * 80}")
-            print(f"WARNING: Output file is a symlink - SKIPPING")
-            print(f"  Input:  {input_file}")
-            print(f"  Output: {output_file} -> {os.readlink(output_file)}")
-            print(f"  Symlinks will never be overwritten for safety")
-            print(f"{'!' * 80}")
+        # Check whether we're skipping this file
+        if skip_this_file(input_file, output_file, overwrite):
             continue
 
-        # Skip if output file already exists and overwrite is not enabled
-        if os.path.exists(output_file) and not overwrite:
-            print(f"\nSkipping (output exists): {input_file}")
-            print(f"  Output: {output_file}")
-            print(f"  Use --overwrite to replace existing files")
-            continue
-
+        # Print things to do for this file
         print(f"\nInput:  {input_file}")
         print(f"Output: {output_file}")
         print(f"Variables to modify: {len(var_fillvalues)}")
@@ -274,40 +262,74 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None
 
         # Execute the command if not in dry-run mode
         if not dry_run:
-            print("\nExecuting...")
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                print("  ✓ Success")
-                if result.stdout:
-                    print(f"  stdout: {result.stdout}")
-                if result.stderr:
-                    print(f"  stderr: {result.stderr}")
-                files_processed += 1
-
-                # Update XML file if provided
-                if xml_file:
-                    # Update the XML file with the new output path
-                    update_xml_file(xml_file, input_file, output_file)
-            except subprocess.CalledProcessError as e:
-                print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
-                if e.stdout:
-                    print(f"  stdout: {e.stdout}", file=sys.stderr)
-                if e.stderr:
-                    print(f"  stderr: {e.stderr}", file=sys.stderr)
-                sys.exit(1)
-            except FileNotFoundError:
-                print("  ✗ Error: ncatted command not found", file=sys.stderr)
-                print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
-                sys.exit(1)
+            files_processed += execute_command(xml_file, input_file, output_file, cmd)
 
     # Only print summary in dry-run mode
     if dry_run:
-        print("\n" + "=" * 80)
-        print("\nSummary:")
-        print(f"  {total_files} file(s) will be processed")
-        print(f"  {total_vars} variable(s) will be modified")
+        print_dry_run_summary(total_files, total_vars)
 
     return files_processed
+
+
+def skip_this_file(input_file, output_file, overwrite):
+    """Whether to skip the current file"""
+    # Check if output is a symlink - never overwrite symlinks
+    if os.path.islink(output_file):
+        print(f"\n{'!' * 80}")
+        print("WARNING: Output file is a symlink - SKIPPING")
+        print(f"  Input:  {input_file}")
+        print(f"  Output: {output_file} -> {os.readlink(output_file)}")
+        print("  Symlinks will never be overwritten for safety")
+        print(f"{'!' * 80}")
+        return True
+
+    # Skip if output file already exists and overwrite is not enabled
+    if os.path.exists(output_file) and not overwrite:
+        print(f"\nSkipping (output exists): {input_file}")
+        print(f"  Output: {output_file}")
+        print("  Use --overwrite to replace existing files")
+        return True
+
+    return False
+
+
+def execute_command(xml_file, input_file, output_file, cmd):
+    """Execute the command to make the new file and replace the old one in the XML"""
+    print("\nExecuting...")
+    files_processed = 0
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print("  ✓ Success")
+        if result.stdout:
+            print(f"  stdout: {result.stdout}")
+        if result.stderr:
+            print(f"  stderr: {result.stderr}")
+        files_processed = 1
+
+        # Update XML file if provided
+        if xml_file:
+            # Update the XML file with the new output path
+            update_xml_file(xml_file, input_file, output_file)
+    except subprocess.CalledProcessError as e:
+        print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
+        if e.stdout:
+            print(f"  stdout: {e.stdout}", file=sys.stderr)
+        if e.stderr:
+            print(f"  stderr: {e.stderr}", file=sys.stderr)
+        sys.exit(1)
+    except FileNotFoundError:
+        print("  ✗ Error: ncatted command not found", file=sys.stderr)
+        print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
+        sys.exit(1)
+    return files_processed
+
+
+def print_dry_run_summary(total_files, total_vars):
+    """Print summary info about files to be processed (only in dry run)"""
+    print("\n" + "=" * 80)
+    print("\nSummary:")
+    print(f"  {total_files} file(s) will be processed")
+    print(f"  {total_vars} variable(s) will be modified")
 
 
 def main():
