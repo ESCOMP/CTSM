@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 Unit tests for get_replacement_fill_values.py script.
-
-Tests the get_fill_value_from_user function.
 """
 
+import numpy as np
 import pytest
+import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
     USER_REQ_DELETE,
@@ -17,6 +17,7 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     FillValueConfig,
     VarContext,
     get_fill_value_from_user,
+    var_data_has_nan,
 )
 
 
@@ -191,3 +192,27 @@ class TestGetFillValueFromUser:
         monkeypatch.setattr("builtins.input", input_with_ctrl_c_then_quit)
         with pytest.raises(KeyboardInterrupt):
             get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
+
+
+class TestVarDataHasNan:
+    """Test the var_data_has_nan function."""
+
+    def test_true_when_nan_present(self):
+        """Test detection of NaN values."""
+        da = xr.DataArray([[1.0, 2.0], [np.nan, 4.0]])
+        assert var_data_has_nan(da)
+
+    def test_false_when_no_nan(self):
+        """Test correct response for arrays without NaN values."""
+        da = xr.DataArray([1.0, 2.0, 3.0, 4.0])
+        assert not var_data_has_nan(da)
+
+    def test_true_when_all_nan(self):
+        """Test that arrays with all NaN values are detected."""
+        da = xr.DataArray([np.nan, np.nan, np.nan])
+        assert var_data_has_nan(da)
+
+    def test_false_for_empty_array(self):
+        """Test that empty arrays return False (no NaNs)."""
+        da = xr.DataArray([])
+        assert not var_data_has_nan(da)
