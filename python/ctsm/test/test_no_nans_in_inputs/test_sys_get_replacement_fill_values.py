@@ -20,13 +20,6 @@ TEST_PATH_OTHER = "share/meshes/test_mesh.nc"
 class TestExtractFilePathsFromXml:
     """Test the extract_file_paths_from_xml function."""
 
-    def test_extracts_paths_from_default_content(self, create_mock_xml_file):
-        """Test extracting paths from the default mock XML content."""
-        xml_path = create_mock_xml_file()
-        result = extract_file_paths_from_xml(xml_path)
-        assert TEST_PATH_PARAM in result
-        assert TEST_PATH_SURF in result
-
     def test_extracts_multiple_paths(self, create_mock_xml_file):
         """Test extracting multiple file paths from XML."""
         xml_path = create_mock_xml_file(
@@ -76,6 +69,7 @@ class TestExtractFilePathsFromXml:
 <namelist_defaults>
     <paramfile phys="clm6_0">{TEST_PATH_PARAM}</paramfile>
     <paramfile phys="clm5_0">{TEST_PATH_PARAM}</paramfile>
+    <something_else>{TEST_PATH_PARAM}</something_else>
 </namelist_defaults>
 """
         )
@@ -120,10 +114,14 @@ class TestExtractFilePathsFromXml:
         result = extract_file_paths_from_xml(xml_path)
         assert result == set()
 
-    def test_file_not_found_exits(self):
+    def test_file_not_found_exits(self, capsys):
         """Test that a missing XML file causes SystemExit."""
+        nonexistent_path = "/nonexistent/file.xml"
         with pytest.raises(SystemExit):
-            extract_file_paths_from_xml("/nonexistent/file.xml")
+            extract_file_paths_from_xml(nonexistent_path)
+        captured = capsys.readouterr()
+        assert nonexistent_path in captured.err
+        assert "not found" in captured.err
 
     def test_handles_elements_with_attributes(self, create_mock_xml_file):
         """Test extracting paths from elements that have attributes."""
