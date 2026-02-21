@@ -16,6 +16,7 @@ import json
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -40,6 +41,36 @@ PROGRESS_FILE = NEW_FILLVALUES_FILE  # Alias for clarity in this script
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
+
+
+@dataclass
+class VarContext:
+    """Context about the variable being processed.
+
+    Attributes:
+        var_name: Name of the variable
+        target_type: Type to convert user input to (e.g., float, int)
+        file_path: Optional path to the netCDF file (for ncdump on Ctrl-C)
+    """
+
+    var_name: str
+    target_type: type
+    file_path: str | None = None
+
+
+@dataclass
+class FillValueConfig:
+    """Configuration for how the fill value prompt should behave.
+
+    Attributes:
+        default_value: Optional default value to use if user presses enter
+        allow_delete: Whether to allow deleting the fill value attribute
+        delete_if_none_filled: If True, automatically use delete when it's the default
+    """
+
+    default_value: Any = None
+    allow_delete: bool = True
+    delete_if_none_filled: bool = False
 
 
 def extract_file_paths_from_xml(xml_file: str) -> set[str]:
@@ -268,14 +299,13 @@ def get_var_info(var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled:
         print(f"    WARNING: Data contains NaN values - cannot delete {ATTR}")
 
     # Ask user for new fill value
-    new_fill_value = get_fill_value_from_user(
-        var,
-        type(nanmin),
-        abs_path,
+    var_context = VarContext(var_name=var, target_type=type(nanmin), file_path=abs_path)
+    config = FillValueConfig(
         default_value=default_fill,
         allow_delete=not data_has_nan,
         delete_if_none_filled=delete_if_none_filled,
     )
+    new_fill_value = get_fill_value_from_user(var_context, config)
 
     return new_fill_value
 
@@ -369,9 +399,7 @@ def _handle_empty_input(default_value: Any, allow_delete: bool) -> Any | None:
     return None
 
 
-def _handle_ctrl_c(
-    ctrl_c_count: int, user_input: str | None, file_path: str | None, var_name: str
-) -> int:
+def _handle_ctrl_c(ctrl_c_count: int, user_input: str | None, var_context: VarContext) -> int:
     """
     Handle a KeyboardInterrupt (Ctrl-C) during user input.
 
@@ -379,10 +407,9 @@ def _handle_ctrl_c(
     On the second Ctrl-C (or if user had typed 'quit'), re-raises.
 
     Args:
-        ctrl_c_count: Number of times Ctrl-C has been pressed (already incremented)
+        ctrl_c_count: Number of times Ctrl-C has been pressed (before incrementing)
         user_input: The user's input before Ctrl-C (may be None)
-        file_path: Path to the netCDF file for ncdump
-        var_name: Name of the variable being processed
+        var_context: Context about the variable being processed
 
     Returns:
         Updated ctrl_c_count
@@ -402,28 +429,17 @@ def _handle_ctrl_c(
 
     # First Ctrl-C: show ncdump output for this variable
     print("\n    [Ctrl-C detected - press again to exit]")
-    show_ncdump_for_variable(file_path, var_name)
+    show_ncdump_for_variable(var_context.file_path, var_context.var_name)
     return ctrl_c_count
 
 
-def get_fill_value_from_user(
-    var_name: str,
-    target_type: type,
-    file_path: str | None = None,
-    default_value: Any = None,
-    allow_delete: bool = True,
-    delete_if_none_filled: bool = False,
-) -> Any:
+def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -> Any:
     """
     Prompt user for a new fill value and convert it to the target type.
 
     Args:
-        var_name: Name of the variable
-        target_type: Type to convert the user input to (e.g., float, int)
-        file_path: Optional path to the netCDF file for ncdump on Ctrl-C
-        default_value: Optional default value to use if user presses enter
-        allow_delete: Whether to allow deleting the fill value attribute (default: True)
-        delete_if_none_filled: If True, automatically use delete when it's the default
+        var_context: Context about the variable (name, type, file path)
+        config: Configuration for prompt behavior (default, allow_delete, auto-delete)
 
     Returns:
         Converted fill value of the specified type, or USER_REQ_DELETE string
@@ -433,7 +449,7 @@ def get_fill_value_from_user(
         ValueError: If user types 'skip' or 'skipfile'
     """
     # If delete_if_none_filled is enabled and default is delete, use it automatically
-    if delete_if_none_filled and default_value == USER_REQ_DELETE:
+    if config.delete_if_none_filled and config.default_value == USER_REQ_DELETE:
         print(f"    Auto-deleting {ATTR} attribute, since no elements are filled")
         return USER_REQ_DELETE
 
@@ -443,31 +459,31 @@ def get_fill_value_from_user(
         user_input = None
         try:
             # Build prompt with default value if available
-            if default_value is not None:
-                prompt = f"    New fill value for '{var_name}' [default: {default_value}]: "
+            if config.default_value is not None:
+                prompt = f"    New fill value for '{var_context.var_name}' [default: {config.default_value}]: "
             else:
-                prompt = f"    New fill value for '{var_name}': "
+                prompt = f"    New fill value for '{var_context.var_name}': "
 
             user_input = input(prompt).strip()
 
             if user_input:
                 # Check for special commands first
-                special_result = _handle_special_command(user_input, allow_delete)
+                special_result = _handle_special_command(user_input, config.allow_delete)
                 if special_result is not None:
                     return special_result
 
                 # Try to convert to the target type
-                converted = _convert_and_validate_input(user_input, target_type)
+                converted = _convert_and_validate_input(user_input, var_context.target_type)
                 if converted is not None:
                     return converted
             else:
                 # Empty input - use default or show help
-                empty_result = _handle_empty_input(default_value, allow_delete)
+                empty_result = _handle_empty_input(config.default_value, config.allow_delete)
                 if empty_result is not None:
                     return empty_result
 
         except KeyboardInterrupt:
-            ctrl_c_count = _handle_ctrl_c(ctrl_c_count, user_input, file_path, var_name)
+            ctrl_c_count = _handle_ctrl_c(ctrl_c_count, user_input, var_context)
 
 
 def collect_new_fill_values(
