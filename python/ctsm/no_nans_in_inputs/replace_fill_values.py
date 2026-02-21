@@ -15,13 +15,15 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from typing import Any
 
+import numpy as np
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import ATTR, NEW_FILLVALUES_FILE, USER_REQ_DELETE, XML_FILE
 
 
-def load_new_fillvalues(fillvalues_file):
+def load_new_fillvalues(fillvalues_file: str) -> dict[str, dict[str, Any]]:
     """
     Load the new fill values from JSON file.
 
@@ -29,7 +31,7 @@ def load_new_fillvalues(fillvalues_file):
         fillvalues_file: Path to the JSON file with new fill values
 
     Returns:
-        dict: Dictionary mapping file paths to variable fill values
+        Dictionary mapping file paths to dictionaries of variable fill values
 
     Raises:
         SystemExit: If file not found or invalid JSON
@@ -50,7 +52,7 @@ def load_new_fillvalues(fillvalues_file):
         sys.exit(1)
 
 
-def get_output_filename(input_file):
+def get_output_filename(input_file: str) -> str:
     """
     Generate output filename by adding .no_nan_fill before the extension.
 
@@ -58,7 +60,7 @@ def get_output_filename(input_file):
         input_file: Path to the input file
 
     Returns:
-        str: Path to the output file
+        Path to the output file
 
     Examples:
         /path/to/file.nc -> /path/to/file.no_nan_fill.nc
@@ -80,7 +82,7 @@ def get_output_filename(input_file):
     return os.path.join(directory, output_basename)
 
 
-def get_ncatted_type_code(dtype):
+def get_ncatted_type_code(dtype: np.dtype) -> str:
     """
     Get ncatted type code from numpy dtype.
 
@@ -88,7 +90,7 @@ def get_ncatted_type_code(dtype):
         dtype: numpy dtype object
 
     Returns:
-        str: ncatted type code (f, d, c)
+        ncatted type code (f, d, c)
 
     Raises:
         ValueError: If dtype is not recognized or is an integer type
@@ -117,7 +119,9 @@ def get_ncatted_type_code(dtype):
     raise ValueError(f"Unknown dtype for ncatted: {dtype}")
 
 
-def build_ncatted_command(input_file, output_file, var_fillvalues):
+def build_ncatted_command(
+    input_file: str, output_file: str, var_fillvalues: dict[str, Any]
+) -> list[str]:
     """
     Build ncatted command to modify or delete fill values.
 
@@ -128,7 +132,7 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
                         (or USER_REQ_DELETE to delete the attribute)
 
     Returns:
-        list: Command as list of arguments for subprocess
+        Command as list of arguments for subprocess
 
     Raises:
         ValueError: If input and output files are the same, or if variable not found
@@ -175,9 +179,11 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
     return cmd
 
 
-def update_xml_file(xml_file, old_path, new_path):
+def update_xml_file(xml_file: str, old_path: str, new_path: str) -> None:
     """
     Replace a file path in the XML file.
+
+    Replaces all occurrences of old_path with new_path throughout the XML file.
 
     Args:
         xml_file: Path to the XML file to update
@@ -185,7 +191,7 @@ def update_xml_file(xml_file, old_path, new_path):
         new_path: New file path to use (can be relative or absolute)
 
     Raises:
-        ValueError: If old_path not found in XML
+        ValueError: If old_path not found in XML, or if XML parsing/writing fails
     """
     try:
         tree = ET.parse(xml_file)
@@ -213,7 +219,12 @@ def update_xml_file(xml_file, old_path, new_path):
         raise ValueError(f"Error updating XML file: {e}") from e
 
 
-def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None):
+def process_files(
+    fillvalues_file: str,
+    dry_run: bool = False,
+    overwrite: bool = False,
+    xml_file: str | None = None,
+) -> int:
     """
     Process files to replace fill values.
 
@@ -224,7 +235,7 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None
         xml_file: Optional path to XML file to update with new paths (default: None)
 
     Returns:
-        int: Number of files processed (0 if all skipped or dry-run)
+        Number of files successfully processed
     """
     # Load the new fill values
     print(f"Loading new fill values from {fillvalues_file}...")
@@ -271,8 +282,21 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False, xml_file=None
     return files_processed
 
 
-def skip_this_file(input_file, output_file, overwrite):
-    """Whether to skip the current file"""
+def skip_this_file(input_file: str, output_file: str, overwrite: bool) -> bool:
+    """
+    Determine whether to skip processing a file.
+
+    Files are skipped if the output is a symlink (always) or if the output
+    exists and overwrite is False.
+
+    Args:
+        input_file: Path to input file
+        output_file: Path to output file
+        overwrite: Whether to overwrite existing files
+
+    Returns:
+        True if file should be skipped, False otherwise
+    """
     # Check if output is a symlink - never overwrite symlinks
     if os.path.islink(output_file):
         print(f"\n{'!' * 80}")
@@ -293,8 +317,26 @@ def skip_this_file(input_file, output_file, overwrite):
     return False
 
 
-def execute_command(xml_file, input_file, output_file, cmd):
-    """Execute the command to make the new file and replace the old one in the XML"""
+def execute_command(xml_file: str | None, input_file: str, output_file: str, cmd: list[str]) -> int:
+    """
+    Execute ncatted command and update XML file if successful.
+
+    Runs the ncatted command to create the output file with modified fill values.
+    If xml_file is provided and execution succeeds, updates the XML to reference
+    the new output file instead of the input file.
+
+    Args:
+        xml_file: Optional path to XML file to update (None to skip XML update)
+        input_file: Path to input NetCDF file
+        output_file: Path to output NetCDF file
+        cmd: ncatted command as list of arguments
+
+    Returns:
+        Number of files processed (1 on success, 0 on skip)
+
+    Raises:
+        SystemExit: If ncatted command fails or is not found
+    """
     print("\nExecuting...")
     files_processed = 0
     try:
@@ -324,16 +366,31 @@ def execute_command(xml_file, input_file, output_file, cmd):
     return files_processed
 
 
-def print_dry_run_summary(total_files, total_vars):
-    """Print summary info about files to be processed (only in dry run)"""
+def print_dry_run_summary(total_files: int, total_vars: int) -> None:
+    """
+    Print summary information about files to be processed.
+
+    Only called in dry-run mode to show what would be done.
+
+    Args:
+        total_files: Total number of files to process
+        total_vars: Total number of variables to modify
+    """
     print("\n" + "=" * 80)
     print("\nSummary:")
     print(f"  {total_files} file(s) will be processed")
     print(f"  {total_vars} variable(s) will be modified")
 
 
-def main():
-    """Main function to replace fill values."""
+def main() -> int:
+    """
+    Main function to replace fill values.
+
+    Parses command-line arguments and processes files to replace NaN fill values.
+
+    Returns:
+        Exit code (0 for success)
+    """
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
