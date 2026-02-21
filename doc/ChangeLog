@@ -1,4 +1,114 @@
 ===============================================================
+Tag name: ctsm5.4.021
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Feb 20 08:19:42 PM MST 2026
+One-line Summary: Bring b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Some fixes to use the ifx compiler. Added handling of gzipped files in the short term archiver
+needed for DART. Use a CMake funciton for the PfUnit build. Make sure mksurfdata_esmf PIO library is
+used as shared in the build. Fix to a typo in the Technical Note.
+
+Use pytest instead of unittest in our python unit test framework, which allows many modern features.
+One test file, test_unit_longitude.py, has been modified to use pytest's "parametrize" functionality as an example. Most of the changed lines in that file are just whitespace differences.
+
+Existing run_ctsm_py_tests arguments have been ported to replicate the same functionality in pytest. Unknown arguments will be passed to pytest directly.
+
+Also: Made it so that the tests can be called from anywhere in the checkout, instead of only python/.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Resolves #3762 by Bill Sacks ifx issues
+Resolves #3763 by Bill Sacks Floating invalid with ifx
+Resolves #3774 by Erik Kluzek NaN's in Prigent and urbantv streams
+Resolves #3082 by Kevin Raeder st_archive for DART
+Resolves #3616 by Sam Rabin convert python unittests to pytest
+Resolves #3035 by Keith Oleson typo in LW documentation in tech. note
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   The Short Term archiver can now also save files that are g-zipped
+   This is something that is needed for DART
+
+Changes to the datasets (e.g., streams, surface or initial files):
+    New Prigent and urbantv streams datasets with NaN's removed
+
+Changes to documentation: Fix issue in tech. note
+
+Notes of particular relevance for developers: regular
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The ctsm_pylib conda environment changed! Rerun py_env_create to update it
+
+Changes to tests or testing:
+   Python unit test framework changed from unittest to pytest. So now pytest functionality can be used
+   in tests
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3765 Fixes for ifx, from Bill Sacks
+#3084 Added code to make st-archive handle DART files, from Kevin Raeder
+#3761 Use pytest instead of unittest in run_ctsm_py_tests, from Sam Rabin
+#3582 Use a CMake function provided by CIME, from Bill Sacks
+#3700 Fix mksurfdata CMakeLists.txt: use SHARED for .so PIO libraries, from Cooper DeVane-Prugh
+#3220 Tech Note: Distinguish between time step and iteration level in vegetation longwave and fluxes, from Keith Oleson
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.020
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu Feb 19 08:28:59 AM MST 2026
