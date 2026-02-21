@@ -6,8 +6,6 @@ Tests the functionality of replacing NaN fill values in NetCDF files.
 """
 
 import json
-import os
-import tempfile
 
 import numpy as np
 import pytest
@@ -23,21 +21,17 @@ from ctsm.no_nans_in_inputs.replace_fill_values import (
 class TestLoadNewFillvalues:
     """Test the load_new_fillvalues function."""
 
-    def test_load_valid_json(self):
+    def test_load_valid_json(self, tmp_path):
         """Test loading a valid JSON file."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            test_data = {
-                "/path/to/file1.nc": {"var1": -999.0, "var2": "delete"},
-                "/path/to/file2.nc": {"var3": -999},
-            }
-            json.dump(test_data, f)
-            temp_file = f.name
+        test_file = tmp_path / "test_fillvalues.json"
+        test_data = {
+            "/path/to/file1.nc": {"var1": -999.0, "var2": "delete"},
+            "/path/to/file2.nc": {"var3": -999},
+        }
+        test_file.write_text(json.dumps(test_data), encoding="utf-8")
 
-        try:
-            result = load_new_fillvalues(temp_file)
-            assert result == test_data
-        finally:
-            os.unlink(temp_file)
+        result = load_new_fillvalues(str(test_file))
+        assert result == test_data
 
     def test_file_not_found(self):
         """Test that missing file causes SystemExit."""
@@ -49,10 +43,9 @@ class TestBuildNcattedCommand:
     """Test the build_ncatted_command function."""
 
     @pytest.fixture
-    def test_netcdf_file(self):
+    def test_netcdf_file(self, tmp_path):
         """Create a temporary NetCDF file for testing."""
-        temp_dir = tempfile.mkdtemp()
-        test_file = os.path.join(temp_dir, "test.nc")
+        test_file = tmp_path / "test.nc"
 
         # Create a simple NetCDF file with float variables that have NaN fill values
         # (NetCDF doesn't allow NaN for integer types, and our scripts only work on
@@ -71,15 +64,10 @@ class TestBuildNcattedCommand:
                 ),
             }
         )
-        ds.to_netcdf(test_file)
+        ds.to_netcdf(str(test_file))
         ds.close()
 
-        yield test_file
-
-        # Cleanup
-        if os.path.exists(test_file):
-            os.unlink(test_file)
-        os.rmdir(temp_dir)
+        yield str(test_file)
 
     def test_delete_attribute(self, test_netcdf_file):
         """Test building command to delete an attribute."""
