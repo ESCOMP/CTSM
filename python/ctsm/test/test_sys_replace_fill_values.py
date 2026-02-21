@@ -128,6 +128,12 @@ class TestBuildNcattedCommand:
         with pytest.raises(ValueError, match="not found"):
             build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
 
+    def test_same_input_output(self, test_netcdf_file):
+        """Test that same input and output files raises ValueError."""
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        with pytest.raises(ValueError, match="Input and output files are the same"):
+            build_ncatted_command(test_netcdf_file, test_netcdf_file, var_fillvalues)
+
 
 class TestReplaceFullWorkflow:
     """Test the complete workflow of replacing fill values."""

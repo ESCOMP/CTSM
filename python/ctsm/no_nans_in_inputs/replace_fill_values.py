@@ -132,7 +132,19 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
 
     Returns:
         list: Command as list of arguments for subprocess
+
+    Raises:
+        ValueError: If input and output files are the same, or if variable not found
     """
+    # Ensure input and output files are different (resolve symlinks)
+    input_real = os.path.realpath(input_file)
+    output_real = os.path.realpath(output_file)
+
+    if input_real == output_real:
+        raise ValueError(
+            f"Input and output files are the same: {input_file} -> {input_real}"
+        )
+
     # Open the input file to get actual data types
     ds = xr.open_dataset(input_file, decode_cf=False, decode_timedelta=False, decode_times=False)
 
