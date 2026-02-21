@@ -22,7 +22,12 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import (
+# Add the python directory to sys.path for direct script execution
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+if _CTSM_PYTHON not in sys.path:
+    sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     ATTR,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
