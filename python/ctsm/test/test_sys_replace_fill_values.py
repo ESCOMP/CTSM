@@ -18,6 +18,7 @@ from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
     get_output_filename,
     load_new_fillvalues,
+    main,
 )
 
 
@@ -134,6 +135,21 @@ class TestBuildNcattedCommand:
         with pytest.raises(ValueError, match="Input and output files are the same"):
             build_ncatted_command(test_netcdf_file, test_netcdf_file, var_fillvalues)
 
+    def test_output_already_exists(self, test_netcdf_file, tmp_path):
+        """Test that existing output file is detected."""
+        # Create an output file that already exists
+        output_file = tmp_path / "output.nc"
+        output_file.write_text("dummy content")
+
+        # The function should still build the command (skip logic is in main())
+        # but we can verify the output file exists
+        assert os.path.exists(str(output_file))
+
+        # Building command should still work - skip logic is in main()
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(test_netcdf_file, str(output_file), var_fillvalues)
+        assert NCATTED_CMD in cmd
+
 
 class TestReplaceFullWorkflow:
     """Test the complete workflow of replacing fill values."""
@@ -195,7 +211,9 @@ class TestReplaceFullWorkflow:
         assert os.path.exists(output_file)
 
         # Open and check the output file
-        ds_out = xr.open_dataset(output_file, decode_cf=False, decode_timedelta=False, decode_times=False)
+        ds_out = xr.open_dataset(
+            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+        )
 
         # Check temp variable - should have new fill value
         assert TEST_VAR_TEMP in ds_out
@@ -210,12 +228,81 @@ class TestReplaceFullWorkflow:
 
         ds_out.close()
 
-    def test_full_workflow_dry_run(self, test_setup):
+    def test_full_workflow_dry_run(self, test_setup, monkeypatch):
         """Test that dry-run mode doesn't create output files."""
         input_file = test_setup["input_file"]
+        fillvalues_file = test_setup["fillvalues_file"]
         output_file = get_output_filename(input_file)
 
-        # In dry-run mode, output file should not be created
-        # (We can't easily test the main() function directly, so we just verify
-        # that the output file doesn't exist before we would run the command)
+        # Mock sys.argv to simulate running with --dry-run
+        monkeypatch.setattr(
+            "sys.argv",
+            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--dry-run"],
+        )
+
+        # Run main in dry-run mode
+        result = main()
+        assert result == 0
+
+        # Output file should not have been created
         assert not os.path.exists(output_file)
+
+    def test_skip_existing_without_overwrite(self, test_setup, capsys, monkeypatch):
+        """Test that existing output files are skipped without --overwrite flag."""
+        input_file = test_setup["input_file"]
+        fillvalues_file = test_setup["fillvalues_file"]
+        output_file = get_output_filename(input_file)
+
+        # Create a dummy output file to simulate it already existing
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("dummy existing file")
+
+        original_mtime = os.path.getmtime(output_file)
+
+        # Mock sys.argv to simulate running without --overwrite
+        monkeypatch.setattr(
+            "sys.argv", ["replace_fill_values.py", "--fillvalues-file", fillvalues_file]
+        )
+
+        # Run main (should skip the file)
+        result = main()
+        assert result == 0
+
+        # Output file should be unchanged
+        assert os.path.getmtime(output_file) == original_mtime
+
+        # Check that skip message was printed
+        captured = capsys.readouterr()
+        assert "Skipping (output exists)" in captured.out
+        assert "Use --overwrite" in captured.out
+
+    def test_process_with_overwrite(self, test_setup, monkeypatch):
+        """Test that existing output files are overwritten with --overwrite flag."""
+        input_file = test_setup["input_file"]
+        fillvalues_file = test_setup["fillvalues_file"]
+        output_file = get_output_filename(input_file)
+
+        # Create a dummy output file
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("dummy existing file")
+
+        assert os.path.exists(output_file)
+
+        # Mock sys.argv to simulate running with --overwrite
+        monkeypatch.setattr(
+            "sys.argv",
+            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite"],
+        )
+
+        # Run main (should replace the file)
+        result = main()
+        assert result == 0
+
+        # Output file should now be a valid NetCDF file
+        ds_out = xr.open_dataset(
+            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+        )
+        assert TEST_VAR_TEMP in ds_out
+        assert ATTR in ds_out[TEST_VAR_TEMP].attrs
+        assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
+        ds_out.close()

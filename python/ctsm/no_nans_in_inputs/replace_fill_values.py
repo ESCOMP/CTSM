@@ -141,14 +141,12 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
     output_real = os.path.realpath(output_file)
 
     if input_real == output_real:
-        raise ValueError(
-            f"Input and output files are the same: {input_file} -> {input_real}"
-        )
+        raise ValueError(f"Input and output files are the same: {input_file} -> {input_real}")
 
     # Open the input file to get actual data types
     ds = xr.open_dataset(input_file, decode_cf=False, decode_timedelta=False, decode_times=False)
 
-    cmd = ["ncatted"]
+    cmd = ["ncatted", "-O"]  # -O flag to overwrite without prompting
 
     for var, fill_val in var_fillvalues.items():
         if fill_val == USER_REQ_DELETE:
@@ -180,6 +178,87 @@ def build_ncatted_command(input_file, output_file, var_fillvalues):
     return cmd
 
 
+def process_files(fillvalues_file, dry_run=False, overwrite=False):
+    """
+    Process files to replace fill values.
+
+    Args:
+        fillvalues_file: Path to JSON file with new fill values
+        dry_run: If True, show commands without executing (default: False)
+        overwrite: If True, overwrite existing output files (default: False)
+
+    Returns:
+        int: Number of files processed (0 if all skipped or dry-run)
+    """
+    # Load the new fill values
+    print(f"Loading new fill values from {fillvalues_file}...")
+    new_fillvalues = load_new_fillvalues(fillvalues_file)
+
+    total_files = len(new_fillvalues)
+    total_vars = sum(len(vars_dict) for vars_dict in new_fillvalues.values())
+    print(f"Found {total_vars} variable(s) in {total_files} file(s)\n")
+
+    # Process each file
+    print("=" * 80)
+    print("NCATTED COMMANDS")
+    print("=" * 80)
+
+    files_processed = 0
+
+    for input_file, var_fillvalues in new_fillvalues.items():
+        output_file = get_output_filename(input_file)
+
+        # Skip if output file already exists and overwrite is not enabled
+        if os.path.exists(output_file) and not overwrite:
+            print(f"\nSkipping (output exists): {input_file}")
+            print(f"  Output: {output_file}")
+            print(f"  Use --overwrite to replace existing files")
+            continue
+
+        print(f"\nInput:  {input_file}")
+        print(f"Output: {output_file}")
+        print(f"Variables to modify: {len(var_fillvalues)}")
+        for var, fill_val in var_fillvalues.items():
+            print(f"  {var}: {fill_val}")
+
+        # Build and print the ncatted command
+        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+        print("\nCommand:")
+        print("  " + " ".join(cmd))
+
+        # Execute the command if not in dry-run mode
+        if not dry_run:
+            print("\nExecuting...")
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                print("  ✓ Success")
+                if result.stdout:
+                    print(f"  stdout: {result.stdout}")
+                if result.stderr:
+                    print(f"  stderr: {result.stderr}")
+                files_processed += 1
+            except subprocess.CalledProcessError as e:
+                print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
+                if e.stdout:
+                    print(f"  stdout: {e.stdout}", file=sys.stderr)
+                if e.stderr:
+                    print(f"  stderr: {e.stderr}", file=sys.stderr)
+                sys.exit(1)
+            except FileNotFoundError:
+                print("  ✗ Error: ncatted command not found", file=sys.stderr)
+                print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
+                sys.exit(1)
+
+    # Only print summary in dry-run mode
+    if dry_run:
+        print("\n" + "=" * 80)
+        print("\nSummary:")
+        print(f"  {total_files} file(s) will be processed")
+        print(f"  {total_vars} variable(s) will be modified")
+
+    return files_processed
+
+
 def main():
     """Main function to replace fill values."""
 
@@ -197,63 +276,16 @@ def main():
         action="store_true",
         help="Show what would be done without actually modifying files",
     )
+    parser.add_argument(
+        "-o",
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing output files (default: skip if output exists)",
+    )
     args = parser.parse_args()
 
-    # Load the new fill values
-    print(f"Loading new fill values from {args.fillvalues_file}...")
-    new_fillvalues = load_new_fillvalues(args.fillvalues_file)
-
-    total_files = len(new_fillvalues)
-    total_vars = sum(len(vars_dict) for vars_dict in new_fillvalues.values())
-    print(f"Found {total_vars} variable(s) in {total_files} file(s)\n")
-
-    # Process each file
-    print("=" * 80)
-    print("NCATTED COMMANDS")
-    print("=" * 80)
-
-    for input_file, var_fillvalues in new_fillvalues.items():
-        output_file = get_output_filename(input_file)
-
-        print(f"\nInput:  {input_file}")
-        print(f"Output: {output_file}")
-        print(f"Variables to modify: {len(var_fillvalues)}")
-        for var, fill_val in var_fillvalues.items():
-            print(f"  {var}: {fill_val}")
-
-        # Build and print the ncatted command
-        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        print("\nCommand:")
-        print("  " + " ".join(cmd))
-
-        # Execute the command if not in dry-run mode
-        if not args.dry_run:
-            print("\nExecuting...")
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                print("  ✓ Success")
-                if result.stdout:
-                    print(f"  stdout: {result.stdout}")
-                if result.stderr:
-                    print(f"  stderr: {result.stderr}")
-            except subprocess.CalledProcessError as e:
-                print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
-                if e.stdout:
-                    print(f"  stdout: {e.stdout}", file=sys.stderr)
-                if e.stderr:
-                    print(f"  stderr: {e.stderr}", file=sys.stderr)
-                sys.exit(1)
-            except FileNotFoundError:
-                print("  ✗ Error: ncatted command not found", file=sys.stderr)
-                print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
-                sys.exit(1)
-
-    # Only print summary in dry-run mode
-    if args.dry_run:
-        print("\n" + "=" * 80)
-        print("\nSummary:")
-        print(f"  {total_files} file(s) will be processed")
-        print(f"  {total_vars} variable(s) will be modified")
+    # Process the files
+    process_files(args.fillvalues_file, dry_run=args.dry_run, overwrite=args.overwrite)
 
     return 0
 
