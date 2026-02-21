@@ -369,6 +369,43 @@ def _handle_empty_input(default_value: Any, allow_delete: bool) -> Any | None:
     return None
 
 
+def _handle_ctrl_c(
+    ctrl_c_count: int, user_input: str | None, file_path: str | None, var_name: str
+) -> int:
+    """
+    Handle a KeyboardInterrupt (Ctrl-C) during user input.
+
+    On the first Ctrl-C, shows ncdump output for the variable.
+    On the second Ctrl-C (or if user had typed 'quit'), re-raises.
+
+    Args:
+        ctrl_c_count: Number of times Ctrl-C has been pressed (already incremented)
+        user_input: The user's input before Ctrl-C (may be None)
+        file_path: Path to the netCDF file for ncdump
+        var_name: Name of the variable being processed
+
+    Returns:
+        Updated ctrl_c_count
+
+    Raises:
+        KeyboardInterrupt: If this is the second Ctrl-C or user typed 'quit'
+    """
+    ctrl_c_count += 1
+
+    # If this is the second Ctrl-C or the user requested quit, exit
+    if ctrl_c_count >= 2 or user_input == USER_REQ_QUIT:
+        if ctrl_c_count >= 2:
+            print("\n    [Ctrl-C pressed again - exiting]")
+        else:
+            print("\n    User requested quit")
+        raise KeyboardInterrupt
+
+    # First Ctrl-C: show ncdump output for this variable
+    print("\n    [Ctrl-C detected - press again to exit]")
+    show_ncdump_for_variable(file_path, var_name)
+    return ctrl_c_count
+
+
 def get_fill_value_from_user(
     var_name: str,
     target_type: type,
@@ -430,19 +467,7 @@ def get_fill_value_from_user(
                     return empty_result
 
         except KeyboardInterrupt:
-            ctrl_c_count += 1
-
-            # If this is the second Ctrl-C or the user requested quit, exit
-            if ctrl_c_count >= 2 or user_input == USER_REQ_QUIT:
-                if ctrl_c_count >= 2:
-                    print("\n    [Ctrl-C pressed again - exiting]")
-                else:
-                    print("\n    User requested quit")
-                raise
-
-            # First Ctrl-C: show ncdump output for this variable
-            print("\n    [Ctrl-C detected - press again to exit]")
-            show_ncdump_for_variable(file_path, var_name)
+            ctrl_c_count = _handle_ctrl_c(ctrl_c_count, user_input, file_path, var_name)
 
 
 def collect_new_fill_values(
