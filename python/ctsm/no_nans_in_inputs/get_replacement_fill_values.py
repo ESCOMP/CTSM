@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Tuple
 
 import numpy as np
 import xarray as xr
@@ -246,12 +246,13 @@ def show_ncdump_for_variable(file_path: str | None, var_name: str) -> None:
     print()  # Empty line for readability
 
 
-def get_var_info(var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled: bool) -> Any:
+def get_var_info(
+    var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled: bool
+) -> Tuple[VarContext, FillValueConfig]:
     """
-    Process a single variable to get its new fill value from the user.
+    Process a single variable to get information to be used as settings.
 
-    Displays variable metadata and statistics, calculates a smart default,
-    and prompts the user for a new fill value.
+    Displays variable metadata and statistics and calculates a smart default.
 
     Args:
         var: Variable name
@@ -260,10 +261,8 @@ def get_var_info(var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled:
         delete_if_none_filled: If True, automatically use delete when it's the default
 
     Returns:
-        New fill value (number or USER_REQ_DELETE string)
-
-    Raises:
-        ValueError: If user chooses to skip this variable or file
+        VarContext: Information about the variable
+        FillValueConfig: Information about the fill value
     """
     da = ds[var]
 
@@ -302,16 +301,15 @@ def get_var_info(var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled:
     if data_has_nan:
         print(f"    WARNING: Data contains NaN values - cannot delete {ATTR}")
 
-    # Ask user for new fill value
+    # Save and return info
     var_context = VarContext(var_name=var, target_type=type(nanmin), file_path=abs_path)
     config = FillValueConfig(
         default_value=default_fill,
         allow_delete=not data_has_nan,
         delete_if_none_filled=delete_if_none_filled,
     )
-    new_fill_value = get_fill_value_from_user(var_context, config)
 
-    return new_fill_value
+    return var_context, config
 
 
 def _handle_special_command(user_input: str, allow_delete: bool) -> Any | None:
@@ -563,9 +561,11 @@ def collect_new_fill_values(
                     print(f"\n  Variable: {var} [already processed, skipping]")
                     continue
 
-                new_fill_value = get_var_info(var, ds, abs_path, delete_if_none_filled)
-
                 # Process this variable to get new fill value
+                var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled)
+                new_fill_value = get_fill_value_from_user(var_context, config)
+
+                # Handle new fill value (or other user input)
                 try:
                     new_fill_values[var] = new_fill_value
 
@@ -737,9 +737,7 @@ def main() -> int:
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
     # Collect new fill values from user
-    collect_new_fill_values(
-        matches, delete_if_none_filled=args.delete_if_none_filled
-    )
+    collect_new_fill_values(matches, delete_if_none_filled=args.delete_if_none_filled)
 
     return 0
 
