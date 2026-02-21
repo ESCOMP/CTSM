@@ -280,6 +280,95 @@ def get_var_info(var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled:
     return new_fill_value
 
 
+def _handle_special_command(user_input: str, allow_delete: bool) -> Any | None:
+    """
+    Check if user input is a special command and handle it.
+
+    Args:
+        user_input: The user's input string (already stripped)
+        allow_delete: Whether deleting the fill value is allowed
+
+    Returns:
+        USER_REQ_DELETE if delete was requested and allowed, or None if not a special command
+
+    Raises:
+        KeyboardInterrupt: If user typed 'quit'
+        ValueError: If user typed 'skip' or 'skipfile'
+    """
+    lower_input = user_input.lower()
+    if lower_input == USER_REQ_QUIT:
+        raise KeyboardInterrupt("User requested quit")
+    if lower_input == USER_REQ_SKIP_VAR:
+        raise ValueError("SKIP_VARIABLE")
+    if lower_input == USER_REQ_SKIP_FILE:
+        raise ValueError("SKIP_FILE")
+    if lower_input == USER_REQ_DELETE:
+        if not allow_delete:
+            print(f"    Error: Cannot delete {ATTR} - variable contains NaN values")
+            return None
+        print(f"    Will delete {ATTR} attribute")
+        return USER_REQ_DELETE
+    return None
+
+
+def _convert_and_validate_input(user_input: str, target_type: type) -> Any | None:
+    """
+    Convert user input to the target type and validate it's not NaN.
+
+    Args:
+        user_input: The user's input string (already stripped)
+        target_type: Type to convert the input to
+
+    Returns:
+        Converted value, or None if conversion failed (error message already printed)
+    """
+    try:
+        converted_value = target_type(user_input)
+
+        # Make sure it's not NaN
+        try:
+            converted_value_is_nan = np.isnan(converted_value)
+        except TypeError:
+            converted_value_is_nan = False
+        if converted_value_is_nan:
+            raise ValueError(f"Input '{user_input}' would produce a NaN {ATTR}")
+
+        return converted_value
+    except (ValueError, TypeError) as e:
+        print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
+        return None
+
+
+def _handle_empty_input(default_value: Any, allow_delete: bool) -> Any | None:
+    """
+    Handle empty user input by returning the default or printing help.
+
+    Args:
+        default_value: Default value to use, or None if no default
+        allow_delete: Whether deleting the fill value is allowed (for help message)
+
+    Returns:
+        The default value if one exists, or None if no default (help message already printed)
+    """
+    if default_value is not None:
+        print(f"    Using default: {default_value}")
+        return default_value
+
+    # Build help message based on what's allowed
+    options = []
+    if allow_delete:
+        options.append(f"'{USER_REQ_DELETE}' to delete attribute")
+    options.extend(
+        [
+            f"'{USER_REQ_SKIP_VAR}' to skip variable",
+            f"'{USER_REQ_SKIP_FILE}' to skip file",
+            f"'{USER_REQ_QUIT}' to save and exit",
+        ]
+    )
+    print(f"    Please enter a value (or {', '.join(options)}).")
+    return None
+
+
 def get_fill_value_from_user(
     var_name: str,
     target_type: type,
@@ -324,58 +413,22 @@ def get_fill_value_from_user(
 
             user_input = input(prompt).strip()
 
-            # Check for special commands
-            if user_input.lower() == USER_REQ_QUIT:
-                raise KeyboardInterrupt("User requested quit")
-            if user_input.lower() == USER_REQ_SKIP_VAR:
-                raise ValueError("SKIP_VARIABLE")
-            if user_input.lower() == USER_REQ_SKIP_FILE:
-                raise ValueError("SKIP_FILE")
-            if user_input.lower() == USER_REQ_DELETE:
-                # Check if delete is allowed for this variable
-                if not allow_delete:
-                    print(f"    Error: Cannot delete {ATTR} - variable contains NaN values")
-                    continue
-                # Return the delete command as a string
-                print(f"    Will delete {ATTR} attribute")
-                return USER_REQ_DELETE
             if user_input:
-                try:
-                    # Convert user input to the target type
-                    converted_value = target_type(user_input)
+                # Check for special commands first
+                special_result = _handle_special_command(user_input, allow_delete)
+                if special_result is not None:
+                    return special_result
 
-                    # Make sure it's not NaN
-                    try:
-                        converted_value_is_nan = np.isnan(converted_value)
-                    except TypeError:
-                        converted_value_is_nan = False
-                    if converted_value_is_nan:
-                        raise ValueError(f"Input '{user_input}' would produce a NaN {ATTR}")
-
-                    return converted_value
-                except (ValueError, TypeError) as e:
-                    # Re-raise if it's the SKIP_VARIABLE signal
-                    if str(e) == "SKIP_VARIABLE":
-                        raise
-                    print(f"    Invalid input: {e}. Please enter a valid {target_type.__name__}.")
+                # Try to convert to the target type
+                converted = _convert_and_validate_input(user_input, target_type)
+                if converted is not None:
+                    return converted
             else:
-                # User pressed enter without input
-                if default_value is not None:
-                    print(f"    Using default: {default_value}")
-                    return default_value
+                # Empty input - use default or show help
+                empty_result = _handle_empty_input(default_value, allow_delete)
+                if empty_result is not None:
+                    return empty_result
 
-                # Build help message based on what's allowed
-                options = []
-                if allow_delete:
-                    options.append(f"'{USER_REQ_DELETE}' to delete attribute")
-                options.extend(
-                    [
-                        f"'{USER_REQ_SKIP_VAR}' to skip variable",
-                        f"'{USER_REQ_SKIP_FILE}' to skip file",
-                        f"'{USER_REQ_QUIT}' to save and exit",
-                    ]
-                )
-                print(f"    Please enter a value (or {', '.join(options)}).")
         except KeyboardInterrupt:
             ctrl_c_count += 1
 
