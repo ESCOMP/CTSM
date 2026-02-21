@@ -181,6 +181,11 @@ def main():
         default=NEW_FILLVALUES_FILE,
         help=f"Path to JSON file with new fill values (default: {NEW_FILLVALUES_FILE})",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without actually modifying files",
+    )
     args = parser.parse_args()
 
     # Load the new fill values
@@ -210,10 +215,12 @@ def main():
         print("\nCommand:")
         print("  " + " ".join(cmd))
 
-    print("\n" + "=" * 80)
-    print("\nSummary:")
-    print(f"  {total_files} file(s) will be processed")
-    print(f"  {total_vars} variable(s) will be modified")
+    # Only print summary in dry-run mode
+    if args.dry_run:
+        print("\n" + "=" * 80)
+        print("\nSummary:")
+        print(f"  {total_files} file(s) will be processed")
+        print(f"  {total_vars} variable(s) will be modified")
 
     return 0
 
