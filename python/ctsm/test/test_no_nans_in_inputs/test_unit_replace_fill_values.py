@@ -81,26 +81,26 @@ class TestGetNcattedTypeCode:
 class TestUpdateXmlFile:
     """Test the update_xml_file function."""
 
-    def test_update_xml_path(self, tmp_path):
+    def test_update_xml_path(self, mock_xml_file_path):
         """Test updating a file path in XML."""
-        # Create a simple XML file
-        xml_file = tmp_path / "test.xml"
+        # Create XML content in the mocked path
         xml_content = """<?xml version="1.0"?>
 <namelist_defaults>
     <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
     <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
 </namelist_defaults>
 """
-        xml_file.write_text(xml_content)
+        with open(mock_xml_file_path, 'w', encoding='utf-8') as f:
+            f.write(xml_content)
 
         # Update one of the paths
         old_path = "lnd/clm2/paramdata/test_params.nc"
         new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
 
-        update_xml_file(str(xml_file), old_path, new_path)
+        update_xml_file(mock_xml_file_path, old_path, new_path)
 
         # Read and verify the updated XML
-        tree = ET.parse(str(xml_file))
+        tree = ET.parse(mock_xml_file_path)
         root = tree.getroot()
         paramfile = root.find("paramfile")
         assert paramfile is not None
@@ -110,15 +110,15 @@ class TestUpdateXmlFile:
         surfdata = root.find("surfdata")
         assert surfdata.text == "lnd/clm2/surfdata/test_surf.nc"
 
-    def test_update_xml_path_not_found(self, tmp_path):
+    def test_update_xml_path_not_found(self, mock_xml_file_path):
         """Test that updating non-existent path raises ValueError."""
-        xml_file = tmp_path / "test.xml"
         xml_content = """<?xml version="1.0"?>
 <namelist_defaults>
     <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
 </namelist_defaults>
 """
-        xml_file.write_text(xml_content)
+        with open(mock_xml_file_path, 'w', encoding='utf-8') as f:
+            f.write(xml_content)
 
         with pytest.raises(ValueError, match="not found"):
-            update_xml_file(str(xml_file), "nonexistent/path.nc", "new/path.nc")
+            update_xml_file(mock_xml_file_path, "nonexistent/path.nc", "new/path.nc")

@@ -277,20 +277,19 @@ class TestReplaceFullWorkflow:
         assert "Skipping (output exists)" in captured.out
         assert "Use --overwrite" in captured.out
 
-    def test_process_with_overwrite(self, test_setup, monkeypatch, tmp_path):
+    def test_process_with_overwrite(self, test_setup, monkeypatch, create_mock_xml_file):
         """Test that existing output files are overwritten with --overwrite flag."""
         input_file = test_setup["input_file"]
         fillvalues_file = test_setup["fillvalues_file"]
         output_file = get_output_filename(input_file)
 
-        # Create a test XML file
-        test_xml = tmp_path / "test.xml"
-        xml_content = f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>{input_file}</paramfile>
-</namelist_defaults>
-"""
-        test_xml.write_text(xml_content)
+        # Update the mock XML file to include our test input file
+        tree = ET.parse(create_mock_xml_file)
+        root = tree.getroot()
+        # Add a new element with our test input file
+        new_elem = ET.SubElement(root, 'test_paramfile')
+        new_elem.text = input_file
+        tree.write(create_mock_xml_file, encoding='utf-8', xml_declaration=True)
 
         # Create a dummy output file
         with open(output_file, "w", encoding="utf-8") as f:
@@ -298,10 +297,10 @@ class TestReplaceFullWorkflow:
 
         assert os.path.exists(output_file)
 
-        # Mock sys.argv to simulate running with --overwrite and test XML file
+        # Mock sys.argv to simulate running with --overwrite (XML file is auto-mocked)
         monkeypatch.setattr(
             "sys.argv",
-            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite", "--xml-file", str(test_xml)],
+            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite"],
         )
 
         # Run main (should replace the file)
@@ -318,11 +317,11 @@ class TestReplaceFullWorkflow:
         ds_out.close()
 
         # Verify XML was updated
-        tree = ET.parse(str(test_xml))
+        tree = ET.parse(create_mock_xml_file)
         root = tree.getroot()
-        paramfile = root.find('paramfile')
-        assert paramfile is not None
-        assert paramfile.text == output_file
+        test_paramfile = root.find('test_paramfile')
+        assert test_paramfile is not None
+        assert test_paramfile.text == output_file
 
     def test_skip_symlink_output(self, test_setup, capsys, monkeypatch):
         """Test that symlinked output files are never overwritten, even with --overwrite."""
