@@ -208,6 +208,16 @@ def process_files(fillvalues_file, dry_run=False, overwrite=False):
     for input_file, var_fillvalues in new_fillvalues.items():
         output_file = get_output_filename(input_file)
 
+        # Check if output is a symlink - never overwrite symlinks
+        if os.path.islink(output_file):
+            print(f"\n{'!' * 80}")
+            print(f"WARNING: Output file is a symlink - SKIPPING")
+            print(f"  Input:  {input_file}")
+            print(f"  Output: {output_file} -> {os.readlink(output_file)}")
+            print(f"  Symlinks will never be overwritten for safety")
+            print(f"{'!' * 80}")
+            continue
+
         # Skip if output file already exists and overwrite is not enabled
         if os.path.exists(output_file) and not overwrite:
             print(f"\nSkipping (output exists): {input_file}")

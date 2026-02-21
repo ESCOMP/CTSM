@@ -306,3 +306,36 @@ class TestReplaceFullWorkflow:
         assert ATTR in ds_out[TEST_VAR_TEMP].attrs
         assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
         ds_out.close()
+
+    def test_skip_symlink_output(self, test_setup, capsys, monkeypatch):
+        """Test that symlinked output files are never overwritten, even with --overwrite."""
+        input_file = test_setup["input_file"]
+        fillvalues_file = test_setup["fillvalues_file"]
+        output_file = get_output_filename(input_file)
+        tmp_path = test_setup["tmp_path"]
+
+        # Create a target file and symlink to it
+        target_file = tmp_path / "target.nc"
+        target_file.write_text("target file content")
+        os.symlink(str(target_file), output_file)
+
+        assert os.path.islink(output_file)
+        original_content = target_file.read_text()
+
+        # Mock sys.argv with --overwrite (should still skip symlinks)
+        monkeypatch.setattr(
+            "sys.argv",
+            ["replace_fill_values.py", "--fillvalues-file", fillvalues_file, "--overwrite"],
+        )
+
+        # Run main (should skip the symlink)
+        result = main()
+        assert result == 0
+
+        # Target file should be unchanged
+        assert target_file.read_text() == original_content
+
+        # Check that warning was printed
+        captured = capsys.readouterr()
+        assert "WARNING: Output file is a symlink - SKIPPING" in captured.out
+        assert "Symlinks will never be overwritten" in captured.out
