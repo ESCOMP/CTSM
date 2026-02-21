@@ -91,10 +91,11 @@ def get_ncatted_type_code(dtype):
         dtype: numpy dtype object
 
     Returns:
-        str: ncatted type code (f, d, i, s, b, c)
+        str: ncatted type code (f, d, c)
 
     Raises:
-        ValueError: If dtype is not recognized
+        ValueError: If dtype is not recognized or is an integer type
+                    (NetCDF doesn't allow NaN fill values for integers)
     """
     dtype_str = str(dtype)
 
@@ -104,15 +105,12 @@ def get_ncatted_type_code(dtype):
     if "float32" in dtype_str:
         return "f"  # float
 
-    # Integer types
-    if "int64" in dtype_str or "int_" in dtype_str:
-        return "i"  # int (will use 32-bit in ncatted)
-    if "int32" in dtype_str:
-        return "i"  # int
-    if "int16" in dtype_str:
-        return "s"  # short
-    if "int8" in dtype_str or "byte" in dtype_str:
-        return "b"  # byte
+    # Integer types - not allowed (NetCDF doesn't support NaN for integers)
+    if any(x in dtype_str for x in ["int64", "int32", "int16", "int8", "int_", "byte"]):
+        raise ValueError(
+            f"Integer dtype detected: {dtype}. "
+            "NetCDF does not allow NaN fill values for integer variables. So how'd this happen?"
+        )
 
     # String/char
     if "str" in dtype_str or "char" in dtype_str or "U" in dtype_str or "S" in dtype_str:

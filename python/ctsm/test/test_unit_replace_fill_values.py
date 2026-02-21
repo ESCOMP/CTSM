@@ -43,29 +43,33 @@ class TestGetNcattedTypeCode:
 
     def test_float64(self):
         """Test float64 dtype."""
-        assert get_ncatted_type_code(np.dtype('float64')) == 'd'
+        assert get_ncatted_type_code(np.dtype("float64")) == "d"
 
     def test_float32(self):
         """Test float32 dtype."""
-        assert get_ncatted_type_code(np.dtype('float32')) == 'f'
+        assert get_ncatted_type_code(np.dtype("float32")) == "f"
 
     def test_int64(self):
-        """Test int64 dtype."""
-        assert get_ncatted_type_code(np.dtype('int64')) == 'i'
+        """Test int64 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            get_ncatted_type_code(np.dtype("int64"))
 
     def test_int32(self):
-        """Test int32 dtype."""
-        assert get_ncatted_type_code(np.dtype('int32')) == 'i'
+        """Test int32 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            get_ncatted_type_code(np.dtype("int32"))
 
     def test_int16(self):
-        """Test int16 dtype."""
-        assert get_ncatted_type_code(np.dtype('int16')) == 's'
+        """Test int16 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            get_ncatted_type_code(np.dtype("int16"))
 
     def test_int8(self):
-        """Test int8 dtype."""
-        assert get_ncatted_type_code(np.dtype('int8')) == 'b'
+        """Test int8 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            get_ncatted_type_code(np.dtype("int8"))
 
     def test_unknown_dtype(self):
         """Test that unknown dtype raises ValueError."""
         with pytest.raises(ValueError, match="Unknown dtype"):
-            get_ncatted_type_code(np.dtype('complex128'))
+            get_ncatted_type_code(np.dtype("complex128"))
