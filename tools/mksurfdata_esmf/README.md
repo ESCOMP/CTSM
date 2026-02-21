@@ -202,7 +202,7 @@ nccopy -k cdf5 oldfile newfile
 > [!TIP]
 > The LAI raw dataset \*.nc **FILE MUST HAVE** an "unlimited" time dimension
 
-Example to change time to unlimted dimension using the NCO operator ncks.
+Example to change time to unlimited dimension using the NCO operator ncks.
 
 ``` shell
 ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.nc
