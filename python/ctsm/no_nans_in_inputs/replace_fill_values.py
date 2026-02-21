@@ -20,7 +20,13 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import ATTR, NEW_FILLVALUES_FILE, USER_REQ_DELETE, XML_FILE
+from ctsm.no_nans_in_inputs.constants import (
+    ATTR,
+    NEW_FILLVALUES_FILE,
+    SEP_LENGTH,
+    USER_REQ_DELETE,
+    XML_FILE,
+)
 
 
 def load_new_fillvalues(fillvalues_file: str) -> dict[str, dict[str, Any]]:
@@ -246,9 +252,9 @@ def process_files(
     print(f"Found {total_vars} variable(s) in {total_files} file(s)\n")
 
     # Process each file
-    print("=" * 80)
+    print("=" * SEP_LENGTH)
     print("NCATTED COMMANDS")
-    print("=" * 80)
+    print("=" * SEP_LENGTH)
 
     files_processed = 0
 
@@ -299,12 +305,12 @@ def skip_this_file(input_file: str, output_file: str, overwrite: bool) -> bool:
     """
     # Check if output is a symlink - never overwrite symlinks
     if os.path.islink(output_file):
-        print(f"\n{'!' * 80}")
+        print(f"\n{'!' * SEP_LENGTH}")
         print("WARNING: Output file is a symlink - SKIPPING")
         print(f"  Input:  {input_file}")
         print(f"  Output: {output_file} -> {os.readlink(output_file)}")
         print("  Symlinks will never be overwritten for safety")
-        print(f"{'!' * 80}")
+        print(f"{'!' * SEP_LENGTH}")
         return True
 
     # Skip if output file already exists and overwrite is not enabled
@@ -376,7 +382,7 @@ def print_dry_run_summary(total_files: int, total_vars: int) -> None:
         total_files: Total number of files to process
         total_vars: Total number of variables to modify
     """
-    print("\n" + "=" * 80)
+    print("\n" + "=" * SEP_LENGTH)
     print("\nSummary:")
     print(f"  {total_files} file(s) will be processed")
     print(f"  {total_vars} variable(s) will be modified")

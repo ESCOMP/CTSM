@@ -25,6 +25,7 @@ import xarray as xr
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
     NEW_FILLVALUES_FILE,
+    SEP_LENGTH,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
     USER_REQ_SKIP_FILE,
@@ -37,8 +38,6 @@ BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
 PROGRESS_FILE = NEW_FILLVALUES_FILE  # Alias for clarity in this script
-
-SEP_LENGTH = 80  # Length of horizontal separators in stdout
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
