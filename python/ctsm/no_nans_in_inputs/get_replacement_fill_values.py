@@ -16,6 +16,7 @@ import json
 import os
 import subprocess
 import sys
+from typing import Any
 
 import numpy as np
 import xarray as xr
@@ -41,7 +42,7 @@ SEP_LENGTH = 80  # Length of horizontal separators in stdout
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
 
-def extract_file_paths_from_xml(xml_file):
+def extract_file_paths_from_xml(xml_file: str) -> set[str]:
     """
     Extract all file paths from the XML file.
 
@@ -49,7 +50,7 @@ def extract_file_paths_from_xml(xml_file):
         xml_file: Path to the XML file
 
     Returns:
-        set: Set of file paths found in the XML
+        Set of file paths found in the XML
 
     Raises:
         SystemExit: If XML parsing fails or file is not found
@@ -83,7 +84,7 @@ def extract_file_paths_from_xml(xml_file):
     return file_paths
 
 
-def load_bad_files(bad_files_log, path_filter=None):
+def load_bad_files(bad_files_log: str, path_filter: str | None = None) -> set[str]:
     """
     Load the list of bad files from the log.
 
@@ -93,7 +94,10 @@ def load_bad_files(bad_files_log, path_filter=None):
                      If None, all bad files are included.
 
     Returns:
-        set: Set of absolute file paths from the log
+        Set of absolute file paths from the log
+
+    Raises:
+        SystemExit: If file not found
     """
     bad_files = set()
     bad_line_contents = " : NaN_FillValue : "
@@ -115,7 +119,7 @@ def load_bad_files(bad_files_log, path_filter=None):
     return bad_files
 
 
-def convert_to_absolute_path(relative_path):
+def convert_to_absolute_path(relative_path: str) -> str:
     """
     Convert a relative path to an absolute path.
 
@@ -123,7 +127,7 @@ def convert_to_absolute_path(relative_path):
         relative_path: Relative path starting with OUR_PATH, or already absolute path
 
     Returns:
-        str: Absolute path
+        Absolute path
     """
     # If the path is already absolute, return it as-is
     if os.path.isabs(relative_path):
@@ -173,12 +177,12 @@ def var_data_has_nan(da: xr.DataArray) -> bool:
         return False
 
 
-def show_ncdump_for_variable(file_path, var_name):
+def show_ncdump_for_variable(file_path: str | None, var_name: str) -> None:
     """
     Run ncdump -h on a file and display lines matching the variable name.
 
     Args:
-        file_path: Path to the netCDF file
+        file_path: Path to the netCDF file (None to skip)
         var_name: Name of the variable to search for in ncdump output
     """
     if not file_path:
@@ -208,13 +212,13 @@ def show_ncdump_for_variable(file_path, var_name):
 
 
 def get_fill_value_from_user(
-    var_name,
-    target_type,
-    file_path=None,
-    default_value=None,
-    allow_delete=True,
-    delete_if_none_filled=False,
-):
+    var_name: str,
+    target_type: type,
+    file_path: str | None = None,
+    default_value: Any = None,
+    allow_delete: bool = True,
+    delete_if_none_filled: bool = False,
+) -> Any:
     """
     Prompt user for a new fill value and convert it to the target type.
 
@@ -224,16 +228,14 @@ def get_fill_value_from_user(
         file_path: Optional path to the netCDF file for ncdump on Ctrl-C
         default_value: Optional default value to use if user presses enter
         allow_delete: Whether to allow deleting the fill value attribute (default: True)
-        delete_if_none_filled: If True, automatically use delete when it's the default (default: False)
+        delete_if_none_filled: If True, automatically use delete when it's the default
 
     Returns:
-        Converted fill value of the specified type, or $USER_REQ_DELETE if user wants to delete the
-        attribute
+        Converted fill value of the specified type, or USER_REQ_DELETE string
 
     Raises:
-        KeyboardInterrupt: If user presses Ctrl-C twice or types $USER_REQ_QUIT
-        ValueError: If user types $USER_REQ_SKIP_VAR to skip this variable or $USER_REQ_SKIP_FILE
-                    to skip the file
+        KeyboardInterrupt: If user presses Ctrl-C twice or types 'quit'
+        ValueError: If user types 'skip' or 'skipfile'
     """
     # If delete_if_none_filled is enabled and default is delete, use it automatically
     if delete_if_none_filled and default_value == USER_REQ_DELETE:
@@ -321,24 +323,27 @@ def get_fill_value_from_user(
             show_ncdump_for_variable(file_path, var_name)
 
 
-def collect_new_fill_values(matches, progress_file=PROGRESS_FILE, delete_if_none_filled=False):
+def collect_new_fill_values(
+    matches: list[tuple[str, str]],
+    progress_file: str = PROGRESS_FILE,
+    delete_if_none_filled: bool = False,
+) -> dict[str, dict[str, Any]]:
     """
     Interactively collect new fill values for variables with NaN fill values.
 
     For each file in matches, opens the file, identifies variables with NaN fill values,
     displays their properties, and prompts the user to enter new fill values.
 
-    Progress is automatically saved after each variable. User can type $USER_REQ_QUIT to save and exit,
-    or $USER_REQ_SKIP_VAR to skip a variable.
+    Progress is automatically saved after each variable. User can type 'quit' to save and exit,
+    or 'skip' to skip a variable.
 
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
         progress_file: Path to save/load progress (default: PROGRESS_FILE)
-        delete_if_none_filled: If True, automatically use delete when it's the default (default: False)
+        delete_if_none_filled: If True, automatically use delete when it's the default
 
     Returns:
-        dict: Dictionary mapping absolute file paths to dictionaries of
-              {variable_name: new_fill_value}
+        Dictionary mapping absolute file paths to dictionaries of {variable_name: new_fill_value}
     """
     print("\n" + "=" * SEP_LENGTH)
     print("COLLECTING NEW FILL VALUES")
@@ -472,7 +477,7 @@ def collect_new_fill_values(matches, progress_file=PROGRESS_FILE, delete_if_none
     return all_new_fill_values
 
 
-def check_write_access(file_path):
+def check_write_access(file_path: str) -> bool:
     """
     Check if we have write access to create/update a file.
 
@@ -480,7 +485,7 @@ def check_write_access(file_path):
         file_path: Path to the file to check
 
     Returns:
-        bool: True if we have write access, False otherwise
+        True if we have write access, False otherwise
     """
     # Get the directory where the file would be created
     directory = os.path.dirname(file_path) or "."
@@ -497,7 +502,7 @@ def check_write_access(file_path):
     return os.access(parent or ".", os.W_OK)
 
 
-def save_progress(all_new_fill_values, progress_file):
+def save_progress(all_new_fill_values: dict[str, dict[str, Any]], progress_file: str) -> None:
     """
     Save progress to a JSON file.
 
@@ -513,7 +518,7 @@ def save_progress(all_new_fill_values, progress_file):
         print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
 
 
-def load_progress(progress_file):
+def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
     """
     Load progress from a JSON file if it exists.
 
@@ -521,7 +526,7 @@ def load_progress(progress_file):
         progress_file: Path to the progress file
 
     Returns:
-        dict: Previously saved fill values, or empty dict if file doesn't exist
+        Previously saved fill values, or empty dict if file doesn't exist
     """
     if not os.path.exists(progress_file):
         return {}
@@ -534,8 +539,16 @@ def load_progress(progress_file):
         return {}
 
 
-def main():
-    """Main function to find matching file paths."""
+def main() -> int:
+    """
+    Main function to find matching file paths and collect new fill values.
+
+    Parses command-line arguments, finds files with NaN fill values, and
+    interactively collects replacement values from the user.
+
+    Returns:
+        Exit code (0 for success)
+    """
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(

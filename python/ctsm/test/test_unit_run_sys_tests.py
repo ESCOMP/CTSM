@@ -186,9 +186,10 @@ class TestRunSysTests(unittest.TestCase):
         It also ensures that the cs.status.fails and cs.status files are created
         """
         machine = self._make_machine()
-        with mock.patch("ctsm.run_sys_tests.datetime") as mock_date, mock.patch(
-            "ctsm.run_sys_tests.get_tests_from_xml"
-        ) as mock_get_tests:
+        with (
+            mock.patch("ctsm.run_sys_tests.datetime") as mock_date,
+            mock.patch("ctsm.run_sys_tests.get_tests_from_xml") as mock_get_tests,
+        ):
             mock_date.now.side_effect = self._fake_now
             mock_get_tests.return_value = [
                 {"compiler": "intel"},
