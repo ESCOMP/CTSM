@@ -285,13 +285,14 @@ class TestReplaceFullWorkflow:
         fillvalues_file = test_setup["fillvalues_file"]
         output_file = get_output_filename(input_file)
 
-        # Update the mock XML file to include our test input file
-        tree = ET.parse(create_mock_xml_file)
-        root = tree.getroot()
-        # Add a new element with our test input file
-        new_elem = ET.SubElement(root, "test_paramfile")
-        new_elem.text = input_file
-        tree.write(create_mock_xml_file, encoding="utf-8", xml_declaration=True)
+        # Create mock XML file with our test input file
+        xml_path = create_mock_xml_file(
+            f"""<?xml version="1.0"?>
+<namelist_defaults>
+    <test_paramfile>{input_file}</test_paramfile>
+</namelist_defaults>
+"""
+        )
 
         # Create a dummy output file
         with open(output_file, "w", encoding="utf-8") as f:
@@ -319,7 +320,7 @@ class TestReplaceFullWorkflow:
         ds_out.close()
 
         # Verify XML was updated
-        tree = ET.parse(create_mock_xml_file)
+        tree = ET.parse(xml_path)
         root = tree.getroot()
         test_paramfile = root.find("test_paramfile")
         assert test_paramfile is not None
@@ -449,8 +450,9 @@ class TestExecuteCommand:
         var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
 
-        # Read original XML content
-        with open(create_mock_xml_file, "r", encoding="utf-8") as f:
+        # Create mock XML and read original content
+        xml_path = create_mock_xml_file()
+        with open(xml_path, "r", encoding="utf-8") as f:
             original_xml = f.read()
 
         # Execute without xml_file parameter
@@ -459,6 +461,6 @@ class TestExecuteCommand:
         assert files_processed == 1
 
         # XML file should be unchanged
-        with open(create_mock_xml_file, "r", encoding="utf-8") as f:
+        with open(xml_path, "r", encoding="utf-8") as f:
             current_xml = f.read()
         assert current_xml == original_xml

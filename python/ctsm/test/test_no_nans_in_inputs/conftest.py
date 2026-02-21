@@ -31,17 +31,24 @@ def fixture_mock_xml_file_path(tmp_path, monkeypatch):
 @pytest.fixture(name="create_mock_xml_file")
 def fixture_create_mock_xml_file(mock_xml_file_path):
     """
-    Fixture to create the mock XML file with default content.
+    Factory fixture to create the mock XML file with given or default content.
 
     Use this fixture in tests that need an actual XML file to exist.
+    Call with no arguments for default content, or pass custom XML content.
+
+    Returns:
+        A function that creates the XML file and returns its path.
     """
-    xml_content = """<?xml version="1.0"?>
+    default_content = """<?xml version="1.0"?>
 <namelist_defaults>
     <paramfile phys="clm6_0">lnd/clm2/paramdata/test_params.nc</paramfile>
     <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
 </namelist_defaults>
 """
-    with open(mock_xml_file_path, "w", encoding="utf-8") as f:
-        f.write(xml_content)
 
-    return mock_xml_file_path
+    def _create(content: str = default_content) -> str:
+        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return mock_xml_file_path
+
+    return _create
