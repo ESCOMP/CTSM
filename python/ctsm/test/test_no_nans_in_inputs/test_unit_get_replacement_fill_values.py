@@ -17,7 +17,9 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     FillValueConfig,
     VarContext,
     get_fill_value_from_user,
+    get_var_info,
     var_data_has_nan,
+    VARSTARTS_TO_DEFAULT_NEG999,
 )
 
 
@@ -216,3 +218,80 @@ class TestVarDataHasNan:
         """Test that empty arrays return False (no NaNs)."""
         da = xr.DataArray([])
         assert not var_data_has_nan(da)
+
+
+# pylint: disable=too-few-public-methods
+class TestGetVarInfo:
+    """Test the get_var_info function."""
+
+    @staticmethod
+    def _create_test_dataset(data, var_name, long_name, units):
+        """Helper to create a test dataset."""
+        return xr.Dataset(
+            {var_name: (("y", "x"), data)},
+            attrs={"long_name": long_name, "units": units},
+        )
+
+    def test_no_nan_in_data_suggests_delete(self):
+        """If data has no NaNs, default suggestion should be to delete the attribute."""
+        data = np.array([[1.0, 2.0], [3.0, 4.0]])
+        ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
+        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        assert config.default_value == USER_REQ_DELETE
+        assert config.allow_delete is True
+
+    def test_nan_in_data_prevents_delete(self):
+        """If data has NaNs, deleting the attribute should not be allowed."""
+        data = np.array([[1.0, 2.0], [np.nan, 4.0]])
+        ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
+        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        assert config.default_value != USER_REQ_DELETE
+        assert config.allow_delete is False
+
+    @pytest.mark.parametrize("data_min", [10.0, 0.0, -1.0])
+    def test_defaults_to_neg999_due_to_min(self, data_min):
+        """For some minimum values, default should be -999."""
+        data = np.array([[data_min, 20.0], [np.nan, 40.0]])
+        ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
+        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        assert config.default_value == -999
+
+    def test_special_varname_prefix_defaults_to_neg999(self):
+        """Test if var name starts with special prefix like 'fertl_', default is -999."""
+        var_name = VARSTARTS_TO_DEFAULT_NEG999[0] + "weuuewriebr"
+        data = np.array([[-50.0, 20.0], [np.nan, 40.0]])
+        ds = self._create_test_dataset(data, var_name, "Fertilizer", "g/m2")
+        _, config = get_var_info(var_name, ds, "/path/to/file", delete_if_none_filled=False)
+        assert config.default_value == -999
+
+    @pytest.mark.parametrize(
+        "abs_path, expected",
+        [
+            ("/some/path/surfdata_map/file.nc", -999),
+            ("/some/path/surfdata_map.nc", None),
+        ],
+    )
+    def test_surfdata_map_defaults_to_neg999(self, abs_path, expected):
+        """Test that a variable in a surfdata_map dir defaults to -999."""
+        var_name = "grid1_to_grid2"
+        data = np.array([[-50.0, 20.0], [np.nan, 40.0]])
+        ds = self._create_test_dataset(data, var_name, "Mapping", "none")
+        _, config = get_var_info(var_name, ds, abs_path, delete_if_none_filled=False)
+        assert config.default_value == expected
+
+    def test_no_special_case_no_default(self):
+        """If no special condition is met, there should be no default value."""
+        data = np.array([[-50.0, -20.0], [np.nan, -10.0]])
+        ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
+        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        assert config.default_value is None
+
+    def test_returns_correct_var_context(self):
+        """Ensure VarContext is returned with correct info."""
+        data = np.array([[1.0, 2.0]], dtype=np.float32)
+        ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
+        file_path = "/path/to/file.nc"
+        var_context, _ = get_var_info(TEST_VAR_NAME, ds, file_path, delete_if_none_filled=False)
+        assert var_context.var_name == TEST_VAR_NAME
+        assert var_context.target_type == float
+        assert var_context.file_path == file_path
