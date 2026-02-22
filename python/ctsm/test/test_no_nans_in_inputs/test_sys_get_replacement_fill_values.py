@@ -5,6 +5,7 @@ System tests for get_replacement_fill_values.py script.
 Tests functions that require file I/O.
 """
 
+import json
 import sys
 from unittest.mock import MagicMock, patch
 
@@ -15,7 +16,9 @@ import xarray as xr
 from ctsm.no_nans_in_inputs.constants import ATTR
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     extract_file_paths_from_xml,
+    load_progress,
     main as main_func,
+    save_progress,
     show_ncdump_for_variable,
     var_has_nan_fill,
 )
@@ -380,3 +383,48 @@ class TestMain:
         assert e.value.code == 1
         captured = capsys.readouterr()
         assert "No write access" in captured.err
+
+
+class TestProgressFunctions:
+    """Test the save_progress and load_progress functions."""
+
+    def test_save_and_load_progress(self, tmp_path):
+        """Test that data is saved and loaded correctly."""
+        progress_file = tmp_path / "progress.json"
+        data_to_save = {
+            "/path/to/file1.nc": {"var1": -999, "var2": "delete"},
+            "/path/to/file2.nc": {"var3": -999.0},
+        }
+
+        # Save data
+        save_progress(data_to_save, str(progress_file))
+
+        # Load data
+        loaded_data = load_progress(str(progress_file))
+
+        # Check that loaded data is identical to saved data
+        assert loaded_data == data_to_save
+
+    def test_load_nonexistent_file(self):
+        """Test loading a nonexistent progress file returns an empty dict."""
+        loaded_data = load_progress("/nonexistent/path/progress.json")
+        assert loaded_data == {}
+
+    def test_load_corrupted_json(self, tmp_path, capsys):
+        """Test loading a corrupted JSON file returns an empty dict and warns."""
+        progress_file = tmp_path / "progress.json"
+        with open(progress_file, "w", encoding="utf-8") as f:
+            f.write("this is not valid json")
+
+        loaded_data = load_progress(str(progress_file))
+
+        assert loaded_data == {}
+        captured = capsys.readouterr()
+        assert "Warning: Could not load progress file" in captured.err
+
+    def test_save_io_error(self, capsys):
+        """Test that an IOError during save is caught and a warning is printed."""
+        with patch("builtins.open", side_effect=IOError("Permission denied")):
+            save_progress({"some": "data"}, "/readonly/path/progress.json")
+            captured = capsys.readouterr()
+            assert "Warning: Could not save progress" in captured.err
