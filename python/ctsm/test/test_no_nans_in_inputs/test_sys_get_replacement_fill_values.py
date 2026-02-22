@@ -320,6 +320,7 @@ class TestMain:
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
         mock_collect.assert_called_once()
+        mock_check_write.assert_called_once()
 
         # Check the arguments passed to collect_new_fill_values
         args, kwargs = mock_collect.call_args
@@ -331,6 +332,82 @@ class TestMain:
         )
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
+        assert "dry_run" in kwargs
+        assert not kwargs["dry_run"]
+
+    @patch("sys.argv", ["get_replacement_fill_values.py", "--dry-run"])
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.check_write_access",
+        return_value=True,
+    )
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        return_value={"lnd/clm2/test.nc"},
+    )
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_bad_files",
+        return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
+    )
+    @patch("os.path.exists", return_value=True)
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.xr.open_dataset")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.var_has_nan_fill",
+        return_value=True,
+    )
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
+    def test_main_dry_run(
+        self,
+        mock_collect,
+        mock_var_has_nan,
+        mock_open_dataset,
+        mock_exists,
+        mock_load_bad,
+        mock_extract,
+        mock_check_write,
+        capsys,
+    ):  # pylint: disable=unused-argument
+        """Test main function with a single matching file under --dry-run"""
+        # Setup mock dataset
+        mock_ds = MagicMock(spec=xr.Dataset)
+        # Make the mock dataset iterable
+        mock_ds.__iter__.return_value = iter(["temp"])
+
+        # Setup context manager mock for open_dataset
+        mock_open_dataset.return_value = mock_ds
+
+        result = main_func()
+
+        assert result == 0
+        mock_extract.assert_called_once()
+        mock_load_bad.assert_called_once()
+        mock_open_dataset.assert_called_once_with(
+            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+            decode_cf=False,
+            decode_timedelta=False,
+            decode_times=False,
+        )
+        mock_var_has_nan.assert_called_with(mock_ds, "temp")
+        mock_collect.assert_called_once()
+
+        # Shouldn't check write access in dry run
+        mock_check_write.assert_not_called()
+
+        # Check the arguments passed to collect_new_fill_values
+        args, kwargs = mock_collect.call_args
+        matches = args[0]
+        assert len(matches) == 1
+        assert matches[0] == (
+            "lnd/clm2/test.nc",
+            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+        )
+        assert "delete_if_none_filled" in kwargs
+        assert not kwargs["delete_if_none_filled"]
+        assert "dry_run" in kwargs
+        assert kwargs["dry_run"]
+
+        # Check stdout
+        stdout = capsys.readouterr().out
+        assert "Checking write access" not in stdout
 
     @patch("sys.argv", ["get_replacement_fill_values.py", "--delete-if-none-filled"])
     @patch(
@@ -565,3 +642,35 @@ class TestCollectNewFillValues:
 
         # No value was collected, so save_progress is not called
         mock_save.assert_not_called()
+
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
+        return_value={},
+    )
+    def test_dry_run(self, mock_load, mock_save, tmp_path, capsys):
+        """Test --dry-run"""
+        test_file = tmp_path / "test.nc"
+        self._create_test_netcdf(
+            test_file,
+            {
+                "temp": {
+                    "data": np.array([1.0, 2.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan), "long_name": "temperature"},
+                }
+            },
+        )
+
+        matches = [("rel/path/test.nc", str(test_file))]
+        result = collect_new_fill_values(matches, dry_run=True)
+
+        # Check that nothing was saved
+        mock_save.assert_not_called()
+
+        # Check that result only has filename
+        assert result == {str(test_file): {}}
+
+        # Check that result does print some info but not everything
+        stdout = capsys.readouterr().out
+        assert "Variable: temp" in stdout
+        assert "new fill value(s)" not in stdout

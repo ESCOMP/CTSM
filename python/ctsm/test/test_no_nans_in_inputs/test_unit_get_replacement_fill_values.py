@@ -197,6 +197,13 @@ class TestGetFillValueFromUser:
         with pytest.raises(KeyboardInterrupt):
             get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
 
+    def test_dry_run(self):
+        """With --dry-run, user input should be unneeded; result should always be to skip var"""
+        var_context = DEFAULT_VAR_CONTEXT
+        var_context.dry_run = True
+        result = get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
+        assert result == USER_REQ_SKIP_VAR
+
 
 class TestVarDataHasNan:
     """Test the var_data_has_nan function."""
@@ -234,19 +241,25 @@ class TestGetVarInfo:
             attrs={"long_name": long_name, "units": units},
         )
 
-    def test_no_nan_in_data_suggests_delete(self):
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_no_nan_in_data_suggests_delete(self, dry_run):
         """If data has no NaNs, default suggestion should be to delete the attribute."""
         data = np.array([[1.0, 2.0], [3.0, 4.0]])
         ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
-        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        _, config = get_var_info(
+            TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False, dry_run=dry_run
+        )
         assert config.default_value == USER_REQ_DELETE
         assert config.allow_delete is True
 
-    def test_nan_in_data_prevents_delete(self):
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_nan_in_data_prevents_delete(self, dry_run):
         """If data has NaNs, deleting the attribute should not be allowed."""
         data = np.array([[1.0, 2.0], [np.nan, 4.0]])
         ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
-        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        _, config = get_var_info(
+            TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False, dry_run=dry_run
+        )
         assert config.default_value != USER_REQ_DELETE
         assert config.allow_delete is False
 
@@ -255,7 +268,9 @@ class TestGetVarInfo:
         """For some minimum values, default should be -999."""
         data = np.array([[data_min, 20.0], [np.nan, 40.0]])
         ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
-        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        _, config = get_var_info(
+            TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False, dry_run=False
+        )
         assert config.default_value == -999
 
     def test_special_varname_prefix_defaults_to_neg999(self):
@@ -263,7 +278,9 @@ class TestGetVarInfo:
         var_name = VARSTARTS_TO_DEFAULT_NEG999[0] + "weuuewriebr"
         data = np.array([[-50.0, 20.0], [np.nan, 40.0]])
         ds = self._create_test_dataset(data, var_name, "Fertilizer", "g/m2")
-        _, config = get_var_info(var_name, ds, "/path/to/file", delete_if_none_filled=False)
+        _, config = get_var_info(
+            var_name, ds, "/path/to/file", delete_if_none_filled=False, dry_run=False
+        )
         assert config.default_value == -999
 
     @pytest.mark.parametrize(
@@ -278,14 +295,17 @@ class TestGetVarInfo:
         var_name = "grid1_to_grid2"
         data = np.array([[-50.0, 20.0], [np.nan, 40.0]])
         ds = self._create_test_dataset(data, var_name, "Mapping", "none")
-        _, config = get_var_info(var_name, ds, abs_path, delete_if_none_filled=False)
+        _, config = get_var_info(var_name, ds, abs_path, delete_if_none_filled=False, dry_run=False)
         assert config.default_value == expected
 
-    def test_no_special_case_no_default(self):
+    @pytest.mark.parametrize("dry_run", [False, True])
+    def test_no_special_case_no_default(self, dry_run):
         """If no special condition is met, there should be no default value."""
         data = np.array([[-50.0, -20.0], [np.nan, -10.0]])
         ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
-        _, config = get_var_info(TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False)
+        _, config = get_var_info(
+            TEST_VAR_NAME, ds, "/path/to/file", delete_if_none_filled=False, dry_run=dry_run
+        )
         assert config.default_value is None
 
     def test_returns_correct_var_context(self):
@@ -293,7 +313,9 @@ class TestGetVarInfo:
         data = np.array([[1.0, 2.0]], dtype=np.float32)
         ds = self._create_test_dataset(data, TEST_VAR_NAME, "Test Variable", "test_units")
         file_path = "/path/to/file.nc"
-        var_context, _ = get_var_info(TEST_VAR_NAME, ds, file_path, delete_if_none_filled=False)
+        var_context, _ = get_var_info(
+            TEST_VAR_NAME, ds, file_path, delete_if_none_filled=False, dry_run=False
+        )
         assert var_context.var_name == TEST_VAR_NAME
         assert var_context.target_type == float
         assert var_context.file_path == file_path

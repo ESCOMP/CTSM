@@ -57,11 +57,13 @@ class VarContext:
         var_name: Name of the variable
         target_type: Type to convert user input to (e.g., float, int)
         file_path: Optional path to the netCDF file (for ncdump on Ctrl-C)
+        dry_run: If true, just print vars to process (and defaults, if any).
     """
 
     var_name: str
     target_type: type
     file_path: str | None = None
+    dry_run: bool = False
 
 
 @dataclass
@@ -249,7 +251,7 @@ def show_ncdump_for_variable(file_path: str | None, var_name: str) -> None:
 
 
 def get_var_info(
-    var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled: bool
+    var: str, ds: xr.Dataset, abs_path: str, delete_if_none_filled: bool, dry_run: bool
 ) -> Tuple[VarContext, FillValueConfig]:
     """
     Process a single variable to get information to be used as settings.
@@ -261,6 +263,7 @@ def get_var_info(
         da: xarray DataArray for the variable
         abs_path: Absolute path to the file (for context in defaults)
         delete_if_none_filled: If True, automatically use delete when it's the default
+        dry_run: If true, just print vars to process (and defaults, if any).
 
     Returns:
         VarContext: Information about the variable
@@ -304,7 +307,9 @@ def get_var_info(
         print(f"    WARNING: Data contains NaN values - cannot delete {ATTR}")
 
     # Save and return info
-    var_context = VarContext(var_name=var, target_type=type(nanmin), file_path=abs_path)
+    var_context = VarContext(
+        var_name=var, target_type=type(nanmin), file_path=abs_path, dry_run=dry_run
+    )
     config = FillValueConfig(
         default_value=default_fill,
         allow_delete=not data_has_nan,
@@ -423,8 +428,8 @@ def _handle_ctrl_c(ctrl_c_count: int, user_input: str | None, var_context: VarCo
     """
     ctrl_c_count += 1
 
-    # If this is the second Ctrl-C or the user requested quit, exit
-    if ctrl_c_count >= 2 or user_input == USER_REQ_QUIT:
+    # If this is the second Ctrl-C or the user requested quit or dry run, exit
+    if ctrl_c_count >= 2 or user_input == USER_REQ_QUIT or var_context.dry_run:
         if ctrl_c_count >= 2:
             print("\n    [Ctrl-C pressed again - exiting]")
         else:
@@ -454,7 +459,11 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
     """
     # If delete_if_none_filled is enabled and default is delete, use it automatically
     if config.delete_if_none_filled and config.default_value == USER_REQ_DELETE:
-        print(f"    Auto-deleting {ATTR} attribute, since no elements are filled")
+        if var_context.dry_run:
+            prefix = "Would auto-delete"
+        else:
+            prefix = "Auto-deleting"
+        print(f"    {prefix} {ATTR} attribute, since no elements are filled")
         return USER_REQ_DELETE
 
     ctrl_c_count = 0
@@ -466,7 +475,15 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
             prompt = f"    New fill value for '{var_context.var_name}'"
             if config.default_value is not None:
                 prompt += f" [default: {config.default_value}]"
-            prompt += ": "
+            if not var_context.dry_run:
+                prompt += ": "
+            elif config.delete_if_none_filled:
+                prompt += "; would automatically mark for deletion"
+
+            # Skip variable if dry run
+            if var_context.dry_run:
+                print(prompt)
+                return USER_REQ_SKIP_VAR
 
             user_input = input(prompt).strip()
 
@@ -494,6 +511,7 @@ def collect_new_fill_values(
     matches: list[tuple[str, str]],
     progress_file: str = PROGRESS_FILE,
     delete_if_none_filled: bool = False,
+    dry_run: bool = False,
 ) -> dict[str, dict[str, Any]]:
     """
     Interactively collect new fill values for variables with NaN fill values, looping through files.
@@ -504,6 +522,7 @@ def collect_new_fill_values(
         matches: List of tuples (relative_path, absolute_path) for files to process
         progress_file: Path to save/load progress (default: PROGRESS_FILE)
         delete_if_none_filled: If True, automatically use delete when it's the default
+        dry_run: If true, just print vars to process (and defaults, if any).
 
     Returns:
         Dictionary mapping absolute file paths to dictionaries of {variable_name: new_fill_value}
@@ -532,7 +551,12 @@ def collect_new_fill_values(
     try:
         for path_from_xml, abs_path in matches:
             _collect_fill_values_one_path(
-                progress_file, delete_if_none_filled, all_new_fill_values, path_from_xml, abs_path
+                progress_file=progress_file,
+                delete_if_none_filled=delete_if_none_filled,
+                all_new_fill_values=all_new_fill_values,
+                path_from_xml=path_from_xml,
+                abs_path=abs_path,
+                dry_run=dry_run,
             )
 
     except KeyboardInterrupt:
@@ -548,6 +572,7 @@ def _collect_fill_values_one_path(
     all_new_fill_values: str,
     path_from_xml: str,
     abs_path: str,
+    dry_run: bool,
 ):
     """
     Interactively collect new fill values for variables in one file with NaN fill values.
@@ -565,6 +590,7 @@ def _collect_fill_values_one_path(
                              {variable_name: new_fill_value}
         path_from_xml: The path of the file as written in the XML file
         abs_path: Absolute path to the file.
+        dry_run: If true, just print vars to process (and defaults, if any).
 
     Returns:
         Dictionary mapping absolute file paths to dictionaries of {variable_name: new_fill_value}
@@ -596,7 +622,7 @@ def _collect_fill_values_one_path(
             continue
 
         # Process this variable to get new fill value
-        var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled)
+        var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled, dry_run)
         try:
             new_fill_value = get_fill_value_from_user(var_context, config)
         except ValueError as e:
@@ -611,6 +637,9 @@ def _collect_fill_values_one_path(
             # Otherwise re-raise
             raise
 
+        if dry_run:
+            continue
+
         # Handle new fill value (or other user input)
         new_fill_values[var] = new_fill_value
 
@@ -621,9 +650,10 @@ def _collect_fill_values_one_path(
     ds.close()
 
     # Print summary for this file
-    print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
-    for var, fill_val in new_fill_values.items():
-        print(f"    {var}: {fill_val}")
+    if not dry_run:
+        print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+        for var, fill_val in new_fill_values.items():
+            print(f"    {var}: {fill_val}")
 
 
 def check_write_access(file_path: str) -> bool:
@@ -708,18 +738,27 @@ def main() -> int:
         action="store_true",
         help="Automatically use 'delete' if variable has no filled elements (no prompt)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help=(
+            "Print the variables that would be processed (and their defaults, if any), but don't"
+            " request user input or save anything."
+        ),
+    )
     args = parser.parse_args()
 
     # Check write access to progress file before starting
-    print("Checking write access for progress file...")
-    if not check_write_access(PROGRESS_FILE):
-        print(f"Error: No write access to create/update {PROGRESS_FILE}", file=sys.stderr)
-        print(
-            f"Please check permissions in directory: {os.path.dirname(PROGRESS_FILE) or '.'}",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    print(f"✓ Write access confirmed for {PROGRESS_FILE}\n")
+    if not args.dry_run:
+        print("Checking write access for progress file...")
+        if not check_write_access(PROGRESS_FILE):
+            print(f"Error: No write access to create/update {PROGRESS_FILE}", file=sys.stderr)
+            print(
+                f"Please check permissions in directory: {os.path.dirname(PROGRESS_FILE) or '.'}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print(f"✓ Write access confirmed for {PROGRESS_FILE}\n")
 
     print("Extracting file paths from XML...")
     xml_paths = extract_file_paths_from_xml(XML_FILE)
@@ -765,7 +804,9 @@ def main() -> int:
     print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
 
     # Collect new fill values from user
-    collect_new_fill_values(matches, delete_if_none_filled=args.delete_if_none_filled)
+    collect_new_fill_values(
+        matches, delete_if_none_filled=args.delete_if_none_filled, dry_run=args.dry_run
+    )
 
     return 0
 
