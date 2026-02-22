@@ -13,8 +13,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import ATTR
+from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_SKIP_FILE, USER_REQ_QUIT
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
+    collect_new_fill_values,
     extract_file_paths_from_xml,
     load_progress,
     main as main_func,
@@ -428,3 +429,134 @@ class TestProgressFunctions:
             save_progress({"some": "data"}, "/readonly/path/progress.json")
             captured = capsys.readouterr()
             assert "Warning: Could not save progress" in captured.err
+
+
+class TestCollectNewFillValues:
+    """Test the collect_new_fill_values function using real files."""
+
+    def _create_test_netcdf(self, path, var_dict):
+        """Helper function to create a NetCDF file for testing."""
+        ds = xr.Dataset()
+        for var_name, properties in var_dict.items():
+            ds[var_name] = xr.DataArray(
+                properties["data"],
+                dims=["time"],
+                attrs=properties["attrs"],
+            )
+        ds.to_netcdf(path)
+        ds.close()
+
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
+        return_value={},
+    )
+    @patch("builtins.input", side_effect=["-999"])
+    def test_user_provides_number(self, mock_input, mock_load, mock_save, tmp_path, capsys):
+        """Test happy path where user provides a numeric fill value."""
+        test_file = tmp_path / "test.nc"
+        self._create_test_netcdf(
+            test_file,
+            {
+                "temp": {
+                    "data": np.array([1.0, 2.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan), "long_name": "temperature"},
+                }
+            },
+        )
+
+        matches = [("rel/path/test.nc", str(test_file))]
+        result = collect_new_fill_values(matches)
+
+        # Check final result
+        expected_fill_value = -999.0
+        assert result == {str(test_file): {"temp": expected_fill_value}}
+
+        # Check what was saved
+        mock_save.assert_called_once()
+        saved_data = mock_save.call_args[0][0]
+        saved_fill_value = saved_data[str(test_file)]["temp"]
+        assert saved_fill_value == expected_fill_value
+        assert isinstance(saved_fill_value, float)
+
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
+        return_value={},
+    )
+    @patch("builtins.input", side_effect=[USER_REQ_SKIP_FILE])
+    def test_user_skips_file(self, mock_input, mock_load, mock_save, tmp_path):
+        """Test that requesting skipfile skips the current file."""
+        test_file = tmp_path / "test.nc"
+        self._create_test_netcdf(
+            test_file,
+            {
+                "temp": {
+                    "data": np.array([1.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan)},
+                },
+                "precip": {
+                    "data": np.array([2.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan)},
+                },
+            },
+        )
+        matches = [("rel/path/test.nc", str(test_file))]
+        result = collect_new_fill_values(matches)
+
+        # 'temp' is processed, user skips, neither it nor 'precip' are in results
+        assert result == {str(test_file): {}}
+        # Progress was never saved
+        mock_save.assert_not_called()
+
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
+        return_value={},
+    )
+    @patch("builtins.input", side_effect=["-100", USER_REQ_SKIP_FILE])
+    def test_user_enters_then_skips_file(self, mock_input, mock_load, mock_save, tmp_path):
+        """Test that requesting skipfile skips the current file but saves entered results."""
+        test_file = tmp_path / "test.nc"
+        self._create_test_netcdf(
+            test_file,
+            {
+                "temp": {
+                    "data": np.array([1.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan)},
+                },
+                "precip": {
+                    "data": np.array([2.0], dtype=np.float32),
+                    "attrs": {ATTR: np.float32(np.nan)},
+                },
+            },
+        )
+        matches = [("rel/path/test.nc", str(test_file))]
+        result = collect_new_fill_values(matches)
+
+        # 'temp' is processed, user enters so it saves, then precip is skipped
+        assert result == {str(test_file): {"temp": -100.0}}
+        # Progress was saved only after temp
+        mock_save.assert_called_once()
+
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
+        return_value={},
+    )
+    @patch("builtins.input", side_effect=[USER_REQ_QUIT])
+    def test_user_quits(self, mock_input, mock_load, mock_save, tmp_path):
+        """Test that requesting quit exits the collection loop."""
+        test_file = tmp_path / "test.nc"
+        self._create_test_netcdf(
+            test_file,
+            {"temp": {"data": [1.0], "attrs": {ATTR: np.nan}}},
+        )
+        matches = [("rel/path/test.nc", str(test_file))]
+
+        with pytest.raises(SystemExit) as e:
+            collect_new_fill_values(matches)
+        assert e.value.code == 0
+
+        # No value was collected, so save_progress is not called
+        mock_save.assert_not_called()
