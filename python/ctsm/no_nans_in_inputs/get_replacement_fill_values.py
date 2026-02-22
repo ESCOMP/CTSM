@@ -496,13 +496,9 @@ def collect_new_fill_values(
     delete_if_none_filled: bool = False,
 ) -> dict[str, dict[str, Any]]:
     """
-    Interactively collect new fill values for variables with NaN fill values.
+    Interactively collect new fill values for variables with NaN fill values, looping through files.
 
-    For each file in matches, opens the file, identifies variables with NaN fill values,
-    displays their properties, and prompts the user to enter new fill values.
-
-    Progress is automatically saved after each variable. User can type 'quit' to save and exit,
-    or 'skip' to skip a variable.
+    See _collect_fill_values_one_path(), which processes individual files, for more information.
 
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
@@ -535,69 +531,99 @@ def collect_new_fill_values(
 
     try:
         for path_from_xml, abs_path in matches:
-            print(f"\n{'=' * SEP_LENGTH}")
-            print(f"Processing: {path_from_xml}")
-            print(f"Full path:  {abs_path}")
-            print(f"{'=' * SEP_LENGTH}")
-
-            # Get or create dictionary for this file's fill values
-            if abs_path not in all_new_fill_values:
-                all_new_fill_values[abs_path] = {}
-            new_fill_values = all_new_fill_values[abs_path]
-
-            # Open the dataset
-            ds = xr.open_dataset(
-                abs_path, decode_cf=False, decode_timedelta=False, decode_times=False
+            _collect_fill_values_one_path(
+                progress_file, delete_if_none_filled, all_new_fill_values, path_from_xml, abs_path
             )
-
-            # Get all variables (both data and coordinate variables)
-            all_vars = list(ds.data_vars) + list(ds.coords)
-
-            # Loop through all variables
-            for var in all_vars:
-                if not var_has_nan_fill(ds, var):
-                    continue
-
-                # Skip variables we've already processed
-                if var in new_fill_values:
-                    print(f"\n  Variable: {var} [already processed, skipping]")
-                    continue
-
-                # Process this variable to get new fill value
-                var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled)
-                try:
-                    new_fill_value = get_fill_value_from_user(var_context, config)
-                except ValueError as e:
-                    # Check if this is the skip variable signal
-                    if str(e) == ERR_STR_SKIP_VAR:
-                        print(f"    Skipping variable '{var}'")
-                        continue
-                    # Check if this is the skip file signal
-                    if str(e) == ERR_STR_SKIP_FILE:
-                        print("    Skipping rest of file")
-                        break
-                    # Otherwise re-raise
-                    raise
-
-                # Handle new fill value (or other user input)
-                new_fill_values[var] = new_fill_value
-
-                # Save progress after each variable
-                save_progress(all_new_fill_values, progress_file)
-
-            # Close the dataset
-            ds.close()
-
-            # Print summary for this file
-            print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
-            for var, fill_val in new_fill_values.items():
-                print(f"    {var}: {fill_val}")
 
     except KeyboardInterrupt:
         print("Exiting.")
         sys.exit(0)
 
     return all_new_fill_values
+
+
+def _collect_fill_values_one_path(
+    progress_file: str,
+    delete_if_none_filled: bool,
+    all_new_fill_values: str,
+    path_from_xml: str,
+    abs_path: str,
+):
+    """
+    Interactively collect new fill values for variables in one file with NaN fill values.
+
+    Opens the file, identifies variables with NaN fill values, displays their properties, and
+    prompts the user to enter new fill values.
+
+    Progress is automatically saved after each variable. User can type 'quit' to save and exit,
+    or 'skip' to skip a variable.
+
+    Args:
+        progress_file: Path to save/load progress
+        delete_if_none_filled: If True, automatically use delete when it's the default
+        all_new_fill_values: Dictionary mapping absolute file paths to dictionaries of
+                             {variable_name: new_fill_value}
+        path_from_xml: The path of the file as written in the XML file
+        abs_path: Absolute path to the file.
+
+    Returns:
+        Dictionary mapping absolute file paths to dictionaries of {variable_name: new_fill_value}
+    """
+    print(f"\n{'=' * SEP_LENGTH}")
+    print(f"Processing: {path_from_xml}")
+    print(f"Full path:  {abs_path}")
+    print(f"{'=' * SEP_LENGTH}")
+
+    # Get or create dictionary for this file's fill values
+    if abs_path not in all_new_fill_values:
+        all_new_fill_values[abs_path] = {}
+    new_fill_values = all_new_fill_values[abs_path]
+
+    # Open the dataset
+    ds = xr.open_dataset(abs_path, decode_cf=False, decode_timedelta=False, decode_times=False)
+
+    # Get all variables (both data and coordinate variables)
+    all_vars = list(ds.data_vars) + list(ds.coords)
+
+    # Loop through all variables
+    for var in all_vars:
+        if not var_has_nan_fill(ds, var):
+            continue
+
+        # Skip variables we've already processed
+        if var in new_fill_values:
+            print(f"\n  Variable: {var} [already processed, skipping]")
+            continue
+
+        # Process this variable to get new fill value
+        var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled)
+        try:
+            new_fill_value = get_fill_value_from_user(var_context, config)
+        except ValueError as e:
+            # Check if this is the skip variable signal
+            if str(e) == ERR_STR_SKIP_VAR:
+                print(f"    Skipping variable '{var}'")
+                continue
+            # Check if this is the skip file signal
+            if str(e) == ERR_STR_SKIP_FILE:
+                print("    Skipping rest of file")
+                break
+            # Otherwise re-raise
+            raise
+
+        # Handle new fill value (or other user input)
+        new_fill_values[var] = new_fill_value
+
+        # Save progress after each variable
+        save_progress(all_new_fill_values, progress_file)
+
+    # Close the dataset
+    ds.close()
+
+    # Print summary for this file
+    print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+    for var, fill_val in new_fill_values.items():
+        print(f"    {var}: {fill_val}")
 
 
 def check_write_access(file_path: str) -> bool:
