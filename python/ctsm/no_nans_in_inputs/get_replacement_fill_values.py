@@ -77,8 +77,6 @@ class FillValueConfig:
     delete_if_none_filled: bool = False
 
 
-
-
 def extract_file_paths_from_xml(xml_file: str) -> set[str]:
     """
     Extract all file paths from the XML file.
@@ -565,14 +563,8 @@ def collect_new_fill_values(
 
                 # Process this variable to get new fill value
                 var_context, config = get_var_info(var, ds, abs_path, delete_if_none_filled)
-                new_fill_value = get_fill_value_from_user(var_context, config)
-
-                # Handle new fill value (or other user input)
                 try:
-                    new_fill_values[var] = new_fill_value
-
-                    # Save progress after each variable
-                    save_progress(all_new_fill_values, progress_file)
+                    new_fill_value = get_fill_value_from_user(var_context, config)
                 except ValueError as e:
                     # Check if this is the skip variable signal
                     if str(e) == "SKIP_VARIABLE":
@@ -584,6 +576,12 @@ def collect_new_fill_values(
                         break
                     # Otherwise re-raise
                     raise
+
+                # Handle new fill value (or other user input)
+                new_fill_values[var] = new_fill_value
+
+                # Save progress after each variable
+                save_progress(all_new_fill_values, progress_file)
 
             # Close the dataset
             ds.close()
