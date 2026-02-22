@@ -13,7 +13,12 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_SKIP_FILE, USER_REQ_QUIT
+from ctsm.no_nans_in_inputs.constants import (
+    ATTR,
+    USER_REQ_DELETE,
+    USER_REQ_SKIP_FILE,
+    USER_REQ_QUIT,
+)
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
     extract_file_paths_from_xml,
@@ -393,7 +398,7 @@ class TestProgressFunctions:
         """Test that data is saved and loaded correctly."""
         progress_file = tmp_path / "progress.json"
         data_to_save = {
-            "/path/to/file1.nc": {"var1": -999, "var2": "delete"},
+            "/path/to/file1.nc": {"var1": -999, "var2": USER_REQ_DELETE},
             "/path/to/file2.nc": {"var3": -999.0},
         }
 

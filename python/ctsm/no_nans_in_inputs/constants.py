@@ -15,5 +15,9 @@ USER_REQ_SKIP_VAR = "skip"
 USER_REQ_SKIP_FILE = "skipfile"
 USER_REQ_DELETE = "delete"
 
+# Error strings corresponding to special user commands
+ERR_STR_SKIP_VAR = "SKIP_VARIABLE"
+ERR_STR_SKIP_FILE = "SKIP_FILE"
+
 # Output formatting
 SEP_LENGTH = 80  # Length of horizontal separators in stdout

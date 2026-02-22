@@ -29,6 +29,8 @@ if _CTSM_PYTHON not in sys.path:
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     ATTR,
+    ERR_STR_SKIP_FILE,
+    ERR_STR_SKIP_VAR,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
     USER_REQ_DELETE,
@@ -331,9 +333,9 @@ def _handle_special_command(user_input: str, allow_delete: bool) -> Any | None:
     if lower_input == USER_REQ_QUIT:
         raise KeyboardInterrupt("User requested quit")
     if lower_input == USER_REQ_SKIP_VAR:
-        raise ValueError("SKIP_VARIABLE")
+        raise ValueError(ERR_STR_SKIP_VAR)
     if lower_input == USER_REQ_SKIP_FILE:
-        raise ValueError("SKIP_FILE")
+        raise ValueError(ERR_STR_SKIP_FILE)
     if lower_input == USER_REQ_DELETE:
         if not allow_delete:
             print(f"    Error: Cannot delete {ATTR} - variable contains NaN values")
@@ -567,11 +569,11 @@ def collect_new_fill_values(
                     new_fill_value = get_fill_value_from_user(var_context, config)
                 except ValueError as e:
                     # Check if this is the skip variable signal
-                    if str(e) == "SKIP_VARIABLE":
+                    if str(e) == ERR_STR_SKIP_VAR:
                         print(f"    Skipping variable '{var}'")
                         continue
                     # Check if this is the skip file signal
-                    if str(e) == "SKIP_FILE":
+                    if str(e) == ERR_STR_SKIP_FILE:
                         print("    Skipping rest of file")
                         break
                     # Otherwise re-raise

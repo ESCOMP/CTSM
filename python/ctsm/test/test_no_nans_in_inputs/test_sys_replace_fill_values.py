@@ -41,7 +41,7 @@ class TestLoadNewFillvalues:
         """Test loading a valid JSON file."""
         test_file = tmp_path / "test_fillvalues.json"
         test_data = {
-            "/path/to/file1.nc": {"var1": -999.0, "var2": "delete"},
+            "/path/to/file1.nc": {"var1": -999.0, "var2": USER_REQ_DELETE},
             "/path/to/file2.nc": {"var3": -999},
         }
         test_file.write_text(json.dumps(test_data), encoding="utf-8")

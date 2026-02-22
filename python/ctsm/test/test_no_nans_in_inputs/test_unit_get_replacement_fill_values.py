@@ -8,6 +8,8 @@ import pytest
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
+    ERR_STR_SKIP_FILE,
+    ERR_STR_SKIP_VAR,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
     USER_REQ_SKIP_FILE,
@@ -71,13 +73,13 @@ class TestGetFillValueFromUser:
     def test_skip_variable(self, monkeypatch):
         """Test that 'skip' raises ValueError with SKIP_VARIABLE."""
         monkeypatch.setattr("builtins.input", lambda _: USER_REQ_SKIP_VAR)
-        with pytest.raises(ValueError, match="SKIP_VARIABLE"):
+        with pytest.raises(ValueError, match=ERR_STR_SKIP_VAR):
             get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
 
     def test_skip_file(self, monkeypatch):
         """Test that 'skipfile' raises ValueError with SKIP_FILE."""
         monkeypatch.setattr("builtins.input", lambda _: USER_REQ_SKIP_FILE)
-        with pytest.raises(ValueError, match="SKIP_FILE"):
+        with pytest.raises(ValueError, match=ERR_STR_SKIP_FILE):
             get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
 
     def test_quit(self, monkeypatch):
