@@ -1179,6 +1179,14 @@ contains
          ! place the conversion once in w_d_o_scalars
          tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod / &
                   secsphr
+         ! WW testing adding temperature threshold for microbial turnover
+         ! Here with copios shutting down in cold temps 
+         ! TODO, make min soil temperatures and scaling factor parameters
+
+         !IF (t_soi_degC < 1._r8) THEN
+         !  tau_m1 = tau_m1 * 2._r8
+         !END IF
+
          tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod / &
                   secsphr
 
