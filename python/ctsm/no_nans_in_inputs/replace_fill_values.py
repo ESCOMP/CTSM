@@ -28,6 +28,7 @@ import xarray as xr  # pylint: disable=wrong-import-position
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
     NEW_FILLVALUES_FILE,
+    OPEN_DS_KWARGS,
     SEP_LENGTH,
     USER_REQ_DELETE,
     XML_FILE,
@@ -156,7 +157,7 @@ def build_ncatted_command(
         raise ValueError(f"Input and output files are the same: {input_file} -> {input_real}")
 
     # Open the input file to get actual data types
-    ds = xr.open_dataset(input_file, decode_cf=False, decode_timedelta=False, decode_times=False)
+    ds = xr.open_dataset(input_file, **OPEN_DS_KWARGS)
 
     cmd = ["ncatted", "-O"]  # -O flag to overwrite without prompting
 

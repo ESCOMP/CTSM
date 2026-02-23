@@ -32,6 +32,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     ERR_STR_SKIP_FILE,
     ERR_STR_SKIP_VAR,
     NEW_FILLVALUES_FILE,
+    OPEN_DS_KWARGS,
     SEP_LENGTH,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
@@ -190,10 +191,10 @@ def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
               False otherwise
     """
     da = ds[var]
-    if not attr in da.attrs:
+    if not attr in da.encoding:
         return False
     try:
-        result = np.isnan(da.attrs[attr])
+        result = np.isnan(da.encoding[attr])
     except TypeError:
         return False
     return result
@@ -606,7 +607,7 @@ def _collect_fill_values_one_path(
     new_fill_values = all_new_fill_values[abs_path]
 
     # Open the dataset
-    ds = xr.open_dataset(abs_path, decode_cf=False, decode_timedelta=False, decode_times=False)
+    ds = xr.open_dataset(abs_path, **OPEN_DS_KWARGS)
 
     # Get all variables (both data and coordinate variables)
     all_vars = list(ds.data_vars) + list(ds.coords)
@@ -784,7 +785,8 @@ def main() -> int:
 
             # Check that the file actually has NaN _FillValue for at least one var
             ds = xr.open_dataset(
-                abs_path, decode_cf=False, decode_timedelta=False, decode_times=False
+                abs_path,
+                **OPEN_DS_KWARGS,
             )
             any_nan_fill = False
             for var in ds:

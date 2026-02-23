@@ -21,3 +21,6 @@ ERR_STR_SKIP_FILE = "SKIP_FILE"
 
 # Output formatting
 SEP_LENGTH = 80  # Length of horizontal separators in stdout
+
+# Keyword arguments we want to include in every xarray.open_dataset() call.
+OPEN_DS_KWARGS = {"decode_timedelta": False, "decode_times": False}

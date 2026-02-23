@@ -15,6 +15,7 @@ import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
+    OPEN_DS_KWARGS,
     USER_REQ_DELETE,
     USER_REQ_SKIP_FILE,
     USER_REQ_QUIT,
@@ -185,9 +186,7 @@ class TestVarHasNanFill:
         # Use encoding to set (or suppress) the _FillValue
         encoding = {"temp": {ATTR: fill_value}}
         ds.to_netcdf(str(test_file), encoding=encoding)
-        ds_read = xr.open_dataset(
-            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
-        )
+        ds_read = xr.open_dataset(str(test_file), **OPEN_DS_KWARGS)
         assert var_has_nan_fill(ds_read, "temp") == expected
         ds_read.close()
 
@@ -210,7 +209,8 @@ class TestVarHasNanFill:
         )
         ds.to_netcdf(str(test_file))
         ds_read = xr.open_dataset(
-            str(test_file), decode_cf=False, decode_timedelta=False, decode_times=False
+            str(test_file),
+            **OPEN_DS_KWARGS,
         )
         assert var_has_nan_fill(ds_read, "has_nan")
         assert not var_has_nan_fill(ds_read, "no_nan")
@@ -314,9 +314,7 @@ class TestMain:
         mock_load_bad.assert_called_once()
         mock_open_dataset.assert_called_once_with(
             "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
-            decode_cf=False,
-            decode_timedelta=False,
-            decode_times=False,
+            **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
         mock_collect.assert_called_once()
@@ -382,9 +380,7 @@ class TestMain:
         mock_load_bad.assert_called_once()
         mock_open_dataset.assert_called_once_with(
             "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
-            decode_cf=False,
-            decode_timedelta=False,
-            decode_times=False,
+            **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
         mock_collect.assert_called_once()

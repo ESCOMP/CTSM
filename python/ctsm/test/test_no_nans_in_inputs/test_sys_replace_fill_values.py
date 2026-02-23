@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE
+from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE, OPEN_DS_KWARGS
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
     execute_command,
@@ -216,19 +216,20 @@ class TestReplaceFullWorkflow:
 
         # Open and check the output file
         ds_out = xr.open_dataset(
-            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+            output_file,
+            **OPEN_DS_KWARGS,
         )
 
         # Check temp variable - should have new fill value
         assert TEST_VAR_TEMP in ds_out
-        assert ATTR in ds_out[TEST_VAR_TEMP].attrs
-        assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
+        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
+        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
         # Data should be unchanged except fill value
         assert ds_out[TEST_VAR_TEMP].shape == (4,)
 
         # Check pressure variable - fill value should be deleted
         assert TEST_VAR_PRESSURE in ds_out
-        assert ATTR not in ds_out[TEST_VAR_PRESSURE].attrs
+        assert ATTR not in ds_out[TEST_VAR_PRESSURE].encoding
 
         ds_out.close()
 
@@ -313,11 +314,12 @@ class TestReplaceFullWorkflow:
 
         # Output file should now be a valid NetCDF file
         ds_out = xr.open_dataset(
-            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+            output_file,
+            **OPEN_DS_KWARGS,
         )
         assert TEST_VAR_TEMP in ds_out
-        assert ATTR in ds_out[TEST_VAR_TEMP].attrs
-        assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
+        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
+        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
         ds_out.close()
 
         # Verify XML was updated
@@ -373,19 +375,28 @@ class TestExecuteCommand:
             A function that creates the test netCDF file and returns its path.
         """
 
-        def _create(*, netcdf_format: str = "NETCDF4_CLASSIC") -> str:
+        def _create(
+            *, netcdf_format: str = "NETCDF4_CLASSIC", first_value: np.float32 = 1.0
+        ) -> str:
             test_nc = str(tmp_path / "test_input.nc")
+            nan_fill = np.float32(np.nan)
             ds = xr.Dataset(
                 {
                     TEST_VAR_TEMP: xr.DataArray(
-                        np.array([1.0, 2.0, 3.0], dtype=np.float32),
+                        np.array([first_value, 2.0, 3.0], dtype=np.float32),
                         dims=["time"],
-                        attrs={ATTR: np.float32(np.nan)},
                     ),
                 }
             )
-            ds.to_netcdf(test_nc, format=netcdf_format)
+            ds.to_netcdf(test_nc, format=netcdf_format, encoding={TEST_VAR_TEMP: {ATTR: nan_fill}})
             ds.close()
+
+            # Check fill value
+            ds = xr.open_dataset(test_nc, mask_and_scale=True, **OPEN_DS_KWARGS)
+            assert ATTR in ds[TEST_VAR_TEMP].encoding
+            assert np.isnan(ds[TEST_VAR_TEMP].encoding[ATTR])
+            ds.close()
+
             return test_nc
 
         return _create
@@ -437,11 +448,12 @@ class TestExecuteCommand:
 
         # Verify the output file is valid NetCDF with correct fill value
         ds_out = xr.open_dataset(
-            output_file, decode_cf=False, decode_timedelta=False, decode_times=False
+            output_file,
+            **OPEN_DS_KWARGS,
         )
         assert TEST_VAR_TEMP in ds_out
-        assert ATTR in ds_out[TEST_VAR_TEMP].attrs
-        assert ds_out[TEST_VAR_TEMP].attrs[ATTR] == TEST_FILL_VALUE
+        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
+        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
         ds_out.close()
 
         # Verify formats match
