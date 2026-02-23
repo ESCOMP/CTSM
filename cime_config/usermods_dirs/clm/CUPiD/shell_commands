@@ -20,14 +20,14 @@ fi
 #
 
 # Set the standard CUPiD baseline case to compare to
-./xmlchange CUPID_BASELINE_CASE='CESM_output_for_testing/ctsm5.4.002_clm6_BGCcrop_crujra_4x5_HIST'
+./xmlchange CUPID_BASELINE_CASE='ctsm5.4.002_clm6_BGCcrop_crujra_4x5_HIST'
 # NOTE: This is currently only valid on Derecho
 # TODO: Look into having this available under GDEX and available anywhere via download
-./xmlchange CUPID_BASELINE_ROOT='/glade/campaign/cesm/development/cross-wg/diagnostic_framework'
-./xmlchange CUPID_BASE_STARTDATE='1850-01-01'
-./xmlchange CUPID_BASE_CLIMO_END_YEAR=2023
-./xmlchange CUPID_BASE_CLIMO_N_YEAR=25
-./xmlchange CUPID_BASE_STOP_N=172
+./xmlchange CUPID_BASELINE_ROOT='/glade/campaign/cesm/development/cross-wg/diagnostic_framework/CESM_output_for_testing'
+./xmlchange CUPID_BASE_STARTDATE='1995-01-01'
+./xmlchange CUPID_BASE_CLIMO_END_YEAR=1995
+./xmlchange CUPID_BASE_CLIMO_N_YEAR=10
+./xmlchange CUPID_BASE_STOP_N=20
 ./xmlchange CUPID_BASE_STOP_OPTION='nyears'
 
 #
@@ -43,15 +43,16 @@ fi
 #
 # Setting for specific CUPiD diagnostics to run
 #
-./xmlchange CUPID_GEN_HTML=FALSE
+# NOTE: Create webpages for Tutorial, for testing have this done seperately
+./xmlchange CUPID_GEN_HTML=TRUE
 # TODO: Test with running more tasks
 #./xmlchange CUPID_NTASKS=1
 # TODO: Trigger these to be FALSE only when it is an I compset
 ./xmlchange CUPID_RUN_ADF=FALSE
 ./xmlchange CUPID_RUN_ALL=FALSE
-# Use the land_only example
+# Use the land_only example, with LDF on and ILAMB off
 ./xmlchange CUPID_EXAMPLE=land_only
-./xmlchange CUPID_RUN_LDF=FALSE
+./xmlchange CUPID_RUN_LDF=TRUE
 ./xmlchange CUPID_RUN_ILAMB=FALSE
 # NOTE: CUPID_RUN_LND must be set to TRUE for either LDF or ILAMB
 #       and you should pick one or the other as LND needs key-metrics from one or the other
