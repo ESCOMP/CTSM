@@ -51,7 +51,7 @@ SYNOPSIS
 REQUIRED OPTIONS
      <cs.status files>              cime5 cs.status. file(s) that will be run and parsed
                                     At least one file needs to be given, but you can also
-                                    give a list of space seperated files.
+                                    give a list of space separated files.
 OPTIONS
      -die_on_duplicate              Die if find a duplicate testname
      -summarize [or -s]             Summarize results into lists of tests in categories (pend, pass, fail etc.)
@@ -323,7 +323,7 @@ sub expectedFails {
 }
 
 sub print_categories {
-   # Seperate tests into categories
+   # Separate tests into categories
 
    my $scrdir   = shift(@_);
    my %csstatus = @_;
