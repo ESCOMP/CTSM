@@ -782,6 +782,7 @@ def main() -> int:
             # Check that the file exists
             if not os.path.exists(abs_path):
                 raise FileNotFoundError(abs_path)
+            # TODO: Check that the file is in CESM inputdata dir
 
             print("-" * SEP_LENGTH)
             print(f"In XML:   {path_from_xml}")
@@ -794,6 +795,7 @@ def main() -> int:
             )
             any_nan_fill = False
             for var in ds:
+                # TODO: Make this faster by parsing ncdump -h
                 if var_has_nan_fill(ds, var):
                     any_nan_fill = True
                     break
