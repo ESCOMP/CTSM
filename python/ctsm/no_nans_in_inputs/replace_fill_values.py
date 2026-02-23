@@ -364,6 +364,7 @@ def execute_command(xml_file: str | None, input_file: str, output_file: str, cmd
         if xml_file:
             # Update the XML file with the new output path
             update_xml_file(xml_file, input_file, output_file)
+            # TODO: git commit!
     except subprocess.CalledProcessError as e:
         print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
         if e.stdout:

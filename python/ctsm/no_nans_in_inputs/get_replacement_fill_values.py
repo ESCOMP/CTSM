@@ -174,6 +174,7 @@ def convert_to_absolute_path(relative_path: str) -> str:
         return relative_path
 
     # Otherwise, convert relative path to absolute
+    # TODO: Handle DIN_LOC_ROOT here
     return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
@@ -466,6 +467,9 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
             prefix = "Auto-deleting"
         print(f"    {prefix} {ATTR} attribute, since no elements are filled")
         return USER_REQ_DELETE
+
+    # TODO:  WARN AND ASK FOR CONFIRMATION IF TRYING TO SET FILL VALUE TO SOMETHING ALREADY PRESENT IN DATA
+    # TODO: ALSO LOOK IN ALL OUR USER_NL_CLM FILES
 
     ctrl_c_count = 0
 
