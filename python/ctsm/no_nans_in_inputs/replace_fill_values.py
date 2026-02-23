@@ -215,6 +215,8 @@ def update_xml_file(xml_file: str, old_path: str, new_path: str) -> None:
         for elem in root.iter():
             if elem.text and old_path in elem.text:
                 # Replace the old path with the new path
+                err_msg = f"Not both abs or rel: {old_path=}, {new_path=},"
+                assert os.path.isabs(old_path) == os.path.isabs(new_path), err_msg
                 elem.text = elem.text.replace(old_path, new_path)
                 replacements_made += 1
 
