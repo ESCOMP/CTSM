@@ -463,3 +463,46 @@ class TestExecuteCommand:
             output_format = nc_out.data_model
         assert output_format == input_format
         assert output_format == netcdf_format
+
+    @pytest.mark.parametrize(
+        "first_value, expect_filled",
+        [
+            (np.nan, True),
+            (TEST_FILL_VALUE, True),
+            (150, False),
+            (7.24, False),
+        ],
+    )
+    def test_execute_different_data(self, tmp_path, create_test_nc, first_value, expect_filled):
+        """Test execute_command with different data values."""
+        # Create input file with specified value first
+        input_file = create_test_nc(first_value=first_value)
+
+        # Build and execute the command without XML update (because we're not testing that here)
+        output_file = str(tmp_path / "test_output.nc")
+        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
+        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+        execute_command(None, input_file, output_file, cmd)
+
+        # Verify the output file is valid NetCDF with correct fill value. mask_and_scale True means
+        # that the variable's DataArray's _FillValue attribute will be populated and any filled
+        # values will be NaN.
+        assert os.path.exists(output_file)
+        ds_out = xr.open_dataset(output_file, mask_and_scale=True, **OPEN_DS_KWARGS)
+        assert TEST_VAR_TEMP in ds_out
+        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
+        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
+
+        # If we used a value we expect to be filled, then...
+        if expect_filled:
+            # It should be NaN after reading with mask_and_scale True
+            assert np.isnan(ds_out[TEST_VAR_TEMP].values[0]), str(ds_out[TEST_VAR_TEMP].values)
+            # It should be the fill value after reading with mask_and_scale False
+            ds_out_no_ms = xr.open_dataset(output_file, mask_and_scale=False, **OPEN_DS_KWARGS)
+            assert ds_out_no_ms[TEST_VAR_TEMP].values[0] == TEST_FILL_VALUE
+            ds_out_no_ms.close()
+        # Otherwise, we expect it to be unchanged
+        else:
+            assert ds_out[TEST_VAR_TEMP].values[0] == first_value
+
+        ds_out.close()
