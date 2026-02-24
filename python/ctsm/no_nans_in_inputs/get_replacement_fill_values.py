@@ -44,6 +44,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
 )
 
 # File paths
+# TODO: Remove reliance on this log, as it will be out of date after the first update where I point to new file paths
 BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 
