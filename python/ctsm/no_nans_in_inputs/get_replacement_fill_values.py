@@ -44,8 +44,6 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
 )
 
 # File paths
-# TODO: Remove reliance on this log, as it will be out of date after the first update where I point to new file paths
-BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
@@ -127,41 +125,6 @@ def extract_file_paths_from_xml(xml_file: str) -> set[str]:
                         file_paths.add(token)
 
     return file_paths
-
-
-def load_bad_files(bad_files_log: str, path_filter: str | None = None) -> set[str]:
-    """
-    Load the list of bad files from the log.
-
-    Args:
-        bad_files_log: Path to the bad files log
-        path_filter: Optional string that must be in the file path to include it.
-                     If None, all bad files are included.
-
-    Returns:
-        Set of absolute file paths from the log
-
-    Raises:
-        SystemExit: If file not found
-    """
-    bad_files = set()
-    bad_line_contents = " : NaN_FillValue : "
-
-    try:
-        with open(bad_files_log, "r", encoding="utf-8") as f:
-            for line in f:
-                # Each line starts with the file path followed by " : NaN_FillValue : "
-                if bad_line_contents in line:
-                    file_path = line.split(bad_line_contents)[0].strip()
-                    # Only add files that match our filter (if specified)
-                    if path_filter is None or path_filter in file_path:
-                        bad_files.add(file_path)
-
-    except FileNotFoundError:
-        print(f"Bad files log not found: {bad_files_log}", file=sys.stderr)
-        sys.exit(1)
-
-    return bad_files
 
 
 def convert_to_absolute_path(relative_path: str) -> str:
@@ -747,11 +710,6 @@ def init_progress():
     return progress
 
 
-def abs_path_is_in_bad_files_list(abs_path: str, bad_files: List[str]):
-    """This is just a helper function so we can mock it in testing"""
-    return abs_path in bad_files
-
-
 def main() -> int:
     """
     Main function to find matching file paths and collect new fill values.
@@ -798,51 +756,53 @@ def main() -> int:
     xml_paths = extract_file_paths_from_xml(XML_FILE)
     print(f"Found {len(xml_paths)} file paths in XML")
 
-    print("\nLoading bad files from log...")
-    bad_files = load_bad_files(BAD_FILES_LOG, path_filter=OUR_PATH)
-    print(f"Found {len(bad_files)} bad files in log matching '{OUR_PATH}'")
-
     # Load existing progress if available
     progress = init_progress()
 
     print("\nFinding matches...")
 
+    files_not_found = []
     for path_from_xml in sorted(xml_paths):
         print(f"Finding matches for: {path_from_xml}")
+
+        # Check that the file exists
         abs_path = convert_to_absolute_path(path_from_xml)
-        if abs_path_is_in_bad_files_list(abs_path, bad_files):
-            print(f"Does exist, abs path: {abs_path}")
-            # Check that the file exists
-            if not os.path.exists(abs_path):
-                raise FileNotFoundError(abs_path)
-            # TODO: Check that the file is in CESM inputdata dir
+        if not os.path.exists(abs_path):
+            # TODO: Actually handle files that weren't found, if possible.
+            files_not_found.append(abs_path)
+            continue
+        # TODO: Check that the file is in CESM inputdata dir
 
-            print("-" * SEP_LENGTH)
-            print(f"In XML:   {path_from_xml}")
-            print(f"Absolute: {abs_path}")
+        print(f"Does exist, abs path: {abs_path}")
+        print("-" * SEP_LENGTH)
+        print(f"In XML:   {path_from_xml}")
+        print(f"Absolute: {abs_path}")
 
-            # Check that the file actually has NaN _FillValue for at least one var
-            any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
-            if any_nan_fill:
-                if abs_path not in progress:
-                    progress[abs_path] = create_empty_progress_dict_onefile()
-                progress[abs_path]["found_in_files"][XML_FILE] = path_from_xml
-                progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
-                save_progress(progress, NEW_FILLVALUES_FILE)
-            else:
-                if abs_path in progress:
-                    raise RuntimeError(
-                        f"Found no NaN fills in file but it was in progress dict: {abs_path}"
-                    )
-                print(f"No variable in file has NaN {ATTR}; skipping")
+        # Check that the file actually has NaN _FillValue for at least one var
+        any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
+        if any_nan_fill:
+            if abs_path not in progress:
+                progress[abs_path] = create_empty_progress_dict_onefile()
+            progress[abs_path]["found_in_files"][XML_FILE] = path_from_xml
+            progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
+            save_progress(progress, NEW_FILLVALUES_FILE)
+        else:
+            if abs_path in progress:
+                raise RuntimeError(
+                    f"Found no NaN fills in file but it was in progress dict: {abs_path}"
+                )
+            print(f"No variable in file has NaN {ATTR}; skipping")
 
     print("-" * SEP_LENGTH)
 
     # Summary
     print("\nSummary:")
     print(f"  {len(xml_paths)}\tTotal paths in XML")
-    print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
-    print(f"  {len(progress)}\tMatching files with NaN {ATTR}")
+    print(f"  {len(progress)}\tFiles with NaN {ATTR}")
+    print(f"  {len(files_not_found)}\tFiles not found")
+    if files_not_found:
+        for f in files_not_found:
+            print(f"\t* Not found: '{f}'")
 
     # Collect new fill values from user
     collect_new_fill_values(

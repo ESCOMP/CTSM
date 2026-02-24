@@ -278,15 +278,6 @@ class TestShowNcdumpForVariable:
 class TestMain:
     """Test the main function of get_replacement_fill_values.py."""
 
-    @pytest.fixture(name="mock_bad_files_check", autouse=True)
-    def fixture_mock_bad_files_check(self, monkeypatch):
-        """Make get_replacement_fill_values.abs_path_is_in_bad_files_list() always return True"""
-        monkeypatch.setattr(
-            get_replacement_fill_values,
-            "abs_path_is_in_bad_files_list",
-            lambda *args, **kwargs: True,
-        )
-
     @patch("sys.argv", ["get_replacement_fill_values.py"])
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.check_write_access",
@@ -295,10 +286,6 @@ class TestMain:
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
-    )
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_bad_files",
-        return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
     @patch(
@@ -311,7 +298,6 @@ class TestMain:
         mock_collect,
         mock_file_has_nan,
         mock_exists,
-        mock_load_bad,
         mock_extract,
         mock_check_write,
         tmp_path,
@@ -327,7 +313,6 @@ class TestMain:
 
         assert result == 0
         mock_extract.assert_called_once()
-        mock_load_bad.assert_called_once()
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_collect.assert_called_once()
@@ -355,10 +340,6 @@ class TestMain:
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_bad_files",
-        return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
-    )
     @patch("os.path.exists", return_value=True)
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.get_vars_with_nan_fills",
@@ -370,7 +351,6 @@ class TestMain:
         mock_collect,
         mock_get_vars_with_nan,
         mock_exists,
-        mock_load_bad,
         mock_extract,
         mock_check_write,
         capsys,
@@ -387,7 +367,6 @@ class TestMain:
 
         assert result == 0
         mock_extract.assert_called_once()
-        mock_load_bad.assert_called_once()
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_get_vars_with_nan.assert_called_with(path_to_test_file_abs)
@@ -413,7 +392,7 @@ class TestMain:
         stdout = capsys.readouterr().out
         assert "Checking write access" not in stdout
 
-    @patch("sys.argv", ["get_replacement_fill_values.py", "--delete-if-none-filled"])
+    @patch("sys.argv", ["get_replacement_fill_values.py"])
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.check_write_access",
         return_value=True,
@@ -423,8 +402,53 @@ class TestMain:
         return_value={"lnd/clm2/test.nc"},
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_bad_files",
-        return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.get_vars_with_nan_fills",
+        return_value=["temp"],
+    )
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
+    def test_main_missing_file(
+        self,
+        mock_collect,
+        mock_get_vars_with_nan,
+        mock_extract,
+        mock_check_write,
+        capsys,
+        tmp_path,
+        mock_xml_file_path,
+    ):  # pylint: disable=unused-argument
+        """Test main function with a file that doesn't exist"""
+        # Setup mock dataset
+        mock_ds = MagicMock(spec=xr.Dataset)
+        # Make the mock dataset iterable
+        mock_ds.__iter__.return_value = iter(["temp"])
+
+        result = main_func()
+
+        assert result == 0
+        mock_extract.assert_called_once()
+        path_to_test_file_rel = "lnd/clm2/test.nc"
+        path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
+        mock_get_vars_with_nan.assert_not_called()
+
+        # Check the arguments passed to collect_new_fill_values
+        mock_collect.assert_called_once()
+        args, _ = mock_collect.call_args
+        progress = args[0]
+        assert progress == {}
+
+        # Check stdout
+        stdout = capsys.readouterr().out
+        assert "1\tFiles not found" in stdout
+        assert f"Not found: '{path_to_test_file_abs}'" in stdout
+
+    @patch("sys.argv", ["get_replacement_fill_values.py", "--delete-if-none-filled"])
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.check_write_access",
+        return_value=True,
+    )
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        return_value={"lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
     @patch(
@@ -437,7 +461,6 @@ class TestMain:
         mock_collect,
         mock_file_has_nan,
         mock_exists,
-        mock_load_bad,
         mock_extract,
         mock_check_write,
     ):  # pylint: disable=unused-argument

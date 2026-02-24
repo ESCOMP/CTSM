@@ -56,16 +56,6 @@ def fixture_test_netcdf_file(tmp_path):
     yield str(test_file)
 
 
-@pytest.fixture(name="mock_bad_files_check", autouse=True)
-def fixture_mock_bad_files_check(monkeypatch):
-    """Make get_replacement_fill_values.abs_path_is_in_bad_files_list() always return True"""
-    monkeypatch.setattr(
-        get_replacement_fill_values,
-        "abs_path_is_in_bad_files_list",
-        lambda *args, **kwargs: True,
-    )
-
-
 @pytest.mark.parametrize("abs_or_rel", ["abs", "rel"])
 def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file, abs_or_rel):
     """Test the integrated get -> replace pipeline"""
