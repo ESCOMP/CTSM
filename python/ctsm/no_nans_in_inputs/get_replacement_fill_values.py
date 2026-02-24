@@ -87,7 +87,7 @@ class FillValueConfig:
 
 def extract_file_paths_from_xml(xml_file: str) -> set[str]:
     """
-    Extract all file paths from the XML file.
+    Extract all file paths from an XML file.
 
     Args:
         xml_file: Path to the XML file
@@ -124,6 +124,28 @@ def extract_file_paths_from_xml(xml_file: str) -> set[str]:
                     if OUR_PATH in token:
                         file_paths.add(token)
 
+    return file_paths
+
+
+def extract_file_paths_from_file(file_to_search: str) -> set[str]:
+    """
+    Extract all file paths from a file.
+
+    Args:
+        file_to_search: Path to the file to search
+
+    Returns:
+        Set of file paths found in the file
+
+    Raises:
+        NotImplementedError: If no function exists to process this file
+    """
+
+    _, ext = os.path.splitext(file_to_search)
+    if ext == ".xml":
+        file_paths = extract_file_paths_from_xml(file_to_search)
+    else:
+        raise NotImplementedError(f"Not sure how to get file paths from file: '{file_to_search}'")
     return file_paths
 
 
@@ -753,7 +775,7 @@ def main() -> int:
         print(f"✓ Write access confirmed for {NEW_FILLVALUES_FILE}\n")
 
     print(f"Extracting file paths from XML file: {XML_FILE}")
-    xml_paths = extract_file_paths_from_xml(XML_FILE)
+    xml_paths = extract_file_paths_from_file(XML_FILE)
     print(f"Found {len(xml_paths)} file paths in XML")
 
     # Load existing progress if available

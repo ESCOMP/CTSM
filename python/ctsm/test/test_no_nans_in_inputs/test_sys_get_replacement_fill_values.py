@@ -22,6 +22,7 @@ from ctsm.no_nans_in_inputs.constants import (
 )
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
+    extract_file_paths_from_file,
     extract_file_paths_from_xml,
     file_has_nan_fill,
     get_vars_with_nan_fills,
@@ -44,8 +45,14 @@ TEST_PATH_OTHER = "share/meshes/test_mesh.nc"
 class TestExtractFilePathsFromXml:
     """Test the extract_file_paths_from_xml function."""
 
-    def test_extracts_multiple_paths(self, create_mock_xml_file):
-        """Test extracting multiple file paths from XML."""
+    @pytest.mark.parametrize(
+        "func_to_test", [extract_file_paths_from_xml, extract_file_paths_from_file]
+    )
+    def test_extracts_multiple_paths(self, create_mock_xml_file, func_to_test):
+        """
+        Test extracting multiple file paths from XML, both directly and via
+        extract_file_paths_from_file.
+        """
         xml_path = create_mock_xml_file(
             f"""<?xml version="1.0"?>
 <namelist_defaults>
@@ -55,7 +62,7 @@ class TestExtractFilePathsFromXml:
 </namelist_defaults>
 """
         )
-        result = extract_file_paths_from_xml(xml_path)
+        result = func_to_test(xml_path)
         assert result == {TEST_PATH_PARAM, TEST_PATH_SURF, TEST_PATH_INIT}
 
     def test_ignores_non_lnd_clm2_paths(self, create_mock_xml_file):
