@@ -33,6 +33,8 @@ fi
 #
 # General setup based on the start and length of the case being run
 #
+./xmlchange CUPID_CLIMO_END_YEAR=2004
+./xmlchange CUPID_CLIMO_N_YEAR='$STOP_N'
 # TODO: Have this set based on what CLM_BLDNML_OPTS has
 #./xmlchange CUPID_RUN_TYPE=SP
 ./xmlchange CUPID_STARTDATE='$RUN_STARTDATE'
@@ -45,6 +47,7 @@ fi
 #
 # Setting for specific CUPiD diagnostics to run
 #
+./xmlchange CUPID_GEN_TIMESERIES=FALSE
 # NOTE: Create webpages for Tutorial, for testing have this done seperately
 ./xmlchange CUPID_GEN_HTML=TRUE
 # TODO: Test with running more tasks
