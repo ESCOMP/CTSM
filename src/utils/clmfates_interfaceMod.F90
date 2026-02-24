@@ -3090,10 +3090,10 @@ module CLMFatesInterfaceMod
         hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration
         totsomc       => soilbiogeochem_carbonstate_inst%totsomc_col, & ! (gC/m2) total soil organic matter carbon
         totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col, & ! (gC/m2) total litter carbon in BGC pools
-        eflx_lh_tot   => energyflux_inst%eflx_lh_tot_patch(p), &    ! (W/m2) latent heat flux
-        eflx_sh_tot   => energyflux_inst%eflx_sh_tot_patch(p), &    ! (W/m2) sensible heat flux
-        fsa_patch     => solarabs_inst%fsa_patch(p), &              ! (W/m2) absorbed solar flux
-        eflx_lwrad_net=> energyflux_inst%eflx_lwrad_net_patch(p), & ! (W/m2) net longwave radiative flux
+        eflx_lh_tot   => energyflux_inst%eflx_lh_tot_patch, &    ! (W/m2) latent heat flux
+        eflx_sh_tot   => energyflux_inst%eflx_sh_tot_patch, &    ! (W/m2) sensible heat flux
+        fsa_patch     => solarabs_inst%fsa_patch, &              ! (W/m2) absorbed solar flux
+        eflx_lwrad_net=> energyflux_inst%eflx_lwrad_net_patch, & ! (W/m2) net longwave radiative flux
         t_ref2m       => temperature_inst%t_ref2m_patch)            ! (K) 2-m air temperature
 
       nc = bounds_clump%clump_index
@@ -3120,7 +3120,7 @@ module CLMFatesInterfaceMod
       do s = 1, this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
          do ifp = 0, this%fates(nc)%sites(s)%youngest_patch%patchno
-            p = ifp + col_pp%pfti(c)
+            p = ifp + col%patchi(c)
             this%fates(nc)%bc_in(s)%lhflux_pa(ifp) = eflx_lh_tot(p)
             this%fates(nc)%bc_in(s)%shflux_pa(ifp) = eflx_sh_tot(p)
             this%fates(nc)%bc_in(s)%swabs_pa(ifp)  = fsa_patch(p)
