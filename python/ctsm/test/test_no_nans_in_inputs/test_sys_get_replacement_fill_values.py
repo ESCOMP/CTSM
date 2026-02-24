@@ -24,12 +24,12 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
     extract_file_paths_from_xml,
     file_has_nan_fill,
+    get_vars_with_nan_fills,
     load_progress,
     main as main_func,
     create_empty_progress_dict_onefile,
     save_progress,
     show_ncdump_for_variable,
-    var_has_nan_fill,
 )
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
 
@@ -189,13 +189,13 @@ class TestFileHasNanFill:
         # Use encoding to set (or suppress) the _FillValue
         encoding = {"temp": {ATTR: fill_value}}
         ds.to_netcdf(str(test_file), encoding=encoding)
-        ds_read = xr.open_dataset(str(test_file), **OPEN_DS_KWARGS)
-        assert file_has_nan_fill(str(test_file)) == expected
-        ds_read.close()
+        any_nan_fill, vars_with_nan_fills = file_has_nan_fill(str(test_file))
+        assert any_nan_fill == expected
+        assert len(vars_with_nan_fills) == int(expected)
 
 
-class TestVarHasNanFill:
-    """Test the var_has_nan_fill function."""
+class TestGetVarsWithNanFills:
+    """Test the get_vars_with_nan_fills function."""
 
     @pytest.mark.parametrize(
         "fill_value, expected",
@@ -208,49 +208,23 @@ class TestVarHasNanFill:
         ],
     )
     def test_fill_value_detection(self, tmp_path, fill_value, expected):
-        """Test that var_has_nan_fill correctly detects NaN vs non-NaN vs absent fill values."""
+        """Test that get_vars_with_nan_fills correctly detects NaN/non-NaN/absent fill values."""
         test_file = tmp_path / "test.nc"
+        var_name = "temp"
         dtype = np.float32 if fill_value is None else type(fill_value)
         ds = xr.Dataset(
             {
-                "temp": xr.DataArray(
+                var_name: xr.DataArray(
                     np.array([1, 2], dtype=dtype),
                     dims=["time"],
                 ),
             }
         )
         # Use encoding to set (or suppress) the _FillValue
-        encoding = {"temp": {ATTR: fill_value}}
+        encoding = {var_name: {ATTR: fill_value}}
         ds.to_netcdf(str(test_file), encoding=encoding)
-        ds_read = xr.open_dataset(str(test_file), **OPEN_DS_KWARGS)
-        assert var_has_nan_fill(ds_read, "temp") == expected
-        ds_read.close()
-
-    def test_checks_correct_variable(self, tmp_path):
-        """Test that only the specified variable is checked."""
-        test_file = tmp_path / "test.nc"
-        ds = xr.Dataset(
-            {
-                "has_nan": xr.DataArray(
-                    np.array([1.0, 2.0], dtype=np.float32),
-                    dims=["time"],
-                    attrs={ATTR: np.float32(np.nan)},
-                ),
-                "no_nan": xr.DataArray(
-                    np.array([3.0, 4.0], dtype=np.float32),
-                    dims=["time"],
-                    attrs={ATTR: np.float32(-999.0)},
-                ),
-            }
-        )
-        ds.to_netcdf(str(test_file))
-        ds_read = xr.open_dataset(
-            str(test_file),
-            **OPEN_DS_KWARGS,
-        )
-        assert var_has_nan_fill(ds_read, "has_nan")
-        assert not var_has_nan_fill(ds_read, "no_nan")
-        ds_read.close()
+        vars_with_nan_fills = get_vars_with_nan_fills(str(test_file))
+        assert (var_name in vars_with_nan_fills) == expected
 
 
 class TestShowNcdumpForVariable:
@@ -327,17 +301,15 @@ class TestMain:
         return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.xr.open_dataset")
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.var_has_nan_fill",
-        return_value=True,
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.file_has_nan_fill",
+        return_value=(True, ["temp"]),
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
     def test_main_happy_path(
         self,
         mock_collect,
-        mock_var_has_nan,
-        mock_open_dataset,
+        mock_file_has_nan,
         mock_exists,
         mock_load_bad,
         mock_extract,
@@ -351,9 +323,6 @@ class TestMain:
         # Make the mock dataset iterable
         mock_ds.__iter__.return_value = iter(["temp"])
 
-        # Setup context manager mock for open_dataset
-        mock_open_dataset.return_value = mock_ds
-
         result = main_func()
 
         assert result == 0
@@ -361,11 +330,6 @@ class TestMain:
         mock_load_bad.assert_called_once()
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
-        mock_open_dataset.assert_called_once_with(
-            path_to_test_file_abs,
-            **OPEN_DS_KWARGS,
-        )
-        mock_var_has_nan.assert_called_with(mock_ds, "temp")
         mock_collect.assert_called_once()
         mock_check_write.assert_called_once()
 
@@ -375,6 +339,7 @@ class TestMain:
         assert len(progress) == 1
         expected_dict = create_empty_progress_dict_onefile()
         expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        expected_dict["vars_with_nan_fills"] = ["temp"]
         assert progress[path_to_test_file_abs] == expected_dict
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
@@ -395,17 +360,15 @@ class TestMain:
         return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.xr.open_dataset")
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.var_has_nan_fill",
-        return_value=True,
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.get_vars_with_nan_fills",
+        return_value=["temp"],
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
     def test_main_dry_run(
         self,
         mock_collect,
-        mock_var_has_nan,
-        mock_open_dataset,
+        mock_get_vars_with_nan,
         mock_exists,
         mock_load_bad,
         mock_extract,
@@ -420,9 +383,6 @@ class TestMain:
         # Make the mock dataset iterable
         mock_ds.__iter__.return_value = iter(["temp"])
 
-        # Setup context manager mock for open_dataset
-        mock_open_dataset.return_value = mock_ds
-
         result = main_func()
 
         assert result == 0
@@ -430,11 +390,7 @@ class TestMain:
         mock_load_bad.assert_called_once()
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
-        mock_open_dataset.assert_called_once_with(
-            path_to_test_file_abs,
-            **OPEN_DS_KWARGS,
-        )
-        mock_var_has_nan.assert_called_with(mock_ds, "temp")
+        mock_get_vars_with_nan.assert_called_with(path_to_test_file_abs)
         mock_collect.assert_called_once()
 
         # Shouldn't check write access in dry run
@@ -445,6 +401,7 @@ class TestMain:
         progress = args[0]
         expected_dict = create_empty_progress_dict_onefile()
         expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        expected_dict["vars_with_nan_fills"] = ["temp"]
         assert len(progress) == 1
         assert progress[path_to_test_file_abs] == expected_dict
         assert "delete_if_none_filled" in kwargs
@@ -470,17 +427,15 @@ class TestMain:
         return_value={"/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.xr.open_dataset")
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.var_has_nan_fill",
-        return_value=True,
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.file_has_nan_fill",
+        return_value=(True, ["temp"]),
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
     def test_main_with_delete_flag(
         self,
         mock_collect,
-        mock_var_has_nan,
-        mock_open_dataset,
+        mock_file_has_nan,
         mock_exists,
         mock_load_bad,
         mock_extract,
@@ -489,7 +444,6 @@ class TestMain:
         """Test main function with --delete-if-none-filled flag."""
         mock_ds = MagicMock(spec=xr.Dataset)
         mock_ds.__iter__.return_value = iter(["temp"])
-        mock_open_dataset.return_value = mock_ds
 
         result = main_func()
         assert result == 0
@@ -580,10 +534,11 @@ class TestCollectNewFillValues:
     def test_user_provides_number(self, mock_input, mock_save, tmp_path, capsys):
         """Test happy path where user provides a numeric fill value."""
         test_file = tmp_path / "test.nc"
+        var_name = "temp"
         self._create_test_netcdf(
             test_file,
             {
-                "temp": {
+                var_name: {
                     "data": np.array([1.0, 2.0], dtype=np.float32),
                     "attrs": {ATTR: np.float32(np.nan), "long_name": "temperature"},
                 }
@@ -594,21 +549,18 @@ class TestCollectNewFillValues:
         assert not expected_result[str(test_file)]["new_fill_values"]
 
         progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         result = collect_new_fill_values(progress)
 
         # Check final result
-        # expected_fill_value = -999.0
-        # expected_result = {str(test_file): create_empty_progress_dict_onefile()}
-        # assert not expected_result[str(test_file)]["new_fill_values"]
-        expected_result[str(test_file)]["new_fill_values"] = {"temp": expected_fill_value}
-        print(f"{expected_result=}")
-        print(f"{result=}")
+        expected_result[str(test_file)]["new_fill_values"] = {var_name: expected_fill_value}
+        expected_result[str(test_file)]["vars_with_nan_fills"] = [var_name]
         assert result == expected_result
 
         # Check what was saved
         mock_save.assert_called_once()
         saved_data = mock_save.call_args[0][0]
-        saved_fill_value = saved_data[str(test_file)]["new_fill_values"]["temp"]
+        saved_fill_value = saved_data[str(test_file)]["new_fill_values"][var_name]
         assert saved_fill_value == expected_fill_value
         assert isinstance(saved_fill_value, float)
 
@@ -645,25 +597,28 @@ class TestCollectNewFillValues:
     def test_user_enters_then_skips_file(self, mock_input, mock_save, tmp_path):
         """Test that requesting skipfile skips the current file but saves entered results."""
         test_file = tmp_path / "test.nc"
+        data = {
+            "temp": {
+                "data": np.array([1.0], dtype=np.float32),
+                "attrs": {ATTR: np.float32(np.nan)},
+            },
+            "precip": {
+                "data": np.array([2.0], dtype=np.float32),
+                "attrs": {ATTR: np.float32(np.nan)},
+            },
+        }
         self._create_test_netcdf(
             test_file,
-            {
-                "temp": {
-                    "data": np.array([1.0], dtype=np.float32),
-                    "attrs": {ATTR: np.float32(np.nan)},
-                },
-                "precip": {
-                    "data": np.array([2.0], dtype=np.float32),
-                    "attrs": {ATTR: np.float32(np.nan)},
-                },
-            },
+            data,
         )
         progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress[str(test_file)]["vars_with_nan_fills"] = data.keys()
         result = collect_new_fill_values(progress)
 
         # 'temp' is processed, user enters so it saves, then precip is skipped
         expected_result = {str(test_file): create_empty_progress_dict_onefile()}
         expected_result[str(test_file)]["new_fill_values"] = {"temp": -100.0}
+        expected_result[str(test_file)]["vars_with_nan_fills"] = data.keys()
         assert result == expected_result
         # Progress was saved only after temp
         mock_save.assert_called_once()
@@ -673,11 +628,13 @@ class TestCollectNewFillValues:
     def test_user_quits(self, mock_input, mock_save, tmp_path, mock_progress_file):
         """Test that requesting quit exits the collection loop."""
         test_file = tmp_path / "test.nc"
+        var_name = "temp"
         self._create_test_netcdf(
             test_file,
-            {"temp": {"data": [1.0], "attrs": {ATTR: np.nan}}},
+            {var_name: {"data": [1.0], "attrs": {ATTR: np.nan}}},
         )
         progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         assert not progress[str(test_file)]["new_fill_values"]
 
         assert not os.path.exists(str(mock_progress_file))
@@ -693,10 +650,11 @@ class TestCollectNewFillValues:
     def test_dry_run(self, mock_save, tmp_path, capsys):
         """Test --dry-run"""
         test_file = tmp_path / "test.nc"
+        var_name = "temp"
         self._create_test_netcdf(
             test_file,
             {
-                "temp": {
+                var_name: {
                     "data": np.array([1.0, 2.0], dtype=np.float32),
                     "attrs": {ATTR: np.float32(np.nan), "long_name": "temperature"},
                 }
@@ -704,13 +662,16 @@ class TestCollectNewFillValues:
         )
 
         progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         result = collect_new_fill_values(progress, dry_run=True)
 
         # Check that nothing was saved
         mock_save.assert_not_called()
 
-        # Check that result only has filename
-        assert result == {str(test_file): create_empty_progress_dict_onefile()}
+        # Check that result is what we expect
+        expected = {str(test_file): create_empty_progress_dict_onefile()}
+        expected[str(test_file)]["vars_with_nan_fills"] = [var_name]
+        assert result == expected
 
         # Check that result does print some info but not everything
         stdout = capsys.readouterr().out

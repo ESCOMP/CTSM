@@ -67,9 +67,7 @@ def fixture_mock_bad_files_check(monkeypatch):
 
 
 @pytest.mark.parametrize("abs_or_rel", ["abs", "rel"])
-def test_integrate_get_replace(
-    tmp_path, test_netcdf_file, create_mock_xml_file, abs_or_rel
-):
+def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file, abs_or_rel):
     """Test the integrated get -> replace pipeline"""
 
     # Get the path to put in the XML
@@ -90,7 +88,10 @@ def test_integrate_get_replace(
 
     # Call get_replacement_fill_values.py
     with patch("sys.argv", ["get_replacement_fill_values.py"]):
-        with patch("builtins.input", side_effect=[str(TEST_FILL_VALUE), USER_REQ_DELETE]):
+        with patch(
+            "builtins.input",
+            side_effect=[USER_REQ_DELETE, str(TEST_FILL_VALUE)],  # alphabetically 1st, then 2nd var
+        ):
             get_replacement_fill_values.main()
             print(f"{NEW_FILLVALUES_FILE=}")
 

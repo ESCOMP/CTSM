@@ -52,7 +52,7 @@ VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
 
 def create_empty_progress_dict_onefile():
-    return {"found_in_files": {}, "new_fill_values": {}}
+    return {"found_in_files": {}, "new_fill_values": {}, "vars_with_nan_fills": []}
 
 
 @dataclass
@@ -183,7 +183,7 @@ def convert_to_absolute_path(relative_path: str) -> str:
     return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
-def file_has_nan_fill(abs_path: str) -> bool:
+def file_has_nan_fill(abs_path: str) -> Tuple[bool, List[str]]:
     """
     Check if a netCDF file has any variable with NaN fill value attribute.
 
@@ -192,41 +192,36 @@ def file_has_nan_fill(abs_path: str) -> bool:
 
     Returns:
         bool: True if the file has any variable with NaN fill value attribute, False otherwise
+        List[str]: Variables with NaN fill value attributes
     """
-    # TODO: Make this faster by parsing ncdump -h
-    ds = xr.open_dataset(
-        abs_path,
-        **OPEN_DS_KWARGS,
-    )
-    any_nan_fill = False
-    for var in ds:
-        if var_has_nan_fill(ds, var):
-            any_nan_fill = True
-            break
-    return any_nan_fill
+    vars_with_nan_fills = get_vars_with_nan_fills(abs_path)
+    return bool(vars_with_nan_fills), vars_with_nan_fills
 
 
-def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
+def get_vars_with_nan_fills(abs_path: str) -> List[str]:
     """
-    Check if a variable has a NaN fill value attribute.
+    Given a file, get variables with NaN fill value attribute (if any).
 
     Args:
-        ds: xarray Dataset containing the variable
-        var: Name of the variable to check
-        attr: Name of the attribute to check (typically '_FillValue')
+        abs_path: Absolute path to file
 
     Returns:
-        bool: True if the variable has the specified attribute and its value is NaN,
-              False otherwise
+        bool: List of variables with NaN fill value attribute
     """
-    da = ds[var]
-    if not attr in da.encoding:
-        return False
-    try:
-        result = np.isnan(da.encoding[attr])
-    except TypeError:
-        return False
-    return result
+    ncdump_results = subprocess.check_output(["ncdump", "-h", abs_path], text=True)
+
+    # Regex breakdown:
+    # ^\s* : Start of line and any leading whitespace
+    # (\S+)       : Capture one or more non-whitespace characters (the variable name)
+    # :{ATTR}} : The attribute where fill value is stored
+    # \s*=\s* : The equals sign with flexible surrounding whitespace
+    # NaNf?\s*;    : The NaN/NaNf value and the closing semicolon
+    regex_pattern = rf"^\s*(\S+):{ATTR}\s*=\s*NaNf?\s*;"
+
+    # Use re.MULTILINE to treat each line in the string as a new start
+    vars_with_nan_fills = re.findall(regex_pattern, ncdump_results, re.MULTILINE)
+    vars_with_nan_fills.sort()
+    return vars_with_nan_fills
 
 
 def var_data_has_nan(da: xr.DataArray) -> bool:
@@ -629,13 +624,8 @@ def _collect_fill_values_one_path(
     # Open the dataset
     ds = xr.open_dataset(abs_path, **OPEN_DS_KWARGS)
 
-    # Get all variables (both data and coordinate variables)
-    all_vars = list(ds.data_vars) + list(ds.coords)
-
     # Loop through all variables
-    for var in all_vars:
-        if not var_has_nan_fill(ds, var):
-            continue
+    for var in progress[abs_path]["vars_with_nan_fills"]:
 
         # Skip variables we've already processed
         if var in new_fill_values:
@@ -832,11 +822,12 @@ def main() -> int:
             print(f"Absolute: {abs_path}")
 
             # Check that the file actually has NaN _FillValue for at least one var
-            any_nan_fill = file_has_nan_fill(abs_path)
+            any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
             if any_nan_fill:
                 if abs_path not in progress:
                     progress[abs_path] = create_empty_progress_dict_onefile()
                 progress[abs_path]["found_in_files"][XML_FILE] = path_from_xml
+                progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
                 save_progress(progress, NEW_FILLVALUES_FILE)
             else:
                 if abs_path in progress:
