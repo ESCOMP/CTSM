@@ -24,6 +24,7 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     extract_file_paths_from_xml,
     load_progress,
     main as main_func,
+    create_empty_progress_dict_onefile,
     save_progress,
     show_ncdump_for_variable,
     var_has_nan_fill,
@@ -307,6 +308,7 @@ class TestMain:
         mock_extract,
         mock_check_write,
         tmp_path,
+        mock_xml_file_path,
     ):  # pylint: disable=unused-argument
         """Test main function with a single matching file."""
         # Setup mock dataset
@@ -322,9 +324,10 @@ class TestMain:
         assert result == 0
         mock_extract.assert_called_once()
         mock_load_bad.assert_called_once()
-        path_to_test_file = os.path.join(str(tmp_path), "lnd/clm2/test.nc")
+        path_to_test_file_rel = "lnd/clm2/test.nc"
+        path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_open_dataset.assert_called_once_with(
-            path_to_test_file,
+            path_to_test_file_abs,
             **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
@@ -333,12 +336,11 @@ class TestMain:
 
         # Check the arguments passed to collect_new_fill_values
         args, kwargs = mock_collect.call_args
-        matches = args[0]
-        assert len(matches) == 1
-        assert matches[0] == (
-            "lnd/clm2/test.nc",
-            path_to_test_file,
-        )
+        progress = args[0]
+        assert len(progress) == 1
+        expected_dict = create_empty_progress_dict_onefile()
+        expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        assert progress[path_to_test_file_abs] == expected_dict
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
         assert "dry_run" in kwargs
@@ -375,6 +377,7 @@ class TestMain:
         mock_check_write,
         capsys,
         tmp_path,
+        mock_xml_file_path,
     ):  # pylint: disable=unused-argument
         """Test main function with a single matching file under --dry-run"""
         # Setup mock dataset
@@ -390,9 +393,10 @@ class TestMain:
         assert result == 0
         mock_extract.assert_called_once()
         mock_load_bad.assert_called_once()
-        path_to_test_file = os.path.join(str(tmp_path), "lnd/clm2/test.nc")
+        path_to_test_file_rel = "lnd/clm2/test.nc"
+        path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_open_dataset.assert_called_once_with(
-            path_to_test_file,
+            path_to_test_file_abs,
             **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
@@ -403,12 +407,11 @@ class TestMain:
 
         # Check the arguments passed to collect_new_fill_values
         args, kwargs = mock_collect.call_args
-        matches = args[0]
-        assert len(matches) == 1
-        assert matches[0] == (
-            "lnd/clm2/test.nc",
-            path_to_test_file,
-        )
+        progress = args[0]
+        expected_dict = create_empty_progress_dict_onefile()
+        expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        assert len(progress) == 1
+        assert progress[path_to_test_file_abs] == expected_dict
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
         assert "dry_run" in kwargs
@@ -538,12 +541,8 @@ class TestCollectNewFillValues:
         ds.close()
 
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
-        return_value={},
-    )
     @patch("builtins.input", side_effect=["-999"])
-    def test_user_provides_number(self, mock_input, mock_load, mock_save, tmp_path, capsys):
+    def test_user_provides_number(self, mock_input, mock_save, tmp_path, capsys):
         """Test happy path where user provides a numeric fill value."""
         test_file = tmp_path / "test.nc"
         self._create_test_netcdf(
@@ -555,28 +554,32 @@ class TestCollectNewFillValues:
                 }
             },
         )
+        expected_fill_value = -999.0
+        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        assert not expected_result[str(test_file)]["new_fill_values"]
 
-        matches = [("rel/path/test.nc", str(test_file))]
-        result = collect_new_fill_values(matches)
+        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        result = collect_new_fill_values(progress)
 
         # Check final result
-        expected_fill_value = -999.0
-        assert result == {str(test_file): {"temp": expected_fill_value}}
+        # expected_fill_value = -999.0
+        # expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        # assert not expected_result[str(test_file)]["new_fill_values"]
+        expected_result[str(test_file)]["new_fill_values"] = {"temp": expected_fill_value}
+        print(f"{expected_result=}")
+        print(f"{result=}")
+        assert result == expected_result
 
         # Check what was saved
         mock_save.assert_called_once()
         saved_data = mock_save.call_args[0][0]
-        saved_fill_value = saved_data[str(test_file)]["temp"]
+        saved_fill_value = saved_data[str(test_file)]["new_fill_values"]["temp"]
         assert saved_fill_value == expected_fill_value
         assert isinstance(saved_fill_value, float)
 
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
-        return_value={},
-    )
     @patch("builtins.input", side_effect=[USER_REQ_SKIP_FILE])
-    def test_user_skips_file(self, mock_input, mock_load, mock_save, tmp_path):
+    def test_user_skips_file(self, mock_input, mock_save, tmp_path):
         """Test that requesting skipfile skips the current file."""
         test_file = tmp_path / "test.nc"
         self._create_test_netcdf(
@@ -592,21 +595,19 @@ class TestCollectNewFillValues:
                 },
             },
         )
-        matches = [("rel/path/test.nc", str(test_file))]
-        result = collect_new_fill_values(matches)
+        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        result = collect_new_fill_values(progress)
 
         # 'temp' is processed, user skips, neither it nor 'precip' are in results
-        assert result == {str(test_file): {}}
+        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        assert not expected_result[str(test_file)]["new_fill_values"]
+        assert result == expected_result
         # Progress was never saved
         mock_save.assert_not_called()
 
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
-        return_value={},
-    )
     @patch("builtins.input", side_effect=["-100", USER_REQ_SKIP_FILE])
-    def test_user_enters_then_skips_file(self, mock_input, mock_load, mock_save, tmp_path):
+    def test_user_enters_then_skips_file(self, mock_input, mock_save, tmp_path):
         """Test that requesting skipfile skips the current file but saves entered results."""
         test_file = tmp_path / "test.nc"
         self._create_test_netcdf(
@@ -622,42 +623,39 @@ class TestCollectNewFillValues:
                 },
             },
         )
-        matches = [("rel/path/test.nc", str(test_file))]
-        result = collect_new_fill_values(matches)
+        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        result = collect_new_fill_values(progress)
 
         # 'temp' is processed, user enters so it saves, then precip is skipped
-        assert result == {str(test_file): {"temp": -100.0}}
+        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        expected_result[str(test_file)]["new_fill_values"] = {"temp": -100.0}
+        assert result == expected_result
         # Progress was saved only after temp
         mock_save.assert_called_once()
 
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
-        return_value={},
-    )
     @patch("builtins.input", side_effect=[USER_REQ_QUIT])
-    def test_user_quits(self, mock_input, mock_load, mock_save, tmp_path):
+    def test_user_quits(self, mock_input, mock_save, tmp_path, mock_progress_file):
         """Test that requesting quit exits the collection loop."""
         test_file = tmp_path / "test.nc"
         self._create_test_netcdf(
             test_file,
             {"temp": {"data": [1.0], "attrs": {ATTR: np.nan}}},
         )
-        matches = [("rel/path/test.nc", str(test_file))]
+        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        assert not progress[str(test_file)]["new_fill_values"]
+
+        assert not os.path.exists(str(mock_progress_file))
 
         with pytest.raises(SystemExit) as e:
-            collect_new_fill_values(matches)
+            collect_new_fill_values(progress)
         assert e.value.code == 0
 
         # No value was collected, so save_progress is not called
         mock_save.assert_not_called()
 
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
-    @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.load_progress",
-        return_value={},
-    )
-    def test_dry_run(self, mock_load, mock_save, tmp_path, capsys):
+    def test_dry_run(self, mock_save, tmp_path, capsys):
         """Test --dry-run"""
         test_file = tmp_path / "test.nc"
         self._create_test_netcdf(
@@ -670,14 +668,14 @@ class TestCollectNewFillValues:
             },
         )
 
-        matches = [("rel/path/test.nc", str(test_file))]
-        result = collect_new_fill_values(matches, dry_run=True)
+        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        result = collect_new_fill_values(progress, dry_run=True)
 
         # Check that nothing was saved
         mock_save.assert_not_called()
 
         # Check that result only has filename
-        assert result == {str(test_file): {}}
+        assert result == {str(test_file): create_empty_progress_dict_onefile()}
 
         # Check that result does print some info but not everything
         stdout = capsys.readouterr().out

@@ -237,7 +237,6 @@ def process_files(
     fillvalues_file: str,
     dry_run: bool = False,
     overwrite: bool = False,
-    xml_file: str | None = None,
 ) -> int:
     """
     Process files to replace fill values.
@@ -246,17 +245,16 @@ def process_files(
         fillvalues_file: Path to JSON file with new fill values
         dry_run: If True, show commands without executing (default: False)
         overwrite: If True, overwrite existing output files (default: False)
-        xml_file: Optional path to XML file to update with new paths (default: None)
 
     Returns:
         Number of files successfully processed
     """
     # Load the new fill values
     print(f"Loading new fill values from {fillvalues_file}...")
-    new_fillvalues = load_new_fillvalues(fillvalues_file)
+    progress = load_new_fillvalues(fillvalues_file)
 
-    total_files = len(new_fillvalues)
-    total_vars = sum(len(vars_dict) for vars_dict in new_fillvalues.values())
+    total_files = len(progress)
+    total_vars = sum(len(vars_dict) for vars_dict in progress.values())
     print(f"Found {total_vars} variable(s) in {total_files} file(s)\n")
 
     # Process each file
@@ -266,28 +264,34 @@ def process_files(
 
     files_processed = 0
 
-    for input_file, var_fillvalues in new_fillvalues.items():
-        output_file = get_output_filename(input_file)
+    for input_file_abs in progress:
+        output_file = get_output_filename(input_file_abs)
 
         # Check whether we're skipping this file
-        if skip_this_file(input_file, output_file, overwrite):
+        if skip_this_file(input_file_abs, output_file, overwrite):
             continue
 
         # Print things to do for this file
-        print(f"\nInput:  {input_file}")
+        var_fillvalues = progress[input_file_abs]["new_fill_values"]
+        print(f"\nInput:  {input_file_abs}")
         print(f"Output: {output_file}")
         print(f"Variables to modify: {len(var_fillvalues)}")
         for var, fill_val in var_fillvalues.items():
             print(f"  {var}: {fill_val}")
 
         # Build and print the ncatted command
-        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
+        cmd = build_ncatted_command(input_file_abs, output_file, var_fillvalues)
         print("\nCommand:")
         print("  " + " ".join(cmd))
 
         # Execute the command if not in dry-run mode
         if not dry_run:
-            files_processed += execute_command(xml_file, input_file, output_file, cmd)
+            files_processed += execute_command(cmd)
+            # Update the XML file(s) with the new output path
+            for xml_file, input_file_xml in progress[input_file_abs]["found_in_files"].items():
+                output_file_xml = get_output_filename(input_file_xml)
+                update_xml_file(xml_file, input_file_xml, output_file_xml)
+            # TODO: git commit!
 
     # Only print summary in dry-run mode
     if dry_run:
@@ -331,18 +335,11 @@ def skip_this_file(input_file: str, output_file: str, overwrite: bool) -> bool:
     return False
 
 
-def execute_command(xml_file: str | None, input_file: str, output_file: str, cmd: list[str]) -> int:
+def execute_command(cmd: list[str]) -> int:
     """
-    Execute ncatted command and update XML file if successful.
-
     Runs the ncatted command to create the output file with modified fill values.
-    If xml_file is provided and execution succeeds, updates the XML to reference
-    the new output file instead of the input file.
 
     Args:
-        xml_file: Optional path to XML file to update (None to skip XML update)
-        input_file: Path to input NetCDF file
-        output_file: Path to output NetCDF file
         cmd: ncatted command as list of arguments
 
     Returns:
@@ -362,11 +359,6 @@ def execute_command(xml_file: str | None, input_file: str, output_file: str, cmd
             print(f"  stderr: {result.stderr}")
         files_processed = 1
 
-        # Update XML file if provided
-        if xml_file:
-            # Update the XML file with the new output path
-            update_xml_file(xml_file, input_file, output_file)
-            # TODO: git commit!
     except subprocess.CalledProcessError as e:
         print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
         if e.stdout:
@@ -434,15 +426,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # Don't update XML in dry-run mode unless explicitly specified
-    xml_file_to_update = args.xml_file if not args.dry_run else None
-
     # Process the files
     process_files(
         args.fillvalues_file,
         dry_run=args.dry_run,
         overwrite=args.overwrite,
-        xml_file=xml_file_to_update,
     )
 
     return 0

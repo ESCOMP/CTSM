@@ -17,6 +17,7 @@ import pytest
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE, OPEN_DS_KWARGS
+from ctsm.no_nans_in_inputs.get_replacement_fill_values import create_empty_progress_dict_onefile
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
     execute_command,
@@ -159,7 +160,7 @@ class TestReplaceFullWorkflow:
     """Test the complete workflow of replacing fill values."""
 
     @pytest.fixture
-    def test_setup(self, tmp_path):
+    def test_setup(self, tmp_path, create_mock_xml_file):
         """Set up test files and JSON for full workflow test."""
         # Create input NetCDF file
         input_file = tmp_path / "input.nc"
@@ -180,14 +181,24 @@ class TestReplaceFullWorkflow:
         ds.to_netcdf(str(input_file))
         ds.close()
 
+        # Write the XML file
+        xml_content = f"""<?xml version="1.0"?>
+    <namelist_defaults>
+        <paramfile>{input_file}</paramfile>
+    </namelist_defaults>
+    """
+        xml_file = create_mock_xml_file(xml_content)
+
         # Create fillvalues JSON file
         fillvalues_file = tmp_path / "test_fillvalues.json"
-        fillvalues_data = {
-            str(input_file): {
-                TEST_VAR_TEMP: TEST_FILL_VALUE,
-                TEST_VAR_PRESSURE: USER_REQ_DELETE,
-            }
+        input_file_dict = create_empty_progress_dict_onefile()
+        input_file_dict["found_in_files"] = {xml_file: str(input_file)}
+        input_file_dict["new_fill_values"] = {
+            TEST_VAR_TEMP: TEST_FILL_VALUE,
+            TEST_VAR_PRESSURE: USER_REQ_DELETE,
         }
+        fillvalues_data = {str(input_file): input_file_dict}
+        print(f"{fillvalues_data=}")
         fillvalues_file.write_text(json.dumps(fillvalues_data), encoding="utf-8")
 
         return {
@@ -204,7 +215,7 @@ class TestReplaceFullWorkflow:
 
         # Load the fillvalues and build command
         fillvalues = load_new_fillvalues(fillvalues_file)
-        var_fillvalues = fillvalues[input_file]
+        var_fillvalues = fillvalues[input_file]["new_fill_values"]
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
 
         # Execute the command
@@ -407,20 +418,6 @@ class TestExecuteCommand:
         with mock.patch("ctsm.no_nans_in_inputs.replace_fill_values.update_xml_file") as _fixture:
             yield _fixture
 
-    # TODO: This doesn't actually touch the file system, so it's really more of a unit test
-    @mock.patch("subprocess.run")
-    @pytest.mark.parametrize("xml_file, exp_n_calls", [("dummy.xml", 1), (None, 0)])
-    def test_update_xml_file(
-        self, _mock_subprocess_run, xml_file, exp_n_calls, mock_update_xml_file
-    ):
-        """Test that execute_command does or doesn't call update_xml_file(), as appropriate"""
-
-        # Build and execute the command
-        execute_command(xml_file, "dummy_input.nc", "dummy_output.nc", "dummy command --option")
-
-        # update_xml_file() should have been called exp_n_calls times
-        assert mock_update_xml_file.call_count == exp_n_calls
-
     @pytest.mark.parametrize(
         "netcdf_format",
         [
@@ -438,7 +435,7 @@ class TestExecuteCommand:
         output_file = str(tmp_path / "test_output.nc")
         var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        files_processed = execute_command(None, input_file, output_file, cmd)
+        files_processed = execute_command(cmd)
 
         # Should have processed 1 file
         assert files_processed == 1
@@ -482,7 +479,7 @@ class TestExecuteCommand:
         output_file = str(tmp_path / "test_output.nc")
         var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        execute_command(None, input_file, output_file, cmd)
+        execute_command(cmd)
 
         # Verify the output file is valid NetCDF with correct fill value. mask_and_scale True means
         # that the variable's DataArray's _FillValue attribute will be populated and any filled

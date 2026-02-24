@@ -5,6 +5,7 @@ Pytest configuration and fixtures for test_no_nans_in_inputs tests.
 import pytest
 
 from ctsm.no_nans_in_inputs import constants
+from ctsm.no_nans_in_inputs import get_replacement_fill_values
 from ctsm.no_nans_in_inputs import replace_fill_values
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
 
@@ -37,6 +38,24 @@ def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
     """
     # Monkeypatch
     monkeypatch.setattr(get_replacement_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
+
+
+@pytest.fixture(autouse=True, name="mock_progress_file", scope="function")
+def fixture_mock_progress_file(tmp_path, monkeypatch):
+    """
+    Auto-used fixture to mock NEW_FILLVALUES_FILE constant with a temporary path.
+    """
+    # Define the test NEW_FILLVALUES_FILE file path (but don't create it yet)
+    test_progress = tmp_path / "progress.json"
+
+    # Monkeypatch the NEW_FILLVALUES_FILE constant where it's defined
+    monkeypatch.setattr(constants, "NEW_FILLVALUES_FILE", str(test_progress))
+
+    # Also where it's imported
+    monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+    monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+
+    return str(test_progress)
 
 
 @pytest.fixture(autouse=True, name="mock_xml_file_path")

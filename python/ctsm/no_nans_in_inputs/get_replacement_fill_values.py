@@ -9,6 +9,7 @@ This script:
 4. Prints the matching paths
 """
 
+from collections import UserDict
 import argparse
 import re
 import xml.etree.ElementTree as ET
@@ -17,7 +18,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 
 import numpy as np
 import xarray as xr
@@ -47,6 +48,10 @@ BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
+
+
+def create_empty_progress_dict_onefile():
+    return {"found_in_files": {}, "new_fill_values": {}}
 
 
 @dataclass
@@ -511,8 +516,15 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
             ctrl_c_count = _handle_ctrl_c(ctrl_c_count, user_input, var_context)
 
 
+def _get_n_vars_in_progress(progress: Dict):
+    n_vars = 0
+    for file in progress.keys():
+        n_vars += len(progress[file]["new_fill_values"].keys())
+    return n_vars
+
+
 def collect_new_fill_values(
-    matches: list[tuple[str, str]],
+    progress: Dict | {},
     delete_if_none_filled: bool = False,
     dry_run: bool = False,
 ) -> dict[str, dict[str, Any]]:
@@ -533,17 +545,6 @@ def collect_new_fill_values(
     print("COLLECTING NEW FILL VALUES")
     print("=" * SEP_LENGTH)
 
-    # Load existing progress if available
-    all_new_fill_values = load_progress(NEW_FILLVALUES_FILE)
-    if all_new_fill_values:
-        print(f"\nLoaded progress from {NEW_FILLVALUES_FILE}")
-        total_vars = sum(len(vars_dict) for vars_dict in all_new_fill_values.values())
-        print(f"Already processed {total_vars} variable(s) in {len(all_new_fill_values)} file(s)")
-        response = input("Continue from where you left off? [Y/n]: ").strip().lower()
-        if response and response not in ("y", "yes"):
-            all_new_fill_values = {}
-            print("Starting fresh...")
-
     print(
         f"\nCommands: Type a number for fill value, '{USER_REQ_DELETE}' to delete attribute, "
         f"'{USER_REQ_SKIP_VAR}' to skip variable, '{USER_REQ_SKIP_FILE}' to skip file, "
@@ -551,12 +552,11 @@ def collect_new_fill_values(
     )
 
     try:
-        for path_from_xml, abs_path in matches:
-            _collect_fill_values_one_path(
+        for abs_path in progress:
+            progress = _collect_fill_values_one_path(
                 progress_file=NEW_FILLVALUES_FILE,
+                progress=progress,
                 delete_if_none_filled=delete_if_none_filled,
-                all_new_fill_values=all_new_fill_values,
-                path_from_xml=path_from_xml,
                 abs_path=abs_path,
                 dry_run=dry_run,
             )
@@ -565,14 +565,13 @@ def collect_new_fill_values(
         print("Exiting.")
         sys.exit(0)
 
-    return all_new_fill_values
+    return progress
 
 
 def _collect_fill_values_one_path(
     progress_file: str,
+    progress: Dict,
     delete_if_none_filled: bool,
-    all_new_fill_values: str,
-    path_from_xml: str,
     abs_path: str,
     dry_run: bool,
 ):
@@ -587,10 +586,8 @@ def _collect_fill_values_one_path(
 
     Args:
         progress_file: Path to save/load progress
+        progress: Dictionary of found locations and collected fill values (from progress_file)
         delete_if_none_filled: If True, automatically use delete when it's the default
-        all_new_fill_values: Dictionary mapping absolute file paths to dictionaries of
-                             {variable_name: new_fill_value}
-        path_from_xml: The path of the file as written in the XML file
         abs_path: Absolute path to the file.
         dry_run: If true, just print vars to process (and defaults, if any).
 
@@ -598,14 +595,12 @@ def _collect_fill_values_one_path(
         Dictionary mapping absolute file paths to dictionaries of {variable_name: new_fill_value}
     """
     print(f"\n{'=' * SEP_LENGTH}")
-    print(f"Processing: {path_from_xml}")
-    print(f"Full path:  {abs_path}")
+    print(f"Processing: {abs_path}")
     print(f"{'=' * SEP_LENGTH}")
 
-    # Get or create dictionary for this file's fill values
-    if abs_path not in all_new_fill_values:
-        all_new_fill_values[abs_path] = {}
-    new_fill_values = all_new_fill_values[abs_path]
+    # Get dictionary for this file's fill values
+    new_fill_values = progress[abs_path]["new_fill_values"]
+    n_fv_before = len(new_fill_values)
 
     # Open the dataset
     ds = xr.open_dataset(abs_path, **OPEN_DS_KWARGS)
@@ -646,16 +641,21 @@ def _collect_fill_values_one_path(
         new_fill_values[var] = new_fill_value
 
         # Save progress after each variable
-        save_progress(all_new_fill_values, progress_file)
+        save_progress(progress, progress_file)
+        progress[abs_path]["new_fill_values"] = new_fill_values
 
     # Close the dataset
     ds.close()
 
     # Print summary for this file
     if not dry_run:
-        print(f"\n  Collected {len(new_fill_values)} new fill value(s) for this file:")
+        n_fv_after = len(new_fill_values)
+        n_new_fv = n_fv_after - n_fv_before
+        print(f"\n  Collected {n_new_fv} new fill value(s) for this file; {n_fv_after} total:")
         for var, fill_val in new_fill_values.items():
             print(f"    {var}: {fill_val}")
+
+    return progress
 
 
 def check_write_access(file_path: str) -> bool:
@@ -683,17 +683,17 @@ def check_write_access(file_path: str) -> bool:
     return os.access(parent or ".", os.W_OK)
 
 
-def save_progress(all_new_fill_values: dict[str, dict[str, Any]], progress_file: str) -> None:
+def save_progress(progress: dict[str, dict[str, Any]], progress_file: str) -> None:
     """
     Save progress to a JSON file.
 
     Args:
-        all_new_fill_values: Dictionary of collected fill values
+        progress: Dictionary of found locations and collected fill values
         progress_file: Path to the progress file
     """
     try:
         with open(progress_file, "w", encoding="utf-8") as f:
-            json.dump(all_new_fill_values, f, indent=2)
+            json.dump(progress, f, indent=2)
         print(f"  [Progress saved to {progress_file}]")
     except (IOError, OSError) as e:
         print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
@@ -707,7 +707,7 @@ def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
         progress_file: Path to the progress file
 
     Returns:
-        Previously saved fill values, or empty dict if file doesn't exist
+        Previously saved progress, or empty dict if file doesn't exist
     """
     if not os.path.exists(progress_file):
         return {}
@@ -718,6 +718,19 @@ def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
     except (IOError, OSError, json.JSONDecodeError) as e:
         print(f"Warning: Could not load progress file: {e}", file=sys.stderr)
         return {}
+
+
+def init_progress():
+    progress = load_progress(NEW_FILLVALUES_FILE)
+    if progress:
+        print(f"\nLoaded progress from {NEW_FILLVALUES_FILE}")
+        total_vars = _get_n_vars_in_progress(progress)
+        print(f"Already processed {total_vars} variable(s) in {len(progress)} file(s)")
+        response = input("Continue from where you left off? [Y/n]: ").strip().lower()
+        if response and response not in ("y", "yes"):
+            progress = {}
+            print("Starting fresh...")
+    return progress
 
 
 def abs_path_is_in_bad_files_list(abs_path: str, bad_files: List[str]):
@@ -775,8 +788,10 @@ def main() -> int:
     bad_files = load_bad_files(BAD_FILES_LOG, path_filter=OUR_PATH)
     print(f"Found {len(bad_files)} bad files in log matching '{OUR_PATH}'")
 
+    # Load existing progress if available
+    progress = init_progress()
+
     print("\nFinding matches...")
-    matches = []
 
     for path_from_xml in sorted(xml_paths):
         print(f"Finding matches for: {path_from_xml}")
@@ -803,21 +818,29 @@ def main() -> int:
                 if var_has_nan_fill(ds, var):
                     any_nan_fill = True
                     break
-            if not any_nan_fill:
+            if any_nan_fill:
+                if abs_path not in progress:
+                    progress[abs_path] = create_empty_progress_dict_onefile()
+                progress[abs_path]["found_in_files"][XML_FILE] = path_from_xml
+                save_progress(progress, NEW_FILLVALUES_FILE)
+            else:
+                if abs_path in progress:
+                    raise RuntimeError(
+                        f"Found no NaN fills in file but it was in progress dict: {abs_path}"
+                    )
                 print(f"No variable in file has NaN {ATTR}; skipping")
 
-            matches.append((path_from_xml, abs_path))
     print("-" * SEP_LENGTH)
 
     # Summary
     print("\nSummary:")
     print(f"  {len(xml_paths)}\tTotal paths in XML")
     print(f"  {len(bad_files)}\tTotal bad files matching '{OUR_PATH}'")
-    print(f"  {len(matches)}\tMatching files with NaN {ATTR}")
+    print(f"  {len(progress)}\tMatching files with NaN {ATTR}")
 
     # Collect new fill values from user
     collect_new_fill_values(
-        matches, delete_if_none_filled=args.delete_if_none_filled, dry_run=args.dry_run
+        progress, delete_if_none_filled=args.delete_if_none_filled, dry_run=args.dry_run
     )
 
     return 0
