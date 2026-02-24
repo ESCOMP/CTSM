@@ -39,6 +39,8 @@ fi
 ./xmlchange CUPID_STOP_N='$STOP_N'
 # TODO: Check that STOP_OPTION is nyears
 ./xmlchange CUPID_STOP_OPTION='$STOP_OPTION'
+# Put the time-series directory under the CUPID output
+./xmlchange CUPID_TS_DIR='$CIME_OUTPUT_ROOT/cupid_output'
 
 #
 # Setting for specific CUPiD diagnostics to run
