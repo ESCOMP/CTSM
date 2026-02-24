@@ -183,6 +183,29 @@ def convert_to_absolute_path(relative_path: str) -> str:
     return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
+def file_has_nan_fill(abs_path: str) -> bool:
+    """
+    Check if a netCDF file has any variable with NaN fill value attribute.
+
+    Args:
+        abs_path: Absolute path to file
+
+    Returns:
+        bool: True if the file has any variable with NaN fill value attribute, False otherwise
+    """
+    # TODO: Make this faster by parsing ncdump -h
+    ds = xr.open_dataset(
+        abs_path,
+        **OPEN_DS_KWARGS,
+    )
+    any_nan_fill = False
+    for var in ds:
+        if var_has_nan_fill(ds, var):
+            any_nan_fill = True
+            break
+    return any_nan_fill
+
+
 def var_has_nan_fill(ds: xr.Dataset, var: str, attr: str = ATTR) -> bool:
     """
     Check if a variable has a NaN fill value attribute.
@@ -809,16 +832,7 @@ def main() -> int:
             print(f"Absolute: {abs_path}")
 
             # Check that the file actually has NaN _FillValue for at least one var
-            ds = xr.open_dataset(
-                abs_path,
-                **OPEN_DS_KWARGS,
-            )
-            any_nan_fill = False
-            for var in ds:
-                # TODO: Make this faster by parsing ncdump -h
-                if var_has_nan_fill(ds, var):
-                    any_nan_fill = True
-                    break
+            any_nan_fill = file_has_nan_fill(abs_path)
             if any_nan_fill:
                 if abs_path not in progress:
                     progress[abs_path] = create_empty_progress_dict_onefile()

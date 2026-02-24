@@ -4,6 +4,7 @@ System tests for get_replacement_fill_values.py script.
 
 Tests functions that require file I/O.
 """
+# pylint: disable=too-few-public-methods
 
 import os
 from unittest.mock import MagicMock, patch
@@ -22,6 +23,7 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
     extract_file_paths_from_xml,
+    file_has_nan_fill,
     load_progress,
     main as main_func,
     create_empty_progress_dict_onefile,
@@ -157,6 +159,39 @@ class TestExtractFilePathsFromXml:
         )
         result = extract_file_paths_from_xml(xml_path)
         assert result == {TEST_PATH_PARAM, TEST_PATH_SURF}
+
+
+class TestFileHasNanFill:
+    """Test the file_has_nan_fill function."""
+
+    @pytest.mark.parametrize(
+        "fill_value, expected",
+        [
+            (np.float32(np.nan), True),
+            (np.float64(np.nan), True),
+            (np.float32(-999.0), False),
+            (np.int32(-999), False),
+            (None, False),
+        ],
+    )
+    def test_fill_value_detection(self, tmp_path, fill_value, expected):
+        """Test that file_has_nan_fill correctly detects NaN vs non-NaN vs absent fill values."""
+        test_file = tmp_path / "test.nc"
+        dtype = np.float32 if fill_value is None else type(fill_value)
+        ds = xr.Dataset(
+            {
+                "temp": xr.DataArray(
+                    np.array([1, 2], dtype=dtype),
+                    dims=["time"],
+                ),
+            }
+        )
+        # Use encoding to set (or suppress) the _FillValue
+        encoding = {"temp": {ATTR: fill_value}}
+        ds.to_netcdf(str(test_file), encoding=encoding)
+        ds_read = xr.open_dataset(str(test_file), **OPEN_DS_KWARGS)
+        assert file_has_nan_fill(str(test_file)) == expected
+        ds_read.close()
 
 
 class TestVarHasNanFill:
