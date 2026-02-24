@@ -42,7 +42,7 @@ def check_and_trim_years(year_1, year_n, ds_in):
 
     # Make sure you have the expected number of timesteps (including extra year)
     n_years_expected = year_n - year_1 + 2
-    if ds_in.dims["time"] != n_years_expected:
+    if ds_in.sizes["time"] != n_years_expected:
         raise RuntimeError(
             f"Expected {n_years_expected} timesteps in output but got {ds_in.dims['time']}"
         )
@@ -208,7 +208,7 @@ def import_max_gs_length(paramfile):
     Import maximum growing season length
     """
     # Get parameter file
-    paramfile_ds = xr.open_dataset(paramfile)
+    paramfile_ds = xr.open_dataset(paramfile, decode_timedelta=True)
 
     # Import max growing season length (stored in netCDF as nanoseconds!)
     paramfile_mxmats = paramfile_ds["mxmat"].values / np.timedelta64(1, "D")
