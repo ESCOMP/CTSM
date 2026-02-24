@@ -3867,7 +3867,27 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
+      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode (P still prescribed in clm).</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesCruRsGs" testmods="clm/FatesColdPRT2_suplnAll">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode with suplnitro set to ALL.</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesCruRsGs" testmods="clm/FatesColdPRT2_synthN">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode with both P and N prescribed to replicate what happened before the CLM-FATES-CN coupling.</option>
     </options>
   </test>
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP" testmods="clm/FatesColdLandUse">
