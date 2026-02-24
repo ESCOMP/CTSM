@@ -6,6 +6,37 @@ import pytest
 
 from ctsm.no_nans_in_inputs import constants
 from ctsm.no_nans_in_inputs import replace_fill_values
+from ctsm.no_nans_in_inputs import get_replacement_fill_values
+
+
+@pytest.fixture(autouse=True, name="mock_progress_file")
+def fixture_mock_progress_file(tmp_path, monkeypatch):
+    """
+    Auto-used fixture to mock NEW_FILLVALUES_FILE constant with a temporary path.
+
+    This prevents tests from accidentally modifying the real file.
+    Does not create the file; that happens in get_replacement_fill_values.py.
+    """
+    # Define the test NEW_FILLVALUES_FILE
+    test_progress = tmp_path / "progress.json"
+
+    # Monkeypatch the XML_FILE constant in both the constants module and replace_fill_values
+    monkeypatch.setattr(constants, "NEW_FILLVALUES_FILE", str(test_progress))
+
+    # Also patch it in things that import XML_FILE
+    monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+    monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+
+    return str(test_progress)
+
+
+@pytest.fixture(autouse=True, name="mock_inputdata_prefix")
+def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
+    """
+    Auto-used fixture to mock INPUTDATA_PREFIX constant with a temporary path.
+    """
+    # Monkeypatch
+    monkeypatch.setattr(get_replacement_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
 
 
 @pytest.fixture(autouse=True, name="mock_xml_file_path")
@@ -22,7 +53,8 @@ def fixture_mock_xml_file_path(tmp_path, monkeypatch):
     # Monkeypatch the XML_FILE constant in both the constants module and replace_fill_values
     monkeypatch.setattr(constants, "XML_FILE", str(test_xml))
 
-    # Also patch it in replace_fill_values since it imports XML_FILE
+    # Also patch it in things that import XML_FILE
+    monkeypatch.setattr(get_replacement_fill_values, "XML_FILE", str(test_xml))
     monkeypatch.setattr(replace_fill_values, "XML_FILE", str(test_xml))
 
     return str(test_xml)

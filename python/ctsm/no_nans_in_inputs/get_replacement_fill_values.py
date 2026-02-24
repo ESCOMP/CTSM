@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any, Tuple
+from typing import Any, List, Tuple
 
 import numpy as np
 import xarray as xr
@@ -33,6 +33,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     ERR_STR_SKIP_VAR,
     NEW_FILLVALUES_FILE,
     OPEN_DS_KWARGS,
+    OUR_PATH,
     SEP_LENGTH,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
@@ -44,8 +45,6 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
 # File paths
 BAD_FILES_LOG = "/glade/work/bdobbins/check_nan/inputdata_fillvalue.log"
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
-OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
-PROGRESS_FILE = NEW_FILLVALUES_FILE  # Alias for clarity in this script
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
@@ -514,7 +513,6 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
 
 def collect_new_fill_values(
     matches: list[tuple[str, str]],
-    progress_file: str = PROGRESS_FILE,
     delete_if_none_filled: bool = False,
     dry_run: bool = False,
 ) -> dict[str, dict[str, Any]]:
@@ -525,7 +523,6 @@ def collect_new_fill_values(
 
     Args:
         matches: List of tuples (relative_path, absolute_path) for files to process
-        progress_file: Path to save/load progress (default: PROGRESS_FILE)
         delete_if_none_filled: If True, automatically use delete when it's the default
         dry_run: If true, just print vars to process (and defaults, if any).
 
@@ -537,9 +534,9 @@ def collect_new_fill_values(
     print("=" * SEP_LENGTH)
 
     # Load existing progress if available
-    all_new_fill_values = load_progress(progress_file)
+    all_new_fill_values = load_progress(NEW_FILLVALUES_FILE)
     if all_new_fill_values:
-        print(f"\nLoaded progress from {progress_file}")
+        print(f"\nLoaded progress from {NEW_FILLVALUES_FILE}")
         total_vars = sum(len(vars_dict) for vars_dict in all_new_fill_values.values())
         print(f"Already processed {total_vars} variable(s) in {len(all_new_fill_values)} file(s)")
         response = input("Continue from where you left off? [Y/n]: ").strip().lower()
@@ -556,7 +553,7 @@ def collect_new_fill_values(
     try:
         for path_from_xml, abs_path in matches:
             _collect_fill_values_one_path(
-                progress_file=progress_file,
+                progress_file=NEW_FILLVALUES_FILE,
                 delete_if_none_filled=delete_if_none_filled,
                 all_new_fill_values=all_new_fill_values,
                 path_from_xml=path_from_xml,
@@ -723,6 +720,11 @@ def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
         return {}
 
 
+def abs_path_is_in_bad_files_list(abs_path: str, bad_files: List[str]):
+    """This is just a helper function so we can mock it in testing"""
+    return abs_path in bad_files
+
+
 def main() -> int:
     """
     Main function to find matching file paths and collect new fill values.
@@ -756,16 +758,16 @@ def main() -> int:
     # Check write access to progress file before starting
     if not args.dry_run:
         print("Checking write access for progress file...")
-        if not check_write_access(PROGRESS_FILE):
-            print(f"Error: No write access to create/update {PROGRESS_FILE}", file=sys.stderr)
+        if not check_write_access(NEW_FILLVALUES_FILE):
+            print(f"Error: No write access to create/update {NEW_FILLVALUES_FILE}", file=sys.stderr)
             print(
-                f"Please check permissions in directory: {os.path.dirname(PROGRESS_FILE) or '.'}",
+                f"Please check permissions in directory: {os.path.dirname(NEW_FILLVALUES_FILE) or '.'}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        print(f"✓ Write access confirmed for {PROGRESS_FILE}\n")
+        print(f"✓ Write access confirmed for {NEW_FILLVALUES_FILE}\n")
 
-    print("Extracting file paths from XML...")
+    print(f"Extracting file paths from XML file: {XML_FILE}")
     xml_paths = extract_file_paths_from_xml(XML_FILE)
     print(f"Found {len(xml_paths)} file paths in XML")
 
@@ -777,8 +779,10 @@ def main() -> int:
     matches = []
 
     for path_from_xml in sorted(xml_paths):
+        print(f"Finding matches for: {path_from_xml}")
         abs_path = convert_to_absolute_path(path_from_xml)
-        if abs_path in bad_files:
+        if abs_path_is_in_bad_files_list(abs_path, bad_files):
+            print(f"Does exist, abs path: {abs_path}")
             # Check that the file exists
             if not os.path.exists(abs_path):
                 raise FileNotFoundError(abs_path)

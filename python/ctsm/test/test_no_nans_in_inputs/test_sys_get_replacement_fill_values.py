@@ -5,8 +5,7 @@ System tests for get_replacement_fill_values.py script.
 Tests functions that require file I/O.
 """
 
-import json
-import sys
+import os
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -29,6 +28,7 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     show_ncdump_for_variable,
     var_has_nan_fill,
 )
+from ctsm.no_nans_in_inputs import get_replacement_fill_values
 
 
 # Test constants
@@ -268,6 +268,15 @@ class TestShowNcdumpForVariable:
 class TestMain:
     """Test the main function of get_replacement_fill_values.py."""
 
+    @pytest.fixture(name="mock_bad_files_check", autouse=True)
+    def fixture_mock_bad_files_check(self, monkeypatch):
+        """Make get_replacement_fill_values.abs_path_is_in_bad_files_list() always return True"""
+        monkeypatch.setattr(
+            get_replacement_fill_values,
+            "abs_path_is_in_bad_files_list",
+            lambda *args, **kwargs: True,
+        )
+
     @patch("sys.argv", ["get_replacement_fill_values.py"])
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.check_write_access",
@@ -297,6 +306,7 @@ class TestMain:
         mock_load_bad,
         mock_extract,
         mock_check_write,
+        tmp_path,
     ):  # pylint: disable=unused-argument
         """Test main function with a single matching file."""
         # Setup mock dataset
@@ -312,8 +322,9 @@ class TestMain:
         assert result == 0
         mock_extract.assert_called_once()
         mock_load_bad.assert_called_once()
+        path_to_test_file = os.path.join(str(tmp_path), "lnd/clm2/test.nc")
         mock_open_dataset.assert_called_once_with(
-            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+            path_to_test_file,
             **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
@@ -326,7 +337,7 @@ class TestMain:
         assert len(matches) == 1
         assert matches[0] == (
             "lnd/clm2/test.nc",
-            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+            path_to_test_file,
         )
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
@@ -363,6 +374,7 @@ class TestMain:
         mock_extract,
         mock_check_write,
         capsys,
+        tmp_path,
     ):  # pylint: disable=unused-argument
         """Test main function with a single matching file under --dry-run"""
         # Setup mock dataset
@@ -378,8 +390,9 @@ class TestMain:
         assert result == 0
         mock_extract.assert_called_once()
         mock_load_bad.assert_called_once()
+        path_to_test_file = os.path.join(str(tmp_path), "lnd/clm2/test.nc")
         mock_open_dataset.assert_called_once_with(
-            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+            path_to_test_file,
             **OPEN_DS_KWARGS,
         )
         mock_var_has_nan.assert_called_with(mock_ds, "temp")
@@ -394,7 +407,7 @@ class TestMain:
         assert len(matches) == 1
         assert matches[0] == (
             "lnd/clm2/test.nc",
-            "/glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/test.nc",
+            path_to_test_file,
         )
         assert "delete_if_none_filled" in kwargs
         assert not kwargs["delete_if_none_filled"]
