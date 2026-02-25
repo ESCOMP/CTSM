@@ -15,7 +15,6 @@ import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
-    OPEN_DS_KWARGS,
     USER_REQ_DELETE,
     USER_REQ_SKIP_FILE,
     USER_REQ_QUIT,
@@ -23,6 +22,8 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
     extract_file_paths_from_file,
+    extract_file_path_list_from_usernl,
+    extract_file_path_set_from_usernl,
     extract_file_paths_from_xml,
     file_has_nan_fill,
     get_vars_with_nan_fills,
@@ -32,7 +33,6 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     save_progress,
     show_ncdump_for_variable,
 )
-from ctsm.no_nans_in_inputs import get_replacement_fill_values
 
 
 # Test constants
@@ -40,6 +40,56 @@ TEST_PATH_PARAM = "lnd/clm2/paramdata/test_params.nc"
 TEST_PATH_SURF = "lnd/clm2/surfdata/test_surf.nc"
 TEST_PATH_INIT = "lnd/clm2/initdata/test_init.nc"
 TEST_PATH_OTHER = "share/meshes/test_mesh.nc"
+
+
+class TestExtractFilePathListFromUserNl:
+    """Test the extract_file_path_list_from_usernl function."""
+
+    def test_extracts_multiple_paths(self, create_mock_user_nl_file):
+        """
+        Test extracting multiple file paths from user_nl file, both directly and via
+        extract_file_paths_from_file.
+        """
+
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+
+        result = extract_file_path_list_from_usernl(mock_usernl_file_path)
+        assert nc_paths.rel_path in result
+        assert nc_paths.abs_path in result
+        assert nc_paths.abs_path_dinlocroot in result
+        assert nc_paths.abs_path_dinlocrootcurly in result
+        assert len(result) == 4
+
+
+class TestExtractFilePathSetFromUserNl:
+    """Test the extract_file_path_set_from_usernl function."""
+
+    @pytest.mark.parametrize(
+        "func_to_test, exact",
+        [
+            (extract_file_path_set_from_usernl, False),
+            (extract_file_paths_from_file, False),
+            (extract_file_path_set_from_usernl, True),
+            (extract_file_paths_from_file, True),
+        ],
+    )
+    def test_extracts_multiple_paths(self, create_mock_user_nl_file, func_to_test, exact):
+        """
+        Test extracting multiple file paths from user_nl file, both directly and via
+        extract_file_paths_from_file.
+        """
+
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+
+        result = func_to_test(mock_usernl_file_path, exact)
+        set_with_exact_false = {nc_paths.rel_path, nc_paths.abs_path}
+        if exact:
+            assert result == (
+                set_with_exact_false
+                | {nc_paths.abs_path_dinlocroot, nc_paths.abs_path_dinlocrootcurly}
+            )
+        else:
+            assert result == set_with_exact_false
 
 
 class TestExtractFilePathsFromXml:
@@ -294,18 +344,28 @@ class TestMain:
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_path_set_from_usernl",
+        return_value=set(),
+    )
     @patch("os.path.exists", return_value=True)
     @patch(
         "ctsm.no_nans_in_inputs.get_replacement_fill_values.file_has_nan_fill",
         return_value=(True, ["temp"]),
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
+    @patch(
+        "ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files",
+        return_value=["user_nl_clm"],
+    )
     def test_main_happy_path(
         self,
+        mock_find_user_nl_files,
         mock_collect,
         mock_file_has_nan,
         mock_exists,
-        mock_extract,
+        mock_extract_from_usernl,
+        mock_extract_from_xml,
         mock_check_write,
         tmp_path,
         mock_xml_file_path,
@@ -319,18 +379,20 @@ class TestMain:
         result = main_func()
 
         assert result == 0
-        mock_extract.assert_called_once()
+        assert mock_extract_from_xml.call_count == 2
+        assert mock_extract_from_usernl.call_count == 1
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_collect.assert_called_once()
         mock_check_write.assert_called_once()
+        mock_find_user_nl_files.assert_called_once()
 
         # Check the arguments passed to collect_new_fill_values
         args, kwargs = mock_collect.call_args
         progress = args[0]
         assert len(progress) == 1
         expected_dict = create_empty_progress_dict_onefile()
-        expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        expected_dict["found_in_files"] = {mock_xml_file_path: {path_to_test_file_rel}}
         expected_dict["vars_with_nan_fills"] = ["temp"]
         assert progress[path_to_test_file_abs] == expected_dict
         assert "delete_if_none_filled" in kwargs
@@ -353,8 +415,10 @@ class TestMain:
         return_value=["temp"],
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files", return_value=[])
     def test_main_dry_run(
         self,
+        mock_find_user_nl_files,
         mock_collect,
         mock_get_vars_with_nan,
         mock_exists,
@@ -373,11 +437,12 @@ class TestMain:
         result = main_func()
 
         assert result == 0
-        mock_extract.assert_called_once()
+        assert mock_extract.call_count == 2
         path_to_test_file_rel = "lnd/clm2/test.nc"
         path_to_test_file_abs = os.path.join(str(tmp_path), path_to_test_file_rel)
         mock_get_vars_with_nan.assert_called_with(path_to_test_file_abs)
         mock_collect.assert_called_once()
+        mock_find_user_nl_files.assert_called_once()
 
         # Shouldn't check write access in dry run
         mock_check_write.assert_not_called()
@@ -386,7 +451,7 @@ class TestMain:
         args, kwargs = mock_collect.call_args
         progress = args[0]
         expected_dict = create_empty_progress_dict_onefile()
-        expected_dict["found_in_files"] = {mock_xml_file_path: path_to_test_file_rel}
+        expected_dict["found_in_files"] = {mock_xml_file_path: {path_to_test_file_rel}}
         expected_dict["vars_with_nan_fills"] = ["temp"]
         assert len(progress) == 1
         assert progress[path_to_test_file_abs] == expected_dict
@@ -413,8 +478,10 @@ class TestMain:
         return_value=["temp"],
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
+    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files", return_value=[])
     def test_main_missing_file(
         self,
+        mock_find_user_nl_files,
         mock_collect,
         mock_get_vars_with_nan,
         mock_extract,
@@ -502,22 +569,32 @@ class TestMain:
 class TestProgressFunctions:
     """Test the save_progress and load_progress functions."""
 
-    def test_save_and_load_progress(self, tmp_path):
+    @pytest.fixture(name="example_data")
+    def fixture_example_data(self):
+        """Some test data to represent a progress object"""
+        data_to_save = {}
+        file1 = "/path/to/file1.nc"
+        data_to_save[file1] = create_empty_progress_dict_onefile()
+        data_to_save[file1]["new_fill_values"] = {"var1": -999, "var2": USER_REQ_DELETE}
+        data_to_save[file1]["found_in_files"] = {"dummy.xml": {file1}}
+        file2 = "/path/to/file2.nc"
+        data_to_save[file2] = create_empty_progress_dict_onefile()
+        data_to_save[file2]["new_fill_values"] = {"var3": -999.0}
+        data_to_save[file2]["found_in_files"] = {"user_nl_dummy": {file2}}
+        return data_to_save
+
+    def test_save_and_load_progress(self, tmp_path, example_data):
         """Test that data is saved and loaded correctly."""
         progress_file = tmp_path / "progress.json"
-        data_to_save = {
-            "/path/to/file1.nc": {"var1": -999, "var2": USER_REQ_DELETE},
-            "/path/to/file2.nc": {"var3": -999.0},
-        }
 
         # Save data
-        save_progress(data_to_save, str(progress_file))
+        save_progress(example_data, str(progress_file))
 
         # Load data
         loaded_data = load_progress(str(progress_file))
 
         # Check that loaded data is identical to saved data
-        assert loaded_data == data_to_save
+        assert loaded_data == example_data
 
     def test_load_nonexistent_file(self):
         """Test loading a nonexistent progress file returns an empty dict."""
@@ -536,10 +613,10 @@ class TestProgressFunctions:
         captured = capsys.readouterr()
         assert "Warning: Could not load progress file" in captured.err
 
-    def test_save_io_error(self, capsys):
+    def test_save_io_error(self, example_data, capsys):
         """Test that an IOError during save is caught and a warning is printed."""
         with patch("builtins.open", side_effect=IOError("Permission denied")):
-            save_progress({"some": "data"}, "/readonly/path/progress.json")
+            save_progress(example_data, "/readonly/path/progress.json")
             captured = capsys.readouterr()
             assert "Warning: Could not save progress" in captured.err
 

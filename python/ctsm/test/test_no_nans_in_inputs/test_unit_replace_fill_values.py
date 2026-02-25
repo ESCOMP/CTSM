@@ -5,6 +5,7 @@ System tests for replace_fill_values.py script.
 Tests the functionality of replacing NaN fill values in NetCDF files.
 """
 
+from pathlib import Path
 import xml.etree.ElementTree as ET
 
 import numpy as np
@@ -13,6 +14,8 @@ import pytest
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     get_ncatted_type_code,
     get_output_filename,
+    update_text_file_referencing_netcdf,
+    update_usernl_file,
     update_xml_file,
 )
 
@@ -90,7 +93,8 @@ class TestGetNcattedTypeCode:
 class TestUpdateXmlFile:
     """Test the update_xml_file function."""
 
-    def test_update_xml_path(self, mock_xml_file_path):
+    @pytest.mark.parametrize("fn_to_test", [update_xml_file, update_text_file_referencing_netcdf])
+    def test_update_xml_path(self, mock_xml_file_path, fn_to_test):
         """Test updating a file path in XML."""
         # Create XML content in the mocked path
         xml_content = """<?xml version="1.0"?>
@@ -106,7 +110,7 @@ class TestUpdateXmlFile:
         old_path = "lnd/clm2/paramdata/test_params.nc"
         new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
 
-        update_xml_file(mock_xml_file_path, old_path, new_path)
+        fn_to_test(mock_xml_file_path, old_path, new_path)
 
         # Read and verify the updated XML
         tree = ET.parse(mock_xml_file_path)
@@ -262,3 +266,76 @@ class TestUpdateXmlFile:
         # Surfdata should be unchanged
         surfdata = root.find("surfdata")
         assert surfdata.text == "lnd/clm2/surfdata/different_file.nc"
+
+
+class TestUpdateUsernlFile:
+    """Test the update_usernl_file function."""
+
+    def _do_test(
+        self,
+        mock_usernl_file_path: Path,
+        nc_path_in: str,
+        fn_to_test: callable = update_usernl_file,
+    ):
+
+        # Get line with nc_path before substitution
+        line_before = None
+        with open(mock_usernl_file_path, "r", encoding="utf8") as f:
+            n_line = -1
+            for line in f.readlines():
+                n_line += 1
+                if nc_path_in in line:
+                    line_before = line
+                    break
+        if line_before is None:
+            raise RuntimeError(f"No line found containing {nc_path_in=}")
+
+        # Substitute
+        nc_path_out = "abc123.nc"
+        fn_to_test(mock_usernl_file_path, nc_path_in, nc_path_out)
+
+        # Get line after substitution
+        line_after = None
+        with open(mock_usernl_file_path, "r", encoding="utf8") as f:
+            n = -1
+            for line_after in f.readlines():
+                n += 1
+                if n == n_line:
+                    break
+        if line_after is None:
+            raise RuntimeError(f"No lines read from {mock_usernl_file_path=}")
+
+        # Make sure *something* happened on the line
+        assert line_before != line_after
+
+        # Make sure the line looks like what we expect: The filename was replaced but nothing else
+        # was touched.
+        expected = line_before.replace(nc_path_in, nc_path_out)
+        assert line_after == expected
+
+    @pytest.mark.parametrize(
+        "fn_to_test", [update_usernl_file, update_text_file_referencing_netcdf]
+    )
+    def test_update_usernl_file_relpath(self, create_mock_user_nl_file, fn_to_test):
+        """Test update_usernl_file with rel_path line of our test user_nl_ file"""
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+        nc_path_in = nc_paths.rel_path
+        self._do_test(mock_usernl_file_path, nc_path_in, fn_to_test)
+
+    def test_update_usernl_file_abspath(self, create_mock_user_nl_file):
+        """Test update_usernl_file with abs_path line of our test user_nl_ file"""
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+        nc_path_in = nc_paths.abs_path
+        self._do_test(mock_usernl_file_path, nc_path_in)
+
+    def test_update_usernl_file_abs_path_dinlocroot(self, create_mock_user_nl_file):
+        """Test update_usernl_file with abs_path_dinlocroot line of our test user_nl_ file"""
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+        nc_path_in = nc_paths.abs_path_dinlocroot
+        self._do_test(mock_usernl_file_path, nc_path_in)
+
+    def test_update_usernl_file_abs_path_dinlocrootcurly(self, create_mock_user_nl_file):
+        """Test update_usernl_file with abs_path_dinlocrootcurly line of our test user_nl_ file"""
+        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
+        nc_path_in = nc_paths.abs_path_dinlocrootcurly
+        self._do_test(mock_usernl_file_path, nc_path_in)

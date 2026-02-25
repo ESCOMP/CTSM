@@ -3,6 +3,10 @@
 Unit tests for get_replacement_fill_values.py script.
 """
 
+import os
+from pathlib import Path
+from unittest.mock import MagicMock
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -18,17 +22,23 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     FillValueConfig,
     VarContext,
+    convert_fif_dict_sets,
+    create_empty_progress_dict_onefile,
+    find_user_nl_files,
     get_fill_value_from_user,
     get_var_info,
+    replace_env_vars_in_netcdf_paths,
     var_data_has_nan,
     VARSTARTS_TO_DEFAULT_NEG999,
 )
+from ctsm.no_nans_in_inputs import get_replacement_fill_values
 
 
 # Test constants used in multiple tests
 TEST_VAR_NAME = "test_var"
 DEFAULT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=float)
 INT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=int)
+TEST_NC_ABSPATH = "/abs/path/abc123.nc"
 
 
 class TestGetFillValueFromUser:
@@ -319,3 +329,163 @@ class TestGetVarInfo:
         assert var_context.var_name == TEST_VAR_NAME
         assert var_context.target_type == float
         assert var_context.file_path == file_path
+
+
+class TestFindUserNlFiles:
+    """Tests of find_user_nl_files()"""
+
+    def test_find_user_nl_files(self, tmp_path):
+        """Test find_user_nl_files()"""
+        found_toplevel = f"{tmp_path}/user_nl_clm"
+        Path(found_toplevel).touch()
+
+        # Create files and dirs
+        found_secondlevel = f"{tmp_path}/some_dir/user_nl_something"
+        Path(found_secondlevel).parent.mkdir()
+        Path(found_secondlevel).touch()
+        notfound = f"{tmp_path}/some_dir/different_user_nl_confusing"
+        Path(notfound).touch()
+
+        # Get and check results
+        results = find_user_nl_files(str(tmp_path))
+        assert len(results) == 2
+        assert found_toplevel in results
+        assert found_secondlevel in results
+        assert notfound not in results
+
+
+class TestReplaceEnvVarsInNetcdfPath:
+    """Tests of replace_env_vars_in_netcdf_paths()"""
+
+    @pytest.mark.parametrize("nc_in", ["file_name.nc", "/abs/path/file.nc"])
+    def test_replace_env_vars_in_netcdf_paths_nosubs(self, nc_in):
+        """Test that replace_env_vars_in_netcdf_paths() works without any substitutions"""
+        nc_out = replace_env_vars_in_netcdf_paths(nc_in)
+        assert nc_out == nc_in
+
+    @pytest.mark.parametrize("nc_in", ["$DIN_LOC_ROOT/file.nc", "${DIN_LOC_ROOT}/file.nc"])
+    def test_replace_env_vars_in_netcdf_paths_dlr(self, nc_in):
+        """Test that replace_env_vars_in_netcdf_paths() works when replacing DIN_LOC_ROOT"""
+        nc_out = replace_env_vars_in_netcdf_paths(nc_in)
+
+        expected = os.path.join(get_replacement_fill_values.INPUTDATA_PREFIX, "file.nc")
+
+        assert nc_out == expected
+
+
+class TestHowNetcdfIsReferencedInFile:
+    """Tests of how_netcdf_is_referenced_in_file()."""
+
+    def return_input(self, x):
+        """Take one input argument and return it"""
+        return x
+
+    @pytest.fixture(autouse=True)
+    def mock_convert_to_absolute_path(self, monkeypatch):
+        """Mock convert_to_absolute_path() to just return what it was given"""
+        mock = MagicMock(side_effect=lambda x, *args, **kwargs: x)
+        monkeypatch.setattr(get_replacement_fill_values, "convert_to_absolute_path", mock)
+        return mock
+
+    @pytest.fixture(autouse=True)
+    def mock_replace_env_vars_in_netcdf_paths(self, monkeypatch):
+        """Mock replace_env_vars_in_netcdf_paths() to just return what it was given"""
+        mock = MagicMock(side_effect=lambda x, *args, **kwargs: x)
+        monkeypatch.setattr(get_replacement_fill_values, "replace_env_vars_in_netcdf_paths", mock)
+        return mock
+
+    def test_how_netcdf_is_referenced_in_file_1found_once(
+        self, monkeypatch, mock_convert_to_absolute_path, mock_replace_env_vars_in_netcdf_paths
+    ):
+        """Test how_netcdf_is_referenced_in_file() for one netCDF file present once in text file"""
+        nc_file = "file.nc"
+        monkeypatch.setattr(
+            get_replacement_fill_values,
+            "extract_file_paths_from_file",
+            lambda *args, **kwargs: [nc_file],
+        )
+        set_of_how_this_netcdf_appears = (
+            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+        )
+        assert mock_convert_to_absolute_path.call_count == 2
+        assert mock_replace_env_vars_in_netcdf_paths.call_count == 1
+        assert set_of_how_this_netcdf_appears == {nc_file}
+
+    def test_how_netcdf_is_referenced_in_file_1found_twice_same(
+        self, monkeypatch, mock_convert_to_absolute_path, mock_replace_env_vars_in_netcdf_paths
+    ):
+        """
+        Test how_netcdf_is_referenced_in_file() for one netCDF file present twice in text file in
+        the exact same way
+        """
+        nc_file = "file.nc"
+        monkeypatch.setattr(
+            get_replacement_fill_values,
+            "extract_file_paths_from_file",
+            lambda *args, **kwargs: [nc_file, nc_file],
+        )
+        set_of_how_this_netcdf_appears = (
+            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+        )
+        assert mock_convert_to_absolute_path.call_count == 3
+        assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
+        assert set_of_how_this_netcdf_appears == {nc_file}
+
+    def test_how_netcdf_is_referenced_in_file_1found_twice_diff(
+        self, monkeypatch, mock_convert_to_absolute_path, mock_replace_env_vars_in_netcdf_paths
+    ):
+        """
+        Test how_netcdf_is_referenced_in_file() for one netCDF file present twice in text file in
+        different ways
+        """
+        nc_file = "file.nc"
+        nc_file2 = "abc123" + nc_file
+        monkeypatch.setattr(
+            get_replacement_fill_values,
+            "extract_file_paths_from_file",
+            lambda *args, **kwargs: [nc_file, nc_file2],
+        )
+        set_of_how_this_netcdf_appears = (
+            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+        )
+        assert mock_convert_to_absolute_path.call_count == 3
+        assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
+        assert set_of_how_this_netcdf_appears == {nc_file}
+
+    def test_how_netcdf_is_referenced_in_file_2found(
+        self, monkeypatch, mock_convert_to_absolute_path, mock_replace_env_vars_in_netcdf_paths
+    ):
+        """Test how_netcdf_is_referenced_in_file() for two netCDF files present in text file"""
+        nc_file = "file.nc"
+        nc_files = [nc_file, "file2.nc"]
+        monkeypatch.setattr(
+            get_replacement_fill_values,
+            "extract_file_paths_from_file",
+            lambda *args, **kwargs: nc_files,
+        )
+        set_of_how_this_netcdf_appears = (
+            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+        )
+        assert mock_convert_to_absolute_path.call_count == 3
+        assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
+        assert set_of_how_this_netcdf_appears == {nc_file}
+
+
+class TestConvertFifDictSets:
+    """Tests of convert_fif_dict_sets()"""
+
+    @pytest.mark.parametrize(
+        "obj_in, expected",
+        [
+            ([TEST_NC_ABSPATH], {TEST_NC_ABSPATH}),
+            ({TEST_NC_ABSPATH}, [TEST_NC_ABSPATH]),
+        ],
+    )
+    def test_convert_fif_dict_sets_set2list(self, obj_in, expected):
+        """Test converting set to list and vice versa"""
+
+        progress_in = {TEST_NC_ABSPATH: create_empty_progress_dict_onefile()}
+        file_containing = "user_nl_clm"
+        progress_in[TEST_NC_ABSPATH]["found_in_files"][file_containing] = obj_in
+        progress_out = convert_fif_dict_sets(progress_in, dest_type=type(expected))
+        assert progress_out[TEST_NC_ABSPATH]["found_in_files"][file_containing] == expected

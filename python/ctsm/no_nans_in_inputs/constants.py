@@ -28,3 +28,7 @@ SEP_LENGTH = 80  # Length of horizontal separators in stdout
 
 # Keyword arguments we want to include in every xarray.open_dataset() call.
 OPEN_DS_KWARGS = {"decode_timedelta": False, "decode_times": False}
+
+# Pattern for extracting netCDF paths (third group) from user_nl_ files
+ONE_OF_OUR_FILES = f"""[^'"]*{OUR_PATH}[^'"]"""
+USERNL_NC_PATTERN = rf"""^(\s*\w+\s*=\s*)(['"])({ONE_OF_OUR_FILES}*)(['"])(.*)$"""

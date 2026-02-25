@@ -5,7 +5,6 @@ System tests for replace_fill_values.py script.
 Tests the functionality of replacing NaN fill values in NetCDF files.
 """
 
-import json
 import os
 import subprocess
 import xml.etree.ElementTree as ET
@@ -17,12 +16,11 @@ import pytest
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE, OPEN_DS_KWARGS
-from ctsm.no_nans_in_inputs.get_replacement_fill_values import create_empty_progress_dict_onefile
+from ctsm.no_nans_in_inputs.get_replacement_fill_values import create_empty_progress_dict_onefile, load_progress, save_progress
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
     execute_command,
     get_output_filename,
-    load_new_fillvalues,
     main,
 )
 
@@ -34,28 +32,6 @@ TEST_OUTPUT_FILE = "output.nc"
 TEST_FILL_VALUE = -123.4
 NCATTED_CMD = "ncatted"
 NCATTED_FLAG = "-a"
-
-
-class TestLoadNewFillvalues:
-    """Test the load_new_fillvalues function."""
-
-    def test_load_valid_json(self, tmp_path):
-        """Test loading a valid JSON file."""
-        test_file = tmp_path / "test_fillvalues.json"
-        test_data = {
-            "/path/to/file1.nc": {"var1": -999.0, "var2": USER_REQ_DELETE},
-            "/path/to/file2.nc": {"var3": -999},
-        }
-        test_file.write_text(json.dumps(test_data), encoding="utf-8")
-
-        result = load_new_fillvalues(str(test_file))
-        assert result == test_data
-
-    def test_file_not_found(self):
-        """Test that missing file causes SystemExit."""
-        with pytest.raises(SystemExit):
-            load_new_fillvalues("/nonexistent/file.json")
-
 
 class TestBuildNcattedCommand:
     """Test the build_ncatted_command function."""
@@ -192,14 +168,13 @@ class TestReplaceFullWorkflow:
         # Create fillvalues JSON file
         fillvalues_file = tmp_path / "test_fillvalues.json"
         input_file_dict = create_empty_progress_dict_onefile()
-        input_file_dict["found_in_files"] = {xml_file: str(input_file)}
+        input_file_dict["found_in_files"] = {xml_file: {str(input_file)}}
         input_file_dict["new_fill_values"] = {
             TEST_VAR_TEMP: TEST_FILL_VALUE,
             TEST_VAR_PRESSURE: USER_REQ_DELETE,
         }
         fillvalues_data = {str(input_file): input_file_dict}
-        print(f"{fillvalues_data=}")
-        fillvalues_file.write_text(json.dumps(fillvalues_data), encoding="utf-8")
+        save_progress(fillvalues_data, fillvalues_file)
 
         return {
             "input_file": str(input_file),
@@ -214,7 +189,7 @@ class TestReplaceFullWorkflow:
         output_file = get_output_filename(input_file)
 
         # Load the fillvalues and build command
-        fillvalues = load_new_fillvalues(fillvalues_file)
+        fillvalues = load_progress(fillvalues_file)
         var_fillvalues = fillvalues[input_file]["new_fill_values"]
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
 

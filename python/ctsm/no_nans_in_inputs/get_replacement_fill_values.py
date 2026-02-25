@@ -9,7 +9,7 @@ This script:
 4. Prints the matching paths
 """
 
-from collections import UserDict
+import glob
 import argparse
 import re
 import xml.etree.ElementTree as ET
@@ -18,7 +18,8 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any, List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Set, Type
+from copy import deepcopy
 
 import numpy as np
 import xarray as xr
@@ -36,6 +37,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     OPEN_DS_KWARGS,
     OUR_PATH,
     SEP_LENGTH,
+    USERNL_NC_PATTERN,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
     USER_REQ_SKIP_FILE,
@@ -45,6 +47,9 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
 
 # File paths
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
+DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+)
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
 
@@ -85,6 +90,78 @@ class FillValueConfig:
     delete_if_none_filled: bool = False
 
 
+def find_user_nl_files(dir_to_search: str) -> list[str]:
+    """Find all user_nl_* files in CTSM repo"""
+    pattern = os.path.join(f"{dir_to_search}", "**", "user_nl_*")
+    return glob.glob(pattern, recursive=True)
+
+
+def replace_env_vars_in_netcdf_paths(netcdf_path_in: str) -> str:
+    """
+    Given a path to a netCDF file, replace any environment variables like $DIN_LOC_ROOT
+    """
+    netcdf_path_out = netcdf_path_in
+    netcdf_path_out = netcdf_path_out.replace("$DIN_LOC_ROOT", INPUTDATA_PREFIX)
+    netcdf_path_out = netcdf_path_out.replace("${DIN_LOC_ROOT}", INPUTDATA_PREFIX)
+    return netcdf_path_out
+
+
+def extract_file_path_list_from_usernl(usernl_file: str) -> set[str]:
+    """
+    Extract all file paths from a user_nl file.
+
+    Args:
+        usernl_file (str): Path to the user_nl file
+
+    Returns:
+        List of file paths found in the user_nl file
+
+    Raises:
+        SystemExit: If usernl_file is not found
+    """
+
+    try:
+        # Find all quoted strings in file containing OUR_PATH
+        with open(usernl_file, "r", encoding="utf8") as f:
+            text = f.read()
+        file_paths_list = [m.group(3) for m in re.finditer(USERNL_NC_PATTERN, text, re.MULTILINE)]
+    except FileNotFoundError:
+        print(f"File not found: {usernl_file}", file=sys.stderr)
+        sys.exit(1)
+    return file_paths_list
+
+
+def extract_file_path_set_from_usernl(usernl_file: str, exact: bool = False) -> set[str]:
+    """
+    Extract all unique file paths from a user_nl file.
+
+    Args:
+        usernl_file (str): Path to the user_nl file
+        exact (bool): Whether returned file paths should be exactly as they were in the usernl file.
+                      Default False.
+
+    Returns:
+        Set of file paths found in the user_nl file
+
+    Raises:
+        SystemExit: If usernl_file is not found
+    """
+    file_paths = set()
+
+    try:
+        file_paths_list = extract_file_path_list_from_usernl(usernl_file)
+
+        # Add those strings to our set of found paths, replacing env vars if needed
+        for f in file_paths_list:
+            if not exact:
+                f = replace_env_vars_in_netcdf_paths(f)
+            file_paths.add(f)
+    except FileNotFoundError:
+        print(f"File not found: {usernl_file}", file=sys.stderr)
+        sys.exit(1)
+    return file_paths
+
+
 def extract_file_paths_from_xml(xml_file: str) -> set[str]:
     """
     Extract all file paths from an XML file.
@@ -96,7 +173,7 @@ def extract_file_paths_from_xml(xml_file: str) -> set[str]:
         Set of file paths found in the XML
 
     Raises:
-        SystemExit: If XML parsing fails or file is not found
+        SystemExit: If parsing fails or file is not found
     """
     file_paths = set()
 
@@ -127,12 +204,14 @@ def extract_file_paths_from_xml(xml_file: str) -> set[str]:
     return file_paths
 
 
-def extract_file_paths_from_file(file_to_search: str) -> set[str]:
+def extract_file_paths_from_file(file_to_search: str, exact: bool = False) -> set[str]:
     """
     Extract all file paths from a file.
 
     Args:
-        file_to_search: Path to the file to search
+        file_to_search (str): Path to the file to search
+        exact (bool): Whether returned file paths should be exactly as they were in the usernl file.
+                      Default False.
 
     Returns:
         Set of file paths found in the file
@@ -141,12 +220,43 @@ def extract_file_paths_from_file(file_to_search: str) -> set[str]:
         NotImplementedError: If no function exists to process this file
     """
 
-    _, ext = os.path.splitext(file_to_search)
+    basename = os.path.basename(file_to_search)
+    _, ext = os.path.splitext(basename)
     if ext == ".xml":
+        # Doesn't need "exact" arg because no replacement happens
         file_paths = extract_file_paths_from_xml(file_to_search)
+    elif basename.startswith("user_nl"):
+        file_paths = extract_file_path_set_from_usernl(file_to_search, exact)
     else:
         raise NotImplementedError(f"Not sure how to get file paths from file: '{file_to_search}'")
     return file_paths
+
+
+def how_netcdf_is_referenced_in_file(file_to_search: str, netcdf_path: str) -> List[str]:
+    """
+    Get list of ways a given netCDF file is referenced in a given text file
+
+    Args:
+        file_to_search (str): Path to text file we're searching
+        netcdf_path (str): Path (relative or absolute) of netCDF file we're looking for
+
+    Returns:
+        Set[str]: Unique ways that netcdf_path is referenced in file_to_search
+    """
+
+    # Convert netcdf_path to absolute
+    netcdf_path = convert_to_absolute_path(netcdf_path)
+
+    # Check whether that's referenced in file_to_search
+    netcdf_files_in_file = extract_file_paths_from_file(file_to_search, exact=True)
+    set_of_how_this_netcdf_appears = set()
+    for netcdf_file_in_file in netcdf_files_in_file:
+        netcdf_file_in_file_abs = convert_to_absolute_path(
+            replace_env_vars_in_netcdf_paths(netcdf_file_in_file)
+        )
+        if netcdf_path == netcdf_file_in_file_abs:
+            set_of_how_this_netcdf_appears = set_of_how_this_netcdf_appears | {netcdf_file_in_file}
+    return set_of_how_this_netcdf_appears
 
 
 def convert_to_absolute_path(relative_path: str) -> str:
@@ -164,7 +274,6 @@ def convert_to_absolute_path(relative_path: str) -> str:
         return relative_path
 
     # Otherwise, convert relative path to absolute
-    # TODO: Handle DIN_LOC_ROOT here
     return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
@@ -477,7 +586,6 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
         return USER_REQ_DELETE
 
     # TODO:  WARN AND ASK FOR CONFIRMATION IF TRYING TO SET FILL VALUE TO SOMETHING ALREADY PRESENT IN DATA
-    # TODO: ALSO LOOK IN ALL OUR USER_NL_CLM FILES
 
     ctrl_c_count = 0
 
@@ -682,6 +790,23 @@ def check_write_access(file_path: str) -> bool:
     return os.access(parent or ".", os.W_OK)
 
 
+def convert_fif_dict_sets(progress: Dict, dest_type: Type) -> Dict:
+    """
+    The code needs the "found_in_files" dictionary to contain sets, but the JSON serializer can only
+    handle lists. This function allows the conversion of items in that dictionary between lists and
+    sets.
+
+    Args:
+        progress: Dictionary of found locations and collected fill values
+        dest_type: Type to convert to
+    """
+    for abs_path in progress:
+        fif_dict = progress[abs_path]["found_in_files"]
+        for file_containing in fif_dict:
+            fif_dict[file_containing] = dest_type(fif_dict[file_containing])
+    return progress
+
+
 def save_progress(progress: dict[str, dict[str, Any]], progress_file: str) -> None:
     """
     Save progress to a JSON file.
@@ -690,9 +815,13 @@ def save_progress(progress: dict[str, dict[str, Any]], progress_file: str) -> No
         progress: Dictionary of found locations and collected fill values
         progress_file: Path to the progress file
     """
+    # Can't serialize sets. deepcopy() is needed so that caller's progress isn't affected (.copy()
+    # isn't sufficient since we have nested mutables).
+    progress_out = convert_fif_dict_sets(deepcopy(progress), list)
+
     try:
         with open(progress_file, "w", encoding="utf-8") as f:
-            json.dump(progress, f, indent=2)
+            json.dump(progress_out, f, indent=2)
         print(f"  [Progress saved to {progress_file}]")
     except (IOError, OSError) as e:
         print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
@@ -713,7 +842,12 @@ def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
 
     try:
         with open(progress_file, "r", encoding="utf-8") as f:
-            return json.load(f)
+            progress = json.load(f)
+
+            # This is serialized as a list, but the code needs it as a set
+            progress = convert_fif_dict_sets(progress, set)
+
+            return progress
     except (IOError, OSError, json.JSONDecodeError) as e:
         print(f"Warning: Could not load progress file: {e}", file=sys.stderr)
         return {}
@@ -774,9 +908,19 @@ def main() -> int:
             sys.exit(1)
         print(f"✓ Write access confirmed for {NEW_FILLVALUES_FILE}\n")
 
-    print(f"Extracting file paths from XML file: {XML_FILE}")
-    xml_paths = extract_file_paths_from_file(XML_FILE)
-    print(f"Found {len(xml_paths)} file paths in XML")
+    # Get list of files to search for netCDF that might have NaN fill values
+    files_to_search = [XML_FILE]
+    files_to_search.extend(find_user_nl_files(DIR_TO_SEARCH_FOR_USER_NL_FILES))
+
+    netcdf_paths = set()
+    files_referencing_netcdfs = []
+    for file_to_search in files_to_search:
+        print(f"Extracting file paths from file: {file_to_search}")
+        netcdf_paths_thisfile = extract_file_paths_from_file(file_to_search)
+        print(f"Found {len(netcdf_paths_thisfile)} file paths in file")
+        if netcdf_paths_thisfile:
+            files_referencing_netcdfs.append(file_to_search)
+        netcdf_paths = netcdf_paths | netcdf_paths_thisfile
 
     # Load existing progress if available
     progress = init_progress()
@@ -784,11 +928,11 @@ def main() -> int:
     print("\nFinding matches...")
 
     files_not_found = []
-    for path_from_xml in sorted(xml_paths):
-        print(f"Finding matches for: {path_from_xml}")
+    for netcdf_path in sorted(netcdf_paths):
+        print(f"Finding matches for: {netcdf_path}")
 
         # Check that the file exists
-        abs_path = convert_to_absolute_path(path_from_xml)
+        abs_path = convert_to_absolute_path(netcdf_path)
         if not os.path.exists(abs_path):
             # TODO: Actually handle files that weren't found, if possible.
             files_not_found.append(abs_path)
@@ -797,7 +941,7 @@ def main() -> int:
 
         print(f"Does exist, abs path: {abs_path}")
         print("-" * SEP_LENGTH)
-        print(f"In XML:   {path_from_xml}")
+        print(f"In XML/user_nl file:   {netcdf_path}")
         print(f"Absolute: {abs_path}")
 
         # Check that the file actually has NaN _FillValue for at least one var
@@ -805,9 +949,19 @@ def main() -> int:
         if any_nan_fill:
             if abs_path not in progress:
                 progress[abs_path] = create_empty_progress_dict_onefile()
-            progress[abs_path]["found_in_files"][XML_FILE] = path_from_xml
+            fif_dict = progress[abs_path]["found_in_files"]
+            for file_to_search in files_referencing_netcdfs:
+                set_of_how_this_netcdf_appears = how_netcdf_is_referenced_in_file(
+                    file_to_search, netcdf_path
+                )
+                if set_of_how_this_netcdf_appears:
+                    if file_to_search not in fif_dict:
+                        fif_dict[file_to_search] = set()
+                    fif_dict[file_to_search] = (
+                        fif_dict[file_to_search] | set_of_how_this_netcdf_appears
+                    )
             progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
-            save_progress(progress, NEW_FILLVALUES_FILE)
+            save_progress(progress.copy(), NEW_FILLVALUES_FILE)
         else:
             if abs_path in progress:
                 raise RuntimeError(
@@ -819,7 +973,7 @@ def main() -> int:
 
     # Summary
     print("\nSummary:")
-    print(f"  {len(xml_paths)}\tTotal paths in XML")
+    print(f"  {len(netcdf_paths)}\tTotal paths in XML and user_nl_ files")
     print(f"  {len(progress)}\tFiles with NaN {ATTR}")
     print(f"  {len(files_not_found)}\tFiles not found")
     if files_not_found:
