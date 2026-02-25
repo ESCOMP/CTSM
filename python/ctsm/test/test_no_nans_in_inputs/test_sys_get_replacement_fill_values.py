@@ -15,7 +15,6 @@ import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
-    USER_REQ_DELETE,
     USER_REQ_SKIP_FILE,
     USER_REQ_QUIT,
 )
@@ -27,12 +26,11 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     extract_file_paths_from_xml,
     file_has_nan_fill,
     get_vars_with_nan_fills,
-    load_progress,
     main as main_func,
-    create_empty_progress_dict_onefile,
-    save_progress,
     show_ncdump_for_variable,
 )
+
+from ctsm.no_nans_in_inputs.json_io import create_empty_progress_dict_onefile
 
 
 # Test constants
@@ -566,61 +564,6 @@ class TestMain:
         assert "No write access" in captured.err
 
 
-class TestProgressFunctions:
-    """Test the save_progress and load_progress functions."""
-
-    @pytest.fixture(name="example_data")
-    def fixture_example_data(self):
-        """Some test data to represent a progress object"""
-        data_to_save = {}
-        file1 = "/path/to/file1.nc"
-        data_to_save[file1] = create_empty_progress_dict_onefile()
-        data_to_save[file1]["new_fill_values"] = {"var1": -999, "var2": USER_REQ_DELETE}
-        data_to_save[file1]["found_in_files"] = {"dummy.xml": {file1}}
-        file2 = "/path/to/file2.nc"
-        data_to_save[file2] = create_empty_progress_dict_onefile()
-        data_to_save[file2]["new_fill_values"] = {"var3": -999.0}
-        data_to_save[file2]["found_in_files"] = {"user_nl_dummy": {file2}}
-        return data_to_save
-
-    def test_save_and_load_progress(self, tmp_path, example_data):
-        """Test that data is saved and loaded correctly."""
-        progress_file = tmp_path / "progress.json"
-
-        # Save data
-        save_progress(example_data, str(progress_file))
-
-        # Load data
-        loaded_data = load_progress(str(progress_file))
-
-        # Check that loaded data is identical to saved data
-        assert loaded_data == example_data
-
-    def test_load_nonexistent_file(self):
-        """Test loading a nonexistent progress file returns an empty dict."""
-        loaded_data = load_progress("/nonexistent/path/progress.json")
-        assert loaded_data == {}
-
-    def test_load_corrupted_json(self, tmp_path, capsys):
-        """Test loading a corrupted JSON file returns an empty dict and warns."""
-        progress_file = tmp_path / "progress.json"
-        with open(progress_file, "w", encoding="utf-8") as f:
-            f.write("this is not valid json")
-
-        loaded_data = load_progress(str(progress_file))
-
-        assert loaded_data == {}
-        captured = capsys.readouterr()
-        assert "Warning: Could not load progress file" in captured.err
-
-    def test_save_io_error(self, example_data, capsys):
-        """Test that an IOError during save is caught and a warning is printed."""
-        with patch("builtins.open", side_effect=IOError("Permission denied")):
-            save_progress(example_data, "/readonly/path/progress.json")
-            captured = capsys.readouterr()
-            assert "Warning: Could not save progress" in captured.err
-
-
 class TestCollectNewFillValues:
     """Test the collect_new_fill_values function using real files."""
 
@@ -636,7 +579,7 @@ class TestCollectNewFillValues:
         ds.to_netcdf(path)
         ds.close()
 
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     @patch("builtins.input", side_effect=["-999"])
     def test_user_provides_number(self, mock_input, mock_save, tmp_path, capsys):
         """Test happy path where user provides a numeric fill value."""
@@ -671,7 +614,7 @@ class TestCollectNewFillValues:
         assert saved_fill_value == expected_fill_value
         assert isinstance(saved_fill_value, float)
 
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     @patch("builtins.input", side_effect=[USER_REQ_SKIP_FILE])
     def test_user_skips_file(self, mock_input, mock_save, tmp_path):
         """Test that requesting skipfile skips the current file."""
@@ -699,7 +642,7 @@ class TestCollectNewFillValues:
         # Progress was never saved
         mock_save.assert_not_called()
 
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     @patch("builtins.input", side_effect=["-100", USER_REQ_SKIP_FILE])
     def test_user_enters_then_skips_file(self, mock_input, mock_save, tmp_path):
         """Test that requesting skipfile skips the current file but saves entered results."""
@@ -730,7 +673,7 @@ class TestCollectNewFillValues:
         # Progress was saved only after temp
         mock_save.assert_called_once()
 
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     @patch("builtins.input", side_effect=[USER_REQ_QUIT])
     def test_user_quits(self, mock_input, mock_save, tmp_path, mock_progress_file):
         """Test that requesting quit exits the collection loop."""
@@ -753,7 +696,7 @@ class TestCollectNewFillValues:
         # No value was collected, so save_progress is not called
         mock_save.assert_not_called()
 
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     def test_dry_run(self, mock_save, tmp_path, capsys):
         """Test --dry-run"""
         test_file = tmp_path / "test.nc"

@@ -22,8 +22,6 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     FillValueConfig,
     VarContext,
-    convert_fif_dict_sets,
-    create_empty_progress_dict_onefile,
     find_user_nl_files,
     get_fill_value_from_user,
     get_var_info,
@@ -38,7 +36,6 @@ from ctsm.no_nans_in_inputs import get_replacement_fill_values
 TEST_VAR_NAME = "test_var"
 DEFAULT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=float)
 INT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=int)
-TEST_NC_ABSPATH = "/abs/path/abc123.nc"
 
 
 class TestGetFillValueFromUser:
@@ -471,21 +468,4 @@ class TestHowNetcdfIsReferencedInFile:
         assert set_of_how_this_netcdf_appears == {nc_file}
 
 
-class TestConvertFifDictSets:
-    """Tests of convert_fif_dict_sets()"""
 
-    @pytest.mark.parametrize(
-        "obj_in, expected",
-        [
-            ([TEST_NC_ABSPATH], {TEST_NC_ABSPATH}),
-            ({TEST_NC_ABSPATH}, [TEST_NC_ABSPATH]),
-        ],
-    )
-    def test_convert_fif_dict_sets_set2list(self, obj_in, expected):
-        """Test converting set to list and vice versa"""
-
-        progress_in = {TEST_NC_ABSPATH: create_empty_progress_dict_onefile()}
-        file_containing = "user_nl_clm"
-        progress_in[TEST_NC_ABSPATH]["found_in_files"][file_containing] = obj_in
-        progress_out = convert_fif_dict_sets(progress_in, dest_type=type(expected))
-        assert progress_out[TEST_NC_ABSPATH]["found_in_files"][file_containing] == expected

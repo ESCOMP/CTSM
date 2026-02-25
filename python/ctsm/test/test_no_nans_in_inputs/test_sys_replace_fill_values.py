@@ -16,7 +16,11 @@ import pytest
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE, OPEN_DS_KWARGS
-from ctsm.no_nans_in_inputs.get_replacement_fill_values import create_empty_progress_dict_onefile, load_progress, save_progress
+from ctsm.no_nans_in_inputs.json_io import (
+    create_empty_progress_dict_onefile,
+    load_progress,
+    save_progress,
+)
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
     execute_command,
@@ -32,6 +36,7 @@ TEST_OUTPUT_FILE = "output.nc"
 TEST_FILL_VALUE = -123.4
 NCATTED_CMD = "ncatted"
 NCATTED_FLAG = "-a"
+
 
 class TestBuildNcattedCommand:
     """Test the build_ncatted_command function."""

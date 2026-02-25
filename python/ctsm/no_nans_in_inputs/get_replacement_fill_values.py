@@ -18,7 +18,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from typing import Any, List, Tuple, Dict, Set, Type
+from typing import Any, List, Tuple, Dict, Type
 from copy import deepcopy
 
 import numpy as np
@@ -44,6 +44,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     USER_REQ_SKIP_VAR,
     XML_FILE,
 )
+from ctsm.no_nans_in_inputs import json_io
 
 # File paths
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
@@ -52,10 +53,6 @@ DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
 )
 
 VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
-
-
-def create_empty_progress_dict_onefile():
-    return {"found_in_files": {}, "new_fill_values": {}, "vars_with_nan_fills": []}
 
 
 @dataclass
@@ -628,13 +625,6 @@ def get_fill_value_from_user(var_context: VarContext, config: FillValueConfig) -
             ctrl_c_count = _handle_ctrl_c(ctrl_c_count, user_input, var_context)
 
 
-def _get_n_vars_in_progress(progress: Dict):
-    n_vars = 0
-    for file in progress.keys():
-        n_vars += len(progress[file]["new_fill_values"].keys())
-    return n_vars
-
-
 def collect_new_fill_values(
     progress: Dict | {},
     delete_if_none_filled: bool = False,
@@ -748,7 +738,7 @@ def _collect_fill_values_one_path(
         new_fill_values[var] = new_fill_value
 
         # Save progress after each variable
-        save_progress(progress, progress_file)
+        json_io.save_progress(progress, progress_file)
         progress[abs_path]["new_fill_values"] = new_fill_values
 
     # Close the dataset
@@ -788,82 +778,6 @@ def check_write_access(file_path: str) -> bool:
         parent = os.path.dirname(parent)
 
     return os.access(parent or ".", os.W_OK)
-
-
-def convert_fif_dict_sets(progress: Dict, dest_type: Type) -> Dict:
-    """
-    The code needs the "found_in_files" dictionary to contain sets, but the JSON serializer can only
-    handle lists. This function allows the conversion of items in that dictionary between lists and
-    sets.
-
-    Args:
-        progress: Dictionary of found locations and collected fill values
-        dest_type: Type to convert to
-    """
-    for abs_path in progress:
-        fif_dict = progress[abs_path]["found_in_files"]
-        for file_containing in fif_dict:
-            fif_dict[file_containing] = dest_type(fif_dict[file_containing])
-    return progress
-
-
-def save_progress(progress: dict[str, dict[str, Any]], progress_file: str) -> None:
-    """
-    Save progress to a JSON file.
-
-    Args:
-        progress: Dictionary of found locations and collected fill values
-        progress_file: Path to the progress file
-    """
-    # Can't serialize sets. deepcopy() is needed so that caller's progress isn't affected (.copy()
-    # isn't sufficient since we have nested mutables).
-    progress_out = convert_fif_dict_sets(deepcopy(progress), list)
-
-    try:
-        with open(progress_file, "w", encoding="utf-8") as f:
-            json.dump(progress_out, f, indent=2)
-        print(f"  [Progress saved to {progress_file}]")
-    except (IOError, OSError) as e:
-        print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
-
-
-def load_progress(progress_file: str) -> dict[str, dict[str, Any]]:
-    """
-    Load progress from a JSON file if it exists.
-
-    Args:
-        progress_file: Path to the progress file
-
-    Returns:
-        Previously saved progress, or empty dict if file doesn't exist
-    """
-    if not os.path.exists(progress_file):
-        return {}
-
-    try:
-        with open(progress_file, "r", encoding="utf-8") as f:
-            progress = json.load(f)
-
-            # This is serialized as a list, but the code needs it as a set
-            progress = convert_fif_dict_sets(progress, set)
-
-            return progress
-    except (IOError, OSError, json.JSONDecodeError) as e:
-        print(f"Warning: Could not load progress file: {e}", file=sys.stderr)
-        return {}
-
-
-def init_progress():
-    progress = load_progress(NEW_FILLVALUES_FILE)
-    if progress:
-        print(f"\nLoaded progress from {NEW_FILLVALUES_FILE}")
-        total_vars = _get_n_vars_in_progress(progress)
-        print(f"Already processed {total_vars} variable(s) in {len(progress)} file(s)")
-        response = input("Continue from where you left off? [Y/n]: ").strip().lower()
-        if response and response not in ("y", "yes"):
-            progress = {}
-            print("Starting fresh...")
-    return progress
 
 
 def main() -> int:
@@ -923,7 +837,7 @@ def main() -> int:
         netcdf_paths = netcdf_paths | netcdf_paths_thisfile
 
     # Load existing progress if available
-    progress = init_progress()
+    progress = json_io.init_progress()
 
     print("\nFinding matches...")
 
@@ -948,7 +862,7 @@ def main() -> int:
         any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
         if any_nan_fill:
             if abs_path not in progress:
-                progress[abs_path] = create_empty_progress_dict_onefile()
+                progress[abs_path] = json_io.create_empty_progress_dict_onefile()
             fif_dict = progress[abs_path]["found_in_files"]
             for file_to_search in files_referencing_netcdfs:
                 set_of_how_this_netcdf_appears = how_netcdf_is_referenced_in_file(
@@ -961,7 +875,7 @@ def main() -> int:
                         fif_dict[file_to_search] | set_of_how_this_netcdf_appears
                     )
             progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
-            save_progress(progress.copy(), NEW_FILLVALUES_FILE)
+            json_io.save_progress(progress.copy(), NEW_FILLVALUES_FILE)
         else:
             if abs_path in progress:
                 raise RuntimeError(

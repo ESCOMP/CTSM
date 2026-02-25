@@ -26,7 +26,7 @@ if _CTSM_PYTHON not in sys.path:
 import numpy as np  # pylint: disable=wrong-import-position
 import xarray as xr  # pylint: disable=wrong-import-position
 
-from ctsm.no_nans_in_inputs.get_replacement_fill_values import load_progress
+from ctsm.no_nans_in_inputs.json_io import load_progress
 
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,

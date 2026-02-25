@@ -10,6 +10,7 @@ import pytest
 
 from ctsm.no_nans_in_inputs import constants
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
+from ctsm.no_nans_in_inputs import json_io
 from ctsm.no_nans_in_inputs import replace_fill_values
 
 
@@ -27,9 +28,10 @@ def fixture_mock_progress_file(tmp_path, monkeypatch):
     # Monkeypatch the XML_FILE constant in both the constants module and replace_fill_values
     monkeypatch.setattr(constants, "NEW_FILLVALUES_FILE", str(test_progress))
 
-    # Also patch it in things that import XML_FILE
+    # Also patch it in things that import NEW_FILLVALUES_FILE
     monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+    monkeypatch.setattr(json_io, "NEW_FILLVALUES_FILE", str(test_progress))
 
     return str(test_progress)
 
@@ -58,6 +60,7 @@ def fixture_mock_progress_file(tmp_path, monkeypatch):
     # Also where it's imported
     monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
+    monkeypatch.setattr(json_io, "NEW_FILLVALUES_FILE", str(test_progress))
 
     return str(test_progress)
 
