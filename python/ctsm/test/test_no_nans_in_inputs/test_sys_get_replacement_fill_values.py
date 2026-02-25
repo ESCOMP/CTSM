@@ -20,10 +20,6 @@ from ctsm.no_nans_in_inputs.constants import (
 )
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     collect_new_fill_values,
-    extract_file_paths_from_file,
-    extract_file_path_list_from_usernl,
-    extract_file_path_set_from_usernl,
-    extract_file_paths_from_xml,
     file_has_nan_fill,
     get_vars_with_nan_fills,
     main as main_func,
@@ -31,189 +27,6 @@ from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
 )
 
 from ctsm.no_nans_in_inputs.json_io import create_empty_progress_dict_onefile
-
-
-# Test constants
-TEST_PATH_PARAM = "lnd/clm2/paramdata/test_params.nc"
-TEST_PATH_SURF = "lnd/clm2/surfdata/test_surf.nc"
-TEST_PATH_INIT = "lnd/clm2/initdata/test_init.nc"
-TEST_PATH_OTHER = "share/meshes/test_mesh.nc"
-
-
-class TestExtractFilePathListFromUserNl:
-    """Test the extract_file_path_list_from_usernl function."""
-
-    def test_extracts_multiple_paths(self, create_mock_user_nl_file):
-        """
-        Test extracting multiple file paths from user_nl file, both directly and via
-        extract_file_paths_from_file.
-        """
-
-        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
-
-        result = extract_file_path_list_from_usernl(mock_usernl_file_path)
-        assert nc_paths.rel_path in result
-        assert nc_paths.abs_path in result
-        assert nc_paths.abs_path_dinlocroot in result
-        assert nc_paths.abs_path_dinlocrootcurly in result
-        assert len(result) == 4
-
-
-class TestExtractFilePathSetFromUserNl:
-    """Test the extract_file_path_set_from_usernl function."""
-
-    @pytest.mark.parametrize(
-        "func_to_test, exact",
-        [
-            (extract_file_path_set_from_usernl, False),
-            (extract_file_paths_from_file, False),
-            (extract_file_path_set_from_usernl, True),
-            (extract_file_paths_from_file, True),
-        ],
-    )
-    def test_extracts_multiple_paths(self, create_mock_user_nl_file, func_to_test, exact):
-        """
-        Test extracting multiple file paths from user_nl file, both directly and via
-        extract_file_paths_from_file.
-        """
-
-        mock_usernl_file_path, nc_paths = create_mock_user_nl_file()
-
-        result = func_to_test(mock_usernl_file_path, exact)
-        set_with_exact_false = {nc_paths.rel_path, nc_paths.abs_path}
-        if exact:
-            assert result == (
-                set_with_exact_false
-                | {nc_paths.abs_path_dinlocroot, nc_paths.abs_path_dinlocrootcurly}
-            )
-        else:
-            assert result == set_with_exact_false
-
-
-class TestExtractFilePathsFromXml:
-    """Test the extract_file_paths_from_xml function."""
-
-    @pytest.mark.parametrize(
-        "func_to_test", [extract_file_paths_from_xml, extract_file_paths_from_file]
-    )
-    def test_extracts_multiple_paths(self, create_mock_xml_file, func_to_test):
-        """
-        Test extracting multiple file paths from XML, both directly and via
-        extract_file_paths_from_file.
-        """
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>{TEST_PATH_PARAM}</paramfile>
-    <surfdata>{TEST_PATH_SURF}</surfdata>
-    <initdata>{TEST_PATH_INIT}</initdata>
-</namelist_defaults>
-"""
-        )
-        result = func_to_test(xml_path)
-        assert result == {TEST_PATH_PARAM, TEST_PATH_SURF, TEST_PATH_INIT}
-
-    def test_ignores_non_lnd_clm2_paths(self, create_mock_xml_file):
-        """Test that paths not containing lnd/clm2/ are ignored."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>{TEST_PATH_PARAM}</paramfile>
-    <meshfile>{TEST_PATH_OTHER}</meshfile>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM}
-        assert TEST_PATH_OTHER not in result
-
-    def test_ignores_non_path_text(self, create_mock_xml_file):
-        """Test that non-path text content is ignored."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>{TEST_PATH_PARAM}</paramfile>
-    <some_setting>42</some_setting>
-    <another_setting>.true.</another_setting>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM}
-
-    def test_deduplicates_paths(self, create_mock_xml_file):
-        """Test that duplicate paths are returned only once."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile phys="clm6_0">{TEST_PATH_PARAM}</paramfile>
-    <paramfile phys="clm5_0">{TEST_PATH_PARAM}</paramfile>
-    <something_else>{TEST_PATH_PARAM}</something_else>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM}
-
-    def test_handles_whitespace_around_path(self, create_mock_xml_file):
-        """Test that leading/trailing whitespace around paths is handled."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>  {TEST_PATH_PARAM}  </paramfile>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM}
-
-    def test_handles_multiline_path(self, create_mock_xml_file):
-        """Test extracting a path that spans multiple lines (with leading newline)."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile>
-{TEST_PATH_PARAM}
-</paramfile>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM}
-
-    def test_empty_xml(self, create_mock_xml_file):
-        """Test with XML that has no file paths."""
-        xml_path = create_mock_xml_file(
-            """<?xml version="1.0"?>
-<namelist_defaults>
-    <some_setting>42</some_setting>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == set()
-
-    def test_file_not_found_exits(self, capsys):
-        """Test that a missing XML file causes SystemExit."""
-        nonexistent_path = "/nonexistent/file.xml"
-        with pytest.raises(SystemExit):
-            extract_file_paths_from_xml(nonexistent_path)
-        captured = capsys.readouterr()
-        assert nonexistent_path in captured.err
-        assert "not found" in captured.err
-
-    def test_handles_elements_with_attributes(self, create_mock_xml_file):
-        """Test extracting paths from elements that have attributes."""
-        xml_path = create_mock_xml_file(
-            f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <paramfile phys="clm6_0">{TEST_PATH_PARAM}</paramfile>
-    <paramfile phys="clm5_0">{TEST_PATH_SURF}</paramfile>
-</namelist_defaults>
-"""
-        )
-        result = extract_file_paths_from_xml(xml_path)
-        assert result == {TEST_PATH_PARAM, TEST_PATH_SURF}
 
 
 class TestFileHasNanFill:
@@ -339,11 +152,11 @@ class TestMain:
         return_value=True,
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        "ctsm.no_nans_in_inputs.namelist_utils._extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_path_set_from_usernl",
+        "ctsm.no_nans_in_inputs.namelist_utils._extract_file_path_set_from_usernl",
         return_value=set(),
     )
     @patch("os.path.exists", return_value=True)
@@ -353,7 +166,7 @@ class TestMain:
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files",
+        "ctsm.no_nans_in_inputs.namelist_utils.find_user_nl_files",
         return_value=["user_nl_clm"],
     )
     def test_main_happy_path(
@@ -404,7 +217,7 @@ class TestMain:
         return_value=True,
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        "ctsm.no_nans_in_inputs.namelist_utils._extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)
@@ -413,7 +226,7 @@ class TestMain:
         return_value=["temp"],
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files", return_value=[])
+    @patch("ctsm.no_nans_in_inputs.namelist_utils.find_user_nl_files", return_value=[])
     def test_main_dry_run(
         self,
         mock_find_user_nl_files,
@@ -468,7 +281,7 @@ class TestMain:
         return_value=True,
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        "ctsm.no_nans_in_inputs.namelist_utils._extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
     @patch(
@@ -476,7 +289,7 @@ class TestMain:
         return_value=["temp"],
     )
     @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.collect_new_fill_values")
-    @patch("ctsm.no_nans_in_inputs.get_replacement_fill_values.find_user_nl_files", return_value=[])
+    @patch("ctsm.no_nans_in_inputs.namelist_utils.find_user_nl_files", return_value=[])
     def test_main_missing_file(
         self,
         mock_find_user_nl_files,
@@ -519,7 +332,7 @@ class TestMain:
         return_value=True,
     )
     @patch(
-        "ctsm.no_nans_in_inputs.get_replacement_fill_values.extract_file_paths_from_xml",
+        "ctsm.no_nans_in_inputs.namelist_utils._extract_file_paths_from_xml",
         return_value={"lnd/clm2/test.nc"},
     )
     @patch("os.path.exists", return_value=True)

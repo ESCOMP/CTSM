@@ -12,7 +12,6 @@ This script:
 import glob
 import argparse
 import re
-import xml.etree.ElementTree as ET
 import json
 import os
 import subprocess
@@ -35,19 +34,20 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     ERR_STR_SKIP_VAR,
     NEW_FILLVALUES_FILE,
     OPEN_DS_KWARGS,
-    OUR_PATH,
     SEP_LENGTH,
-    USERNL_NC_PATTERN,
     USER_REQ_DELETE,
     USER_REQ_QUIT,
     USER_REQ_SKIP_FILE,
     USER_REQ_SKIP_VAR,
     XML_FILE,
 )
-from ctsm.no_nans_in_inputs import json_io
+from ctsm.no_nans_in_inputs import json_io  # pylint: disable=wrong-import-position
+import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-position
+    convert_to_absolute_path,
+)
 
 # File paths
-INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
     os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
 )
@@ -85,193 +85,6 @@ class FillValueConfig:
     default_value: Any = None
     allow_delete: bool = True
     delete_if_none_filled: bool = False
-
-
-def find_user_nl_files(dir_to_search: str) -> list[str]:
-    """Find all user_nl_* files in CTSM repo"""
-    pattern = os.path.join(f"{dir_to_search}", "**", "user_nl_*")
-    return glob.glob(pattern, recursive=True)
-
-
-def replace_env_vars_in_netcdf_paths(netcdf_path_in: str) -> str:
-    """
-    Given a path to a netCDF file, replace any environment variables like $DIN_LOC_ROOT
-    """
-    netcdf_path_out = netcdf_path_in
-    netcdf_path_out = netcdf_path_out.replace("$DIN_LOC_ROOT", INPUTDATA_PREFIX)
-    netcdf_path_out = netcdf_path_out.replace("${DIN_LOC_ROOT}", INPUTDATA_PREFIX)
-    return netcdf_path_out
-
-
-def extract_file_path_list_from_usernl(usernl_file: str) -> set[str]:
-    """
-    Extract all file paths from a user_nl file.
-
-    Args:
-        usernl_file (str): Path to the user_nl file
-
-    Returns:
-        List of file paths found in the user_nl file
-
-    Raises:
-        SystemExit: If usernl_file is not found
-    """
-
-    try:
-        # Find all quoted strings in file containing OUR_PATH
-        with open(usernl_file, "r", encoding="utf8") as f:
-            text = f.read()
-        file_paths_list = [m.group(3) for m in re.finditer(USERNL_NC_PATTERN, text, re.MULTILINE)]
-    except FileNotFoundError:
-        print(f"File not found: {usernl_file}", file=sys.stderr)
-        sys.exit(1)
-    return file_paths_list
-
-
-def extract_file_path_set_from_usernl(usernl_file: str, exact: bool = False) -> set[str]:
-    """
-    Extract all unique file paths from a user_nl file.
-
-    Args:
-        usernl_file (str): Path to the user_nl file
-        exact (bool): Whether returned file paths should be exactly as they were in the usernl file.
-                      Default False.
-
-    Returns:
-        Set of file paths found in the user_nl file
-
-    Raises:
-        SystemExit: If usernl_file is not found
-    """
-    file_paths = set()
-
-    try:
-        file_paths_list = extract_file_path_list_from_usernl(usernl_file)
-
-        # Add those strings to our set of found paths, replacing env vars if needed
-        for f in file_paths_list:
-            if not exact:
-                f = replace_env_vars_in_netcdf_paths(f)
-            file_paths.add(f)
-    except FileNotFoundError:
-        print(f"File not found: {usernl_file}", file=sys.stderr)
-        sys.exit(1)
-    return file_paths
-
-
-def extract_file_paths_from_xml(xml_file: str) -> set[str]:
-    """
-    Extract all file paths from an XML file.
-
-    Args:
-        xml_file: Path to the XML file
-
-    Returns:
-        Set of file paths found in the XML
-
-    Raises:
-        SystemExit: If parsing fails or file is not found
-    """
-    file_paths = set()
-
-    try:
-        tree = ET.parse(xml_file)
-    except ET.ParseError as parse_error:
-        print(f"Error parsing XML file: {parse_error}", file=sys.stderr)
-        sys.exit(1)
-    except FileNotFoundError:
-        print(f"XML file not found: {xml_file}", file=sys.stderr)
-        sys.exit(1)
-
-    root = tree.getroot()
-
-    # Iterate through all elements in the XML
-    for elem in root.iter():
-        # Get the text content of the element
-        if elem.text and elem.text.strip():
-            text = elem.text.strip()
-            # Check if it looks like a file path (contains OUR_PATH)
-            if OUR_PATH in text:
-                # Extract just the path part (in case there's other text)
-                # Split by whitespace and look for the path
-                for token in text.split():
-                    if OUR_PATH in token:
-                        file_paths.add(token)
-
-    return file_paths
-
-
-def extract_file_paths_from_file(file_to_search: str, exact: bool = False) -> set[str]:
-    """
-    Extract all file paths from a file.
-
-    Args:
-        file_to_search (str): Path to the file to search
-        exact (bool): Whether returned file paths should be exactly as they were in the usernl file.
-                      Default False.
-
-    Returns:
-        Set of file paths found in the file
-
-    Raises:
-        NotImplementedError: If no function exists to process this file
-    """
-
-    basename = os.path.basename(file_to_search)
-    _, ext = os.path.splitext(basename)
-    if ext == ".xml":
-        # Doesn't need "exact" arg because no replacement happens
-        file_paths = extract_file_paths_from_xml(file_to_search)
-    elif basename.startswith("user_nl"):
-        file_paths = extract_file_path_set_from_usernl(file_to_search, exact)
-    else:
-        raise NotImplementedError(f"Not sure how to get file paths from file: '{file_to_search}'")
-    return file_paths
-
-
-def how_netcdf_is_referenced_in_file(file_to_search: str, netcdf_path: str) -> List[str]:
-    """
-    Get list of ways a given netCDF file is referenced in a given text file
-
-    Args:
-        file_to_search (str): Path to text file we're searching
-        netcdf_path (str): Path (relative or absolute) of netCDF file we're looking for
-
-    Returns:
-        Set[str]: Unique ways that netcdf_path is referenced in file_to_search
-    """
-
-    # Convert netcdf_path to absolute
-    netcdf_path = convert_to_absolute_path(netcdf_path)
-
-    # Check whether that's referenced in file_to_search
-    netcdf_files_in_file = extract_file_paths_from_file(file_to_search, exact=True)
-    set_of_how_this_netcdf_appears = set()
-    for netcdf_file_in_file in netcdf_files_in_file:
-        netcdf_file_in_file_abs = convert_to_absolute_path(
-            replace_env_vars_in_netcdf_paths(netcdf_file_in_file)
-        )
-        if netcdf_path == netcdf_file_in_file_abs:
-            set_of_how_this_netcdf_appears = set_of_how_this_netcdf_appears | {netcdf_file_in_file}
-    return set_of_how_this_netcdf_appears
-
-
-def convert_to_absolute_path(relative_path: str) -> str:
-    """
-    Convert a relative path to an absolute path.
-
-    Args:
-        relative_path: Relative path starting with OUR_PATH, or already absolute path
-
-    Returns:
-        Absolute path
-    """
-    # If the path is already absolute, return it as-is
-    if os.path.isabs(relative_path):
-        return relative_path
-
-    # Otherwise, convert relative path to absolute
-    return os.path.join(INPUTDATA_PREFIX, relative_path)
 
 
 def file_has_nan_fill(abs_path: str) -> Tuple[bool, List[str]]:
@@ -824,13 +637,13 @@ def main() -> int:
 
     # Get list of files to search for netCDF that might have NaN fill values
     files_to_search = [XML_FILE]
-    files_to_search.extend(find_user_nl_files(DIR_TO_SEARCH_FOR_USER_NL_FILES))
+    files_to_search.extend(nlu.find_user_nl_files(DIR_TO_SEARCH_FOR_USER_NL_FILES))
 
     netcdf_paths = set()
     files_referencing_netcdfs = []
     for file_to_search in files_to_search:
         print(f"Extracting file paths from file: {file_to_search}")
-        netcdf_paths_thisfile = extract_file_paths_from_file(file_to_search)
+        netcdf_paths_thisfile = nlu.extract_file_paths_from_file(file_to_search)
         print(f"Found {len(netcdf_paths_thisfile)} file paths in file")
         if netcdf_paths_thisfile:
             files_referencing_netcdfs.append(file_to_search)
@@ -865,7 +678,7 @@ def main() -> int:
                 progress[abs_path] = json_io.create_empty_progress_dict_onefile()
             fif_dict = progress[abs_path]["found_in_files"]
             for file_to_search in files_referencing_netcdfs:
-                set_of_how_this_netcdf_appears = how_netcdf_is_referenced_in_file(
+                set_of_how_this_netcdf_appears = nlu.how_netcdf_is_referenced_in_file(
                     file_to_search, netcdf_path
                 )
                 if set_of_how_this_netcdf_appears:

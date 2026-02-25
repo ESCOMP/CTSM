@@ -394,8 +394,8 @@ class TestExecuteCommand:
 
     @pytest.fixture(name="mock_update_xml_file", autouse=True)
     def fixture_mock_update_xml_file(self):
-        """Every test in this class will have update_xml_file() mocked; that's tested elsewhere"""
-        with mock.patch("ctsm.no_nans_in_inputs.replace_fill_values.update_xml_file") as _fixture:
+        """Every test in this class will have _update_xml_file() mocked; that's tested elsewhere"""
+        with mock.patch("ctsm.no_nans_in_inputs.namelist_utils._update_xml_file") as _fixture:
             yield _fixture
 
     @pytest.mark.parametrize(

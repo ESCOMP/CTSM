@@ -3,6 +3,7 @@ Shared constants for the no_nans_in_inputs module.
 """
 
 # File paths
+INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 NEW_FILLVALUES_FILE = "new_fillvalues.json"  # File to save/load new fill values
 XML_FILE = "bld/namelist_files/namelist_defaults_ctsm.xml"  # CTSM namelist defaults XML
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for

@@ -11,7 +11,9 @@ import pytest
 from ctsm.no_nans_in_inputs import constants
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
 from ctsm.no_nans_in_inputs import json_io
+from ctsm.no_nans_in_inputs import namelist_utils
 from ctsm.no_nans_in_inputs import replace_fill_values
+from ctsm.no_nans_in_inputs import shared
 
 
 @pytest.fixture(autouse=True, name="mock_progress_file")
@@ -42,8 +44,9 @@ def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
     Auto-used fixture to mock INPUTDATA_PREFIX constant with a temporary path.
     """
     # Monkeypatch
-    monkeypatch.setattr(get_replacement_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
-    monkeypatch.setattr(get_replacement_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
+    monkeypatch.setattr(constants, "INPUTDATA_PREFIX", str(tmp_path))
+    monkeypatch.setattr(namelist_utils, "INPUTDATA_PREFIX", str(tmp_path))
+    monkeypatch.setattr(shared, "INPUTDATA_PREFIX", str(tmp_path))
 
 
 @pytest.fixture(autouse=True, name="mock_progress_file", scope="function")

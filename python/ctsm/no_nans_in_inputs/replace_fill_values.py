@@ -26,18 +26,17 @@ if _CTSM_PYTHON not in sys.path:
 import numpy as np  # pylint: disable=wrong-import-position
 import xarray as xr  # pylint: disable=wrong-import-position
 
-from ctsm.no_nans_in_inputs.json_io import load_progress
+from ctsm.no_nans_in_inputs.json_io import load_progress  # pylint: disable=wrong-import-position
 
-from ctsm.no_nans_in_inputs.constants import (
+from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     ATTR,
     NEW_FILLVALUES_FILE,
-    ONE_OF_OUR_FILES,
     OPEN_DS_KWARGS,
     SEP_LENGTH,
-    USERNL_NC_PATTERN,
     USER_REQ_DELETE,
     XML_FILE,
 )
+import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-import-position
 
 
 def get_output_filename(input_file: str) -> str:
@@ -167,104 +166,6 @@ def build_ncatted_command(
     return cmd
 
 
-def update_xml_file(xml_file: str, old_path: str, new_path: str) -> None:
-    """
-    Replace a file path in an XML file.
-
-    Replaces all occurrences of old_path with new_path throughout the file.
-
-    Args:
-        xml_file: Path to the XML file to update
-        old_path: Old file path to replace (can be relative or absolute)
-        new_path: New file path to use (can be relative or absolute)
-
-    Raises:
-        ValueError: If old_path not found in XML, or if XML parsing/writing fails
-    """
-    try:
-        tree = ET.parse(xml_file)
-        root = tree.getroot()
-
-        replacements_made = 0
-
-        # Iterate through all elements
-        for elem in root.iter():
-            if elem.text and old_path in elem.text:
-                # Replace the old path with the new path
-                err_msg = f"Not both abs or rel: {old_path=}, {new_path=},"
-                assert os.path.isabs(old_path) == os.path.isabs(new_path), err_msg
-                elem.text = elem.text.replace(old_path, new_path)
-                replacements_made += 1
-
-        if replacements_made == 0:
-            raise ValueError(f"Path '{old_path}' not found in {xml_file}")
-
-        # Write the updated XML back to file
-        tree.write(xml_file, encoding="utf-8", xml_declaration=True)
-        print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
-
-    except ET.ParseError as e:
-        raise ValueError(f"Error parsing XML file: {e}") from e
-    except (IOError, OSError) as e:
-        raise ValueError(f"Error updating XML file: {e}") from e
-
-
-def update_usernl_file(usernl_file: str, old_path: str, new_path: str) -> None:
-    """
-    Replace a file path in a user_nl file.
-
-    Replaces all occurrences of old_path with new_path throughout the file.
-
-    Args:
-        usernl_file: Path to the user_nl file to update
-        old_path: Old file path to replace (can be relative or absolute)
-        new_path: New file path to use (can be relative or absolute)
-    """
-    with open(usernl_file, "r", encoding="utf8") as f:
-        # Get the existing file contents
-        file_contents = f.read()
-
-    # Function to replace any quoted instances of old_path with new_path
-    def replacer(match):
-        return (
-            f"{match.group(1)}"  # Everything before opening apostrophe/quote (varname = )
-            f"{match.group(2)}"  # Opening apostrophe/quote
-            f"{new_path}"        # Our new path
-            f"{match.group(4)}"  # Closing apostrophe/quote
-            f"{match.group(5)}"  # Everything after closing apostrophe/quote (e.g., comments)
-        )
-
-    # Get the pattern we're going to replace. USERNL_NC_PATTERN is built for finding ANY of our
-    # files; here, we're replacing just one specific path.
-    pattern = USERNL_NC_PATTERN.replace(ONE_OF_OUR_FILES, re.escape(old_path))
-
-    # Replace matching paths with our new one
-    file_contents = re.sub(pattern, replacer, file_contents, flags=re.MULTILINE)
-
-    # Save
-    with open(usernl_file, "w", encoding="utf8") as f:
-        f.write(file_contents)
-
-
-def update_text_file_referencing_netcdf(text_file: str, old_netcdf: str, new_netcdf: str) -> None:
-    """
-    Replace path to a netCDF file in a text file
-
-    Args:
-        text_file: Path to the text file to update
-        old_path: Old file path to replace (can be relative or absolute)
-        new_path: New file path to use (can be relative or absolute)
-    """
-    basename = os.path.basename(text_file)
-    _, ext = os.path.splitext(basename)
-    if ext == ".xml":
-        update_xml_file(text_file, old_netcdf, new_netcdf)
-    elif basename.startswith("user_nl"):
-        update_usernl_file(text_file, old_netcdf, new_netcdf)
-    else:
-        raise NotImplementedError(f"Not sure how to replace file paths in file: '{text_file}'")
-
-
 def process_files(
     fillvalues_file: str,
     dry_run: bool = False,
@@ -325,7 +226,7 @@ def process_files(
             ].items():
                 for netcdf_path_in in set_of_how_this_netcdf_appears:
                     netcdf_path_out = get_output_filename(netcdf_path_in)
-                    update_text_file_referencing_netcdf(
+                    nlu.update_text_file_referencing_netcdf(
                         file_containing_netcdf, netcdf_path_in, netcdf_path_out
                     )
             # TODO: git commit!

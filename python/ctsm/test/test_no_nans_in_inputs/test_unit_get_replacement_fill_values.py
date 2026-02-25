@@ -22,14 +22,14 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     FillValueConfig,
     VarContext,
-    find_user_nl_files,
     get_fill_value_from_user,
     get_var_info,
-    replace_env_vars_in_netcdf_paths,
     var_data_has_nan,
     VARSTARTS_TO_DEFAULT_NEG999,
 )
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
+from ctsm.no_nans_in_inputs import namelist_utils
+from ctsm.no_nans_in_inputs import shared
 
 
 # Test constants used in multiple tests
@@ -328,47 +328,6 @@ class TestGetVarInfo:
         assert var_context.file_path == file_path
 
 
-class TestFindUserNlFiles:
-    """Tests of find_user_nl_files()"""
-
-    def test_find_user_nl_files(self, tmp_path):
-        """Test find_user_nl_files()"""
-        found_toplevel = f"{tmp_path}/user_nl_clm"
-        Path(found_toplevel).touch()
-
-        # Create files and dirs
-        found_secondlevel = f"{tmp_path}/some_dir/user_nl_something"
-        Path(found_secondlevel).parent.mkdir()
-        Path(found_secondlevel).touch()
-        notfound = f"{tmp_path}/some_dir/different_user_nl_confusing"
-        Path(notfound).touch()
-
-        # Get and check results
-        results = find_user_nl_files(str(tmp_path))
-        assert len(results) == 2
-        assert found_toplevel in results
-        assert found_secondlevel in results
-        assert notfound not in results
-
-
-class TestReplaceEnvVarsInNetcdfPath:
-    """Tests of replace_env_vars_in_netcdf_paths()"""
-
-    @pytest.mark.parametrize("nc_in", ["file_name.nc", "/abs/path/file.nc"])
-    def test_replace_env_vars_in_netcdf_paths_nosubs(self, nc_in):
-        """Test that replace_env_vars_in_netcdf_paths() works without any substitutions"""
-        nc_out = replace_env_vars_in_netcdf_paths(nc_in)
-        assert nc_out == nc_in
-
-    @pytest.mark.parametrize("nc_in", ["$DIN_LOC_ROOT/file.nc", "${DIN_LOC_ROOT}/file.nc"])
-    def test_replace_env_vars_in_netcdf_paths_dlr(self, nc_in):
-        """Test that replace_env_vars_in_netcdf_paths() works when replacing DIN_LOC_ROOT"""
-        nc_out = replace_env_vars_in_netcdf_paths(nc_in)
-
-        expected = os.path.join(get_replacement_fill_values.INPUTDATA_PREFIX, "file.nc")
-
-        assert nc_out == expected
-
 
 class TestHowNetcdfIsReferencedInFile:
     """Tests of how_netcdf_is_referenced_in_file()."""
@@ -381,14 +340,14 @@ class TestHowNetcdfIsReferencedInFile:
     def mock_convert_to_absolute_path(self, monkeypatch):
         """Mock convert_to_absolute_path() to just return what it was given"""
         mock = MagicMock(side_effect=lambda x, *args, **kwargs: x)
-        monkeypatch.setattr(get_replacement_fill_values, "convert_to_absolute_path", mock)
+        monkeypatch.setattr(namelist_utils, "convert_to_absolute_path", mock)
         return mock
 
     @pytest.fixture(autouse=True)
     def mock_replace_env_vars_in_netcdf_paths(self, monkeypatch):
-        """Mock replace_env_vars_in_netcdf_paths() to just return what it was given"""
+        """Mock _replace_env_vars_in_netcdf_paths() to just return what it was given"""
         mock = MagicMock(side_effect=lambda x, *args, **kwargs: x)
-        monkeypatch.setattr(get_replacement_fill_values, "replace_env_vars_in_netcdf_paths", mock)
+        monkeypatch.setattr(namelist_utils, "_replace_env_vars_in_netcdf_paths", mock)
         return mock
 
     def test_how_netcdf_is_referenced_in_file_1found_once(
@@ -397,12 +356,12 @@ class TestHowNetcdfIsReferencedInFile:
         """Test how_netcdf_is_referenced_in_file() for one netCDF file present once in text file"""
         nc_file = "file.nc"
         monkeypatch.setattr(
-            get_replacement_fill_values,
+            namelist_utils,
             "extract_file_paths_from_file",
             lambda *args, **kwargs: [nc_file],
         )
         set_of_how_this_netcdf_appears = (
-            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+            namelist_utils.how_netcdf_is_referenced_in_file("dummy", nc_file)
         )
         assert mock_convert_to_absolute_path.call_count == 2
         assert mock_replace_env_vars_in_netcdf_paths.call_count == 1
@@ -417,12 +376,12 @@ class TestHowNetcdfIsReferencedInFile:
         """
         nc_file = "file.nc"
         monkeypatch.setattr(
-            get_replacement_fill_values,
+            namelist_utils,
             "extract_file_paths_from_file",
             lambda *args, **kwargs: [nc_file, nc_file],
         )
         set_of_how_this_netcdf_appears = (
-            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+            namelist_utils.how_netcdf_is_referenced_in_file("dummy", nc_file)
         )
         assert mock_convert_to_absolute_path.call_count == 3
         assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
@@ -438,12 +397,12 @@ class TestHowNetcdfIsReferencedInFile:
         nc_file = "file.nc"
         nc_file2 = "abc123" + nc_file
         monkeypatch.setattr(
-            get_replacement_fill_values,
+            namelist_utils,
             "extract_file_paths_from_file",
             lambda *args, **kwargs: [nc_file, nc_file2],
         )
         set_of_how_this_netcdf_appears = (
-            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+            namelist_utils.how_netcdf_is_referenced_in_file("dummy", nc_file)
         )
         assert mock_convert_to_absolute_path.call_count == 3
         assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
@@ -456,12 +415,12 @@ class TestHowNetcdfIsReferencedInFile:
         nc_file = "file.nc"
         nc_files = [nc_file, "file2.nc"]
         monkeypatch.setattr(
-            get_replacement_fill_values,
+            namelist_utils,
             "extract_file_paths_from_file",
             lambda *args, **kwargs: nc_files,
         )
         set_of_how_this_netcdf_appears = (
-            get_replacement_fill_values.how_netcdf_is_referenced_in_file("dummy", nc_file)
+            namelist_utils.how_netcdf_is_referenced_in_file("dummy", nc_file)
         )
         assert mock_convert_to_absolute_path.call_count == 3
         assert mock_replace_env_vars_in_netcdf_paths.call_count == 2
