@@ -4,7 +4,7 @@ System tests for get_replacement_fill_values.py script.
 
 Tests functions that require file I/O.
 """
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,too-many-positional-arguments
 
 import os
 from unittest.mock import MagicMock, patch

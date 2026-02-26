@@ -183,9 +183,11 @@ class TestUpdateXmlFile:
         assert initdata.text == new_path
 
     def test_update_xml_replaces_across_same_tag_different_attrs(self, mock_xml_file_path):
-        """Test that same path in elements with same tag but different attributes are all replaced."""
-        # Simulate scenario where two paramfile elements with different attributes point to same file
-        # (like if lines 625 and 626 in the real XML both had the same path)
+        """
+        Test that same path in elements with same tag but different attributes are all replaced.
+        """
+        # Simulate scenario where two paramfile elements with different attributes point to same
+        # file (like if lines 625 and 626 in the real XML both had the same path)
         test_path = "lnd/clm2/paramdata/shared_params.nc"
         xml_content = f"""<?xml version="1.0"?>
 <namelist_defaults>

@@ -13,10 +13,7 @@ from ctsm.no_nans_in_inputs.constants import (
     USER_REQ_SKIP_FILE,
 )
 from ctsm.no_nans_in_inputs.user_inputs import collect_new_fill_values
-from ctsm.no_nans_in_inputs.json_io import (
-    NoNanFillValueProgress,
-    create_empty_progress_dict_onefile,
-)
+from ctsm.no_nans_in_inputs.json_io import NoNanFillValueProgress
 
 
 class TestCollectNewFillValues:

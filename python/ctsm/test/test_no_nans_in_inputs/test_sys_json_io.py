@@ -12,6 +12,7 @@ class TestSaveProgress:
     """Test the save() function"""
 
     def test_save(self, example_progress: NoNanFillValueProgress):
+        """Test the save() function"""
         example_progress.save()
         assert os.path.exists(example_progress.progress_file)
         with open(example_progress.progress_file, "r", encoding="utf8") as f:

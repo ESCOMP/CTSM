@@ -64,7 +64,6 @@ def fixture_mock_progress_file(tmp_path, monkeypatch):
     # Also where it's imported
     monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
-    monkeypatch.setattr(user_inputs, "NEW_FILLVALUES_FILE", str(test_progress))
 
     return str(test_progress)
 

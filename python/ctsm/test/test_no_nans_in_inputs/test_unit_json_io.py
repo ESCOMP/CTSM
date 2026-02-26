@@ -5,7 +5,6 @@
 from unittest.mock import patch
 import pytest
 
-from ctsm.no_nans_in_inputs.constants import USER_REQ_DELETE
 from ctsm.no_nans_in_inputs.json_io import (
     _convert_fif_dict_sets,
     create_empty_progress_dict_onefile,

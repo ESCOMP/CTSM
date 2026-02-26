@@ -18,7 +18,6 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     ATTR,
     ERR_STR_SKIP_FILE,
     ERR_STR_SKIP_VAR,
-    NEW_FILLVALUES_FILE,
     OPEN_DS_KWARGS,
     SEP_LENGTH,
     USER_REQ_DELETE,
