@@ -18,6 +18,7 @@ from ctsm.no_nans_in_inputs.constants import (
 from ctsm.no_nans_in_inputs import get_replacement_fill_values
 from ctsm.no_nans_in_inputs.replace_fill_values import main as replace_fill_values
 from ctsm.no_nans_in_inputs.replace_fill_values import get_output_filename
+from ctsm.no_nans_in_inputs.json_io import NoNanFillValueProgress
 
 # Test constants
 TEST_VAR_TEMP = "temp"
@@ -82,7 +83,7 @@ def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file,
         with patch(
             "builtins.input",
             side_effect=[
-                USER_REQ_DELETE,       # alphabetically 1st var
+                USER_REQ_DELETE,  # alphabetically 1st var
                 str(TEST_FILL_VALUE),  # alphabetically 2nd var
             ],
         ):
@@ -114,3 +115,6 @@ def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file,
     paramfile = root.find("paramfile")
     assert paramfile is not None
     assert paramfile.text == get_output_filename(netcdf_path_for_xml)
+
+    # Make sure the progress file is now empty
+    assert not NoNanFillValueProgress(progress_file=progress_file, load_without_asking=True)

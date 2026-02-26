@@ -116,6 +116,8 @@ def _process_one_file(
         print("-" * SEP_LENGTH)
         if not confirm_continue():
             sys.exit("Exiting.")
+        progress.done_with_file(input_file_abs)
+        progress.cleanup()
     return files_processed
 
 
@@ -149,8 +151,9 @@ def process_files(
     print("=" * SEP_LENGTH)
 
     files_processed = 0
+    files_to_process = list(progress.keys()).copy()
 
-    for input_file_abs in progress:
+    for input_file_abs in files_to_process:
         output_file = get_output_filename(input_file_abs)
 
         # Check whether we're skipping this file

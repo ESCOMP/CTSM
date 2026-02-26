@@ -47,10 +47,39 @@ class TestLoadProgress:
 class TestSaveProgress:
     """Test the save() function"""
 
-    def test_save_io_error(self, example_progress, capsys):
+    def test_save_io_error(self, example_progress: NoNanFillValueProgress, capsys):
         """Test that an IOError during save is caught and a warning is printed."""
         with patch("builtins.open", side_effect=IOError("Permission denied")):
 
             example_progress.save()
             captured = capsys.readouterr()
             assert "Warning: Could not save progress" in captured.err
+
+
+class TestDoneAndCleanup:
+    """Test the done_with_file() and cleanup() functions"""
+
+    def test_done_and_cleanup(self, example_progress: NoNanFillValueProgress):
+        """Test the done_with_file() and cleanup() functions"""
+        # Save the file with both keys
+        keys_orig = list(example_progress.keys())
+        k0 = keys_orig[0]
+        k1 = keys_orig[1]
+        example_progress.save()
+
+        # Mark the 0th key for deletion
+        example_progress.done_with_file(k0)
+        assert not example_progress[k0]
+
+        # Call cleanup
+        example_progress.cleanup()
+
+        # Make sure the 0th key was deleted from the object
+        assert k0 not in example_progress
+        assert k1 in example_progress
+
+        # Make sure the 0th key was deleted from the file
+        result = NoNanFillValueProgress(
+            progress_file=example_progress.progress_file, load_without_asking=True
+        )
+        assert result == example_progress

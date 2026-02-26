@@ -98,6 +98,19 @@ class NoNanFillValueProgress(defaultdict):
         except (IOError, OSError) as e:
             print(f"  Warning: Could not save progress: {e}", file=sys.stderr)
 
+    def done_with_file(self, netcdf_path: str) -> None:
+        """After we're done with a netCDF file, mark for removal from progress object/file"""
+        if netcdf_path not in self:
+            raise KeyError(netcdf_path)
+        self[netcdf_path] = None
+
+    def cleanup(self) -> None:
+        """Remove keys marked for deletion, then update progress file"""
+        keys_to_remove = [k for k in self if not self[k]]
+        for key in keys_to_remove:
+            self.pop(key)
+        self.save()
+
 
 def _convert_fif_dict_sets(
     progress: NoNanFillValueProgress, dest_type: Type
