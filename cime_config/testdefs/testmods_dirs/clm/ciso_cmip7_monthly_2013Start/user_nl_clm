@@ -1,0 +1,5 @@
+ hist_dov2xy    = .true.,.true.          ! Set both history output files to 2D grid, so can be evaluated
+ stream_year_first_atm_c14 = 2013
+ stream_model_year_align_atm_c14 = 2013
+ stream_year_first_atm_c13 = 2013
+ stream_model_year_align_atm_c13 = 2013

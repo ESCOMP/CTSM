@@ -27,6 +27,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         Make /_tempdir for use by these tests.
         Check tempdir for history files
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._cfg_file_path = os.path.join(
@@ -37,6 +38,7 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_modify_site(self):
@@ -53,14 +55,14 @@ class TestSysModifySingleptSiteNeon(unittest.TestCase):
         sys.argv = [
             "modify_singlept_site_neon",
             "--neon_site",
-            path_to_ctsm_root() + "/ctsm/cime_config/usermods_dirs/NEON/ABBY",
+            path_to_ctsm_root() + "/ctsm/cime_config/usermods_dirs/clm/NEON/ABBY",
         ]
         # TODO: the above requires a full path instead of site name
-        #       because of how run_neon is configured.
-        # This needs to be fixed in run_neon.
+        #       because of how run_tower is configured.
+        # This needs to be fixed in run_tower.
         with self.assertRaises(SystemExit):
             print(
-                """This should currently fail due to directory structure in run_neon
+                """This should currently fail due to directory structure in run_tower
                    and the directory structure listed in sys.argv"""
             )
             main()

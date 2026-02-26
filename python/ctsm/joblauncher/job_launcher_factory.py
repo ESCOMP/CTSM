@@ -1,5 +1,4 @@
-"""Factory function for creating an appropriate job launcher class for a given machine.
-"""
+"""Factory function for creating an appropriate job launcher class for a given machine."""
 
 from __future__ import print_function
 
@@ -18,6 +17,7 @@ JOB_LAUNCHER_FAKE = "fake"
 
 def create_job_launcher(
     job_launcher_type,
+    *,
     account=None,
     queue=None,
     walltime=None,

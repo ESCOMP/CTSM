@@ -1,0 +1,28 @@
+# Modified from https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#publishing-a-package-using-an-action (last accessed 2025-05-09)
+name: Build and test ctsm-docs container
+
+# Configures this workflow to run every time a change in the Docker container setup is pushed or included in a PR
+on:
+  push:
+    # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
+    paths:
+      - 'doc/ctsm-docs_container/**'
+      - '!doc/ctsm-docs_container/README.md'
+      - '.github/workflows/docker-image-common.yml'
+
+  pull_request:
+    # Run on pull requests that change the listed files
+    paths:
+      - 'doc/ctsm-docs_container/**'
+      - '!doc/ctsm-docs_container/README.md'
+      - '.github/workflows/docker-image-common.yml'
+
+  workflow_dispatch:
+
+# There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
+jobs:
+  build-image-and-test-docs:
+    name: Build image and test docs
+    uses: ./.github/workflows/docker-image-common.yml
+    secrets: inherit

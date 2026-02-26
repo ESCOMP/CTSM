@@ -44,7 +44,7 @@ Clone the CTSM repository::
 
     git clone https://github.com/ESCOMP/CTSM.git
     cd CTSM
-    ./manage_externals/checkout_externals
+    ./bin/git-fleximod update
 
 .. _build-CTSM-and-dependencies:
 

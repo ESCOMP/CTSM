@@ -24,6 +24,7 @@ module dynGrossUnrepMod
   use clm_varpar              , only : natpft_size, i_litr_min, i_litr_max, i_met_lit
   use ColumnType              , only : col                
   use PatchType               , only : patch                
+  use CNSharedParamsMod       , only : use_matrixcn
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -157,6 +158,7 @@ contains
     use pftconMod       , only : noveg, nbrdlf_evr_shrub, nc4_grass
     use clm_varcon      , only : secspday
     use clm_time_manager, only : get_step_size_real, is_beg_curr_year
+    use CNVegMatrixMod  , only : matrix_update_gmc, matrix_update_gmn
     !
     ! !ARGUMENTS:
     integer                         , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -266,7 +268,44 @@ contains
          gru_livestemn_xfer_to_atm           =>    cnveg_nitrogenflux_inst%gru_livestemn_xfer_to_atm_patch        , & ! Output: [real(r8) (:)]                                                    
          gru_deadstemn_xfer_to_atm           =>    cnveg_nitrogenflux_inst%gru_deadstemn_xfer_to_atm_patch        , & ! Output: [real(r8) (:)]                                                    
          gru_livecrootn_xfer_to_atm          =>    cnveg_nitrogenflux_inst%gru_livecrootn_xfer_to_atm_patch       , & ! Output: [real(r8) (:)]                                                    
-         gru_deadcrootn_xfer_to_atm          =>    cnveg_nitrogenflux_inst%gru_deadcrootn_xfer_to_atm_patch         & ! Output: [real(r8) (:)]                                                    
+         gru_deadcrootn_xfer_to_atm          =>    cnveg_nitrogenflux_inst%gru_deadcrootn_xfer_to_atm_patch       , & ! Output: [real(r8) (:)]
+         ileaf_to_iout_gmc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_gm                         , &
+         ileafst_to_iout_gmc                 =>    cnveg_carbonflux_inst%ileafst_to_iout_gm                       , &
+         ileafxf_to_iout_gmc                 =>    cnveg_carbonflux_inst%ileafxf_to_iout_gm                       , &
+         ifroot_to_iout_gmc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_gm                        , &
+         ifrootst_to_iout_gmc                =>    cnveg_carbonflux_inst%ifrootst_to_iout_gm                      , &
+         ifrootxf_to_iout_gmc                =>    cnveg_carbonflux_inst%ifrootxf_to_iout_gm                      , &
+         ilivestem_to_iout_gmc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_gm                     , &
+         ilivestemst_to_iout_gmc             =>    cnveg_carbonflux_inst%ilivestemst_to_iout_gm                   , &
+         ilivestemxf_to_iout_gmc             =>    cnveg_carbonflux_inst%ilivestemxf_to_iout_gm                   , &
+         ideadstem_to_iout_gmc               =>    cnveg_carbonflux_inst%ideadstem_to_iout_gm                     , &
+         ideadstemst_to_iout_gmc             =>    cnveg_carbonflux_inst%ideadstemst_to_iout_gm                   , &
+         ideadstemxf_to_iout_gmc             =>    cnveg_carbonflux_inst%ideadstemxf_to_iout_gm                   , &
+         ilivecroot_to_iout_gmc              =>    cnveg_carbonflux_inst%ilivecroot_to_iout_gm                    , &
+         ilivecrootst_to_iout_gmc            =>    cnveg_carbonflux_inst%ilivecrootst_to_iout_gm                  , &
+         ilivecrootxf_to_iout_gmc            =>    cnveg_carbonflux_inst%ilivecrootxf_to_iout_gm                  , &
+         ideadcroot_to_iout_gmc              =>    cnveg_carbonflux_inst%ideadcroot_to_iout_gm                    , &
+         ideadcrootst_to_iout_gmc            =>    cnveg_carbonflux_inst%ideadcrootst_to_iout_gm                  , &
+         ideadcrootxf_to_iout_gmc            =>    cnveg_carbonflux_inst%ideadcrootxf_to_iout_gm                  , &
+         ileaf_to_iout_gmn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_gm                       , &
+         ileafst_to_iout_gmn                 =>    cnveg_nitrogenflux_inst%ileafst_to_iout_gm                     , &
+         ileafxf_to_iout_gmn                 =>    cnveg_nitrogenflux_inst%ileafxf_to_iout_gm                     , &
+         ifroot_to_iout_gmn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_gm                      , &
+         ifrootst_to_iout_gmn                =>    cnveg_nitrogenflux_inst%ifrootst_to_iout_gm                    , &
+         ifrootxf_to_iout_gmn                =>    cnveg_nitrogenflux_inst%ifrootxf_to_iout_gm                    , &
+         ilivestem_to_iout_gmn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_gm                   , &
+         ilivestemst_to_iout_gmn             =>    cnveg_nitrogenflux_inst%ilivestemst_to_iout_gm                 , &
+         ilivestemxf_to_iout_gmn             =>    cnveg_nitrogenflux_inst%ilivestemxf_to_iout_gm                 , &
+         ideadstem_to_iout_gmn               =>    cnveg_nitrogenflux_inst%ideadstem_to_iout_gm                   , &
+         ideadstemst_to_iout_gmn             =>    cnveg_nitrogenflux_inst%ideadstemst_to_iout_gm                 , &
+         ideadstemxf_to_iout_gmn             =>    cnveg_nitrogenflux_inst%ideadstemxf_to_iout_gm                 , &
+         ilivecroot_to_iout_gmn              =>    cnveg_nitrogenflux_inst%ilivecroot_to_iout_gm                  , &
+         ilivecrootst_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ilivecrootst_to_iout_gm                , &
+         ilivecrootxf_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ilivecrootxf_to_iout_gm                , &
+         ideadcroot_to_iout_gmn              =>    cnveg_nitrogenflux_inst%ideadcroot_to_iout_gm                  , &
+         ideadcrootst_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ideadcrootst_to_iout_gm                , &
+         ideadcrootxf_to_iout_gmn            =>    cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_gm                , &
+         iretransn_to_iout_gmn               =>    cnveg_nitrogenflux_inst%iretransn_to_iout_gm                     &
          )
 
       dtime = get_step_size_real()
@@ -294,61 +333,157 @@ contains
                m = 0._r8
             end if
 
-            ! patch-level gross unrepresented landcover change carbon fluxes
-            ! displayed pools
-            gru_leafc_to_litter(p)               = leafc(p)               * m
-            gru_frootc_to_litter(p)              = frootc(p)              * m
-            gru_livestemc_to_atm(p)              = livestemc(p)           * m
-            gru_deadstemc_to_atm(p)              = deadstemc(p)           * m * convfrac(ivt(p))
-            gru_wood_productc_gain(p)            = deadstemc(p)           * m * (1._r8 - convfrac(ivt(p)))
-            gru_livecrootc_to_litter(p)          = livecrootc(p)          * m
-            gru_deadcrootc_to_litter(p)          = deadcrootc(p)          * m
-            gru_xsmrpool_to_atm(p)               = xsmrpool(p)            * m
+            if(.not. use_matrixcn)then
+               ! patch-level gross unrepresented landcover change carbon fluxes
+               ! displayed pools
+               gru_leafc_to_litter(p)               = leafc(p)               * m
+               gru_frootc_to_litter(p)              = frootc(p)              * m
+               gru_livestemc_to_atm(p)              = livestemc(p)           * m
+               gru_deadstemc_to_atm(p)              = deadstemc(p)           * m * convfrac(ivt(p))
+               gru_wood_productc_gain(p)            = deadstemc(p)           * m * (1._r8 - convfrac(ivt(p)))
+               gru_livecrootc_to_litter(p)          = livecrootc(p)          * m
+               gru_deadcrootc_to_litter(p)          = deadcrootc(p)          * m
+               gru_xsmrpool_to_atm(p)               = xsmrpool(p)            * m
 
-            ! storage pools
-            gru_leafc_storage_to_atm(p)          = leafc_storage(p)       * m
-            gru_frootc_storage_to_atm(p)         = frootc_storage(p)      * m
-            gru_livestemc_storage_to_atm(p)      = livestemc_storage(p)   * m
-            gru_deadstemc_storage_to_atm(p)      = deadstemc_storage(p)   * m
-            gru_livecrootc_storage_to_atm(p)     = livecrootc_storage(p)  * m
-            gru_deadcrootc_storage_to_atm(p)     = deadcrootc_storage(p)  * m
-            gru_gresp_storage_to_atm(p)          = gresp_storage(p)       * m
+               ! storage pools
+               gru_leafc_storage_to_atm(p)          = leafc_storage(p)       * m
+               gru_frootc_storage_to_atm(p)         = frootc_storage(p)      * m
+               gru_livestemc_storage_to_atm(p)      = livestemc_storage(p)   * m
+               gru_deadstemc_storage_to_atm(p)      = deadstemc_storage(p)   * m
+               gru_livecrootc_storage_to_atm(p)     = livecrootc_storage(p)  * m
+               gru_deadcrootc_storage_to_atm(p)     = deadcrootc_storage(p)  * m
+               gru_gresp_storage_to_atm(p)          = gresp_storage(p)       * m
 
-            ! transfer pools
-            gru_leafc_xfer_to_atm(p)             = leafc_xfer(p)          * m
-            gru_frootc_xfer_to_atm(p)            = frootc_xfer(p)         * m
-            gru_livestemc_xfer_to_atm(p)         = livestemc_xfer(p)      * m
-            gru_deadstemc_xfer_to_atm(p)         = deadstemc_xfer(p)      * m
-            gru_livecrootc_xfer_to_atm(p)        = livecrootc_xfer(p)     * m
-            gru_deadcrootc_xfer_to_atm(p)        = deadcrootc_xfer(p)     * m
-            gru_gresp_xfer_to_atm(p)             = gresp_xfer(p)          * m
-	    
-            ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
-            ! displayed pools
-            gru_leafn_to_litter(p)               = leafn(p)               * m
-            gru_frootn_to_litter(p)              = frootn(p)              * m
-            gru_livestemn_to_atm(p)              = livestemn(p)           * m
-            gru_deadstemn_to_atm(p)              = deadstemn(p)           * m * convfrac(ivt(p))
-            gru_wood_productn_gain(p)            = deadstemn(p)           * m * (1._r8 - convfrac(ivt(p)))
-            gru_livecrootn_to_litter(p)          = livecrootn(p)          * m
-            gru_deadcrootn_to_litter(p)          = deadcrootn(p)          * m
-            gru_retransn_to_litter(p)            = retransn(p)            * m
+               ! transfer pools
+               gru_leafc_xfer_to_atm(p)             = leafc_xfer(p)          * m
+               gru_frootc_xfer_to_atm(p)            = frootc_xfer(p)         * m
+               gru_livestemc_xfer_to_atm(p)         = livestemc_xfer(p)      * m
+               gru_deadstemc_xfer_to_atm(p)         = deadstemc_xfer(p)      * m
+               gru_livecrootc_xfer_to_atm(p)        = livecrootc_xfer(p)     * m
+               gru_deadcrootc_xfer_to_atm(p)        = deadcrootc_xfer(p)     * m
+               gru_gresp_xfer_to_atm(p)             = gresp_xfer(p)          * m
 
-            ! storage pools
-            gru_leafn_storage_to_atm(p)          = leafn_storage(p)       * m
-            gru_frootn_storage_to_atm(p)         = frootn_storage(p)      * m
-            gru_livestemn_storage_to_atm(p)      = livestemn_storage(p)   * m
-            gru_deadstemn_storage_to_atm(p)      = deadstemn_storage(p)   * m
-            gru_livecrootn_storage_to_atm(p)     = livecrootn_storage(p)  * m
-            gru_deadcrootn_storage_to_atm(p)     = deadcrootn_storage(p)  * m
+               ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
+               ! displayed pools
+               gru_leafn_to_litter(p)               = leafn(p)               * m
+               gru_frootn_to_litter(p)              = frootn(p)              * m
+               gru_livestemn_to_atm(p)              = livestemn(p)           * m
+               gru_deadstemn_to_atm(p)              = deadstemn(p)           * m * convfrac(ivt(p))
+               gru_wood_productn_gain(p)            = deadstemn(p)           * m * (1._r8 - convfrac(ivt(p)))
+               gru_livecrootn_to_litter(p)          = livecrootn(p)          * m
+               gru_deadcrootn_to_litter(p)          = deadcrootn(p)          * m
+               gru_retransn_to_litter(p)            = retransn(p)            * m
 
-            ! transfer pools
-            gru_leafn_xfer_to_atm(p)             = leafn_xfer(p)          * m
-            gru_frootn_xfer_to_atm(p)            = frootn_xfer(p)         * m
-            gru_livestemn_xfer_to_atm(p)         = livestemn_xfer(p)      * m
-            gru_deadstemn_xfer_to_atm(p)         = deadstemn_xfer(p)      * m
-            gru_livecrootn_xfer_to_atm(p)        = livecrootn_xfer(p)     * m
-            gru_deadcrootn_xfer_to_atm(p)        = deadcrootn_xfer(p)     * m
+               ! storage pools
+               gru_leafn_storage_to_atm(p)          = leafn_storage(p)       * m
+               gru_frootn_storage_to_atm(p)         = frootn_storage(p)      * m
+               gru_livestemn_storage_to_atm(p)      = livestemn_storage(p)   * m
+               gru_deadstemn_storage_to_atm(p)      = deadstemn_storage(p)   * m
+               gru_livecrootn_storage_to_atm(p)     = livecrootn_storage(p)  * m
+               gru_deadcrootn_storage_to_atm(p)     = deadcrootn_storage(p)  * m
+
+               ! transfer pools
+               gru_leafn_xfer_to_atm(p)             = leafn_xfer(p)          * m
+               gru_frootn_xfer_to_atm(p)            = frootn_xfer(p)         * m
+               gru_livestemn_xfer_to_atm(p)         = livestemn_xfer(p)      * m
+               gru_deadstemn_xfer_to_atm(p)         = deadstemn_xfer(p)      * m
+               gru_livecrootn_xfer_to_atm(p)        = livecrootn_xfer(p)     * m
+               gru_deadcrootn_xfer_to_atm(p)        = deadcrootn_xfer(p)     * m
+            else  ! matrixcn solution
+               ! patch-level gross unrepresented landcover change carbon fluxes
+               ! displayed pools
+               gru_leafc_to_litter(p) = matrix_update_gmc(p,ileaf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             leafc(p)
+               gru_frootc_to_litter(p) = matrix_update_gmc(p,ifroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             frootc(p)
+               gru_livestemc_to_atm(p) = matrix_update_gmc(p,ilivestem_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livestemc(p)
+               gru_deadstemc_to_atm(p) = matrix_update_gmc(p,ideadstem_to_iout_gmc,m * convfrac(ivt(p)),dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
+                                             deadstemc(p)
+               gru_wood_productc_gain(p) = matrix_update_gmc(p,ideadstem_to_iout_gmc,m * (1._r8 - convfrac(ivt(p))),dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
+                                             deadstemc(p)
+               gru_livecrootc_to_litter(p) = matrix_update_gmc(p,ilivecroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livecrootc(p)
+               gru_deadcrootc_to_litter(p) = matrix_update_gmc(p,ideadcroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             deadcrootc(p)
+               gru_xsmrpool_to_atm(p) = xsmrpool(p) * m
+
+               ! storage pools
+               gru_leafc_storage_to_atm(p) = matrix_update_gmc(p,ileafst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             leafc_storage(p)
+               gru_frootc_storage_to_atm(p) = matrix_update_gmc(p,ifrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             frootc_storage(p)
+               gru_livestemc_storage_to_atm(p) = matrix_update_gmc(p,ilivestemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livestemc_storage(p)
+               gru_deadstemc_storage_to_atm(p) = matrix_update_gmc(p,ideadstemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             deadstemc_storage(p)
+               gru_livecrootc_storage_to_atm(p) = matrix_update_gmc(p,ilivecrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livecrootc_storage(p)
+               gru_deadcrootc_storage_to_atm(p) = matrix_update_gmc(p,ideadcrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             deadcrootc_storage(p)
+               gru_gresp_storage_to_atm(p) = gresp_storage(p) * m
+
+               ! transfer pools
+               gru_leafc_xfer_to_atm(p) = matrix_update_gmc(p,ileafxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             leafc_xfer(p)
+               gru_frootc_xfer_to_atm(p) = matrix_update_gmc(p,ifrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             frootc_xfer(p)
+               gru_livestemc_xfer_to_atm(p) = matrix_update_gmc(p,ilivestemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livestemc_xfer(p)
+               gru_deadstemc_xfer_to_atm(p) = matrix_update_gmc(p,ideadstemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             deadstemc_xfer(p)
+               gru_livecrootc_xfer_to_atm(p) = matrix_update_gmc(p,ilivecrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             livecrootc_xfer(p)
+               gru_deadcrootc_xfer_to_atm(p) = matrix_update_gmc(p,ideadcrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
+                                             deadcrootc_xfer(p)
+               gru_gresp_xfer_to_atm(p) = gresp_xfer(p) * m
+
+               ! patch-level gross unrepresented landcover change mortality nitrogen fluxes
+               ! displayed pools
+               gru_leafn_to_litter(p) = matrix_update_gmn(p,ileaf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             leafn(p)
+               gru_frootn_to_litter(p) = matrix_update_gmn(p,ifroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             frootn(p)
+               gru_livestemn_to_atm(p) = matrix_update_gmn(p,ilivestem_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             livestemn(p)
+               gru_deadstemn_to_atm(p) = matrix_update_gmn(p,ideadstem_to_iout_gmn,m * convfrac(ivt(p)),dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
+                                             deadstemn(p)
+               gru_wood_productn_gain(p) = matrix_update_gmn(p,ideadstem_to_iout_gmn,m * (1._r8 - convfrac(ivt(p))),dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
+                                             deadstemn(p)
+               gru_livecrootn_to_litter(p) = matrix_update_gmn(p,ilivecroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             livecrootn(p)
+               gru_deadcrootn_to_litter(p) = matrix_update_gmn(p,ideadcroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             deadcrootn(p)
+               gru_retransn_to_litter(p)   = matrix_update_gmn(p,iretransn_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             retransn(p)
+
+               ! storage pools
+               gru_leafn_storage_to_atm(p) = matrix_update_gmn(p,ileafst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             leafn_storage(p)
+               gru_frootn_storage_to_atm(p) = matrix_update_gmn(p,ifrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             frootn_storage(p)
+               gru_livestemn_storage_to_atm(p) = matrix_update_gmn(p,ilivestemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             livestemn_storage(p)
+               gru_deadstemn_storage_to_atm(p) = matrix_update_gmn(p,ideadstemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             deadstemn_storage(p)
+               gru_livecrootn_storage_to_atm(p) = matrix_update_gmn(p,ilivecrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)* &
+                                             livecrootn_storage(p)
+               gru_deadcrootn_storage_to_atm(p) = matrix_update_gmn(p,ideadcrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)* &
+                                             deadcrootn_storage(p)
+               ! transfer pools
+               gru_leafn_xfer_to_atm(p) = matrix_update_gmn(p,ileafxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             leafn_xfer(p)
+               gru_frootn_xfer_to_atm(p) = matrix_update_gmn(p,ifrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             frootn_xfer(p)
+               gru_livestemn_xfer_to_atm(p) = matrix_update_gmn(p,ilivestemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             livestemn_xfer(p)
+               gru_deadstemn_xfer_to_atm(p) = matrix_update_gmn(p,ideadstemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             deadstemn_xfer(p)
+               gru_livecrootn_xfer_to_atm(p) = matrix_update_gmn(p,ilivecrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             livecrootn_xfer(p)
+               gru_deadcrootn_xfer_to_atm(p) = matrix_update_gmn(p,ideadcrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
+                                             deadcrootn_xfer(p)
+            end if
 
          end if  ! end tree block
 

@@ -26,6 +26,8 @@ module unittestTimeManagerMod
   ! clm_time_manager. The routines in this unittest-specific file, in contrast, tend to be
   ! higher-level wrappers.
 
+  use shr_sys_mod, only : shr_sys_abort
+
   implicit none
   private
   save
@@ -48,7 +50,7 @@ contains
     ! Should be called once for every test that uses the time manager.
     !
     ! !USES:
-    use ESMF, only : ESMF_Initialize, ESMF_SUCCESS
+    use ESMF, only : ESMF_Initialize, ESMF_IsInitialized, ESMF_SUCCESS
     use clm_time_manager, only : set_timemgr_init, timemgr_init, NO_LEAP_C, GREGORIAN_C
     !
     ! !ARGUMENTS:
@@ -59,6 +61,7 @@ contains
     integer :: l_dtime  ! local version of dtime
     logical :: l_use_gregorian_calendar  ! local version of use_gregorian_calendar
     character(len=:), allocatable :: calendar
+    logical :: esmf_is_initialized
     integer :: rc ! return code
 
     integer, parameter :: dtime_default = 1800  ! time step (seconds)
@@ -67,12 +70,6 @@ contains
     integer, parameter :: start_ymd = 10101
     integer, parameter :: ref_ymd = start_ymd
     integer, parameter :: perpetual_ymd = start_ymd
-
-    ! Set current time to be at the start of year 1
-    integer, parameter :: curr_yr = 1
-    integer, parameter :: curr_mon = 1
-    integer, parameter :: curr_day = 1
-    integer, parameter :: curr_tod = 0
 
     character(len=*), parameter :: subname = 'unittest_timemgr_setup'
     !-----------------------------------------------------------------------
@@ -89,9 +86,15 @@ contains
        l_use_gregorian_calendar = .false.
     end if
 
-    call ESMF_Initialize(rc=rc)
+    esmf_is_initialized = ESMF_IsInitialized(rc=rc)
     if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_Initialize'
+       call shr_sys_abort(subname//': Error in ESMF_IsInitialized')
+    end if
+    if (.not. esmf_is_initialized) then
+       call ESMF_Initialize(rc=rc)
+       if (rc /= ESMF_SUCCESS) then
+          call shr_sys_abort(subname//': Error in ESMF_Initialize')
+       end if
     end if
 
     if (l_use_gregorian_calendar) then
@@ -112,12 +115,6 @@ contains
 
     call timemgr_init()
 
-    call unittest_timemgr_set_curr_date( &
-         yr = curr_yr, &
-         mon = curr_mon, &
-         day = curr_day, &
-         tod = curr_tod)
-
   end subroutine unittest_timemgr_setup
 
   !-----------------------------------------------------------------------
@@ -126,6 +123,9 @@ contains
     ! !DESCRIPTION:
     ! Set the current model date in the time manager. This is the time at the END of the
     ! time step.
+    !
+    ! Note that a side effect of this subroutine is that the time step count is
+    ! incremented by 1 (because of the method used by for_test_set_curr_date).
     !
     ! !USES:
     use clm_time_manager, only : for_test_set_curr_date
@@ -177,9 +177,6 @@ contains
     ! !DESCRIPTION:
     ! Set the time step number
     !
-    ! Note that the starting time step number is 0, so calling this with nstep = 1
-    ! advances the time step beyond the starting time step.
-    !
     ! !USES:
     use clm_time_manager, only : advance_timestep
     !
@@ -192,7 +189,7 @@ contains
     character(len=*), parameter :: subname = 'unittest_timemgr_set_nstep'
     !-----------------------------------------------------------------------
 
-    do n = 1, nstep
+    do n = 2, nstep
        call advance_timestep()
     end do
 
@@ -222,10 +219,12 @@ contains
     
     call timemgr_reset()
 
-    call ESMF_Finalize(rc=rc)
-    if (rc /= ESMF_SUCCESS) then
-       stop 'Error in ESMF_Finalize'
-    end if
+    ! If this is the end of the executable, we should call
+    ! ESMF_Finalize. But the timemgr setup and teardown routines can
+    ! be called multiple times within a single unit test executable,
+    ! and it's an error to re-call ESMF_Initialize after calling
+    ! ESMF_Finalize. So for now we just won't attempt to do an
+    ! ESMF_Finalize.
 
   end subroutine unittest_timemgr_teardown
 

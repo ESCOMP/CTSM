@@ -171,6 +171,11 @@ contains
          avgflag='A', long_name=this%info%lname('atmospheric specific humidity (downscaled to columns in glacier regions)'), &
          ptr_col=this%forc_q_downscaled_col, default='inactive')
 
+    this%forc_q_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname=this%info%fname('QBOT_NOT_DOWNSCALED'), units='kg/kg',  &
+         avgflag='A', long_name=this%info%lname('atmospheric specific humidity (pre-downscaling)'), &
+         ptr_lnd=this%forc_q_not_downscaled_grc, default='inactive')
+
     this%forc_flood_grc(begg:endg) = spval
     call hist_addfld1d (fname=this%info%fname('QFLOOD'),  units='mm/s',  &
          avgflag='A', long_name=this%info%lname('runoff from river flooding'), &

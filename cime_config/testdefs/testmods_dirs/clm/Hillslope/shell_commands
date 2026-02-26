@@ -1,4 +1,19 @@
 ./xmlchange CLM_BLDNML_OPTS="-bgc sp"
 DIN_LOC_ROOT=$(./xmlquery --value DIN_LOC_ROOT)
-meshfile=$DIN_LOC_ROOT/lnd/clm2/testdata/ESMFmesh_10x15_synthetic_cosphill_1.0.nc
-./xmlchange ATM_DOMAIN_MESH=${meshfile},LND_DOMAIN_MESH=${meshfile}
+
+# Set hillslope_file. Needed for any grids without default hillslope_file already set by CTSM.
+lnd_grid=$(./xmlquery --value LND_GRID)
+if [[ ${lnd_grid} == "10x15" ]]; then
+    # Synthetic data
+    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_hist_1850_78pfts_c240216.synth_hillslopes_241001.nc'
+elif [[ ${lnd_grid} == "5x5_amazon" ]]; then
+    # Real data
+    hillslope_file='/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global/combined/hilldata_5x5_amazon_hist_2000_78pfts_c240216.nc'
+else
+    echo "ERROR: Hillslope file not found for LND_GRID=${lnd_grid}" >&2
+    exit 1
+fi
+echo -e "hillslope_file = '${hillslope_file}'\n" >> user_nl_clm
+
+# -ignore_warnings is needed as long as we don't allow use_hillslope and use_init_interp together
+./xmlchange --append CLM_BLDNML_OPTS=-ignore_warnings

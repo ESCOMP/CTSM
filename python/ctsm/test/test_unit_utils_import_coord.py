@@ -39,6 +39,7 @@ class TestUtilsImportCoord(unittest.TestCase):
 
     def setUp(self):
         """Setup for trying out the methods"""
+        self._previous_dir = os.getcwd()
         testinputs_path = os.path.join(path_to_ctsm_root(), "python/ctsm/test/testinputs")
         self._testinputs_path = testinputs_path
         self._tempdir = tempfile.mkdtemp()
@@ -48,13 +49,14 @@ class TestUtilsImportCoord(unittest.TestCase):
         )
         self._2d_lonlat_file = os.path.join(
             self._testinputs_path,
-            "surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214_modified.nc",
+            "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031_modified.nc",
         )
 
     def tearDown(self):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_importcoord1d(self):

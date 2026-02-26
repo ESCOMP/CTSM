@@ -87,6 +87,7 @@ module SnowHydrologyMod
       real(r8) :: scvng_fct_mlt_dst4    ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
       real(r8) :: ceta                  ! Overburden compaction constant (kg/m3)
       real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+      real(r8) :: upplim_destruct_metamorph ! Upper limit on destructive metamorphism compaction (kg/m3)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -151,7 +152,6 @@ module SnowHydrologyMod
 
   integer  :: overburden_compaction_method = -1
   integer  :: new_snow_density            = LoTmpDnsSlater2017 ! Snow density type
-  real(r8) :: upplim_destruct_metamorph   = 100.0_r8           ! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
   real(r8) :: overburden_compress_Tfactor = 0.08_r8            ! snow compaction overburden exponential factor (1/K)
 
   ! ------------------------------------------------------------------------
@@ -211,8 +211,7 @@ contains
 
     namelist /clm_snowhydrology_inparm/ &
          wind_dependent_snow_density, snow_overburden_compaction_method, &
-         lotmp_snowdensity_method, upplim_destruct_metamorph, &
-         overburden_compress_Tfactor, &
+         lotmp_snowdensity_method, overburden_compress_Tfactor, &
          reset_snow, reset_snow_glc, reset_snow_glc_ela, &
          snow_dzmin_1, snow_dzmax_l_1, snow_dzmax_u_1, &
          snow_dzmin_2, snow_dzmax_l_2, snow_dzmax_u_2
@@ -246,7 +245,6 @@ contains
     call shr_mpi_bcast (wind_dependent_snow_density, mpicom)
     call shr_mpi_bcast (snow_overburden_compaction_method, mpicom)
     call shr_mpi_bcast (lotmp_snowdensity_method   , mpicom)
-    call shr_mpi_bcast (upplim_destruct_metamorph  , mpicom)
     call shr_mpi_bcast (overburden_compress_Tfactor, mpicom)
     call shr_mpi_bcast (reset_snow                 , mpicom)
     call shr_mpi_bcast (reset_snow_glc             , mpicom)
@@ -333,6 +331,8 @@ contains
     call readNcdioScalar(ncid, 'ceta', subname, params_inst%ceta)
     ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
     call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
+    ! Upper limit on destructive metamorphism compaction (kg/m3)
+    call readNcdioScalar(ncid, 'upplim_destruct_metamorph', subname, params_inst%upplim_destruct_metamorph)
 
   end subroutine readParams
 
@@ -1972,7 +1972,8 @@ contains
                 ! Settling as a result of destructive metamorphism
 
                 ddz1 = -c3*dexpf
-                if (bi > upplim_destruct_metamorph) ddz1 = ddz1*exp(-46.0e-3_r8*(bi-upplim_destruct_metamorph))
+                if (bi > params_inst%upplim_destruct_metamorph) ddz1 = &
+                        ddz1*exp(-46.0e-3_r8*(bi-params_inst%upplim_destruct_metamorph))
 
                 ! Liquid water term
 

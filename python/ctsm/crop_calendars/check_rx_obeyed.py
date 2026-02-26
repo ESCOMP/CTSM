@@ -7,6 +7,10 @@ import numpy as np
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.cropcal_constants import DEFAULT_GDD_MIN
 
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
+
 
 def get_pct_harv_at_mature(harvest_reason_da):
     """
@@ -104,8 +108,27 @@ def get_extreme_info(diff_array, rx_array, mxn, dims, gs_da, patches1d_lon, patc
     return round(themxn, 3), round(this_lon, 3), round(this_lat, 3), this_gs, round(this_rx)
 
 
+def summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diffs_eg_txt):
+    """
+    Summarize results
+    """
+    bad = True
+    if all_ok == 2:
+        bad = False
+        print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
+    elif all_ok == 1:
+        bad = False
+        print(
+            f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable (diffs <= "
+            + f"{gdd_tolerance})"
+        )
+    elif not verbose:
+        print(f"❌ {which_ds}: Prescribed {output_var} *not* always obeyed. E.g., {diffs_eg_txt}")
+    return bad
+
+
 def check_rx_obeyed(
-    vegtype_list, rx_ds, dates_ds, which_ds, output_var, gdd_min=None, verbose=False
+    vegtype_list, rx_ds, dates_ds, which_ds, output_var, *, gdd_min=None, verbose=False
 ):
     """
     Check that prescribed crop calendars were obeyed
@@ -114,13 +137,14 @@ def check_rx_obeyed(
         dates_ds, which_ds, output_var, verbose
     )
 
+    diffs_eg_txt = None
     for vegtype_str in vegtype_list:
         thisveg_patches = np.where(dates_ds.patches1d_itype_veg_str == vegtype_str)[0]
         if thisveg_patches.size == 0:
             continue
         ds_thisveg = dates_ds.isel(patch=thisveg_patches)
 
-        vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
+        vegtype_int = utils.vegtype_str2int(vegtype_str)
         rx_da = rx_ds[f"gs1_{vegtype_int}"]
         rx_array = rx_da.values[
             ds_thisveg.patches1d_jxy.values.astype(int) - 1,
@@ -203,14 +227,6 @@ def check_rx_obeyed(
                     else:
                         break
 
-    if all_ok == 2:
-        print(f"✅ {which_ds}: Prescribed {output_var} always obeyed")
-    elif all_ok == 1:
-        # print(f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable:")
-        # for x in diff_str_list: print(x)
-        print(
-            f"🟨 {which_ds}: Prescribed {output_var} *not* always obeyed, but acceptable (diffs <= "
-            + f"{gdd_tolerance})"
-        )
-    elif not verbose:
-        print(f"❌ {which_ds}: Prescribed {output_var} *not* always obeyed. E.g., {diffs_eg_txt}")
+    bad = summarize_results(which_ds, output_var, verbose, all_ok, gdd_tolerance, diffs_eg_txt)
+
+    return bad

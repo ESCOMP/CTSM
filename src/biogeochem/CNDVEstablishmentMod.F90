@@ -55,6 +55,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: g,l,c,p,m                               ! indices
+    ! TODO slevis: Is begg - endg backwards in the next line?
     integer  :: fn, filterg(bounds%begg-bounds%endg+1)  ! local gridcell filter for error check
     !
     ! gridcell level variables

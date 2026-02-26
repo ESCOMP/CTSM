@@ -5,7 +5,7 @@ module test_accumul
   use funit
   use accumulMod
   use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use shr_kind_mod , only : r8 => shr_kind_r8
   use clm_varcon, only : spval
   use PatchType, only : patch
@@ -94,12 +94,12 @@ contains
          numlev = nlev, &
          subgrid_type = 'pft', &
          init_value = l_init_value, &
-         type2d = 'irrelevant', &  ! type2d just needed for restart
+         type2d = 'patch', &  ! Irrelevant for one-patch fields, but some tests have more than one
          scale_by_thickness = .false.)
   end subroutine init_ml_patch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &
-       pactive, timestep_start)
+       pactive, timestep_start, reset)
     ! Calls update_accum_field once for each value in 'values', assuming that the values
     ! come once per timestep. For the first call, all input values are set equal to
     ! values(1); for the second call, all input values are set equal to values(2); etc.
@@ -122,16 +122,23 @@ contains
     ! If present, this specifies the starting nstep value. If absent, we start with 1.
     integer, optional, intent(in) :: timestep_start
 
+    ! If present, same size as 'values', indicating whether each should be associated with a reset
+    logical, optional, intent(in) :: reset(:)
+
     integer :: n_timesteps
     integer :: timestep
     integer :: timestep_offset
     real(r8), pointer :: vals_input(:)
     real(r8), pointer :: vals_output(:)
     logical, allocatable :: l_pactive(:)  ! local version of pactive
+    logical, allocatable :: l_reset(:)    ! local version of reset
 
     n_timesteps = size(values)
     if (present(pactive)) then
        @assertEqual(n_timesteps, size(pactive))
+    end if
+    if (present(reset)) then
+       @assertEqual(n_timesteps, size(reset))
     end if
 
     allocate(l_pactive(n_timesteps))
@@ -147,11 +154,21 @@ contains
        timestep_offset = 0
     end if
 
+    allocate(l_reset(n_timesteps))
+    if (present(reset)) then
+       l_reset(:) = reset(:)
+    else
+       l_reset(:) = .false.
+    end if
+
     allocate(vals_input(bounds%begp:bounds%endp))
     allocate(vals_output(bounds%begp:bounds%endp))
     do timestep = 1, n_timesteps
        vals_input(:) = values(timestep)
        patch%active(bounds%begp) = l_pactive(timestep)
+       if (l_reset(timestep)) then
+          call markreset_accum_field(fieldname)
+       end if
        call update_accum_field(fieldname, vals_input, timestep+timestep_offset)
     end do
     call extract_accum_field(fieldname, vals_output, n_timesteps+timestep_offset)
@@ -258,6 +275,54 @@ contains
   end subroutine timeavg_basic
 
   @Test
+  subroutine timeavg_reset1(this)
+    ! Test reset of timeavg field 1 day after period start
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period+1) = [11._r8, 12._r8, 13._r8, 14._r8]
+    logical, parameter :: reset(accum_period+1) = [.false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(2:4))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_reset1
+
+  @Test
+  subroutine timeavg_reset2(this)
+    ! Test reset of timeavg field 2 days after period start
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period+2) = [11._r8, 12._r8, 13._r8, 14._r8, 15._r8]
+    logical, parameter :: reset(accum_period+2) = [.false., .false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(3:5))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_reset2
+
+  @Test
   subroutine timeavg_wrongTime(this)
     ! Test a timeavg field when it's the wrong time for producing an average
     class(TestAccumul), intent(inout) :: this
@@ -302,6 +367,32 @@ contains
     expected = sum(values(accum_period+1:2*accum_period))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
   end subroutine timeavg_onlyLatestPeriod
+
+  @Test
+  subroutine timeavg_onlyLatestPeriod_redundantReset(this)
+    ! Manually requesting a reset when one was going to happen anyway should have no effect.
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(accum_period*2) = &
+         [11._r8, 12._r8, 13._r8, 21._r8, 22._r8, 23._r8]
+    logical, parameter :: reset(accum_period*2) = &
+         [.false., .false., .false., .true., .false., .false.]
+    real(r8) :: val_output
+    real(r8) :: expected
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected = sum(values(accum_period+1:2*accum_period))/accum_period
+    @assertEqual(expected, val_output, tolerance=tol)
+  end subroutine timeavg_onlyLatestPeriod_redundantReset
 
   @Test
   subroutine timeavg_newlyActive(this)
@@ -506,6 +597,54 @@ contains
   end subroutine runmean_afterPeriod
 
   @Test
+  subroutine runmean_afterPeriod_reset(this)
+    ! Test runmean accumulation after accum_period is reached, with a reset
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(5) = [11._r8,  22._r8,  43._r8,  110._r8, 17._r8]
+    logical,  parameter :: reset(5)  = [.false., .false., .false., .true.,  .false.]
+    real(r8) :: val_output
+    real(r8) :: expected_ts5
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='runmean', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
+
+    ! Verify
+    expected_ts5 = (values(4) + values(5)) / 2._r8
+    @assertEqual(expected_ts5, val_output, tolerance=tol)
+  end subroutine runmean_afterPeriod_reset
+
+  @Test
+  subroutine runmean_afterPeriod_resetWhileInactive(this)
+    ! Test runmean accumulation after accum_period is reached, with a reset while the patch was inactive. Unlike the other accumulator types, runmean should preserve this reset request and apply it when the patch is active again. This may or may not be the ideal behavior; we can change this if some other
+    ! behavior would be better in this situation.
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: accum_period = 3
+    real(r8), parameter :: values(5)  = [11._r8,  22._r8,  43._r8,  110._r8, 17._r8]
+    logical,  parameter :: pactive(5) = [.true.,  .true.,  .true.,  .false., .true.]
+    logical,  parameter :: reset(5)   = [.false., .false., .false., .true.,  .false.]
+    real(r8) :: val_output
+
+    ! Setup
+    call setup_single_veg_patch(pft_type=1)
+    call this%init_sl_patch_field(name=fieldname, accum_type='runmean', &
+         accum_period = accum_period)
+
+    ! Exercise
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive, reset=reset)
+
+    ! Verify
+    @assertEqual(values(5), val_output, tolerance=tol)
+  end subroutine runmean_afterPeriod_resetWhileInactive
+
+  @Test
   subroutine runmean_newlyActive(this)
     ! For runmean: If a point recently became active, its running mean should only
     ! consider values from when it was active.
@@ -599,7 +738,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8, 12._r8, accumResetVal, 13._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  12._r8,  -99999._r8, 13._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .false., .true.,     .false., .false.]
     real(r8) :: val_output
     real(r8) :: expected
 
@@ -609,7 +749,7 @@ contains
          accum_period = accum_period)
 
     ! Exercise
-    call this%update_and_extract_sl_patch_field(fieldname, values, val_output)
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, reset=reset)
 
     ! Verify
     expected = sum(values(4:5))
@@ -626,7 +766,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8,  accumResetVal, 12._r8,  13._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  -99999._r8, 12._r8,  13._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .true.,     .false., .false., .false.]
     logical, parameter :: pactive(5) = [.false., .false.,       .false., .true., .true.]
     real(r8) :: val_output
     real(r8) :: expected
@@ -649,7 +790,7 @@ contains
     ! Test runaccum with a point that starts active, becomes inactive, then later becomes
     ! active again.
     !
-    ! Should ignore values and accumResetVal in the inactive steps.
+    ! Should ignore values and reset request in the inactive steps.
     !
     ! Also, should continue where it left off - i.e., including the values accumulated
     ! when it was first active. This may or may not be the ideal behavior; we can change
@@ -657,7 +798,8 @@ contains
     class(TestAccumul), intent(inout) :: this
     character(len=*), parameter :: fieldname = 'foo'
     integer, parameter :: accum_period = 3  ! irrelevant for this type
-    real(r8), parameter :: values(5) = [11._r8,  accumResetVal, 12._r8,  17._r8, 24._r8]
+    real(r8), parameter :: values(5) = [11._r8,  -99999._r8, 12._r8,  17._r8,  24._r8]
+    logical , parameter :: reset(5)  = [.false., .true.,     .false., .false., .false.]
     logical, parameter :: pactive(5) = [.true., .false.,       .false., .true., .true.]
     real(r8) :: val_output
     real(r8) :: expected
@@ -668,7 +810,7 @@ contains
          accum_period = accum_period)
 
     ! Exercise
-    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive)
+    call this%update_and_extract_sl_patch_field(fieldname, values, val_output, pactive=pactive, reset=reset)
 
     ! Verify
     expected = values(1) + values(4) + values(5)
@@ -717,5 +859,151 @@ contains
     @assertEqual(expected1, val_output1, tolerance=tol)
     @assertEqual(expected2, val_output2, tolerance=tol)
   end subroutine multipleFields
+
+  ! ------------------------------------------------------------------------
+  ! Tests of markreset_accum_field()
+  ! ------------------------------------------------------------------------
+
+  @Test
+  subroutine markreset_nopoints_nolevels(this)
+    ! Make sure that NOT calling markreset_accum_field() means no point-levels are marked for reset.
+    !
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         0, 0, 0, 0, 0, &
+         0, 0, 0, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    reset_output_int = merge(1, 0, reset_output)
+    @assertEqual(expected, reset_output_int)
+  end subroutine markreset_nopoints_nolevels
+
+  @Test
+  subroutine markreset_1point_nolevels(this)
+    ! Make sure that calling markreset_accum_field() with kf but no level works right (marks
+    ! all levels of that patch for reset).
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         1, 1, 1, 1, 1, &
+         0, 0, 0, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    call markreset_accum_field(fieldname, kf=1)
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    reset_output_int = merge(1, 0, reset_output)
+    @assertEqual(expected, reset_output_int)
+  end subroutine markreset_1point_nolevels
+
+  @Test
+  subroutine markreset_allpoints_1level(this)
+    ! Make sure that calling markreset_accum_field() with level but no kf works right (marks that
+    ! level for reset for all points).
+    !
+    ! Note that type of accumulator and values don't matter.
+
+    class(TestAccumul), intent(inout) :: this
+    character(len=*), parameter :: fieldname = 'foo'
+    integer, parameter :: npatches = 2
+    integer, parameter :: nlevels = 5
+    real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+    integer, parameter :: pft_type(npatches) = [1, 2]
+    integer, parameter :: accum_period = 3
+    integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+         0, 0, 1, 0, 0, &
+         0, 0, 1, 0, 0 &
+         ], [nlevels, npatches]))
+    logical :: reset_output(npatches, nlevels)
+    integer :: reset_output_int(npatches, nlevels)
+    integer :: l, p
+
+    ! Setup
+    call setup_n_veg_patches(pwtcol, pft_type)
+    call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
+         accum_period = accum_period, nlev=nlevels)
+
+    ! Exercise
+    call markreset_accum_field(fieldname, level=3)
+    reset_output = get_accum_reset(fieldname)
+
+    ! Verify
+    reset_output_int = merge(1, 0, reset_output)
+    @assertEqual(expected, reset_output_int)
+end subroutine markreset_allpoints_1level
+
+@Test
+subroutine markreset_allpoints_alllevels(this)
+  ! Make sure that calling markreset_accum_field() with neither kf nor level works right (marks
+  ! all for reset).
+  !
+  ! Note that type of accumulator and values don't matter.
+
+  class(TestAccumul), intent(inout) :: this
+  character(len=*), parameter :: fieldname = 'foo'
+  integer, parameter :: npatches = 2
+  integer, parameter :: nlevels = 5
+  real(r8), parameter :: pwtcol(npatches) = [0.5, 0.5]
+  integer, parameter :: pft_type(npatches) = [1, 2]
+  integer, parameter :: accum_period = 3
+  integer, parameter :: expected(npatches, nlevels) = transpose(reshape([ &
+       1, 1, 1, 1, 1, &
+       1, 1, 1, 1, 1 &
+       ], [nlevels, npatches]))
+  logical :: reset_output(npatches, nlevels)
+  integer :: reset_output_int(npatches, nlevels)
+  integer :: l, p
+
+  ! Setup
+  call setup_n_veg_patches(pwtcol, pft_type)
+  call this%init_ml_patch_field(name=fieldname, accum_type='timeavg', &
+       accum_period = accum_period, nlev=nlevels)
+
+  ! Exercise
+  call markreset_accum_field(fieldname)
+  reset_output = get_accum_reset(fieldname)
+
+  ! Verify
+  reset_output_int = merge(1, 0, reset_output)
+  @assertEqual(expected, reset_output_int)
+end subroutine markreset_allpoints_alllevels
+
 
 end module test_accumul

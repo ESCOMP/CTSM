@@ -110,7 +110,15 @@ def read_cfg_subgrid(config, cfg_path, numurbl=3):
 
     subgrid_settings = {}
     var_list = config.options(section)
-    valid_list = ["pct_natveg", "pct_crop", "pct_lake", "pct_glacier", "pct_wetland", "pct_urban"]
+    valid_list = [
+        "pct_natveg",
+        "pct_crop",
+        "pct_lake",
+        "pct_glacier",
+        "pct_wetland",
+        "pct_urban",
+        "pct_ocean",
+    ]
     varsum = 0
     for var in var_list:
         if valid_list.count(var) == 0:
@@ -230,6 +238,7 @@ def read_cfg_var_list(config, idealized=True):
 
 
 def modify_optional(
+    *,
     modify_fsurdat,
     idealized,
     include_nonveg,
@@ -246,8 +255,8 @@ def modify_optional(
     """Modify the dataset according to the optional settings"""
 
     # Set fsurdat variables in a rectangle that could be global (default).
-    # Note that the land/ocean mask gets specified in the domain file for
-    # MCT or the ocean mesh files for NUOPC. Here the user may specify
+    # Note that the land/ocean mask gets specified in
+    # the ocean mesh files. Here the user may specify
     # fsurdat variables inside a box but cannot change which points will
     # run as land and which as ocean.
     if idealized:
@@ -490,6 +499,13 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
         file_path=cfg_path,
         convert_to_type=float,
     )
+    lon_type = get_config_value(
+        config=config,
+        section=section,
+        item="lon_type",
+        file_path=cfg_path,
+        convert_to_type=int,
+    )
 
     landmask_file = get_config_value(
         config=config,
@@ -505,7 +521,16 @@ def read_cfg_required_basic_opts(config, section, cfg_path):
     lon_dimname = get_config_value(
         config=config, section=section, item="lon_dimname", file_path=cfg_path, can_be_unset=True
     )
-    return (lnd_lat_1, lnd_lat_2, lnd_lon_1, lnd_lon_2, landmask_file, lat_dimname, lon_dimname)
+    return (
+        lnd_lat_1,
+        lnd_lat_2,
+        lnd_lon_1,
+        lnd_lon_2,
+        landmask_file,
+        lat_dimname,
+        lon_dimname,
+        lon_type,
+    )
 
 
 def fsurdat_modifier(parser):
@@ -560,17 +585,19 @@ def fsurdat_modifier(parser):
         landmask_file,
         lat_dimname,
         lon_dimname,
+        lon_type,
     ) = read_cfg_required_basic_opts(config, section, cfg_path)
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat.init_from_file(
-        fsurdat_in,
-        lnd_lon_1,
-        lnd_lon_2,
-        lnd_lat_1,
-        lnd_lat_2,
-        landmask_file,
-        lat_dimname,
-        lon_dimname,
+        fsurdat_in=fsurdat_in,
+        lon_1=lnd_lon_1,
+        lon_2=lnd_lon_2,
+        lat_1=lnd_lat_1,
+        lat_2=lnd_lat_2,
+        landmask_file=landmask_file,
+        lat_dimname=lat_dimname,
+        lon_dimname=lon_dimname,
+        lon_type=lon_type,
     )
 
     # Read control information about the optional sections
@@ -603,18 +630,18 @@ def fsurdat_modifier(parser):
     # ------------------------------
 
     modify_optional(
-        modify_fsurdat,
-        idealized,
-        include_nonveg,
-        max_sat_area,
-        std_elev,
-        soil_color,
-        dom_pft,
-        evenly_split_cropland,
-        lai,
-        sai,
-        hgt_top,
-        hgt_bot,
+        modify_fsurdat=modify_fsurdat,
+        idealized=idealized,
+        include_nonveg=include_nonveg,
+        max_sat_area=max_sat_area,
+        std_elev=std_elev,
+        soil_color=soil_color,
+        dom_pft=dom_pft,
+        evenly_split_cropland=evenly_split_cropland,
+        lai=lai,
+        sai=sai,
+        hgt_top=hgt_top,
+        hgt_bot=hgt_bot,
     )
     #
     # Handle optional sections
@@ -628,7 +655,9 @@ def fsurdat_modifier(parser):
 
     if process_var_list:
         varlist = read_cfg_var_list(config, idealized=idealized)
-        update_list = modify_fsurdat.check_varlist(varlist, allow_uppercase_vars=True)
+        update_list = modify_fsurdat.check_varlist(
+            varlist, allow_uppercase_vars=True, source="Config file: " + cfg_path
+        )
         modify_fsurdat.set_varlist(update_list, cfg_path)
         logger.info("process_var_list is complete")
     else:

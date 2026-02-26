@@ -5,7 +5,7 @@ Documentation for expectedFail.pm
 =head1 Overview
 
 The module expectedFail.pm supplies the capability of checking if a failed test is expected to fail.
-It is called directly from either test_driver.sh (for batch and interactive tests) or build-namelist_test.pl.  
+It is called directly from build-namelist_test.pl.  
 Future plans involve integrating this module into cesm tests.
 
 =head1 Use Case
@@ -112,7 +112,7 @@ sub new {
 
 =head1 parseOutput
 
-parseOutput parsese the output from the build-namelist_test.pl script.  It is similar
+parseOutput parses the output from the build-namelist_test.pl script.  It is similar
 to, but not interchangable with parseOutputCLM.
 
 The only argument is that of the reference variable that contains the information dumped
@@ -219,119 +219,6 @@ sub parseOutput
    
 }
    
-##############################################################################
-#
-##############################################################################
-
-=head1 parseOutputCLM
-
-parseOutputCLM parsese the output from the test_driver.sh script.  It is similar
-to, but not interchangable with parseOutput.
-
-parseOutputCLM takes one arguments:
-   $statFoo->     the name of the td.<pid>.status file 
-
-returns:  nothing
-
-=cut
-
-##############################################################################
-#
-##############################################################################
-sub parseOutputCLM
-{
-
-   my $report;
-   my $testId;
-   my @testName={};
-   my $testReason;
-
-   my ($self, $statFoo) = @_ ;
-    
-   open(FOO, "< $statFoo"); # open for input
-   open(FOO_OUT, "> $statFoo.xFail"); # open for input
-
-   my(@reportLines);
-
-   while (<FOO>) {
-
-      my($line) = $_;
-
-      my @outArr=split(/ /,$line);
-      if (looks_like_number(@outArr[0])) {
-
-         $self->{_numericalTestId}++;
-
-         my $num=sprintf("%03d", $self->{_numericalTestId});
-         my $totNum=sprintf("%03d", $self->{_totTests});
-
-         #_# last element has the pass/fail info.
-         chomp(@outArr[-1]);
-         my $repPass=substr(@outArr[-1], -4, 4);
-
-         if ($DEBUG) {
-            print ("xFail::expectedFail::parseOutput @outArr[0] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[1] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[2] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[3] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[4] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[5] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[6] \n");
-            print ("xFail::expectedFail::parseOutput @outArr[-1] \n");
-            print ("xFail::expectedFail::parseOutput $repPass \n");
-         }
-
-         my $size = @outArr-1;
-         if ($DEBUG) {
-            print ("size of line $size \n");
-         }
-         my $endOfDesc=$size-1;
-   
-         if ($repPass eq "PASS") {
-            $report=$pass;
-            $testId=@outArr[1];
-            @testName=@outArr[2..$endOfDesc];
-
-            my ($retVal,$xFailText)=$self->_searchExpectedFail($testId);
-
-            my $testReason=$self->_testNowPassing($testId,$retVal,$xFailText);
-
-            #_# print out the test results
-            print FOO_OUT ("$num/$totNum <$report> <Test Id: $testId> <Desc: @testName> $testReason \n"); 
-
-         } else {
-            $testId=@outArr[1];
-            my ($retVal,$xFailText)=$self->_searchExpectedFail($testId);
-            
-            if ($DEBUG) {
-               print ("xFail::expectedFail::parseOutput Id $retVal,$xFailText \n");
-            }
-         
-            @testName=@outArr[2..$endOfDesc];
-         
-            if ($retVal eq "TRUE"){
-               #_# found an expected FAIL (xFAIL)
-               $report=$xfail;
-               $testReason= "<Note: $xFailText>";
-            } else {
-               #_# print a regular FAIL
-               $report=$fail;
-               $testReason="";
-            }
-
-            #_# print out the test results
-            print FOO_OUT ("$num/$totNum <$report> <Test Id: $testId> <Desc: @testName> $testReason \n"); 
-
-         }
-
-      } else {
-         print FOO_OUT $line;
-      }
-   }
-   close(FOO);
-   close(FOO_OUT);
-}
-
 ##############################################################################
 #
 ##############################################################################
@@ -608,8 +495,6 @@ sub _getTestType
 
    my %testTypes = (
       "build-namelist_test.pl"  => "namelistTest",
-      "test_driver.sh-i"   => "clmInteractive",
-      "test_driver.sh"   => "clmBatch",
       "clm-cesm.sh"   => "cesm"
    );
    

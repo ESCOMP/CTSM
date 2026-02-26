@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for machine
-"""
+"""Unit tests for machine"""
 
 import unittest
 import os
@@ -33,6 +32,7 @@ class TestCreateMachine(unittest.TestCase):
 
     def assertMachineInfo(
         self,
+        *,
         machine,
         name,
         scratch_dir,
@@ -60,7 +60,7 @@ class TestCreateMachine(unittest.TestCase):
             nice_level = 0
         self.assertEqual(launcher.get_nice_level(), nice_level)
 
-    def assertQsubInfo(self, machine, queue, walltime, account, required_args, extra_args):
+    def assertQsubInfo(self, *, machine, queue, walltime, account, required_args, extra_args):
         """Asserts that the machine's launcher is of type JobLauncherQsub, and has values as
         expected"""
         launcher = machine.job_launcher

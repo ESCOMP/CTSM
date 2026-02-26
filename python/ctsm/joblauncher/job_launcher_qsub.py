@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class JobLauncherQsub(JobLauncherBase):
     """Job launcher for systems where we run big jobs via qsub"""
 
-    def __init__(self, queue, walltime, account, required_args, extra_args):
+    def __init__(self, *, queue, walltime, account, required_args, extra_args):
         """
         account can be None or the empty string on a machine that doesn't require an account
         """

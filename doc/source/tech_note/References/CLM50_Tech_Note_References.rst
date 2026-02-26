@@ -843,6 +843,10 @@ Lowe, P.R. 1977. An approximating polynomial for the computation of saturation v
 
 Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations of carbon and nitrogen in land ecosystems: a meta-analysis. Ecology 87:53-63.
 
+.. _Luoetal2025:
+
+Luo J, Hess P G, Hall S, et al. Agricultural emissions of reactive nitrogen gases from constrained simulations using the Community Land Model. Authorea Preprints, 2025.
+
 .. _Magilletal1997:
 
 Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simulated chronic nitrogen deposition. Ecological Applications, 7: 402-415.
@@ -1047,6 +1051,10 @@ Parton, W. et al. 1996. Generalized model for N2 and N2O production from nitrifi
 .. _Partonetal2001:
 
 Parton, W.J. et al. 2001. Generalized model for NOx and N2O emissions from soils. J. Geophys. Res. 106(D15):17403-17419.
+
+.. _Patankaretal2018:
+
+Patankar S., 2018. Numerical heat transfer and fluid flow[M]. CRC press., Boca Raton, section 5.2, 80-95 pp
 
 .. _Paterson1994:
 
@@ -1263,6 +1271,10 @@ Sitch, S et al. (2003). Evaluation of ecosystem dynamics, plant geography and te
 .. _Sivak2013:
 
 Sivak, M. 2013. Air conditioning versus heating: climate control is more energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8, doi:10.1088/1748-9326/8/1/014050.
+
+.. _Smeraldetal2023:
+
+Smerald, A., Rahimi, J., & Scheer, C., 2023. A global dataset for the production and usage of cereal residues in the period 1997–2021. Scientific Data, 10(1), 685. doi: 10.1038/s41597-023-02587-0
 
 .. _smith2001:
 

@@ -168,7 +168,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine InitHillslope(bounds,fsurdat)
+  subroutine InitHillslope(bounds, hillslope_file)
     !
     ! !DESCRIPTION:
     ! Initialize hillslope geomorphology from input dataset
@@ -187,7 +187,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    character(len=*) , intent(in) :: fsurdat    ! surface data file name
+    character(len=*) , intent(in) :: hillslope_file    ! hillslope data file name
     integer,  pointer     :: ihillslope_in(:,:) ! read in - integer
     integer,  pointer     :: ncolumns_hillslope_in(:) ! read in number of columns
     integer,  allocatable :: ncolumns_hillslope(:)    ! number of hillslope columns
@@ -224,9 +224,9 @@ contains
     ! consistency check
     call check_aquifer_layer()
 
-    ! Open surface dataset to read in data below
+    ! Open hillslope dataset to read in data below
 
-    call getfil (fsurdat, locfn, 0)
+    call getfil (hillslope_file, locfn, 0)
     call ncd_pio_openfile (ncid, locfn, 0)
 
     allocate( &
@@ -248,7 +248,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=ncolumns_hillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: nhillcolumns not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -266,7 +266,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: pct_hillslope not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -278,7 +278,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_index not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -287,7 +287,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: column_index not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -296,7 +296,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='downhill_column_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: downhill_column_index not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: downhill_column_index not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -307,7 +307,7 @@ contains
     allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='hillslope_slope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_slope not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -317,7 +317,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_aspect', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_aspect not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_aspect not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -327,7 +327,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_area', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_area not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_area not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -335,7 +335,7 @@ contains
     enddo
     call ncd_io(ncid=ncid, varname='hillslope_distance', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_length not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_distance not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
 
     do l = bounds%begl,bounds%endl
@@ -345,7 +345,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_width', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_width not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -354,7 +354,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='hillslope_elevation', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (masterproc .and. .not. readvar) then
-       call endrun( 'ERROR:: hillslope_height not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       call endrun( 'ERROR:: hillslope_elevation not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
@@ -380,7 +380,7 @@ contains
 
        call ncd_io(ncid=ncid, varname='hillslope_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (masterproc .and. .not. readvar) then
-          call endrun( 'ERROR:: hillslope_stream_depth not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          call endrun( 'ERROR:: hillslope_stream_depth not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
        end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
@@ -389,7 +389,7 @@ contains
 
        call ncd_io(ncid=ncid, varname='hillslope_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (masterproc .and. .not. readvar) then
-          call endrun( 'ERROR:: hillslope_stream_width not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          call endrun( 'ERROR:: hillslope_stream_width not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
        end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
@@ -398,7 +398,7 @@ contains
 
        call ncd_io(ncid=ncid, varname='hillslope_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
        if (masterproc .and. .not. readvar) then
-          call endrun( 'ERROR:: hillslope_stream_slope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          call endrun( 'ERROR:: hillslope_stream_slope not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
        end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
@@ -504,11 +504,11 @@ contains
              enddo
           end if
 
-          ! if missing hillslope information on surface dataset,
+          ! if missing hillslope information on dataset,
           ! call endrun
           if (ncolumns_hillslope(l) > 0 .and. sum(hillslope_area) == 0._r8 .and. masterproc) then
              write(iulog,*) 'Problem with input data: nhillcolumns is non-zero, but hillslope area is zero'
-             write(iulog,*) 'Check surface data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
+             write(iulog,*) 'Check hillslope data for gridcell at (lon/lat): ', grc%londeg(g),grc%latdeg(g)
              call endrun( 'ERROR:: sum of hillslope areas is zero.'//errmsg(sourcefile, __LINE__) )
           end if
 
@@ -559,7 +559,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-  subroutine SetHillslopeSoilThickness(bounds,fsurdat,soil_depth_lowland_in,soil_depth_upland_in)
+  subroutine SetHillslopeSoilThickness(bounds, hillslope_file, soil_depth_lowland_in, soil_depth_upland_in)
     !
     ! !DESCRIPTION:
     ! Set hillslope column nbedrock values
@@ -578,7 +578,7 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
-    character(len=*) , intent(in) :: fsurdat    ! surface data file name
+    character(len=*) , intent(in) :: hillslope_file    ! hillslope data file name
     real(r8), intent(in), optional  :: soil_depth_lowland_in
     real(r8), intent(in), optional  :: soil_depth_upland_in
     real(r8), pointer     :: fhillslope_in(:,:) ! read in - float
@@ -599,14 +599,14 @@ contains
 
     if (soil_profile_method==soil_profile_from_file) then
 
-       ! Open surface dataset to read in data below
-       call getfil (fsurdat, locfn, 0)
+       ! Open hillslope dataset to read in data below
+       call getfil (hillslope_file, locfn, 0)
        call ncd_pio_openfile (ncid, locfn, 0)
 
        allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
        call ncd_io(ncid=ncid, varname='hillslope_bedrock_depth', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
        if (masterproc .and. .not. readvar) then
-          call endrun( 'ERROR:: soil_profile_method = "FromFile", but hillslope_bedrock not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+          call endrun( 'ERROR:: soil_profile_method = "FromFile", but hillslope_bedrock not found on hillslope data set.'//errmsg(sourcefile, __LINE__) )
        end if
        do l = bounds%begl,bounds%endl
           g = lun%gridcell(l)
@@ -896,7 +896,7 @@ contains
   subroutine HillslopePftFromFile(bounds,col_pftndx)
     !
     ! !DESCRIPTION:
-    ! Reassign patch type using indices from surface data file
+    ! Reassign patch type using indices from data file
     ! Assumes one patch per hillslope column
     ! In preparation for this reassignment of patch type, only the
     ! first patch was given a non-zero weight in surfrd_hillslope.

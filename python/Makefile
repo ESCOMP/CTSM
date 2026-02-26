@@ -19,7 +19,7 @@ ifneq ($(verbose), not-set)
 endif
 
 PYLINT=pylint
-PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc --fail-under=0
+PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 #  NOTE: These don't pass pylint checking and should be added when we put into effort to get them to pass
@@ -40,6 +40,7 @@ utest: FORCE
 
 .PHONY: stest
 stest: FORCE
+# ----------------------------------------------------------------
 	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --sys
 
 .PHONY: lint

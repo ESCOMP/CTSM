@@ -1,0 +1,1 @@
+Use midDecStart instead of decStart if you want ERP/ERS/etc. tests longer than 2 days to be able to have the split in December instead of January (i.e., before rather than after new year).

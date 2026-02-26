@@ -6,7 +6,7 @@
  Customizing CLM's namelist
 ============================
 
-Once a case has run **case.setup**, we can then customize the case further, by editing the run-time namelist for CLM. First let's list the definition of each namelist item and their valid values, and then we'll list the default values for them. Next for some of the most used or tricky namelist items we'll give examples of their use, and give you example namelists that highlight these features.
+Once a case has run ``case.setup``, we can then customize the case further, by editing the run-time namelist for CLM. First let's list the definition of each namelist item and their valid values, and then we'll list the default values for them. Next for some of the most used or tricky namelist items we'll give examples of their use, and give you example namelists that highlight these features.
 
 In the following, various examples of namelists are provided that feature the use of different namelist options to customize a case for particular uses. Most the examples revolve around how to customize the output history fields. This should give you a good basis for setting up your own CLM namelist.
 
@@ -90,7 +90,9 @@ Example 1-2. Default CLM Namelist
 Adding/removing fields on your primary history file
 ---------------------------------------------------
 
-The primary history files are output monthly, and contain an extensive list of fieldnames, but the list of fieldnames can be added to using ``hist_fincl1`` or removed from by adding fieldnames to ``hist_fexcl1``. A sample user namelist ``user_nl_clm`` adding few new fields (cosine of solar zenith angle, and solar declination) and excluding a few standard fields is (ground temperature, vegetation temperature, soil temperature and soil water).:
+The primary history files are output monthly and contain an extensive list of fieldnames, but the list of fieldnames can be added to using ``hist_fincl1`` or removed from by adding fieldnames to ``hist_fexcl1``. For maximum output, ``hist_all_fields`` will enable all fieldnames on the primary history file.
+
+A sample user namelist ``user_nl_clm`` adding few new fields (cosine of solar zenith angle, and solar declination) and excluding a few standard fields is (ground temperature, vegetation temperature, soil temperature and soil water).:
 
 Example 1-3. Example user_nl_clm namelist adding and removing fields on primary history file
 --------------------------------------------------------------------------------------------
@@ -138,14 +140,16 @@ Example 1-5. Example user_nl_clm namelist removing all history fields
 Various ways to change history output averaging flags
 -----------------------------------------------------
 
-There are two ways to change the averaging of output history fields. The first is using ``hist_avgflag_pertape`` which gives a default value for each history stream, the second is when you add fields using ``hist_fincl*``, you add an averaging flag to the end of the field name after a colon (for example 'TSOI:X', would output the maximum of TSOI). The types of averaging that can be done are:
+There are two ways to change the averaging of output history fields. The first is using ``hist_avgflag_pertape`` which gives a default value for each history stream, the second is when you add fields using ``hist_fincl*``, you add an averaging flag to the end of the field name after a colon (for example ``TSOI:X`` would output the maximum of ``TSOI``). The types of averaging that can be done are:
 
-- *A* Average, over the output interval.
-- *I* Instantaneous, output the value at the output interval.
-- *X* Maximum, over the output interval.
-- *M* Minimum, over the output interval.
+- ``A`` Average, over the output interval.
+- ``I`` Instantaneous, output the value at the output interval.
+- ``X`` Maximum, over the output interval.
+- ``M`` Minimum, over the output interval.
 
-The default averaging depends on the specific fields, but for most fields is an average. A sample user namelist ``user_nl_clm`` making the monthly output fields all averages (except TSOI for the first two streams and FIRE for the 5th stream), and adding auxiliary file streams for instantaneous (6-hourly), maximum (daily), minimum (daily), and average (daily). For some of the fields we diverge from the per-tape value given and customize to some different type of optimization.
+The default averaging depends on the specific fields, but for most fields is an average. A sample user namelist ``user_nl_clm`` follows making the monthly output fields all averages (except ``TSOI``), and adding auxiliary file streams for instantaneous (6-hourly), maximum (daily), minimum (daily), and average (daily). For some of the fields we diverge from the per-tape value given and customize to some different type of averaging.
+
+.. note:: As of ctsm5.4, history files that used to be labeled with hX (where X is an integer from 0 to 4 in the example) will be labeled with hXi and hXa (as separate files) to indicate instantaneous versus non-instantaneous (average, etc.) files. The change intends to prevent confusion associated with the time corresponding to instantaneous history fields by now putting them on separate files than non-instantaneous fields. The separate instantaneous history files represent the exact time step when they were written and do not include a time_bounds variable. Conversely, non-instantaneous history files represent the period of their time_bounds variable. As a result, time data on non-instantaneous history files are now read correctly during post processing (e.g. by xarray). Special handling may still be needed for instantaneous history files, whose timestamps represent the date and time at the END of the history timestep. So, e.g., an instantaneous variable saved at the end of year 2023 will get the timestamp 2024-01-01 00:00:00.
 
 Example: user_nl_clm namelist with various ways to average history fields
 -------------------------------------------------------------------------------------
@@ -162,12 +166,12 @@ Example: user_nl_clm namelist with various ways to average history fields
 		 'EFLX_LH_TOT', 'WT'
    hist_fincl5 = 'TSOI',   'TG',   'TV',   'FIRE:I', 'FSR', 'FSH',
 		 'EFLX_LH_TOT', 'WT'
-   hist_avgflag_pertape = 'A', 'I', 'X',   'M', 'A'
+   hist_avgflag_pertape = 'A', 'I', 'X', 'M', 'A'
    hist_nhtfrq = 0, -6, -24, -24, -24
 
-In the example we put the same list of fields on each of the tapes: soil-temperature, ground temperature, vegetation temperature, emitted longwave radiation, reflected solar radiation, sensible heat, total latent-heat, and total water storage. We also modify the soil-temperature for the primary and secondary auxiliary tapes by outputting them for a maximum instead of the prescribed per-tape of average and instantaneous respectively. For the tertiary auxiliary tape we output ground temperature instantaneous instead of as a maximum, and for the fourth auxiliary tape we output vegetation temperature instantaneous instead of as a minimum. Finally, for the fifth auxiliary tapes we output ``FIRE`` instantaneously instead of as an average.
+In the example we put the same list of fields on each of the tapes: soil-temperature, ground temperature, vegetation temperature, emitted longwave radiation, reflected solar radiation, sensible heat, total latent-heat, and total water storage. We also modify the soil temperature for the primary and secondary auxiliary tapes by outputting them for a maximum instead of the prescribed per-tape of average and instantaneous respectively. For the tertiary auxiliary tape we output ground temperature as instantaneous instead of as maximum, and for the fourth auxiliary tape we output vegetation temperature as instantaneous instead of as minimum. Finally, for the fifth auxiliary tapes we output ``FIRE`` as instantaneous instead of as average.
 
-.. note:: We also use ``hist_empty_htapes`` as in the previous example, so we can list ONLY the fields that we want on the primary history tapes.
+.. note:: We also use ``hist_empty_htapes`` as in the previous example, so we can list ONLY the fields that we want on the primary history tape.
 
 Outputting history files as a vector in order to analyze the plant function types within gridcells
 --------------------------------------------------------------------------------------------------
@@ -186,11 +190,11 @@ Example: user_nl_clm namelist outputting some files in 1D Vector format
    hist_fincl5 = 'TG'
    hist_fincl6 = 'TG'
    hist_dov2xy = .true., .false., .false., .false.
-   hist_type2d_pertape = ' ', 'GRID', 'COLS', ' '
+   hist_type1d_pertape = ' ', 'GRID', 'COLS', ' '
    hist_nhtfrq = 0, -24, -24, -24
 
-.. warning:: LAND and COLS are also options to the pertape averaging, but currently there is a bug with them and they fail to work.
+.. warning:: ``LAND`` and ``COLS`` are also options to the pertape averaging, but currently there is a bug with them and they fail to work.
 
-.. note:: Technically the default for hist_nhtfrq is for primary files output monthly and the other auxiliary tapes for daily, so we don't actually have to include hist_nhtfrq, we could use the default for it. Here we specify it for clarity.
+.. note:: Technically the default for ``hist_nhtfrq`` is for primary files output monthly and the other auxiliary tapes for daily, so we don't actually have to include ``hist_nhtfrq``, we could use the default for it. Here we specify it for clarity.
 
-Visualizing global 1D vector files will take effort. You'll probably want to do some post-processing and possibly just extract out single points of interest to see what is going on. Since, the output is a 1D vector, of only land-points traditional plots won't be helpful. The number of points per grid-cell will also vary for anything, but grid-cell averaging. You'll need to use the output fields pfts1d_ixy, and pfts1d_jxy, to get the mapping of the fields to the global 2D array. pfts1d_itype_veg gives you the PFT number for each PFT. Most likely you'll want to do this analysis in a data processing tool (such as NCL, Matlab, Mathmatica, IDL, etcetera that is able to read and process NetCDF data files).
+Visualizing global 1D vector files will take effort. You'll probably want to do some post-processing and possibly just extract out single points of interest to see what is going on. Since the output is a 1D vector of only land points, traditional plots won't be helpful. The number of points per grid-cell will also vary for anything but grid-cell averaging. You'll need to use the output fields ``pfts1d_ixy``, and ``pfts1d_jxy``, to get the mapping of the fields to the global 2D array. ``pfts1d_itype_veg`` gives you the PFT number for each PFT. Most likely you'll want to do this analysis in a data processing tool (such as NCL, Matlab, Mathmatica, IDL, etc. that is able to read and process NetCDF data files).

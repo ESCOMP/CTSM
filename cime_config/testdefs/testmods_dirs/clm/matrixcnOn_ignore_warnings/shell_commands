@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./xmlchange CLM_BLDNML_OPTS="-ignore_warnings" --append
+
+# In this testmod directory we are ignoring warnings about running
+# matrixcn in transient simulations AND/OR
+# warnings about running matrixcn with threading NTHRDS_LND > 1.

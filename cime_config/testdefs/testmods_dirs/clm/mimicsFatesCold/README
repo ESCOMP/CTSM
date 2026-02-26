@@ -1,0 +1,4 @@
+2023/6/22 slevis added:
+./xmlchange CLM_BLDNML_OPTS="-ignore_warnings" --append
+to get past this error in test:
+DON'T use the '-fire_emis' option when '-bgc fates' is activated

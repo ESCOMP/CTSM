@@ -26,19 +26,21 @@ from ctsm.site_and_regional.neon_site import NeonSite
 
 class TestNeonSite(unittest.TestCase):
     """
-    Basic class for testing NeonSite.py.
+    Basic class for testing neon_site.py.
     """
 
     def setUp(self):
         """
         Make /_tempdir for use by these tests.
         """
+        self._previous_dir = os.getcwd()
         self._tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
         """
         Remove temporary directory
         """
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_modify_user_nl_transient(self):
@@ -60,9 +62,14 @@ class TestNeonSite(unittest.TestCase):
         rundir = ""
 
         # create NeonSite object and update namelist
-        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
-            case_root, run_type, rundir
-        )
+        NeonSite(
+            name=name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
+        ).modify_user_nl(case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")
@@ -95,9 +102,14 @@ class TestNeonSite(unittest.TestCase):
         rundir = ""
 
         # create NeonSite object and update namelist
-        NeonSite(name, start_year, end_year, start_month, end_month, finidat).modify_user_nl(
-            case_root, run_type, rundir
-        )
+        NeonSite(
+            name=name,
+            start_year=start_year,
+            end_year=end_year,
+            start_month=start_month,
+            end_month=end_month,
+            finidat=finidat,
+        ).modify_user_nl(case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")

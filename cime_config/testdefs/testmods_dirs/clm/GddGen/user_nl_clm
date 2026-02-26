@@ -1,0 +1,14 @@
+cropcals_rx = .true.
+stream_fldFileName_swindow_start = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc'
+stream_fldFileName_swindow_end = '$DIN_LOC_ROOT/lnd/clm2/cropdata/calendars/processed/sdates_ggcmi_crop_calendar_phase3_v1.01_nninterp-hcru_hcru_mt13.2000-2000.20230728_165845.tweaked_latlons.nc'
+stream_fldFileName_cultivar_gdds = ''
+generate_crop_gdds = .true.
+use_mxmat = .false.
+
+! (h3) Daily outputs for GDD generation and figure-making
+! Note that hist_mfilt ≠ 1 means that ERI tests will probably fail
+hist_fincl4 = 'GDDACCUM', 'GDDHARV'
+hist_nhtfrq(4) = -24
+hist_mfilt(4) = 365
+hist_type1d_pertape(4) = 'PFTS'
+hist_dov2xy(4) = .false.

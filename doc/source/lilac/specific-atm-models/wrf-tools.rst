@@ -48,13 +48,19 @@ is described in here.
 
      ../../../configure --macros-format Makefile --mpilib mpi-serial
 
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
 5. Generate CTSM domain files using ``get_domain`` tool::
 
      ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
 
-6. Create surface datasets in ``tools/mksurfdata_map``::
+.. todo::
+    Update the below, as ``mksurfdata.pl`` no longer exists.
 
-     ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_map" -no-crop
+6. Create surface datasets in ``tools/mksurfdata_esmf``::
+
+     ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_esmf" -no-crop
 
 Merge WRF initial conditions into an existing CTSM initial condition file
 --------------------------------------------------------------------------

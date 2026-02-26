@@ -14,7 +14,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
 ----------------------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case myB1850 -res f09_g17_gl4 -compset B1850
    > cd myB1850
    > ./case.setup
@@ -44,14 +44,14 @@ Example: Simulation Forced with Data from the Previous Simulation
 ------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case frcwmyB1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd frcWmyB1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
    > ./xmlchange DATM_CPLHIST_CASE="myB1850"
    # The following sets the align year and years to run over for atm forcing
    #  (you could also use an editor)
-   > ./xmlchange DATM_CPLHIST_YR_ALIGN="1",DATM_CPLHIST_YR_START=1,DATM_CPLHIST_YR_END=20
+   > ./xmlchange DATM_YR_ALIGN="1",DATM_YR_START=1,DATM_YR_END=20
    # Set the strm_datdir in the namelist_defaults_datm.xml
    # file to the archival path of the case above in the form of: /glade/home/achive/$USER/$DATM_CPLHIST_CASE/cpl/hist
    # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm50BgcSpinup COMPSET CASES MADE AFTER THIS!

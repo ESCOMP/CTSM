@@ -276,7 +276,7 @@ contains
   end subroutine getPrevYearfrac_leapYearAtYearBoundary_returnsCorrectValue
 
   @Test
-  subroutine getNstep_step0(this)
+  subroutine getNstep_step1(this)
     class(TestTimeManager), intent(inout) :: this
     integer :: nstep
 
@@ -284,8 +284,8 @@ contains
 
     nstep = get_nstep()
 
-    @assertEqual(0, nstep)
-  end subroutine getNstep_step0
+    @assertEqual(1, nstep)
+  end subroutine getNstep_step1
 
   @Test
   subroutine getNstep_step3(this)
@@ -377,7 +377,7 @@ contains
 
     call unittest_timemgr_setup(dtime=dtime_int)
 
-    call set_nstep(1)
+    call set_nstep(2)
 
     is_first = is_first_step()
 
@@ -452,7 +452,7 @@ contains
        londeg = londeg + 0.1_r8
        ! Start at 0 Z
        secs = 0
-       call set_date(yr=1, mon=1, day=1, tod=secs)
+       call set_date(yr=2, mon=1, day=1, tod=secs)
        do while ( .not. is_end_curr_year() )
           @assertEqual( get_local_time( londeg, starttime=0 ), get_local_timestep_time( londeg ) )
           call advance_timestep()

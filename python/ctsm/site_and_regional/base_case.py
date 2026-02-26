@@ -3,6 +3,7 @@ This module includes the definition for a parent class for SinglePointCase
 and RegionalCase. The common functionalities of SinglePointCase and
 RegionalCase are defined in this Class.
 """
+
 # -- Import libraries
 
 # -- standard libraries
@@ -66,6 +67,7 @@ class BaseCase:
 
     def __init__(
         self,
+        *,
         create_domain,
         create_surfdata,
         create_landuse,
@@ -135,6 +137,7 @@ class BaseCase:
 
         """
 
+        f_in = None
         if os.path.exists(filename):
             logger.debug("Open file: %s", filename)
 
@@ -229,7 +232,7 @@ class BaseCase:
         """
         if not os.path.exists(nc_fname) or self.overwrite:
             # mode 'w' overwrites file
-            xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF3_64BIT")
+            xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF4_CLASSIC")
         else:
             err_msg = (
                 "File "

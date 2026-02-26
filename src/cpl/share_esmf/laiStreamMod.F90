@@ -12,7 +12,7 @@ module laiStreamMod
   use dshr_strdata_mod , only : shr_strdata_type
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
   !
@@ -60,8 +60,9 @@ contains
     integer                 :: model_year_align_lai       ! align stream_year_first_lai with
     integer                 :: nu_nml                     ! unit for namelist file
     integer                 :: nml_error                  ! namelist i/o error flag
-    character(len=CL)       :: stream_fldFileName_lai     ! lai stream filename to read
-    character(len=CL)       :: stream_meshfile_lai        ! lai stream meshfile
+    character(len=FL)       :: stream_fldFileName_lai     ! lai stream filename to read
+    character(len=FL)       :: stream_meshfile_lai        ! lai stream meshfile
+    real(r8)                :: lai_dtlimit = 1.5_r8       ! dlimit for lai stream to use
     character(len=CL)       :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)       :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
     integer                 :: lai_offset = 0             ! Offset in time for dataset (sec)
@@ -75,6 +76,7 @@ contains
          stream_year_first_lai,    &
          stream_year_last_lai,     &
          model_year_align_lai,     &
+         lai_dtlimit,              &
          lai_mapalgo,              &
          stream_fldFileName_lai,   &
          stream_meshfile_lai,      &
@@ -110,6 +112,8 @@ contains
     call shr_mpi_bcast(stream_fldFileName_lai , mpicom)
     call shr_mpi_bcast(stream_meshfile_lai    , mpicom)
     call shr_mpi_bcast(lai_tintalgo           , mpicom)
+    call shr_mpi_bcast(lai_dtlimit            , mpicom)
+    call shr_mpi_bcast(lai_mapalgo            , mpicom)
 
     if (masterproc) then
        write(iulog,*)
@@ -120,6 +124,9 @@ contains
        write(iulog,'(a,a)' ) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
        write(iulog,'(a,a)' ) '  stream_meshfile_lai    = ',trim(stream_meshfile_lai)
        write(iulog,'(a,a)' ) '  lai_tintalgo           = ',trim(lai_tintalgo)
+       write(iulog,'(a,a)' ) '  lai_mapalgo            = ',trim(lai_mapalgo)
+       write(iulog,'(a,a)' ) '  lai_dtlimit            = ', lai_dtlimit
+
        do n = 1,numLaiFields
           write(iulog,'(a,a)' ) '  stream_varname         = ',trim(stream_varnames(n))
        end do
@@ -144,7 +151,7 @@ contains
          stream_yearAlign    = model_year_align_lai,             &
          stream_offset       = lai_offset,                       &
          stream_taxmode      = 'cycle',                          &
-         stream_dtlimit      = 1.5_r8,                           &
+         stream_dtlimit      = lai_dtlimit,                      &
          stream_tintalgo     = lai_tintalgo,                     &
          stream_name         = 'LAI data',                       &
          rc                  = rc)
@@ -252,10 +259,10 @@ contains
        if (ivt /= noveg) then
           ! vegetated pft
           ig = g_to_ig(patch%gridcell(p))
-          canopystate_inst%tlai_patch(p) = dataptr2d(ig,ivt)
+          canopystate_inst%tlai_input_patch(p) = dataptr2d(ig,ivt)
        else
           ! non-vegetated pft
-          canopystate_inst%tlai_patch(p) = 0._r8
+          canopystate_inst%tlai_input_patch(p) = 0._r8
        endif
     end do
     deallocate(dataptr2d)

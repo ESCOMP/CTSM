@@ -20,6 +20,7 @@ from CIME.utils import run_cmd, expect
 
 logger = logging.getLogger(__name__)
 
+
 ###############################################################################
 def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
     """Writes a ctsm.mk file in exeroot.

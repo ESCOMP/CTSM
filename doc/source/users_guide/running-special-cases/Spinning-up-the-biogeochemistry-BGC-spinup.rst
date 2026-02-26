@@ -6,7 +6,7 @@
  Spinup of |version|-BGC-Crop
 =============================
 
-To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (-bgc_spinup on in CLM **configure**, see example below) mode for about 200 simulation years. :numref:`Figure BGC AD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using GSWP3 atmospheric forcing. Generally, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
+To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (``-bgc_spinup on`` in CLM ``configure``, see example below) mode for about 200 simulation years. :numref:`Figure BGC AD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using GSWP3 atmospheric forcing. Generally, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
 
 .. _Figure BGC AD spinup plot for 1850 GSWP3:
 
@@ -14,7 +14,7 @@ To get the |version|-BGC model to a steady state, you first run it from arbitrar
 
  BGC AD spinup plot for a year 1850 case with GSWP3 atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
 
-After this you branch from this mode in the "final spinup" (-bgc_spinup off in CLM **configure**, see example below), and run for several hundred simulation years. :numref:`Figure BGC pAD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC post accelerated decomposition (pAD) case using GSWP3 atmospheric forcing. As before, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy. It can be difficult to meet this strict criteria in less than 1000 years and users may want to relax this criteria depending on their application.
+After this you branch from this mode in the "final spinup" (``-bgc_spinup off`` in CLM ``configure``, see example below), and run for several hundred simulation years. :numref:`Figure BGC pAD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC post accelerated decomposition (pAD) case using GSWP3 atmospheric forcing. As before, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy. It can be difficult to meet this strict criteria in less than 1000 years and users may want to relax this criteria depending on their application.
 
 .. _Figure BGC pAD spinup plot for 1850 GSWP3:
 
@@ -41,13 +41,13 @@ You can also start from a default initial file that is setup as part of the sele
 If you use the default initial file and you signficantly change model behavior or atmospheric forcing, and you are concerned about the carbon equilibrium (e.g., TOTECOSYSC, TOTSOMC, TOTVEGC), particularly at high latitudes, then we recommend you put the model back into AD mode to reach a new equilibrium. In this configuration, this will also automatically reseed "dead" plant functional types in the initial file with a bit of leaf carbon to give those plant functional types another chance to grow under the new atmospheric forcing or model conditions.
 
 **1. |version| accelerated-decomposition (AD) spinup**
-     For the first step of running 200+ years in "-bgc_spinup on" mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
+     For the first step of running 200+ years in ``-bgc_spinup on`` mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
 
-Example:: AD_SPINUP Simulation for |version|-BGC
+Example: AD_SPINUP Simulation for |version|-BGC
 --------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_spinup
    # Change accelerated spinup mode
@@ -67,7 +67,7 @@ Example:: AD_SPINUP Simulation for |version|-BGC
 Afterwards save the last restart file from this simulation to use in the next step.
 
 **2. Final spinup for |version|-BGC**
-     Next save the last restart file from this step and use it as the "finidat" file to use for one more spinup for at least 400+ years in normal mode. So do the following:
+     Next save the last restart file from this step and use it as the ``finidat`` file to use for one more spinup for at least 400+ years in normal mode. So do the following:
 
 .. _eg-final-clmbgc-spinup:
 
@@ -75,7 +75,7 @@ Example: Final CLMBGC Spinup Simulation for |version|-BGC
 ------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
    > cd BGC_finalspinup
    # Now, Copy the last CLM restart file from the earlier case into your run directory

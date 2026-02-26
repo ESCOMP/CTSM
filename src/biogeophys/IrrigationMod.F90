@@ -221,9 +221,8 @@ module IrrigationMod
   ! There is no reason to make this a tunable parameter, because the behavior it governs
   ! (the trigger for irrigation) can be tuned via other parameters.
   !
-  ! TODO(wjs, 2016-09-08) It looks like there is other code in CLM that also uses an
-  ! assumed wilting point (CNRootDynMod, maybe others). We should probably make this a
-  ! shared parameter, e.g., in clm_varcon.
+  ! TODO(wjs, 2016-09-08, updated by slevis 2024-07-06) assumed wilting point:
+  ! Make this a shared parameter? E.g., in clm_varcon
   real(r8), parameter, private :: wilting_point_smp = -150000._r8
 
   ! Conversion factors

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
+
+<namelist_defaults>
+
+<!--
+Values to use by default for creation of CLM model driver namelists.
+The element names are the same as the corresponding namelist
+variables.  Values that depend on the model configuration use
+attributes to express the dependency.  The recognized attributes
+are: RESOLUTION, defaults, mask, ic_ymd, ic_tod, sim_year and all configuration
+attributes from the config_cache.xml file (with keys converted to upper-case).
+-->
+
+<!-- Defaults for dust_emis_inparm namelist  -->
+<dust_emis_method>Zender_2003</dust_emis_method>
+<dust_emis_method phys="clm6_0">Leung_2023</dust_emis_method>
+
+<zender_soil_erod_source>atm</zender_soil_erod_source>
+
+</namelist_defaults>
