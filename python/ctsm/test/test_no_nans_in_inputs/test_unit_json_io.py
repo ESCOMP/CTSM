@@ -9,26 +9,10 @@ from ctsm.no_nans_in_inputs.constants import USER_REQ_DELETE
 from ctsm.no_nans_in_inputs.json_io import (
     _convert_fif_dict_sets,
     create_empty_progress_dict_onefile,
-    save_progress,
-    load_progress,
+    NoNanFillValueProgress,
 )
 
 TEST_NC_ABSPATH = "/abs/path/abc123.nc"
-
-
-@pytest.fixture(name="example_data")
-def fixture_example_data():
-    """Some test data to represent a progress object"""
-    data_to_save = {}
-    file1 = "/path/to/file1.nc"
-    data_to_save[file1] = create_empty_progress_dict_onefile()
-    data_to_save[file1]["new_fill_values"] = {"var1": -999, "var2": USER_REQ_DELETE}
-    data_to_save[file1]["found_in_files"] = {"dummy.xml": {file1}}
-    file2 = "/path/to/file2.nc"
-    data_to_save[file2] = create_empty_progress_dict_onefile()
-    data_to_save[file2]["new_fill_values"] = {"var3": -999.0}
-    data_to_save[file2]["found_in_files"] = {"user_nl_dummy": {file2}}
-    return data_to_save
 
 
 class TestConvertFifDictSets:
@@ -52,20 +36,21 @@ class TestConvertFifDictSets:
 
 
 class TestLoadProgress:
-    """Test the _load_progress() function"""
+    """Test loading"""
 
     def test_load_nonexistent_file(self):
         """Test loading a nonexistent progress file returns an empty dict."""
-        loaded_data = load_progress("/nonexistent/path/progress.json")
-        assert loaded_data == {}
+        loaded_data = NoNanFillValueProgress(progress_file="/nonexistent/path/progress.json")
+        assert not loaded_data
 
 
 class TestSaveProgress:
-    """Test the save_progress() function"""
+    """Test the save() function"""
 
-    def test_save_io_error(self, example_data, capsys):
+    def test_save_io_error(self, example_progress, capsys):
         """Test that an IOError during save is caught and a warning is printed."""
         with patch("builtins.open", side_effect=IOError("Permission denied")):
-            save_progress(example_data, "/readonly/path/progress.json")
+
+            example_progress.save()
             captured = capsys.readouterr()
             assert "Warning: Could not save progress" in captured.err

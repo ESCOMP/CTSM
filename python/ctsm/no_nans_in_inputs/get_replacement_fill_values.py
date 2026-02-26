@@ -25,7 +25,9 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     SEP_LENGTH,
     XML_FILE,
 )
-from ctsm.no_nans_in_inputs import json_io  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.json_io import (  # pylint: disable=wrong-import-position
+    NoNanFillValueProgress,
+)
 import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-import-position
 from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-position
     convert_to_absolute_path,
@@ -41,11 +43,14 @@ DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
 )
 
 
-def _check_for_nanfill_in_netcdf(files_referencing_netcdfs, progress, netcdf_path, abs_path):
+def _check_for_nanfill_in_netcdf(
+    files_referencing_netcdfs: list,
+    progress: NoNanFillValueProgress,
+    netcdf_path: str,
+    abs_path: str,
+):
     any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
     if any_nan_fill:
-        if abs_path not in progress:
-            progress[abs_path] = json_io.create_empty_progress_dict_onefile()
         fif_dict = progress[abs_path]["found_in_files"]
         for file_to_search in files_referencing_netcdfs:
             set_of_how_this_netcdf_appears = nlu.how_netcdf_is_referenced_in_file(
@@ -56,7 +61,7 @@ def _check_for_nanfill_in_netcdf(files_referencing_netcdfs, progress, netcdf_pat
                     fif_dict[file_to_search] = set()
                 fif_dict[file_to_search] = fif_dict[file_to_search] | set_of_how_this_netcdf_appears
         progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
-        json_io.save_progress(progress.copy(), NEW_FILLVALUES_FILE)
+        progress.save()
     else:
         if abs_path in progress:
             raise RuntimeError(
@@ -134,26 +139,34 @@ def main() -> int:
             " request user input or save anything."
         ),
     )
+    parser.add_argument(
+        "--fillvalues-file",
+        default=str(NEW_FILLVALUES_FILE),
+        help=(
+            f"JSON file where collected info will be saved. Default: '{NEW_FILLVALUES_FILE}'"
+        ),
+    )
     args = parser.parse_args()
 
     # Check write access to progress file before starting
     if not args.dry_run:
         print("Checking write access for progress file...")
-        if not check_write_access(NEW_FILLVALUES_FILE):
-            print(f"Error: No write access to create/update {NEW_FILLVALUES_FILE}", file=sys.stderr)
-            dir_str = os.path.dirname(NEW_FILLVALUES_FILE) or "."
+        if not check_write_access(args.fillvalues_file):
+            print(f"Error: No write access to create/update {args.fillvalues_file}", file=sys.stderr)
+            dir_str = os.path.dirname(args.fillvalues_file) or "."
             print(
                 f"Please check permissions in directory: {dir_str}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        print(f"✓ Write access confirmed for {NEW_FILLVALUES_FILE}\n")
+        print(f"✓ Write access confirmed for {args.fillvalues_file}\n")
 
     # Get list of files to search for netCDF that might have NaN fill values
     netcdf_paths, files_referencing_netcdfs = _get_netcdf_files_to_check()
 
     # Load existing progress if available
-    progress = json_io.init_progress()
+    print(f"{args.fillvalues_file=}")
+    progress = NoNanFillValueProgress(progress_file=args.fillvalues_file)
 
     print("\nFinding matches...")
 

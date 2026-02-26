@@ -12,7 +12,6 @@ import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import (
     ATTR,
-    NEW_FILLVALUES_FILE,
     OPEN_DS_KWARGS,
     USER_REQ_DELETE,
 )
@@ -77,19 +76,26 @@ def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file,
     xml_file = create_mock_xml_file(xml_content)
 
     # Call get_replacement_fill_values.py
-    with patch("sys.argv", ["get_replacement_fill_values.py"]):
+    progress_file = str(tmp_path / "progress.json")
+    assert not os.path.exists(progress_file)
+    with patch("sys.argv", ["get_replacement_fill_values.py", "--fillvalues-file", progress_file]):
         with patch(
             "builtins.input",
-            side_effect=[USER_REQ_DELETE, str(TEST_FILL_VALUE)],  # alphabetically 1st, then 2nd var
+            side_effect=[
+                USER_REQ_DELETE,       # alphabetically 1st var
+                str(TEST_FILL_VALUE),  # alphabetically 2nd var
+            ],
         ):
             get_replacement_fill_values.main()
-            print(f"{NEW_FILLVALUES_FILE=}")
 
     # Call replace_fill_values.py
-    with patch("sys.argv", ["replace_fill_values.py"]):
+    with patch("sys.argv", ["replace_fill_values.py", "--fillvalues-file", progress_file]):
         with patch(
             "builtins.input",
-            side_effect="y",  # continue after replacing
+            side_effect=[
+                # "y",  # load progress without asking
+                "y",  # continue after replacing
+            ],
         ):
             replace_fill_values()
 

@@ -13,7 +13,10 @@ from ctsm.no_nans_in_inputs.constants import (
     USER_REQ_SKIP_FILE,
 )
 from ctsm.no_nans_in_inputs.user_inputs import collect_new_fill_values
-from ctsm.no_nans_in_inputs.json_io import create_empty_progress_dict_onefile
+from ctsm.no_nans_in_inputs.json_io import (
+    NoNanFillValueProgress,
+    create_empty_progress_dict_onefile,
+)
 
 
 class TestCollectNewFillValues:
@@ -31,10 +34,9 @@ class TestCollectNewFillValues:
         ds.to_netcdf(path)
         ds.close()
 
-    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
     @patch("builtins.input", side_effect=["-999"])
     def test_user_provides_number(
-        self, mock_input, mock_save, tmp_path, capsys
+        self, mock_input, tmp_path, capsys
     ):  # pylint: disable=unused-argument
         """Test happy path where user provides a numeric fill value."""
         test_file = tmp_path / "test.nc"
@@ -49,10 +51,11 @@ class TestCollectNewFillValues:
             },
         )
         expected_fill_value = -999.0
-        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        expected_result = NoNanFillValueProgress(progress_file=None)
         assert not expected_result[str(test_file)]["new_fill_values"]
 
-        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress_file = tmp_path / "progress.json"
+        progress = NoNanFillValueProgress(progress_file=progress_file)
         progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         result = collect_new_fill_values(progress)
 
@@ -62,13 +65,13 @@ class TestCollectNewFillValues:
         assert result == expected_result
 
         # Check what was saved
-        mock_save.assert_called_once()
-        saved_data = mock_save.call_args[0][0]
-        saved_fill_value = saved_data[str(test_file)]["new_fill_values"][var_name]
+        saved_data = NoNanFillValueProgress(progress_file=progress_file, load_without_asking=True)
+        d = saved_data[str(test_file)]["new_fill_values"]
+        saved_fill_value = d[var_name]
         assert saved_fill_value == expected_fill_value
         assert isinstance(saved_fill_value, float)
 
-    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.NoNanFillValueProgress.save")
     @patch("builtins.input", side_effect=[USER_REQ_SKIP_FILE])
     def test_user_skips_file(
         self, mock_input, mock_save, tmp_path
@@ -88,17 +91,17 @@ class TestCollectNewFillValues:
                 },
             },
         )
-        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress_file = tmp_path / "progress.json"
+        progress = NoNanFillValueProgress(progress_file=progress_file)
         result = collect_new_fill_values(progress)
 
         # 'temp' is processed, user skips, neither it nor 'precip' are in results
-        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
-        assert not expected_result[str(test_file)]["new_fill_values"]
+        expected_result = NoNanFillValueProgress(progress_file=None)
         assert result == expected_result
         # Progress was never saved
         mock_save.assert_not_called()
 
-    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.NoNanFillValueProgress.save")
     @patch("builtins.input", side_effect=["-100", USER_REQ_SKIP_FILE])
     def test_user_enters_then_skips_file(
         self, mock_input, mock_save, tmp_path
@@ -119,19 +122,19 @@ class TestCollectNewFillValues:
             test_file,
             data,
         )
-        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress = NoNanFillValueProgress(progress_file=None)
         progress[str(test_file)]["vars_with_nan_fills"] = data.keys()
         result = collect_new_fill_values(progress)
 
         # 'temp' is processed, user enters so it saves, then precip is skipped
-        expected_result = {str(test_file): create_empty_progress_dict_onefile()}
+        expected_result = NoNanFillValueProgress(progress_file=None)
         expected_result[str(test_file)]["new_fill_values"] = {"temp": -100.0}
         expected_result[str(test_file)]["vars_with_nan_fills"] = data.keys()
         assert result == expected_result
         # Progress was saved only after temp
         mock_save.assert_called_once()
 
-    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.NoNanFillValueProgress.save")
     @patch("builtins.input", side_effect=[USER_REQ_QUIT])
     def test_user_quits(
         self, mock_input, mock_save, tmp_path, mock_progress_file
@@ -143,7 +146,7 @@ class TestCollectNewFillValues:
             test_file,
             {var_name: {"data": [1.0], "attrs": {ATTR: np.nan}}},
         )
-        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress = NoNanFillValueProgress(progress_file=None)
         progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         assert not progress[str(test_file)]["new_fill_values"]
 
@@ -156,7 +159,7 @@ class TestCollectNewFillValues:
         # No value was collected, so save_progress is not called
         mock_save.assert_not_called()
 
-    @patch("ctsm.no_nans_in_inputs.json_io.save_progress")
+    @patch("ctsm.no_nans_in_inputs.json_io.NoNanFillValueProgress.save")
     def test_dry_run(self, mock_save, tmp_path, capsys):
         """Test --dry-run"""
         test_file = tmp_path / "test.nc"
@@ -171,7 +174,7 @@ class TestCollectNewFillValues:
             },
         )
 
-        progress = {str(test_file): create_empty_progress_dict_onefile()}
+        progress = NoNanFillValueProgress(progress_file=None)
         progress[str(test_file)]["vars_with_nan_fills"] = [var_name]
         result = collect_new_fill_values(progress, dry_run=True)
 
@@ -179,7 +182,7 @@ class TestCollectNewFillValues:
         mock_save.assert_not_called()
 
         # Check that result is what we expect
-        expected = {str(test_file): create_empty_progress_dict_onefile()}
+        expected = NoNanFillValueProgress(progress_file=None)
         expected[str(test_file)]["vars_with_nan_fills"] = [var_name]
         assert result == expected
 

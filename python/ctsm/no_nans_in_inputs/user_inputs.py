@@ -4,7 +4,7 @@ Functions handling user inputs
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import xarray as xr
@@ -34,7 +34,10 @@ from ctsm.no_nans_in_inputs.netcdf_utils import (  # pylint: disable=wrong-impor
     get_var_info,
     show_ncdump_for_variable,
 )
-from ctsm.no_nans_in_inputs import json_io  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.json_io import (  # pylint: disable=wrong-import-position
+    NoNanFillValueProgress,
+)
+
 
 def confirm_continue(prompt: str = "Continue? [Y/n]: "):
     """
@@ -66,6 +69,7 @@ def confirm_continue(prompt: str = "Continue? [Y/n]: "):
             return False
 
         print("Please enter 'y' or 'n'.")
+
 
 def _convert_and_validate_input(user_input: str, target_type: type) -> Any | None:
     """
@@ -259,12 +263,11 @@ def _handle_special_command(input_str: str, allow_delete: bool) -> Any | None:
 
 
 def _collect_fill_values_one_path(
-    progress_file: str,
-    progress: Dict,
+    progress: NoNanFillValueProgress,
     delete_if_none_filled: bool,
     abs_path: str,
     dry_run: bool,
-):
+) -> NoNanFillValueProgress:
     """
     Interactively collect new fill values for variables in one file with NaN fill values.
 
@@ -326,7 +329,7 @@ def _collect_fill_values_one_path(
         new_fill_values[var] = new_fill_value
 
         # Save progress after each variable
-        json_io.save_progress(progress, progress_file)
+        progress.save()
         progress[abs_path]["new_fill_values"] = new_fill_values
 
     # Close the dataset
@@ -344,10 +347,10 @@ def _collect_fill_values_one_path(
 
 
 def collect_new_fill_values(
-    progress: Dict | {},
+    progress: NoNanFillValueProgress,
     delete_if_none_filled: bool = False,
     dry_run: bool = False,
-) -> dict[str, dict[str, Any]]:
+) -> NoNanFillValueProgress:
     """
     Interactively collect new fill values for variables with NaN fill values, looping through files.
 
@@ -374,7 +377,6 @@ def collect_new_fill_values(
     try:
         for abs_path in progress:
             progress = _collect_fill_values_one_path(
-                progress_file=NEW_FILLVALUES_FILE,
                 progress=progress,
                 delete_if_none_filled=delete_if_none_filled,
                 abs_path=abs_path,

@@ -15,11 +15,7 @@ import pytest
 import xarray as xr
 
 from ctsm.no_nans_in_inputs.constants import ATTR, USER_REQ_DELETE, OPEN_DS_KWARGS
-from ctsm.no_nans_in_inputs.json_io import (
-    create_empty_progress_dict_onefile,
-    load_progress,
-    save_progress,
-)
+from ctsm.no_nans_in_inputs.json_io import NoNanFillValueProgress
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     get_output_filename,
     main,
@@ -71,14 +67,14 @@ class TestReplaceFullWorkflow:
 
         # Create fillvalues JSON file
         fillvalues_file = tmp_path / "test_fillvalues.json"
-        input_file_dict = create_empty_progress_dict_onefile()
+        fillvalues_data = NoNanFillValueProgress(progress_file=str(fillvalues_file))
+        input_file_dict = fillvalues_data[input_file]
         input_file_dict["found_in_files"] = {xml_file: {str(input_file)}}
         input_file_dict["new_fill_values"] = {
             TEST_VAR_TEMP: TEST_FILL_VALUE,
             TEST_VAR_PRESSURE: USER_REQ_DELETE,
         }
-        fillvalues_data = {str(input_file): input_file_dict}
-        save_progress(fillvalues_data, fillvalues_file)
+        fillvalues_data.save()
 
         return {
             "input_file": str(input_file),
@@ -93,7 +89,9 @@ class TestReplaceFullWorkflow:
         output_file = get_output_filename(input_file)
 
         # Load the fillvalues and build command
-        fillvalues = load_progress(fillvalues_file)
+        fillvalues = NoNanFillValueProgress(
+            progress_file=str(fillvalues_file), load_without_asking=True
+        )
         var_fillvalues = fillvalues[input_file]["new_fill_values"]
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
 
@@ -145,7 +143,7 @@ class TestReplaceFullWorkflow:
     def test_skip_existing_without_overwrite(self, test_setup, capsys, monkeypatch):
         """Test that existing output files are skipped without --overwrite flag."""
         input_file = test_setup["input_file"]
-        fillvalues_file = test_setup["fillvalues_file"]
+        fillvalues_file = str(test_setup["fillvalues_file"])
         output_file = get_output_filename(input_file)
 
         # Create a dummy output file to simulate it already existing

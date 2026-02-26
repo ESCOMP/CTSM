@@ -19,7 +19,9 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 if _CTSM_PYTHON not in sys.path:
     sys.path.insert(1, _CTSM_PYTHON)
 
-from ctsm.no_nans_in_inputs.json_io import load_progress  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.json_io import (  # pylint: disable=wrong-import-position
+    NoNanFillValueProgress,
+)
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     CESM_TOP,
@@ -66,7 +68,11 @@ def get_output_filename(input_file: str) -> str:
 
 
 def _process_one_file(
-    progress: dict, input_file_abs: str, output_file: str, files_processed: list, dry_run: bool
+    progress: NoNanFillValueProgress,
+    input_file_abs: str,
+    output_file: str,
+    files_processed: list,
+    dry_run: bool,
 ):
     # Print things to do for this file
     var_fillvalues = progress[input_file_abs]["new_fill_values"]
@@ -131,7 +137,7 @@ def process_files(
     """
     # Load the new fill values
     print(f"Loading new fill values from {fillvalues_file}...")
-    progress = load_progress(fillvalues_file)
+    progress = NoNanFillValueProgress(progress_file=fillvalues_file, load_without_asking=True)
 
     total_files = len(progress)
     total_vars = sum(len(vars_dict) for vars_dict in progress.values())

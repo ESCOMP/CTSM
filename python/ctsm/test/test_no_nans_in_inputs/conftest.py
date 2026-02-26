@@ -48,7 +48,7 @@ def fixture_mock_cesm_top(tmp_path, monkeypatch):
     monkeypatch.setattr(replace_fill_values, "CESM_TOP", str(tmp_path))
 
 
-@pytest.fixture(autouse=True, name="mock_progress_file", scope="function")
+@pytest.fixture(autouse=True, name="mock_progress_file")
 def fixture_mock_progress_file(tmp_path, monkeypatch):
     """
     Auto-used fixture to mock NEW_FILLVALUES_FILE constant with a temporary path.
@@ -62,7 +62,6 @@ def fixture_mock_progress_file(tmp_path, monkeypatch):
     # Also where it's imported
     monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
-    monkeypatch.setattr(json_io, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(user_inputs, "NEW_FILLVALUES_FILE", str(test_progress))
 
     return str(test_progress)
@@ -156,3 +155,17 @@ dlr = "{nc_paths.abs_path_dinlocroot}"
         return mock_usernl_file_path, nc_paths
 
     return _create
+
+@pytest.fixture(name="example_progress")
+def fixture_example_progress(tmp_path) -> json_io.NoNanFillValueProgress:
+    """Some test data to represent a progress object"""
+    progress_file = str(tmp_path / "progress.json")
+    data_to_save = json_io.NoNanFillValueProgress(progress_file=progress_file)
+    file1 = "/path/to/file1.nc"
+    data_to_save[file1]["new_fill_values"] = {"var1": -999, "var2": constants.USER_REQ_DELETE}
+    data_to_save[file1]["found_in_files"] = {"dummy.xml": {file1}}
+    file2 = "/path/to/file2.nc"
+    data_to_save[file2]["new_fill_values"] = {"var3": -999.0}
+    data_to_save[file2]["found_in_files"] = {"user_nl_dummy": {file2}}
+    print(f"{data_to_save=}")
+    return data_to_save
