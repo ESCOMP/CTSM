@@ -26,6 +26,7 @@ def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
     monkeypatch.setattr(constants, "INPUTDATA_PREFIX", str(tmp_path))
     monkeypatch.setattr(namelist_utils, "INPUTDATA_PREFIX", str(tmp_path))
     monkeypatch.setattr(shared, "INPUTDATA_PREFIX", str(tmp_path))
+    monkeypatch.setattr(replace_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
 
 
 @pytest.fixture(autouse=True, name="mock_dir_to_search_for_usernl_files")
@@ -35,6 +36,16 @@ def fixture_mock_dir_with_usernl_files(tmp_path, monkeypatch):
     """
     # Monkeypatch
     monkeypatch.setattr(get_replacement_fill_values, "DIR_TO_SEARCH_FOR_USER_NL_FILES", str(tmp_path))
+
+
+@pytest.fixture(autouse=True, name="mock_cesm_top")
+def fixture_mock_cesm_top(tmp_path, monkeypatch):
+    """
+    Auto-used fixture to mock CESM_TOP constant with a temporary path.
+    """
+    # Monkeypatch
+    monkeypatch.setattr(constants, "CESM_TOP", str(tmp_path))
+    monkeypatch.setattr(replace_fill_values, "CESM_TOP", str(tmp_path))
 
 
 @pytest.fixture(autouse=True, name="mock_progress_file", scope="function")

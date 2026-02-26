@@ -2,11 +2,17 @@
 Shared constants for the no_nans_in_inputs module.
 """
 
+from pathlib import Path
+
 # File paths
 INPUTDATA_PREFIX = "/glade/campaign/cesm/cesmdata/cseg/inputdata/"
 NEW_FILLVALUES_FILE = "new_fillvalues.json"  # File to save/load new fill values
 XML_FILE = "bld/namelist_files/namelist_defaults_ctsm.xml"  # CTSM namelist defaults XML
 OUR_PATH = "lnd/clm2/"  # String to be found in files we're responsible for
+try:
+    CESM_TOP = Path(__file__).resolve().parents[3]
+except IndexError:
+    CESM_TOP = Path.cwd()
 
 # Filename suffix after fixing NaN fills
 NONANFILL_SUFFIX = "no_nan_fill"

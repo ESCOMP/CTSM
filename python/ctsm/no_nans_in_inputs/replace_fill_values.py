@@ -12,6 +12,7 @@ This script:
 import argparse
 import os
 import sys
+from pathlib import Path
 
 # Add the python directory to sys.path for direct script execution
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
@@ -21,6 +22,8 @@ if _CTSM_PYTHON not in sys.path:
 from ctsm.no_nans_in_inputs.json_io import load_progress  # pylint: disable=wrong-import-position
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
+    CESM_TOP,
+    INPUTDATA_PREFIX,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
     XML_FILE,
@@ -69,9 +72,6 @@ def _process_one_file(
     var_fillvalues = progress[input_file_abs]["new_fill_values"]
     print(f"\nInput:  {input_file_abs}")
     print(f"Output: {output_file}")
-    print(f"Variables to modify: {len(var_fillvalues)}")
-    for var, fill_val in var_fillvalues.items():
-        print(f"  {var}: {fill_val}")
 
     # Build and print the ncatted command
     cmd = netcdf_utils.build_ncatted_command(input_file_abs, output_file, var_fillvalues)
@@ -93,10 +93,21 @@ def _process_one_file(
                     file_containing_netcdf, netcdf_path_in, netcdf_path_out
                 )
 
-        # Print message and wait for user to approve continuing
-        print(
-            f"Replaced in: {','.join(files_containing)}"
+        # Print message (useful for a git commit) and wait for user to approve before continuing
+        print("-" * SEP_LENGTH)
+        input_file_msg = input_file_abs.replace(INPUTDATA_PREFIX, "$CESMDATAROOT/").replace(
+            "//", "/"
         )
+        print(f"Removed NaN fill values from '{input_file_msg}'.\n")
+        output_file_msg = output_file.replace(INPUTDATA_PREFIX, "$CESMDATAROOT/").replace("//", "/")
+        print(f"Replaced with '{output_file_msg}'; new fill values:")
+        for var, fill_val in var_fillvalues.items():
+            print(f"  {var}: {fill_val}")
+        print("\nPath updated in:")
+        for f in files_containing:
+            f_rel = Path(f).relative_to(CESM_TOP)
+            print(f"  {f_rel}")
+        print("-" * SEP_LENGTH)
         if not confirm_continue():
             sys.exit("Exiting.")
     return files_processed
