@@ -13,11 +13,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from ctsm.no_nans_in_inputs.constants import (
-    ATTR,
-    USER_REQ_SKIP_FILE,
-    USER_REQ_QUIT,
-)
+from ctsm.no_nans_in_inputs.constants import ATTR
 from ctsm.no_nans_in_inputs.get_replacement_fill_values import (
     file_has_nan_fill,
     main as main_func,

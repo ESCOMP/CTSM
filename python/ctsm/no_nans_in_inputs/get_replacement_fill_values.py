@@ -9,19 +9,10 @@ This script:
 4. Prints the matching paths
 """
 
-import glob
 import argparse
-import re
-import json
 import os
-import subprocess
 import sys
-from dataclasses import dataclass
-from typing import Any, List, Tuple, Dict, Type
-from copy import deepcopy
 
-import numpy as np
-import xarray as xr
 
 # Add the python directory to sys.path for direct script execution
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
@@ -32,7 +23,6 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     ATTR,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
-    USER_REQ_DELETE,
     XML_FILE,
 )
 from ctsm.no_nans_in_inputs import json_io  # pylint: disable=wrong-import-position
@@ -40,10 +30,10 @@ import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-imp
 from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-position
     convert_to_absolute_path,
 )
-from ctsm.no_nans_in_inputs import user_inputs
-from ctsm.no_nans_in_inputs.netcdf_utils import (
+from ctsm.no_nans_in_inputs import user_inputs  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.netcdf_utils import (  # pylint: disable=wrong-import-position
     file_has_nan_fill,
-)  # pylint: disable=wrong-import-position
+)
 
 # File paths
 DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
@@ -111,8 +101,9 @@ def main() -> int:
         print("Checking write access for progress file...")
         if not check_write_access(NEW_FILLVALUES_FILE):
             print(f"Error: No write access to create/update {NEW_FILLVALUES_FILE}", file=sys.stderr)
+            dir_str = os.path.dirname(NEW_FILLVALUES_FILE) or '.'
             print(
-                f"Please check permissions in directory: {os.path.dirname(NEW_FILLVALUES_FILE) or '.'}",
+                f"Please check permissions in directory: {dir_str}",
                 file=sys.stderr,
             )
             sys.exit(1)

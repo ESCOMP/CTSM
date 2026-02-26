@@ -10,13 +10,10 @@ This script:
 """
 
 import argparse
-import json
 import os
 import subprocess
 import sys
-import xml.etree.ElementTree as ET
 from typing import Any
-import re
 
 # Add the python directory to sys.path for direct script execution
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
