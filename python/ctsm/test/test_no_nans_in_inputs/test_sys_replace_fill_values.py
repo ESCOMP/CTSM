@@ -8,9 +8,7 @@ Tests the functionality of replacing NaN fill values in NetCDF files.
 import os
 import subprocess
 import xml.etree.ElementTree as ET
-from unittest import mock
 
-from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
 import pytest
 import xarray as xr
@@ -22,11 +20,10 @@ from ctsm.no_nans_in_inputs.json_io import (
     save_progress,
 )
 from ctsm.no_nans_in_inputs.replace_fill_values import (
-    build_ncatted_command,
-    execute_ncatted_command,
     get_output_filename,
     main,
 )
+from ctsm.no_nans_in_inputs.netcdf_utils import build_ncatted_command
 
 
 # Test constants
@@ -36,105 +33,6 @@ TEST_OUTPUT_FILE = "output.nc"
 TEST_FILL_VALUE = -123.4
 NCATTED_CMD = "ncatted"
 NCATTED_FLAG = "-a"
-
-
-class TestBuildNcattedCommand:
-    """Test the build_ncatted_command function."""
-
-    @pytest.fixture
-    def test_netcdf_file(self, tmp_path):
-        """Create a temporary NetCDF file for testing."""
-        test_file = tmp_path / "test.nc"
-
-        # Create a simple NetCDF file with float variables that have NaN fill values
-        # (NetCDF doesn't allow NaN for integer types, and our scripts only work on
-        # variables that already have NaN fill values)
-        ds = xr.Dataset(
-            {
-                TEST_VAR_TEMP: xr.DataArray(
-                    np.array([1.0, 2.0, 3.0], dtype=np.float32),
-                    dims=["time"],
-                    attrs={ATTR: np.float32(np.nan)},
-                ),
-                TEST_VAR_PRESSURE: xr.DataArray(
-                    np.array([1000.0, 1010.0, 1020.0], dtype=np.float64),
-                    dims=["time"],
-                    attrs={ATTR: np.float64(np.nan)},
-                ),
-            }
-        )
-        ds.to_netcdf(str(test_file))
-        ds.close()
-
-        yield str(test_file)
-
-    def test_delete_attribute(self, test_netcdf_file):
-        """Test building command to delete an attribute."""
-        var_fillvalues = {TEST_VAR_TEMP: USER_REQ_DELETE}
-        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
-
-        assert NCATTED_CMD in cmd
-        assert NCATTED_FLAG in cmd
-        assert f"{ATTR},{TEST_VAR_TEMP},d,," in cmd
-        assert test_netcdf_file in cmd
-        assert TEST_OUTPUT_FILE in cmd
-
-    def test_modify_float_attribute(self, test_netcdf_file):
-        """Test building command to modify a float attribute."""
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
-        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
-
-        assert NCATTED_CMD in cmd
-        assert NCATTED_FLAG in cmd
-        # Should use 'f' for float32
-        assert f"{ATTR},{TEST_VAR_TEMP},o,f,{TEST_FILL_VALUE}" in cmd
-
-    def test_modify_double_attribute(self, test_netcdf_file):
-        """Test building command to modify a double (float64) attribute."""
-        var_fillvalues = {TEST_VAR_PRESSURE: TEST_FILL_VALUE}
-        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
-
-        assert NCATTED_CMD in cmd
-        assert NCATTED_FLAG in cmd
-        # Should use 'd' for float64
-        assert f"{ATTR},{TEST_VAR_PRESSURE},o,d,{TEST_FILL_VALUE}" in cmd
-
-    def test_multiple_variables(self, test_netcdf_file):
-        """Test building command with multiple variables."""
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE, TEST_VAR_PRESSURE: USER_REQ_DELETE}
-        cmd = build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
-
-        # Should have two -a flags
-        assert cmd.count(NCATTED_FLAG) == 2
-        assert f"{ATTR},{TEST_VAR_TEMP},o,f,{TEST_FILL_VALUE}" in cmd
-        assert f"{ATTR},{TEST_VAR_PRESSURE},d,," in cmd
-
-    def test_variable_not_found(self, test_netcdf_file):
-        """Test that missing variable raises ValueError."""
-        var_fillvalues = {"nonexistent_var": TEST_FILL_VALUE}
-        with pytest.raises(ValueError, match="not found"):
-            build_ncatted_command(test_netcdf_file, TEST_OUTPUT_FILE, var_fillvalues)
-
-    def test_same_input_output(self, test_netcdf_file):
-        """Test that same input and output files raises ValueError."""
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
-        with pytest.raises(ValueError, match="Input and output files are the same"):
-            build_ncatted_command(test_netcdf_file, test_netcdf_file, var_fillvalues)
-
-    def test_output_already_exists(self, test_netcdf_file, tmp_path):
-        """Test that existing output file is detected."""
-        # Create an output file that already exists
-        output_file = tmp_path / "output.nc"
-        output_file.write_text("dummy content")
-
-        # The function should still build the command (skip logic is in main())
-        # but we can verify the output file exists
-        assert os.path.exists(str(output_file))
-
-        # Building command should still work - skip logic is in main()
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
-        cmd = build_ncatted_command(test_netcdf_file, str(output_file), var_fillvalues)
-        assert NCATTED_CMD in cmd
 
 
 class TestReplaceFullWorkflow:
@@ -352,134 +250,3 @@ class TestReplaceFullWorkflow:
         captured = capsys.readouterr()
         assert "WARNING: Output file is a symlink - SKIPPING" in captured.out
         assert "Symlinks will never be overwritten" in captured.out
-
-
-class TestExecuteCommand:
-    """Test the execute_ncatted_command function."""
-
-    @pytest.fixture(name="create_test_nc")
-    def fixture_create_test_nc(self, tmp_path):
-        """
-        Factory fixture to create a test netCDF file with given or default parameters
-
-        Returns:
-            A function that creates the test netCDF file and returns its path.
-        """
-
-        def _create(
-            *, netcdf_format: str = "NETCDF4_CLASSIC", first_value: np.float32 = 1.0
-        ) -> str:
-            test_nc = str(tmp_path / "test_input.nc")
-            nan_fill = np.float32(np.nan)
-            ds = xr.Dataset(
-                {
-                    TEST_VAR_TEMP: xr.DataArray(
-                        np.array([first_value, 2.0, 3.0], dtype=np.float32),
-                        dims=["time"],
-                    ),
-                }
-            )
-            ds.to_netcdf(test_nc, format=netcdf_format, encoding={TEST_VAR_TEMP: {ATTR: nan_fill}})
-            ds.close()
-
-            # Check fill value
-            ds = xr.open_dataset(test_nc, mask_and_scale=True, **OPEN_DS_KWARGS)
-            assert ATTR in ds[TEST_VAR_TEMP].encoding
-            assert np.isnan(ds[TEST_VAR_TEMP].encoding[ATTR])
-            ds.close()
-
-            return test_nc
-
-        return _create
-
-    @pytest.fixture(name="mock_update_xml_file", autouse=True)
-    def fixture_mock_update_xml_file(self):
-        """Every test in this class will have _update_xml_file() mocked; that's tested elsewhere"""
-        with mock.patch("ctsm.no_nans_in_inputs.namelist_utils._update_xml_file") as _fixture:
-            yield _fixture
-
-    @pytest.mark.parametrize(
-        "netcdf_format",
-        [
-            "NETCDF4",
-            "NETCDF4_CLASSIC",
-            "NETCDF3_CLASSIC",
-        ],
-    )
-    def test_execute_preserves_format(self, tmp_path, create_test_nc, netcdf_format):
-        """Test execute_ncatted_command preserves NetCDF format from input to output."""
-        # Create input file with specified format
-        input_file = create_test_nc(netcdf_format=netcdf_format)
-
-        # Build and execute the command without XML update (because we're not testing that here)
-        output_file = str(tmp_path / "test_output.nc")
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
-        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        files_processed = execute_ncatted_command(cmd)
-
-        # Should have processed 1 file
-        assert files_processed == 1
-
-        # Output file should exist
-        assert os.path.exists(output_file)
-
-        # Verify the output file is valid NetCDF with correct fill value
-        ds_out = xr.open_dataset(
-            output_file,
-            **OPEN_DS_KWARGS,
-        )
-        assert TEST_VAR_TEMP in ds_out
-        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
-        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
-        ds_out.close()
-
-        # Verify formats match
-        with Dataset(input_file, "r") as nc_in:
-            input_format = nc_in.data_model
-        with Dataset(output_file, "r") as nc_out:
-            output_format = nc_out.data_model
-        assert output_format == input_format
-        assert output_format == netcdf_format
-
-    @pytest.mark.parametrize(
-        "first_value, expect_filled",
-        [
-            (np.nan, True),
-            (TEST_FILL_VALUE, True),
-            (150, False),
-            (7.24, False),
-        ],
-    )
-    def test_execute_different_data(self, tmp_path, create_test_nc, first_value, expect_filled):
-        """Test execute_ncatted_command with different data values."""
-        # Create input file with specified value first
-        input_file = create_test_nc(first_value=first_value)
-
-        # Build and execute the command without XML update (because we're not testing that here)
-        output_file = str(tmp_path / "test_output.nc")
-        var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
-        cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        execute_ncatted_command(cmd)
-
-        # Verify the output file is valid NetCDF with correct fill value. mask_and_scale True means
-        # that the variable's DataArray's _FillValue attribute will be populated and any filled
-        # values will be NaN.
-        assert os.path.exists(output_file)
-        ds_out = xr.open_dataset(output_file, mask_and_scale=True, **OPEN_DS_KWARGS)
-        assert TEST_VAR_TEMP in ds_out
-        assert ATTR in ds_out[TEST_VAR_TEMP].encoding
-        assert ds_out[TEST_VAR_TEMP].encoding[ATTR] == TEST_FILL_VALUE
-
-        # If we used a value we expect to be filled, then...
-        if expect_filled:
-            # It should be NaN after reading with mask_and_scale True
-            assert np.isnan(ds_out[TEST_VAR_TEMP].values[0]), str(ds_out[TEST_VAR_TEMP].values)
-            # It should be the fill value after reading with mask_and_scale False
-            ds_out_no_ms = xr.open_dataset(output_file, mask_and_scale=False, **OPEN_DS_KWARGS)
-            assert ds_out_no_ms[TEST_VAR_TEMP].values[0] == TEST_FILL_VALUE
-            ds_out_no_ms.close()
-        # Otherwise, we expect it to be unchanged
-        else:
-            assert ds_out[TEST_VAR_TEMP].values[0] == first_value
-
-        ds_out.close()

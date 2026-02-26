@@ -4,7 +4,7 @@ import os
 import sys
 import re
 import subprocess
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import numpy as np
 import xarray as xr
@@ -16,6 +16,7 @@ if _CTSM_PYTHON not in sys.path:
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     ATTR,
+    OPEN_DS_KWARGS,
     USER_REQ_DELETE,
 )
 
@@ -26,6 +27,104 @@ from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-posi
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     VARSTARTS_TO_DEFAULT_NEG999,
 )
+
+
+def build_ncatted_command(
+    input_file: str, output_file: str, var_fillvalues: dict[str, Any]
+) -> list[str]:
+    """
+    Build ncatted command to modify or delete fill values.
+
+    Args:
+        input_file: Path to input NetCDF file
+        output_file: Path to output NetCDF file
+        var_fillvalues: Dictionary mapping variable names to new fill values
+                        (or USER_REQ_DELETE to delete the attribute)
+
+    Returns:
+        Command as list of arguments for subprocess
+
+    Raises:
+        ValueError: If input and output files are the same, or if variable not found
+    """
+    # Ensure input and output files are different (resolve symlinks)
+    input_real = os.path.realpath(input_file)
+    output_real = os.path.realpath(output_file)
+
+    if input_real == output_real:
+        raise ValueError(f"Input and output files are the same: {input_file} -> {input_real}")
+
+    # Open the input file to get actual data types
+    ds = xr.open_dataset(input_file, **OPEN_DS_KWARGS)
+
+    cmd = ["ncatted", "-O"]  # -O flag to overwrite without prompting
+
+    for var, fill_val in var_fillvalues.items():
+        if fill_val == USER_REQ_DELETE:
+            # Delete the attribute: -a attr_name,var_name,d,,
+            cmd.extend(["-a", f"{ATTR},{var},d,,"])
+        else:
+            # Get the actual data type from the file
+            if var in ds.data_vars:
+                dtype = ds[var].dtype
+            elif var in ds.coords:
+                dtype = ds[var].dtype
+            else:
+                # Variable not found - raise error
+                ds.close()
+                raise ValueError(f"Variable '{var}' not found in {input_file}")
+
+            # Get the appropriate type code for ncatted
+            type_code = _get_ncatted_type_code(dtype)
+
+            # Modify the attribute: -a attr_name,var_name,o,type,value
+            cmd.extend(["-a", f"{ATTR},{var},o,{type_code},{fill_val}"])
+
+    # Close the dataset
+    ds.close()
+
+    # Add input and output files
+    cmd.extend([input_file, output_file])
+
+    return cmd
+
+
+def execute_ncatted_command(cmd: list[str]) -> int:
+    """
+    Runs the ncatted command to create the output file with modified fill values.
+
+    Args:
+        cmd: ncatted command as list of arguments
+
+    Returns:
+        Number of files processed (1 on success, 0 on skip)
+
+    Raises:
+        SystemExit: If ncatted command fails or is not found
+    """
+    print("\nExecuting...")
+    files_processed = 0
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        print("  ✓ Success")
+        if result.stdout:
+            print(f"  stdout: {result.stdout}")
+        if result.stderr:
+            print(f"  stderr: {result.stderr}")
+        files_processed = 1
+
+    except subprocess.CalledProcessError as e:
+        print(f"  ✗ Error: ncatted failed with exit code {e.returncode}", file=sys.stderr)
+        if e.stdout:
+            print(f"  stdout: {e.stdout}", file=sys.stderr)
+        if e.stderr:
+            print(f"  stderr: {e.stderr}", file=sys.stderr)
+        sys.exit(1)
+    except FileNotFoundError:
+        print("  ✗ Error: ncatted command not found", file=sys.stderr)
+        print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
+        sys.exit(1)
+    return files_processed
 
 
 def file_has_nan_fill(abs_path: str) -> Tuple[bool, List[str]]:
@@ -41,6 +140,43 @@ def file_has_nan_fill(abs_path: str) -> Tuple[bool, List[str]]:
     """
     vars_with_nan_fills = get_vars_with_nan_fills(abs_path)
     return bool(vars_with_nan_fills), vars_with_nan_fills
+
+
+def _get_ncatted_type_code(dtype: np.dtype) -> str:
+    """
+    Get ncatted type code from numpy dtype.
+
+    Args:
+        dtype: numpy dtype object
+
+    Returns:
+        ncatted type code (f, d, c)
+
+    Raises:
+        ValueError: If dtype is not recognized or is an integer type
+                    (NetCDF doesn't allow NaN fill values for integers)
+    """
+    dtype_str = str(dtype)
+
+    # Float types
+    if "float64" in dtype_str or "float_" in dtype_str:
+        return "d"  # double
+    if "float32" in dtype_str:
+        return "f"  # float
+
+    # Integer types - not allowed (NetCDF doesn't support NaN for integers)
+    if any(x in dtype_str for x in ["int64", "int32", "int16", "int8", "int_", "byte"]):
+        raise ValueError(
+            f"Integer dtype detected: {dtype}. "
+            "NetCDF does not allow NaN fill values for integer variables. So how'd this happen?"
+        )
+
+    # String/char
+    if "str" in dtype_str or "char" in dtype_str or "U" in dtype_str or "S" in dtype_str:
+        return "c"  # char
+
+    # Unknown type - raise error
+    raise ValueError(f"Unknown dtype for ncatted: {dtype}")
 
 
 def get_var_info(

@@ -383,6 +383,43 @@ class TestUnitAreDictsIdenticalNansEqual(unittest.TestCase):
         self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
 
 
+class TestGetNcattedTypeCode:
+    """Test the _get_ncatted_type_code function."""
+
+    def test_float64(self):
+        """Test float64 dtype."""
+        assert nu._get_ncatted_type_code(np.dtype("float64")) == "d"
+
+    def test_float32(self):
+        """Test float32 dtype."""
+        assert nu._get_ncatted_type_code(np.dtype("float32")) == "f"
+
+    def test_int64(self):
+        """Test int64 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            nu._get_ncatted_type_code(np.dtype("int64"))
+
+    def test_int32(self):
+        """Test int32 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            nu._get_ncatted_type_code(np.dtype("int32"))
+
+    def test_int16(self):
+        """Test int16 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            nu._get_ncatted_type_code(np.dtype("int16"))
+
+    def test_int8(self):
+        """Test int8 dtype raises error."""
+        with pytest.raises(ValueError, match="Integer dtype detected"):
+            nu._get_ncatted_type_code(np.dtype("int8"))
+
+    def test_unknown_dtype(self):
+        """Test that unknown dtype raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown dtype"):
+            nu._get_ncatted_type_code(np.dtype("complex128"))
+
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
