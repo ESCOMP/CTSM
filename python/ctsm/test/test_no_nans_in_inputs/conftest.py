@@ -14,28 +14,7 @@ from ctsm.no_nans_in_inputs import json_io
 from ctsm.no_nans_in_inputs import namelist_utils
 from ctsm.no_nans_in_inputs import replace_fill_values
 from ctsm.no_nans_in_inputs import shared
-
-
-@pytest.fixture(autouse=True, name="mock_progress_file")
-def fixture_mock_progress_file(tmp_path, monkeypatch):
-    """
-    Auto-used fixture to mock NEW_FILLVALUES_FILE constant with a temporary path.
-
-    This prevents tests from accidentally modifying the real file.
-    Does not create the file; that happens in get_replacement_fill_values.py.
-    """
-    # Define the test NEW_FILLVALUES_FILE
-    test_progress = tmp_path / "progress.json"
-
-    # Monkeypatch the XML_FILE constant in both the constants module and replace_fill_values
-    monkeypatch.setattr(constants, "NEW_FILLVALUES_FILE", str(test_progress))
-
-    # Also patch it in things that import NEW_FILLVALUES_FILE
-    monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
-    monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
-    monkeypatch.setattr(json_io, "NEW_FILLVALUES_FILE", str(test_progress))
-
-    return str(test_progress)
+from ctsm.no_nans_in_inputs import user_inputs
 
 
 @pytest.fixture(autouse=True, name="mock_inputdata_prefix")
@@ -64,6 +43,7 @@ def fixture_mock_progress_file(tmp_path, monkeypatch):
     monkeypatch.setattr(get_replacement_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(replace_fill_values, "NEW_FILLVALUES_FILE", str(test_progress))
     monkeypatch.setattr(json_io, "NEW_FILLVALUES_FILE", str(test_progress))
+    monkeypatch.setattr(user_inputs, "NEW_FILLVALUES_FILE", str(test_progress))
 
     return str(test_progress)
 

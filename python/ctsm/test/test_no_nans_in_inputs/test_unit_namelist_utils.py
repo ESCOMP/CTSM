@@ -24,5 +24,3 @@ class TestReplaceEnvVarsInNetcdfPath:
         expected = os.path.join(tmp_path, "file.nc")
 
         assert nc_out == expected
-
-

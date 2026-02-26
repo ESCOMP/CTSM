@@ -33,3 +33,6 @@ OPEN_DS_KWARGS = {"decode_timedelta": False, "decode_times": False}
 # Pattern for extracting netCDF paths (third group) from user_nl_ files
 ONE_OF_OUR_FILES = f"""[^'"]*{OUR_PATH}[^'"]"""
 USERNL_NC_PATTERN = rf"""^(\s*\w+\s*=\s*)(['"])({ONE_OF_OUR_FILES}*)(['"])(.*)$"""
+
+# netCDF variables that start with any of these strings should get a default fill value of -999
+VARSTARTS_TO_DEFAULT_NEG999 = ["fertl_", "irrig_", "crpbf_", "fharv_"]
