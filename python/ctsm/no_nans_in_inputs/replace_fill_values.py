@@ -61,6 +61,38 @@ def get_output_filename(input_file: str) -> str:
     return os.path.join(directory, output_basename)
 
 
+def _process_one_file(
+    progress: dict, input_file_abs: str, output_file: str, files_processed: list, dry_run: bool
+):
+    # Print things to do for this file
+    var_fillvalues = progress[input_file_abs]["new_fill_values"]
+    print(f"\nInput:  {input_file_abs}")
+    print(f"Output: {output_file}")
+    print(f"Variables to modify: {len(var_fillvalues)}")
+    for var, fill_val in var_fillvalues.items():
+        print(f"  {var}: {fill_val}")
+
+    # Build and print the ncatted command
+    cmd = netcdf_utils.build_ncatted_command(input_file_abs, output_file, var_fillvalues)
+    print("\nCommand:")
+    print("  " + " ".join(cmd))
+
+    # Execute the command if not in dry-run mode
+    if not dry_run:
+        files_processed += netcdf_utils.execute_ncatted_command(cmd)
+        # Update the XML file(s) with the new output path
+        for file_containing_netcdf, set_of_how_this_netcdf_appears in progress[input_file_abs][
+            "found_in_files"
+        ].items():
+            for netcdf_path_in in set_of_how_this_netcdf_appears:
+                netcdf_path_out = get_output_filename(netcdf_path_in)
+                nlu.update_text_file_referencing_netcdf(
+                    file_containing_netcdf, netcdf_path_in, netcdf_path_out
+                )
+        # TODO: git commit!
+    return files_processed
+
+
 def process_files(
     fillvalues_file: str,
     dry_run: bool = False,
@@ -99,32 +131,13 @@ def process_files(
         if skip_this_file(input_file_abs, output_file, overwrite):
             continue
 
-        # Print things to do for this file
-        var_fillvalues = progress[input_file_abs]["new_fill_values"]
-        print(f"\nInput:  {input_file_abs}")
-        print(f"Output: {output_file}")
-        print(f"Variables to modify: {len(var_fillvalues)}")
-        for var, fill_val in var_fillvalues.items():
-            print(f"  {var}: {fill_val}")
-
-        # Build and print the ncatted command
-        cmd = netcdf_utils.build_ncatted_command(input_file_abs, output_file, var_fillvalues)
-        print("\nCommand:")
-        print("  " + " ".join(cmd))
-
-        # Execute the command if not in dry-run mode
-        if not dry_run:
-            files_processed += netcdf_utils.execute_ncatted_command(cmd)
-            # Update the XML file(s) with the new output path
-            for file_containing_netcdf, set_of_how_this_netcdf_appears in progress[input_file_abs][
-                "found_in_files"
-            ].items():
-                for netcdf_path_in in set_of_how_this_netcdf_appears:
-                    netcdf_path_out = get_output_filename(netcdf_path_in)
-                    nlu.update_text_file_referencing_netcdf(
-                        file_containing_netcdf, netcdf_path_in, netcdf_path_out
-                    )
-            # TODO: git commit!
+        files_processed = _process_one_file(
+            progress=progress,
+            input_file_abs=input_file_abs,
+            output_file=output_file,
+            files_processed=files_processed,
+            dry_run=dry_run,
+        )
 
     # Only print summary in dry-run mode
     if dry_run:
