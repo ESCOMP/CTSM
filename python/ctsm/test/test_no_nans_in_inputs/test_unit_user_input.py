@@ -20,6 +20,7 @@ TEST_VAR_NAME = "test_var"
 DEFAULT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=float)
 INT_VAR_CONTEXT = VarContext(var_name=TEST_VAR_NAME, target_type=int)
 
+
 class TestGetFillValueFromUser:
     """Test the _get_fill_value_from_user function."""
 

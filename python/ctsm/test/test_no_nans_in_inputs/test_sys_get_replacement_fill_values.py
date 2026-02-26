@@ -291,5 +291,3 @@ class TestMain:
         assert e.value.code == 1
         captured = capsys.readouterr()
         assert "No write access" in captured.err
-
-

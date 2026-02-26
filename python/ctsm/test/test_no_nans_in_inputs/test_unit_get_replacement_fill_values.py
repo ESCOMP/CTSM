@@ -10,7 +10,6 @@ import pytest
 from ctsm.no_nans_in_inputs import namelist_utils
 
 
-
 class TestHowNetcdfIsReferencedInFile:
     """Tests of how_netcdf_is_referenced_in_file()."""
 

@@ -6,6 +6,7 @@ import pytest
 
 from ctsm.no_nans_in_inputs.namelist_utils import _replace_env_vars_in_netcdf_paths
 
+
 class TestReplaceEnvVarsInNetcdfPath:
     """Tests of _replace_env_vars_in_netcdf_paths()"""
 

@@ -1,4 +1,5 @@
 """System tests of functions in namelist_utils module (anything touching filesystem)"""
+
 # pylint: disable=too-few-public-methods
 
 from pathlib import Path
@@ -28,7 +29,6 @@ TEST_PATH_OTHER = "share/meshes/test_mesh.nc"
 TEST_PHYS_CLM60 = "clm6_0"
 TEST_PHYS_CLM50 = "clm5_0"
 TEST_PHYS_CLM45 = "clm4_5"
-
 
 
 class TestUpdateXmlFile:
@@ -281,6 +281,7 @@ class TestUpdateUsernlFile:
         nc_path_in = nc_paths.abs_path_dinlocrootcurly
         self._do_test(mock_usernl_file_path, nc_path_in)
 
+
 class TestExtractFilePathListFromUserNl:
     """Test the _extract_file_path_list_from_usernl function."""
 
@@ -456,6 +457,7 @@ class TestExtractFilePathsFromXml:
         result = _extract_file_paths_from_xml(xml_path)
         assert result == {TEST_PATH_PARAM, TEST_PATH_SURF}
 
+
 class TestFindUserNlFiles:
     """Tests of find_user_nl_files()"""
 
@@ -477,4 +479,3 @@ class TestFindUserNlFiles:
         assert found_toplevel in results
         assert found_secondlevel in results
         assert notfound not in results
-

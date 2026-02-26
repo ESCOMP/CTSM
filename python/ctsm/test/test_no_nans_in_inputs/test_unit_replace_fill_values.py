@@ -13,6 +13,7 @@ from ctsm.no_nans_in_inputs.replace_fill_values import (
     get_output_filename,
 )
 
+
 class TestGetOutputFilename:
     """Test the get_output_filename function."""
 
@@ -72,4 +73,3 @@ class TestGetNcattedTypeCode:
         """Test that unknown dtype raises ValueError."""
         with pytest.raises(ValueError, match="Unknown dtype"):
             get_ncatted_type_code(np.dtype("complex128"))
-

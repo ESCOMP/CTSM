@@ -41,7 +41,9 @@ from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-posi
     convert_to_absolute_path,
 )
 from ctsm.no_nans_in_inputs import user_inputs
-from ctsm.no_nans_in_inputs.netcdf_utils import file_has_nan_fill  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.netcdf_utils import (
+    file_has_nan_fill,
+)  # pylint: disable=wrong-import-position
 
 # File paths
 DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(

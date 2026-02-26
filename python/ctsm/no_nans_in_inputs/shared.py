@@ -14,6 +14,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     INPUTDATA_PREFIX,
 )
 
+
 @dataclass
 class FillValueConfig:
     """Configuration for how the fill value prompt should behave.
@@ -27,6 +28,7 @@ class FillValueConfig:
     default_value: Any = None
     allow_delete: bool = True
     delete_if_none_filled: bool = False
+
 
 @dataclass
 class VarContext:

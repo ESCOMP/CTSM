@@ -94,6 +94,7 @@ def fixture_create_mock_xml_file(mock_xml_file_path):
 
     return _create
 
+
 @pytest.fixture(name="create_mock_user_nl_file")
 def fixture_create_mock_user_nl_file(
     tmp_path, mock_inputdata_prefix
