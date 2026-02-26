@@ -36,6 +36,7 @@ class TestGetOutputFilename:
         result = get_output_filename("file.nc")
         assert result == "file.no_nan_fill.nc"
 
+
 class TestGetNcattedTypeCode:
     """Test the _get_ncatted_type_code function."""
 

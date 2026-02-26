@@ -381,6 +381,7 @@ class TestUnitAreDictsIdenticalNansEqual(unittest.TestCase):
         dict1 = {"a": 1, "b": np.array(["1", "2"])}
         self.assertTrue(nu._are_dicts_identical_nansequal(dict0, dict1))
 
+
 if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()

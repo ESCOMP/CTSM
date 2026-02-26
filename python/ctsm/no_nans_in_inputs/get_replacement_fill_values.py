@@ -142,9 +142,7 @@ def main() -> int:
     parser.add_argument(
         "--fillvalues-file",
         default=str(NEW_FILLVALUES_FILE),
-        help=(
-            f"JSON file where collected info will be saved. Default: '{NEW_FILLVALUES_FILE}'"
-        ),
+        help=(f"JSON file where collected info will be saved. Default: '{NEW_FILLVALUES_FILE}'"),
     )
     args = parser.parse_args()
 
@@ -152,7 +150,9 @@ def main() -> int:
     if not args.dry_run:
         print("Checking write access for progress file...")
         if not check_write_access(args.fillvalues_file):
-            print(f"Error: No write access to create/update {args.fillvalues_file}", file=sys.stderr)
+            print(
+                f"Error: No write access to create/update {args.fillvalues_file}", file=sys.stderr
+            )
             dir_str = os.path.dirname(args.fillvalues_file) or "."
             print(
                 f"Please check permissions in directory: {dir_str}",

@@ -35,7 +35,9 @@ def fixture_mock_dir_with_usernl_files(tmp_path, monkeypatch):
     Auto-used fixture to mock DIR_TO_SEARCH_FOR_USER_NL_FILES constant with a temporary path.
     """
     # Monkeypatch
-    monkeypatch.setattr(get_replacement_fill_values, "DIR_TO_SEARCH_FOR_USER_NL_FILES", str(tmp_path))
+    monkeypatch.setattr(
+        get_replacement_fill_values, "DIR_TO_SEARCH_FOR_USER_NL_FILES", str(tmp_path)
+    )
 
 
 @pytest.fixture(autouse=True, name="mock_cesm_top")
@@ -155,6 +157,7 @@ dlr = "{nc_paths.abs_path_dinlocroot}"
         return mock_usernl_file_path, nc_paths
 
     return _create
+
 
 @pytest.fixture(name="example_progress")
 def fixture_example_progress(tmp_path) -> json_io.NoNanFillValueProgress:
