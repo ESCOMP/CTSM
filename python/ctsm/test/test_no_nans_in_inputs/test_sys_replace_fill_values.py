@@ -23,7 +23,7 @@ from ctsm.no_nans_in_inputs.json_io import (
 )
 from ctsm.no_nans_in_inputs.replace_fill_values import (
     build_ncatted_command,
-    execute_command,
+    execute_ncatted_command,
     get_output_filename,
     main,
 )
@@ -355,7 +355,7 @@ class TestReplaceFullWorkflow:
 
 
 class TestExecuteCommand:
-    """Test the execute_command function."""
+    """Test the execute_ncatted_command function."""
 
     @pytest.fixture(name="create_test_nc")
     def fixture_create_test_nc(self, tmp_path):
@@ -407,7 +407,7 @@ class TestExecuteCommand:
         ],
     )
     def test_execute_preserves_format(self, tmp_path, create_test_nc, netcdf_format):
-        """Test execute_command preserves NetCDF format from input to output."""
+        """Test execute_ncatted_command preserves NetCDF format from input to output."""
         # Create input file with specified format
         input_file = create_test_nc(netcdf_format=netcdf_format)
 
@@ -415,7 +415,7 @@ class TestExecuteCommand:
         output_file = str(tmp_path / "test_output.nc")
         var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        files_processed = execute_command(cmd)
+        files_processed = execute_ncatted_command(cmd)
 
         # Should have processed 1 file
         assert files_processed == 1
@@ -451,7 +451,7 @@ class TestExecuteCommand:
         ],
     )
     def test_execute_different_data(self, tmp_path, create_test_nc, first_value, expect_filled):
-        """Test execute_command with different data values."""
+        """Test execute_ncatted_command with different data values."""
         # Create input file with specified value first
         input_file = create_test_nc(first_value=first_value)
 
@@ -459,7 +459,7 @@ class TestExecuteCommand:
         output_file = str(tmp_path / "test_output.nc")
         var_fillvalues = {TEST_VAR_TEMP: TEST_FILL_VALUE}
         cmd = build_ncatted_command(input_file, output_file, var_fillvalues)
-        execute_command(cmd)
+        execute_ncatted_command(cmd)
 
         # Verify the output file is valid NetCDF with correct fill value. mask_and_scale True means
         # that the variable's DataArray's _FillValue attribute will be populated and any filled

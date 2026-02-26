@@ -216,7 +216,7 @@ def process_files(
 
         # Execute the command if not in dry-run mode
         if not dry_run:
-            files_processed += execute_command(cmd)
+            files_processed += execute_ncatted_command(cmd)
             # Update the XML file(s) with the new output path
             for file_containing_netcdf, set_of_how_this_netcdf_appears in progress[input_file_abs][
                 "found_in_files"
@@ -270,7 +270,7 @@ def skip_this_file(input_file: str, output_file: str, overwrite: bool) -> bool:
     return False
 
 
-def execute_command(cmd: list[str]) -> int:
+def execute_ncatted_command(cmd: list[str]) -> int:
     """
     Runs the ncatted command to create the output file with modified fill values.
 
