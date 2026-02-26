@@ -169,5 +169,4 @@ def fixture_example_progress(tmp_path) -> json_io.NoNanFillValueProgress:
     file2 = "/path/to/file2.nc"
     data_to_save[file2]["new_fill_values"] = {"var3": -999.0}
     data_to_save[file2]["found_in_files"] = {"user_nl_dummy": {file2}}
-    print(f"{data_to_save=}")
     return data_to_save

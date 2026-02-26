@@ -40,7 +40,6 @@ class NoNanFillValueProgress(defaultdict):
         self.progress_file = progress_file
 
         if progress_file and os.path.exists(progress_file):
-            print(f"{progress_file=}")
             try:
                 with open(progress_file, "r", encoding="utf-8") as f:
                     progress = json.load(f)
@@ -88,7 +87,6 @@ class NoNanFillValueProgress(defaultdict):
         """
         # Can't serialize sets. deepcopy() is needed so that caller's progress isn't affected
         # .copy() isn't sufficient since we have nested mutables.
-        print(f"{self=}")
         progress_out = _convert_fif_dict_sets(deepcopy(self), list)
 
         try:

@@ -165,7 +165,6 @@ def main() -> int:
     netcdf_paths, files_referencing_netcdfs = _get_netcdf_files_to_check()
 
     # Load existing progress if available
-    print(f"{args.fillvalues_file=}")
     progress = NoNanFillValueProgress(progress_file=args.fillvalues_file)
 
     print("\nFinding matches...")
