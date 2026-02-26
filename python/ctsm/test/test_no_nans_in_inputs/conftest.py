@@ -28,6 +28,15 @@ def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
     monkeypatch.setattr(shared, "INPUTDATA_PREFIX", str(tmp_path))
 
 
+@pytest.fixture(autouse=True, name="mock_dir_to_search_for_usernl_files")
+def fixture_mock_dir_with_usernl_files(tmp_path, monkeypatch):
+    """
+    Auto-used fixture to mock DIR_TO_SEARCH_FOR_USER_NL_FILES constant with a temporary path.
+    """
+    # Monkeypatch
+    monkeypatch.setattr(get_replacement_fill_values, "DIR_TO_SEARCH_FOR_USER_NL_FILES", str(tmp_path))
+
+
 @pytest.fixture(autouse=True, name="mock_progress_file", scope="function")
 def fixture_mock_progress_file(tmp_path, monkeypatch):
     """
