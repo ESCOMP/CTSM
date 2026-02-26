@@ -41,6 +41,30 @@ DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
 )
 
 
+def _check_for_nanfill_in_netcdf(files_referencing_netcdfs, progress, netcdf_path, abs_path):
+    any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
+    if any_nan_fill:
+        if abs_path not in progress:
+            progress[abs_path] = json_io.create_empty_progress_dict_onefile()
+        fif_dict = progress[abs_path]["found_in_files"]
+        for file_to_search in files_referencing_netcdfs:
+            set_of_how_this_netcdf_appears = nlu.how_netcdf_is_referenced_in_file(
+                file_to_search, netcdf_path
+            )
+            if set_of_how_this_netcdf_appears:
+                if file_to_search not in fif_dict:
+                    fif_dict[file_to_search] = set()
+                fif_dict[file_to_search] = fif_dict[file_to_search] | set_of_how_this_netcdf_appears
+        progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
+        json_io.save_progress(progress.copy(), NEW_FILLVALUES_FILE)
+    else:
+        if abs_path in progress:
+            raise RuntimeError(
+                f"Found no NaN fills in file but it was in progress dict: {abs_path}"
+            )
+        print(f"No variable in file has NaN {ATTR}; skipping")
+
+
 def check_write_access(file_path: str) -> bool:
     """
     Check if we have write access to create/update a file.
@@ -64,6 +88,22 @@ def check_write_access(file_path: str) -> bool:
         parent = os.path.dirname(parent)
 
     return os.access(parent or ".", os.W_OK)
+
+
+def _get_netcdf_files_to_check():
+    files_to_search = [XML_FILE]
+    files_to_search.extend(nlu.find_user_nl_files(DIR_TO_SEARCH_FOR_USER_NL_FILES))
+
+    netcdf_paths = set()
+    files_referencing_netcdfs = []
+    for file_to_search in files_to_search:
+        print(f"Extracting file paths from file: {file_to_search}")
+        netcdf_paths_thisfile = nlu.extract_file_paths_from_file(file_to_search)
+        print(f"Found {len(netcdf_paths_thisfile)} file paths in file")
+        if netcdf_paths_thisfile:
+            files_referencing_netcdfs.append(file_to_search)
+        netcdf_paths = netcdf_paths | netcdf_paths_thisfile
+    return netcdf_paths, files_referencing_netcdfs
 
 
 def main() -> int:
@@ -101,7 +141,7 @@ def main() -> int:
         print("Checking write access for progress file...")
         if not check_write_access(NEW_FILLVALUES_FILE):
             print(f"Error: No write access to create/update {NEW_FILLVALUES_FILE}", file=sys.stderr)
-            dir_str = os.path.dirname(NEW_FILLVALUES_FILE) or '.'
+            dir_str = os.path.dirname(NEW_FILLVALUES_FILE) or "."
             print(
                 f"Please check permissions in directory: {dir_str}",
                 file=sys.stderr,
@@ -110,18 +150,7 @@ def main() -> int:
         print(f"✓ Write access confirmed for {NEW_FILLVALUES_FILE}\n")
 
     # Get list of files to search for netCDF that might have NaN fill values
-    files_to_search = [XML_FILE]
-    files_to_search.extend(nlu.find_user_nl_files(DIR_TO_SEARCH_FOR_USER_NL_FILES))
-
-    netcdf_paths = set()
-    files_referencing_netcdfs = []
-    for file_to_search in files_to_search:
-        print(f"Extracting file paths from file: {file_to_search}")
-        netcdf_paths_thisfile = nlu.extract_file_paths_from_file(file_to_search)
-        print(f"Found {len(netcdf_paths_thisfile)} file paths in file")
-        if netcdf_paths_thisfile:
-            files_referencing_netcdfs.append(file_to_search)
-        netcdf_paths = netcdf_paths | netcdf_paths_thisfile
+    netcdf_paths, files_referencing_netcdfs = _get_netcdf_files_to_check()
 
     # Load existing progress if available
     progress = json_io.init_progress()
@@ -146,29 +175,7 @@ def main() -> int:
         print(f"Absolute: {abs_path}")
 
         # Check that the file actually has NaN _FillValue for at least one var
-        any_nan_fill, vars_with_nan_fills = file_has_nan_fill(abs_path)
-        if any_nan_fill:
-            if abs_path not in progress:
-                progress[abs_path] = json_io.create_empty_progress_dict_onefile()
-            fif_dict = progress[abs_path]["found_in_files"]
-            for file_to_search in files_referencing_netcdfs:
-                set_of_how_this_netcdf_appears = nlu.how_netcdf_is_referenced_in_file(
-                    file_to_search, netcdf_path
-                )
-                if set_of_how_this_netcdf_appears:
-                    if file_to_search not in fif_dict:
-                        fif_dict[file_to_search] = set()
-                    fif_dict[file_to_search] = (
-                        fif_dict[file_to_search] | set_of_how_this_netcdf_appears
-                    )
-            progress[abs_path]["vars_with_nan_fills"] = vars_with_nan_fills
-            json_io.save_progress(progress.copy(), NEW_FILLVALUES_FILE)
-        else:
-            if abs_path in progress:
-                raise RuntimeError(
-                    f"Found no NaN fills in file but it was in progress dict: {abs_path}"
-                )
-            print(f"No variable in file has NaN {ATTR}; skipping")
+        _check_for_nanfill_in_netcdf(files_referencing_netcdfs, progress, netcdf_path, abs_path)
 
     print("-" * SEP_LENGTH)
 
