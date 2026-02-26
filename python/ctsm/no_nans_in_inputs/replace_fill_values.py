@@ -27,6 +27,7 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     CESM_TOP,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
+    USER_REQ_DELETE,
     XML_FILE,
 )
 import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-import-position
@@ -99,6 +100,7 @@ def _process_one_file(
                 )
 
         # Print message (useful for a git commit) and wait for user to approve before continuing
+        indent = "  "
         print("-" * SEP_LENGTH)
         input_file_msg = input_file_abs
         if os.getenv("CESMDATAROOT"):
@@ -112,12 +114,21 @@ def _process_one_file(
                 os.getenv("CESMDATAROOT"), "$CESMDATAROOT"
             ).replace("//", "/")
         print(f"Replaced with '{output_file_msg}'; new fill values:")
+        vars_with_deleted_fill = []
         for var, fill_val in var_fillvalues.items():
-            print(f"  {var}: {fill_val}")
+            if fill_val == USER_REQ_DELETE:
+                vars_with_deleted_fill.append(var)
+            else:
+                print(f"{indent}{var}: {fill_val}")
+        if vars_with_deleted_fill:
+            if len(vars_with_deleted_fill) <= 10:
+                print(f"{indent}Deleted fill: {', '.join(vars_with_deleted_fill)}")
+            else:
+                print(f"{indent}Deleted unused fill from {len(vars_with_deleted_fill)} variables")
         print("\nPath updated in:")
         for f in files_containing:
             f_rel = Path(f).relative_to(CESM_TOP)
-            print(f"  {f_rel}")
+            print(f"{indent}{f_rel}")
         print("-" * SEP_LENGTH)
         if not confirm_continue():
             sys.exit("Exiting.")
