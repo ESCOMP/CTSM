@@ -1,9 +1,10 @@
 """System tests of functions in namelist_utils module (anything touching filesystem)"""
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,protected-access
 
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +18,7 @@ from ctsm.no_nans_in_inputs.namelist_utils import (
     _update_xml_file,
     update_text_file_referencing_netcdf,
 )
+from ctsm.no_nans_in_inputs import namelist_utils
 
 # Test constants
 TEST_PARAM_CLM60 = "lnd/clm2/paramdata/ctsm60_params.c260108.nc"
@@ -51,7 +53,12 @@ class TestUpdateXmlFile:
         old_path = "lnd/clm2/paramdata/test_params.nc"
         new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
 
-        fn_to_test(mock_xml_file_path, old_path, new_path)
+        # Spy on _check_xml_file: Mock it so that it behaves as usual but we can check call count
+        with patch(
+            "ctsm.no_nans_in_inputs.namelist_utils._check_xml_file",
+            wraps=namelist_utils._check_xml_file,
+        ) as mock_check_xml:
+            fn_to_test(mock_xml_file_path, old_path, new_path)
 
         # Read and verify the updated XML
         tree = ET.parse(mock_xml_file_path)
@@ -63,6 +70,9 @@ class TestUpdateXmlFile:
         # Other paths should be unchanged
         surfdata = root.find("surfdata")
         assert surfdata.text == "lnd/clm2/surfdata/test_surf.nc"
+
+        # We should have checked the file
+        assert mock_check_xml.call_count == 1
 
     def test_update_xml_path_not_found(self, mock_xml_file_path):
         """Test that updating non-existent path raises ValueError."""
@@ -233,7 +243,12 @@ class TestUpdateUsernlFile:
 
         # Substitute
         nc_path_out = "abc123.nc"
-        fn_to_test(mock_usernl_file_path, nc_path_in, nc_path_out)
+        # Spy on _check_usernl_file: Mock it so that it behaves as usual but we can check call count
+        with patch(
+            "ctsm.no_nans_in_inputs.namelist_utils._check_usernl_file",
+            wraps=namelist_utils._check_usernl_file,
+        ) as mock_check_usernl:
+            fn_to_test(mock_usernl_file_path, nc_path_in, nc_path_out)
 
         # Get line after substitution
         line_after = None
@@ -253,6 +268,9 @@ class TestUpdateUsernlFile:
         # was touched.
         expected = line_before.replace(nc_path_in, nc_path_out)
         assert line_after == expected
+
+        # We should have checked the file
+        assert mock_check_usernl.call_count == 1
 
     @pytest.mark.parametrize(
         "fn_to_test", [_update_usernl_file, update_text_file_referencing_netcdf]
@@ -479,3 +497,79 @@ class TestFindUserNlFiles:
         assert found_toplevel in results
         assert found_secondlevel in results
         assert notfound not in results
+
+
+class TestCheckXmlFile:
+    """Test _check_xml_file()"""
+
+    @pytest.fixture
+    def run_check(self, tmp_path):
+        """
+        Helper fixture that:
+        - Creates a temp XML file (optionally malformed)
+        - Patches ET.parse to raise a provided exception
+        - Patches os.remove
+        - Executes _check_xml_file
+        - Returns (exception, mock_remove, stderr_output)
+        """
+
+        def _run(exception, *, malformed=False, capture_output=False):
+            xml_file = tmp_path / "file.xml"
+            if malformed:
+                xml_file.write_text("<root>")  # malformed XML
+
+            with (
+                patch("ctsm.no_nans_in_inputs.namelist_utils.ET.parse", side_effect=exception),
+                patch("ctsm.no_nans_in_inputs.namelist_utils.os.remove") as mock_remove,
+            ):
+                if capture_output:
+                    # capsys must be accessed inside test, so we return control
+                    with pytest.raises(type(exception)):
+                        namelist_utils._check_xml_file(str(xml_file))
+                else:
+                    with pytest.raises(type(exception)):
+                        namelist_utils._check_xml_file(str(xml_file))
+
+            return str(xml_file), mock_remove
+
+        return _run
+
+    def test_valid_xml(self, tmp_path):
+        """Test _check_xml_file() given a valid string to write"""
+        xml_file = tmp_path / "valid.xml"
+        xml_file.write_text("<root></root>")
+
+        namelist_utils._check_xml_file(str(xml_file))
+        assert xml_file.exists()
+
+    @pytest.mark.parametrize(
+        "exception, expected_stderr, malformed",
+        [
+            (IOError("boom"), "could not be opened", False),
+            (ET.ParseError("bad xml"), "not well-formed", True),
+            (RuntimeError("boom"), None, False),
+        ],
+        ids=["ioerror", "parse_error", "generic_exception"],
+    )
+    def test_exception_paths(
+        self,
+        run_check,
+        capsys,
+        exception,
+        expected_stderr,
+        malformed,
+    ):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        """Test _check_xml_file() given an invalid string to write"""
+        xml_path, mock_remove = run_check(
+            exception,
+            malformed=malformed,
+        )
+
+        mock_remove.assert_called_once_with(xml_path)
+
+        if expected_stderr is not None:
+            captured = capsys.readouterr()
+            assert expected_stderr in captured.err
+
+            if malformed:
+                assert "<root>" in captured.err

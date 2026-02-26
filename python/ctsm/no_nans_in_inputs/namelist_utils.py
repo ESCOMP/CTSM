@@ -1,9 +1,11 @@
 """Functions for reading and manipulating namelist XML and user_nl_ files"""
 
+from shutil import move
 import glob
 import os
 import re
 import sys
+import tempfile
 from typing import List
 import xml.etree.ElementTree as ET
 
@@ -21,6 +23,37 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
 from ctsm.no_nans_in_inputs.shared import (  # pylint: disable=wrong-import-position
     convert_to_absolute_path,
 )
+
+
+def _check_usernl_file(usernl_file) -> None:
+    """Check user_nl_ file for validity"""
+    # TODO: Add check of user_nl_ file validity
+    # pylint: disable=unused-argument
+    return
+
+
+def _check_xml_file(xml_file) -> None:
+    """Check XML file for validity"""
+    try:
+        ET.parse(xml_file)
+    except IOError as e:
+        print(
+            f"Error: The temporary output file could not be opened: '{xml_file}'", file=sys.stderr
+        )
+        try:
+            os.remove(xml_file)  # Because we created temp file with delete=False
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        raise e
+    except ET.ParseError as e:
+        print("Output file is not well-formed. Contents:", file=sys.stderr)
+        with open(xml_file, "r", encoding="utf8") as f:
+            print(str(f.read()), file=sys.stderr)
+        os.remove(xml_file)  # Because we created temp file with delete=False
+        raise e
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        os.remove(xml_file)  # Because we created temp file with delete=False
+        raise e
 
 
 def find_user_nl_files(dir_to_search: str) -> list[str]:
@@ -224,14 +257,20 @@ def _update_xml_file(xml_file: str, old_path: str, new_path: str) -> None:
         if replacements_made == 0:
             raise ValueError(f"Path '{old_path}' not found in {xml_file}")
 
-        # Write the updated XML back to file
-        tree.write(xml_file, encoding="utf-8", xml_declaration=True)
-        print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
-
     except ET.ParseError as e:
         raise ValueError(f"Error parsing XML file: {e}") from e
     except (IOError, OSError) as e:
         raise ValueError(f"Error updating XML file: {e}") from e
+
+    # Write the updated XML back to file, first stopping in a temp file for checks
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".xml", delete=False) as tmp_path:
+        tree.write(tmp_path, encoding="utf-8", xml_declaration=True)
+        xml_file_tmp = tmp_path.name
+    # This will error if it's not well-formed, deleting the temporary file and causing this
+    # function to stop.
+    _check_xml_file(xml_file_tmp)
+    move(xml_file_tmp, xml_file)
+    print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
 
 
 def _update_usernl_file(usernl_file: str, old_path: str, new_path: str) -> None:
@@ -266,9 +305,15 @@ def _update_usernl_file(usernl_file: str, old_path: str, new_path: str) -> None:
     # Replace matching paths with our new one
     file_contents = re.sub(pattern, replacer, file_contents, flags=re.MULTILINE)
 
-    # Save
-    with open(usernl_file, "w", encoding="utf8") as f:
-        f.write(file_contents)
+    # Write the updated user_nl_ back to file, first stopping in a temp file for checks
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".xml", delete=False) as tmp_path:
+        usernl_file_tmp = tmp_path.name
+        with open(usernl_file_tmp, "w", encoding="utf8") as f:
+            f.write(file_contents)
+    # This will error if it's not well-formed, deleting the temporary file and causing this
+    # function to stop.
+    _check_usernl_file(usernl_file_tmp)
+    move(usernl_file_tmp, usernl_file)
 
 
 def update_text_file_referencing_netcdf(text_file: str, old_netcdf: str, new_netcdf: str) -> None:
