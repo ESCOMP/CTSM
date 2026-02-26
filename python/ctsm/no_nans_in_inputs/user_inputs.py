@@ -36,6 +36,36 @@ from ctsm.no_nans_in_inputs.netcdf_utils import (  # pylint: disable=wrong-impor
 )
 from ctsm.no_nans_in_inputs import json_io  # pylint: disable=wrong-import-position
 
+def confirm_continue(prompt: str = "Continue? [Y/n]: "):
+    """
+    Prompt the user for confirmation to continue, defaulting to 'Yes'.
+
+    Parameters
+    ----------
+    prompt : str
+        The message displayed to the user. Default is "Continue? [Y/n]: ".
+
+    Returns
+    -------
+    bool
+        True if the user confirms (Yes), False if the user declines (No).
+
+    Behavior
+    --------
+    - Pressing Enter defaults to Yes.
+    - Accepts 'y', 'yes' (case-insensitive) as Yes.
+    - Accepts 'n', 'no' (case-insensitive) as No.
+    - Any other input will reprompt until a valid response is given.
+    """
+    while True:
+        response = input(prompt).strip().lower()
+
+        if response in ("", "y", "yes"):
+            return True
+        if response in ("n", "no"):
+            return False
+
+        print("Please enter 'y' or 'n'.")
 
 def _convert_and_validate_input(user_input: str, target_type: type) -> Any | None:
     """

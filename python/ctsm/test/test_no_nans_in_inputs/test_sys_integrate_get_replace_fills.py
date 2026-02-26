@@ -87,7 +87,11 @@ def test_integrate_get_replace(tmp_path, test_netcdf_file, create_mock_xml_file,
 
     # Call replace_fill_values.py
     with patch("sys.argv", ["replace_fill_values.py"]):
-        replace_fill_values()
+        with patch(
+            "builtins.input",
+            side_effect="y",  # continue after replacing
+        ):
+            replace_fill_values()
 
     # Check the output file
     output_file = get_output_filename(str(test_netcdf_file))

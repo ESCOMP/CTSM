@@ -18,8 +18,6 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir
 if _CTSM_PYTHON not in sys.path:
     sys.path.insert(1, _CTSM_PYTHON)
 
-import numpy as np  # pylint: disable=wrong-import-position
-
 from ctsm.no_nans_in_inputs.json_io import load_progress  # pylint: disable=wrong-import-position
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
@@ -28,7 +26,10 @@ from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-p
     XML_FILE,
 )
 import ctsm.no_nans_in_inputs.namelist_utils as nlu  # pylint: disable=wrong-import-position
-from ctsm.no_nans_in_inputs import netcdf_utils
+from ctsm.no_nans_in_inputs import netcdf_utils  # pylint: disable=wrong-import-position
+from ctsm.no_nans_in_inputs.user_inputs import (  # pylint: disable=wrong-import-position
+    confirm_continue,
+)
 
 
 def get_output_filename(input_file: str) -> str:
@@ -81,15 +82,23 @@ def _process_one_file(
     if not dry_run:
         files_processed += netcdf_utils.execute_ncatted_command(cmd)
         # Update the XML file(s) with the new output path
+        files_containing = []
         for file_containing_netcdf, set_of_how_this_netcdf_appears in progress[input_file_abs][
             "found_in_files"
         ].items():
+            files_containing.append(file_containing_netcdf)
             for netcdf_path_in in set_of_how_this_netcdf_appears:
                 netcdf_path_out = get_output_filename(netcdf_path_in)
                 nlu.update_text_file_referencing_netcdf(
                     file_containing_netcdf, netcdf_path_in, netcdf_path_out
                 )
-        # TODO: git commit!
+
+        # Print message and wait for user to approve continuing
+        print(
+            f"Replaced in: {','.join(files_containing)}"
+        )
+        if not confirm_continue():
+            sys.exit("Exiting.")
     return files_processed
 
 

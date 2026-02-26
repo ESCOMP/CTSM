@@ -2,6 +2,8 @@
 Unit tests of user_input (anything not touching filesystem)
 """
 
+from unittest.mock import patch
+
 import pytest
 
 from ctsm.no_nans_in_inputs.constants import (
@@ -13,7 +15,7 @@ from ctsm.no_nans_in_inputs.constants import (
     USER_REQ_SKIP_VAR,
 )
 from ctsm.no_nans_in_inputs.shared import FillValueConfig, VarContext
-from ctsm.no_nans_in_inputs.user_inputs import _get_fill_value_from_user
+from ctsm.no_nans_in_inputs.user_inputs import _get_fill_value_from_user, confirm_continue
 
 # Test constants used in multiple tests
 TEST_VAR_NAME = "test_var"
@@ -193,3 +195,31 @@ class TestGetFillValueFromUser:
         var_context.dry_run = True
         result = _get_fill_value_from_user(DEFAULT_VAR_CONTEXT, FillValueConfig())
         assert result == USER_REQ_SKIP_VAR
+
+
+class TestConfirmContinue:
+    """Test confirm_continue()"""
+
+    def test_default_enter(self):
+        """Pressing Enter should return True (default yes)."""
+        with patch("builtins.input", return_value=""):
+            assert confirm_continue() is True
+
+    @pytest.mark.parametrize("user_input", ["y", "Y", "yes", "YES", "Yes"])
+    def test_yes_inputs(self, user_input):
+        """Various forms of 'yes' should return True."""
+        with patch("builtins.input", return_value=user_input):
+            assert confirm_continue() is True
+
+    @pytest.mark.parametrize("user_input", ["n", "N", "no", "NO", "No"])
+    def test_no_inputs(self, user_input):
+        """Various forms of 'no' should return False."""
+        with patch("builtins.input", return_value=user_input):
+            assert confirm_continue() is False
+
+    @pytest.mark.parametrize("user_in, expected", [("n", False), ("y", True)])
+    def test_invalid_then_valid(self, user_in, expected):
+        """Invalid input should reprompt until valid input is given."""
+        # First input invalid, second input 'n'
+        with patch("builtins.input", side_effect=["maybe", user_in]):
+            assert confirm_continue() is expected

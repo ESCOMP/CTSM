@@ -8,6 +8,7 @@ Tests the functionality of replacing NaN fill values in NetCDF files.
 import os
 import subprocess
 import xml.etree.ElementTree as ET
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -198,7 +199,8 @@ class TestReplaceFullWorkflow:
         )
 
         # Run main (should replace the file)
-        result = main()
+        with patch("builtins.input", return_value="y"):  # continue after replacing
+            result = main()
         assert result == 0
 
         # Output file should now be a valid NetCDF file
