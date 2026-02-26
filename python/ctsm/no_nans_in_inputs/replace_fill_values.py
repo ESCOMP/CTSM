@@ -127,6 +127,8 @@ def _process_one_file(
                 print(f"{indent}Deleted unused fill from {len(vars_with_deleted_fill)} variables")
         print("\nPath updated in:")
         for f in files_containing:
+            if os.path.exists(f) and not os.path.isabs(f):
+                f = os.path.realpath(f)
             f_rel = Path(f).relative_to(CESM_TOP)
             print(f"{indent}{f_rel}")
         print("-" * SEP_LENGTH)
