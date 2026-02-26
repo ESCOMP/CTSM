@@ -25,7 +25,6 @@ from ctsm.no_nans_in_inputs.json_io import (  # pylint: disable=wrong-import-pos
 
 from ctsm.no_nans_in_inputs.constants import (  # pylint: disable=wrong-import-position
     CESM_TOP,
-    INPUTDATA_PREFIX,
     NEW_FILLVALUES_FILE,
     SEP_LENGTH,
     XML_FILE,
@@ -101,11 +100,17 @@ def _process_one_file(
 
         # Print message (useful for a git commit) and wait for user to approve before continuing
         print("-" * SEP_LENGTH)
-        input_file_msg = input_file_abs.replace(INPUTDATA_PREFIX, "$CESMDATAROOT/").replace(
-            "//", "/"
-        )
+        input_file_msg = input_file_abs
+        if os.getenv("CESMDATAROOT"):
+            input_file_msg = input_file_msg.replace(
+                os.getenv("CESMDATAROOT"), "$CESMDATAROOT"
+            ).replace("//", "/")
         print(f"Removed NaN fill values from '{input_file_msg}'.\n")
-        output_file_msg = output_file.replace(INPUTDATA_PREFIX, "$CESMDATAROOT/").replace("//", "/")
+        output_file_msg = output_file
+        if os.getenv("CESMDATAROOT"):
+            output_file_msg = output_file_msg.replace(
+                os.getenv("CESMDATAROOT"), "$CESMDATAROOT"
+            ).replace("//", "/")
         print(f"Replaced with '{output_file_msg}'; new fill values:")
         for var, fill_val in var_fillvalues.items():
             print(f"  {var}: {fill_val}")

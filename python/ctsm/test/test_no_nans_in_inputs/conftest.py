@@ -26,7 +26,6 @@ def fixture_mock_inputdata_prefix(tmp_path, monkeypatch):
     monkeypatch.setattr(constants, "INPUTDATA_PREFIX", str(tmp_path))
     monkeypatch.setattr(namelist_utils, "INPUTDATA_PREFIX", str(tmp_path))
     monkeypatch.setattr(shared, "INPUTDATA_PREFIX", str(tmp_path))
-    monkeypatch.setattr(replace_fill_values, "INPUTDATA_PREFIX", str(tmp_path))
 
 
 @pytest.fixture(autouse=True, name="mock_dir_to_search_for_usernl_files")
