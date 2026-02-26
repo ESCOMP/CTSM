@@ -39,7 +39,7 @@ from ctsm.no_nans_in_inputs.netcdf_utils import (  # pylint: disable=wrong-impor
 
 # File paths
 DIR_TO_SEARCH_FOR_USER_NL_FILES = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+    os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, "cime_config")
 )
 
 
