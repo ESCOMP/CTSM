@@ -119,11 +119,11 @@ def execute_ncatted_command(cmd: list[str]) -> int:
             print(f"  stdout: {e.stdout}", file=sys.stderr)
         if e.stderr:
             print(f"  stderr: {e.stderr}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(6)
     except FileNotFoundError:
         print("  ✗ Error: ncatted command not found", file=sys.stderr)
         print("  Please ensure NCO (NetCDF Operators) is installed", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(7)
     return files_processed
 
 

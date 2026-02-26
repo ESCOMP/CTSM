@@ -60,7 +60,7 @@ def _extract_file_path_list_from_usernl(usernl_file: str) -> set[str]:
         file_paths_list = [m.group(3) for m in re.finditer(USERNL_NC_PATTERN, text, re.MULTILINE)]
     except FileNotFoundError:
         print(f"File not found: {usernl_file}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(2)
     return file_paths_list
 
 
@@ -91,7 +91,7 @@ def _extract_file_path_set_from_usernl(usernl_file: str, exact: bool = False) ->
             file_paths.add(f)
     except FileNotFoundError:
         print(f"File not found: {usernl_file}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(3)
     return file_paths
 
 
@@ -114,10 +114,10 @@ def _extract_file_paths_from_xml(xml_file: str) -> set[str]:
         tree = ET.parse(xml_file)
     except ET.ParseError as parse_error:
         print(f"Error parsing XML file: {parse_error}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(4)
     except FileNotFoundError:
         print(f"XML file not found: {xml_file}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(5)
 
     root = tree.getroot()
 
