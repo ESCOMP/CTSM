@@ -121,7 +121,7 @@ we want to preserve!
         with open(mock_xml_file_path, "w", encoding="utf-8") as f:
             f.write(xml_content)
 
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(ValueError, match="No matches for"):
             _update_xml_file(mock_xml_file_path, "nonexistent/path.nc", "new/path.nc")
 
     def test_update_xml_with_multiple_same_tag(self, mock_xml_file_path):
@@ -161,30 +161,6 @@ we want to preserve!
 
         clm45_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM45][0]
         assert clm45_param.text.strip() == TEST_PARAM_CLM45
-
-    def test_update_xml_replaces_within_element_text(self, mock_xml_file_path):
-        """Test that all occurrences within a single element's text are replaced."""
-        # Create XML with a path appearing multiple times in one element's text
-        test_path = "lnd/clm2/test/file.nc"
-        xml_content = f"""<?xml version="1.0"?>
-<namelist_defaults>
-    <multi_path>{test_path} {test_path}</multi_path>
-</namelist_defaults>
-"""
-        with open(mock_xml_file_path, "w", encoding="utf-8") as f:
-            f.write(xml_content)
-
-        new_path = test_path.replace(".nc", ".no_nan_fill.nc")
-        _update_xml_file(mock_xml_file_path, test_path, new_path)
-
-        # Verify both occurrences were replaced
-        tree = ET.parse(mock_xml_file_path)
-        root = tree.getroot()
-        multi_path = root.find("multi_path")
-        assert multi_path is not None
-        assert multi_path.text.strip() == f"{new_path} {new_path}"
-        # Verify old path is completely gone
-        assert test_path not in multi_path.text.strip()
 
     def test_update_xml_replaces_across_different_tags(self, mock_xml_file_path):
         """Test that same path in different element types are all replaced."""

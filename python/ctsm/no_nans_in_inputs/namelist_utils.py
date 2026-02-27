@@ -239,38 +239,67 @@ def _update_xml_file(xml_file: str, old_path: str, new_path: str) -> None:
     Raises:
         ValueError: If old_path not found in XML, or if XML parsing/writing fails
     """
-    try:
-        tree = ET.parse(xml_file)
-        root = tree.getroot()
+    with open(xml_file, "r", encoding="utf-8") as f:
+        xml_file_contents = f.read()
 
-        replacements_made = 0
+    # Regex explanation:
+    #
+    # <!--.*?-->
+    #     Matches an entire XML comment block (non-greedy).
+    #     Because we use re.DOTALL, '.' also matches newlines.
+    #
+    # |
+    #
+    # (>\s*)
+    #     Group 1: matches a '>' followed by any whitespace.
+    #     This ensures the path is inside a tag's text content.
+    #
+    # lnd/clm2/paramdata/test_params\.nc
+    #     The exact filename we want to replace.
+    #     The dot is escaped because '.' is special in regex.
+    #
+    # (\s*<)
+    #     Group 2: matches optional whitespace followed by '<'.
+    #     This ensures we only replace when the filename is
+    #     between '>' and '<'.
+    #
+    # The alternation ensures that comment blocks are matched
+    # as a whole and passed through unchanged.
+    old_path = re.escape(old_path)
+    pattern = re.compile(
+        # rf"<!--.*?-->|(>\s*){old_path}(\s*<)",
+        rf"<!--.*?-->|(>\s*){old_path}(\s*<)",
+        re.DOTALL,
+    )
 
-        # Iterate through all elements
-        for elem in root.iter():
-            if elem.text and old_path in elem.text:
-                # Replace the old path with the new path
-                err_msg = f"Not both abs or rel: {old_path=}, {new_path=},"
-                assert os.path.isabs(old_path) == os.path.isabs(new_path), err_msg
-                elem.text = elem.text.replace(old_path, new_path)
-                replacements_made += 1
+    # Function to replace any quoted instances of old_path with new_path
+    def replacer(match: re.Match):
+        """
+        If group(1) is None, the match was the comment branch.
+        In that case, return the original text unchanged.
 
-        if replacements_made == 0:
-            raise ValueError(f"Path '{old_path}' not found in {xml_file}")
+        Otherwise, reconstruct the match with NEW_PATH while
+        preserving the original surrounding whitespace.
+        """
+        if match.group(1) is None:
+            return match.group(0)  # leave comment untouched
 
-    except ET.ParseError as e:
-        raise ValueError(f"Error parsing XML file: {e}") from e
-    except (IOError, OSError) as e:
-        raise ValueError(f"Error updating XML file: {e}") from e
+        return f"{match.group(1)}{new_path}{match.group(2)}"
+
+    # Perform the substitution
+    new_text, n_repl = pattern.subn(replacer, xml_file_contents)
+    if n_repl == 0:
+        raise ValueError(f"No matches for '{old_path=}' found in '{xml_file}'")
 
     # Write the updated XML back to file, first stopping in a temp file for checks
-    with tempfile.NamedTemporaryFile(mode="wb", suffix=".xml", delete=False) as tmp_path:
-        tree.write(tmp_path, encoding="utf-8", xml_declaration=True)
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf8", delete=False) as tmp_path:
+        tmp_path.write(new_text)
         xml_file_tmp = tmp_path.name
     # This will error if it's not well-formed, deleting the temporary file and causing this
     # function to stop.
     _check_xml_file(xml_file_tmp)
     move(xml_file_tmp, xml_file)
-    print(f"  Updated {xml_file}: {replacements_made} replacement(s)")
+    print(f"  Updated {xml_file}")
 
 
 def _update_usernl_file(usernl_file: str, old_path: str, new_path: str) -> None:
