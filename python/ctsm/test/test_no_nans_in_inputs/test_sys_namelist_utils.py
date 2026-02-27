@@ -39,19 +39,36 @@ class TestUpdateXmlFile:
     @pytest.mark.parametrize("fn_to_test", [_update_xml_file, update_text_file_referencing_netcdf])
     def test_update_xml_path(self, mock_xml_file_path, fn_to_test):
         """Test updating a file path in XML."""
-        # Create XML content in the mocked path
+        old_path = "lnd/clm2/paramdata/test_params.nc"
+        new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
+
+        # Create XML content in the mocked path, including comments and spacing to preserve
         xml_content = """<?xml version="1.0"?>
+<!--
+This is a comment that
+we want to preserve!
+-->
+
+<!-- Section header -->
 <namelist_defaults>
-    <paramfile>lnd/clm2/paramdata/test_params.nc</paramfile>
-    <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
+    <paramfile  > lnd/clm2/paramdata/test_params.nc</paramfile>
+    <surfdata>  lnd/clm2/surfdata/test_surf.nc </surfdata>
 </namelist_defaults>
 """
         with open(mock_xml_file_path, "w", encoding="utf-8") as f:
             f.write(xml_content)
 
-        # Update one of the paths
-        old_path = "lnd/clm2/paramdata/test_params.nc"
-        new_path = "lnd/clm2/paramdata/test_params.no_nan_fill.nc"
+        # Get line with old_path before substitution
+        line_before = None
+        with open(mock_xml_file_path, "r", encoding="utf8") as f:
+            n_line = -1
+            for line in f.readlines():
+                n_line += 1
+                if old_path in line:
+                    line_before = line
+                    break
+        if line_before is None:
+            raise RuntimeError(f"No line found containing {old_path=}")
 
         # Spy on _check_xml_file: Mock it so that it behaves as usual but we can check call count
         with patch(
@@ -65,11 +82,31 @@ class TestUpdateXmlFile:
         root = tree.getroot()
         paramfile = root.find("paramfile")
         assert paramfile is not None
-        assert paramfile.text == new_path
+        assert paramfile.text.strip() == new_path
 
         # Other paths should be unchanged
         surfdata = root.find("surfdata")
-        assert surfdata.text == "lnd/clm2/surfdata/test_surf.nc"
+        assert surfdata.text.strip() == "lnd/clm2/surfdata/test_surf.nc"
+
+        # Now check that comments and whitespace weren't affected
+        # Get line after substitution
+        line_after = None
+        with open(mock_xml_file_path, "r", encoding="utf8") as f:
+            n = -1
+            for line_after in f.readlines():
+                n += 1
+                if n == n_line:
+                    break
+        if line_after is None:
+            raise RuntimeError(f"No lines read from {mock_xml_file_path=}")
+
+        # Make sure *something* happened on the line
+        assert line_before != line_after
+
+        # Make sure the line looks like what we expect: The filename was replaced but nothing else
+        # was touched.
+        expected = line_before.replace(old_path, new_path)
+        assert line_after == expected
 
         # We should have checked the file
         assert mock_check_xml.call_count == 1
@@ -116,14 +153,14 @@ class TestUpdateXmlFile:
 
         # Check that only the clm6_0 one was updated
         clm60_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM60][0]
-        assert clm60_param.text == new_path
+        assert clm60_param.text.strip() == new_path
 
         # Check that others are unchanged
         clm50_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM50][0]
-        assert clm50_param.text == TEST_PARAM_CLM50
+        assert clm50_param.text.strip() == TEST_PARAM_CLM50
 
         clm45_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM45][0]
-        assert clm45_param.text == TEST_PARAM_CLM45
+        assert clm45_param.text.strip() == TEST_PARAM_CLM45
 
     def test_update_xml_replaces_within_element_text(self, mock_xml_file_path):
         """Test that all occurrences within a single element's text are replaced."""
@@ -145,9 +182,9 @@ class TestUpdateXmlFile:
         root = tree.getroot()
         multi_path = root.find("multi_path")
         assert multi_path is not None
-        assert multi_path.text == f"{new_path} {new_path}"
+        assert multi_path.text.strip() == f"{new_path} {new_path}"
         # Verify old path is completely gone
-        assert test_path not in multi_path.text
+        assert test_path not in multi_path.text.strip()
 
     def test_update_xml_replaces_across_different_tags(self, mock_xml_file_path):
         """Test that same path in different element types are all replaced."""
@@ -172,15 +209,15 @@ class TestUpdateXmlFile:
 
         paramfile = root.find("paramfile")
         assert paramfile is not None
-        assert paramfile.text == new_path
+        assert paramfile.text.strip() == new_path
 
         surfdata = root.find("surfdata")
         assert surfdata is not None
-        assert surfdata.text == new_path
+        assert surfdata.text.strip() == new_path
 
         initdata = root.find("initdata")
         assert initdata is not None
-        assert initdata.text == new_path
+        assert initdata.text.strip() == new_path
 
     def test_update_xml_replaces_across_same_tag_different_attrs(self, mock_xml_file_path):
         """
@@ -211,14 +248,14 @@ class TestUpdateXmlFile:
 
         # Both should have the new path
         clm60_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM60][0]
-        assert clm60_param.text == new_path
+        assert clm60_param.text.strip() == new_path
 
         clm50_param = [p for p in paramfiles if p.get("phys") == TEST_PHYS_CLM50][0]
-        assert clm50_param.text == new_path
+        assert clm50_param.text.strip() == new_path
 
         # Surfdata should be unchanged
         surfdata = root.find("surfdata")
-        assert surfdata.text == "lnd/clm2/surfdata/different_file.nc"
+        assert surfdata.text.strip() == "lnd/clm2/surfdata/different_file.nc"
 
 
 class TestUpdateUsernlFile:

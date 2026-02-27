@@ -100,9 +100,15 @@ def fixture_create_mock_xml_file(mock_xml_file_path):
         A function that creates the XML file and returns its path.
     """
     default_content = """<?xml version="1.0"?>
+<!--
+This is a comment that
+we want to preserve!
+-->
+
+<!-- Section header -->
 <namelist_defaults>
-    <paramfile phys="clm6_0">lnd/clm2/paramdata/test_params.nc</paramfile>
-    <surfdata>lnd/clm2/surfdata/test_surf.nc</surfdata>
+    <paramfile phys="clm6_0"  >lnd/clm2/paramdata/test_params.nc    </paramfile>
+    <surfdata> lnd/clm2/surfdata/test_surf.nc</surfdata>
 </namelist_defaults>
 """
 
