@@ -24,7 +24,7 @@ module controlMod
   use clm_varpar                       , only: clmfates_carbon_nitrogen
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen
-  use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
+  use histFileMod                      , only: hist_empty_htapes, hist_all_fields, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
   use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
   use histFileMod                      , only: hist_fincl9, hist_fincl10
@@ -157,7 +157,8 @@ contains
     ! History, restart options
 
     namelist /clm_inparm/  &
-         hist_empty_htapes, hist_dov2xy, &
+         hist_empty_htapes, hist_all_fields, &
+         hist_dov2xy, &
          hist_avgflag_pertape, hist_type1d_pertape, &
          hist_nhtfrq,  hist_ndens, hist_mfilt, &
          hist_fincl1,  hist_fincl2, hist_fincl3, &
@@ -973,6 +974,7 @@ contains
 
     ! history file variables
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_all_fields, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_dov2xy, size(hist_dov2xy), MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)

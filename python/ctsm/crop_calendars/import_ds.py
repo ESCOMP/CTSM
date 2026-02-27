@@ -6,13 +6,14 @@ and/or vegetation types and/or timesteps, concatenating by time.
     vegetation types.
 """
 
+import os
 import re
 import warnings
 from importlib.util import find_spec
 import numpy as np
 import xarray as xr
 from ctsm.utils import is_instantaneous
-from ctsm.ctsm_logging import log
+from ctsm.ctsm_logging import log, error
 import ctsm.crop_calendars.cropcal_utils as utils
 from ctsm.crop_calendars.xr_flexsel import xr_flexsel
 
@@ -32,7 +33,7 @@ def compute_derived_vars(ds_in, var, logger=None):
         hyears = ds_in["HDATES"].copy()
         hyears.values = np.tile(
             np.expand_dims(year_list, (1, 2)),
-            (1, ds_in.dims["mxharvests"], ds_in.dims["patch"]),
+            (1, ds_in.sizes["mxharvests"], ds_in.sizes["patch"]),
         )
         with np.errstate(invalid="ignore"):
             is_le_zero = ~np.isnan(ds_in.HDATES.values) & (ds_in.HDATES.values <= 0)
@@ -247,23 +248,7 @@ def import_ds(
     # elements through end-1 will be selected, but that seems not to be the case in the xarray
     # implementation.
     if time_slice:
-        new_filelist = []
-        for file in sorted(filelist):
-            log(logger, f"Getting filetime from file: {file}")
-            filetime = xr.open_dataset(file).time
-            filetime_sel = utils.safer_timeslice(filetime, time_slice)
-            include_this_file = filetime_sel.size
-            if include_this_file:
-                log(logger, f"Including filetime : {filetime_sel['time'].values}")
-                new_filelist.append(file)
-
-            # If you found some matching files, but then you find one that doesn't, stop going
-            # through the list.
-            elif new_filelist:
-                break
-        if not new_filelist:
-            raise RuntimeError(f"No files found in time_slice {time_slice}")
-        filelist = new_filelist
+        filelist = get_files_in_time_slice(filelist, time_slice, logger)
 
     # The xarray open_mfdataset() "preprocess" argument requires a function that takes exactly one
     # variable (an xarray.Dataset object). Wrapping mfdataset_preproc() in this lambda function
@@ -324,3 +309,32 @@ def import_ds(
 
     log(logger, "End")
     return this_ds
+
+
+def get_files_in_time_slice(filelist, time_slice, logger=None, quiet=False):
+    """
+    For a given list of files, find the files that need to be read in order to get all history
+    timesteps in the slice.
+    """
+    new_filelist = []
+    for file in sorted(filelist):
+        filetime = xr.open_dataset(file).time
+        filetime_sel = utils.safer_timeslice(filetime, time_slice)
+        include_this_file = filetime_sel.size
+        if include_this_file:
+            if not quiet:
+                f = os.path.basename(file)
+                first_str = str(filetime_sel["time"].isel(time=0).values)
+                last_str = str(filetime_sel["time"].isel(time=-1).values)
+                msg = f"From {f}, including {first_str} through {last_str}"
+                log(logger, msg)
+            new_filelist.append(file)
+
+            # If you found some matching files, but then you find one that doesn't, stop going
+            # through the list.
+        elif new_filelist:
+            break
+    if not new_filelist:
+        err_msg = f"No files found in time_slice {time_slice}"
+        error(logger, err_msg, error_type=FileNotFoundError)
+    return new_filelist

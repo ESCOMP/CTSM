@@ -51,22 +51,53 @@ def check_pfts_in_paramfile(selected_pfts, ds):
     return pft_names
 
 
-def get_pft_names(ds):
+def get_pft_names_from_values(values):
     """
-    Get the list of PFT names from the parameter file dataset.
+    Extract PFT names from raw pftname variable values.
+
+    Decodes byte strings and strips whitespace from each PFT name.
 
     Parameters
     ----------
-    ds : xarray.Dataset
-        The parameter file dataset.
+    values : array-like
+        Raw values from the pftname variable (typically byte strings).
+
+    Returns
+    -------
+    list of str
+        List of decoded and stripped PFT names.
+    """
+    return [pft.decode().strip() for pft in values]
+
+
+def get_pft_names(ds: xr.Dataset | xr.DataArray) -> list[str]:
+    """
+    Get the list of PFT names from a parameter file Dataset or DataArray.
+
+    Parameters
+    ----------
+    ds : xr.Dataset or xr.DataArray
+        The parameter file dataset or a DataArray with pftname coordinate.
 
     Returns
     -------
     list of str
         List of PFT names.
+
+    Raises
+    ------
+    KeyError
+        If PFTNAME_VAR is not found in the Dataset or DataArray coordinates.
     """
-    pft_names = [pft.decode().strip() for pft in ds[PFTNAME_VAR].values]
-    return pft_names
+    if isinstance(ds, xr.DataArray):
+        if PFTNAME_VAR not in ds.coords:
+            raise KeyError(f"DataArray missing coordinate: {PFTNAME_VAR}")
+        return get_pft_names_from_values(ds.coords[PFTNAME_VAR].values)
+
+    if PFTNAME_VAR not in ds:
+        raise KeyError(f"Dataset missing variable: {PFTNAME_VAR}")
+
+    return get_pft_names_from_values(ds[PFTNAME_VAR].values)
 
 
 def get_selected_pft_indices(selected_pfts, pft_names):
@@ -110,6 +141,10 @@ def open_paramfile(file_in, mask_and_scale=False):
     return xr.open_dataset(file_in, decode_timedelta=False, mask_and_scale=mask_and_scale)
 
 
+# Flags that can be used for the PFT argument
+PFT_FLAGS = ["-p", "--pft"]
+
+
 def paramfile_parser_setup(description):
     """
     Set up an argument parser for parameter file utilities.
@@ -130,7 +165,4 @@ def paramfile_parser_setup(description):
     )
     parser.add_argument("-i", "--input", required=True, help="Input netCDF file")
 
-    # Flags that can be used for the PFT argument
-    pft_flags = ["-p", "--pft"]
-
-    return parser, pft_flags
+    return parser, PFT_FLAGS

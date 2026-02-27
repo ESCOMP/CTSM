@@ -37,7 +37,8 @@ Changes to defaults for \`clm6\` physics:
 * See “Changes to FATES and the FATES parameter file” below.  
 * Namelist defaults change so that  
   * use\_c13/use\_c14 are on only for HistClm60Bgc compsets with CRUJRA2024 or CAM7 forcing; examples of when use\_c13/use\_c14 are now off include SSP and single-point compsets, as well as cases using older forcings, such as CAM6, GSWP3v1, Qian, and CRUv7  
-  * when use\_c13 or use\_c14 is on, turn on the corresponding time series file  
+  * when use\_c13 or use\_c14 is on, turn on the corresponding time series file  (responding to the CLM_CMIP_ERA flag)
+  * C13/C14 CMIP7 data is done using streams with new namelist variables (stream_*_atm_c13, stream_*_atm_c14)
   * irrigation is on for transient cases (1850-2000, 1850-2100, but not for clm4\_5).
 
 Changes for all physics versions:
@@ -45,13 +46,14 @@ Changes for all physics versions:
 * Parameters updated: Added MIMICS parameter \`mimics\_fi\` (fraction of litter inputs that bypass litter pools, directly contributing to SOM) and updated other MIMICS parameters (https://github.com/ESCOMP/CTSM/pull/2365) to remove NPP control on turnover, fix density dependent control on turnover, add litterfall fluxes that bypass litter pools and contribute directly to soil organic matter.  
 * FATES parameter file updated: ([PR \#2965](https://github.com/ESCOMP/CTSM/pull/2965), [PR \#2904](https://github.com/ESCOMP/CTSM/pull/2904), [PR \#1344](https://github.com/NGEET/fates/pull/1344), [PR \#3087](https://github.com/ESCOMP/CTSM/pull/3087)). See “FATES parameter file” section below for details.  
 * New surface datasets and landuse timeseries files (see “surface datasets” section below).
+* CMIP7 C13/C14 atmospheric timeseries data
 
 ## Heads up
 
 * History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs https://github.com/ESCOMP/ctsm/pull/2445 https://github.com/ESCOMP/MOSART/pull/117 https://github.com/ESCOMP/RTM/pull/61 and the corresponding issues.  
 * Adding time to 1d weighting fields in transient simulations PR https://github.com/ESCOMP/CTSM/pull/3328  
 * Regarding CMIP7 vs. CMIP6 inputs:  
-  * We supply only CMIP7 C13/C14 isotope datasets, so these get used regardless of CLM\_CMIP\_ERA setting.  
+  * C13/C14 isotope datasets are the new CMIP7 datasets using streams, while when CLM_CMIP_ERA==cmip6, the older cmip6 files are used
   * We supply only CMIP7 population density with clm6 physics in non-SSP cases, because the fire model is calibrated to that; conversely, we supply only CMIP6 population density for pre-clm6 physics and for SSP cases.  
   * We supply only CESM2 nitrogen deposition (ndep), so this gets used regardless of CLM\_CMIP\_ERA setting.  
   * For DATM we supply only CMIP6 aerosols.  
@@ -147,4 +149,3 @@ The former is calculated as a function of the latter and can be time-evolving de
 * ne30 with \`Clm60BgcCropCruJra\`: https://github.com/NCAR/LMWG_dev/issues/123 (123\_HIST\_popDens)  
 * ne30 SP https://github.com/NCAR/LMWG_dev/issues/126  
 * f09 SP https://github.com/NCAR/LMWG_dev/issues/127
-
