@@ -86,7 +86,12 @@ def _process_one_file(
 
     # Execute the command if not in dry-run mode
     if not dry_run:
-        files_processed += netcdf_utils.execute_ncatted_command(cmd)
+        try:
+            files_processed += netcdf_utils.execute_ncatted_command(cmd)
+        except Exception:  # pylint: disable=broad-exception-caught
+            if not confirm_continue():
+                sys.exit("Exiting.")
+            return files_processed
         # Update the XML file(s) with the new output path
         files_containing = []
         for file_containing_netcdf, set_of_how_this_netcdf_appears in progress[input_file_abs][
