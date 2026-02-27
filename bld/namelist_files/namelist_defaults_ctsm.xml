@@ -1882,7 +1882,7 @@ lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1x1_vancouverCAN_hist_2000_78pfts_c251
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" >
 lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1x1_mexicocityMEX_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 <fsurdat hgrid="1x1_urbanc_alpha"    sim_year="2000" >
-lnd/clm2/surfdata_esmf/ctsm5.4.0/synthetic/surfdata_1x1_urbanc_alpha_synth_hist_2000_78pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/ctsm5.4.0/synthetic/surfdata_1x1_urbanc_alpha_synth_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 
 <!-- for pre-industrial simulations - year 1850 -->
 
