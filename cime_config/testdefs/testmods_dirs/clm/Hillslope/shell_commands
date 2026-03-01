@@ -8,7 +8,7 @@ if [[ ${lnd_grid} == "10x15" ]]; then
     hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_hist_1850_78pfts_c240216.synth_hillslopes_241001.nc'
 elif [[ ${lnd_grid} == "5x5_amazon" ]]; then
     # Real data
-    hillslope_file='/glade/derecho/scratch/samrabin/hillslopes_5x5_amazon/hand_analysis_global/combined/hilldata_5x5_amazon_hist_2000_78pfts_c240216.nc'
+    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/hilldata_5x5_amazon_hist_2000_78pfts_c240216.nc'
 else
     echo "ERROR: Hillslope file not found for LND_GRID=${lnd_grid}" >&2
     exit 1
