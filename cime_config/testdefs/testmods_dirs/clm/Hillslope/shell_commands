@@ -5,7 +5,7 @@ DIN_LOC_ROOT=$(./xmlquery --value DIN_LOC_ROOT)
 lnd_grid=$(./xmlquery --value LND_GRID)
 if [[ ${lnd_grid} == "10x15" ]]; then
     # Synthetic data
-    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_hist_1850_78pfts_c240216.synth_hillslopes_241001.nc'
+    hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_hist_1850_78pfts_c240216.synth_hillslopes_241001.no_nan_fill.nc'
 elif [[ ${lnd_grid} == "5x5_amazon" ]]; then
     # Real data
     hillslope_file='$DIN_LOC_ROOT/lnd/clm2/testdata/hilldata_5x5_amazon_hist_2000_78pfts_c240216.nc'
