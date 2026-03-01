@@ -2034,7 +2034,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_360x720cru_hist_1850-2023_78pfts_c251022.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000"
->lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_1x1_brazil_hist_1850-2023_78pfts_c251023.nc</flanduse_timeseries>
+>lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_1x1_brazil_hist_1850-2023_78pfts_c251023.no_nan_fill.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="mpasa120"      sim_year_range="1850-2000"
 >lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_mpasa120_hist_1850-2023_78pfts_c251022.nc</flanduse_timeseries>
