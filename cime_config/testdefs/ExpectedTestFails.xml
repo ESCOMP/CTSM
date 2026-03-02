@@ -176,6 +176,13 @@
     </phase>
   </test>
 
+  <test name="ERP_D_P64x2_Ld10.f10_f10_mg37.I2000Clm60Bgc.derecho_intel.clm-Hillslope">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3788</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
