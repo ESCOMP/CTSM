@@ -87,6 +87,10 @@ def create_filled_array(this_ds, fill_value, thisvar_da, new_dims):
     """
     Create a Numpy array to be filled with gridded data
     """
+
+    if fill_value is None:
+        fill_value = np.nan
+
     dim_size_list = []
     for dim in new_dims:
         if dim == "ivt_str":
@@ -97,10 +101,7 @@ def create_filled_array(this_ds, fill_value, thisvar_da, new_dims):
             dim_size = this_ds.sizes[dim]
         dim_size_list = dim_size_list + [dim_size]
     thisvar_gridded = np.empty(dim_size_list)
-    if fill_value:
-        thisvar_gridded[:] = fill_value
-    else:
-        thisvar_gridded[:] = np.NaN
+    thisvar_gridded[:] = fill_value
     return thisvar_gridded
 
 
@@ -160,7 +161,7 @@ def grid_one_variable(this_ds, var, fill_value=None, **kwargs):
     # Get DataArrays needed for gridding
     thisvar_da, vt_da, spatial_unit, ixy_da, jxy_da = get_ixy_jxy_das(this_ds, var)
 
-    if not fill_value and "_FillValue" in thisvar_da.attrs:
+    if fill_value is None and "_FillValue" in thisvar_da.attrs:
         fill_value = thisvar_da.attrs["_FillValue"]
 
     # Renumber vt_da to work as indices on new ivt dimension, if needed.
