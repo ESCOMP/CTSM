@@ -60,6 +60,72 @@
       <issue>#2784</issue>
     </phase>
   </test>
+  <test name="SMS_Ld5.f09_g17.ISSP245Clm50BgcCrop.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_g17.ISSP370Clm50BgcCrop.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_g17.ISSP585Clm50BgcCrop.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_t232.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_t232.ISSP370Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ld5.f09_t232.ISSP585Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3790</issue>
+    </phase>
+  </test>
+  <test name="RXCROPMATURITY_Lm61.f09_t232.IHistClm60BgcCropCrujra.derecho_intel.clm-cropMonthOutput">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3792</issue>
+    </phase>
+  </test>
+  <test name="SMS_D.1x1_brazil.I2000Clm60FatesSpCruRsGs.derecho_intel.clm-FatesColdSatPhen">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3792</issue>
+    </phase>
+  </test>
+  <test name="SMS_Lm1.f19_g17.I1850Clm60BgcCropCmip6waccm.derecho_intel.clm-basic">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3792</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ln9.ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12.IHistClm50Sp.derecho_intel.clm-clm50cam6LndTuningMode_1979Start--clm-nofireemis">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3792</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ly3_Mmpi-serial.1x1_numaIA.I2000Clm60BgcCropQianRs.derecho_intel.clm-monthly">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3792</issue>
+    </phase>
+  </test>
 
   <!-- aux_clm test suite failures -->
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdAllVars">
@@ -176,6 +242,13 @@
     </phase>
   </test>
 
+  <test name="ERP_D_P64x2_Ld10.f10_f10_mg37.I2000Clm60Bgc.derecho_intel.clm-Hillslope">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3788</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
@@ -263,6 +336,29 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2919</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
+    </phase>
+  </test>
+
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestArea">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
+    </phase>
+  </test>
+
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestMass">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
     </phase>
   </test>
 
