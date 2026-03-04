@@ -107,41 +107,11 @@ module WaterDiagnosticBulkType
 
   end type waterdiagnosticbulk_type
 
-   ! PUBLIC MEMBER FUNCTIONS
-  public :: readParams
-
-  type, private :: params_type
-      real(r8) :: zlnd  ! Momentum roughness length for soil, glacier, wetland (m)
-      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-  end type params_type
-  type(params_type), private ::  params_inst
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
  !------------------------------------------------------------------------
 
 contains
-
- subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_WaterDiagnosticBulk'
-    !--------------------------------------------------------------------
-
-    ! Momentum roughness length for soil, glacier, wetland (m)
-    call readNcdioScalar(ncid, 'zlnd', subname, params_inst%zlnd)
-    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
-
-  end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine InitBulk(this, bounds, info, vars, &
@@ -765,11 +735,11 @@ contains
 
       do c = bounds%begc,bounds%endc
          if (snl(c) < 0) then
-            this%snw_rds_col(c,snl(c)+1:0)        = params_inst%snw_rds_min
+            this%snw_rds_col(c,snl(c)+1:0)        = distparams%snw_rds_min%param_val(col%gridcell(c))
             this%snw_rds_col(c,-nlevsno+1:snl(c)) = 0._r8
-            this%snw_rds_top_col(c)               = params_inst%snw_rds_min
+            this%snw_rds_top_col(c)               = distparams%snw_rds_min%param_val(col%gridcell(c))
          elseif (h2osno_input_col(c) > 0._r8) then
-            this%snw_rds_col(c,0)                 = params_inst%snw_rds_min
+            this%snw_rds_col(c,0)                 = distparams%snw_rds_min%param_val(col%gridcell(c))
             this%snw_rds_col(c,-nlevsno+1:-1)     = 0._r8
             this%snw_rds_top_col(c)               = spval
             this%sno_liq_top_col(c)               = spval
@@ -1251,7 +1221,7 @@ contains
     integer , intent(in)   :: column     ! column index
     !-----------------------------------------------------------------------
 
-    this%snw_rds_col(column,0)  = params_inst%snw_rds_min
+    this%snw_rds_col(column,0)  = distparams%snw_rds_min%param_val(col%gridcell(column))
 
   end subroutine ResetBulk
 

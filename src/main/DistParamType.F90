@@ -59,7 +59,13 @@ module DistParamType
 
      ! SnowHydrologyMod
      class(distparam_class), pointer :: upplim_destruct_metamorph => NULL()       ! Upper limit on destructive metamorphism compaction (kg/m3)
+     class(distparam_class), pointer :: scvng_fct_mlt_sf => NULL()                ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
 
+     ! SnowSnicarMod
+     class(distparam_class), pointer :: xdrdt => NULL()                           ! Arbitrary factor applied to snow aging rate (-)
+     class(distparam_class), pointer :: snw_rds_refrz => NULL()                   ! Effective radius of re-frozen snow (microns)
+     class(distparam_class), pointer :: fresh_snw_rds_max => NULL()               ! maximum warm fresh snow effective radius [microns]
+     
      ! SoilStateInitTimeConstMod
      class(distparam_class), pointer :: bsw_sf => NULL()                          ! Scale factor for bsw (unitless)
      class(distparam_class), pointer :: hksat_sf => NULL()                        ! Scale factor for hksat (unitless)
@@ -230,6 +236,18 @@ contains
 
     ! Upper limit on destructive metamorphism compaction (kg/m3)
     call ReadScalarParameter(distributed_parameters%upplim_destruct_metamorph,ncid)
+    ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
+    call ReadScalarParameter(distributed_parameters%scvng_fct_mlt_sf,ncid)
+    !-----------------------------------------------------------
+    ! SnowSnicarMod !
+    !-----------------------------------------------------------
+
+    ! Arbitrary factor applied to snow aging rate (-)
+    call ReadScalarParameter(distributed_parameters%xdrdt,ncid)
+    ! Effective radius of re-frozen snow (microns)
+    call ReadScalarParameter(distributed_parameters%snw_rds_refrz,ncid)
+    ! maximum warm fresh snow effective radius [microns]
+    call ReadScalarParameter(distributed_parameters%fresh_snw_rds_max,ncid)
 
     !-----------------------------------------------------------
     ! SoilStateInitTimeConstMod !
@@ -319,6 +337,10 @@ contains
     allocate(this%frac_sat_soil_dsl_init)
     allocate(this%zlnd)
     allocate(this%snw_rds_min)
+    allocate(this%xdrdt)
+    allocate(this%snw_rds_refrz)
+    allocate(this%fresh_snw_rds_max)
+    allocate(this%scvng_fct_mlt_sf)
     allocate(this%precip_repartition_nonglc_all_rain_t_celsius)
     allocate(this%precip_repartition_nonglc_all_snow_t_celsius)
     allocate(this%precip_repartition_glc_all_rain_t_celsius)
@@ -387,6 +409,15 @@ contains
     this%snw_rds_min%name = 'snw_rds_min'
     this%snw_rds_min%is_distributed = .false.
 
+    this%xdrdt%name = 'xdrdt'
+    this%xdrdt%is_distributed = .false.
+    this%snw_rds_refrz%name = 'snw_rds_refrz'
+    this%snw_rds_refrz%is_distributed = .false.
+    this%fresh_snw_rds_max%name = 'fresh_snw_rds_max'
+    this%fresh_snw_rds_max%is_distributed = .false.
+    this%scvng_fct_mlt_sf%name = 'scvng_fct_mlt_sf'
+    this%scvng_fct_mlt_sf%is_distributed = .false.
+    
     this%precip_repartition_nonglc_all_rain_t_celsius%name = &
          'precip_repartition_nonglc_all_rain_t'
     this%precip_repartition_nonglc_all_rain_t_celsius%is_distributed = .false.
@@ -433,6 +464,10 @@ contains
     deallocate(this%frac_sat_soil_dsl_init%val)
     deallocate(this%zlnd%val)
     deallocate(this%snw_rds_min%val)
+    deallocate(this%xdrdt%val)
+    deallocate(this%snw_rds_refrz%val)
+    deallocate(this%fresh_snw_rds_max%val)
+    deallocate(this%scvng_fct_mlt_sf%val)
     deallocate(this%precip_repartition_nonglc_all_rain_t_celsius%val)
     deallocate(this%precip_repartition_nonglc_all_snow_t_celsius%val)
     deallocate(this%precip_repartition_glc_all_rain_t_celsius%val)

@@ -16,6 +16,7 @@ module SnowSnicarMod
                                snicar_snodst_intmix, do_sno_oc
   use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
+  use DistParamType   , only : distparams => distributed_parameters
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type, subgrid_level_column
   use atm2lndType     , only : atm2lnd_type
@@ -37,12 +38,10 @@ module SnowSnicarMod
   public :: SnowOptics_init  ! Initial read in of snow-optics file
 
   type, private :: params_type
-      real(r8) :: xdrdt         ! Arbitrary factor applied to snow aging rate (-)
       real(r8) :: snw_rds_refrz ! Effective radius of re-frozen snow (microns)
       real(r8) :: C2_liq_Brun89 ! Constant for liquid water grain growth [m3 s-1],
                                 ! from Brun89: corrected for LWC in units of percent
       real(r8) :: fresh_snw_rds_max  ! maximum warm fresh snow effective radius [microns]
-      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -173,16 +172,8 @@ contains
     character(len=*), parameter :: subname = 'readParams_SnowSnicar'
     !--------------------------------------------------------------------
 
-    ! Arbitrary factor applied to snow aging rate (-)
-    call readNcdioScalar(ncid, 'xdrdt', subname, params_inst%xdrdt)
-    ! Effective radius of re-frozen snow (microns)
-    call readNcdioScalar(ncid, 'snw_rds_refrz', subname, params_inst%snw_rds_refrz)
     ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent
     call readNcdioScalar(ncid,  'C2_liq_Brun89', subname, params_inst%C2_liq_Brun89)
-    ! maximum warm fresh snow effective radius [microns]
-    call readNcdioScalar(ncid, 'fresh_snw_rds_max', subname, params_inst%fresh_snw_rds_max)
-    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
 
   end subroutine readParams
 
@@ -678,7 +669,7 @@ contains
                snl_lcl           =  -1
                h2osno_ice_lcl(0) =  h2osno_lcl
                h2osno_liq_lcl(0) =  0._r8
-               snw_rds_lcl(0)    =  nint(params_inst%snw_rds_min)
+               snw_rds_lcl(0)    =  nint(distparams%snw_rds_min%param_val(col%gridcell(c_idx)))
             else
                flg_nosnl         =  0
                snl_lcl           =  snl(c_idx)
@@ -1629,10 +1620,10 @@ contains
 
 
             !LvK extra boundary check, to prevent when using old restart file with lower snw_rds_min than current run
-            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), params_inst%snw_rds_min)
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), distparams%snw_rds_min%param_val(col%gridcell(c_idx)))
 
             ! change in snow effective radius, using best-fit parameters
-            dr_fresh = snw_rds(c_idx,i) - params_inst%snw_rds_min
+            dr_fresh = snw_rds(c_idx,i) - distparams%snw_rds_min%param_val(col%gridcell(c_idx))
             dr = (bst_drdt0 * (bst_tau / (dr_fresh + bst_tau))**(1._r8 / bst_kappa)) * (dtime / secsphr)
 
             !
@@ -1656,7 +1647,7 @@ contains
             !**********  3. SNOWAGE SCALING  *************
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
-            dr = dr*params_inst%xdrdt
+            dr = dr*distparams%xdrdt%param_val(col%gridcell(c_idx))
 
             !
             !**********  4. INCREMENT EFFECTIVE RADIUS, ACCOUNTING FOR:  ***********
@@ -1694,12 +1685,13 @@ contains
 
             ! mass-weighted mean of fresh snow, old snow, and re-frozen snow effective radius
             snw_rds(c_idx,i) = (snw_rds(c_idx,i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + &
-                               params_inst%snw_rds_refrz*frc_refrz
+                               distparams%snw_rds_refrz%param_val(col%gridcell(c_idx))*frc_refrz
             !
+            
             !**********  5. CHECK BOUNDARIES   ***********
             !
             ! boundary check
-            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), params_inst%snw_rds_min)
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), distparams%snw_rds_min%param_val(col%gridcell(c_idx)))
             snw_rds(c_idx,i) = min(snw_rds(c_idx,i), snw_rds_max)
 
             ! set top layer variables for history files
@@ -1718,7 +1710,7 @@ contains
       do fc = 1, num_nosnowc
          c_idx = filter_nosnowc(fc)
          if (h2osno_no_layers(c_idx) > 0._r8) then
-            snw_rds(c_idx,0) = params_inst%snw_rds_min
+            snw_rds(c_idx,0) = distparams%snw_rds_min%param_val(col%gridcell(c_idx))
          endif
       enddo
 
@@ -1757,11 +1749,11 @@ contains
     associate( &
          forc_t      => atm2lnd_inst%forc_t_downscaled_col & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)
          )
-       if ( params_inst%fresh_snw_rds_max <= params_inst%snw_rds_min )then
-           FreshSnowRadius = params_inst%snw_rds_min
+       if ( distparams%fresh_snw_rds_max%param_val(col%gridcell(c_idx)) <= distparams%snw_rds_min%param_val(col%gridcell(c_idx)) )then
+           FreshSnowRadius = distparams%snw_rds_min%param_val(col%gridcell(c_idx))
        else
-           gs_max = params_inst%fresh_snw_rds_max
-           gs_min = params_inst%snw_rds_min
+           gs_max = distparams%fresh_snw_rds_max%param_val(col%gridcell(c_idx))
+           gs_min = distparams%snw_rds_min%param_val(col%gridcell(c_idx))
 
            if (forc_t(c_idx) < tmin) then
                FreshSnowRadius = gs_min

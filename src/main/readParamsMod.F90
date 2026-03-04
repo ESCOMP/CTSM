@@ -55,7 +55,6 @@ contains
     use SoilStateInitTimeConstMod         , only : readParams_SoilStateInitTimeConst      => readParams
     use SoilWaterMovementMod              , only : readParams_SoilWaterMovement           => readParams
     use InfiltrationExcessRunoffMod       , only : readParams_InfiltrationExcessRunoff    => readParams
-    use WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
     use SnowHydrologyMod                  , only : readParams_SnowHydrology               => readParams
     use SnowSnicarMod                     , only : readParams_SnowSnicar                  => readParams
     use initVerticalMod                   , only : readParams_initVertical                => readParams
@@ -129,7 +128,6 @@ contains
     call readParams_SoilStateInitTimeConst ( ncid )
     call readParams_SoilWaterMovement ( ncid )
     call readParams_InfiltrationExcessRunoff ( ncid )
-    call readParams_WaterDiagnosticBulk ( ncid )
     call readParams_SnowHydrology ( ncid )
     call readParams_SnowSnicar ( ncid )
     call readParams_initVertical ( ncid )
