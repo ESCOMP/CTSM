@@ -2607,11 +2607,11 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam7.0"
