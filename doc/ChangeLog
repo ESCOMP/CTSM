@@ -72,7 +72,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 Tag name: ctsm5.4.022
 Originator(s): erik (Erik Kluzek)
-Date: Tue Mar  3 22:41:16 MST 2026
+Date: Wed Mar  4 10:52:05 AM MST 2026
 One-line Summary: Change to using the ifx compiler and some more fixes related to it
 
 Purpose and description of changes
