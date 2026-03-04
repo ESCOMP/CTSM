@@ -1,13 +1,25 @@
 ===============================================================
 Tag name: ctsm5.4.022
 Originator(s): erik (Erik Kluzek)
-Date: Tue Mar  3 16:38:04 MST 2026
-One-line Summary: More updates needed with the ifx compiler for the coupled model
+Date: Tue Mar  3 22:41:16 MST 2026
+One-line Summary: Change to using the ifx compiler and some more fixes related to it
 
 Purpose and description of changes
 ----------------------------------
 
+Updates ccs_config to 1.0.75 which has the new ifx compiler in use for derecho_intel, as well as updating to using ESMF8.9.0. This exposed problems in the code on two fronts when running with DEBUG mode:
 
+Reliance on short-circuiting in if statements
+Problems with NaN's, in datasets especially _FillValue
+For the former, we changed code to break up if statements so this would work. And with the latter we point to new datasets with the NaN's handled. mosart and cdeps code also had short-circuiting problems.
+
+@samsrabin created a script to examine all of the files in namelist_defaults_ctsm.xml and in the testmod directories to check if there were problems with NaN's in _FillValues. The modified files here all were the result
+of the first pass of that script. The new files all have a ".no_nan_fill.nc" ending on them.
+
+Includes updating submodules: ccs_config, cdeps, mosart
+
+Contributors: @samsrabin @billsacks
+-------------
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -30,36 +42,39 @@ Bugs fixed
 ----------
 
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Work on #3775 -- NaN's in _FillValue of some input datasets
+  Fixes #3794 -- Update to ccs_config1.0.75
 
 Notes of particular relevance for users
 ---------------------------------------
 
-Changes made to namelist defaults (e.g., changed parameter values):
-
 Changes to the datasets (e.g., streams, surface or initial files):
+  Datasets with a ".no_nan_fill.nc" at the end were modified to remove NaN's in _FillValue
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   This includes most of the files that have problems with NaN's
+   But, there are a few more that will be resolved after this tag.
+   aux_clm works fine with the exception of a hillslope test that now fails.
 
 Changes to tests or testing:
+   Added a bunch of tests to expected fails that will be resolved later
+   Update files in testmods that have issues
 
-
-Testing summary: regular, ctsm_sci, fates
+Testing summary: regular, ctsm_sci, fates, crop_calendars
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho -OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
@@ -67,13 +82,15 @@ Testing summary: regular, ctsm_sci, fates
     izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
   ctsm_sci
-     derecho ----
+     derecho ---- OK
+  crop_calendars
+     derecho ---- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -93,10 +110,14 @@ Other details
 -------------
 
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
-ccs_config
+    ccs_config to ccs_config_cesm1.0.75
+    mosart to mosart1.1.13
+    cdeps to cdeps1.0.93
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+   #3787 -- Replace some netCDF inputs that have NaN fill values  (@samsrabin)
+   #3769 -- Update to ifx compiler
 
 ===============================================================
 ===============================================================

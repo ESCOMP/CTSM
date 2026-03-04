@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.022     erik 03/03/2026 More updates needed with the ifx compiler for the coupled model
+       ctsm5.4.022     erik 03/03/2026 Change to using the ifx compiler and some more fixes related to it
        ctsm5.4.021     erik 02/20/2026 Bring b4b-dev to master
        ctsm5.4.020   slevis 02/19/2026 Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
        ctsm5.4.019 samrabin 02/12/2026 Fix years used by generate_gdds
