@@ -962,17 +962,33 @@ contains
 
     integer               :: c, l, g, i, j
     integer               :: nstep
-    real(r8) :: dtime                                     ! land model time step (sec)
+    real(r8)              :: dtime                        ! land model time step (sec)
+    real(r8)              :: cross_sectional_area_channel ! cross sectional area of stream channel (m2)
     real(r8)              :: cross_sectional_area         ! cross sectional area of stream water (m2)
     real(r8)              :: stream_depth                 ! depth of stream water (m)
     real(r8)              :: hydraulic_radius             ! cross sectional area divided by wetted perimeter (m)
     real(r8)              :: flow_velocity                ! flow velocity (m/s)
     real(r8)              :: overbank_area                ! area of water above bankfull (m2)
+    real(r8)              :: overbank_depth               ! depth of water above bankfull (m)
+    real(r8)              :: tanalpha
+    real(r8)              :: dynamic_viscosity
+    real(r8)              :: bankfull_flow_velocity
+    real(r8)              :: kinematic_viscosity
+    real(r8)              :: length_scale
+    real(r8)              :: reynolds
     real(r8), parameter   :: manning_roughness = 0.03_r8  ! manning roughness
     real(r8), parameter   :: manning_exponent  = 0.667_r8 ! manning exponent
 
     integer, parameter    :: overbank_method = 1          ! method to treat overbank stream storage; 1 = increase dynamic slope, 2 = increase flow area cross section, 3 = remove instantaneously
     logical               :: active_stream
+    real(r8), parameter   :: Acoef = 0.02939 !mPa·s
+    real(r8), parameter   :: Bcoef = 507.88  !K
+    real(r8), parameter   :: Ccoef = 149.30  !K
+    real(r8), parameter   :: Tavg  = 293.15  !20C + 273.15
+    real(r8), parameter   :: rhow = 1e3 
+    real(r8), parameter   :: reynolds_thresh = 1000
+    real(r8), parameter   :: stream_conductivity = 1e-3_r8
+    real(r8), parameter   :: water_surface_slope = 5e-5_r8
     character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
 
     !-----------------------------------------------------------------------
@@ -998,25 +1014,70 @@ contains
          if (lun%active(l) .and. active_stream) then
             ! Streamflow calculated from Manning equation
             if (streamflow_method == streamflow_manning) then
+cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_depth(l)
+
                cross_sectional_area = stream_water_volume(l) &
                     /lun%stream_channel_length(l)
-               stream_depth =  cross_sectional_area &
-                    /lun%stream_channel_width(l)
-               hydraulic_radius = cross_sectional_area &
-                    /(lun%stream_channel_width(l) + 2*stream_depth)
+
+               ! calculate hydraulic radius
+               if(cross_sectional_area <= cross_sectional_area_channel) then
+                  stream_depth =  cross_sectional_area &
+                       /lun%stream_channel_width(l)
+                  overbank_depth = 0._r8
+                  hydraulic_radius = cross_sectional_area &
+                       /(lun%stream_channel_width(l) + 2*stream_depth)
+               else  ! overbank conditions exist
+                  stream_depth = lun%stream_channel_depth(l)
+                  overbank_area = cross_sectional_area &
+                       -cross_sectional_area_channel
+                  ! use small positive slope for floodplain
+                  tanalpha = 1e-3_r8
+                  overbank_depth = sqrt(tanalpha*overbank_area)
+
+                  hydraulic_radius = cross_sectional_area &
+                       /(lun%stream_channel_width(l) &
+                       + 2*stream_depth &
+                       +2*overbank_depth/tanalpha) ! sin ~ tan for small values
+               endif
 
                if (hydraulic_radius <= 0._r8) then
                   volumetric_streamflow(l) = 0._r8
                else
-                  flow_velocity = (hydraulic_radius)**manning_exponent &
+                  ! check reynolds number using bankfull channel properties (static)
+                  bankfull_flow_velocity = (lun%stream_channel_depth(l))**manning_exponent &
                        * sqrt(lun%stream_channel_slope(l)) &
                        / manning_roughness
+                  ! check reynolds number dynamically
+                  flow_velocity = (hydraulic_radius)**manning_exponent &
+                          * sqrt(lun%stream_channel_slope(l)) &
+                          / manning_roughness
+                  
+                  ! Vogel-Fulcher-Tammann equation
+                  dynamic_viscosity = Acoef * exp((Bcoef/(Tavg-Ccoef)))
+                  kinematic_viscosity = dynamic_viscosity/rhow
+
+                  ! let length scale equal bankfull depth
+                  !length_scale = lun%stream_channel_depth(l)
+                  !reynolds = bankfull_flow_velocity*length_scale/kinematic_viscosity
+                  ! let length scale equal dynamic depth
+                  length_scale = stream_depth + overbank_depth
+                  reynolds = flow_velocity*length_scale/kinematic_viscosity
+                  
+                  if( reynolds < reynolds_thresh) then
+                     ! use exponent = 2 instead of 0.66, and specified water surface slope
+                     flow_velocity = (hydraulic_radius)**2 &
+                          * water_surface_slope &
+                          / (manning_roughness)
+                  else
+                     flow_velocity = (hydraulic_radius)**manning_exponent &
+                          * sqrt(lun%stream_channel_slope(l)) &
+                          / manning_roughness
+                  endif
                   ! overbank flow
-                  if (stream_depth > lun%stream_channel_depth(l)) then
+                  if (overbank_depth > 0._r8) then
                      if (overbank_method  == 1) then
-                        ! try increasing dynamic slope
-                        volumetric_streamflow(l) = cross_sectional_area * flow_velocity &
-                             *(stream_depth/lun%stream_channel_depth(l))
+                        ! flow velocity already accounts for overbank conditions
+                        volumetric_streamflow(l) = cross_sectional_area * flow_velocity
                      else if (overbank_method  == 2) then
                         ! try increasing flow area cross section
                         overbank_area = (stream_depth -lun%stream_channel_depth(l)) * 30._r8 * lun%stream_channel_width(l)
