@@ -146,7 +146,7 @@ contains
          nparams = 0
          do n=1,nvariables
             call ncd_inqvname(ncid,n,varname,var_desc)
-            if (.not. any(varname == (/'time','lat','lon'/))) then 
+            if ( .not. any((/trim(varname) == 'time',trim(varname) == 'lat',trim(varname) == 'lon'/)) ) then
                nparams = nparams + 1
                write(stream_varnames_in(nparams),'(a)') trim(varname)
             endif
