@@ -26,7 +26,8 @@ din_loc_root = '/glade/campaign/cesm/cesmdata/inputdata'
 dir_surfdata = os.path.join( din_loc_root, 'lnd', 'clm2', 'surfdata_esmf', 'ctsm5.4.0' )
 dir_output='./'
 
-# for coordinates, land mask, etc.
+# template file at model resolution for coordinates, land mask, etc.
+# NOTE: the particular simulation year (here 2000) and PFT number doesn't matter for these purposes
 fsurf = os.path.join( dir_surfdata, 'surfdata_0.9x1.25_hist_2000_78pfts_c251022.nc' )
 
 tag = "distparams"
