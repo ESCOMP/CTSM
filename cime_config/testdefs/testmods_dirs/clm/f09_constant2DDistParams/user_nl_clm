@@ -1,0 +1,6 @@
+! Turn on distributed parameters with values that are just copies of the 1D parameter file
+! So tests with this and without distributed parameters should compare exactly
+use_distributed_parameters = TRUE
+! The distparam file MUST match the model resolution
+stream_fldfilename_distparam = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm60_2Dparamdata_0.9x1.25_distparams_constant_ident2_ctsm60260303params_c260306.nc'
+stream_meshfile_distparam = '$LND_DOMAIN_MESH'
