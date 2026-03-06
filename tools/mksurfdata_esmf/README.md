@@ -100,6 +100,7 @@ This will bring in CIME and ccs_config which are required for building.
 
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
+setenv DEBUG TRUE  # only if debugging and your shell is tcsh (in bash use: export DEBUG=TRUE)
  ./gen_mksurfdata_build         # For machines with a cime build
 ```
 

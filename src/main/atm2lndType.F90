@@ -179,6 +179,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: beg_index, end_index
+
     character(len=*), parameter :: subname = 'atm2lnd_params_constructor'
     !-----------------------------------------------------------------------
 
@@ -259,19 +260,38 @@ contains
 
     if (repartition_rain_snow) then
 
+       ! Read repartition temperatures from parameter file
+       call getfil (paramfile, locfn, 0)
+       call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+       ! non-glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_rain_t', subname, precip_repartition_nonglc_all_rain_t_celsius)
+
+       ! non-glacier all snow temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_snow_t', subname, precip_repartition_nonglc_all_snow_t_celsius)
+
+       ! glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_rain_t', subname, precip_repartition_glc_all_rain_t_celsius)
+
+       ! glacier all snow temperature (degrees C) 
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_snow_t', subname, precip_repartition_glc_all_snow_t_celsius)
+
+       call ncd_pio_closefile(ncid)
+
        ! Do some other error checking
 
+       ! NOTE: EBK 3/5/2026 -- this was commented out in PR #305 with this note below. It would need to be redone over gridcells...
        !todo: should this be done on a gridcell basis, or just removed?
-       
-!!$       if (precip_repartition_glc_all_rain_t <= precip_repartition_glc_all_snow_t) then
-!!$          call endrun(subname // &
-!!$               ' ERROR: Must have precip_repartition_glc_all_snow_t < precip_repartition_glc_all_rain_t')
-!!$       end if
+
+!!$    if (precip_repartition_glc_all_rain_t_celsius <= precip_repartition_glc_all_snow_t_celsius) then
+!!$       call endrun(subname // &
+!!$            ' ERROR: Must have precip_repartition_glc_all_snow_t < precip_repartition_glc_all_rain_t')
+!!$    end if
 !!$
-!!$       if (precip_repartition_nonglc_all_rain_t <= precip_repartition_nonglc_all_snow_t) then
-!!$          call endrun(subname // &
-!!$               ' ERROR: Must have precip_repartition_nonglc_all_snow_t < precip_repartition_nonglc_all_rain_t')
-!!$       end if
+!!$    if (precip_repartition_nonglc_all_rain_t_celsius <= precip_repartition_nonglc_all_snow_t_celsius) then
+!!$       call endrun(subname // &
+!!$            ' ERROR: Must have precip_repartition_nonglc_all_snow_t < precip_repartition_nonglc_all_rain_t')
+!!$    end ifb
 
        ! Convert to the form of the parameters we want for the main code
 
@@ -309,7 +329,6 @@ contains
     end subroutine compute_ramp_params
 
   end function atm2lnd_params_constructor
-
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename)

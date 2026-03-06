@@ -45,4 +45,4 @@ Code conventions: https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
 
 #### Code of Conduct:
 
-See the `CODE_OF_CONDUCT.md` file for expectations of how to work in the community.
+See https://github.com/ESCOMP/CTSM?tab=coc-ov-file for expectations of how to work in the community.

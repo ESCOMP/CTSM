@@ -72,6 +72,8 @@
 #      ./run_clm_historical.v10.csh ! > & run_clm_historical.out &
 # - Modify to look for either h0 or h0a files - Keith Oleson July, 2025
 #      ./run_clm_historical.v11.csh ! > & run_clm_historical.out &
+# - Update the comment about h0a/h0 files - slevis Nov, 2025
+#      ./run_clm_historical.v11.csh ! > & run_clm_historical.out &
 #########################################################################################
 
 #########################################################################################
@@ -85,8 +87,8 @@
 # --- CASENAME is your case name
 set CASENAME = 'ctsm530_f19_PPE_TESTv11_hist'
 
-# --- Set to either h0 (ctsm5.3.061 or earlier) or h0a (ctsm5.3.062 or later)
-set HIST_EXT = 'h0'
+# HIST_EXT valid options: h0a, h0
+set HIST_EXT = 'h0a'
 
 # --- Set the user namelist file.
 cp original_user_nl_clm user_nl_clm

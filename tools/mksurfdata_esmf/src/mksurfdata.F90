@@ -968,8 +968,8 @@ program mksurfdata
         rcode = pio_put_var(pioid, pio_varid, (/ntim/), year)
         rcode = pio_inq_varid(pioid, 'time', pio_varid)
         rcode = pio_put_var(pioid, pio_varid, (/ntim/), year)
-       !rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
-       !rcode = pio_put_var(pioid, pio_varid, (/1,ntim/), (/len_trim(string),1/), trim(string))
+        rcode = pio_inq_varid(pioid, 'input_pftdata_filename', pio_varid)
+        rcode = pio_put_var(pioid, pio_varid, (/1,ntim/), trim(string))
         call pio_syncfile(pioid)
 
         ! Create pctpft data at model resolution from file fname

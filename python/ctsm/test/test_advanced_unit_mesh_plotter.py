@@ -44,7 +44,7 @@ class TestMeshMaker(unittest.TestCase):
         """
         Test that the default outfile is as expected
         """
-        infile = "ctsm/test/testinputs/default_data.cfg"
+        infile = os.path.join(unit_testing.get_test_input_data_dir(), "default_data.cfg")
         sys.argv = [
             "mesh_plotter",
             "--input",

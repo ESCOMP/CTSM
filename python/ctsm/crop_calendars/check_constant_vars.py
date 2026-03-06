@@ -147,8 +147,8 @@ def ensure_all_patches_checked(this_ds, this_da, ra_sp, incl_patches):
     incl_patches = np.sort(incl_patches)
     if not np.array_equal(incl_patches, np.unique(incl_patches)):
         raise RuntimeError("Patch(es) checked but also all-NaN??")
-    if not np.array_equal(incl_patches, np.arange(this_ds.dims["patch"])):
-        for patch in np.arange(this_ds.dims["patch"]):
+    if not np.array_equal(incl_patches, np.arange(this_ds.sizes["patch"])):
+        for patch in np.arange(this_ds.sizes["patch"]):
             if patch not in incl_patches:
                 raise RuntimeError(
                     f"Not all patches checked! E.g., {patch}: {this_da.isel(patch=patch).values}"
@@ -178,7 +178,7 @@ def check_one_constant_var_loop_through_timesteps(
     In check_one_constant_var(), loop through timesteps
     """
     found_in_rx = None
-    for timestep in np.arange(time_1 + 1, this_ds.dims[time_coord]):
+    for timestep in np.arange(time_1 + 1, this_ds.sizes[time_coord]):
         t_yr = this_ds[time_coord].values[timestep]
         t_vals = np.squeeze(this_da.isel({time_coord: timestep, "patch": these_patches}).values)
         ok_p = t1_vals == t_vals
@@ -267,7 +267,7 @@ def check_one_constant_var(
         bad_patches,
     ) = check_one_constant_var_setup(this_ds, case, var)
 
-    for time_1 in np.arange(this_ds.dims[time_coord] - 1):
+    for time_1 in np.arange(this_ds.sizes[time_coord] - 1):
         condn = ~np.isnan(ra_sp[time_1, ...])
         if time_1 > 0:
             condn = np.bitwise_and(condn, np.all(np.isnan(ra_sp[:time_1, ...]), axis=0))
@@ -324,12 +324,12 @@ def check_one_constant_var(
     if not any_bad:
         if any_bad_before_checking_rx:
             print(
-                f"✅ CLM output {var} do not vary through {this_ds.dims[time_coord]} growing "
+                f"✅ CLM output {var} do not vary through {this_ds.sizes[time_coord]} growing "
                 + "seasons of output (except for patch(es) with missing rx)."
             )
         else:
             print(
-                f"✅ CLM output {var} do not vary through {this_ds.dims[time_coord]} growing "
+                f"✅ CLM output {var} do not vary through {this_ds.sizes[time_coord]} growing "
                 + "seasons of output."
             )
 

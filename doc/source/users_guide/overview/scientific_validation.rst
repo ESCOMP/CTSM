@@ -20,9 +20,9 @@ In the sections below we go through configuration and/or namelist options or mod
 Configurations that should be used with caution
 -----------------------------------------------
 
-There are some options in |version| that are available but either not tested extensively, or not scientifically evaluated. These options should be used with caution. And any options that deviate from the scientifically supported configurations can have issues. The IMPORTANT_NODES file goes into more details on this.
+There are some options in |version| that are available but either not tested extensively, or not scientifically evaluated. These options should be used with caution. And any options that deviate from the scientifically supported configurations can have issues. The IMPORTANT_NOTES.md file goes into more details on this.
 
-The IMPORTANT_NOTES (which can be found in ``$CTSMROOT/doc``) is repeated here.
+The IMPORTANT_NOTES.md (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../../IMPORTANT_NOTES
-   :literal:
+.. include:: ../../../IMPORTANT_NOTES.md
+   :code: markdown

@@ -296,11 +296,11 @@ contains
        this%vegwp_ln_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPLN',  units='mm', type2d='nvegwcs', &
             avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', &
-            ptr_patch=this%vegwp_ln_patch, default='active')
+            ptr_patch=this%vegwp_ln_patch, default='inactive')
        this%vegwp_pd_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
             long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
-            ptr_patch=this%vegwp_pd_patch, default='active')
+            ptr_patch=this%vegwp_pd_patch, default='inactive')
     end if
 
   end subroutine InitHistory
