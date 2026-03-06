@@ -1,17 +1,38 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
+"""
+----------------------------------------------------------------
+Instructions for running using conda python environments:
+../../py_env_create
+conda activate ctsm_pylib
+"""
 import subprocess
 import numpy as np
 import netCDF4 as netcdf4
+import os
+import sys
 
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.utils import add_tag_to_filename
+
+# Location for CESM inputdata directory
+# TODO: Have this as an input argument and set defaults for: Derecho, Casper and Izumi
+din_loc_root = '/glade/campaign/cesm/cesmdata/inputdata'
 # creates surface dataset with distributed parameters
-dir_surfdata = '/fs/cgd/csm/inputdata/lnd/clm2/surfdata_esmf/'
+dir_surfdata = os.path.join( din_loc_root, 'lnd', 'clm2', 'surfdata_esmf', 'ctsm5.4.0' )
 dir_output='./'
 
 # for coordinates, land mask, etc.
-fsurf = f'{dir_surfdata}ctsm5.3.0/surfdata_0.9x1.25_hist_2000_78pfts_c240908.nc'
+fsurf = os.path.join( dir_surfdata, 'surfdata_0.9x1.25_hist_2000_78pfts_c251022.nc' )
 
-outfile = f'{dir_output}paramdata_0.9x1.25_ctsm60_params.c260204.nc'
-paramfile = '/fs/cgd/csm/inputdata/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc'
+tag = "distparams"
+# use add_tag_to_filename to update the ending creating date to current time
+outfile = add_tag_to_filename( os.path.join( dir_output, 'ctsm60_2Dparamdata_0.9x1.25.c260306.nc'), tag )
+paramfile = os.path.join( din_loc_root, 'lnd/clm2/paramdata/ctsm60_params.c260303.nc' )
 
 # calibrated parameters from Tang2025
 param_list = ['e_ice','n_baseflow','baseflow_scalar','fff','d_max','FMAX','om_frac_sf','interception_fraction','watsat_sf','sucsat_sf','bsw_sf','zbedrock_sf','hksat_sf','slopebeta','liq_canopy_storage_scalar','maximum_leaf_wetted_fraction','n_melt_coef','accum_factor','upplim_destruct_metamorph','zsno','precip_repartition_nonglc_all_rain_t','medlynslope','jmaxb0','kmax','cv','leafcn']
