@@ -260,24 +260,6 @@ contains
 
     if (repartition_rain_snow) then
 
-       ! Read repartition temperatures from parameter file
-       call getfil (paramfile, locfn, 0)
-       call ncd_pio_openfile (ncid, trim(locfn), 0)
-
-       ! non-glacier all rain temperature (degrees C)
-       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_rain_t', subname, precip_repartition_nonglc_all_rain_t_celsius)
-
-       ! non-glacier all snow temperature (degrees C)
-       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_snow_t', subname, precip_repartition_nonglc_all_snow_t_celsius)
-
-       ! glacier all rain temperature (degrees C)
-       call readNcdioScalar(ncid, 'precip_repartition_glc_all_rain_t', subname, precip_repartition_glc_all_rain_t_celsius)
-
-       ! glacier all snow temperature (degrees C) 
-       call readNcdioScalar(ncid, 'precip_repartition_glc_all_snow_t', subname, precip_repartition_glc_all_snow_t_celsius)
-
-       call ncd_pio_closefile(ncid)
-
        ! Do some other error checking
 
        ! NOTE: EBK 3/5/2026 -- this was commented out in PR #305 with this note below. It would need to be redone over gridcells...
