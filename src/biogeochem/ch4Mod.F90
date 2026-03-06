@@ -1532,7 +1532,7 @@ contains
      params_inst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_ch4_oxid=tempr
-
+     
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -1576,6 +1576,9 @@ contains
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_oxid_unsat=tempr
 
+     !scs
+     params_inst%vmax_oxid_unsat = 2._r8*params_inst%vmax_oxid_unsat
+     
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -4397,8 +4400,7 @@ contains
 
     ! only unsaturated layer considered here 
     k_m_eff = k_m_unsat
-    !vmax_eff = vmax_oxid_unsat
-    vmax_eff = 3._r8*vmax_oxid_unsat
+    vmax_eff = vmax_oxid_unsat
 
     ! maximum water content in unsaturated layer is field capacity
     h2osoi_vol_min = min(watsat*(sucsat/psi_fc)**(1._r8/bsw), h2osoi_vol)
