@@ -3116,7 +3116,9 @@ module CLMFatesInterfaceMod
       end if
 
 
-      ! summarize biophysical variables that we want to output on FATES dimensions
+      ! Summarize biophysical variables that we want to output on FATES dimensions
+      ! Note that we pass in the bareground patch values here by starting the ifp
+      ! do loop from zero
       do s = 1, this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
          do ifp = 0, this%fates(nc)%sites(s)%youngest_patch%patchno
