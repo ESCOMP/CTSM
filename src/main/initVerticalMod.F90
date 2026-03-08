@@ -27,6 +27,7 @@ module initVerticalMod
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
+  use DistParamType     , only : distparams => distributed_parameters
   use glcBehaviorMod    , only : glc_behavior_type
   use abortUtils        , only : endrun    
   use ncdio_pio
@@ -45,8 +46,6 @@ module initVerticalMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   type, private :: params_type
-     real(r8) :: slopebeta      ! exponent for microtopography pdf sigma (unitless)
-     real(r8) :: slopemax       ! max topographic slope for microtopography pdf sigma (unitless)
      real(r8) :: zbedrock       ! parameter to substitute for zbedrock (m)
      real(r8) :: zbedrock_sf    ! parameter to scale zbedrock (m)
   end type params_type
@@ -75,11 +74,6 @@ contains
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'readParams_initVertical'
     !--------------------------------------------------------------------
-
-    ! Exponent for microtopography pdf sigma (unitless)
-    call readNcdioScalar(ncid, 'slopebeta', subname, params_inst%slopebeta)
-    ! Max topographic slope for microtopography pdf sigma (unitless) 
-    call readNcdioScalar(ncid, 'slopemax', subname, params_inst%slopemax)
 
     call readNcdioScalar(ncid, 'zbedrock', subname, params_inst%zbedrock)
     call readNcdioScalar(ncid, 'zbedrock_sf', subname, params_inst%zbedrock_sf)
@@ -657,12 +651,12 @@ contains
 
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
-       slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
+       slope0 = distparams%slopemax%param_val(col%gridcell(c))**(1._r8/distparams%slopebeta%param_val(col%gridcell(c)))
 
        if (col%is_hillslope_column(c)) then
-          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(params_inst%slopebeta)
+          col%micro_sigma(c) = (atan(col%hill_slope(c)) + slope0)**(distparams%slopebeta%param_val(col%gridcell(c)))
        else
-          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
+          col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(distparams%slopebeta%param_val(col%gridcell(c)))
        endif
 
     end do

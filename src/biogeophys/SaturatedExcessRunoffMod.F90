@@ -16,9 +16,10 @@ module SaturatedExcessRunoffMod
   use clm_varcon   , only : spval,ispval
   use LandunitType , only : landunit_type
   use landunit_varcon  , only : istcrop
-  use ColumnType   , only : column_type
+  use ColumnType       , only : column_type
+  use DistParamType    , only : distparams => distributed_parameters
   use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType, only : soilstate_type
+  use SoilStateType    , only : soilstate_type
   use WaterFluxBulkType, only : waterfluxbulk_type
 
   implicit none
@@ -50,12 +51,6 @@ module SaturatedExcessRunoffMod
      procedure, private, nopass :: ComputeFsatTopmodel
      procedure, private, nopass :: ComputeFsatVic
   end type saturated_excess_runoff_type
-  public :: readParams
-
-  type, private :: params_type
-     real(r8) :: fff  ! Decay factor for fractional saturated area (1/m)
-  end type params_type
-  type(params_type), private ::  params_inst
 
   ! !PRIVATE DATA MEMBERS:
 
@@ -174,26 +169,6 @@ contains
     end if
 
   end subroutine InitCold
-
-  !-----------------------------------------------------------------------
-  subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_SaturatedExcessRunoff'
-    !--------------------------------------------------------------------
-
-    ! Decay factor for fractional saturated area (1/m)
-    call readNcdioScalar(ncid, 'fff', subname, params_inst%fff)
-
-  end subroutine readParams
 
   ! ========================================================================
   ! Science routines
@@ -315,6 +290,8 @@ contains
   subroutine ComputeFsatTopmodel(bounds, num_hydrologyc, filter_hydrologyc, &
        soilhydrology_inst, soilstate_inst, fsat)
     !
+    ! USES
+    use ColumnType     , only : col
     ! !DESCRIPTION:
     ! Compute fsat using the TOPModel-based parameterization
     !
@@ -349,9 +326,9 @@ contains
        c = filter_hydrologyc(fc)
        if (frost_table(c) > zwt_perched(c) .and. frost_table(c) <= zwt(c)) then
           ! use perched water table to determine fsat (if present)
-          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt_perched(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff%param_val(col%gridcell(c))*zwt_perched(c))
        else
-          fsat(c) = wtfact(c) * exp(-0.5_r8*params_inst%fff*zwt(c))
+          fsat(c) = wtfact(c) * exp(-0.5_r8*distparams%fff%param_val(col%gridcell(c))*zwt(c))
        end if
     end do
 

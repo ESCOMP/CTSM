@@ -9,6 +9,7 @@ module SoilWaterMovementMod
   ! created by Jinyun Tang, Mar 12, 2014
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod       , only : shr_sys_flush
+  use DistParamType     , only : distparams => distributed_parameters
  
   !
   implicit none
@@ -724,7 +725,7 @@ contains
             s1 = min(1._r8, s1)
             s2 = hksat(c,j)*s1**(2._r8*bsw(c,j)+2._r8)
 
-            imped(c,j)=10._r8**(-params_inst%e_ice*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
+            imped(c,j)=10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
 
             hk(c,j) = imped(c,j)*s1*s2
             dhkdw(c,j) = imped(c,j)*(2._r8*bsw(c,j)+3._r8)*s2* &
@@ -1518,10 +1519,10 @@ contains
             ! s1 is interface value, s2 is node value
             if(j==nlayers)then
              s1 = s2(j)
-             call IceImpedance(icefrac(c,j), imped(j) )
+             call IceImpedance(c,icefrac(c,j), imped(j) )
             else
              s1 = 0.5_r8 * (s2(j) + s2(j+1))
-             call IceImpedance(0.5_r8*(icefrac(c,j) + icefrac(c,j+1)), imped(j) )
+             call IceImpedance(c,0.5_r8*(icefrac(c,j) + icefrac(c,j+1)), imped(j) )
             endif
 
   ! impose constraints on relative saturation at the layer interface
@@ -2136,8 +2137,10 @@ contains
 
 !#13
   !-----------------------------------------------------------------------
-  subroutine IceImpedance(icefrac, imped)
+  subroutine IceImpedance(c, icefrac, imped)
     !
+    ! USES
+    use ColumnType     , only : col
     !DESCRIPTION
     ! compute soil suction potential
     !
@@ -2147,15 +2150,16 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    real(r8), intent(in)  :: icefrac    !fraction of pore space filled with ice
+    integer , intent(in)  :: c          ! column index
+    real(r8), intent(in)  :: icefrac    ! fraction of pore space filled with ice
 
-    real(r8), intent(out) :: imped      !hydraulic conductivity reduction due to the presence of ice in pore space
+    real(r8), intent(out) :: imped      ! hydraulic conductivity reduction due to the presence of ice in pore space
     !
     ! !LOCAL VARIABLES:
     character(len=32) :: subname = 'IceImpedance'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    imped = 10._r8**(-params_inst%e_ice*icefrac)
+    imped = 10._r8**(-distparams%e_ice%param_val(col%gridcell(c))*icefrac)
 
   end subroutine IceImpedance
 

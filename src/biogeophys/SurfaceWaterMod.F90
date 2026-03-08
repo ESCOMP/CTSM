@@ -15,6 +15,7 @@ module SurfaceWaterMod
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type, subgrid_level_column
   use ColumnType                  , only : col
+  use DistParamType               , only : distparams => distributed_parameters
   use NumericsMod                 , only : truncate_small_values
   use InfiltrationExcessRunoffMod , only : infiltration_excess_runoff_type
   use EnergyFluxType              , only : energyflux_type
@@ -32,44 +33,16 @@ module SurfaceWaterMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UpdateFracH2oSfc     ! Determine fraction of land surfaces which are submerged
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
-  public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_FracH2oSfc          ! Determine fraction of land surfaces which are submerged
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
-  type, private :: params_type
-     real(r8) :: pc              ! Threshold probability for surface water (unitless)
-     real(r8) :: mu              ! Connectivity exponent for surface water (unitless)
-  end type params_type
-  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
-
-  !-----------------------------------------------------------------------
-  subroutine readParams( ncid )
-    !
-    ! !USES:
-    use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
-    !
-    ! !ARGUMENTS:
-    implicit none
-    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
-    !
-    ! !LOCAL VARIABLES:
-    character(len=*), parameter :: subname = 'readParams_SurfaceWater'
-    !--------------------------------------------------------------------
-
-    ! Threshold probability for surface water (unitless)
-    call readNcdioScalar(ncid, 'pc', subname, params_inst%pc)
-    ! Connectivity exponent for surface water (unitless)
-    call readNcdioScalar(ncid, 'mu', subname, params_inst%mu)
-
-  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UpdateFracH2oSfc(bounds, num_soilc, filter_soilc, &
@@ -473,10 +446,10 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+          if (frac_h2osfc_nosnow(c) <= distparams%pc%param_val(col%gridcell(c))) then
              frac_infclust=0.0_r8
           else
-             frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
+             frac_infclust=(frac_h2osfc_nosnow(c)-distparams%pc%param_val(col%gridcell(c)))**distparams%mu%param_val(col%gridcell(c))
           endif
        endif
 

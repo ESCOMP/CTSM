@@ -14,6 +14,8 @@ conda activate ctsm_pylib
 
 Brief description of scripts:
 
+create_2d_distparam_file.py
+        Create a 2D distributed parameter file to use with the use_distributed_parameters option in CTSM
 create_scrip_file.ncl
         Create a SCRIP grid file needed for running with WRF
 run_clm_historical.v11.csh

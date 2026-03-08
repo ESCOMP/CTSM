@@ -46,7 +46,7 @@ module controlMod
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML, hillslope_hydrology_ReadNML
+  use SoilHydrologyMod                 , only: hillslope_hydrology_ReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
@@ -149,7 +149,7 @@ contains
 
     namelist /clm_inparm/  &
          fsurdat, hillslope_file, &
-         paramfile, fsnowoptics, fsnowaging
+         paramfile, distributed_paramfile, fsnowoptics, fsnowaging
 
     ! History, restart options
 
@@ -618,7 +618,6 @@ contains
        call CNFUNReadNML( NLFilename )
     end if
 
-    call soilHydReadNML(   NLFilename )
     if ( use_hillslope ) then
        call hillslope_hydrology_ReadNML(   NLFilename )
     endif
@@ -758,6 +757,7 @@ contains
     call mpi_bcast (hillslope_file, len(hillslope_file), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (distributed_paramfile, len(distributed_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
 
@@ -1051,6 +1051,7 @@ contains
     write(iulog,*) '    use_SSRE = ', use_SSRE
     write(iulog,*) 'input data files:'
     write(iulog,*) '   PFT physiology and parameters file = ',trim(paramfile)
+    write(iulog,*) '   distributed parameter file = ',trim(distributed_paramfile)
     if (fsurdat == ' ') then
        write(iulog,*) '   fsurdat, surface dataset not set'
     else

@@ -36,6 +36,7 @@ module SnowHydrologyMod
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
+  use DistParamType   , only : distparams => distributed_parameters
   use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice, istcrop
   use clm_time_manager, only : get_step_size_real, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
@@ -70,7 +71,7 @@ module SnowHydrologyMod
   public :: SnowHydrologySetControlForTesting ! Set some of the control settings
 
   type, private :: params_type
-      real(r8) :: wimp                  ! Water impremeable if porosity less than wimp (unitless)
+      real(r8) :: wimp                  ! Water impermeable if porosity less than wimp (unitless)
       real(r8) :: ssi                   ! Irreducible water saturation of snow (unitless)
       real(r8) :: drift_gs              ! Wind drift compaction / grain size (fixed value for now) (unitless)
       real(r8) :: eta0_anderson         ! Viscosity coefficent from Anderson1976 (kg*s/m2)
@@ -78,7 +79,6 @@ module SnowHydrologyMod
       real(r8) :: wind_snowcompact_fact ! Reference wind above which fresh snow density is (substantially) increased (m/s)
       real(r8) :: rho_max               ! Wind drift compaction / maximum density (kg/m3)
       real(r8) :: tau_ref               ! Wind drift compaction / reference time (48*3600) (s)
-      real(r8) :: scvng_fct_mlt_sf      ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
       real(r8) :: scvng_fct_mlt_bcphi   ! scavenging factor for hydrophillic BC inclusion in meltwater  [frc]
       real(r8) :: scvng_fct_mlt_bcpho   ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
       real(r8) :: scvng_fct_mlt_dst1    ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
@@ -313,8 +313,6 @@ contains
     call readNcdioScalar(ncid, 'rho_max', subname, params_inst%rho_max)
     ! Wind drift compaction / reference time (48*3600) (s)
     call readNcdioScalar(ncid, 'tau_ref', subname, params_inst%tau_ref)
-    ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
-    call readNcdioScalar(ncid, 'scvng_fct_mlt_sf', subname, params_inst%scvng_fct_mlt_sf)
     ! scavenging factor for hydrophillic BC inclusion in meltwater  [frc]
     call readNcdioScalar(ncid, 'scvng_fct_mlt_bcphi', subname, params_inst%scvng_fct_mlt_bcphi)
     ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
@@ -1600,7 +1598,7 @@ contains
 
              ! BCPHI:
              ! 1. flux with meltwater:
-             qout_bc_phi(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_bc_phi(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                               params_inst%scvng_fct_mlt_bcphi*(mss_bcphi(c,j)/mss_liqice)
              if (qout_bc_phi(c)*dtime > mss_bcphi(c,j)) then
                 qout_bc_phi(c) = mss_bcphi(c,j)/dtime
@@ -1612,7 +1610,7 @@ contains
 
              ! BCPHO:
              ! 1. flux with meltwater:
-             qout_bc_pho(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_bc_pho(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                               params_inst%scvng_fct_mlt_bcpho*(mss_bcpho(c,j)/mss_liqice)
              if (qout_bc_pho(c)*dtime > mss_bcpho(c,j)) then
                 qout_bc_pho(c) = mss_bcpho(c,j)/dtime
@@ -1624,7 +1622,7 @@ contains
 
              ! OCPHI:
              ! 1. flux with meltwater:
-             qout_oc_phi(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_oc_phi(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                               scvng_fct_mlt_ocphi*(mss_ocphi(c,j)/mss_liqice)
              if (qout_oc_phi(c)*dtime > mss_ocphi(c,j)) then
                 qout_oc_phi(c) = mss_ocphi(c,j)/dtime
@@ -1636,7 +1634,7 @@ contains
 
              ! OCPHO:
              ! 1. flux with meltwater:
-             qout_oc_pho(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_oc_pho(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                               scvng_fct_mlt_ocpho*(mss_ocpho(c,j)/mss_liqice)
              if (qout_oc_pho(c)*dtime > mss_ocpho(c,j)) then
                 qout_oc_pho(c) = mss_ocpho(c,j)/dtime
@@ -1648,7 +1646,7 @@ contains
 
              ! DUST 1:
              ! 1. flux with meltwater:
-             qout_dst1(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_dst1(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                             params_inst%scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
              if (qout_dst1(c)*dtime > mss_dst1(c,j)) then
                 qout_dst1(c) = mss_dst1(c,j)/dtime
@@ -1660,7 +1658,7 @@ contains
 
              ! DUST 2:
              ! 1. flux with meltwater:
-             qout_dst2(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_dst2(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                             params_inst%scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
              if (qout_dst2(c)*dtime > mss_dst2(c,j)) then
                 qout_dst2(c) = mss_dst2(c,j)/dtime
@@ -1672,7 +1670,7 @@ contains
 
              ! DUST 3:
              ! 1. flux with meltwater:
-             qout_dst3(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_dst3(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                             params_inst%scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
              if (qout_dst3(c)*dtime > mss_dst3(c,j)) then
                 qout_dst3(c) = mss_dst3(c,j)/dtime
@@ -1684,7 +1682,7 @@ contains
 
              ! DUST 4:
              ! 1. flux with meltwater:
-             qout_dst4(c) = qflx_snow_percolation(c,j)*params_inst%scvng_fct_mlt_sf* &
+             qout_dst4(c) = qflx_snow_percolation(c,j)*distparams%scvng_fct_mlt_sf%param_val(col%gridcell(c))* &
                             params_inst%scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
              if (qout_dst4(c)*dtime > mss_dst4(c,j)) then
                 qout_dst4(c) = mss_dst4(c,j)/dtime
@@ -1972,8 +1970,8 @@ contains
                 ! Settling as a result of destructive metamorphism
 
                 ddz1 = -c3*dexpf
-                if (bi > params_inst%upplim_destruct_metamorph) ddz1 = &
-                        ddz1*exp(-46.0e-3_r8*(bi-params_inst%upplim_destruct_metamorph))
+                if (bi > distparams%upplim_destruct_metamorph%param_val(col%gridcell(c))) ddz1 = &
+                        ddz1*exp(-46.0e-3_r8*(bi-distparams%upplim_destruct_metamorph%param_val(col%gridcell(c))))
 
                 ! Liquid water term
 

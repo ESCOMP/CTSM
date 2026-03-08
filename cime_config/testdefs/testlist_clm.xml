@@ -109,6 +109,24 @@
       <option name="comment">Simple test to make sure adding obscure stream options works</option>
     </options>
   </test>
+  <test name="SMS_Ld5_PS" grid="f09_f09_mt232" compset="IHistClm60Sp" testmods="clm/f09_constant2DDistParams--clm-nofireesmis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Test that distributed 2D stream parameters works (should be identical to the one with the default testmod)</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5_PS" grid="f09_f09_mt232" compset="IHistClm60Sp" testmods="clm/default--clm-nofireesmis">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Default test to compare the above distributed stream test to</option>
+    </options>
+  </test>
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>

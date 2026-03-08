@@ -111,6 +111,7 @@ module clm_varctl
   character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
   character(len=fname_len), public :: hillslope_file = ' '    ! hillslope data file name
   character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
+  character(len=fname_len), public :: distributed_paramfile  = ' ' ! spatially distributed parameter file name
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
@@ -397,6 +398,12 @@ module clm_varctl
   integer, public :: vcmax_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
+
+  !----------------------------------------------------------
+  ! spatially distributed parameters switch
+  !----------------------------------------------------------
+
+  logical, public :: use_distributed_parameters = .false. ! true => use spatially distributed parameter stream data
 
   !----------------------------------------------------------
   ! prescribed soil moisture streams switch 

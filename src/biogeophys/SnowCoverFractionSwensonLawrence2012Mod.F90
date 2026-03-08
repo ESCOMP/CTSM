@@ -20,6 +20,7 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use fileutils      , only : getavu, relavu, opnfil
   use clm_varcon     , only : rpi
   use ColumnType     , only : column_type
+  use DistParamType  , only : distparams => distributed_parameters
   use glcBehaviorMod , only : glc_behavior_type
   use landunit_varcon, only : istice
   use paramUtilMod   , only : readNcdioScalar
@@ -44,7 +45,6 @@ module SnowCoverFractionSwensonLawrence2012Mod
      procedure, public :: Init
 
      procedure, private :: ReadNamelist
-     procedure, private :: ReadParams
      procedure, private :: CheckValidInputs
      procedure, private :: SetDerivedParameters
   end type snow_cover_fraction_swenson_lawrence_2012_type
@@ -66,6 +66,8 @@ contains
        lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
        snow_depth, frac_sno, frac_sno_eff)
     !
+    ! USES
+    use ColumnType     , only : col
     ! !DESCRIPTION:
     ! Update snow depth and snow fraction using the SwensonLawrence2012 parameterization
     !
@@ -121,7 +123,7 @@ contains
        ! fsca parameterization based on *changes* in swe
        if (h2osno_total(c) == 0._r8) then
           if (newsnow(c) > 0._r8) then
-             frac_sno(c) = tanh(this%accum_factor * newsnow(c))
+             frac_sno(c) = tanh(distparams%accum_factor%param_val(col%gridcell(c)) * newsnow(c))
           else
              ! NOTE(wjs, 2019-08-07) This resetting of frac_sno to 0 when h2osno_total is 0
              ! may already be done elsewhere; if it isn't, it possibly *should* be done
@@ -146,7 +148,7 @@ contains
              !
              ! This form is algebraically equivalent, but simpler and less prone to
              ! roundoff errors (see https://github.com/ESCOMP/ctsm/issues/784)
-             frac_sno(c) = frac_sno(c) + tanh(this%accum_factor * newsnow(c)) * (1._r8 - frac_sno(c))
+             frac_sno(c) = frac_sno(c) + tanh(distparams%accum_factor%param_val(col%gridcell(c)) * newsnow(c)) * (1._r8 - frac_sno(c))
 
           end if
        end if
@@ -291,7 +293,6 @@ contains
     type(file_desc_t)       , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
     !
     ! !LOCAL VARIABLES:
-    real(r8)                                :: n_melt_coef    ! n_melt parameter (unitless)
     real(r8) :: n_melt_glcmec  ! SCA shape parameter for glc_mec columns
 
     character(len=*), parameter :: subname = 'Init'
@@ -300,10 +301,6 @@ contains
     call this%ReadNamelist( &
          NLFilename = NLFilename, &
          n_melt_glcmec = n_melt_glcmec)
-
-    call this%ReadParams( &
-         params_ncid = params_ncid, &
-         n_melt_coef = n_melt_coef)
 
     if (masterproc) then
        call this%CheckValidInputs( &
@@ -314,7 +311,6 @@ contains
          bounds        = bounds, &
          col           = col, &
          glc_behavior  = glc_behavior, &
-         n_melt_coef   = n_melt_coef, &
          n_melt_glcmec = n_melt_glcmec)
 
   end subroutine Init
@@ -377,30 +373,6 @@ contains
   end subroutine ReadNamelist
 
   !-----------------------------------------------------------------------
-  subroutine ReadParams(this, params_ncid, n_melt_coef)
-    !
-    ! !DESCRIPTION:
-    ! Read netCDF parameters needed for the SwensonLawrence2012 method
-    !
-    ! !ARGUMENTS:
-    class(snow_cover_fraction_swenson_lawrence_2012_type), intent(inout) :: this
-    type(file_desc_t) , intent(inout) :: params_ncid ! pio netCDF file id for parameter file
-    real(r8)          , intent(out)   :: n_melt_coef ! n_melt parameter (unitless)
-    !
-    ! !LOCAL VARIABLES:
-
-    character(len=*), parameter :: subname = 'ReadParams'
-    !-----------------------------------------------------------------------
-
-    ! Accumulation constant for fractional snow covered area (unitless)
-    call readNcdioScalar(params_ncid, 'accum_factor', subname, this%accum_factor)
-
-    ! n_melt parameter (unitless)
-    call readNcdioScalar(params_ncid, 'n_melt_coef', subname, n_melt_coef)
-
-  end subroutine ReadParams
-
-  !-----------------------------------------------------------------------
   subroutine CheckValidInputs(this, n_melt_glcmec)
     !
     ! !DESCRIPTION:
@@ -430,7 +402,7 @@ contains
   end subroutine CheckValidInputs
 
   !-----------------------------------------------------------------------
-  subroutine SetDerivedParameters(this, bounds, col, glc_behavior, n_melt_coef, n_melt_glcmec)
+  subroutine SetDerivedParameters(this, bounds, col, glc_behavior, n_melt_glcmec)
     !
     ! !DESCRIPTION:
     ! Set parameters that are derived from other inputs
@@ -440,7 +412,6 @@ contains
     type(bounds_type)       , intent(in) :: bounds
     type(column_type)       , intent(in) :: col
     type(glc_behavior_type) , intent(in) :: glc_behavior
-    real(r8)                , intent(in) :: n_melt_coef
     real(r8)                , intent(in) :: n_melt_glcmec ! SCA shape parameter for glc_mec columns
     !
     ! !LOCAL VARIABLES:
@@ -461,7 +432,7 @@ contains
           ! value of n_melt.
           this%n_melt(c) = n_melt_glcmec
        else
-          this%n_melt(c) = n_melt_coef / max(10._r8, col%topo_std(c))
+          this%n_melt(c) = distparams%n_melt_coef%param_val(col%gridcell(c)) / max(10._r8, col%topo_std(c))
        end if
     end do
 
