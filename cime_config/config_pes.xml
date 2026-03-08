@@ -1709,10 +1709,11 @@
       </pes>
     </mach>
   </grid>
+  <!-- The 5x5 aaazon grid for CTSM is only 5x5 gridcells, the HDMAmz_amazon grid has over 4k -->
   <grid name="l%5x5_amazon_oi%null_r%HDMAmz_amazon">
-    <mach name="cheyenne">
+    <mach name="derecho">
       <pes pesize="any" compset="any">
-	<comment>none</comment>
+      <comment>HDMA grid over amazon for Derecho/Izumi with a full two nodes going to mizuRoute</comment>
 	<ntasks>
 	  <ntasks_atm>25</ntasks_atm>
 	  <ntasks_lnd>25</ntasks_lnd>
@@ -1747,9 +1748,9 @@
     </mach>
   </grid>
   <grid name="l%5x5_amazon_oi%null_r%HDMAmz_amazon">
-    <mach name="hobart|izumi">
+    <mach name="izumi">
       <pes pesize="any" compset="any">
-	<comment>none</comment>
+      <comment>HDMA grid over amazon for Izumi with a full node going to mizuRoute</comment>
 	<ntasks>
 	  <ntasks_atm>25</ntasks_atm>
 	  <ntasks_lnd>25</ntasks_lnd>
