@@ -336,7 +336,7 @@ sub print_categories {
         die "ERROR: CTSM ExpectedTestFails.xml file NOT found in $scrdir\n";
       }
    }
-   my @failfiles = (  $expectedfailfile, "$srcroot/components/mizuroute/cime_config/testdefs/ExpectedTestFails.xml",
+   my @failfiles = (  $expectedfailfile, "$srcroot/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml",
                       "$srcroot/components/mosart/cime_config/testdefs/ExpectedTestFails.xml",
                       "$srcroot/components/cmeps/cime_config/ExpectedTestFails.xml" );
    my @passes;
