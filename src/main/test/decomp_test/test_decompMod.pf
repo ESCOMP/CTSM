@@ -1,0 +1,106 @@
+module test_decompMod
+
+  ! Tests of decompMod
+
+  use funit
+  use decompMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestDecompMod
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: create_simpleSingleDecomp
+  end type TestDecompMod
+
+  integer, parameter :: ni = 2
+  integer, parameter :: nj = 2
+
+contains
+
+  ! ========================================================================
+  ! Helper routines
+  ! ========================================================================
+
+  subroutine setUp(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    call this%create_simpleSingleDecomp()
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    call decompmod_clean()
+
+  end subroutine tearDown
+
+  subroutine create_simpleSingleDecomp(this)
+    use spmdMod, only : iam
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: clump_pproc
+    ! TODO: When decompMod has it's own allocate method that could be used here
+    nclumps = 1
+    clump_pproc = nclumps
+    allocate(procinfo%cid(clump_pproc))
+    allocate(clumps(nclumps))
+    ! Set the procinfo and clumps values
+    ! TODO: Use initialization method when available (currently in decompInitMod)
+    procinfo%cid = 1
+    procinfo%ncells = ni*nj
+    procinfo%begg = 1
+    procinfo%endg = procinfo%ncells
+    procinfo%nclumps = nclumps
+    clumps(:)%owner = iam
+    clumps(:)%begg = 1
+    clumps(:)%endg = procinfo%ncells
+
+  end subroutine create_simpleSingleDecomp
+  ! ========================================================================
+  ! Begin tests
+  ! ========================================================================
+
+  @Test
+  subroutine test_get_clump_bounds(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds
+    integer :: n
+
+    do n = 1, procinfo%nclumps
+       call get_clump_bounds(n, bounds)
+       @assertEqual(bounds%level, bounds_level_clump)
+       @assertEqual(bounds%clump_index, n)
+    end do
+  end subroutine test_get_clump_bounds
+
+  @Test
+  subroutine test_get_proc_bounds(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds
+
+    ! Add optional argument, just to test that it can handle it
+    call get_proc_bounds(bounds, allow_call_from_threaded_region=.true.)
+    @assertEqual(bounds%level, bounds_level_proc)
+    @assertEqual(bounds%clump_index, -1)
+  end subroutine test_get_proc_bounds
+
+  @Test
+  subroutine test_proc_clump_bounds_equal(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds_clump, bounds_proc
+
+    @assertTrue(procinfo%nclumps == 1)
+    call get_clump_bounds(1, bounds_clump)
+    call get_proc_bounds(bounds_proc)
+    @assertEqual(bounds_proc%begg, bounds_clump%begg)
+    @assertEqual(bounds_proc%endg, bounds_clump%endg)
+  end subroutine test_proc_clump_bounds_equal
+
+end module test_decompMod
