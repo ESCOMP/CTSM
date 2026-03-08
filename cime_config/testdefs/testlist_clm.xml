@@ -4368,7 +4368,7 @@
       <option name="comment">Parallel test of mizuRoute for the small 5x5_amazon HDMA grid</option>
     </options>
   </test>
-  <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+  <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizGsNldas" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
