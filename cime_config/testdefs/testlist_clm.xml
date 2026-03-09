@@ -17,6 +17,10 @@
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+      ROF model test lists: (in each component model)
+        mosart: MOSART test list, run when MOSARt is updated
+        rtm: RTM test list, run when RTM is updated
+        mizu: mizuRoute test list, run when mizuRoute is updated
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
