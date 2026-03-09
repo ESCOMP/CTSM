@@ -317,11 +317,14 @@ contains
              gindx = g
              lindx = l
              exit
-          else if (urban_explicit_ac .and. (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8)) then
-             found = .true.
-             gindx = g
-             lindx = l
-             exit
+          end if
+          if (urban_explicit_ac) then
+             if (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8) then
+                found = .true.
+                gindx = g
+                lindx = l
+                exit
+             end if
           end if
        end if
     end do

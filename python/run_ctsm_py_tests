@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Driver for running the unit tests of the python code
 
-We use this rather than simply relying on 'python -m unittest discover' so we can do some
+We use this rather than simply relying calling ``pytest`` so we can do some
 initial setup, like configuring logging, before running the unit tests.
+
+Unknown arguments will be passed to pytest directly.
 """
 
-from ctsm import add_cime_to_path
 from ctsm.run_ctsm_py_tests import main
 
 if __name__ == "__main__":
