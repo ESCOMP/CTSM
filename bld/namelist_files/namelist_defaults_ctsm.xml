@@ -1974,9 +1974,9 @@ lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne120np4.pg3_hist_1979_78pfts_c251022.
 
 <!-- for NEON sites present day simulations - year 2000 -->
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.no_nan_fill.nc</fsurdat>
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 <!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
 <!-- for example to override the above for the TOOL site do something like this...
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
