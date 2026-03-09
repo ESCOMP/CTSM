@@ -4924,7 +4924,7 @@ sub setup_logic_fates {
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                        "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		       "use_fates_managed_fire","fates_lu_transition_logic"
+		                  "use_fates_managed_fire","fates_lu_transition_logic"
                     );
 
         foreach my $var ( @list ) {
