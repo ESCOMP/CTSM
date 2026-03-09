@@ -1437,13 +1437,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20000101"  sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_f09_127_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_f09_127_HIST.clm2.r.2000-01-01-00000.no_nan_fill.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"  maxpft="17"  mask="tx2_3v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101"  sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_ne30_126_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_SP_ne30_126_HIST.clm2.r.2000-01-01-00000.no_nan_fill.nc
 </finidat>
 
 <!-- CTSM6_0 - use clm6_0_CRUJRA2024 BgcCrop at f09 for all clm6_0 options -->
@@ -1451,21 +1451,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU.clm2.r.0161-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU.clm2.r.0161-01-01-00000.no_nan_fill.nc
 </finidat>
 <!-- ne30 case with the Greenland snow "hole" patched -->
 <finidat hgrid="ne30np4.pg3" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.015_BGCcrop_ne30_144_pSASU.clm2.r.0181-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.015_BGCcrop_ne30_144_pSASU.clm2.r.0181-01-01-00000.no_nan_fill.nc
 </finidat>
 <!-- Corresponding f19 -->
 <finidat hgrid="1.9x2.5" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".false."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f19_125_pSASU.clm2.r.0161-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f19_125_pSASU.clm2.r.0161-01-01-00000.no_nan_fill.nc
 </finidat>
 
 <!--
@@ -1501,7 +1501,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm53065_54surfdata_PPEcal115_115_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm53065_54surfdata_PPEcal115_115_HIST.clm2.r.2000-01-01-00000.no_nan_fill.nc
 </finidat>
 
 
@@ -1518,7 +1518,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup f09/f19 grid with irrigation on -->
@@ -1526,7 +1526,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!--
@@ -1538,7 +1538,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup f19 grid with irrigation on -->
@@ -1546,7 +1546,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
@@ -1554,7 +1554,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -1562,7 +1562,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 and present day crop spinup at 1/4-degree for high resolution with irrigation on -->
@@ -1595,13 +1595,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2000-01-01-00000.no_nan_fill.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0" use_init_interp=".true."
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2000-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2000-01-01-00000.no_nan_fill.nc
 </finidat>
 
 <!-- Repeat for 2010 -->
@@ -1609,13 +1609,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20100101" sim_year="2010" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2010-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.2010-01-01-00000.no_nan_fill.nc
 </finidat>
 <finidat hgrid="ne30np4.pg3"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20100101" sim_year="2010" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2010-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.2010-01-01-00000.no_nan_fill.nc
 </finidat>
 
 <!-- clm5_0 and cam7.0 -->
@@ -1624,7 +1624,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.no_nan_fill.nc
 </finidat>
 
 
@@ -1633,7 +1633,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.no_nan_fill.nc
 </finidat>
 <!-- Repeat above for clm6_0 -->
 <!-- slevis-lmwg, ekluzek 2024/10/11: do_transient_pfts was removed here to bypass a bug that doesn't allow
@@ -1643,14 +1643,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.1979-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_HIST.clm2.r.1979-01-01-00000.no_nan_fill.nc
 </finidat>
 <!-- 1979 crop spinup ne30 grid -->
 <finidat hgrid="ne30np4.pg3" maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101"  sim_year="1979" use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0"
->lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.1979-01-01-00000.nc
+>lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.CMIP7_ciso_ctsm5.3.075_ne30_123_HIST_popDens.clm2.r.1979-01-01-00000.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
@@ -1658,7 +1658,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -1666,7 +1666,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
@@ -1684,7 +1684,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam7.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.no_nan_fill.nc
 </finidat>
 
 <!--
@@ -1696,7 +1696,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup f19 grid with irrigation on -->
@@ -1704,7 +1704,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTIC grid with irrigation on -->
@@ -1712,7 +1712,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -1720,7 +1720,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
@@ -1744,7 +1744,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20030101"  sim_year="2003" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.no_nan_fill.nc
 </finidat>
 
 
@@ -1753,7 +1753,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.no_nan_fill.nc
 </finidat>
 <!-- Repeat above for clm6_0 -->
 <!-- clm6_0 and cam6.0-->
@@ -1763,7 +1763,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- 1979 no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -1771,7 +1771,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101"  sim_year="1979" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.no_nan_fill.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
@@ -1789,7 +1789,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20130101"  sim_year="2013" do_transient_pfts=".false." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm6_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.no_nan_fill.nc
 </finidat>
 
 
@@ -1974,9 +1974,9 @@ lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne120np4.pg3_hist_1979_78pfts_c251022.
 
 <!-- for NEON sites present day simulations - year 2000 -->
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.no_nan_fill.nc</fsurdat>
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 <!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
 <!-- for example to override the above for the TOOL site do something like this...
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
@@ -2607,11 +2607,11 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam7.0"
