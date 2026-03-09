@@ -2,14 +2,14 @@
 
 .. _customizing-the-mizuRoute-namelist:
 
-===============================
+===================================
  Customizing the mizuRoute namelist
-===============================
+===================================
 
 When running "I" compsets with CLM you can use the mizuRoute ROF model to model the river flow. Compsets with "Mz" in the alias name or ``_MIZUROUTE_`` in the long compset name use the mizuRoute ROF model.
 
 1. **mizuRoute control file** (``mizuRoute.control``)
-2. **mizuRoute Namelist ** (``mizuRoute_in``)
+2. **mizuRoute Namelist** (``mizuRoute_in``)
 
 The `mizuRoute User's Guide Documentation <https://mizuroute.readthedocs.io/en/latest/users_guide/index.html>`_ gives the details of all the options for mizuRoute namelist and control file.
 
@@ -18,7 +18,7 @@ To change options in the mizuRoute control file you edit the user_nl_mizuroute_c
 So for example to set the history file output and new file frequency to daily you would add the following lines to your user_nl_mizuroute_control file:
 
 .. code-block::
-::
+
     <newFileFrequency>           daily   !  frequency for new output files (daily, monthly, yearly, single)
     <outputFrequency>            daily   !  time frequency used for temporal aggregation of output variables - numeric or daily, monthyly, or yearly
 
