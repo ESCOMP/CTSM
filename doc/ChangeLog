@@ -1,13 +1,14 @@
 ===============================================================
 Tag name: ctsm5.4.024
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Mar 10 07:55:56 PM MDT 2026
+Date: Wed Mar 11 05:22:12 PM MDT 2026
 One-line Summary: Update derecho_intel again and a one line fix needed for it to build
 
 Purpose and description of changes
 ----------------------------------
 
 Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a one line fix so that it will build.
+Note, there are several mpi-serial Bgc cases that now fail on derecho_intel see details below.
 
 
 Significant changes to scientifically-supported configurations
@@ -36,9 +37,12 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
+   Some mpi-serial cases for single point cases with a Bgc compset fail because of a divide by zero in the ch4finundation mapping.
+   It fails with ch4finundatedmapalgo==bilinear but works if set to "nn" (see https://github.com/ESCOMP/CTSM/issues/3798)
 
 Notes of particular relevance for developers:
 ---------------------------------------------
+   There are now more problems with the CN-Matrix threaded tests (see https://github.com/ESCOMP/CTSM/issues/2619)
 
 Testing summary: regular
 ----------------
@@ -47,8 +51,8 @@ Testing summary: regular
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -56,7 +60,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: no bit-for-bit?
+Changes answers relative to baseline: no bit-for-bit
 
 Other details
 -------------
