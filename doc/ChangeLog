@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.4.023
+Tag name: ctsm5.4.024
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Mar  4 01:07:29 AM MST 2026
+Date: Tue Mar 10 07:55:56 PM MDT 2026
 One-line Summary: Update derecho_intel again and a one line fix needed for it to build
 
 Purpose and description of changes
@@ -67,6 +67,90 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
    #3796 -- Hot fix with updated derecho_intel and one line fix needed for it
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.023
+Originator(s): samrabin
+Date: Tue Mar 10 07:44:59 PM MDT 2026
+One-line Summary: Replace more netCDFs with NaN issues
+
+Purpose and description of changes
+----------------------------------
+
+Replaces the remaining input netCDF files that had problems with NaNs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Resolves NaN values in some input files cause problems with ifx compiler #3764
+   Resolves ciso_dec2050Start tests fail with ifx compiler #3790
+   Resolves Misc. ctsm_sci tests failing with ifx compiler #3792
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., streams, surface or initial files):
+   NEON and PLUMBER2 surface datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Zender soilerod datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Fire-emission factors dataset updated NaN _FillValue so have a .no_nan_fill.nc suffix
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    The finidat files have NaN's on them. But, using the modified files causes changes to answers.
+    This shows how the NaN's are having an impact that is different from a _FillValue change.
+
+Changes to tests or testing:
+    Was able to remove many expected fails
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3809 -- Replace more netCDFs with NaN issues
 
 ===============================================================
 ===============================================================
