@@ -1,0 +1,8 @@
+#!/bin/bash
+./xmlchange CUPID_RUN_LDF=TRUE
+
+# Base case setttings to match the case just run
+./xmlchange CUPID_BASE_STARTDATE='$RUN_STARTDATE'
+./xmlchange CUPID_BASE_CLIMO_END_YEAR=2005
+./xmlchange CUPID_BASE_CLIMO_N_YEAR='$STOP_N'
+./xmlchange CUPID_BASE_STOP_N='$STOP_N'
