@@ -39,25 +39,10 @@ contains
   end subroutine tearDown
 
   subroutine create_simpleSingleDecomp(this)
-    use spmdMod, only : iam
+    use unittestSubgridMod, only : set_decomp_info
     class(TestDecompMod), intent(inout) :: this
 
-    integer :: clump_pproc
-    ! TODO: When decompMod has it's own allocate method that could be used here
-    nclumps = 1
-    clump_pproc = nclumps
-    allocate(procinfo%cid(clump_pproc))
-    allocate(clumps(nclumps))
-    ! Set the procinfo and clumps values
-    ! TODO: Use initialization method when available (currently in decompInitMod)
-    procinfo%cid = 1
-    procinfo%ncells = ni*nj
-    procinfo%begg = 1
-    procinfo%endg = procinfo%ncells
-    procinfo%nclumps = nclumps
-    clumps(:)%owner = iam
-    clumps(:)%begg = 1
-    clumps(:)%endg = procinfo%ncells
+    call set_decomp_info( ni=ni, nj=nj )
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================
@@ -102,5 +87,102 @@ contains
     @assertEqual(bounds_proc%begg, bounds_clump%begg)
     @assertEqual(bounds_proc%endg, bounds_clump%endg)
   end subroutine test_proc_clump_bounds_equal
+
+  @Test
+  subroutine test_calc_globalxy_indices(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds
+    integer :: g
+    integer :: i, j
+    integer :: expect_i(ni*nj), expect_j(ni*nj)
+
+    ! Expected indices is just the pattern on the simple 2D grid with no mask
+    g = 0
+    do j = 1, nj
+      do i = 1, ni
+        g = g + 1
+        expect_i(g) = i
+        expect_j(g) = j
+      end do
+    end do
+    call get_proc_bounds(bounds)
+    ! Make sure begg is 1, as that is assumed here
+    @assertEqual(bounds%begg, 1)
+    @assertEqual(bounds%endg, ni*nj)
+    do g = bounds%begg, bounds%endg
+      write(*,*) 'g = ', g
+      call procinfo%calc_globalxy_indices( g, i, j )
+      @assertEqual(i, expect_i(g) )
+      @assertEqual(j, expect_j(g) )
+    end do
+
+  end subroutine test_calc_globalxy_indices
+
+  @Test
+  subroutine test_calc_globalxy_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    ! IF g is less than begg i and j should be undefined as -1
+    g = 0
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! IF g is greater than endg i and j should be undefined as -1
+    g = ni*nj + 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_x is not set
+    nglob_x = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_y is not set
+    nglob_x = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails
+
+  @Test
+  subroutine test_calc_globalxy_fails_when_not_allocated(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    call decompmod_clean()
+    g = 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails_when_not_allocated
+
+  @Test
+  subroutine test_calc_ijindices_from_full_global_index_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: gidx ! Global idnex
+    integer :: i, j
+
+    ! IF gidx is less than 1 i and j should be undefined as -1
+    gidx = 0
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+    ! IF gidx is greater than grid size  i and j should be undefined as -1
+    gidx = ni*nj + 1
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_ijindices_from_full_global_index_fails
 
 end module test_decompMod
