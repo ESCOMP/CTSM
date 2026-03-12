@@ -340,7 +340,7 @@ contains
     this%eflx_snomelt_u_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_U',  units='W/m^2',  &
          avgflag='A', long_name='Urban snow melt heat flux', &
-         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_lwrad_net_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA', units='W/m^2',  &
@@ -480,7 +480,7 @@ contains
     this%eflx_lwrad_net_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA_U', units='W/m^2',  &
          avgflag='A', long_name='Urban net infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
@@ -490,12 +490,12 @@ contains
     this%eflx_lwrad_out_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRE_U', units='W/m^2',  &
          avgflag='A', long_name='Urban emitted infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_sh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_U', units='W/m^2',  &
          avgflag='A', long_name='Urban sensible heat', &
-         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_sh_precip_conversion_col(begc:endc) = spval
     call hist_addfld1d (fname = 'FSH_PRECIP_CONVERSION', units='W/m^2', &
@@ -505,12 +505,12 @@ contains
     this%eflx_lh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_U', units='W/m^2',  &
          avgflag='A', long_name='Urban total evaporation', &
-         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_U', units='W/m^2',  &
          avgflag='A', long_name='Urban heat flux into soil/snow including snow melt', &
-         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%netrad_patch(begp:endp) = spval
     call hist_addfld1d (fname='Rnet', units='W/m^2',  &

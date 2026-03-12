@@ -469,7 +469,8 @@ class TestSubsetDataSys(unittest.TestCase):
         for year in list(range(start_year, end_year + 1)):
             for forcing in ["Solr", "Prec", "TPQWL"]:
                 expected_output_files.append(
-                    f"clmforc.CRUJRAv2.5_0.5x0.5.{forcing}.{sitename_str}.{year}.nc"
+                    f"clmforc.CRUJRAv2.5_filled_antarct_and_grnlnd_0.5x0.5"
+                    f".{forcing}.{sitename_str}.{year}.nc"
                 )
         expected_output_files = [os.path.join("datmdata", x) for x in expected_output_files]
         self.assertTrue(self._check_result_file_matches_expected(expected_output_files, 2))
