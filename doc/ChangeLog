@@ -10,6 +10,9 @@ Purpose and description of changes
 Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a one line fix so that it will build.
 Note, there are several mpi-serial Bgc cases that now fail on derecho_intel see details below.
 
+Also update the parameter files to ones that have some new fields on it that will be moved from namelist to the parameter
+file in a future b4b-dev PR.
+
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -37,8 +40,24 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
    Some mpi-serial cases for single point cases with a Bgc compset fail because of a divide by zero in the ch4finundation mapping.
    It fails with ch4finundatedmapalgo==bilinear but works if set to "nn" (see https://github.com/ESCOMP/CTSM/issues/3798)
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+
+  ./tools/param_utils/compare_paramfiles $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+  File 0: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc
+  File 1: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+
+  Variable(s) present in File 1 but not File 0:
+     baseflow_scalar
+     precip_repartition_glc_all_rain_t
+     precip_repartition_glc_all_snow_t
+     precip_repartition_nonglc_all_rain_t
+     precip_repartition_nonglc_all_snow_t
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -60,7 +79,14 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: no bit-for-bit
+Changes answers relative to baseline: no bit-for-bit -- except the compiler update means derecho_intel changes answers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: derecho_intel
+    - nature of change: should be roundoff (but haven't verified)
+
+  73 of the 280 passing tests on derecho_intel show different answers
 
 Other details
 -------------
