@@ -42,7 +42,9 @@ sub make_env_run {
     my %settings = @_;
 
     # Set default settings
-    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",  LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"", CLM_CMIP_ERA=>"cmip7" );
+    my %env_vars = ( DIN_LOC_ROOT=>"MYDINLOCROOT", GLC_TWO_WAY_COUPLING=>"FALSE",
+                     LND_SETS_DUST_EMIS_DRV_FLDS=>"TRUE", NEONSITE=>"", PLUMBER2SITE=>"",
+                     CLM_CMIP_ERA=>"cmip7", CLM_NDEP_FROM_CPL=>"FALSE" );
     # Set any settings that came in from function call
     foreach my $item ( keys(%settings) ) {
        $env_vars{$item} = $settings{$item};
@@ -1416,7 +1418,7 @@ foreach my $key ( keys(%failtest) ) {
    my $options  = $failtest{$key}{"options"};
    my $namelist = $failtest{$key}{"namelst"};
    my %settings;
-   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS", "CLM_CMIP_ERA") {
+   foreach my $xmlvar ( "GLC_TWO_WAY_COUPLING", "LND_SETS_DUST_EMIS_DRV_FLDS", "CLM_CMIP_ERA", "CLM_NDEP_FROM_CPL") {
       if ( defined($failtest{$key}{$xmlvar}) ) {
          $settings{$xmlvar} = $failtest{$key}{$xmlvar};
       }
