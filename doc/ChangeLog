@@ -1,4 +1,316 @@
 ===============================================================
+Tag name: ctsm5.4.024
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 11 11:46:22 PM MDT 2026
+One-line Summary: Update derecho_intel again and some fixes for it
+
+Purpose and description of changes
+----------------------------------
+
+Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a two line fix to a continuation line in
+the middle of a string, so that it will build.
+Note, there are several mpi-serial Bgc cases that now fail on derecho_intel see details below.
+
+Also update the parameter files to ones that have some new fields on it that will be moved from namelist to the parameter
+file in a future b4b-dev PR.
+
+Improve the logging about the ch4finundation stream. Some of this seemed to be important in order to be able to change
+ch4finundationmapalo away from bilinear.
+
+Remove a bunch of tests in the expected fail files that have been working now. Add a few more newly failing tests.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3791 - one line change needed for intel/2025.3.2
+   Fixes #3795 - Update to ccs_config_cesm1.0.77
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+   Some mpi-serial cases for single point cases with a Bgc compset fail because of a divide by zero in the ch4finundation mapping.
+   It fails with ch4finundatedmapalgo==bilinear but works if set to "nn" (see https://github.com/ESCOMP/CTSM/issues/3798)
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+
+  ./tools/param_utils/compare_paramfiles $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+  File 0: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc
+  File 1: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+
+  Variable(s) present in File 1 but not File 0:
+     baseflow_scalar
+     precip_repartition_glc_all_rain_t
+     precip_repartition_glc_all_snow_t
+     precip_repartition_nonglc_all_rain_t
+     precip_repartition_nonglc_all_snow_t
+
+Notes of particular relevance for developers:
+---------------------------------------------
+   There are now more problems with the CN-Matrix threaded tests (see https://github.com/ESCOMP/CTSM/issues/2619)
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit -- except the compiler update means derecho_intel changes answers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: derecho_intel
+    - nature of change: should be roundoff (but haven't verified)
+
+  73 of the 280 passing tests on derecho_intel show different answers
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+    ccs_config to ccs_config_cesm1.0.77
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #3796 -- Hot fix with updated derecho_intel and changes needed for it
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.023
+Originator(s): samrabin
+Date: Tue Mar 10 07:44:59 PM MDT 2026
+One-line Summary: Replace more netCDFs with NaN issues
+
+Purpose and description of changes
+----------------------------------
+
+Replaces the remaining input netCDF files that had problems with NaNs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Resolves NaN values in some input files cause problems with ifx compiler #3764
+   Resolves ciso_dec2050Start tests fail with ifx compiler #3790
+   Resolves Misc. ctsm_sci tests failing with ifx compiler #3792
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., streams, surface or initial files):
+   NEON and PLUMBER2 surface datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Zender soilerod datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Fire-emission factors dataset updated NaN _FillValue so have a .no_nan_fill.nc suffix
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    The finidat files have NaN's on them. But, using the modified files causes changes to answers.
+    This shows how the NaN's are having an impact that is different from a _FillValue change.
+
+Changes to tests or testing:
+    Was able to remove many expected fails
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3809 -- Replace more netCDFs with NaN issues
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.022
+Originator(s): erik (Erik Kluzek)
+Date: Wed Mar  4 10:52:05 AM MST 2026
+One-line Summary: Change to using the ifx compiler and some more fixes related to it
+
+Purpose and description of changes
+----------------------------------
+
+Updates ccs_config to 1.0.75 which has the new ifx compiler in use for derecho_intel, as well as updating to using ESMF8.9.0. This exposed problems in the code on two fronts when running with DEBUG mode:
+
+Reliance on short-circuiting in if statements
+Problems with NaN's, in datasets especially _FillValue
+For the former, we changed code to break up if statements so this would work. And with the latter we point to new datasets with the NaN's handled. mosart and cdeps code also had short-circuiting problems.
+
+@samsrabin created a script to examine all of the files in namelist_defaults_ctsm.xml and in the testmod directories to check if there were problems with NaN's in _FillValues. The modified files here all were the result
+of the first pass of that script. The new files all have a ".no_nan_fill.nc" ending on them.
+
+Includes updating submodules: ccs_config, cdeps, mosart
+
+Contributors: @samsrabin @billsacks
+-------------
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  Work on #3775 -- NaN's in _FillValue of some input datasets
+  Fixes #3794 -- Update to ccs_config1.0.75
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., streams, surface or initial files):
+  Datasets with a ".no_nan_fill.nc" at the end were modified to remove NaN's in _FillValue
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   This includes most of the files that have problems with NaN's
+   But, there are a few more that will be resolved after this tag.
+   aux_clm works fine with the exception of a hillslope test that now fails.
+
+Changes to tests or testing:
+   Added a bunch of tests to expected fails that will be resolved later
+   Update files in testmods that have issues
+
+Testing summary: regular, ctsm_sci, fates, crop_calendars
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+  crop_calendars
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for derecho_intel!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: ONLY for Derecho with the intel compiler
+    (because of the updated ccs_config submodule)
+    - nature of change: We expect it to be roundoff, but haven't confirmed
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+    ccs_config to ccs_config_cesm1.0.75
+    mosart to mosart1.1.13
+    cdeps to cdeps1.0.93
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #3787 -- Replace some netCDF inputs that have NaN fill values  (@samsrabin)
+   #3769 -- Update to ifx compiler
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.021
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Feb 20 08:19:42 PM MST 2026
