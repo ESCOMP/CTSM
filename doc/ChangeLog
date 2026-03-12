@@ -1,4 +1,484 @@
 ===============================================================
+Tag name: ctsm5.4.021
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Feb 20 08:19:42 PM MST 2026
+One-line Summary: Bring b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Some fixes to use the ifx compiler. Added handling of gzipped files in the short term archiver
+needed for DART. Use a CMake funciton for the PfUnit build. Make sure mksurfdata_esmf PIO library is
+used as shared in the build. Fix to a typo in the Technical Note.
+
+Use pytest instead of unittest in our python unit test framework, which allows many modern features.
+One test file, test_unit_longitude.py, has been modified to use pytest's "parametrize" functionality as an example. Most of the changed lines in that file are just whitespace differences.
+
+Existing run_ctsm_py_tests arguments have been ported to replicate the same functionality in pytest. Unknown arguments will be passed to pytest directly.
+
+Also: Made it so that the tests can be called from anywhere in the checkout, instead of only python/.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Resolves #3762 by Bill Sacks ifx issues
+Resolves #3763 by Bill Sacks Floating invalid with ifx
+Resolves #3774 by Erik Kluzek NaN's in Prigent and urbantv streams
+Resolves #3082 by Kevin Raeder st_archive for DART
+Resolves #3616 by Sam Rabin convert python unittests to pytest
+Resolves #3035 by Keith Oleson typo in LW documentation in tech. note
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   The Short Term archiver can now also save files that are g-zipped
+   This is something that is needed for DART
+
+Changes to the datasets (e.g., streams, surface or initial files):
+    New Prigent and urbantv streams datasets with NaN's removed
+
+Changes to documentation: Fix issue in tech. note
+
+Notes of particular relevance for developers: regular
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The ctsm_pylib conda environment changed! Rerun py_env_create to update it
+
+Changes to tests or testing:
+   Python unit test framework changed from unittest to pytest. So now pytest functionality can be used
+   in tests
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3765 Fixes for ifx, from Bill Sacks
+#3084 Added code to make st-archive handle DART files, from Kevin Raeder
+#3761 Use pytest instead of unittest in run_ctsm_py_tests, from Sam Rabin
+#3582 Use a CMake function provided by CIME, from Bill Sacks
+#3700 Fix mksurfdata CMakeLists.txt: use SHARED for .so PIO libraries, from Cooper DeVane-Prugh
+#3220 Tech Note: Distinguish between time step and iteration level in vegetation longwave and fluxes, from Keith Oleson
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.020
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Thu Feb 19 08:28:59 AM MST 2026
+One-line Summary: Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
+
+Purpose and description of changes
+----------------------------------
+
+ - New defaults for lnd_tuning_mode="clm6_0_cam7.0"
+ defo_fire_precip_thresh_bet = 1.4d00
+ rh_hgh = 80.0d00
+
+ - New default paramfiles
+ for clm6: /glade/work/linnia/CLM6-PPE/ctsm6_cal/paramfiles/ctsm60_params.c260204.nc
+ for lnd_tuning_mode="clm6_0_cam7.0": /glade/u/home/slevis/paramfiles/iss3725_forFang/ctsm60_params.c260204.cesm3-01.nc
+ The latter got renamed to ctsm60-cam70_params.c260204.nc and it increases pft-specific values of "rswf_max" and "rswf_min"
+
+ - New default finidat for ne30 and 1850
+ /glade/derecho/scratch/wwieder/archive/ctsm5.4.015_BGCcrop_ne30_144_pSASU/rest/0181-01-01-00000/ctsm5.4.015_BGCcrop_ne30_144_pSASU.clm2.r.0181-01-01-00000.nc
+
+ All new files got moved to /inputdata and got rimported.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #3725
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Listed above.
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+ Listed above.
+
+Changes to documentation:
+ Not, yet.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff due to changes in defaults
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - LMWG_dev issue number(s): https://github.com/NCAR/LMWG_dev/issues/141
+                                   https://github.com/NCAR/LMWG_dev/issues/143
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3756
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.019
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Feb 12 16:21:47 MST 2026
+One-line Summary: Fix years used by generate_gdds
+
+Purpose and description of changes
+----------------------------------
+
+This fixes a bug where the generate_gdds script (used for producing crop maturity requirement input files) was looking for the wrong timestamps.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed:
+- Resolves [ESCOMP/CTSM Issue #3740: RXCROPMATURITY tests broken](https://github.com/ESCOMP/CTSM/issues/3740)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Deletes f09_g17 version of RXCROPMATURITY test (was redundant with f09_t232) version.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+    clm_pymods test suite on derecho - PASS
+
+  rxcropmaturity suite:
+    derecho ----- PASS
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #3749: ctsm5.4.019: Fix years used by generate_gdds](https://github.com/ESCOMP/CTSM/pull/3749)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.018
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Feb 12 11:28:51 AM MST 2026
+One-line Summary: Quick fix so that we can use Nitrogen Deposition sent from the ATM model
+
+Purpose and description of changes
+----------------------------------
+
+Add the ndep_inparm namelist to drv_flds_in, so that CTSM can turn on ndep from the ATM model. Also turn on using the ndep from the ATM model for the cam LndTuningMode testmods. And make sure ndep comes from CAM when we are coupled to CAM.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes Add ndep_inparm namelist to drv_flds_in #3742
+ Fixes When coupled to CAM, ndep is still read in from CTSM rather than using what CAM is sending #3737
+ Fixes Ndep from ATM is now hard coded to 2 fields #3743
+ Fixes Have testmods with cam LndTuningMode use ndep from ATM #3744
+ Fixes Add CLM_NDEP_FROM_CPL XML variable #3747
+ Fixes Difference between ndep from CTSM streams and from DATM is significant #3748
+ Some work on Move settings from use_cases to namelist_defaults #605
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+   Now you can trigger whether Nitrogen Deposition is coming from the ATM model or read inside of CTSM
+   (before it was ALWAYS read in)
+   This only matters for Bgc or BgcCrop compsets
+   You can see if ndep is coming from ATM or CTSM by doing this in your case:
+      ./xmlquery CLM_NDEP_FROM_CPL
+      # (will be TRUE if coming from either DATM or CAM, FALSE if read internally in CTSM
+      grep ndep CaseDocs/*
+      # If the above is FALSE for an I compset you'll see matches in: datm_in and lnd_in
+      # If the above is TRUE when coupled to CAM you'll see matches in: atm_in and drv_flds_in
+      # (and in lnd_in, but just for the empty namelist: &ndepdyn_nml)
+
+      The lnd.log file also will explicitly say whether ndep is coming from ATM or read by CTSM
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New XML variable: CLM_NDEP_FROM_CPL
+   For I compsets this is set to FALSE, but when coupled to CAM it's set to TRUE
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   None from the user perspective, unless you try to run with CLM_NML_USE_CASE==UNSET
+
+Changes to documentation:
+  Updated notes on ndep
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Settings for ndep moved from the use_case files to namelist_defaults_ctsm
+   ndep_list added to namelist_definition_drv_flds.xml
+
+Changes to tests or testing:
+   clm*cam*LndTuningMode testmods changed to have ndep come from the ATM model (so DATM)
+   build-namelist tester updated to accommodate the addition of CLM_NDEP_FROM_CPL
+
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (some changes relative to ctsm5.4.017)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: yes (just when coupled to CAM or the CAM LndTuningMode testmods are used)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only BGC cases for when Coupled to CAM / CAM LND_TUNING_MODE
+    - what platforms/compilers: All
+    - nature of change: same climate, changes Nitrogen deposition
+
+  We didn't run simulations but as the change to ndep is a normalized RMS of 1.e-4 we felt it should be OK
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #3745 -- allows ndep to come from ATM model
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.017
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Feb  9 12:34:51 PM MST 2026
+One-line Summary: Introduce CRUJRA2024b datm option (Greenand snow hole filled)
+
+Purpose and description of changes
+----------------------------------
+
+ Introduce CRUJRA2024b option:
+ - Includes corresponding changes in cdeps by updating to cdeps1.0.91
+ - Includes renaming of CRUJRA2024 files present in /python/ctsm/test/testinputs/expected_result_files to permit all tests to pass
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes #3680 and parts of #3707
+ In cdeps this fixes https://github.com/ESCOMP/CDEPS/issues/382
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ - The default datm input dataset changes from CRUJRA2024 to CRUJRA2024b. The former has Antarctica filled and the latter has Greenland also filled.
+ - User may select either CRUJRA2024 or CRUJRA2024b using long compset names, e.g.
+ HIST_DATM%CRUJRA2024_SLND_SICE_SOCN_SROF_SGLC_SWAV_SESP
+ HIST_DATM%CRUJRA2024b_SLND_SICE_SOCN_SROF_SGLC_SWAV_SESP
+
+Changes to the datasets (e.g., streams, surface or initial files):
+ CRUJRA2024 already had Antarctica filled and CRUJRA2024b has Greenland also filled.
+
+Changes to documentation:
+ I updated from CRUJRA2024 to CRUJRA2024b where I found it mentioned.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ In aux_cdeps I kept one CRUJRA2024 test unchanged, for which I added a CRUJRA2024b test. All others I just changed to CRUJRA2024b.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 failures expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK done against ctsm5.4.016
+    izumi ------- OK done against ctsm5.4.015 (b4b with .016)
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: New climate over Greenland due to the new datm files; cpl output diffs due to the submodule updates listed below
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - LMWG_dev issue number(s): https://github.com/NCAR/LMWG_dev/issues/133
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ cdeps1.0.84 --> cdeps1.0.91
+ cmeps1.1.24 --> cmeps1.1.29 (required for the cdeps update to work)
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3734
+ https://github.com/ESCOMP/CDEPS/pull/385
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.016
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Feb  6 09:09:56 MST 2026
