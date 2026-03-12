@@ -290,13 +290,6 @@
 
   <!-- decomp_init test list-->
 
-  <test name="SMS_Ln1_PL.mpasa15_mpasa15.I2000Clm45Sp.derecho_intel.clm-run_self_tests">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3316</issue>
-    </phase>
-  </test>
-
   <!-- interim_restart (and aux_clm) test list-->
 
   <test name="ERI_Ld41.f10_f10_mg37.I2000Clm60BgcCrop.derecho_gnu.clm-default">
