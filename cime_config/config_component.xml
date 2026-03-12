@@ -304,6 +304,10 @@ Caveats:
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
       <value compset="SSP.*_DATM"  >diagnostic</value>
+      <value compset="1850_DATM[^_]*_CLM60">diagnostic</value>
+      <value compset="2000_DATM[^_]*_CLM60">diagnostic</value>
+      <value compset="2010_DATM[^_]*_CLM60">diagnostic</value>
+      <value compset="^1850_DATM[^_]*_CLM[^_]*NOANTHRO" >constant</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
