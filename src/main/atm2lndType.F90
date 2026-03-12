@@ -120,6 +120,7 @@ module atm2lndType
 
      procedure, public  :: Init
      procedure, public  :: InitForTesting  ! version of Init meant for unit testing
+     procedure, private :: ReadNamelistAndParams
      procedure, private :: ReadNamelist
      procedure, private :: ReadParams
      procedure, private :: InitAllocate
@@ -144,7 +145,9 @@ contains
 
   !-----------------------------------------------------------------------
   function atm2lnd_params_constructor(repartition_rain_snow, glcmec_downscale_longwave, &
-       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit) &
+       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit, &
+       precip_repartition_glc_all_snow_t, precip_repartition_glc_all_rain_t, &
+       precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t) &
        result(params)
     !
     ! !DESCRIPTION:
@@ -168,6 +171,15 @@ contains
     ! Must be present if glcmec_downscale_longwave is true; ignored otherwise
     real(r8), intent(in), optional :: longwave_downscaling_limit
 
+    ! End-points of the rain-snow ramp for glacier landunits (degrees C)
+    ! Must be present if repartition_rain_snow is true; ignored otherwise
+    real(r8), intent(in), optional :: precip_repartition_glc_all_snow_t
+    real(r8), intent(in), optional :: precip_repartition_glc_all_rain_t
+
+    ! End-points of the rain-snow ramp for non-glacier landunits (degrees C)
+    ! Must be present if repartition_rain_snow is true; ignored otherwise
+    real(r8), intent(in), optional :: precip_repartition_nonglc_all_snow_t
+    real(r8), intent(in), optional :: precip_repartition_nonglc_all_rain_t
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'atm2lnd_params_constructor'
@@ -201,6 +213,72 @@ contains
        params%longwave_downscaling_limit = nan
     end if
 
+    if (repartition_rain_snow) then
+
+       ! Make sure all of the repartitioning-related parameters are present
+
+       if (.not. present(precip_repartition_glc_all_snow_t)) then
+          call endrun(subname // &
+               ' ERROR: For repartition_rain_snow true, precip_repartition_glc_all_snow_t must be provided')
+       end if
+       if (.not. present(precip_repartition_glc_all_rain_t)) then
+          call endrun(subname // &
+               ' ERROR: For repartition_rain_snow true, precip_repartition_glc_all_rain_t must be provided')
+       end if
+       if (.not. present(precip_repartition_nonglc_all_snow_t)) then
+          call endrun(subname // &
+               ' ERROR: For repartition_rain_snow true, precip_repartition_nonglc_all_snow_t must be provided')
+       end if
+       if (.not. present(precip_repartition_nonglc_all_rain_t)) then
+          call endrun(subname // &
+               ' ERROR: For repartition_rain_snow true, precip_repartition_nonglc_all_rain_t must be provided')
+       end if
+
+       ! Do some other error checking
+
+       if (precip_repartition_glc_all_rain_t <= precip_repartition_glc_all_snow_t) then
+          call endrun(subname // &
+               ' ERROR: Must have precip_repartition_glc_all_snow_t < precip_repartition_glc_all_rain_t')
+       end if
+
+       if (precip_repartition_nonglc_all_rain_t <= precip_repartition_nonglc_all_snow_t) then
+          call endrun(subname // &
+               ' ERROR: Must have precip_repartition_nonglc_all_snow_t < precip_repartition_nonglc_all_rain_t')
+       end if
+
+       ! Convert to the form of the parameters we want for the main code
+
+       call compute_ramp_params( &
+            all_snow_t_c = precip_repartition_glc_all_snow_t, &
+            all_rain_t_c = precip_repartition_glc_all_rain_t, &
+            all_snow_t_k = params%precip_repartition_glc_all_snow_t, &
+            frac_rain_slope = params%precip_repartition_glc_frac_rain_slope)
+
+       call compute_ramp_params( &
+            all_snow_t_c = precip_repartition_nonglc_all_snow_t, &
+            all_rain_t_c = precip_repartition_nonglc_all_rain_t, &
+            all_snow_t_k = params%precip_repartition_nonglc_all_snow_t, &
+            frac_rain_slope = params%precip_repartition_nonglc_frac_rain_slope)
+
+    else  ! .not. repartition_rain_snow
+       params%precip_repartition_glc_all_snow_t = nan
+       params%precip_repartition_glc_frac_rain_slope = nan
+       params%precip_repartition_nonglc_all_snow_t = nan
+       params%precip_repartition_nonglc_frac_rain_slope = nan
+    end if
+
+  contains
+    elemental subroutine compute_ramp_params(all_snow_t_c, all_rain_t_c, &
+         all_snow_t_k, frac_rain_slope)
+      real(r8), intent(in)  :: all_snow_t_c  ! Temperature at which precip falls entirely as rain (deg C)
+      real(r8), intent(in)  :: all_rain_t_c  ! Temperature at which precip falls entirely as snow (deg C)
+      real(r8), intent(out) :: all_snow_t_k  ! Temperature at which precip falls entirely as snow (K)
+      real(r8), intent(out) :: frac_rain_slope ! Slope of the frac_rain vs. T relationship
+
+      frac_rain_slope = 1._r8 / (all_rain_t_c - all_snow_t_c)
+      all_snow_t_k = all_snow_t_c + tfrz
+    end subroutine compute_ramp_params
+
   end function atm2lnd_params_constructor
 
   !------------------------------------------------------------------------
@@ -215,8 +293,7 @@ contains
     character(len=*), intent(in) :: NLFilename ! namelist filename
 
     call this%InitAllocate(bounds)
-    call this%ReadParams(paramfile)
-    call this%ReadNamelist(NLFilename)
+    call this%ReadNamelistAndParams(NLFilename, paramfile)
     call this%InitHistory(bounds)
 
   end subroutine Init
@@ -260,7 +337,65 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine ReadNamelist(this, NLFilename)
+  subroutine ReadNamelistAndParams(this, NLFilename, paramfile)
+
+    ! !DESCRIPTION:
+    ! Call the
+    ! - subroutines that read the atm2lnd namelist and parameters,
+    ! - function atm2lnd_params_constructor
+
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename !  Namelist filename
+    character(len=*), intent(in) :: paramfile  ! parameter filename
+    class(atm2lnd_type), intent(inout) :: this
+
+    ! !LOCAL VARIABLES:
+
+    ! variables corresponding to the components of atm2lnd_params_type
+    logical :: repartition_rain_snow
+    logical :: glcmec_downscale_longwave
+    real(r8) :: lapse_rate
+    real(r8) :: lapse_rate_longwave
+    real(r8) :: longwave_downscaling_limit
+
+    ! Rain-snow transition temperatures (C) for glacier landunits
+    real(r8) :: precip_repartition_glc_all_rain_t
+    real(r8) :: precip_repartition_glc_all_snow_t
+
+    ! Rain-snow transition temperatures (C) for non-glacier landunits
+    real(r8) :: precip_repartition_nonglc_all_rain_t
+    real(r8) :: precip_repartition_nonglc_all_snow_t
+
+    !-----------------------------------------------------------------------
+
+    call this%ReadNamelist(NLFilename, &
+       repartition_rain_snow, glcmec_downscale_longwave, &
+       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit)
+    call this%ReadParams(paramfile, &
+       repartition_rain_snow, &
+       precip_repartition_glc_all_rain_t, &
+       precip_repartition_glc_all_snow_t, &
+       precip_repartition_nonglc_all_rain_t, &
+       precip_repartition_nonglc_all_snow_t)
+
+    this%params = atm2lnd_params_type( &
+         repartition_rain_snow = repartition_rain_snow, &
+         glcmec_downscale_longwave = glcmec_downscale_longwave, &
+         lapse_rate = lapse_rate, &
+         lapse_rate_longwave = lapse_rate_longwave, &
+         longwave_downscaling_limit = longwave_downscaling_limit, &
+         precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
+         precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
+         precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &
+         precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
+
+  end subroutine ReadNamelistAndParams
+
+
+  !-----------------------------------------------------------------------
+  subroutine ReadNamelist(this, NLFilename, &
+    repartition_rain_snow, glcmec_downscale_longwave, &
+    lapse_rate, lapse_rate_longwave, longwave_downscaling_limit)
     !
     ! !DESCRIPTION:
     ! Read the atm2lnd namelist
@@ -274,15 +409,15 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(atm2lnd_type), intent(inout) :: this
-    !
-    ! !LOCAL VARIABLES:
 
-    ! temporary variables corresponding to the components of atm2lnd_params_type
-    logical :: repartition_rain_snow
-    logical :: glcmec_downscale_longwave
-    real(r8) :: lapse_rate
-    real(r8) :: lapse_rate_longwave
-    real(r8) :: longwave_downscaling_limit
+    ! variables corresponding to the components of atm2lnd_params_type
+    logical, intent(out) :: repartition_rain_snow
+    logical, intent(out) :: glcmec_downscale_longwave
+    real(r8), intent(out) :: lapse_rate
+    real(r8), intent(out) :: lapse_rate_longwave
+    real(r8), intent(out) :: longwave_downscaling_limit
+
+    ! !LOCAL VARIABLES:
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -337,18 +472,16 @@ contains
        write(iulog,*) ' '
     end if
 
-    this%params = atm2lnd_params_type( &
-         repartition_rain_snow = repartition_rain_snow, &
-         glcmec_downscale_longwave = glcmec_downscale_longwave, &
-         lapse_rate = lapse_rate, &
-         lapse_rate_longwave = lapse_rate_longwave, &
-         longwave_downscaling_limit = longwave_downscaling_limit)
-
   end subroutine ReadNamelist
 
 
   !-----------------------------------------------------------------------
-  subroutine ReadParams(this, paramfile)
+  subroutine ReadParams(this, paramfile, &
+    repartition_rain_snow, &
+    precip_repartition_glc_all_rain_t_celsius, &
+    precip_repartition_glc_all_snow_t_celsius, &
+    precip_repartition_nonglc_all_rain_t_celsius, &
+    precip_repartition_nonglc_all_snow_t_celsius)
     !
     ! !DESCRIPTION:
     ! Read the atm2lnd parameters
@@ -362,23 +495,25 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: paramfile  ! parameter filename
     class(atm2lnd_type), intent(inout) :: this
+    logical, intent(in) :: repartition_rain_snow
+
+    ! Rain-snow transition temperatures (C) for glacier landunits
+    real(r8), intent(out) :: precip_repartition_glc_all_rain_t_celsius
+    real(r8), intent(out) :: precip_repartition_glc_all_snow_t_celsius
+
+    ! Rain-snow transition temperatures (C) for non-glacier landunits
+    real(r8), intent(out) :: precip_repartition_nonglc_all_rain_t_celsius
+    real(r8), intent(out) :: precip_repartition_nonglc_all_snow_t_celsius
+
     !
     ! !LOCAL VARIABLES:
     character(len=256) :: locfn ! local file name
     type(file_desc_t)  :: ncid  ! pio netCDF file id
 
-    ! Rain-snow transition temperatures (C) for glacier landunits
-    real(r8) :: precip_repartition_glc_all_rain_t_celsius
-    real(r8) :: precip_repartition_glc_all_snow_t_celsius
-
-    ! Rain-snow transition temperatures (C) for non-glacier landunits
-    real(r8) :: precip_repartition_nonglc_all_rain_t_celsius
-    real(r8) :: precip_repartition_nonglc_all_snow_t_celsius
-
     character(len=*), parameter :: subname = 'ReadParams'
     !-----------------------------------------------------------------------
 
-    if (this%params%repartition_rain_snow) then
+    if (repartition_rain_snow) then
 
        ! Read repartition temperatures from parameter file
        call getfil (paramfile, locfn, 0)
@@ -398,46 +533,7 @@ contains
 
        call ncd_pio_closefile(ncid)
 
-       ! Do some other error checking
-
-       if (precip_repartition_glc_all_rain_t_celsius <= precip_repartition_glc_all_snow_t_celsius) then
-          call endrun(subname // &
-               ' ERROR: Must have precip_repartition_glc_all_snow_t < precip_repartition_glc_all_rain_t')
-       end if
-
-       if (precip_repartition_nonglc_all_rain_t_celsius <= precip_repartition_nonglc_all_snow_t_celsius) then
-          call endrun(subname // &
-               ' ERROR: Must have precip_repartition_nonglc_all_snow_t < precip_repartition_nonglc_all_rain_t')
-       end if
-
-       ! Convert to the form of the parameters we want for the main code
-
-       call compute_ramp_params( &
-            all_snow_t_c = precip_repartition_glc_all_snow_t_celsius, &
-            all_rain_t_c = precip_repartition_glc_all_rain_t_celsius, &
-            all_snow_t_k = this%params%precip_repartition_glc_all_snow_t, &
-            frac_rain_slope = this%params%precip_repartition_glc_frac_rain_slope)
-
-       call compute_ramp_params( &
-            all_snow_t_c = precip_repartition_nonglc_all_snow_t_celsius, &
-            all_rain_t_c = precip_repartition_nonglc_all_rain_t_celsius, &
-            all_snow_t_k = this%params%precip_repartition_nonglc_all_snow_t, &
-            frac_rain_slope = this%params%precip_repartition_nonglc_frac_rain_slope)
-
     end if
-
-  contains
-    subroutine compute_ramp_params(all_snow_t_c, all_rain_t_c, &
-         all_snow_t_k, frac_rain_slope)
-      real(r8), intent(in)  :: all_snow_t_c  ! Temperature at which precip falls entirely as rain (deg C)
-      real(r8), intent(in)  :: all_rain_t_c  ! Temperature at which precip falls entirely as snow (deg C)
-      real(r8), intent(out) :: all_snow_t_k  ! Temperature at which precip falls entirely as snow (K)
-      real(r8), intent(out) :: frac_rain_slope ! Slope of the frac_rain vs. T relationship
-
-      frac_rain_slope = 1._r8 / (all_rain_t_c - all_snow_t_c)
-      all_snow_t_k = all_snow_t_c + tfrz
-    end subroutine compute_ramp_params
-
 
   end subroutine ReadParams
 
