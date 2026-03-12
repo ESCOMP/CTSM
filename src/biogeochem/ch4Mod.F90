@@ -1489,7 +1489,7 @@ contains
      params_inst%f_ch4=tempr
 
      !scs
-     params_inst%f_ch4=0.1_r8
+     params_inst%f_ch4=0.04_r8
      
      tString='rootlitfrac'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1577,7 +1577,7 @@ contains
      !params_inst%vmax_oxid_unsat=tempr
 
      !scs
-     params_inst%vmax_oxid_unsat = 2._r8*params_inst%vmax_oxid_unsat
+     params_inst%vmax_oxid_unsat = 2.5_r8*params_inst%vmax_oxid_unsat
      
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -2022,9 +2022,7 @@ contains
 
       end do
 
-      ! Check to see if finundated changed since the last timestep.  If it increased, then reduce conc_ch4_sat
-      ! proportionally.  If it decreased, then add flux to atm.
-
+      ! Check to see if finundated changed since the last timestep and adjust concentrations to conserve vertically integrated methane
       do j=1,nlevsoi
          do fc = 1, num_soilc
             c = filter_soilc(fc)
@@ -2035,33 +2033,35 @@ contains
 
             g = col%gridcell(c)
             if (.not. ch4_first_time_grc(g)) then
-               if (finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
-                  dfsat = finundated(c) - fsat_bef(c)
+               dfsat = finundated(c) - fsat_bef(c)
+               if (dfsat > 0._r8) then      ! adjust conc_ch4_sat
                   conc_ch4_sat(c,j) = (fsat_bef(c)*conc_ch4_sat(c,j) + dfsat*conc_ch4_unsat(c,j)) / finundated(c)
-               else if (finundated(c) < fsat_bef(c)) then
-                  ch4_dfsat_flux(c) = ch4_dfsat_flux(c) + &
-                       (fsat_bef(c) - finundated(c))*(conc_ch4_sat(c,j) - conc_ch4_unsat(c,j)) * &
-                       dz(c,j) / dtime * catomw / 1000._r8 ! mol --> kg
+               else if (dfsat < 0._r8) then ! adjust conc_ch4_unsat
+                  if (finundated(c) < 1._r8) then
+                     conc_ch4_unsat(c,j) = ((1._r8-fsat_bef(c))*conc_ch4_unsat(c,j) - dfsat*conc_ch4_sat(c,j)) / (1._r8 - finundated(c))
+                  endif
                end if
             end if
          end do
       end do
-
-            ! Account for surface layer
+      ! Account for surface layer
       do fc = 1, num_soilc
          c = filter_soilc(fc)
          g = col%gridcell(c)
          if (.not. ch4_first_time_grc(g)) then
-            if (finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
-               dfsat = finundated(c) - fsat_bef(c)
-
-               surface_layer_conc_ch4_sat(c) = (fsat_bef(c)*surface_layer_conc_ch4_sat(c) + dfsat*surface_layer_conc_ch4_unsat(c)*(surface_layer_thickness_unsat(c)/surface_layer_thickness_sat(c))) / finundated(c)
-            else if (finundated(c) < fsat_bef(c)) then
-               ch4_dfsat_flux(c) = ch4_dfsat_flux(c) + &
-                    (fsat_bef(c) - finundated(c)) &
-                    *(surface_layer_conc_ch4_sat(c)*surface_layer_thickness_sat(c) &
-                    - surface_layer_conc_ch4_unsat(c)*surface_layer_thickness_unsat(c)) &
-                    / dtime * catomw / 1000._r8 ! mol --> kg
+            dfsat = finundated(c) - fsat_bef(c)
+            if (dfsat > 0._r8) then      ! adjust conc_ch4_sat
+               surface_layer_conc_ch4_sat(c) = &
+                    (fsat_bef(c)*surface_layer_conc_ch4_sat(c) &
+                    + dfsat*surface_layer_conc_ch4_unsat(c)*(surface_layer_thickness_unsat(c)/surface_layer_thickness_sat(c))) &
+                    / finundated(c)
+            else if (dfsat < 0._r8) then ! adjust conc_ch4_unsat
+               if (finundated(c) < 1._r8) then
+                  surface_layer_conc_ch4_unsat(c) = &
+                       ((1._r8-fsat_bef(c))*surface_layer_conc_ch4_unsat(c) &
+                       - dfsat*surface_layer_conc_ch4_sat(c)*(surface_layer_thickness_sat(c)/surface_layer_thickness_unsat(c))) &
+                       / (1._r8 - finundated(c))
+               endif
             end if
          end if
       end do
