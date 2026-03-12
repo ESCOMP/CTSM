@@ -1,18 +1,23 @@
 ===============================================================
 Tag name: ctsm5.4.024
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Mar 11 05:22:12 PM MDT 2026
-One-line Summary: Update derecho_intel again and a one line fix needed for it to build
+Date: Wed Mar 11 11:46:22 PM MDT 2026
+One-line Summary: Update derecho_intel again and some fixes for it
 
 Purpose and description of changes
 ----------------------------------
 
-Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a one line fix so that it will build.
+Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a two line fix to a continuation line in
+the middle of a string, so that it will build.
 Note, there are several mpi-serial Bgc cases that now fail on derecho_intel see details below.
 
 Also update the parameter files to ones that have some new fields on it that will be moved from namelist to the parameter
 file in a future b4b-dev PR.
 
+Improve the logging about the ch4finundation stream. Some of this seemed to be important in order to be able to change
+ch4finundationmapalo away from bilinear.
+
+Remove a bunch of tests in the expected fail files that have been working now. Add a few more newly failing tests.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -96,7 +101,7 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
-   #3796 -- Hot fix with updated derecho_intel and one line fix needed for it
+   #3796 -- Hot fix with updated derecho_intel and changes needed for it
 
 ===============================================================
 ===============================================================
