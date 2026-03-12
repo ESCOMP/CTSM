@@ -318,7 +318,9 @@ def generate_gdd20_baseline(input_files, output_file, author, variable, year_arg
             ds_out[var_out] = grid_one_variable(ds_out, var_out)
 
     # Save
-    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC", encoding=encoding_dict)
+    output_dir = os.path.dirname(output_file)
+    os.makedirs(output_dir, exist_ok=True)
+    ds_out.to_netcdf(output_file, format="NETCDF4_CLASSIC", encoding=encoding_dict)
 
     print("Done!")
 
