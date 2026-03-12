@@ -11,6 +11,10 @@ Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting long-term pat
 
 Aber, J.D., Goodale, C.L., Ollinger, S.V., Smith, M.-L., Magill, A.H., Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen deposition altering the nitrogen status of northeastern forests? BioScience 53:375-389.
 
+.. _AlduchovandEskridge1996:
+
+Alduchov, O.A., and Eskridge, R.E. 1996. Improved Magnus form approximation of saturation vapor pressure. J. Appl. Meteor. 35:601-609.
+
 .. _Alietal2016:
 
 Ali, A. A., C. Xu, A. Rogers, R. A. Fisher, S. D. Wullschleger, E. Massoud, J. A. Vrugt, J. D. Muss, N. McDowell, and J. Fisher, 2016: A global scale mechanistic model of photosynthetic capacity (LUNA V1. 0). Geosci. Mod. Dev., 9:587-606.
@@ -686,6 +690,10 @@ Lavigne, M.B., and Ryan, M.G. 1997. Growth and maintenance respiration rates of 
 .. _Lawetal2003:
 
 Law, B.E., Sun, O.J., Campbell, J., Van Tuyl, S. and Thornton, P.E. 2003. Changes in carbon storage and fluxes in a chronosequence of ponderosa pine. Global Change Biology, 9: 510-514.
+
+.. _Lawrence2005:
+
+Lawrence, M.G. 2005. The relationship between relative humidity and the dewpoint temperature in moist air. Bull. Amer. Meteorol. Soc. 86:225-234. DOI:10.1175/BAMS-86-2-225.
 
 .. _Lawrenceetal2007:
 
