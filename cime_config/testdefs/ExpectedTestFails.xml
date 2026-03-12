@@ -184,7 +184,7 @@
   </test>
 
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
-    <phase name="BUILD">
+    <phase name="MODEL_BUILD">
       <status>FAIL</status>
       <issue>ESCOMP/mizuRoute#614</issue>
     </phase>
