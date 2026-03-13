@@ -4924,7 +4924,7 @@ sub setup_logic_fates {
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                        "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		       "use_fates_managed_fire","fates_lu_transition_logic"
+		                  "use_fates_managed_fire","fates_lu_transition_logic"
                     );
 
         foreach my $var ( @list ) {
@@ -4937,7 +4937,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_potentialveg'=>$nl->get_value('use_fates_potentialveg'),
-		    'fates_lu_transition_logic'=>$nl->get_value('fates_lu_transition_logic'),
+		              'fates_lu_transition_logic'=>$nl->get_value('fates_lu_transition_logic'),
                     'fates_harvest_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode')) );
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
@@ -5014,6 +5014,7 @@ sub setup_logic_fates {
         # check that fates landuse change mode has the necessary luh2 landuse timeseries data
         # and add the default if not defined.  Do not add default if use_fates_potentialveg is true.
         # If fixed biogeography is on, make sure that flandusepftdat is avilable.
+        # Check that fates landuse mode is on when the transitional logic is set to greater than zero
         my $var = "use_fates_luh";
         if ( defined($nl->get_value($var))  ) {
            if ( &value_is_true($nl->get_value($var)) ) {
@@ -5041,6 +5042,15 @@ sub setup_logic_fates {
                     }
                  }
               }
+              $var = "fates_lu_transition_logic";
+              if ( defined($nl->get_value($var))  ) {
+                 if ( $nl->get_value($var) < 1 || $nl->get_value($var) > 9) {
+                    $log->fatal_error("$var must be set to between 1 and 9" );
+                    }
+                 }
+              else {
+                  $log->fatal_error("$var must be set when use_fates_luh is true" );
+                 }
            }
         }
         # check that fates landuse is on and harvest mode is off when potential veg switch is true
