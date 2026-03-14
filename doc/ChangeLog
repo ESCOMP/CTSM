@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.025
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Fri Mar 13 10:54:56 PM MDT 2026
+Date: Sat Mar 14 12:15:08 AM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
@@ -112,12 +112,12 @@ Testing summary: regular
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     derecho ----- OK
-    izumi -------
+    izumi ------- OK
 
   any other testing (give details below):
 
   ctsm_sci
-     derecho ---- 
+     derecho ---- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
