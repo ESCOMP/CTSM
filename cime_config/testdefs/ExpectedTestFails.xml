@@ -56,11 +56,21 @@
       <status>FAIL</status>
       <issue>#3454</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
   </test>
   <test name="SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
     <phase name="NLCOMP">
       <status>FAIL</status>
       <issue>#3454</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
 
