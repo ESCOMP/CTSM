@@ -11,7 +11,7 @@ Merge b4b-dev to master:
 
 Important things coming in:
 
- - mizuRoute!
+ - mizuRoute! (NOTE: mizuRoute is a River model (ROF in the CESM context) that can be run in place or MOSART or RTM)
  - Documentation updates
  - Move a few namelist parameters to the parameter file
  - move of X components for nuopc
@@ -20,6 +20,21 @@ Important things coming in:
  - SpinupStablity script update to handle FATES and SE grids
  - Update cdeps for access to CMIP7 CO2
  - Tests for FATES Tree Recruitment Scheme (TRS)
+
+Main grids to use with mizuRoute:
+
+  Default mizuRoute grids will use the half degree land-only mizuRoute grid that is the same resolution as the MOSART grid.
+
+  - 5x5_amazon_r05 - is the small Amazon region for testing
+  - 5x5_amazon_rHDMA - is the small Amazon region using the HDMA for mizuRoute
+  - nldas2_nldas2_rUSGS_mnldas2 - is the Continental US grid with USGS Geospatial Fabric
+  - f09_f09_rHDMA_mg17 - is the 2 degree grid with the medium resolution HDMA grid
+  - f09_f09_rHDMAlk_mg17 - is the 2 degree grid with the medium resolution HDMA grid that includes lakes
+  - hcru_hcru_rMERIT_mt13 - is the half degree grid with the high resolution MERIT grid
+
+Standard case to run with mizuRoute:
+
+  grid=f09_f09_rHDMAlk_mg17 compset=I2000Clm60SpMizGs
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -52,23 +67,29 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+  To use any of the specialized mizuRoute grids (USGS, HDMA, or MERIT) you'll need to use a grid alias that
+  specifies the ROF grid
+  If you use a compset that uses mizuRoute with a normal grid alias -- you'll get mizuRoute running on the regular half-degree grid.
+  To change history output for mizuRoute you'll add fields to the user_nl_mizuroute_control file that has a custom format.
+    See the User's Guide on how to edit it
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  New mizuRoute compsets: I2000Clm60SpMizGs I2000Clm60SpMizGsNldas 
+  Remove namelist parameters: baseflow_scalar, precip_repartition_glc_all_snow_t,  precip_repartition_glc_all_rain_t,
+         precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t
+  parameter files already had been updated to include the above parameters in ctsm5.4.024, but now they are used
+  PE Layouts for mizuRoute grids: 5x5_amazon_rHDMA nldas2_nldas2_rUSGS_mnldas2
 
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., streams, surface or initial files):
-
-Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
-
-Changes to documentation:
+Changes to documentation: Documentation on mizuRoute added to Tech Note and User's Guide
+                          Documentation updated for the dew point restriction on bare ground temperature
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing:
+Changes to tests or testing: 
+  - New FATES TRS tests added to fates
+  - New tests for mizuRoute in aux_clm and ctsm_sci
+  - New parameter files in testmods with the new parameters added moved from the namelist
 
 Contributors: @nmizukami @olyson @slevis-lmwg @swensosc @wwieder @billsacks @glemieux @cdevaneprugh
 
@@ -78,7 +99,7 @@ Testing summary: regular
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -119,7 +140,7 @@ Pull Requests that document the changes (include PR ids):
 
    - b4b-dev: Move nml parameters (changes paramfile) #3391
    - b4b: Documentation changes for issue #3722 (dewpoint temperature restriction on bare ground dew flux) #3736
-   - AFix mksurfdata.F90 format specifiers for GCC 10+ compatibility #3701
+   - Fix mksurfdata.F90 format specifiers for GCC 10+ compatibility #3701
    - Add FATES tree recruitment scheme tests #3757
    - b4b-dev: Update SpinupStability_BGC_v12_SE.ncl to work for FATES and ne16pg3 #3776
    - Fill CRUJRA DATM over Antarctica and Greenland with GSWP3 data #3773
