@@ -38,6 +38,7 @@ SpinupStability_BGC_v12_SE.ncl
         This script assesses the equilibrium state of a ne30pg3 (spectral element)
         Biogeochemistry (BGC) spinup run, works on either monthly or annual mean 
         history files - Oleson 07/2025
+        This script can handle FATES cases as of ctsm5.4.025 - slevis 2026/3/13
 
 run_clmtowers
         This script will run any number of flux tower sites.
@@ -51,5 +52,7 @@ ssp_anomaly_forcing_smooth
         v1 - Peter Lawrence 3/2020
         v2 - Sean Swenson/Erik Kluzek 6/2022
 
-
-
+The separate repository https://github.com/NCAR/CMIP7_inputdata_processing includes contributions from the LMWG, each with README instructions
+        popden.ncl (previously here in tools/contrib) for generating the fire module's population density dataset
+        nccreate_ncwrite_after_ncread_cisotopes.m for generating co2-isotope datasets
+        land-use has a placeholder that hasn't been filled, yet
