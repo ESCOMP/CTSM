@@ -56,11 +56,21 @@
       <status>FAIL</status>
       <issue>#3454</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
   </test>
   <test name="SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
     <phase name="NLCOMP">
       <status>FAIL</status>
       <issue>#3454</issue>
+    </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
 
@@ -165,6 +175,20 @@
     </phase>
   </test>
 
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESCOMP/mizuRoute#613</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESCOMP/mizuRoute#614</issue>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
@@ -213,10 +237,31 @@
     </phase>
   </test>
 
+  <test name="SMS_D_Ld180.f45_f45_mg37.I2000Clm60Fates.derecho_intel.clm-FatesColdTRS">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>FATES#1534</issue>
+    </phase>
+  </test>
+
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3789</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2653</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2321</issue>
     </phase>
   </test>
 

@@ -1,4 +1,155 @@
 ===============================================================
+Tag name: ctsm5.4.025
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sat Mar 14 12:15:08 AM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master:
+
+Important things coming in:
+
+ - mizuRoute! (NOTE: mizuRoute is a River model (ROF in the CESM context) that can be run in place or MOSART or RTM)
+ - Documentation updates
+ - Move a few namelist parameters to the parameter file
+ - move of X components for nuopc
+ - mksurfdata_esmf for Gnu compiler
+ - scripts for CRUJRA forcing to handle Antarctica/Greenland
+ - SpinupStablity script update to handle FATES and SE grids
+ - Update cdeps for access to CMIP7 CO2
+ - Tests for FATES Tree Recruitment Scheme (TRS)
+
+Main grids to use with mizuRoute:
+
+  Default mizuRoute grids will use the half degree land-only mizuRoute grid that is the same resolution as the MOSART grid.
+
+  - 5x5_amazon_r05 - is the small Amazon region for testing
+  - 5x5_amazon_rHDMA - is the small Amazon region using the HDMA for mizuRoute
+  - nldas2_nldas2_rUSGS_mnldas2 - is the Continental US grid with USGS Geospatial Fabric
+  - f09_f09_rHDMA_mg17 - is the 2 degree grid with the medium resolution HDMA grid
+  - f09_f09_rHDMAlk_mg17 - is the 2 degree grid with the medium resolution HDMA grid that includes lakes
+  - hcru_hcru_rMERIT_mt13 - is the half degree grid with the high resolution MERIT grid
+
+Standard case to run with mizuRoute:
+
+  grid=f09_f09_rHDMAlk_mg17 compset=I2000Clm60SpMizGs
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Fixes #3722 -- Update documentation for dewpoint Temperature
+Fixes #2760 -- Add regression test to fates test suite to exercise Tree Recruitment Scheme #2760
+Fixes #2989 -- Share CRUJRA scripts that make three stream datm files and that append Antarctica + Greenland data #2989
+Fixes #3386 -- CMIP7 CO2 concentrations for I case #3386
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  To use any of the specialized mizuRoute grids (USGS, HDMA, or MERIT) you'll need to use a grid alias that
+  specifies the ROF grid
+  If you use a compset that uses mizuRoute with a normal grid alias -- you'll get mizuRoute running on the regular half-degree grid.
+  To change history output for mizuRoute you'll add fields to the user_nl_mizuroute_control file that has a custom format.
+    See the User's Guide on how to edit it
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  New mizuRoute compsets: I2000Clm60SpMizGs I2000Clm60SpMizGsNldas 
+  Remove namelist parameters: baseflow_scalar, precip_repartition_glc_all_snow_t,  precip_repartition_glc_all_rain_t,
+         precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t
+  parameter files already had been updated to include the above parameters in ctsm5.4.024, but now they are used
+  PE Layouts for mizuRoute grids: 5x5_amazon_rHDMA nldas2_nldas2_rUSGS_mnldas2
+
+Changes to documentation: Documentation on mizuRoute added to Tech Note and User's Guide
+                          Documentation updated for the dew point restriction on bare ground temperature
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: 
+  - New FATES TRS tests added to fates
+  - New tests for mizuRoute in aux_clm and ctsm_sci
+  - New parameter files in testmods with the new parameters added moved from the namelist
+
+Contributors: @nmizukami @olyson @slevis-lmwg @swensosc @wwieder @billsacks @glemieux @cdevaneprugh
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): mizuroute changed to mizuRoute
+   the mizuRoute directory needs to be capitolized as mizuRoute rather than mizuroute
+   because of the assumption of directory names in cime
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   - b4b-dev: Move nml parameters (changes paramfile) #3391
+   - b4b: Documentation changes for issue #3722 (dewpoint temperature restriction on bare ground dew flux) #3736
+   - Fix mksurfdata.F90 format specifiers for GCC 10+ compatibility #3701
+   - Add FATES tree recruitment scheme tests #3757
+   - b4b-dev: Update SpinupStability_BGC_v12_SE.ncl to work for FATES and ne16pg3 #3776
+   - Fill CRUJRA DATM over Antarctica and Greenland with GSWP3 data #3773
+   - New location for xlnd
+   - Add mizuRoute compsets, PE layouts and tests and updates to Tech Note/User's Guide #920
+   - b4b-dev post 2/19: Update cdeps1.0.91 to cdeps1.0.92 for access to cmip7 co2 #3750
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.024
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Mar 11 11:46:22 PM MDT 2026
