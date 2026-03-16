@@ -1,5 +1,8 @@
-The purpose of this testmod directory is to trigger the runtime
-self-tests. This runs a suite of unit/integration tests.
+The purpose of this testmod directory is to trigger runtime
+initialization self-tests. This runs a set of unit/integration tests
+that apply at initialization.
 
-We use cold start so that we can get through initialization faster,
-since how we initialize the model is unimportant for these self-tests.
+We inherit the test-mod that sets up for testing and bypassing as much as possible for speed.
+
+There are other self_tests that need to be exercised in the model time stepping
+and are done outside of these.

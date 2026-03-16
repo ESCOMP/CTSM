@@ -53,8 +53,8 @@ Creating a Complete Set of Files for Input to CLM
 5. Enter the new datasets into the ``build-namelist`` XML database
    The last optional thing to do is to enter the new datasets into the ``build-namelist`` XML database. See Chapter 3 for more information on doing this. This is optional because the user may enter these files into their namelists manually. The advantage of entering them into the database is so that they automatically come up when you create new cases.
 
-The ``$CTSMROOT/tools/README`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
+The ``$CTSMROOT/tools/README.md`` goes through the complete process for creating input files needed to run CLM. We repeat that file here:
 
-.. include:: ../../../../tools/README
-   :literal:
+.. include:: ../../../../tools/README.md
+   :code: markdown
 

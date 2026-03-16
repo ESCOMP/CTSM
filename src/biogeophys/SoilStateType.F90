@@ -280,7 +280,7 @@ contains
     this%soilalpha_u_col(begc:endc) = spval
     call hist_addfld1d (fname='SoilAlpha_U',  units='unitless',  &
          avgflag='A', long_name='urban factor limiting ground evap', &
-         ptr_col=this%soilalpha_u_col, set_nourb=spval, default='inactive')
+         ptr_col=this%soilalpha_u_col, set_nourb=spval)
 
     if (use_cn) then
        this%watsat_col(begc:endc,:) = spval 

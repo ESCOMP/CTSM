@@ -38,4 +38,3 @@ presndep.SSP3-7.0:datafiles = $DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_SSP370_b
 presndep.SSP3-7.0:dtlimit=30
 
 co2tseries.SSP3-7.0:datafiles = $DIN_LOC_ROOT/atm/datm7/CO2/fco2_datm_globalSSP3-7.0_simyr_1750-2501_CMIP6_c201101.nc
-

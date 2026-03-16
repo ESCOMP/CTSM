@@ -15,6 +15,21 @@ Shown are three snow layers, :math:`i=-2`, :math:`i=-1`, and :math:`i=0`. The la
 
 The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}` (kg m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}` (m), and temperature :math:`T_{i}` (Chapter :numref:`rst_Soil and Snow Temperatures`). The water vapor phase is neglected. Snow can also exist in the model without being represented by explicit snow layers. This occurs when the snowpack is less than a specified minimum snow depth (:math:`z_{sno} < 0.01` m). In this case, the state variable is the mass of snow :math:`W_{sno}` (kg m\ :sup:`-2`).
 
+.. note:: 
+   In CLM, all water-related state variables, including snow and ice, are reported in **liquid water equivalent** units. This means that quantities such as snow water equivalent (SWE), soil ice content, and snowmelt are expressed in terms of the depth of liquid water that would result if the frozen material melted completely.
+
+   For example:
+   
+   - ``H2OSNO`` represents the total snow water equivalent in mm.
+   - ``H2OSOI_ICE`` is the soil ice content in mm.
+   - ``QSNOMELT`` is the snow melt rate in mm/s.
+
+   In contrast, some glaciological or cryosphere models (e.g., PISM, RACMO2, Crocus) may output variables in **ice-equivalent** units, depending on the modeling context. When necessary, conversion from ice equivalent to water equivalent should account for the density of ice versus liquid water (:numref:`Table Physical Constants`):
+
+   .. math::
+
+      \text{Water equivalent} = \text{Ice equivalent} \times \frac{\rho_\text{ice}}{\rho_\text{liq}}
+
 Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The following two sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snow pack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater flushing. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
 
 .. _Snow Covered Area Fraction:
