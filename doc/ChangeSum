@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.026 glemieux 03/16/2026 Transfer biophysical variables for output with FATES dimensions
        ctsm5.4.025     erik 03/16/2026 Merge b4b-dev to master
        ctsm5.4.024     erik 03/11/2026 Update derecho_intel again and a few fixes for it
        ctsm5.4.023 samrabin 03/10/2026 Replace more netCDFs with NaN issues
