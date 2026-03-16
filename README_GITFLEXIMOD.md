@@ -72,8 +72,8 @@ Each entry in \*\*.gitmodules\*\* has the following form (we use CIME as an exam
 
 Each entry specifies either a tag or a hash. To point to a new tag or hash:
 
-# Modify the relevant entry/entries in \*\*.gitmodules\*\* (e.g., changing   
-   \`\`cime6.0.246\`\` to \`\`cime6.0.247\`\` above)
+# Modify the relevant entry/entries in \*\*.gitmodules\*\* 
+e.g., changing   \`\`cime6.0.246\`\` to \`\`cime6.0.247\`\` above
 
 # Checkout the new submodule(s)::
 
