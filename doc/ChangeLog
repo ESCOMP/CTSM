@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.025
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Sat Mar 14 12:15:08 AM MDT 2026
+Date: Mon Mar 16 12:46:16 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
@@ -11,7 +11,7 @@ Merge b4b-dev to master:
 
 Important things coming in:
 
- - mizuRoute! (NOTE: mizuRoute is a River model (ROF in the CESM context) that can be run in place or MOSART or RTM)
+ - mizuRoute! (NOTE: mizuRoute is a River model (ROF in the CESM context) that can be run in place of MOSART or RTM)
  - Documentation updates
  - Move a few namelist parameters to the parameter file
  - move of X components for nuopc
@@ -132,7 +132,7 @@ Other details
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): mizuroute changed to mizuRoute
-   the mizuRoute directory needs to be capitolized as mizuRoute rather than mizuroute
+   the mizuRoute directory needs to be capitalized as mizuRoute rather than mizuroute
    because of the assumption of directory names in cime
 
 Pull Requests that document the changes (include PR ids):
