@@ -5,7 +5,7 @@ CTSM is released via GitHub. You will need some familiarity with git in order to
 
 To obtain the CTSM code you need to do the following:
 
-\#. Clone the repository. ::
+# Clone the repository. ::
 
       git clone https://github.com/ESCOMP/CTSM.git my\_ctsm\_sandbox
 
