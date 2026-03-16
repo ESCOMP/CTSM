@@ -304,12 +304,14 @@ contains
          sminn_to_plant_fun_nh4_vr    => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col  & ! Iutput: [real(r8) (:)   ]  Total layer nh4 uptake of FUN (gN/m2/s)
          )
 
+
+   if (use_soil_nox) then 
       !pft to column average for soil NO canopy reduction
       crf_drydep_col => crf_drydep_col_target
       call p2c(bounds, num_bgc_soilc, filter_bgc_soilc, &
            crf_drydep(bounds%begp:bounds%endp), &
            crf_drydep_col(bounds%begc:bounds%endc))
-
+   end if 
       
       ! calcualte nitrogen uptake profile
       ! nuptake_prof(:,:) = nan
