@@ -11,7 +11,7 @@ To obtain the CTSM code you need to do the following:
 
    This will create a directory \`\`my\_ctsm\_sandbox/\`\` in your current working directory.
 
-\#. Run \*\*./bin/git-fleximod update\*\*. ::
+# Run \*\*./bin/git-fleximod update\*\*. ::
 
       cd my\_ctsm\_sandbox  
       ./bin/git-fleximod update  
