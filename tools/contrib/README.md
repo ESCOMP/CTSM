@@ -58,11 +58,6 @@ remove_duplicate_tests.py
         Script to rewrite the testlist removing duplicates
         Should this be removed? EBK 3/12/2026
 
-run_tower (previously run_clmtowers and run_neon)
-        This script will run any number of flux tower sites.
-        It's based on having created surface datasets with PTCLM.
-        v1 - Keith Oleson, 8/2015, versions now tracked in github.
-
 ssp_anomaly_forcing_smooth
         This script creates anomaly forcing for CMIP6 SSP scenarios that 
         can be used to run CTSM in CESM with datm.
@@ -70,10 +65,13 @@ ssp_anomaly_forcing_smooth
         v1 - Peter Lawrence 3/2020
         v2 - Sean Swenson/Erik Kluzek 6/2022
 
+run_clmtowers has been superseded by ../site_and_regional/run_tower
+
 The separate repository https://github.com/NCAR/CMIP7_inputdata_processing includes contributions from the LMWG, each with README instructions
         popden.ncl (previously here in tools/contrib) for generating the fire module's population density dataset
         nccreate_ncwrite_after_ncread_cisotopes.m for generating co2-isotope datasets
         land-use
+
 test_rxcropmaturity_python.sh
         Test the prescribed crop maturity python tools
 
