@@ -76,11 +76,11 @@ components/rtm ---------------------- CESM River Transport Model.
 
 Top level documentation ($CTSMROOT):
 
-README ------------------- This file
+README_on_CTSM.md -------- This file
 README.md ---------------- File that displays on github under https::/github.com/ESCOMP/CTSM.git
-README.rst --------------- File that displays under the project in github
-README_GITFLEXIMOD.rst --- Information on how to work with git-fleximod for CTSM
-WhatsNewInCTSM5.4.md ----- Overview document of the changes between ctsm5.3 and ctsm5.4
+README_GITFLEXIMOD.md ---- Information on how to work with git-fleximod for CTSM
+README.CHECKLIST.new_case.md - Information on starting a new case (i.e. simulation)
+WhatsNewInCTSM5.4.md ----- Overview document of the changes between ctsm5.3 and ctsm5.4 (earlier versions in /doc)
 Copyright ---------------- CESM Copyright file
 doc/UpdateChangeLog.pl --- Script to add documentation on a tag to the
                            ChangeLog/ChangeSum files
@@ -91,7 +91,7 @@ doc/design --------------- Software Engineering and code design document files
 
 Checklists for standard Software Engineering tasks
 
-./doc/README.CHECKLIST.master_tags
+./doc/README.CHECKLIST.master_tags.md
 ./bld/namelist_files/README.CHECKLIST.interpolating_initial_conditions.md
 
 Documentation of Namelist Items: (view the following in a web browser)
