@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.026
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
-Date: Mon Mar 16 12:20:05 PDT 2026
+Date: Mon Mar 17 18:46:00 MDT 2026
 One-line Summary: Transfer biophysical variables for output with FATES dimensions
 
 Purpose and description of changes
@@ -38,91 +38,24 @@ Contributors: @ckoven
 
 Testing summary:
 ----------------
-[... Remove before making master tag.
-
-Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
-However, it occasionally makes sense to do more or less system testing;
-here is guidance on different available levels of system testing:
-    a) no system testing (this would normally be something that would go to the b4b-dev branch)
-    b) minimal (for use in rare cases where only a small change with
-                known behavior is added ... eg. a minor bug fix. This
-		might be to just run the "short" test list, or to run
-		a single test. Whatever makes sense for the particular case.)
-    c) python only (for use where the only changes are in the python directory:
-                    run the python testing listed below)
-    d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, etc.)
-		            would be run as well)
-
-In addition, various other tests of the tools, python and namelist script
-infrastructure should be run when appropriate, as described below.
-
-...]
-
-[Remove any lines that don't apply.]
-
- [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho -
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    derecho -
-
-    [If python code has changed and you are NOT running aux_clm (e.g., because the only changes are in python
-     code) then also run the clm_pymods test suite; this is a small subset of aux_clm that runs the system
-     tests impacted by python changes. The best way to do this, if you expect no changes from the last tag in
-     either model output or namelists, is: create sym links pointing to the last tag's baseline directory,
-     named with the upcoming tag; then run the clm_pymods test suite comparing against these baselines but NOT
-     doing their own baseline generation. If you are already running the full aux_clm then you do NOT need to
-     separately run the clm_pymods test suite, and you can remove the following line.]
-
-    clm_pymods test suite on derecho - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
-
-  any other testing (give details below):
-
-  ctsm_sci
-     derecho ----
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
+  izumi fates tested against `fates-sci.1.89.0_api.43.0.0-ctsm5.4.025`
+  derecho fates tested against `fates-sci.1.91.1_api.43.1.0-ctsm5.4.025`
 
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  [ If a tag changes answers relative to baseline comparison the
-    following should be filled in (otherwise remove this section).
-    And always remove these three lines and parts that don't apply. ]
-
-  Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? Roundoff differences means one or more lines of code change results
-   only by roundoff level (because order of operation changes for example). Roundoff
-   changes to state fields usually grow to greater than roundoff as the simulation progresses.
-
-   If this tag changes climate list the run(s) done to evaluate the new
-   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
-       - LMWG_dev issue number(s):
-
-       - details (casename, machine, user, link to plots etc.) [if not in LMWG_dev]
+Changes answers relative to baseline: Yes, fates only
 
 Other details
 -------------
