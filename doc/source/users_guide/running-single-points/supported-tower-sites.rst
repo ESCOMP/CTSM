@@ -95,7 +95,7 @@ A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 
     > ./run_tower --plumber-sites ${site} --setup-only 
 
-3) It is suggested to add ``echo "baseflow_scalar = 0" >> user_nl_clm`` to the user_nl_clm file to avoid issues with the baseflow at the wetland sites.
+3) It is suggested to change `baseflow_scalar` to 0" in the user's paramfile to avoid issues with the baseflow at the wetland sites.
 4) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to review the usermods in detail and adjust them as needed. Key items to be considered include the variables to save. 
 5) Combining these notes, an example of running a PLUMBER site would look like this:
 :: 
