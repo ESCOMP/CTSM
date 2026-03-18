@@ -88,9 +88,9 @@ The output for a PLUMBER case will be set up similarly to the output for a NEON 
 
 A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 
-
 1) By default, the tools call for surfdata files in a default location. These might not be available for all sites or all machines. Users can create their own surfdata files, using tools/site_and_regional/plumber2_usermods. 
 2) It is suggested to use the flags related to setup-only to examine how the site files are being configured before running the simulations.
+
 :: 
 
     > ./run_tower --plumber-sites ${site} --setup-only 
