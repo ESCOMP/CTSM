@@ -53,6 +53,8 @@ module HillslopeHydrologyMod
   integer, private, parameter :: soil_profile_set_lowland_upland    = 2
   integer, private, parameter :: soil_profile_linear                = 3
 
+  real(r8), private, parameter :: floodplain_slope = 1e-3_r8
+  
   !-----------------------------------------------------------------------
 
 contains
@@ -970,7 +972,6 @@ contains
     real(r8)              :: flow_velocity                ! flow velocity (m/s)
     real(r8)              :: overbank_area                ! area of water above bankfull (m2)
     real(r8)              :: overbank_depth               ! depth of water above bankfull (m)
-    real(r8)              :: tanalpha
     real(r8)              :: dynamic_viscosity
     real(r8)              :: bankfull_flow_velocity
     real(r8)              :: kinematic_viscosity
@@ -1031,13 +1032,12 @@ cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_de
                   overbank_area = cross_sectional_area &
                        -cross_sectional_area_channel
                   ! use small positive slope for floodplain
-                  tanalpha = 1e-3_r8
-                  overbank_depth = sqrt(tanalpha*overbank_area)
+                  overbank_depth = sqrt(floodplain_slope*overbank_area)
 
                   hydraulic_radius = cross_sectional_area &
                        /(lun%stream_channel_width(l) &
                        + 2*stream_depth &
-                       +2*overbank_depth/tanalpha) ! sin ~ tan for small values
+                       +2*overbank_depth/floodplain_slope) ! sin ~ tan for small values
                endif
 
                if (hydraulic_radius <= 0._r8) then
@@ -1077,6 +1077,7 @@ cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_de
                   if (overbank_depth > 0._r8) then
                      if (overbank_method  == 1) then
                         ! flow velocity already accounts for overbank conditions
+
                         volumetric_streamflow(l) = cross_sectional_area * flow_velocity
                      else if (overbank_method  == 2) then
                         ! try increasing flow area cross section
@@ -1141,6 +1142,7 @@ cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_de
     real(r8) :: qflx_drain_vol              ! volumetric saturated drainage (m3/s)
     real(r8) :: dtime                       ! land model time step (sec)
     logical  :: active_stream
+    real(r8) :: overbank_area, overbank_depth
 
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
 
@@ -1199,6 +1201,14 @@ cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_de
                   /lun%stream_channel_length(l) &
                   /lun%stream_channel_width(l)
 
+             ! recalculate for floodplain approximation
+             if (stream_water_depth(l)>lun%stream_channel_depth(l)) then
+                overbank_area = (stream_water_volume(l) &
+                     /lun%stream_channel_length(l)) &
+                     -lun%stream_channel_width(l)*lun%stream_channel_depth(l)
+                overbank_depth = sqrt(floodplain_slope*overbank_area)
+                stream_water_depth(l) = lun%stream_channel_depth(l) + overbank_depth
+             endif
           end if
        enddo
 
