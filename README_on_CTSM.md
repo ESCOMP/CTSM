@@ -146,7 +146,7 @@ src/self_tests ---- Internal testing (unit tests run as a part of a CTSM system 
 src/unit_test_shr - Unit test shared modules for unit testing  
 src/unit_test_stubs Unit test stubs that replicate CTSM code simpler  
 
-    QUICKSTART: using the NUOPC driver scripts
+QUICKSTART: using the NUOPC driver scripts
 =============================================================================================
 
          cd $CIMEROOT/scripts
