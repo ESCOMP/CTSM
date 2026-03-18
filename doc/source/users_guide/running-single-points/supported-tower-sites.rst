@@ -97,7 +97,7 @@ A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 4) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to review the usermods in detail and adjust them as needed. Key items to be considered include the variables to save. 
 5) Combining these notes, an example of running a PLUMBER site would look like this:
 :: 
-    > ./run_tower --plumber-sites ${site} --output-root {folder-to-save-results} --overwrite --run-type {ad | postad | transient} --setup-only
+> ./run_tower --plumber-sites ${site} --output-root {folder-to-save-results} --overwrite --run-type {ad | postad | transient} --setup-only
 
 
 ### Spin-up notes
