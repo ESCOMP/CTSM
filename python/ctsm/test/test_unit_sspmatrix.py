@@ -53,7 +53,7 @@ class SSPCaseFake(CaseFake):
         Extend to handle creation of user_nl_clm file
         """
         clone = super().create_clone(newcase, keepexe=keepexe)
-        os.mknod(os.path.join(newcase, "user_nl_clm"))
+        Path.touch(os.path.join(newcase, "user_nl_clm"))
         # Also make the needed case directories
         clone.make_case_dirs(self._tempdir)
         return clone
@@ -165,7 +165,7 @@ class TestSSPMatrix(unittest.TestCase):
         if os.path.exists(ufile):
             os.remove(ufile)
 
-        os.mknod(ufile)
+        Path.touch(ufile)
 
         expect = "\nhist_nhtfrq = -8760, hist_mfilt = 2\n"
         self.ssp.append_user_nl(caseroot=".", n=2)

@@ -174,6 +174,7 @@ contains
     call shr_mpi_bcast(stream_year_first_urbantv  , mpicom)
     call shr_mpi_bcast(stream_year_last_urbantv   , mpicom)
     call shr_mpi_bcast(model_year_align_urbantv   , mpicom)
+    call shr_mpi_bcast(urbantvmapalgo             , mpicom)
     call shr_mpi_bcast(stream_fldFileName_urbantv , mpicom)
     call shr_mpi_bcast(stream_meshfile_urbantv    , mpicom)
     call shr_mpi_bcast(urbantv_tintalgo           , mpicom)
@@ -316,11 +317,14 @@ contains
              gindx = g
              lindx = l
              exit
-          else if (urban_explicit_ac .and. (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8)) then
-             found = .true.
-             gindx = g
-             lindx = l
-             exit
+          end if
+          if (urban_explicit_ac) then
+             if (this%p_ac(l) < 0._r8 .or. this%p_ac(l) > 1._r8) then
+                found = .true.
+                gindx = g
+                lindx = l
+                exit
+             end if
           end if
        end if
     end do

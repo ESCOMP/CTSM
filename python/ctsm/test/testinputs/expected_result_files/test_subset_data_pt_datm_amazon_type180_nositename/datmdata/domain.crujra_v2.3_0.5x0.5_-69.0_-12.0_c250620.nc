@@ -1,0 +1,1 @@
+../../test_subset_data_pt_datm_amazon_type180/datmdata//domain.crujra_v2.3_0.5x0.5_TMP_c250620.nc

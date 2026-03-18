@@ -1,0 +1,6 @@
+! Settings currently required to run at the mpasa3p75 grid
+! urbantv files at that resolution and use a redistribution mapping
+
+stream_fldfilename_urbantv = '$DIN_LOC_ROOT/lnd/clm2/urbandata/CTSM52_tbuildmax_OlesonFeddema_2020_mpasa3p75_fromf09_simyr1849-2106_c20240502.nc'
+stream_meshfile_urbantv = '$DIN_LOC_ROOT/lnd/clm2/urbandata/CTSM52_tbuildmax_Oleson_2020_mpasa3p75_ESMFmesh_cdf5_c202405021.nc'
+urbantvmapalgo = 'redist'

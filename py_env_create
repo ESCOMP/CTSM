@@ -143,11 +143,26 @@ if [ ! -f $condafile ]; then
    exit -1
 fi
 
+# Given two version number strings (unsigned integers separated by periods), echo "true" if the
+# second one is "greater than or equal to" the first. Otherwise, echo "false".
+# Based on https://unix.stackexchange.com/a/285928/208738
+function is_version2_ge_version1 {
+   requiredver=$1
+   currentver=$2
+   if [ "$(printf '%s\n' "$requiredver" "$currentver" | sort -V | head -n1)" = "$requiredver" ]; then
+      echo "true"
+   else
+      echo "false"
+   fi
+}
+
 #
 # Handle an environment that already exists
 #
 function conda_env_exists {
-   ${condamamba} env list | grep -oE "/$1$" | wc -l
+   # Not using ${condamamba} because, at least as of mamba 2.3.1, it doesn't always show environment
+   # names. See https://github.com/mamba-org/mamba/issues/4045
+   conda env list | grep -oE "/$1$" | wc -l
 }
 function rename_existing_env {
    if [[ "$CONDA_DEFAULT_ENV" == *"$1" ]]; then
@@ -155,7 +170,14 @@ function rename_existing_env {
       exit 1
    elif [[ $(conda_env_exists $2) -eq 0 ]]; then
       echo "Renaming $1 to $2 (this will take a few minutes)..."
-      yes_tmp=${yes/yes/force}
+      conda_version=$(conda --version | cut -d" " -f2)
+      if [[ "$(is_version2_ge_version1 25.3.0 ${conda_version})" == "true" ]]; then
+         yes_tmp=$yes
+      else
+         # Before conda 25.3.0, conda rename needed --force instead of --yes
+         # https://github.com/conda/conda/blob/408abc3a3826c80750883accb8896005e3ac97b2/CHANGELOG.md?plain=1#L291
+         yes_tmp=${yes/yes/force}
+      fi
       # Use conda instead of $condamamba because, at least as of mamba 1.5.9 / conda 24.7.1,
       # rename is not supported through mamba.
       if [[ "${quiet}" == "--quiet" ]]; then

@@ -15,6 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop, use_fates
+  use clm_varctl      , only : fname_len
   use surfrdUtilsMod  , only : check_sums_equal_1, apply_convert_ocean_to_land, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
@@ -233,7 +234,7 @@ contains
     character(len=*), intent(in) :: lhillslope_file ! hillslope dataset filename
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len)  :: locfn        ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
     type(file_desc_t) :: ncid                 ! netcdf id for lfsurdat
     type(file_desc_t) :: ncid_hillslope       ! netcdf id for lhillslope_file
@@ -359,7 +360,7 @@ contains
     
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len) :: locfn         ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     logical :: cft_dim_exists                 ! dimension exists on dataset
@@ -437,7 +438,7 @@ contains
     integer, intent(out) :: actual_nlevurb    ! nlevurb from surface dataset
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len)  :: locfn        ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     character(len=32) :: subname = 'surfrd_get_nlevurb'  ! subroutine name
@@ -1163,7 +1164,6 @@ contains
     ! !USES:
      use clm_instur           , only : pct_lake_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
-     use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
     !
     ! !ARGUMENTS:
@@ -1172,7 +1172,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
-    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: locfn                ! local file name
     character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
     logical                   :: readvar
     !
@@ -1218,7 +1218,6 @@ contains
     ! !USES:
      use clm_instur           , only : pct_urban_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
-     use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
     !
     ! !ARGUMENTS:
@@ -1227,7 +1226,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
-    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: locfn                ! local file name
     character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
     logical                   :: readvar
     !

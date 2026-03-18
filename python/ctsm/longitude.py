@@ -177,6 +177,13 @@ class Longitude:
         self._check_lons_same_type(other)
         return self._lon >= other._lon
 
+    def __str__(self):
+        """
+        We don't allow implicit string conversion because the user should always specify the
+        Longitude type they want
+        """
+        raise NotImplementedError("Use Longitude.get_str() instead of implicit string conversion")
+
     def get(self, lon_type_out):
         """
         Get the longitude value, converting longitude type if needed
@@ -188,6 +195,14 @@ class Longitude:
         if lon_type_out == 360:
             return _convert_lon_type_180_to_360(self._lon)
         raise RuntimeError(f"Add handling for lon_type_out {lon_type_out}")
+
+    def get_str(self, lon_type_out):
+        """
+        Get the longitude value as a string, converting longitude type if needed
+        """
+        lon_out = self.get(lon_type_out)
+        # Use float() because the standard in CTSM filenames is to put .0 after whole-number values
+        return str(float(lon_out))
 
     def lon_type(self):
         """

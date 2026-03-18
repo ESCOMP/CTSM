@@ -23,7 +23,7 @@ module CNFUNMod
   use clm_varctl                      , only : iulog
   use PatchType                       , only : patch
   use ColumnType                      , only : col
-  use pftconMod                       , only : pftcon, npcropmin
+  use pftconMod                       , only : pftcon
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
   use CNSharedParamsMod               , only : use_matrixcn
@@ -284,7 +284,7 @@ module CNFUNMod
    use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
-   use pftconMod       , only : npcropmin
+   use pftconMod       , only : is_prognostic_crop
    use CNVegMatrixMod  , only : matrix_update_phn
 !
 ! !ARGUMENTS: 
@@ -1271,7 +1271,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !           Calculate appropriate degree of retranslocation
                !-------------------------------------------------------------------------------
       
-               if(leafc(p).gt.0.0_r8.and.litterfall_n_step(p,istp)* fixerfrac>0.0_r8.and.ivt(p) <npcropmin)then
+               if (leafc(p) > 0.0_r8 .and. (litterfall_n_step(p,istp) * fixerfrac) > 0.0_r8 .and. (.not. is_prognostic_crop(ivt(p)))) then
                   call fun_retranslocation(p,dt,npp_to_spend,&
                                 litterfall_c_step(p,istp)* fixerfrac,&
                                 litterfall_n_step(p,istp)* fixerfrac,&
