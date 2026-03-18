@@ -14,7 +14,7 @@ The model treats maintenance and growth respiration fluxes separately, even thou
 Maintenance Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius.
+Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` , gN m\ :sup:`-2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius.
 
 .. math::
    :label: 17.46)
