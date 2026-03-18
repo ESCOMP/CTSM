@@ -75,7 +75,8 @@ Information on the specific sites can be found `here <https://researchdata.edu.a
 
 Currently supported PLUMBER Sites can be found by running ``run_tower --help``. Keep in mind that the experiment was designed to run 170 sites; however, Abramowitz et al., identified different issues with the sites (e.g., sites with precipitation reported in one unit while the metadata informed of a different unit), and most of the article only uses 156 sites.
 
-To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this::
+To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this:
+::
 
     > cd CTSM/tools/site_and_regional
     > run_tower --plumber-sites AR-SLu
