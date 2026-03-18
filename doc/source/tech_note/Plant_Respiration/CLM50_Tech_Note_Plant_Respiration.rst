@@ -26,17 +26,17 @@ The temperature dependance of leaf maintenance (dark) respiration is described i
 .. math::
    :label: 17.47)
 
-   CF_{mr\_ livestem} \_ =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   CF_{mr\_ livestem} =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
    :label: 17.48)
 
-   CF_{mr\_ livecroot} \_ =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   CF_{mr\_ livecroot} =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
    :label: 17.49)
 
-   CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
+   CF_{mr\_ froot} =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
 
 where :math:`MR_{q10}` (= 2.0) is the temperature sensitivity for maintenance respiration, :math:`T_{2m}` (°C) is the air temperature at 2m height, :math:`Ts_{j}`* (°C) is the soil temperature at level *j*, and :math:`rootfr_{j}` is the fraction of fine roots distributed in soil level *j*.
 
