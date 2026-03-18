@@ -273,11 +273,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <soil_resis_method               >1</soil_resis_method>
 <soil_resis_method phys="clm4_5" >0</soil_resis_method>
 
-<!-- Soil hydrology -->
-<baseflow_scalar                lower_boundary_condition="2">0.001d00</baseflow_scalar>
-<baseflow_scalar                lower_boundary_condition="1">1.d-2</baseflow_scalar>
-<baseflow_scalar phys="clm4_5"  lower_boundary_condition="2">1.d-2</baseflow_scalar>
-
 <!-- Friction velocity -->
 <zetamaxstable               use_biomass_heat_storage=".true." >2.0d00</zetamaxstable>
 <zetamaxstable phys="clm4_5"                                   >2.0d00</zetamaxstable>
@@ -305,20 +300,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lapse_rate_longwave>0.032</lapse_rate_longwave>
 
 <longwave_downscaling_limit>0.5</longwave_downscaling_limit>
-
-<precip_repartition_nonglc_all_snow_t>0.</precip_repartition_nonglc_all_snow_t>
-<precip_repartition_nonglc_all_rain_t>2.</precip_repartition_nonglc_all_rain_t>
-<!-- For CLM5 and following, we assume rain at somewhat cooler temperatures. The main
-     motivation is to increase glacier melt, which otherwise is too low in
-     CESM2. The physical justification is that the 0 - 2 C ramp used elsewhere
-     makes sense for typical atmospheric profiles; but over glaciers, inversions
-     are more common, so it is more reasonable to expect rain despite
-     below-freezing near-surface temperatures. -->
-<precip_repartition_glc_all_snow_t               >-2.</precip_repartition_glc_all_snow_t>
-<precip_repartition_glc_all_rain_t               >0.</precip_repartition_glc_all_rain_t>
-<!-- For CLM45, we used the same rain-snow partitioning for glaciers as for other landunits -->
-<precip_repartition_glc_all_snow_t phys="clm4_5" >0.</precip_repartition_glc_all_snow_t>
-<precip_repartition_glc_all_rain_t phys="clm4_5" >2.</precip_repartition_glc_all_rain_t>
 
 <!-- lnd2atm defaults -->
 <melt_non_icesheet_ice_runoff               >.true.</melt_non_icesheet_ice_runoff>
@@ -623,10 +604,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc</paramfile>
-<paramfile phys="clm6_0" lnd_tuning_mode="clm6_0_cam7.0">ctsm60-cam70_params.c260204.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c250311.no_nan_fill.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c250311.no_nan_fill.nc</paramfile>
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c260303.nc</paramfile>
+<paramfile phys="clm6_0" lnd_tuning_mode="clm6_0_cam7.0">lnd/clm2/paramdata/ctsm60-cam70_params.c260305.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c260305.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c260305.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -1974,9 +1955,9 @@ lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne120np4.pg3_hist_1979_78pfts_c251022.
 
 <!-- for NEON sites present day simulations - year 2000 -->
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".true.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/16PFT_mixed/surfdata_1x1_NEON_${NEONSITE}_hist_2000_16pfts_c251023.no_nan_fill.nc</fsurdat>
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false.">
-lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.nc</fsurdat>
+lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 <!-- If there are cases where only a few datasets change - they can be listed here for the particular NEONSITE -->
 <!-- for example to override the above for the TOOL site do something like this...
 <fsurdat hgrid="CLM_USRDAT" neon=".true." sim_year="2018" use_fates=".false." neonsite="TOOL">
@@ -2607,11 +2588,11 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0"
 >lnd/clm2/dustemisdata/dst_source2x2tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm6_0_cam4.0" hgrid="0.9x1.25"
->lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.nc</stream_fldfilename_zendersoilerod>
+>lnd/clm2/dustemisdata/dst_source1x1tuned-cam4-forCLM_cdf5_c240202.no_nan_fill.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm4_5_cam7.0"
 >lnd/clm2/dustemisdata/dst_source2x2tunedcam6-2x2-forCLM_cdf5_c230312.nc</stream_fldfilename_zendersoilerod>
 <stream_fldfilename_zendersoilerod dust_emis_method="Zender_2003" zender_soil_erod_source="lnd" lnd_tuning_mode="clm5_0_cam7.0"

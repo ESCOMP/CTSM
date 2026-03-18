@@ -1,4 +1,417 @@
 ===============================================================
+Tag name: ctsm5.4.026
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Wed Mar 18 01:12:09 AM MDT 2026
+One-line Summary: Transfer biophysical variables for output with FATES dimensions
+
+Purpose and description of changes
+----------------------------------
+
+This pull request updates the high frequency wrapper procedure in the interface to pass
+biophysical CLM variables to be output along FATES dimensions. The FATES land use x
+pft dimension is also added to the history module.  The FATES base land use test module
+adds the FATES history noted above to the test output.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+  - Landuse history variables adding to the base FatesColdLUH2 test module
+
+Contributors: @ckoven
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+  izumi fates tested against `fates-sci.1.89.0_api.43.0.0-ctsm5.4.025`
+  derecho fates tested against `fates-sci.1.91.1_api.43.1.0-ctsm5.4.025`
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, fates only
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.89.0_api.43.0.0 -> sci.1.91.1_api.43.1.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3760
+https://github.com/NGEET/fates/pull/1536
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.025
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Mar 16 12:46:16 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master:
+
+Important things coming in:
+
+ - mizuRoute! (NOTE: mizuRoute is a River model (ROF in the CESM context) that can be run in place of MOSART or RTM)
+ - Documentation updates
+ - Move a few namelist parameters to the parameter file
+ - move of X components for nuopc
+ - mksurfdata_esmf for Gnu compiler
+ - scripts for CRUJRA forcing to handle Antarctica/Greenland
+ - SpinupStablity script update to handle FATES and SE grids
+ - Update cdeps for access to CMIP7 CO2
+ - Tests for FATES Tree Recruitment Scheme (TRS)
+
+Main grids to use with mizuRoute:
+
+  Default mizuRoute grids will use the half degree land-only mizuRoute grid that is the same resolution as the MOSART grid.
+
+  - 5x5_amazon_r05 - is the small Amazon region for testing
+  - 5x5_amazon_rHDMA - is the small Amazon region using the HDMA for mizuRoute
+  - nldas2_nldas2_rUSGS_mnldas2 - is the Continental US grid with USGS Geospatial Fabric
+  - f09_f09_rHDMA_mg17 - is the 2 degree grid with the medium resolution HDMA grid
+  - f09_f09_rHDMAlk_mg17 - is the 2 degree grid with the medium resolution HDMA grid that includes lakes
+  - hcru_hcru_rMERIT_mt13 - is the half degree grid with the high resolution MERIT grid
+
+Standard case to run with mizuRoute:
+
+  grid=f09_f09_rHDMAlk_mg17 compset=I2000Clm60SpMizGs
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Fixes #3722 -- Update documentation for dewpoint Temperature
+Fixes #2760 -- Add regression test to fates test suite to exercise Tree Recruitment Scheme #2760
+Fixes #2989 -- Share CRUJRA scripts that make three stream datm files and that append Antarctica + Greenland data #2989
+Fixes #3386 -- CMIP7 CO2 concentrations for I case #3386
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  To use any of the specialized mizuRoute grids (USGS, HDMA, or MERIT) you'll need to use a grid alias that
+  specifies the ROF grid
+  If you use a compset that uses mizuRoute with a normal grid alias -- you'll get mizuRoute running on the regular half-degree grid.
+  To change history output for mizuRoute you'll add fields to the user_nl_mizuroute_control file that has a custom format.
+    See the User's Guide on how to edit it
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  New mizuRoute compsets: I2000Clm60SpMizGs I2000Clm60SpMizGsNldas 
+  Remove namelist parameters: baseflow_scalar, precip_repartition_glc_all_snow_t,  precip_repartition_glc_all_rain_t,
+         precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t
+  parameter files already had been updated to include the above parameters in ctsm5.4.024, but now they are used
+  PE Layouts for mizuRoute grids: 5x5_amazon_rHDMA nldas2_nldas2_rUSGS_mnldas2
+
+Changes to documentation: Documentation on mizuRoute added to Tech Note and User's Guide
+                          Documentation updated for the dew point restriction on bare ground temperature
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: 
+  - New FATES TRS tests added to fates
+  - New tests for mizuRoute in aux_clm and ctsm_sci
+  - New parameter files in testmods with the new parameters added moved from the namelist
+
+Contributors: @nmizukami @olyson @slevis-lmwg @swensosc @wwieder @billsacks @glemieux @cdevaneprugh
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): mizuroute changed to mizuRoute
+   the mizuRoute directory needs to be capitalized as mizuRoute rather than mizuroute
+   because of the assumption of directory names in cime
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   - b4b-dev: Move nml parameters (changes paramfile) #3391
+   - b4b: Documentation changes for issue #3722 (dewpoint temperature restriction on bare ground dew flux) #3736
+   - Fix mksurfdata.F90 format specifiers for GCC 10+ compatibility #3701
+   - Add FATES tree recruitment scheme tests #3757
+   - b4b-dev: Update SpinupStability_BGC_v12_SE.ncl to work for FATES and ne16pg3 #3776
+   - Fill CRUJRA DATM over Antarctica and Greenland with GSWP3 data #3773
+   - New location for xlnd
+   - Add mizuRoute compsets, PE layouts and tests and updates to Tech Note/User's Guide #920
+   - b4b-dev post 2/19: Update cdeps1.0.91 to cdeps1.0.92 for access to cmip7 co2 #3750
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.024
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 11 11:46:22 PM MDT 2026
+One-line Summary: Update derecho_intel again and some fixes for it
+
+Purpose and description of changes
+----------------------------------
+
+Update to ccs_config1.0.77 with derecho_intel updates to intel/2024.3.2. And a two line fix to a continuation line in
+the middle of a string, so that it will build.
+Note, there are several mpi-serial Bgc cases that now fail on derecho_intel see details below.
+
+Also update the parameter files to ones that have some new fields on it that will be moved from namelist to the parameter
+file in a future b4b-dev PR.
+
+Improve the logging about the ch4finundation stream. Some of this seemed to be important in order to be able to change
+ch4finundationmapalo away from bilinear.
+
+Remove a bunch of tests in the expected fail files that have been working now. Add a few more newly failing tests.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3791 - one line change needed for intel/2025.3.2
+   Fixes #3795 - Update to ccs_config_cesm1.0.77
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+   Some mpi-serial cases for single point cases with a Bgc compset fail because of a divide by zero in the ch4finundation mapping.
+   It fails with ch4finundatedmapalgo==bilinear but works if set to "nn" (see https://github.com/ESCOMP/CTSM/issues/3798)
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+
+  ./tools/param_utils/compare_paramfiles $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc $CSMDATA/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+  File 0: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260204.no_nan_fill.nc
+  File 1: /glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60_params.c260303.nc
+
+  Variable(s) present in File 1 but not File 0:
+     baseflow_scalar
+     precip_repartition_glc_all_rain_t
+     precip_repartition_glc_all_snow_t
+     precip_repartition_nonglc_all_rain_t
+     precip_repartition_nonglc_all_snow_t
+
+Notes of particular relevance for developers:
+---------------------------------------------
+   There are now more problems with the CN-Matrix threaded tests (see https://github.com/ESCOMP/CTSM/issues/2619)
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit -- except the compiler update means derecho_intel changes answers
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: derecho_intel
+    - nature of change: should be roundoff (but haven't verified)
+
+  73 of the 280 passing tests on derecho_intel show different answers
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+    ccs_config to ccs_config_cesm1.0.77
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #3796 -- Hot fix with updated derecho_intel and changes needed for it
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.023
+Originator(s): samrabin
+Date: Tue Mar 10 07:44:59 PM MDT 2026
+One-line Summary: Replace more netCDFs with NaN issues
+
+Purpose and description of changes
+----------------------------------
+
+Replaces the remaining input netCDF files that had problems with NaNs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Resolves NaN values in some input files cause problems with ifx compiler #3764
+   Resolves ciso_dec2050Start tests fail with ifx compiler #3790
+   Resolves Misc. ctsm_sci tests failing with ifx compiler #3792
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to the datasets (e.g., streams, surface or initial files):
+   NEON and PLUMBER2 surface datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Zender soilerod datasets updated without NaN _FillValue so have a .no_nan_fill.nc suffix
+   Fire-emission factors dataset updated NaN _FillValue so have a .no_nan_fill.nc suffix
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+    The finidat files have NaN's on them. But, using the modified files causes changes to answers.
+    This shows how the NaN's are having an impact that is different from a _FillValue change.
+
+Changes to tests or testing:
+    Was able to remove many expected fails
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: no bit-for-bit
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    #3809 -- Replace more netCDFs with NaN issues
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.022
 Originator(s): erik (Erik Kluzek)
 Date: Wed Mar  4 10:52:05 AM MST 2026
