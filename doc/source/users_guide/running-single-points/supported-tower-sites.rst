@@ -91,7 +91,8 @@ A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 1) By default, the tools call for surfdata files in a default location. These might not be available for all sites or all machines. Users can create their own surfdata files, using tools/site_and_regional/plumber2_usermods. 
 2) It is suggested to use the flags related to setup-only to examine how the site files are being configured before running the simulations.
 :: 
-> ./run_tower --plumber-sites ${site} --setup-only 
+
+    > ./run_tower --plumber-sites ${site} --setup-only 
 
 3) It is suggested to add ``echo "baseflow_scalar = 0" >> user_nl_clm`` to the user_nl_clm file to avoid issues with the baseflow at the wetland sites.
 4) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to review the usermods in detail and adjust them as needed. Key items to be considered include the variables to save. 
