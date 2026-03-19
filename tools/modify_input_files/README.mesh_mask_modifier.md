@@ -2,12 +2,12 @@ mesh_mask_modifier is a tool that modifies mesh_mask files. It reads a
 mesh_mask file and outputs a modified copy of the same file.
 
 Files involved
---------------
+```
 python/ctsm/modify_input_files/mesh_mask_modifier.py
 python/ctsm/modify_input_files/modify_mesh_mask.py
 tools/modify_input_files/mesh_mask_modifier
 tools/modify_input_files/modify_mesh_template.cfg
-
+```
 Instructions
 ------------
 To run on various machines:
@@ -47,17 +47,20 @@ modify the former, use the modify_fsurdat tool. See that tool for
 instructions. Here are the steps to modify the mesh file:
 
 In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
->>> cd tools/modify_input_files
->>> cp modify_mesh_template.cfg modify_fill_indianocean.cfg
-
+```
+cd tools/modify_input_files
+cp modify_mesh_template.cfg modify_fill_indianocean.cfg
+```
 Enter the following (or similar) selections in modify_fill_indianocean.cfg:
-
+```
 mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
 mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
 landmask_file = .../path_to_your_copy_of/fill_indianocean.nc
-
+```
 Run the tool
->>> ./mesh_mask_modifier modify_fill_indianocean.cfg
+```
+./mesh_mask_modifier modify_fill_indianocean.cfg
+```
 
 A modified mesh file should appear in the directory where you ran.
 Point to this file in your case's env_run.xml in the line that sets
