@@ -8,14 +8,18 @@ from ctsm import add_cime_to_path  # pylint: disable=unused-import
 
 from ctsm import unit_testing
 
-(3) Allow names that pylint doesn't like:
-::
-    > # Allow names that pylint doesn't like, because otherwise I find it hard  
-    > # to make readable unit test names  
-    > # pylint: disable=invalid-name  
+(3) Allow names that pylint doesn't like:  
+```
+> # Allow names that pylint doesn't like, because otherwise I find it hard  
+> # to make readable unit test names  
+> # pylint: disable=invalid-name  
 
-(4) Have a 'main' block at the bottom:
-::
-    > if __name__ == '__main__':  
-    >     unit_testing.setup_for_tests()  
-    >     unittest.main()  
+```
+
+(4) Have a 'main' block at the bottom:  
+```
+> if __name__ == '__main__':  
+>     unit_testing.setup_for_tests()  
+>     unittest.main()  
+```
+
