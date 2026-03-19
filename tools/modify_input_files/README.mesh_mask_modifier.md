@@ -12,22 +12,32 @@ Instructions
 ------------
 To run on various machines:
 1) (Un)load, execute, and activate the following:
+
 1a) First step to activate conda on your system
+
 1a) Casper:
+```
 module unload python
 module load conda
+```
 1a) Izumi:
+```
 module load python
-1a) Derecho (nothing needs to be done
+```
+1a) Derecho (nothing needs to be done)
+
 1a) Elsewhere (do what's needed to activate conda)
-1b) On all systems
+
+1b) On all systems:
+```
 ./py_env_create
 conda activate ctsm_py
+```
 (Use "deactivate" to reverse the latter.)
-2) Copy, then modify the configure file named modify_mesh_template.cfg, which
-contains all the arguments needed by the script.
-3) Run the script ./mesh_mask_modifier pointing to the copied/modified
-.cfg file, e.g. modify_users_copy.cfg
+
+2) Copy, then modify the configure file named modify_mesh_template.cfg, which contains all the arguments needed by the script.
+
+3) Run the script ./mesh_mask_modifier pointing to the copied/modified .cfg file, e.g. modify_users_copy.cfg
 
 Example use-case
 ----------------
@@ -39,12 +49,9 @@ be specified as grassland in a netcdf file. This has been obtained by
 modifying the default land fraction of CESM. The file contains two arrays:
 
 - landmask = the new landmask
-- mod_lnd_props = set to 1 where the new land surface has been specified
-(i.e., where grassland needs to be specified) and zero elsewhere
+- mod_lnd_props = set to 1 where the new land surface has been specified (i.e., where grassland needs to be specified) and zero elsewhere
 
-This use-case requires modification to the fsurdat and mesh files. To
-modify the former, use the modify_fsurdat tool. See that tool for
-instructions. Here are the steps to modify the mesh file:
+This use-case requires modification to the fsurdat and mesh files. To modify the former, use the modify_fsurdat tool. See that tool for instructions. Here are the steps to modify the mesh file:
 
 In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
 ```
@@ -68,3 +75,4 @@ MASK_MESH. If for some reason this fails, hardwire the ocean domain mesh
 file name in ~user/ctsm/ccs_config/component_grids_nuopc.xml before
 starting your CTSM or CESM simulation. In the specific example shown
 here, hardwire the mesh file name for domain name gx1v7.
+

@@ -29,7 +29,9 @@ Instructions
 ------------
 To run on various machines:
 1) (Un)load, execute, and activate the following:
+
 1a) First step to activate conda on your system
+
 1a) Casper:
 ```
 module unload python
@@ -40,18 +42,23 @@ module load conda
 module load python
 ```
 1a) Derecho (nothing needs to be done for this step)
+
 1a) Elsewhere (do what's needed to activate conda)
+
 1b) On all systems:
 ```
 ./py_env_create
 conda activate ctsm_pylib
 ```
 (Use "deactivate" to reverse the latter.)
+
 2) Copy, then modify the configure file named modify_fsurdat_template.cfg, which contains all the arguments needed by the script.
+
 3) Run the script ./fsurdat_modifier pointing to the copied/modified .cfg file, e.g. modify_users_copy.cfg
 ```
 ./fsurdat_modifier modify_users_copy.cfg
 ```
 See modify_fsurdat_template.cfg for required and optional settings.
+
 4) Use the --verbose option to see progress output on your screen.
 
