@@ -783,16 +783,6 @@
   <!-- changes to driver xml variables - in case of a tie in the values matches the last match is taken -->
 
   <entries>
-
-    <entry id="DATM_CO2_TSERIES">
-      <values>
-        <value compset="1850_DATM[^_]*_CLM60">cmip7_20tr</value>
-        <value compset="2000_DATM[^_]*_CLM60">cmip7_20tr</value>
-        <value compset="HIST_DATM[^_]*_CLM60">cmip7_20tr</value>
-        <value compset="^1850_DATM[^_]*_CLM[^_]*NOANTHRO" >none</value>
-      </values>
-    </entry>
-
     <entry id="RUN_STARTDATE">
       <values>
 	<value compset="HIST_"			  >1850-01-01</value>
