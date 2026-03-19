@@ -13,22 +13,21 @@ Instructions
 To run on various machines:
 1) (Un)load, execute, and activate the following:
 
-a) First step to activate conda on your system
+1a) First step to activate conda on your system
 
-i) Casper:
+- Casper:
 ```
 module unload python
 module load conda
 ```
-ii) Izumi:
+- Izumi:
 ```
 module load python
 ```
-iii) Derecho (nothing needs to be done)
+- Derecho (nothing needs to be done)
+- Elsewhere (do what's needed to activate conda)
 
-iv) Elsewhere (do what's needed to activate conda)
-
-b) On all systems:
+1b) On all systems:
 ```
 ./py_env_create
 conda activate ctsm_py
