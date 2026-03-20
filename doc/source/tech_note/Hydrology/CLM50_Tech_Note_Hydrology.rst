@@ -87,7 +87,7 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-are the the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
+are the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
 
 .. math::
    :label: 7.10
@@ -196,7 +196,7 @@ while the fraction of the canopy that is dry and transpiring is
    0 &\qquad L+S = 0
    \end{array}\right\}.
 
-Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
+Similarly, the snow-covered fraction of the canopy is used for surface albedo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
 
 .. math::
    :label: 7.23
