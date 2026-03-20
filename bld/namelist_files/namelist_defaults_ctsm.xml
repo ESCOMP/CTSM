@@ -803,7 +803,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
 
 <!-- 2015 for CMIP6 SSP future scenario cases -->
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015" use_excess_ice=".true." >.false.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015" >.true.</use_init_interp>
 
 <!--
      clm6_0 physics with CAM7.0 grids...
@@ -1140,8 +1140,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 2015 IC's - used for CMIP6 SSP future scenario cases  -->
 <!-- Use both for SP and BGC, crop on/off, all grids, all tuning modes, but without excess_ice-->
-<init_interp_attributes sim_year="2015" use_cndv=".false." use_fates=".false." excess_ice=".false."
->hgrid=0.9x1.25 maxpft=78 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. lnd_tuning_mode=clm5_0_cam6.0
+<init_interp_attributes sim_year="2015" use_cndv=".false." use_fates=".false."
+>hgrid=0.9x1.25 maxpft=78 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. excess_ice=.false. glc_nec=10 do_transient_pfts=.true. lnd_tuning_mode=clm5_0_cam6.0
 </init_interp_attributes>
 
 
@@ -1629,7 +1629,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- 2015 for CMIP6 SSP future scenario cases -->
 <finidat hgrid="0.9x1.25"    maxpft="78"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20150101"  sim_year="2015" do_transient_pfts=".false." use_excess_ice=".false."
+         ic_ymd="20150101"  sim_year="2015" do_transient_pfts=".true." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
 >cesm2_init/b.e21.BHIST.f09_g17.CMIP6-historical.010/2015-01-01/b.e21.BHIST.f09_g17.CMIP6-historical.010.clm2.r.2015-01-01-00000.nc
