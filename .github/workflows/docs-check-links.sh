@@ -9,7 +9,7 @@ link_code="$(curl -s -o /dev/null -w "%{http_code}" $URL)"
 # Find bad links
 set +e
 good_links="200"
-if [[ "${link_code}" != "200" ]]; then
+if [[ "${link_code}" != good_links ]]; then
     echo "One or more links in the documentation failed:" >&2
     echo $link_code  >&2
     exit 1
