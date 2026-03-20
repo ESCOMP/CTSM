@@ -598,7 +598,7 @@ where :math:`\left(r_{e,\, i} \right)_{j}` is the effective root fraction for th
 
 and :math:`\left(r_{i} \right)_{j}` is the fraction of roots in layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), :math:`\left(w_{i} \right)_{j}` is a soil dryness or plant wilting factor for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta_{t} \right)_{j}` is a wetness factor for the total soil column for the :math:`j^{th}` PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-The soil water fluxes in :eq:`7.103`,, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
+The soil water fluxes in :eq:`7.103`, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
 
 .. math::
    :label: 7.108
