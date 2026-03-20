@@ -48,6 +48,7 @@ module ncdio_pio
   public :: check_var             ! determine if variable is on netcdf file
   public :: check_dim             ! determine if dimension is on netcdf file
   public :: check_var_or_dim      ! determine if variable or dimension is on netcdf file
+  public :: check_dim_size        ! validity check on dimension
   public :: ncd_io                ! do fake i/o (currently only set up to read)
   public :: ncd_inqvid            ! inquire on a variable id
   public :: ncd_set_var           ! set data on "file" for one variable
@@ -340,6 +341,25 @@ contains
 
   end subroutine check_var_or_dim
 
+  !-----------------------------------------------------------------------
+  subroutine check_dim_size(ncid, dimname, value, msg)
+    !
+    ! !DESCRIPTION:
+    ! Validity check on dimension
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t),intent(in) :: ncid      ! PIO file handle
+    character(len=*) , intent(in) :: dimname   ! Dimension name
+    integer, intent(in)           :: value     ! Expected dimension size
+
+    character(len=*), intent(in), optional :: msg  ! Optional additional message printed upon error
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    ! Does nothing assumes the dim size is as expected
+
+  end subroutine check_dim_size
 
   !-----------------------------------------------------------------------
   subroutine ncd_inqdid(ncid, name, dimid, dimexist)

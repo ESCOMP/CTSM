@@ -34,6 +34,9 @@ module FireMethodType
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
+     ! Deallocate the fire datasets
+     procedure(FireClean_interface)   , public, deferred :: FireClean
+
   end type fire_method_type
 
   abstract interface
@@ -52,7 +55,7 @@ module FireMethodType
      !   consistent between different implementations.
      !
      !---------------------------------------------------------------------------
-  subroutine FireInit_interface(this, bounds, NLFilename )
+  subroutine FireInit_interface(this, bounds )
     !
     ! !DESCRIPTION:
     ! Initialize Fire datasets
@@ -63,20 +66,21 @@ module FireMethodType
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
   end subroutine FireInit_interface
 
-  subroutine FireReadNML_interface(this, NLFilename )
+  subroutine FireReadNML_interface(this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read general fire namelist
     !
     ! USES
+    use decompMod              , only : bounds_type
     import :: fire_method_type
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
@@ -96,6 +100,20 @@ module FireMethodType
     !-----------------------------------------------------------------------
 
   end subroutine FireInterp_interface
+
+  !-----------------------------------------------------------------------
+  subroutine FireClean_interface(this)
+    !
+    ! !DESCRIPTION:
+    ! Deallocate Fire datasets
+    !
+    ! USES
+    import :: fire_method_type
+    ! !ARGUMENTS:
+    class(fire_method_type)     :: this
+    !-----------------------------------------------------------------------
+
+  end subroutine FireClean_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireReadParams_interface( this, ncid )

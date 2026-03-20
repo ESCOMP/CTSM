@@ -127,26 +127,27 @@ module clm_varcon
   real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
   real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
   real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
+  real(r8), public, parameter :: mmh2o_to_m3h2o_per_m2 = 1.0e-3_r8  ! coefficient to convert mm H2O to m3 H2O/m2
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
-  real(r8), public, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0_r8  ! 13C/12C
+  real(r8), private, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0_r8  ! 13C/12C
   real(r8), public :: c13ratio = preind_atm_ratio/(1.0_r8+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
 
    ! typical del13C for C3 photosynthesis (permil, relative to PDB)
-  real(r8), public, parameter :: c3_del13c = -28._r8
+  real(r8), private, parameter :: c3_del13c = -28._r8
 
   ! typical del13C for C4 photosynthesis (permil, relative to PDB)
-  real(r8), public, parameter :: c4_del13c = -13._r8
+  real(r8), private, parameter :: c4_del13c = -13._r8
 
   ! isotope ratio (13c/12c) for C3 photosynthesis
-  real(r8), public, parameter :: c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
+  real(r8), private, parameter :: c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
 
   ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
   real(r8), public, parameter :: c3_r2 = c3_r1/(1._r8 + c3_r1)
 
   ! isotope ratio (13c/12c) for C4 photosynthesis  
-  real(r8), public, parameter :: c4_r1 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
+  real(r8), private, parameter :: c4_r1 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
 
   ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
   real(r8), public, parameter :: c4_r2 = c4_r1/(1._r8 + c4_r1)

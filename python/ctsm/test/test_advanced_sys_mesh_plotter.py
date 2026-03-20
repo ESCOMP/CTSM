@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Advanced System tests for mesh_plotter (requires the ctsm_pylib_wdask conda environment)
+Advanced System tests for mesh_plotter
 
 """
 

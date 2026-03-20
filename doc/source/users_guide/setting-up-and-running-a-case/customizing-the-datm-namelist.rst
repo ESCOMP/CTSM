@@ -8,7 +8,7 @@
 
 When running "I" compsets with CLM you use the DATM model to give atmospheric forcing data to CLM. There are two ways to customize DATM:
 
-1. **DATM Main Namelist and Stream Namlist gorup** (``datm_in``)
+1. **DATM Main Namelist and Stream Namelist group** (``datm_in``)
 2. **DATM stream files**
 
 The `Data Model Documentation <http://esmci.github.io/cime/data_models/data-atm.html>`_ gives the details of all the options for the data models and for DATM specifically. It goes into detail on all namelist items both for DATM and for DATM streams. So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. But, we will talk about a few of the different options that are relevant for running with CLM. All of the options for changing the namelists or stream files is done by editing the ``user_nl_datm`` file.
