@@ -252,18 +252,6 @@
     <p>These are namelist items that appear in the CLM Tools under components/clm/tools.
     </p>
     <table border="1" cellpadding="10">
-    <caption>CLM mksurfdata</caption>
-      <tr>
-      <th rowspan="2">Name</th>
-      <th rowspan="2">Type</th>
-      <th>Description</th>
-      </tr>
-      <tr>
-      <th colspan="1">Valid values</th>
-      </tr>
-      <xsl:apply-templates select="entry[@category='mksurfdata']"/>
-    </table>
-    <table border="1" cellpadding="10">
     <caption>CLM mkgriddata</caption>
       <tr>
       <th rowspan="2">Name</th>
@@ -276,17 +264,6 @@
       <xsl:apply-templates select="entry[@category='mkgriddata']"/>
     </table>
     <table border="1" cellpadding="10">
-    <caption>CLM mkmapdata</caption>
-      <tr>
-      <th rowspan="2">Name</th>
-      <th rowspan="2">Type</th>
-      <th>Description</th>
-      </tr>
-      <tr>
-      <th colspan="1">Valid values</th>
-      </tr>
-      <xsl:apply-templates select="entry[@category='mkmapdata']"/>
-    </table>
     <table border="1" cellpadding="10">
     <caption>CLM mkgriddata</caption>
       <tr>

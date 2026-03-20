@@ -1,4 +1,0 @@
-z0param_method = 'Meier2022'
-use_z0m_snowmelt = .true.
-paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/ctsm51_params.RMz0.c220304.nc'
-

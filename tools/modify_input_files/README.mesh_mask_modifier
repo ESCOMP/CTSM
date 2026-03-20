@@ -10,10 +10,17 @@ tools/modify_input_files/modify_mesh_template.cfg
 
 Instructions
 ------------
-To run on Cheyenne/Casper/Izumi
+To run on various machines:
 1) (Un)load, execute, and activate the following:
+1a) First step to activate conda on your system
+1a) Casper:
 module unload python
 module load conda
+1a) Izumi:
+module load python
+1a) Derecho (nothing needs to be done
+1a) Elsewhere (do what's needed to activate conda)
+1b) On all systems
 ./py_env_create
 conda activate ctsm_py
 (Use "deactivate" to reverse the latter.)
@@ -29,12 +36,8 @@ F-Case, modifying the continental geometry
 User wants to make the Indian Ocean into grassland. They specify their
 own land fraction mask on the CESM 1-degree grid, as well as the area to
 be specified as grassland in a netcdf file. This has been obtained by
-modifying the default land fraction of CESM. An example netcdf file
-containing the masks for such a case is on cheyenne:
+modifying the default land fraction of CESM. The file contains two arrays:
 
-/glade/work/slevis/git/mksurfdata_toolchain/tools/modify_input_files/islas_examples/modify_mesh_mask/fill_indian_ocean/fill_indianocean_slevis.nc
-
-This contains two arrays:
 - landmask = the new landmask
 - mod_lnd_props = set to 1 where the new land surface has been specified
 (i.e., where grassland needs to be specified) and zero elsewhere
@@ -49,7 +52,7 @@ In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
 
 Enter the following (or similar) selections in modify_fill_indianocean.cfg:
 
-mesh_mask_in = /glade/p/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
+mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
 mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
 landmask_file = .../path_to_your_copy_of/fill_indianocean.nc
 

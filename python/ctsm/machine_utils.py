@@ -1,5 +1,4 @@
-"""Various machine-related utility functions
-"""
+"""Various machine-related utility functions"""
 
 from __future__ import print_function
 
@@ -41,6 +40,8 @@ def _machine_from_hostname(hostname):
     """
     if re.match(r"cheyenne\d+", hostname):
         machine = "cheyenne"
+    elif re.match(r"derecho\d+", hostname):
+        machine = "derecho"
     else:
         machine = hostname
 

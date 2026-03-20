@@ -28,7 +28,7 @@ where :math:`f_{lake}` and :math:`f_{sno}` are the CLM grid cell fractions of la
 
    0\le f_{v} =\frac{L+S}{\left(L+S\right)_{t} } \le 1{\rm \; \; \; \; where\; }\left(L+S\right)_{t} =0.3{\rm \; m}^{2} {\rm m}^{-2}
 
-where equation applies only for dust mobilization and is not related to the plant functional type fractions prescribed from the CLM input data or simulated by the CLM dynamic vegetation model (Chapter 22). :math:`L` and :math:`S` are the CLM leaf and stem area index values (m :sup:`2` m\ :sup:`-2`) averaged at the land unit level so as to include all the pfts and the bare ground present in a vegetated land unit. :math:`L` and :math:`S` may be prescribed from the CLM input data (section :numref:`Phenology and vegetation burial by snow`) or simulated by the CLM biogeochemistry model (Chapter :numref:`rst_Vegetation Phenology and Turnover`).
+where equation :eq:`29.3` applies only for dust mobilization and is not related to the plant functional type fractions prescribed from the CLM input data or simulated by the CLM dynamic vegetation model (Chapter 22). :math:`L` and :math:`S` are the CLM leaf and stem area index values (m :sup:`2` m\ :sup:`-2`) averaged at the land unit level so as to include all the pfts and the bare ground present in a vegetated land unit. :math:`L` and :math:`S` may be prescribed from the CLM input data (section :numref:`Phenology and vegetation burial by snow`) or simulated by the CLM biogeochemistry model (Chapter :numref:`rst_Vegetation Phenology and Turnover`).
 
 The sandblasting mass efficiency :math:`\alpha` (m :sup:`-1`) is calculated as
 
@@ -78,7 +78,7 @@ and
 
    w=\frac{\theta _{1} \rho _{liq} }{\rho _{d,1} }
 
-where :math:`a=M_{clay}^{-1}` for tuning purposes, :math:`\theta _{1}` is the volumetric soil moisture in the top soil layer (m :math:`{}^{3 }`\ m\ :sup:`-3`) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{d,\, 1}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`Re_{*t}^{f}` from equation is the threshold friction Reynolds factor
+where :math:`a=M_{clay}^{-1}` for tuning purposes, :math:`\theta _{1}` is the volumetric soil moisture in the top soil layer (m :math:`{}^{3 }`\ m\ :sup:`-3`) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{d,\, 1}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`Re_{*t}^{f}` from equation :eq:`29.6` is the threshold friction Reynolds factor
 
 .. math::
    :label: 29.10
@@ -110,7 +110,7 @@ where :math:`u_{*}` is the CLM wind friction speed (m s\ :sup:`-1`), also known 
 
    U_{10,t} =u_{*t} \frac{U_{10} }{u_{*} }
 
-In equation we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
+In equation :eq:`29.1` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
 
 .. math::
    :label: 29.14

@@ -19,8 +19,6 @@ Module SoilHydrologyType
   type, public :: soilhydrology_type
 
      integer :: h2osfcflag              ! true => surface water is active (namelist)       
-     integer :: origflag                ! used to control soil hydrology properties (namelist)
-
      real(r8), pointer :: num_substeps_col   (:)    ! col adaptive timestep counter     
      ! NON-VIC
      real(r8), pointer :: frost_table_col   (:)     ! col frost table depth                    
@@ -28,7 +26,6 @@ Module SoilHydrologyType
      real(r8), pointer :: zwts_col          (:)     ! col water table depth, the shallower of the two water depths
      real(r8), pointer :: zwt_perched_col   (:)     ! col perched water table depth
      real(r8), pointer :: qcharge_col       (:)     ! col aquifer recharge rate (mm/s) 
-     real(r8), pointer :: fracice_col       (:,:)   ! col fractional impermeability (-)
      real(r8), pointer :: icefrac_col       (:,:)   ! col fraction of ice       
      real(r8), pointer :: h2osfc_thresh_col (:)     ! col level at which h2osfc "percolates"   (time constant)
      real(r8), pointer :: xs_urban_col      (:)     ! col excess soil water above urban ponding limit
@@ -54,6 +51,8 @@ Module SoilHydrologyType
      real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
      real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
+     real(r8), pointer :: qout_col          (:,:)   ! flux of water out of soil layer [mm H2O/s]
+     real(r8), pointer :: qin_col           (:,:)   ! flux of water into soil layer [mm H2O/s]
 
    contains
 
@@ -121,7 +120,6 @@ contains
     allocate(this%zwts_col          (begc:endc))                 ; this%zwts_col          (:)     = nan
 
     allocate(this%qcharge_col       (begc:endc))                 ; this%qcharge_col       (:)     = nan
-    allocate(this%fracice_col       (begc:endc,nlevgrnd))        ; this%fracice_col       (:,:)   = nan
     allocate(this%icefrac_col       (begc:endc,nlevgrnd))        ; this%icefrac_col       (:,:)   = nan
     allocate(this%h2osfc_thresh_col (begc:endc))                 ; this%h2osfc_thresh_col (:)     = nan
     allocate(this%xs_urban_col      (begc:endc))                 ; this%xs_urban_col      (:)     = nan
@@ -146,6 +144,8 @@ contains
     allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
     allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
+    allocate(this%qout_col          (begc:endc,nlevsoi))         ; this%qout_col          (:,:)   = nan
+    allocate(this%qin_col           (begc:endc,nlevsoi))         ; this%qin_col           (:,:)   = nan
 
   end subroutine InitAllocate
 
@@ -153,7 +153,7 @@ contains
   subroutine InitHistory(this, bounds, use_aquifer_layer)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(soilhydrology_type) :: this
@@ -195,6 +195,16 @@ contains
     call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
          avgflag='A', long_name='perched water table depth (natural vegetated and crop landunits only)', &
          ptr_col=this%zwt_perched_col, l2g_scale_type='veg')
+
+    this%qout_col(begc:endc, :) = spval
+    call hist_addfld2d (fname="QOUT", units='mm H2O/s',  type2d='levsoi', &
+         avgflag='A', long_name='flux of water out of soil layer', &
+         ptr_col=this%qout_col, default='inactive')
+
+    this%qin_col(begc:endc, :) = spval
+    call hist_addfld2d (fname="QIN", units='mm H2O/s',  type2d='levsoi', &
+         avgflag='A', long_name='flux of water into soil layer', &
+         ptr_col=this%qin_col, default='inactive')
 
   end subroutine InitHistory
 
@@ -291,7 +301,6 @@ contains
     character(len=*)  , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
@@ -340,16 +349,14 @@ contains
      ! !LOCAL VARIABLES:
      integer :: ierr                 ! error code
      integer :: unitn                ! unit for namelist file
-     integer :: origflag=0            !use to control soil hydraulic properties
      integer :: h2osfcflag=1          !If surface water is active or not
      character(len=32) :: subname = 'SoilHydrology_readnl'  ! subroutine name
      !-----------------------------------------------------------------------
 
-     namelist / clm_soilhydrology_inparm / h2osfcflag, origflag
+     namelist / clm_soilhydrology_inparm / h2osfcflag
 
      ! preset values
 
-     origflag = 0          
      h2osfcflag = 1        
 
      if ( masterproc )then
@@ -371,10 +378,8 @@ contains
      end if
 
      call shr_mpi_bcast(h2osfcflag, mpicom)
-     call shr_mpi_bcast(origflag,   mpicom)
 
      this%h2osfcflag = h2osfcflag
-     this%origflag   = origflag
 
    end subroutine ReadNL
 

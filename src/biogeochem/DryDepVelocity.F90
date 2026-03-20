@@ -204,7 +204,7 @@ CONTAINS
     use pftconMod      , only : nbrdlf_evr_shrub, nbrdlf_dcd_tmp_shrub
     use pftconMod      , only : nbrdlf_dcd_brl_shrub,nc3_arctic_grass
     use pftconMod      , only : nc3_nonarctic_grass, nc4_grass, nc3crop
-    use pftconMod      , only : nc3irrig, npcropmin, npcropmax
+    use pftconMod      , only : nc3irrig, is_prognostic_crop
     use clm_varcon     , only : spval
 
     !
@@ -284,13 +284,13 @@ CONTAINS
 
     if ( n_drydep == 0 ) return
 
-    associate(                                                    &
-         forc_solad =>    atm2lnd_inst%forc_solad_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)
+    associate(                                                    & 
+         forc_solai =>    atm2lnd_inst%forc_solai_grc           , & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)
+         forc_solad =>    atm2lnd_inst%forc_solad_downscaled_col, & ! Input:  [real(r8) (:,:) ] direct beam radiation (visible only)
          forc_t     =>    atm2lnd_inst%forc_t_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric temperature (Kelvin)
          forc_q     =>    wateratm2lndbulk_inst%forc_q_downscaled_col    , & ! Input:  [real(r8) (:)   ] downscaled atmospheric specific humidity (kg/kg)
          forc_pbot  =>    atm2lnd_inst%forc_pbot_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled surface pressure (Pa)
          forc_rain  =>    wateratm2lndbulk_inst%forc_rain_downscaled_col , & ! Input:  [real(r8) (:)   ] downscaled rain rate [mm/s]
-
          h2osoi_vol =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ] volumetric soil water (0<=h2osoi_vol<=watsat)
          snow_depth =>    waterdiagnosticbulk_inst%snow_depth_col        , & ! Input:  [real(r8) (:)   ] snow height (m)
 
@@ -324,7 +324,7 @@ CONTAINS
             spec_hum   = forc_q(c)
             rain       = forc_rain(c)
             sfc_temp   = forc_t(c)
-            solar_flux = forc_solad(g,1)
+            solar_flux = forc_solad(c,1)
             lat        = grc%latdeg(g)
             lon        = grc%londeg(g)
             clmveg     = patch%itype(pi)
@@ -349,7 +349,7 @@ CONTAINS
             if (clmveg == nc4_grass                           ) wesveg = 3
             if (clmveg == nc3crop                             ) wesveg = 2
             if (clmveg == nc3irrig                            ) wesveg = 2
-            if (clmveg >= npcropmin .and. clmveg <= npcropmax ) wesveg = 2
+            if (is_prognostic_crop(clmveg)) wesveg = 2
             if (wesveg == wveg_unset )then
                write(iulog,*) 'clmveg = ', clmveg, 'lun%itype = ', lun%itype(l)
                call endrun(subgrid_index=pi, subgrid_level=subgrid_level_patch, &

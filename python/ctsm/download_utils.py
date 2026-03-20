@@ -9,7 +9,7 @@ from ctsm.utils import abort
 logger = logging.getLogger(__name__)
 
 
-def download_file(url, fname):
+def download_file(url, fname, timeout=30):
     """
     Function to download a file.
     Args:
@@ -17,6 +17,8 @@ def download_file(url, fname):
             url of the file for downloading
         fname (str) :
             file name to save the downloaded file.
+        timeout (number, optional) :
+            time in seconds to wait for response before exiting
 
     Raises:
         Error :
@@ -25,7 +27,7 @@ def download_file(url, fname):
             When download fails for any reason.
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=timeout)
 
     # pylint: disable=broad-except
     except Exception as err:

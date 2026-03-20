@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for job_launcher_no_batch
-"""
+"""Unit tests for job_launcher_no_batch"""
 
 import unittest
 import tempfile
@@ -21,9 +20,11 @@ class TestJobLauncherNoBatch(unittest.TestCase):
     """Tests of job_launcher_no_batch"""
 
     def setUp(self):
+        self._previous_dir = os.getcwd()
         self._testdir = tempfile.mkdtemp()
 
     def tearDown(self):
+        os.chdir(self._previous_dir)
         shutil.rmtree(self._testdir, ignore_errors=True)
 
     def assertFileContentsEqual(self, expected, filepath, msg=None):

@@ -39,6 +39,7 @@ contains
     use SoilBiogeochemLittVertTranspMod   , only : readSoilBiogeochemLittVertTranspParams => readParams
     use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
     use SoilBiogeochemDecompMod           , only : readSoilBiogeochemDecompParams         => readParams
+    use TillageMod                        , only : readTillageParams                      => readParams
     use SoilBiogeochemDecompCascadeMIMICSMod, only : readSoilBiogeochemDecompMimicsParams => readParams
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
@@ -105,6 +106,7 @@ contains
           call readSoilBiogeochemDecompBgcParams(ncid)
        end if
        call readSoilBiogeochemDecompParams(ncid)
+       call readTillageParams(ncid, NLFilename_in)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
        call readSoilBiogeochemNLeachingParams(ncid)

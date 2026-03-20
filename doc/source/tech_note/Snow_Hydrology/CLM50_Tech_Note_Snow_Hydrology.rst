@@ -15,6 +15,21 @@ Shown are three snow layers, :math:`i=-2`, :math:`i=-1`, and :math:`i=0`. The la
 
 The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}` (kg m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}` (m), and temperature :math:`T_{i}` (Chapter :numref:`rst_Soil and Snow Temperatures`). The water vapor phase is neglected. Snow can also exist in the model without being represented by explicit snow layers. This occurs when the snowpack is less than a specified minimum snow depth (:math:`z_{sno} < 0.01` m). In this case, the state variable is the mass of snow :math:`W_{sno}` (kg m\ :sup:`-2`).
 
+.. note:: 
+   In CLM, all water-related state variables, including snow and ice, are reported in **liquid water equivalent** units. This means that quantities such as snow water equivalent (SWE), soil ice content, and snowmelt are expressed in terms of the depth of liquid water that would result if the frozen material melted completely.
+
+   For example:
+   
+   - ``H2OSNO`` represents the total snow water equivalent in mm.
+   - ``H2OSOI_ICE`` is the soil ice content in mm.
+   - ``QSNOMELT`` is the snow melt rate in mm/s.
+
+   In contrast, some glaciological or cryosphere models (e.g., PISM, RACMO2, Crocus) may output variables in **ice-equivalent** units, depending on the modeling context. When necessary, conversion from ice equivalent to water equivalent should account for the density of ice versus liquid water (:numref:`Table Physical Constants`):
+
+   .. math::
+
+      \text{Water equivalent} = \text{Ice equivalent} \times \frac{\rho_\text{ice}}{\rho_\text{liq}}
+
 Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The following two sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snow pack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater flushing. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
 
 .. _Snow Covered Area Fraction:
@@ -106,7 +121,7 @@ The temperature dependent term is given by (:ref:`van Kampenhout et al. (2017) <
 
 .. bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
 
-where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
+where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m s\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
 
 .. math::
    :label: 8.21c
@@ -143,7 +158,7 @@ In the second step, after surface fluxes and snow/soil temperatures have been de
 
    w_{ice,\, snl+1}^{n+1} =w_{ice,\, snl+1}^{n} +f_{sno} \left(q_{frost} -q_{subl} \right)\Delta t.
 
-If :math:`w_{ice,\, snl+1}^{n+1} <0` upon solution of equation, the ice content is reset to zero and the liquid water content :math:`w_{liq,\, snl+1}` is reduced by the amount required to bring :math:`w_{ice,\, snl+1}^{n+1}` up to zero.
+If :math:`w_{ice,\, snl+1}^{n+1} <0` upon solution of equation :eq:`8.25`, the ice content is reset to zero and the liquid water content :math:`w_{liq,\, snl+1}` is reduced by the amount required to bring :math:`w_{ice,\, snl+1}^{n+1}` up to zero.
 
 The snow water equivalent :math:`W_{sno}` is capped to not exceed 10,000 kg m\ :sup:`-2`. If the addition of :math:`q_{frost}` were to result in :math:`W_{sno} > 10,000` kg m\ :sup:`-2`, the frost term :math:`q_{frost}` is instead added to the ice runoff term :math:`q_{snwcp,\, ice}` (section :numref:`Runoff from glaciers and snow-capped surfaces`).
 
@@ -192,7 +207,7 @@ where the volumetric liquid water :math:`\theta _{liq,\, i}` and ice :math:`\the
 
    \theta _{liq,\, i} =\frac{w_{liq,\, i} }{f_{sno} \Delta z_{i} \rho _{liq} } \le 1-\theta _{ice,\, i} ,
 
-and :math:`S_{r} =0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson (1976) <Anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,\, i}` calculated in equation, unless the underlying layer is the surface soil layer, as
+and :math:`S_{r} =0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson (1976) <Anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,\, i}` calculated in equation :eq:`8.29`, unless the underlying layer is the surface soil layer, as
 
 .. math::
    :label: 8.32
@@ -206,7 +221,7 @@ The liquid water content :math:`w_{liq,\, i}`  is updated as
 
    w_{liq,\, i}^{n+1} =w_{liq,\, i}^{n} +\left(q_{i-1} -q_{i} \right)\Delta t.
 
-Equations - are solved sequentially from top (:math:`i=snl+1`) to bottom (:math:`i=0`) snow layer in each time step. The total flow of liquid water reaching the soil surface is then :math:`q_{liq,\, 0}` which is used in the calculation of surface runoff and infiltration (sections :numref:`Surface Runoff` and :numref:`Infiltration`).
+Equations :eq:`8.29` - :eq:`8.33` are solved sequentially from top (:math:`i=snl+1`) to bottom (:math:`i=0`) snow layer in each time step. The total flow of liquid water reaching the soil surface is then :math:`q_{liq,\, 0}` which is used in the calculation of surface runoff and infiltration (sections :numref:`Surface Runoff` and :numref:`Infiltration`).
 
 .. _Black and organic carbon and mineral dust within snow:
 
@@ -585,7 +600,7 @@ The maximum snow layer thickness, :math:`\Delta z_{\max }`, depends on the numbe
 Subdivision
 '''''''''''''''''''
 
-The snow layers are subdivided when the layer thickness exceeds the prescribed maximum thickness :math:`\Delta z_{\max }` with lower and upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`Table snow layer thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\; i}` and :math:`w_{ice,\; i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations -. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}` ) and the splitting layer (:math:`T_{2}` ) and constraining the new temperatures (:math:`T_{2}^{n+1}`, :math:`T_{3}^{n+1}` ) to lie along this slope. The temperature of the lower layer is first evaluated from
+The snow layers are subdivided when the layer thickness exceeds the prescribed maximum thickness :math:`\Delta z_{\max }` with lower and upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`Table snow layer thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\; i}` and :math:`w_{ice,\; i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations :eq:`8.55` - :eq:`8.58`. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}` ) and the splitting layer (:math:`T_{2}` ) and constraining the new temperatures (:math:`T_{2}^{n+1}`, :math:`T_{3}^{n+1}` ) to lie along this slope. The temperature of the lower layer is first evaluated from
 
 .. math::
    :label: 8.62
@@ -602,5 +617,5 @@ then adjusted as,
    T_{2}^{n+1} = T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right.} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right) & \qquad T'_{3} <T_{f}
    \end{array}
 
-where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations and.
+where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations :eq:`8.60` and :eq:`8.61`.
 

@@ -26,9 +26,6 @@ module AerosolMod
   public :: AerosolFluxes
   !
   ! !PUBLIC DATA MEMBERS:
-  real(r8), public, parameter :: snw_rds_min = 54.526_r8          ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
-  real(r8), public            :: fresh_snw_rds_max = 204.526_r8   ! maximum warm fresh snow effective radius [microns]
-  !
   type, public :: aerosol_type
      real(r8), pointer, public  :: mss_bcpho_col(:,:)      ! mass of hydrophobic BC in snow (col,lyr)     [kg]
      real(r8), pointer, public  :: mss_bcphi_col(:,:)      ! mass of hydrophillic BC in snow (col,lyr)    [kg]
@@ -93,7 +90,6 @@ module AerosolMod
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
-     procedure, private :: InitReadNML
        
   end type aerosol_type
 
@@ -113,7 +109,6 @@ contains
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
     call this%InitCold(bounds)
-    call this%InitReadNML(NLFilename)
 
   end subroutine Init
 
@@ -294,58 +289,6 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine InitReadNML(this, NLFilename)
-    !
-    ! !USES:
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    !
-    ! !ARGUMENTS:
-    class(aerosol_type) :: this
-    character(len=*),  intent(in) :: NLFilename ! Input namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    !-----------------------------------------------------------------------
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'Aerosol::InitReadNML'
-    character(len=*), parameter :: nmlname = 'aerosol'
-    !-----------------------------------------------------------------------
-    namelist/aerosol/ fresh_snw_rds_max
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=aerosol, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//" namelist "//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//" namelist "//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (fresh_snw_rds_max       , mpicom)
-
-   if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=aerosol)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine InitReadNML
-
-  !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, &
        h2osoi_ice_col, h2osoi_liq_col)
     ! 

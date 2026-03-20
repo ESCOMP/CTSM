@@ -24,8 +24,9 @@
    adding-new-resolutions/index.rst
    running-special-cases/index.rst
    running-single-points/index.rst
-   running-PTCLM/index.rst
    trouble-shooting/index.rst
    testing/index.rst
+   using-mesh-maker/index.rst
+   working-with-documentation/index.rst
 
 Documentation was built: |today|

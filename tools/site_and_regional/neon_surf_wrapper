@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""
+This is a just top-level skeleton script that calls
+neon_surf_wrapper.py.
+The original code (neon_surf_wrapper.py) is located under
+python/ctsm/site_and_regional folder.
+
+For full instructions on how to run the code and different options,
+please check python/ctsm/site_and_regional/neon_surf_wrapper.py file.
+
+This script is a simple wrapper for neon sites that performs the
+following:
+    1) For neon sites, subset surface dataset from global dataset
+        (i.e. ./subset_data.py )
+    2) Download neon and update the created surface dataset
+       based on the downloaded neon data.
+       (i.e. modify_singlept_site_neon.py)
+
+----------------------------------------------------------------
+Instructions for running using conda python environments:
+../../py_env_create
+conda activate ctsm_pylib
+"""
+
+import os
+import sys
+
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.site_and_regional.neon_surf_wrapper import main
+
+if __name__ == "__main__":
+    main()

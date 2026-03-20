@@ -1,0 +1,24 @@
+&drydep_inparm
+ dep_data_file		= '/glade/campaign/cesm/cesmdata/inputdata/atm/cam/chem/trop_mozart/dvel/dep_data_c20221208.nc'
+ drydep_list		= 'DMS','H2O2','H2SO4','SO2','SOAG'
+/
+&megan_emis_nl
+ megan_factors_file		= '/glade/campaign/cesm/cesmdata/inputdata/atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc'
+ megan_mapped_emisfctrs		= .false.
+ megan_specifier		= 'SOAE = 0.5954*isoprene + 5.1004*(carene_3 + pinene_a + thujene_a + bornene +', ' terpineol_4 + terpineol_a + terpinyl_ACT_a + myrtenal + sabinene + pinene_b + camphene +',
+         ' fenchene_a + limonene + phellandrene_a + terpinene_a + terpinene_g + terpinolene +', ' phellandrene_b + linalool + ionone_b + geranyl_acetone + neryl_acetone + jasmone +',
+         ' verbenene + ipsenol + myrcene + ocimene_t_b + ocimene_al + ocimene_c_b + 2met_nonatriene) + ', ' 12.3942*(farnescene_a + caryophyllene_b + acoradiene + aromadendrene + bergamotene_a +',
+         ' bergamotene_b + bisabolene_a + bisabolene_b + bourbonene_b + cadinene_d + cadinene_g +', ' cedrene_a + copaene_a + cubebene_a + cubebene_b + elemene_b + farnescene_b +',
+         ' germacrene_B + germacrene_D + gurjunene_b + humulene_a + humulene_g + isolongifolene +', ' longifolene + longipinene + muurolene_a + muurolene_g + selinene_b + selinene_d +',
+         ' nerolidol_c + nerolidol_t)'
+/
+&dust_emis_inparm
+  dust_emis_method = 'Zender_2003'
+  zender_soil_erod_source = 'atm'
+/
+&lightning_coupling_nl
+  atm_provides_lightning = .true.
+/
+&ozone_coupling_nl
+  atm_ozone_frequency = 'multiday_average'
+/

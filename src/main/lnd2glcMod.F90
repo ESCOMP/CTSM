@@ -20,7 +20,7 @@ module lnd2glcMod
   use decompMod       , only : get_proc_bounds, bounds_type, subgrid_level_column
   use domainMod       , only : ldomain
   use clm_varpar      , only : maxpatch_glc
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, use_hillslope
   use clm_varcon      , only : spval, tfrz
   use column_varcon   , only : col_itype_to_ice_class
   use landunit_varcon , only : istice, istsoil
@@ -169,10 +169,28 @@ contains
     character(len=*), parameter :: subname = 'update_lnd2glc'
     !------------------------------------------------------------------------------
 
-    ! Initialize to reasonable defaults
+    ! Initialize to reasonable defaults. These values will be sent for gridcells /
+    ! columns outside the do_smb filter.
 
+    ! NOTE(wjs, 2018-07-03) qice should be 0 outside the do_smb filter to ensure conservation
     this%qice_grc(bounds%begg : bounds%endg, :) = 0._r8
+
+    ! NOTE(wjs, 2018-07-03) tsrf can be anything outside the do_smb filter; 0 deg C seems
+    ! as reasonable as anything (based on input from Bill Lipscomb and Gunter Leguy)
     this%tsrf_grc(bounds%begg : bounds%endg, :) = tfrz
+
+    ! NOTE(wjs, 2018-07-03) The topo values outside the do_smb filter could matter for
+    ! gridcells where we compute SMB for some but not all elevation classes (possibly
+    ! because we haven't even allocated memory for some elevation classes - i.e., if we're
+    ! not using the 'virtual' behavior in that gridcell). In glc2lndMod, we ensure that
+    ! this cannot occur for gridcells within the icemask (i.e., within the icemask, we
+    ! ensure that there are no points that have (non-virtual and compute-SMB)), so this
+    ! isn't a conservation issue, but it could still be important, e.g., for generating
+    ! appropriate forcings for a later dlnd-driven T compset. I'm not sure what is "right"
+    ! here. We've historically used 0 for this, and maybe that's as good as anything,
+    ! because it may lead to the 0 SMB values being ignored for the sake of vertical
+    ! interpolation, but I'm not sure about this. But maybe it would be better to use
+    ! topo at the center of each elevation class?
     this%topo_grc(bounds%begg : bounds%endg, :) = 0._r8     
   
     ! Fill the lnd->glc data on the clm grid
@@ -204,7 +222,16 @@ contains
       ! Make sure we haven't already assigned the coupling fields for this point
       ! (this could happen, for example, if there were multiple columns in the
       ! istsoil landunit, which we aren't prepared to handle)
-      if (fields_assigned(g,n)) then
+      !
+      ! BUG(wjs, 2022-07-17, ESCOMP/CTSM#204) We have a known bug in the handling of bare
+      ! land fluxes when we potentially have multiple vegetated columns in a grid cell.
+      ! The most common configuration where this is the case is when use_hillslope is
+      ! true. In order to allow hillslope hydrology runs to work for now, we are
+      ! bypassing this error check when use_hillslope is true - under the assumption
+      ! that, for now, people aren't going to be interested in SMB in a run with
+      ! hillslope hydrology. Once we resolve ESCOMP/CTSM#204, we should remove the '.and.
+      ! .not. use_hillslope' part of this conditional.
+      if (fields_assigned(g,n) .and. .not. use_hillslope) then
          write(iulog,*) subname//' ERROR: attempt to assign coupling fields twice for the same index.'
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
          write(iulog,*) 'which this routine cannot handle.'

@@ -1,0 +1,7 @@
+! Various hillslope options not exercised by other testmods
+use_hillslope_routing = .false.
+downscale_hillslope_meteorology = .true.
+hillslope_head_gradient_method = 'Kinematic'
+hillslope_transmissivity_method = 'Uniform'
+hillslope_pft_distribution_method = 'DominantPftUniform'
+hillslope_soil_profile_method = 'SetLowlandUpland'

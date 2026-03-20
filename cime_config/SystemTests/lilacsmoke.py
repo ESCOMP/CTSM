@@ -25,7 +25,8 @@ import os
 import shutil
 
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
-from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy, append_testlog
+from CIME.utils import run_cmd, run_cmd_no_fail, symlink_force, new_lid, safe_copy
+from CIME.status import append_testlog
 from CIME.build import post_build
 from CIME.test_status import (
     NAMELIST_PHASE,
@@ -38,7 +39,7 @@ from CIME.XML.standard_module_setup import *
 
 logger = logging.getLogger(__name__)
 
-_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "lilac_in"]
+_LILAC_RUNTIME_FILES = ["lnd_in", "lnd_modelio.nml", "drv_flds_in", "lilac_in"]
 
 
 class LILACSMOKE(SystemTestsCommon):
@@ -407,6 +408,11 @@ class LILACSMOKE(SystemTestsCommon):
         # case.get_mpirun_cmd creates a command that runs the executable given by
         # case.run_exe. So it's important that (elsewhere in this test script) we create a
         # link pointing from that to the atm_driver.exe executable.
+        #
+        # 2024/5/28 slevis: We added the load_env here to replace the
+        # behavior of the PBS -V directive that was removed from
+        # /ccs_config/machines/config_batch.xml
+        self._case.load_env(reset=True)
         lid = new_lid()
         os.environ["OMP_NUM_THREADS"] = str(self._case.thread_count)
         cmd = self._case.get_mpirun_cmd(allow_unresolved_envvars=False)

@@ -11,6 +11,10 @@ Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting long-term pat
 
 Aber, J.D., Goodale, C.L., Ollinger, S.V., Smith, M.-L., Magill, A.H., Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen deposition altering the nitrogen status of northeastern forests? BioScience 53:375-389.
 
+.. _AlduchovandEskridge1996:
+
+Alduchov, O.A., and Eskridge, R.E. 1996. Improved Magnus form approximation of saturation vapor pressure. J. Appl. Meteor. 35:601-609.
+
 .. _Alietal2016:
 
 Ali, A. A., C. Xu, A. Rogers, R. A. Fisher, S. D. Wullschleger, E. Massoud, J. A. Vrugt, J. D. Muss, N. McDowell, and J. Fisher, 2016: A global scale mechanistic model of photosynthetic capacity (LUNA V1. 0). Geosci. Mod. Dev., 9:587-606.
@@ -463,6 +467,10 @@ Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV
 
 Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute, 1/2°, and 1° data sets of continental watersheds and river networks for use in regional and global hydrologic and climate system modeling studies. Water Resour. Res. 35:583-587.
 
+.. _Grahametal2021:
+
+Graham, M. W., Thomas, R. Q., Lombardozzi, D. L., & O'Rourke, M. E. (2021). Modest capacity of no-till farming to offset emissions over 21st century. Environmental Research Letters, 16(5), 054055. doi: 10.1088/1748-9326/abe6c6
+
 .. _Gravenetal2017:
 
 Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, H. A. J. Meijer, M. Rubino, P. P. Tans, C. M. Trudinger, B. H. Vaughn and J. W. C. White, 2017. Compiled records of carbon isotopes in atmospheric CO2 for historical simulations in CMIP6, Geoscientific Model Development, in review. doi: 10.5194/gmd-2017-166.
@@ -683,6 +691,10 @@ Lavigne, M.B., and Ryan, M.G. 1997. Growth and maintenance respiration rates of 
 
 Law, B.E., Sun, O.J., Campbell, J., Van Tuyl, S. and Thornton, P.E. 2003. Changes in carbon storage and fluxes in a chronosequence of ponderosa pine. Global Change Biology, 9: 510-514.
 
+.. _Lawrence2005:
+
+Lawrence, M.G. 2005. The relationship between relative humidity and the dewpoint temperature in moist air. Bull. Amer. Meteorol. Soc. 86:225-234. DOI:10.1175/BAMS-86-2-225.
+
 .. _Lawrenceetal2007:
 
 Lawrence, D.M., Thornton, P.E., Oleson, K.W., and Bonan, G.B. 2007. The partitioning of evapotranspiration into transpiration, soil evaporation, and canopy evaporation in a GCM: Impacts on land-atmosphere interaction. J. Hydrometeor. 8:862-880.
@@ -838,6 +850,10 @@ Lowe, P.R. 1977. An approximating polynomial for the computation of saturation v
 .. _Luoetal2006:
 
 Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations of carbon and nitrogen in land ecosystems: a meta-analysis. Ecology 87:53-63.
+
+.. _Luoetal2025:
+
+Luo J, Hess P G, Hall S, et al. Agricultural emissions of reactive nitrogen gases from constrained simulations using the Community Land Model. Authorea Preprints, 2025.
 
 .. _Magilletal1997:
 
@@ -1043,6 +1059,10 @@ Parton, W. et al. 1996. Generalized model for N2 and N2O production from nitrifi
 .. _Partonetal2001:
 
 Parton, W.J. et al. 2001. Generalized model for NOx and N2O emissions from soils. J. Geophys. Res. 106(D15):17403-17419.
+
+.. _Patankaretal2018:
+
+Patankar S., 2018. Numerical heat transfer and fluid flow[M]. CRC press., Boca Raton, section 5.2, 80-95 pp
 
 .. _Paterson1994:
 
@@ -1259,6 +1279,10 @@ Sitch, S et al. (2003). Evaluation of ecosystem dynamics, plant geography and te
 .. _Sivak2013:
 
 Sivak, M. 2013. Air conditioning versus heating: climate control is more energy demanding in Minneapolis than in Miami. Environ. Res. Lett., 8, doi:10.1088/1748-9326/8/1/014050.
+
+.. _Smeraldetal2023:
+
+Smerald, A., Rahimi, J., & Scheer, C., 2023. A global dataset for the production and usage of cereal residues in the period 1997–2021. Scientific Data, 10(1), 685. doi: 10.1038/s41597-023-02587-0
 
 .. _smith2001:
 

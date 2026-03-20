@@ -1,0 +1,6 @@
+# Python packages used for building docs
+rst2pdf == 0.103.1
+sphinx == 8.2.3
+sphinxcontrib_programoutput == 0.18
+sphinx-mdinclude == 0.6.2
+sphinx_rtd_theme == 3.0.2

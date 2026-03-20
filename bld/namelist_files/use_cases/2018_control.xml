@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 
+
+<!-- This use-case is mainly in use for NEON sites -->
+
 <namelist_defaults>
 
 <use_case_desc>Conditions to simulate 2018 land-use</use_case_desc>

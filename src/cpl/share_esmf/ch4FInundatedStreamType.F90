@@ -12,7 +12,7 @@ module ch4FInundatedStreamType
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
   use ch4varcon        , only : finundation_mtd
@@ -41,8 +41,8 @@ module ch4FInundatedStreamType
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
-     character(len=CL)  :: stream_fldFileName_ch4finundated   ! data Filename
-     character(len=CL)  :: stream_meshfile_ch4finundated      ! mesh Filename
+     character(len=FL)  :: stream_fldFileName_ch4finundated   ! data Filename
+     character(len=FL)  :: stream_meshfile_ch4finundated      ! mesh Filename
      character(len=CL)  :: ch4finundatedmapalgo               ! map algo
   contains
      procedure, private :: ReadNML     ! Read in namelist
@@ -338,8 +338,8 @@ contains
    ! local variables
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
-   character(len=CL)  :: stream_fldFileName_ch4finundated = ' '
-   character(len=CL)  :: stream_meshfile_ch4finundated = ' '
+   character(len=FL)  :: stream_fldFileName_ch4finundated = ' '
+   character(len=FL)  :: stream_meshfile_ch4finundated = ' '
    character(len=CL)  :: ch4finundatedmapalgo = 'bilinear'
    character(len=*), parameter :: namelist_name = 'ch4finundated'    ! MUST agree with name in namelist and read
    character(len=*), parameter :: subName = "('ch4finundated::ReadNML')"
@@ -352,6 +352,7 @@ contains
 
    ! Read ch4finundated namelist
    if (masterproc) then
+      write(iulog,*) 'Reading ', namelist_name, ' namelist from file: ', trim(NLFilename)
       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
       call shr_nl_find_group_name(nu_nml, namelist_name, status=nml_error)
       if (nml_error == 0) then
@@ -372,9 +373,9 @@ contains
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) namelist_name, ' stream settings:'
-      write(iulog,*) '  stream_fldFileName_ch4finundated = ',stream_fldFileName_ch4finundated
-      write(iulog,*) '  stream_meshfile_ch4finundated    = ',stream_meshfile_ch4finundated
-      write(iulog,*) '  ch4finundatedmapalgo             = ',ch4finundatedmapalgo
+      write(iulog,*) '  stream_fldFileName_ch4finundated = ',trim(stream_fldFileName_ch4finundated)
+      write(iulog,*) '  stream_meshfile_ch4finundated    = ',trim(stream_meshfile_ch4finundated)
+      write(iulog,*) '  ch4finundatedmapalgo             = ',trim(ch4finundatedmapalgo)
    endif
    this%stream_fldFileName_ch4finundated = stream_fldFileName_ch4finundated
    this%stream_meshfile_ch4finundated    = stream_meshfile_ch4finundated

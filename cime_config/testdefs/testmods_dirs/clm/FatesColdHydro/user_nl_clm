@@ -1,4 +1,4 @@
-hist_mfilt        = 365
+hist_mfilt        = 1
 hist_nhtfrq       = -24
 hist_empty_htapes = .true.
 use_fates_planthydro= .true.

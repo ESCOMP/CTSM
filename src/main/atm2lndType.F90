@@ -80,9 +80,10 @@ module atm2lndType
      real(r8), pointer :: forc_vp_grc                   (:)   => null() ! atmospheric vapor pressure (Pa)
      real(r8), pointer :: forc_pco2_grc                 (:)   => null() ! CO2 partial pressure (Pa)
      real(r8), pointer :: forc_pco2_240_patch           (:)   => null() ! 10-day mean CO2 partial pressure (Pa)
-     real(r8), pointer :: forc_solad_grc                (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
+     real(r8), pointer :: forc_solad_not_downscaled_grc (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
-     real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
+     real(r8), pointer :: forc_solar_not_downscaled_grc (:)   => null() ! incident solar radiation
+     real(r8), pointer :: forc_solar_downscaled_col     (:)   => null() ! incident solar radiation
      real(r8), pointer :: forc_ndep_grc                 (:)   => null() ! nitrogen deposition rate (gN/m2/s)
      real(r8), pointer :: forc_pc13o2_grc               (:)   => null() ! C13O2 partial pressure (Pa)
      real(r8), pointer :: forc_po2_grc                  (:)   => null() ! O2 partial pressure (Pa)
@@ -104,7 +105,7 @@ module atm2lndType
      real(r8), pointer :: forc_pbot_downscaled_col      (:)   => null() ! downscaled atm pressure (Pa)
      real(r8), pointer :: forc_rho_downscaled_col       (:)   => null() ! downscaled atm density (kg/m**3)
      real(r8), pointer :: forc_lwrad_downscaled_col     (:)   => null() ! downscaled atm downwrd IR longwave radiation (W/m**2)
-
+     real(r8), pointer :: forc_solad_downscaled_col     (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
 
      ! time averaged quantities
      real(r8) , pointer :: fsd24_patch                  (:)   => null() ! patch 24hr average of direct beam radiation
@@ -119,7 +120,9 @@ module atm2lndType
 
      procedure, public  :: Init
      procedure, public  :: InitForTesting  ! version of Init meant for unit testing
+     procedure, private :: ReadNamelistAndParams
      procedure, private :: ReadNamelist
+     procedure, private :: ReadParams
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, public  :: InitAccBuffer
@@ -179,7 +182,6 @@ contains
     real(r8), intent(in), optional :: precip_repartition_nonglc_all_rain_t
     !
     ! !LOCAL VARIABLES:
-
     character(len=*), parameter :: subname = 'atm2lnd_params_constructor'
     !-----------------------------------------------------------------------
 
@@ -266,7 +268,7 @@ contains
     end if
 
   contains
-    subroutine compute_ramp_params(all_snow_t_c, all_rain_t_c, &
+    elemental subroutine compute_ramp_params(all_snow_t_c, all_rain_t_c, &
          all_snow_t_k, frac_rain_slope)
       real(r8), intent(in)  :: all_snow_t_c  ! Temperature at which precip falls entirely as rain (deg C)
       real(r8), intent(in)  :: all_rain_t_c  ! Temperature at which precip falls entirely as snow (deg C)
@@ -279,16 +281,19 @@ contains
 
   end function atm2lnd_params_constructor
 
-
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, NLFilename)
 
+    ! !USES:
+    use clm_varctl, only: paramfile
+
+    ! !ARGUMENTS:
     class(atm2lnd_type) :: this
     type(bounds_type), intent(in) :: bounds
     character(len=*), intent(in) :: NLFilename ! namelist filename
 
     call this%InitAllocate(bounds)
-    call this%ReadNamelist(NLFilename)
+    call this%ReadNamelistAndParams(NLFilename, paramfile)
     call this%InitHistory(bounds)
 
   end subroutine Init
@@ -332,7 +337,65 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine ReadNamelist(this, NLFilename)
+  subroutine ReadNamelistAndParams(this, NLFilename, paramfile)
+
+    ! !DESCRIPTION:
+    ! Call the
+    ! - subroutines that read the atm2lnd namelist and parameters,
+    ! - function atm2lnd_params_constructor
+
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename !  Namelist filename
+    character(len=*), intent(in) :: paramfile  ! parameter filename
+    class(atm2lnd_type), intent(inout) :: this
+
+    ! !LOCAL VARIABLES:
+
+    ! variables corresponding to the components of atm2lnd_params_type
+    logical :: repartition_rain_snow
+    logical :: glcmec_downscale_longwave
+    real(r8) :: lapse_rate
+    real(r8) :: lapse_rate_longwave
+    real(r8) :: longwave_downscaling_limit
+
+    ! Rain-snow transition temperatures (C) for glacier landunits
+    real(r8) :: precip_repartition_glc_all_rain_t
+    real(r8) :: precip_repartition_glc_all_snow_t
+
+    ! Rain-snow transition temperatures (C) for non-glacier landunits
+    real(r8) :: precip_repartition_nonglc_all_rain_t
+    real(r8) :: precip_repartition_nonglc_all_snow_t
+
+    !-----------------------------------------------------------------------
+
+    call this%ReadNamelist(NLFilename, &
+       repartition_rain_snow, glcmec_downscale_longwave, &
+       lapse_rate, lapse_rate_longwave, longwave_downscaling_limit)
+    call this%ReadParams(paramfile, &
+       repartition_rain_snow, &
+       precip_repartition_glc_all_rain_t, &
+       precip_repartition_glc_all_snow_t, &
+       precip_repartition_nonglc_all_rain_t, &
+       precip_repartition_nonglc_all_snow_t)
+
+    this%params = atm2lnd_params_type( &
+         repartition_rain_snow = repartition_rain_snow, &
+         glcmec_downscale_longwave = glcmec_downscale_longwave, &
+         lapse_rate = lapse_rate, &
+         lapse_rate_longwave = lapse_rate_longwave, &
+         longwave_downscaling_limit = longwave_downscaling_limit, &
+         precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
+         precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
+         precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &
+         precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
+
+  end subroutine ReadNamelistAndParams
+
+
+  !-----------------------------------------------------------------------
+  subroutine ReadNamelist(this, NLFilename, &
+    repartition_rain_snow, glcmec_downscale_longwave, &
+    lapse_rate, lapse_rate_longwave, longwave_downscaling_limit)
     !
     ! !DESCRIPTION:
     ! Read the atm2lnd namelist
@@ -346,19 +409,15 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
     class(atm2lnd_type), intent(inout) :: this
-    !
-    ! !LOCAL VARIABLES:
 
-    ! temporary variables corresponding to the components of atm2lnd_params_type
-    logical :: repartition_rain_snow
-    logical :: glcmec_downscale_longwave
-    real(r8) :: lapse_rate
-    real(r8) :: lapse_rate_longwave
-    real(r8) :: longwave_downscaling_limit
-    real(r8) :: precip_repartition_glc_all_snow_t
-    real(r8) :: precip_repartition_glc_all_rain_t
-    real(r8) :: precip_repartition_nonglc_all_snow_t
-    real(r8) :: precip_repartition_nonglc_all_rain_t
+    ! variables corresponding to the components of atm2lnd_params_type
+    logical, intent(out) :: repartition_rain_snow
+    logical, intent(out) :: glcmec_downscale_longwave
+    real(r8), intent(out) :: lapse_rate
+    real(r8), intent(out) :: lapse_rate_longwave
+    real(r8), intent(out) :: longwave_downscaling_limit
+
+    ! !LOCAL VARIABLES:
 
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
@@ -368,9 +427,7 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /atm2lnd_inparm/ repartition_rain_snow, glcmec_downscale_longwave, &
-         lapse_rate, lapse_rate_longwave, longwave_downscaling_limit, &
-         precip_repartition_glc_all_snow_t, precip_repartition_glc_all_rain_t, &
-         precip_repartition_nonglc_all_snow_t, precip_repartition_nonglc_all_rain_t
+         lapse_rate, lapse_rate_longwave, longwave_downscaling_limit
 
     ! Initialize namelist variables to defaults
     repartition_rain_snow = .false.
@@ -378,10 +435,6 @@ contains
     lapse_rate = nan
     lapse_rate_longwave = nan
     longwave_downscaling_limit = nan
-    precip_repartition_glc_all_snow_t = nan
-    precip_repartition_glc_all_rain_t = nan
-    precip_repartition_nonglc_all_snow_t = nan
-    precip_repartition_nonglc_all_rain_t = nan
 
     if (masterproc) then
        unitn = getavu()
@@ -403,10 +456,6 @@ contains
     call shr_mpi_bcast(lapse_rate, mpicom)
     call shr_mpi_bcast(lapse_rate_longwave, mpicom)
     call shr_mpi_bcast(longwave_downscaling_limit, mpicom)
-    call shr_mpi_bcast(precip_repartition_glc_all_snow_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_glc_all_rain_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_nonglc_all_snow_t, mpicom)
-    call shr_mpi_bcast(precip_repartition_nonglc_all_rain_t, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -420,27 +469,73 @@ contains
           write(iulog,*) 'lapse_rate_longwave = ', lapse_rate_longwave
           write(iulog,*) 'longwave_downscaling_limit = ', longwave_downscaling_limit
        end if
-       if (repartition_rain_snow) then
-          write(iulog,*) 'precip_repartition_glc_all_snow_t = ', precip_repartition_glc_all_snow_t
-          write(iulog,*) 'precip_repartition_glc_all_rain_t = ', precip_repartition_glc_all_rain_t
-          write(iulog,*) 'precip_repartition_nonglc_all_snow_t = ', precip_repartition_nonglc_all_snow_t
-          write(iulog,*) 'precip_repartition_nonglc_all_rain_t = ', precip_repartition_nonglc_all_rain_t
-       end if
        write(iulog,*) ' '
     end if
 
-    this%params = atm2lnd_params_type( &
-         repartition_rain_snow = repartition_rain_snow, &
-         glcmec_downscale_longwave = glcmec_downscale_longwave, &
-         lapse_rate = lapse_rate, &
-         lapse_rate_longwave = lapse_rate_longwave, &
-         longwave_downscaling_limit = longwave_downscaling_limit, &
-         precip_repartition_glc_all_snow_t = precip_repartition_glc_all_snow_t, &
-         precip_repartition_glc_all_rain_t = precip_repartition_glc_all_rain_t, &
-         precip_repartition_nonglc_all_snow_t = precip_repartition_nonglc_all_snow_t, &
-         precip_repartition_nonglc_all_rain_t = precip_repartition_nonglc_all_rain_t)
-
   end subroutine ReadNamelist
+
+
+  !-----------------------------------------------------------------------
+  subroutine ReadParams(this, paramfile, &
+    repartition_rain_snow, &
+    precip_repartition_glc_all_rain_t_celsius, &
+    precip_repartition_glc_all_snow_t_celsius, &
+    precip_repartition_nonglc_all_rain_t_celsius, &
+    precip_repartition_nonglc_all_snow_t_celsius)
+    !
+    ! !DESCRIPTION:
+    ! Read the atm2lnd parameters
+    !
+    ! !USES:
+    use fileutils, only: getfil
+    use ncdio_pio, only: ncd_pio_closefile, ncd_pio_openfile
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: paramfile  ! parameter filename
+    class(atm2lnd_type), intent(inout) :: this
+    logical, intent(in) :: repartition_rain_snow
+
+    ! Rain-snow transition temperatures (C) for glacier landunits
+    real(r8), intent(out) :: precip_repartition_glc_all_rain_t_celsius
+    real(r8), intent(out) :: precip_repartition_glc_all_snow_t_celsius
+
+    ! Rain-snow transition temperatures (C) for non-glacier landunits
+    real(r8), intent(out) :: precip_repartition_nonglc_all_rain_t_celsius
+    real(r8), intent(out) :: precip_repartition_nonglc_all_snow_t_celsius
+
+    !
+    ! !LOCAL VARIABLES:
+    character(len=256) :: locfn ! local file name
+    type(file_desc_t)  :: ncid  ! pio netCDF file id
+
+    character(len=*), parameter :: subname = 'ReadParams'
+    !-----------------------------------------------------------------------
+
+    if (repartition_rain_snow) then
+
+       ! Read repartition temperatures from parameter file
+       call getfil (paramfile, locfn, 0)
+       call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+       ! non-glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_rain_t', subname, precip_repartition_nonglc_all_rain_t_celsius)
+
+       ! non-glacier all snow temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_nonglc_all_snow_t', subname, precip_repartition_nonglc_all_snow_t_celsius)
+
+       ! glacier all rain temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_rain_t', subname, precip_repartition_glc_all_rain_t_celsius)
+
+       ! glacier all snow temperature (degrees C)
+       call readNcdioScalar(ncid, 'precip_repartition_glc_all_snow_t', subname, precip_repartition_glc_all_snow_t_celsius)
+
+       call ncd_pio_closefile(ncid)
+
+    end if
+
+  end subroutine ReadParams
 
 
   !------------------------------------------------------------------------
@@ -475,9 +570,9 @@ contains
     allocate(this%forc_hgt_q_grc                (begg:endg))        ; this%forc_hgt_q_grc                (:)   = ival
     allocate(this%forc_vp_grc                   (begg:endg))        ; this%forc_vp_grc                   (:)   = ival
     allocate(this%forc_pco2_grc                 (begg:endg))        ; this%forc_pco2_grc                 (:)   = ival
-    allocate(this%forc_solad_grc                (begg:endg,numrad)) ; this%forc_solad_grc                (:,:) = ival
+    allocate(this%forc_solad_not_downscaled_grc (begg:endg,numrad)) ; this%forc_solad_not_downscaled_grc (:,:) = ival
     allocate(this%forc_solai_grc                (begg:endg,numrad)) ; this%forc_solai_grc                (:,:) = ival
-    allocate(this%forc_solar_grc                (begg:endg))        ; this%forc_solar_grc                (:)   = ival
+    allocate(this%forc_solar_not_downscaled_grc (begg:endg))        ; this%forc_solar_not_downscaled_grc (:)   = ival
     allocate(this%forc_ndep_grc                 (begg:endg))        ; this%forc_ndep_grc                 (:)   = ival
     allocate(this%forc_pc13o2_grc               (begg:endg))        ; this%forc_pc13o2_grc               (:)   = ival
     allocate(this%forc_po2_grc                  (begg:endg))        ; this%forc_po2_grc                  (:)   = ival
@@ -503,6 +598,8 @@ contains
     allocate(this%forc_th_downscaled_col        (begc:endc))        ; this%forc_th_downscaled_col        (:)   = ival
     allocate(this%forc_rho_downscaled_col       (begc:endc))        ; this%forc_rho_downscaled_col       (:)   = ival
     allocate(this%forc_lwrad_downscaled_col     (begc:endc))        ; this%forc_lwrad_downscaled_col     (:)   = ival
+    allocate(this%forc_solad_downscaled_col     (begc:endc,numrad)) ; this%forc_solad_downscaled_col     (:,:) = ival
+    allocate(this%forc_solar_downscaled_col     (begc:endc))        ; this%forc_solar_downscaled_col     (:)   = ival
 
     allocate(this%fsd24_patch                   (begp:endp))        ; this%fsd24_patch                   (:)   = nan
     allocate(this%fsd240_patch                  (begp:endp))        ; this%fsd240_patch                  (:)   = nan
@@ -530,6 +627,7 @@ contains
     integer  :: begg, endg
     integer  :: begc, endc
     integer  :: begp, endp
+    real(r8), pointer :: data1dptr(:) ! temp. pointer for slicing larger arrays
     !---------------------------------------------------------------------
 
     begg = bounds%begg; endg= bounds%endg
@@ -545,6 +643,16 @@ contains
          avgflag='A', long_name='atmospheric wind velocity magnitude', &
          ptr_gcell=this%forc_wind_grc, default = 'inactive')
 
+    this%forc_u_grc(begg:endg) = spval
+    call hist_addfld1d (fname='UWIND', units='m/s',  &
+         avgflag='A', long_name='atmospheric U wind velocity magnitude', &
+         ptr_lnd=this%forc_u_grc, default = 'inactive')
+
+    this%forc_v_grc(begg:endg) = spval
+    call hist_addfld1d (fname='VWIND', units='m/s',  &
+         avgflag='A', long_name='atmospheric V wind velocity magnitude', &
+         ptr_lnd=this%forc_v_grc, default = 'inactive')
+
     this%forc_hgt_grc(begg:endg) = spval
     call hist_addfld1d (fname='ZBOT', units='m',  &
          avgflag='A', long_name='atmospheric reference height', &
@@ -555,24 +663,25 @@ contains
          avgflag='A', long_name='atmospheric surface height', &
          ptr_lnd=this%forc_topo_grc)
 
+    this%forc_solar_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='FSDS_from_atm', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation received from atmosphere (pre-downscaling)', &
+         ptr_lnd=this%forc_solar_not_downscaled_grc)
+
+    this%forc_o3_grc(begg:endg) = spval
     call hist_addfld1d (fname='ATM_O3', units='mol/mol', &
          avgflag='A', long_name='atmospheric ozone partial pressure', &
          ptr_lnd=this%forc_o3_grc, default = 'inactive')
-
-    this%forc_solar_grc(begg:endg) = spval
-    call hist_addfld1d (fname='FSDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric incident solar radiation', &
-         ptr_lnd=this%forc_solar_grc)
 
     this%forc_pco2_grc(begg:endg) = spval
     call hist_addfld1d (fname='PCO2', units='Pa',  &
          avgflag='A', long_name='atmospheric partial pressure of CO2', &
          ptr_lnd=this%forc_pco2_grc)
 
-    this%forc_solar_grc(begg:endg) = spval
+    this%forc_solar_not_downscaled_grc(begg:endg) = spval
     call hist_addfld1d (fname='SWdown', units='W/m^2',  &
          avgflag='A', long_name='atmospheric incident solar radiation', &
-         ptr_gcell=this%forc_solar_grc, default='inactive')
+         ptr_gcell=this%forc_solar_not_downscaled_grc, default='inactive')
 
     if (use_lch4) then
        this%forc_pch4_grc(begg:endg) = spval
@@ -586,41 +695,136 @@ contains
          avgflag='A', long_name='atmospheric air temperature received from atmosphere (pre-downscaling)', &
          ptr_gcell=this%forc_t_not_downscaled_grc, default='inactive')
 
+    this%forc_solar_downscaled_col(begc:endc) = spval
+    call hist_addfld1d (fname='FSDS', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric incident solar radiation (downscaled for glacier and hillslope columns)', &
+         ptr_col=this%forc_solar_downscaled_col)
+
     this%forc_t_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='TBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_t_downscaled_col)
     call hist_addfld1d (fname='Tair', units='K', &
-         avgflag='A', long_name='atmospheric air temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_t_downscaled_col, default='inactive')
 
     this%forc_pbot_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='PBOT', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_pbot_downscaled_col)
     call hist_addfld1d (fname='PSurf', units='Pa',  &
-         avgflag='A', long_name='atmospheric pressure at surface (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric pressure at surface (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_pbot_downscaled_col, default='inactive')
+
+    this%forc_pbot_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='PBOT_NOT_DOWNSCALED', units='Pa',  &
+         avgflag='A', long_name='atmospheric pressure at surface (pre-downscaling)', &
+         ptr_gcell=this%forc_pbot_not_downscaled_grc, default = 'inactive')
 
     this%forc_lwrad_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='FLDS', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_lwrad_downscaled_col)
     call hist_addfld1d (fname='LWdown', units='W/m^2',  &
-         avgflag='A', long_name='atmospheric longwave radiation (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_lwrad_downscaled_col, default='inactive')
+
+    this%forc_lwrad_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='FLDS_NOT_DOWNSCALED', units='W/m^2',  &
+         avgflag='A', long_name='atmospheric longwave radiation (pre-downscaling)', &
+         ptr_gcell=this%forc_lwrad_not_downscaled_grc, default = 'inactive')
 
     call hist_addfld1d (fname='FLDS_ICE', units='W/m^2',  &
          avgflag='A', &
-         long_name='atmospheric longwave radiation (downscaled to columns in glacier regions) (ice landunits only)', &
+         long_name='atmospheric longwave radiation (downscaled for glacier and hillslope columns) (ice landunits only)', &
          ptr_col=this%forc_lwrad_downscaled_col, l2g_scale_type='ice', &
          default='inactive')
 
     this%forc_th_downscaled_col(begc:endc) = spval
     call hist_addfld1d (fname='THBOT', units='K',  &
-         avgflag='A', long_name='atmospheric air potential temperature (downscaled to columns in glacier regions)', &
+         avgflag='A', long_name='atmospheric air potential temperature (downscaled for glacier and hillslope columns)', &
          ptr_col=this%forc_th_downscaled_col)
 
+    this%forc_th_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='Thair_from_atm', units='K',  &
+         avgflag='A', long_name='atmospheric air potential temperature (pre-downscaling)', &
+         ptr_gcell=this%forc_th_not_downscaled_grc, default = 'inactive')
+
+    this%forc_rho_not_downscaled_grc(begg:endg) = spval
+    call hist_addfld1d (fname='Rho_from_atm', units='kg/m^3',  &
+         avgflag='A', long_name='atmospheric density (pre-downscaling)', &
+         ptr_gcell=this%forc_rho_not_downscaled_grc, default = 'inactive')
+
+    this%forc_aer_grc(begg:endg,:) = spval
+    data1dptr => this%forc_aer_grc(begg:endg,1)
+    call hist_addfld1d (fname='BCPHIDRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phidry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,2)
+    call hist_addfld1d (fname='BCPHODRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phodry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,3)
+    call hist_addfld1d (fname='BCPHIWET', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phiwet) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,4)
+    call hist_addfld1d (fname='OCPHIDRY', units='kg/m^2/s', &
+         avgflag='A', long_name='organic carbon deposition (phidry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,5)
+    call hist_addfld1d (fname='OCPHODRY', units='kg/m^2/s', &
+         avgflag='A', long_name='black carbon deposition (phodry) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,6)
+    call hist_addfld1d (fname='OCPHIWET', units='kg/m^2/s', &
+         avgflag='A', long_name='organic carbon deposition (phiwet) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,7)
+    call hist_addfld1d (fname='DSTWET1', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet1) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,8)
+    call hist_addfld1d (fname='DSTDRY1', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry1) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,9)
+    call hist_addfld1d (fname='DSTWET2', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet2) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,10)
+    call hist_addfld1d (fname='DSTDRY2', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry2) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,11)
+    call hist_addfld1d (fname='DSTWET3', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet3) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,12)
+    call hist_addfld1d (fname='DSTDRY3', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry3) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,13)
+    call hist_addfld1d (fname='DSTWET4', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (wet4) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
+
+    data1dptr => this%forc_aer_grc(begg:endg,14)
+    call hist_addfld1d (fname='DSTDRY4', units='kg/m^2/s', &
+         avgflag='A', long_name='dust deposition (dry4) from atmosphere', &
+         ptr_gcell=data1dptr, default = 'inactive')
 
     ! Time averaged quantities
     this%fsi24_patch(begp:endp) = spval
@@ -858,7 +1062,7 @@ contains
     ! Accumulate and extract forc_solad24 & forc_solad240
     do p = begp,endp
        g = patch%gridcell(p)
-       rbufslp(p) = this%forc_solad_grc(g,1)
+       rbufslp(p) = this%forc_solad_not_downscaled_grc(g,1)
     end do
     call update_accum_field  ('FSD240', rbufslp               , nstep)
     call extract_accum_field ('FSD240', this%fsd240_patch     , nstep)
@@ -997,9 +1201,9 @@ contains
     deallocate(this%forc_hgt_q_grc)
     deallocate(this%forc_vp_grc)
     deallocate(this%forc_pco2_grc)
-    deallocate(this%forc_solad_grc)
+    deallocate(this%forc_solad_not_downscaled_grc)
     deallocate(this%forc_solai_grc)
-    deallocate(this%forc_solar_grc)
+    deallocate(this%forc_solar_not_downscaled_grc)
     deallocate(this%forc_ndep_grc)
     deallocate(this%forc_pc13o2_grc)
     deallocate(this%forc_po2_grc)
@@ -1020,6 +1224,8 @@ contains
     deallocate(this%forc_th_downscaled_col)
     deallocate(this%forc_rho_downscaled_col)
     deallocate(this%forc_lwrad_downscaled_col)
+    deallocate(this%forc_solad_downscaled_col)
+    deallocate(this%forc_solar_downscaled_col)
 
     deallocate(this%fsd24_patch)
     deallocate(this%fsd240_patch)

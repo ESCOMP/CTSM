@@ -14,7 +14,7 @@ The model treats maintenance and growth respiration fluxes separately, even thou
 Maintenance Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` (gN m :sup:`2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius.
+Atkin et al. (2016) propose a model for leaf respiration that is based on the leaf nitrogen content per unit area (:math:`NS_{narea}` , gN m\ :sup:`-2` leaf), with an intercept parameter that is PFT dependant, and an acclimation term that depends upon the average temperature of the previous 10 day period :math:`t_{2m,10days}`, in Celsius.
 
 .. math::
    :label: 17.46)
@@ -26,17 +26,17 @@ The temperature dependance of leaf maintenance (dark) respiration is described i
 .. math::
    :label: 17.47)
 
-   CF_{mr\_ livestem} \_ =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   CF_{mr\_ livestem} =NS_{livestem} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
    :label: 17.48)
 
-   CF_{mr\_ livecroot} \_ =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
+   CF_{mr\_ livecroot} =NS_{livecroot} MR_{base} MR_{Q10} ^{(T_{2m} -20)/10}
 
 .. math::
    :label: 17.49)
 
-   CF_{mr\_ froot} \_ =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
+   CF_{mr\_ froot} =\sum _{j=1}^{nlevsoi}NS_{froot} rootfr_{j} MR_{base} MR_{Q10} ^{(Ts_{j} -20)/10}
 
 where :math:`MR_{q10}` (= 2.0) is the temperature sensitivity for maintenance respiration, :math:`T_{2m}` (°C) is the air temperature at 2m height, :math:`Ts_{j}`* (°C) is the soil temperature at level *j*, and :math:`rootfr_{j}` is the fraction of fine roots distributed in soil level *j*.
 
@@ -69,6 +69,8 @@ The total maintenance respiration cost is then given as:
    :label: 17.50)
 
    CF_{mr} =CF_{mr\_ leaf} +CF_{mr\_ froot} +CF_{mr\_ livestem} +CF_{mr\_ livecroot} .
+
+.. _Growth Respiration:
 
 Growth Respiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^

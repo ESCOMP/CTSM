@@ -1,5 +1,184 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.025     erik 03/16/2026 Merge b4b-dev to master
+       ctsm5.4.024     erik 03/11/2026 Update derecho_intel again and a few fixes for it
+       ctsm5.4.023 samrabin 03/10/2026 Replace more netCDFs with NaN issues
+       ctsm5.4.022     erik 03/04/2026 Change to using the ifx compiler and some more fixes related to it
+       ctsm5.4.021     erik 02/20/2026 Bring b4b-dev to master
+       ctsm5.4.020   slevis 02/19/2026 Address carbon cycle and fire biases in CESM3 development runs by updating namelist defaults
+       ctsm5.4.019 samrabin 02/12/2026 Fix years used by generate_gdds
+       ctsm5.4.018     erik 02/12/2026 Quick fix so that we can use Nitrogen Deposition sent from the ATM model
+       ctsm5.4.017   slevis 02/09/2026 Introduce CRUJRA2024b datm option (Greenand snow hole filled)
+       ctsm5.4.016 samrabin 02/06/2026 Merge b4b-dev to master
+       ctsm5.4.015     erik 02/03/2026 Update CISM to latest version with answer changes
+       ctsm5.4.014 mvdebols 01/29/2026 Fix for xm2 and revise logic for excess ice melt
+       ctsm5.4.013     erik 01/28/2026 Patch the Greenland snow hole with initial conditions for ne30 and tweak the C14 isotope latitudes
+       ctsm5.4.012   slevis 01/26/2026 Fix C-balance error for partly emerged crops
+       ctsm5.4.011   slevis 01/22/2026 Merge b4b-dev to master
+       ctsm5.4.010     erik 01/21/2026 Update cime to version that changes answers for ERI tests
+       ctsm5.4.009   olyson 01/19/2026 Dewpoint Temperature check for bare ground
+       ctsm5.4.008 swensosc 01/12/2026 Add a correction for oversaturated soil layers in SoilWaterMovement (erik)
+       ctsm5.4.007 samrabin 01/09/2026 Update (irrigated_)rice grnfill and lfemerg
+       ctsm5.4.006     erik 01/07/2026 Merge b4b-dev to master
+       ctsm5.4.005   rgknox 12/19/2025 FATES JSON parameter files
+       ctsm5.4.004 samrabin 12/12/2025 Update crop parameters and maturity requirements
+       ctsm5.4.003 multiple 12/11/2025 Merge post5.4 branch to master
+       ctsm5.4.002     erik 12/10/2025 Start using CMIP7 Carbon Isotope datasets
+       ctsm5.4.001 samrabin 12/08/2025 Merge b4b-dev
+       ctsm5.4.000 multiple 12/04/2025 Merge alpha-ctsm5.4.CMIP7 to master
+       ctsm5.3.085   slevis 11/14/2025 Merge b4b-dev to master
+       ctsm5.3.084     erik 10/31/2025 Merge b4b-dev to master
+       ctsm5.3.083   rgknox 10/29/2025 Changes to coupling of supplementation status with FATES.
+       ctsm5.3.082   slevis 10/24/2025 Update to CMIP7 population density file for non-SSP cases
+       ctsm5.3.081     erik 10/22/2025 Change defaults for when Carbon isotopes are turned on, and turn on irrigate for Sp/Bgc cases for clm6_0 historical transient cases
+       ctsm5.3.080 samrabin 10/16/2025 Merge b4b-dev to master
+       ctsm5.3.079 samrabin 10/06/2025 Update submodules to match versions in cesm3_0_alpha07e
+       ctsm5.3.078   slevis 10/03/2025 Merge b4b-dev to master
+       ctsm5.3.077   rgknox 10/02/2025 Adjustment of timestep albedo filtering with FATES
+       ctsm5.3.076     erik 09/24/2025 Merge b4b-dev to master
+       ctsm5.3.075   slevis 09/10/2025 Change default glcmec_downscale_longwave from true to false for clm6
+       ctsm5.3.074   slevis 09/09/2025 Update ctsm6 default paramfile and finidat files
+       ctsm5.3.073   slevis 08/28/2025 Update .gitmodules to cesm3_0_alpha07c
+       ctsm5.3.072 jinmuluo 08/26/2025 New vertical movement scheme for soil nitrate
+       ctsm5.3.071 samrabin 08/22/2025 Merge b4b-dev to master
+       ctsm5.3.070 glemieux 08/22/2025 Update default FATES parameter file and add FATES managed fire namelist option
+       ctsm5.3.069 samrabin 08/12/2025 Add SystemTests to run subset_data and then CTSM
+       ctsm5.3.068   slevis 08/11/2025 Change megan_use_gamma_sm to default false
+       ctsm5.3.067 samrabin 08/08/2025 (Mostly) fix interim restarts
+       ctsm5.3.066   slevis 08/08/2025 Merge b4b-dev to master
+       ctsm5.3.065     erik 07/28/2025 Merge b4b-dev to master
+       ctsm5.3.064   slevis 07/24/2025 Add time dimension to 1d_wt fields in transient runs
+       ctsm5.3.063 samrabin 07/10/2025 Merge b4b-dev to master
+       ctsm5.3.062   slevis 07/09/2025 Put inst. and non-inst. fields on separate hist files
+       ctsm5.3.061   slevis 06/26/2025 Merge b4b-dev to master
+       ctsm5.3.060   slevis 06/24/2025 Preliminary update of ctsm54 defaults (answer changing)
+       ctsm5.3.059     erik 06/23/2025 Bring in various cleanup efforts found in previous testing after the chill changes came in
+       ctsm5.3.058 samrabin 06/16/2025 Fix clm6 compset aliases
+       ctsm5.3.057 glemieux 06/13/2025 Fix PEM test for on-the-fly parameter file generation
+       ctsm5.3.056     erik 06/12/2025 Merge b4b-dev to master
+       ctsm5.3.055 samrabin 06/05/2025 Remove FTorch
+       ctsm5.3.054 samrabin 06/02/2025 CDEPS: Allow anomaly forcings with any DATM
+       ctsm5.3.053 samrabin 05/30/2025 Fix and improve anomaly forcings for ISSP cases
+       ctsm5.3.052     erik 05/30/2025 Changes to MEGAN needed for coupled cases
+       ctsm5.3.051     erik 05/28/2025 Update submodules to cesm3_0_beta06 versions and update MEGAN/drydep test namelist
+       ctsm5.3.050 samrabin 05/29/2025 Fix Linux Podman; prefer Linux Docker; update docs docs.
+       ctsm5.3.049 samrabin 05/27/2025 Switch docs to use Podman
+       ctsm5.3.048 samrabin 05/26/2025 Automatically publish docs to this repo
+       ctsm5.3.047 samrabin 05/26/2025 Merge b4b-dev to master
+       ctsm5.3.046   rgknox 05/26/2025 For FATES set itype to ispval and a few unused variables to nan to help prevent future problems
+       ctsm5.3.045 glemieux 05/20/2025 FATES default parameter update for API 40
+       ctsm5.3.044   slevis 05/14/2025 Introduce time-evolving LEAFCN_TARGET as function of leafcn param
+       ctsm5.3.043   slevis 05/09/2025 Merge b4b-dev
+       ctsm5.3.042 glemieux 05/08/2025 Update FATES tag, tests and address namelist option bug
+       ctsm5.3.041 samrabin 04/25/2025 Merge b4b-dev to master
+       ctsm5.3.040 samrabin 04/15/2025 Update ctsm_pylib to 3.13.2
+       ctsm5.3.039  afoster 04/14/2025 Create driver data structure for SP mode
+       ctsm5.3.038 samrabin 04/10/2025 Merge b4b-dev
+       ctsm5.3.037     erik 04/02/2025 Add calculations for GSSUN and GSSHA at night in both subroutine Photosynthesis and PhotosynthesisHydraulicStress
+       ctsm5.3.036 glemieux 04/01/2025 Add history output to FATES LUH testmods
+       ctsm5.3.035 samrabin 03/28/2025 Merge b4b-dev
+       ctsm5.3.034   rgknox 03/27/2025 Fixes to enable passing FATES two-stream ERS and ERI restart tests.
+       ctsm5.3.033 multiple 03/19/2025 Add new mimics_fi param = frac of litter inputs bypassing litter pools
+       ctsm5.3.032   slevis 03/17/2025 Add option to use CRUJRA2024 with clm6 and clm5
+       ctsm5.3.031   slevis 03/13/2025 Merge b4b-dev
+       ctsm5.3.030 samrabin 03/07/2025 Fix FATES branch runs
+       ctsm5.3.029   slevis 03/05/2025 Make Bytnerowicz the default nfix_method for clm6
+       ctsm5.3.028 samrabin 03/03/2025 Move Izumi intel and gnu tests to Derecho
+       ctsm5.3.027 glemieux 03/02/2025 FATES parameter file switch migration
+       ctsm5.3.026 samrabin 02/26/2025 Merge b4b-dev to master: run_tower updates, reduce log noise
+       ctsm5.3.025 glemieux 02/20/2025 FATES default parameter file update
+       ctsm5.3.024 xinchang 02/11/2025 Change choice of pressure in CLMU building energy model
+       ctsm5.3.023  afoster 02/08/2025 merge b4b-dev
+       ctsm5.3.022 glemieux 02/06/2025 Update FATES namelist build to avoid Meier2022
+       ctsm5.3.021 samrabin 01/29/2025 Standardize time metadata (release tag for ctsm5.3)
+       ctsm5.3.020 samrabin 01/17/2025 Merge b4b-dev
+       ctsm5.3.019   olyson 01/14/2025 Stop running 0th time step
+       ctsm5.3.018   slevis 01/10/2025 Change history time to be the middle of the time bounds
+       ctsm5.3.017   slevis 01/09/2025 Merge tmp-241219 branch to master
+tmp-241219.n03.ctsm5.3.016  01/09/2025 Bug fix for izumi nag tests to pass (slevis)
+tmp-241219.n02.ctsm5.3.016  01/08/2025 FATES hydro test update (glemieux)
+tmp-241219.n01.ctsm5.3.016  12/24/2024 Merge b4b-dev (slevis)
+       ctsm5.3.016     erik 12/19/2024 Rpointer files for restart now have the simulation date in the filename
+       ctsm5.3.015     erik 12/18/2024 Update cdeps with cam7 nextsw cday changes
+       ctsm5.3.014     erik 12/03/2024 Bring in several fixes for testing in the previous cesm3_0_beta03/04 tags
+       ctsm5.3.013     erik 11/26/2024 Merge b4b-dev
+       ctsm5.3.012  afoster 11/13/2024 update fates tag
+       ctsm5.3.011 samrabin 11/11/2024 Improve handling of cold-start finidat
+       ctsm5.3.010  afoster 11/09/2024 Merge b4b-dev
+       ctsm5.3.009 samrabin 10/15/2024 Reduce outputs from matrixcnOn tests
+       ctsm5.3.008   olyson 10/14/2024 PPE change to sa_leaf in CanopyFluxesMod.F90
+       ctsm5.3.007   slevis 10/14/2024 Clm60 finidat updates for ne30, f09, f19 grids
+       ctsm5.3.006 samrabin 10/11/2024 Merge b4b-dev
+       ctsm5.3.005     erik 10/10/2024 Hardcoded tuning adjustments for Leung_2024 dust emissions
+       ctsm5.3.004 samrabin 10/07/2024 Move hillslope data off surface datasets
+       ctsm5.3.003 multiple 10/07/2024 FATES default parameter file update
+       ctsm5.3.002 multiple 09/26/2024 Duplicate tag (same as 5.3.001)
+       ctsm5.3.001 multiple 09/26/2024 Merge b4b-dev
+         ctsm5.3.0 multiple 09/24/2024 Update surface datasets, CN Matrix, CLM60: excess ice on, explicit A/C on, crop calendars, Sturm snow, Leung dust emissions, prigent roughness data
+       ctsm5.2.029 multiple 09/24/2024 New surface datasets: double tag of ctsm5.3.0
+       ctsm5.2.028   rgknox 09/05/2024 FATES history flushing update
+       ctsm5.2.027     erik 08/28/2024 Merge b4b-dev
+       ctsm5.2.026   slevis 08/23/2024 Turn on excess ice, explicit AC, Leung_2023 for clm6
+       ctsm5.2.025 samrabin 08/23/2024 Minor fixes to li2024 fire methods
+       ctsm5.2.024 samrabin 08/22/2024 Improve li2024 fire methods
+       ctsm5.2.023 samrabin 08/16/2024 Merge b4b-dev
+       ctsm5.2.022 samrabin 08/14/2024 Rework crop_calendars suite and cropMonthOutput
+       ctsm5.2.021   rgknox 08/13/2024 Adding on-the-fly parameter settings for prescribed N and P in FATES
+       ctsm5.2.020   slevis 08/12/2024 MEGAN updates (MEGAN-CLM6)
+       ctsm5.2.019     erik 08/11/2024 Add in an additional dust emission method Leung_2023, by default off
+       ctsm5.2.018 mvdebols 08/02/2024 Fix/excess ice cold start
+       ctsm5.2.017     erik 07/30/2024 Dust emissions control moved to cmeps
+       ctsm5.2.016 samrabin 07/27/2024 Enable new crop calendars for clm60 compsets
+       ctsm5.2.015 multiple 07/22/2024 Update submodule tags to pass runoff from cism to rof
+       ctsm5.2.014 multiple 07/19/2024 use_matrixcn, use_soil_matrixcn come in as default .false.
+       ctsm5.2.013 glemieux 07/18/2024 FATES Land Use V2
+       ctsm5.2.012    sacks 07/16/2024 Relax tolerance for truncating small snocan values in CanopyFluxes
+       ctsm5.2.011   slevis 07/12/2024 Merge b4b-dev
+       ctsm5.2.010 multiple 07/11/2024 Explicit A/C adoption
+       ctsm5.2.009     erik 07/10/2024 Allow for CAM7 in lnd_tuning_mode and handle C or E in long compset names
+       ctsm5.2.008     erik 06/28/2024 Bring changes on temp-branch to master: b4b-dev, git-fleximod, hillslope fsat
+tmp-240620.n03.ctsm5.2.007  06/27/2024 Set upland hillslope column fsat values to zero (samrabin)
+tmp-240620.n02.ctsm5.2.007  06/21/2024 Another update of git-fleximod (erik)
+tmp-240620.n01.ctsm5.2.007  06/21/2024 Merge b4b-dev (slevis)
+       ctsm5.2.007 multiple 05/31/2024 Rm manage_externals and update documentation accordingly
+       ctsm5.2.006   slevis 05/28/2024 Update externals to cesm2_3_beta17, remove mct, retire /test/tools
+       ctsm5.2.005     erik 05/13/2024 Fix clm6_0 defaults and CESM testing issues, add tests to detect these problems
+       ctsm5.2.004 multiple 05/09/2024 CTSM5.2 1979 fsurdat and 1979-2026 landuse ne0np4 files + two fixes
+       ctsm5.2.003 samrabin 05/02/2024 Merge b4b-dev
+       ctsm5.2.002 glemieux 04/26/2024 FATES default allometry parameter file update
+       ctsm5.2.001     erik 04/22/2024 Merge b4b-dev
+         ctsm5.2.0     many 04/20/2024 New mksurfdata_esmf tool to create new surface datasets that are in place
+    ctsm5.1.dev176  afoster 04/04/2024 Merge b4b-dev
+    ctsm5.1.dev175   slevis 03/21/2024 merge-b4bdev-20240321
+    ctsm5.1.dev174   olyson 03/14/2024 Improve vegetation health at high latitudes
+    ctsm5.1.dev173   rgknox 03/13/2024 New FATES namelist variable: fates_history_dimlevel
+    ctsm5.1.dev172     erik 03/12/2024 Merge b4b-dev
+    ctsm5.1.dev171   olyson 03/01/2024 Set initial t_soisno=272 for soils and 274K for urban road
+    ctsm5.1.dev170 samrabin 02/28/2024 Add hillslope hydrology
+    ctsm5.1.dev169 samrabin 02/22/2024 Merge b4b-dev
+    ctsm5.1.dev168   slevis 02/16/2024 Remove a source of negative snocan in CanopyFluxesMod
+    ctsm5.1.dev167 samrabin 02/08/2024 Delete _FillValue and history from parameter files
+    ctsm5.1.dev166 multiple 01/24/2024 BFB merge tag
+    ctsm5.1.dev165   slevis 01/19/2024 Turn Meier2022, tillage, residue removal on for ctsm5.1, fix #2212
+    ctsm5.1.dev164   rgknox 01/17/2024 Compatibility and tests for FATES 2-Stream
+    ctsm5.1.dev163 samrabin 01/10/2024 Add tillage and residue removal
+    ctsm5.1.dev162 samrabin 01/05/2024 Improvements to processing of crop calendar files
+    ctsm5.1.dev161 samrabin 01/04/2024 Refactor 20-year running means of crop GDD accumulation
+    ctsm5.1.dev160 glemieux 12/30/2023 FATES landuse version 1
+    ctsm5.1.dev159 multiple 12/12/2023 Various BFB fixes and updates
+    ctsm5.1.dev158     erik 12/07/2023 First tag with testing moved to Derecho and working PE-layouts for Derecho
+    ctsm5.1.dev157 samrabin 12/05/2023 Update Externals to work on Derecho
+    ctsm5.1.dev156 samrabin 11/30/2023 Do not use Meier roughness by default.
+    ctsm5.1.dev155 samrabin 11/27/2023 Use baset_latvary parameters
+    ctsm5.1.dev154   slevis 11/22/2023 New params files with changes for Meier roughness, MIMICS, and SNICAR, and changes to leafcn and k*_nonmyc
+    ctsm5.1.dev153  afoster 11/17/2023 Call new FATES-side FatesReadParameters
+    ctsm5.1.dev152 multiple 11/14/2023 Mv tools to /python and add tests; add snow_thermal_cond_method; a few fixes / refactors
+    ctsm5.1.dev151   rgknox 11/11/2023 Fixes to FATES long run restarts
+    ctsm5.1.dev150   rgknox 11/06/2023 FATES API fix to support future fates npp-fixation coupling, and urgent coupling fixes with E3SM.
+    ctsm5.1.dev149 samrabin 11/03/2023 Rearrange leaf/stem "harvest" and fix soil gas diffusivity
+    ctsm5.1.dev148 samrabin 11/03/2023 Add GRAINN outputs
+    ctsm5.1.dev147 samrabin 10/30/2023 Add sowing window input files
+    ctsm5.1.dev146 glemieux 10/24/2023 FATES cross-grid seed dispersal
     ctsm5.1.dev145   slevis 10/19/2023 SNICAR snow albedo scheme updates
     ctsm5.1.dev144 samrabin 10/19/2023 Remove a deprecated shr_mpi_bcast call
     ctsm5.1.dev143   rgknox 10/13/2023 Zeroing of wood product fluxes on fates columns

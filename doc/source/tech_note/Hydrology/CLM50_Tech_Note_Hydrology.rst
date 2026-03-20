@@ -87,7 +87,7 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-are the the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
+are the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
 
 .. math::
    :label: 7.10
@@ -196,7 +196,7 @@ while the fraction of the canopy that is dry and transpiring is
    0 &\qquad L+S = 0
    \end{array}\right\}.
 
-Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
+Similarly, the snow-covered fraction of the canopy is used for surface albedo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
 
 .. math::
    :label: 7.23
@@ -358,7 +358,7 @@ For one-dimensional vertical water flow in soils, the conservation of mass is st
 
 where :math:`\theta` is the volumetric soil water content (mm\ :sup:`3` of water / mm\ :sup:`-3` of soil), :math:`t` is time (s), :math:`z` is height above some datum in the soil column (mm) (positive upwards), :math:`q` is soil water flux (kg m\ :sup:`-2` s\ :sup:`-1` or mm s\ :sup:`-1`) (positive upwards), and :math:`e` is a soil moisture sink term (mm of water mm\ :sup:`-1` of soil s\ :sup:`-1`) (ET loss). This equation is solved numerically by dividing the soil column into multiple layers in the vertical and integrating downward over each layer with an upper boundary condition of the infiltration flux into the top soil layer :math:`q_{infl}` and a zero-flux lower boundary condition at the bottom of the soil column (sub-surface runoff is removed later in the timestep, section :numref:`Lateral Sub-surface Runoff`).
 
-The soil water flux :math:`q` in equation can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
+The soil water flux :math:`q` in equation :eq:`7.79` can be described by Darcy's law :ref:`(Dingman 2002) <Dingman2002>`
 
 .. math::
    :label: 7.80
@@ -598,7 +598,7 @@ where :math:`\left(r_{e,\, i} \right)_{j}` is the effective root fraction for th
 
 and :math:`\left(r_{i} \right)_{j}` is the fraction of roots in layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), :math:`\left(w_{i} \right)_{j}` is a soil dryness or plant wilting factor for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta_{t} \right)_{j}` is a wetness factor for the total soil column for the :math:`j^{th}` PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-The soil water fluxes in :eq:`7.103`,, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
+The soil water fluxes in :eq:`7.103`, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
 
 .. math::
    :label: 7.108
@@ -641,7 +641,7 @@ where
 
 The tridiagonal equation set is solved over :math:`i=1,\ldots,N_{levsoi}`.
 
-The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation as
+The finite-difference forms of the fluxes and partial derivatives in equations :eq:`7.111` - :eq:`7.114` can be obtained from equation :eq:`7.82` as
 
 .. math::
    :label: 7.115
@@ -895,7 +895,7 @@ The specific yield, :math:`S_{y}`, which depends on the soil properties and the 
 
 where B is the Clapp-Hornberger exponent. Because :math:`S_{y}` is a function of the soil properties, it results in water table dynamics that are consistent with the soil water fluxes described in section :numref:`Soil Water`.
 
-After the above calculations, two numerical adjustments are implemented to keep the liquid water content of each soil layer (:math:`w_{liq,\, i}` ) within physical constraints of :math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}` where :math:`w_{liq}^{\min } =0.01` (mm). First, beginning with the bottom soil layer :math:`i=N_{levsoi}`, any excess liquid water in each soil layer (:math:`w_{liq,\, i}^{excess} =w_{liq,\, i} -\left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i} \ge 0`) is successively added to the layer above. Any excess liquid water that remains after saturating the entire soil column (plus a maximum surface ponding depth :math:`w_{liq}^{pond} =10` kg m\ :sup:`-2`), is added to drainage :math:`q_{drai}`. Second, to prevent negative :math:`w_{liq,\, i}`, each layer is successively brought up to :math:`w_{liq,\, i} =w_{liq}^{\min }` by taking the required amount of water from the layer below. If this results in :math:`w_{liq,\, N_{levsoi} } <w_{liq}^{\min }`, then the layers above are searched in succession for the required amount of water (:math:`w_{liq}^{\min } -w_{liq,\, N_{levsoi} }` ) and removed from those layers subject to the constraint :math:`w_{liq,\, i} \ge w_{liq}^{\min }`. If sufficient water is not found, then the water is removed from :math:`W_{t}` and :math:`q_{drai}`.
+After the above calculations, two numerical adjustments are implemented to keep the liquid water content of each soil layer (:math:`w_{liq,\, i}` ) within physical constraints of :math:`w_{liq}^{\min } \le w_{liq,\, i} \le \left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i}` where :math:`w_{liq}^{\min } =0.01` (mm). First, beginning with the bottom soil layer :math:`i=N_{levsoi}`, any excess liquid water in each soil layer (:math:`w_{liq,\, i}^{excess} =w_{liq,\, i} -\left(\theta_{sat,\, i} -\theta_{ice,\, i} \right)\Delta z_{i} \ge 0`) is successively added to the layer above. Any excess liquid water that remains after saturating the entire soil column is added to drainage :math:`q_{drai}`. Second, to prevent negative :math:`w_{liq,\, i}`, each layer is successively brought up to :math:`w_{liq,\, i} =w_{liq}^{\min }` by taking the required amount of water from the layer below. If this results in :math:`w_{liq,\, N_{levsoi} } <w_{liq}^{\min }`, then the layers above are searched in succession for the required amount of water (:math:`w_{liq}^{\min } -w_{liq,\, N_{levsoi} }` ) and removed from those layers subject to the constraint :math:`w_{liq,\, i} \ge w_{liq}^{\min }`. If sufficient water is not found, then the water is removed from :math:`W_{t}` and :math:`q_{drai}`.
 
 The soil surface layer liquid water and ice contents are then updated for dew :math:`q_{sdew}`, frost :math:`q_{frost}`, or sublimation :math:`q_{subl}` (section :numref:`Update of Ground Sensible and Latent Heat Fluxes`) as
 
@@ -923,7 +923,7 @@ Runoff from glaciers and snow-capped surfaces
 
 All surfaces are constrained to have a snow water equivalent :math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped columns, any addition of mass at the top (precipitation, dew/riping) is balanced by an equally large mass flux at the bottom of the snow column. This so-called capping flux is separated into solid :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}` runoff terms. The partitioning of these phases is based on the phase ratio in the bottom snow layer at the time of the capping, such that phase ratio in this layer is unaltered.
 
-The :math:`q_{snwcp,ice}` runoff is sent to the River Transport Model (RTM) (Chapter 11) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there.
+The :math:`q_{snwcp,ice}` runoff is sent to MOSART (Chapter :numref:`rst_MOSART`) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there.
 
 For snow-capped surfaces other than glaciers and lakes the :math:`q_{snwcp,liq}` runoff is assigned to the glaciers and lakes runoff term :math:`q_{rgwl}` (e.g. :math:`q_{rgwl} =q_{snwcp,liq}` ). For glacier surfaces the runoff term :math:`q_{rgwl}` is calculated from the residual of the water balance
 
@@ -939,4 +939,4 @@ where :math:`W_{b}^{n}` and :math:`W_{b}^{n+1}` are the water balances at the be
 
    W_{b} =W_{can} +W_{sno} +\sum _{i=1}^{N}\left(w_{ice,i} +w_{liq,i} \right) .
 
-Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
+Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_MOSART`).

@@ -18,7 +18,6 @@ module SnowSnicarMod
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type, subgrid_level_column
-  use AerosolMod      , only : snw_rds_min
   use atm2lndType     , only : atm2lnd_type
   use WaterStateBulkType  , only : waterstatebulk_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
@@ -42,6 +41,8 @@ module SnowSnicarMod
       real(r8) :: snw_rds_refrz ! Effective radius of re-frozen snow (microns)
       real(r8) :: C2_liq_Brun89 ! Constant for liquid water grain growth [m3 s-1],
                                 ! from Brun89: corrected for LWC in units of percent
+      real(r8) :: fresh_snw_rds_max  ! maximum warm fresh snow effective radius [microns]
+      real(r8) :: snw_rds_min  ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -66,7 +67,6 @@ module SnowSnicarMod
 
   integer,  parameter :: snw_rds_max_tbl = 1500          ! maximum effective radius defined in Mie lookup table [microns]
   integer,  parameter :: snw_rds_min_tbl = 30            ! minimium effective radius defined in Mie lookup table [microns]
-  integer,  parameter :: snw_rds_min_int = nint(snw_rds_min) ! minimum allowed snow effective radius as integer [microns]
   real(r8), parameter :: snw_rds_max     = 1500._r8      ! maximum allowed snow effective radius [microns]
 
   real(r8), parameter :: min_snw = 1.0E-30_r8            ! minimum snow mass required for SNICAR RT calculation [kg m-2]
@@ -80,9 +80,6 @@ module SnowSnicarMod
                                                          ! [s-1] (50% mass removal/year)
   real(r8), parameter :: tim_cns_dst_rmv = 2.2E-8_r8     ! time constant for removal of dust in snow on sea-ice
                                                          ! [s-1] (50% mass removal/year)
-
-  ! scaling of the snow aging rate (tuning option):
-  logical :: flg_snoage_scl    = .false.                 ! flag for scaling the snow aging rate by some arbitrary factor
 
   ! snow and aerosol Mie parameters:
   ! (arrays declared here, but are set in iniTimeConst)
@@ -182,6 +179,10 @@ contains
     call readNcdioScalar(ncid, 'snw_rds_refrz', subname, params_inst%snw_rds_refrz)
     ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent
     call readNcdioScalar(ncid,  'C2_liq_Brun89', subname, params_inst%C2_liq_Brun89)
+    ! maximum warm fresh snow effective radius [microns]
+    call readNcdioScalar(ncid, 'fresh_snw_rds_max', subname, params_inst%fresh_snw_rds_max)
+    ! minimum allowed snow effective radius (also cold "fresh snow" value) [microns]
+    call readNcdioScalar(ncid, 'snw_rds_min', subname, params_inst%snw_rds_min)
 
   end subroutine readParams
 
@@ -677,7 +678,7 @@ contains
                snl_lcl           =  -1
                h2osno_ice_lcl(0) =  h2osno_lcl
                h2osno_liq_lcl(0) =  0._r8
-               snw_rds_lcl(0)    =  snw_rds_min_int
+               snw_rds_lcl(0)    =  nint(params_inst%snw_rds_min)
             else
                flg_nosnl         =  0
                snl_lcl           =  snl(c_idx)
@@ -1628,10 +1629,10 @@ contains
 
 
             !LvK extra boundary check, to prevent when using old restart file with lower snw_rds_min than current run
-            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), snw_rds_min)
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), params_inst%snw_rds_min)
 
             ! change in snow effective radius, using best-fit parameters
-            dr_fresh = snw_rds(c_idx,i)-snw_rds_min
+            dr_fresh = snw_rds(c_idx,i) - params_inst%snw_rds_min
             dr = (bst_drdt0 * (bst_tau / (dr_fresh + bst_tau))**(1._r8 / bst_kappa)) * (dtime / secsphr)
 
             !
@@ -1652,13 +1653,10 @@ contains
             dr = dr + dr_wet
 
             !
-            !**********  3. SNOWAGE SCALING (TURNED OFF BY DEFAULT)  *************
+            !**********  3. SNOWAGE SCALING  *************
             !
             ! Multiply rate of change of effective radius by some constant, xdrdt
-            if (flg_snoage_scl) then
-               dr = dr*params_inst%xdrdt
-            endif
-
+            dr = dr*params_inst%xdrdt
 
             !
             !**********  4. INCREMENT EFFECTIVE RADIUS, ACCOUNTING FOR:  ***********
@@ -1701,7 +1699,7 @@ contains
             !**********  5. CHECK BOUNDARIES   ***********
             !
             ! boundary check
-            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), snw_rds_min)
+            snw_rds(c_idx,i) = max(snw_rds(c_idx,i), params_inst%snw_rds_min)
             snw_rds(c_idx,i) = min(snw_rds(c_idx,i), snw_rds_max)
 
             ! set top layer variables for history files
@@ -1720,7 +1718,7 @@ contains
       do fc = 1, num_nosnowc
          c_idx = filter_nosnowc(fc)
          if (h2osno_no_layers(c_idx) > 0._r8) then
-            snw_rds(c_idx,0) = snw_rds_min
+            snw_rds(c_idx,0) = params_inst%snw_rds_min
          endif
       enddo
 
@@ -1744,7 +1742,7 @@ contains
     ! Author: Leo VanKampenhout
     !
     ! !USES:
-    use AerosolMod      , only : fresh_snw_rds_max
+    !
     ! !ARGUMENTS:
     integer, intent(in)                :: c_idx         ! column index
     type(atm2lnd_type) , intent(in)    :: atm2lnd_inst  ! Forcing from atmosphere
@@ -1753,16 +1751,17 @@ contains
     !-----------------------------------------------------------------------
     real(r8), parameter :: tmin = tfrz - 30._r8       ! start of linear ramp
     real(r8), parameter :: tmax = tfrz - 0._r8        ! end of linear ramp
-    real(r8), parameter :: gs_min = snw_rds_min       ! minimum value
-    real(r8)            :: gs_max                     ! maximum value
+    real(r8) :: gs_min  ! minimum value
+    real(r8) :: gs_max  ! maximum value
 
     associate( &
          forc_t      => atm2lnd_inst%forc_t_downscaled_col & ! Input:  [real(r8) (:)   ]  atmospheric temperature (Kelvin)
          )
-       if ( fresh_snw_rds_max <= snw_rds_min )then
-           FreshSnowRadius = snw_rds_min
+       if ( params_inst%fresh_snw_rds_max <= params_inst%snw_rds_min )then
+           FreshSnowRadius = params_inst%snw_rds_min
        else
-           gs_max = fresh_snw_rds_max
+           gs_max = params_inst%fresh_snw_rds_max
+           gs_min = params_inst%snw_rds_min
 
            if (forc_t(c_idx) < tmin) then
                FreshSnowRadius = gs_min

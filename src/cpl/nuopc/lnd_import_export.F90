@@ -9,7 +9,7 @@ module lnd_import_export
   use NUOPC_Model             , only : NUOPC_ModelGet
   use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod             , only : shr_sys_abort
-  use clm_varctl              , only : iulog
+  use clm_varctl              , only : iulog, use_hillslope_routing
   use clm_time_manager        , only : get_nstep
   use decompmod               , only : bounds_type, get_proc_bounds
   use lnd2atmType             , only : lnd2atm_type
@@ -22,6 +22,7 @@ module lnd_import_export
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
+  use abortutils              , only : endrun
 
   implicit none
   private ! except
@@ -99,6 +100,8 @@ module lnd_import_export
   character(*), parameter :: Flrr_flood          = 'Flrr_flood'
   character(*), parameter :: Flrr_volr           = 'Flrr_volr'
   character(*), parameter :: Flrr_volrmch        = 'Flrr_volrmch'
+  character(*), parameter :: Sr_tdepth           = 'Sr_tdepth'
+  character(*), parameter :: Sr_tdepth_max       = 'Sr_tdepth_max'
   character(*), parameter :: Sg_ice_covered_elev = 'Sg_ice_covered_elev'
   character(*), parameter :: Sg_topo_elev        = 'Sg_topo_elev'
   character(*), parameter :: Flgg_hflx_elev      = 'Flgg_hflx_elev'
@@ -158,9 +161,11 @@ contains
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
+    use shr_dust_emis_mod , only : shr_dust_emis_readnl
     use shr_fire_emis_mod , only : shr_fire_emis_readnl
     use clm_varctl        , only : ndep_from_cpl
     use controlMod        , only : NLFilename
+    use spmdMod           , only : mpicom
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -235,6 +240,9 @@ contains
 
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
+    ! Dust emissions from land to atmosphere
+    call shr_dust_emis_readnl( mpicom, "drv_flds_in")
+
     ! Dry Deposition velocities from land - ALSO initialize drydep here
     call shr_drydep_readnl("drv_flds_in", drydep_nflds)
 
@@ -246,7 +254,6 @@ contains
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
 
     ! CARMA volumetric soil water from land
-    ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
@@ -371,10 +378,19 @@ contains
 
     ! from atm - nitrogen deposition
     call shr_ndep_readnl("drv_flds_in", ndep_nflds)
-    if (ndep_nflds > 0) then
+    if ( ndep_nflds == 0 )then
+       if ( masterproc ) write(iulog,*) 'Nitrogen Deposition will be read in by CTSM'
+    else if (ndep_nflds == 2) then
        call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_ndep, ungridded_lbound=1, ungridded_ubound=ndep_nflds)
        ! This sets a variable in clm_varctl
        ndep_from_cpl = .true.
+       if ( masterproc ) then
+         write(iulog,*) 'Nitrogen Deposition is coming from the ATM model'
+       end if
+    else
+       write(iulog,*) 'ndep_fields = ', ndep_nflds
+       write(iulog,*) 'The number of ndep fields must be either 0 (to use datasets in CTSM) or 2 (to use fields from the ATM model)'
+       call endrun(msg="Invalid number of ndep fields, change ndep_list in the drv_flds_in namelist", line=__LINE__, file=u_FILE_u)
     end if
 
     ! from atm - co2 exchange scenarios
@@ -388,6 +404,8 @@ contains
        call fldlist_add(fldsToLnd_num, fldsToLnd, Flrr_flood   )
        call fldlist_add(fldsToLnd_num, fldsToLnd, Flrr_volr    )
        call fldlist_add(fldsToLnd_num, fldsToLnd, Flrr_volrmch )
+       call fldlist_add(fldsToLnd_num, fldsToLnd, Sr_tdepth )
+       call fldlist_add(fldsToLnd_num, fldsToLnd, Sr_tdepth_max )
     end if
 
     if (glc_present) then
@@ -549,9 +567,9 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_lwdn , atm2lnd_inst%forc_lwrad_not_downscaled_grc(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, Faxa_swvdr, atm2lnd_inst%forc_solad_grc(begg:,1), rc=rc)
+    call state_getimport_1d(importState, Faxa_swvdr, atm2lnd_inst%forc_solad_not_downscaled_grc(begg:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call state_getimport_1d(importState, Faxa_swndr, atm2lnd_inst%forc_solad_grc(begg:,2), rc=rc)
+    call state_getimport_1d(importState, Faxa_swndr, atm2lnd_inst%forc_solad_not_downscaled_grc(begg:,2), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call state_getimport_1d(importState, Faxa_swvdf, atm2lnd_inst%forc_solai_grc(begg:,1), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -606,6 +624,20 @@ contains
        end do
     else
        wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
+    end if
+
+    if (fldchk(importState, Sr_tdepth)) then
+       call state_getimport_1d(importState, Sr_tdepth, wateratm2lndbulk_inst%tdepth_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       wateratm2lndbulk_inst%tdepth_grc(:) = 0._r8
+    end if
+
+    if (fldchk(importState, Sr_tdepth_max)) then
+       call state_getimport_1d(importState, Sr_tdepth_max, wateratm2lndbulk_inst%tdepthmax_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    else
+       wateratm2lndbulk_inst%tdepthmax_grc(:) = 0._r8
     end if
 
     !--------------------------
@@ -891,6 +923,10 @@ contains
        do g = begg, endg
           data1d(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
                       waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+          if (use_hillslope_routing) then
+             data1d(g) = data1d(g) + &
+                  waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g)
+          endif
        end do
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:),  init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1297,7 +1333,6 @@ contains
     ! ----------------------------------------------------
     use ESMF             , only : ESMF_VMGetCurrent, ESMF_VMBroadcast, ESMF_VM
     use clm_nlUtilsMod   , only : find_nlgroup_name
-    use abortutils       , only : endrun
     use shr_log_mod      , only : errMsg => shr_log_errMsg
     ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename   ! Namelist filename

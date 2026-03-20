@@ -30,8 +30,9 @@ contains
 
     ! Make sure the date is set to the start of the year (such that the year differs
     ! between the start and end of the timestep), to make sure that the appropriate
-    ! year_position is being used.
-    call set_date(yr=1, mon=1, day=1, tod=0)
+    ! year_position is being used. (Need to use yr=2 instead of yr=1 because it's an error
+    ! to try to set yr,mon,day,tod = 1,1,1,0.)
+    call set_date(yr=2, mon=1, day=1, tod=0)
   end subroutine setUp
   
   subroutine tearDown(this)

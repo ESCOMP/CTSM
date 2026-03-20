@@ -456,6 +456,7 @@ contains
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
+    real(r8),parameter :: min_hill_slope = 1e-3_r8! minimum value of hillslope for outflow
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
     !-----------------------------------------------------------------------
@@ -483,6 +484,10 @@ contains
        if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
           ! spatially variable k_wet
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
+          if (col%is_hillslope_column(c)) then
+             ! require a minimum value to ensure non-zero outflow
+             k_wet = 1e-4_r8 * max(col%hill_slope(c),min_hill_slope)
+          endif
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
 
           qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)
