@@ -1,7 +1,7 @@
 mesh_mask_modifier is a tool that modifies mesh_mask files. It reads a
 mesh_mask file and outputs a modified copy of the same file.
 
-Files involved
+# Files involved
 ```
 python/ctsm/modify_input_files/mesh_mask_modifier.py
 python/ctsm/modify_input_files/modify_mesh_mask.py
