@@ -11,7 +11,7 @@ on:
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
       # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
+      - 'src/README.unit_testing.md'
       - 'tools/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
