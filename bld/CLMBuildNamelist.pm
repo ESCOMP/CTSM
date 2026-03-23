@@ -2648,6 +2648,15 @@ sub setup_logic_initial_conditions {
   my $use_init_interp_default = $nl->get_value($useinitvar);
   $settings{$useinitvar} = $use_init_interp_default;
   if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+    $settings{'hgrid'}   = $nl_flags->{'res'};
+    $settings{'phys'}    = $physv->as_string();
+    $settings{'sim_year'}     = $nl_flags->{'sim_year'};
+    $settings{'use_fates'}    = $nl_flags->{'use_fates'};
+    $settings{'use_cndv'}    = $nl_flags->{'use_cndv'};
+    $settings{'lnd_tuning_mode'}    = $nl_flags->{'lnd_tuning_mode'};
+    $settings{'use_crop'}    = $nl_flags->{'use_crop'};
+    $settings{'use_cn'}    = $nl_flags->{'use_cn'};
+    $settings{'maxpft'}    = $nl_flags->{'maxpft'};
     $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
     $settings{$useinitvar} = ".false.";
   }
