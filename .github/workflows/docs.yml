@@ -14,7 +14,7 @@ on:
       - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'tools/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   pull_request:
@@ -28,7 +28,7 @@ on:
       - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'tools/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   workflow_dispatch:
