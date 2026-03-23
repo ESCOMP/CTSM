@@ -38,8 +38,8 @@ conda activate ctsm_py
 
 3) Run the script ./mesh_mask_modifier pointing to the copied/modified .cfg file, e.g. modify_users_copy.cfg
 
-Example use-case
-----------------
+# Example use-case
+
 F-Case, modifying the continental geometry
 
 User wants to make the Indian Ocean into grassland. They specify their
