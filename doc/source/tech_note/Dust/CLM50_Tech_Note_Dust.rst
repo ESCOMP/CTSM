@@ -3,13 +3,7 @@
 Dust Model
 ==============
 
-Atmospheric dust is mobilized from the land by wind in the CLM. The most important factors determining soil erodibility and dust emission include the wind friction velocity, the vegetation cover, and the soil moisture. The latest CTSM allows users to choose between two dust emission schemes: One is Leung_2023 (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) which is the default for the CLM6 physics, and the other is Zender_2003 (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) based on the DEAD (Dust Entrainment and Deposition model of :ref:`Zender et al. (2003)<Zenderetal2003>`.
-
-One can control the use of the dust emission scheme by setting the namelist variable: 
-
-``dust_emis_method = 'Leung_2023'``, which is the default for CLM6 physics or later, or 
-
-``dust_emis_method = 'Zender_2003'``, which is the default for CLM5 physics or older.
+Atmospheric dust is mobilized from the land by wind in the CLM. The most important factors determining soil erodibility and dust emission include the wind friction velocity, the vegetation cover, and the soil moisture. The latest CTSM allows users to choose between two dust emission schemes: One is Leung_2023 (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) which is the current default for the CLM6 physics, and the other is Zender_2003 (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) based on the DEAD (Dust Entrainment and Deposition model of :ref:`Zender et al. (2003)<Zenderetal2003>`, which is the default for the CLM5 or older physics.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Leung et al. (2023) scheme (default for CLM6 physics or later):
@@ -21,17 +15,17 @@ Dust emission modeling is a threshold parameterization of an aeolian (wind-drive
 .. math::
    :label: 30.1
 
-   u_{*ft} = u_{*ft0}(D_{p},\rho_{a}) f_{m}(w)
+   u_{*ft} = u_{*ft0}(D_{p},\rho_{atm}) f_{m}(w)
 
-where :math:`u_{*ft0}(D_{p},\rho_{a})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{a}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{a})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
+where :math:`u_{*ft0}(D_{p},\rho_{a})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{atm}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{atm})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
 
 .. math::
    :label: 30.2
 
-   u_{*ft0}(D_{p},\rho_{a}) = \sqrt{\frac{A(\rho_{p} g D_{p} + \gamma / D_{p}) }{\rho_{a}} } 
+   u_{*ft0}(D_{p},\rho_{atm}) = \sqrt{\frac{A(\rho_{p} g D_{p} + \gamma / D_{p}) }{\rho_{atm}} } 
 
 
-where :math:`g = 9.81` m s\ :sup:`-2` is gravity, :math:`\rho_{p} = 2650` kg m\ :sup:`-3` is typical soil particle density, and :math:`A = 0.0123` and :math:`\gamma = 1.65 \times 10^{-4}` kg s\ :sup:`-2` are empirical constants. 
+where *g* is the acceleration of gravity (:numref:`Table Physical Constants`), :math:`\rho_{p} = 2650` kg m\ :sup:`-3` is typical soil particle density, and :math:`A = 0.0123` and :math:`\gamma = 1.65 \times 10^{-4}` kg s\ :sup:`-2` are empirical constants. 
 The soil moisture effect :math:`f_{m}(w)` is a function of gravimetric soil moisture :math:`w` (kg water / kg soil) at the topmost soil layer. 
 
 :math:`w` is converted from the CLM volumetric soil moisture :math:`\theta` and porosity (saturation moisture :math:`\theta_{sat}`) at the topmost soil layer:
@@ -41,7 +35,7 @@ The soil moisture effect :math:`f_{m}(w)` is a function of gravimetric soil mois
 
    w=\theta\frac{ \rho _{water} }{\rho_{bulk} }
 
-Note that :math:`w` in CTSM is conventionally (since CLM3; :ref:`Mahowald et al. 2006<Mahowaldetal2006>`) treated as a sum of both liquid and ice/frozen soil moisture at the topmost soil layer, i.e., :math:`w = w_{liq,1} + w_{ice,1}`. :math:`\rho_{water} = 1000 kg\ m^{-3}` is typical water density, and bulk density :math:`\rho_{bulk}` is given by 
+Note that :math:`w` in CTSM is conventionally (since CLM3; :ref:`Mahowald et al. 2006<Mahowaldetal2006>`) treated as a sum of both liquid and ice/frozen soil moisture at the topmost soil layer, i.e., :math:`w = w_{liq,1} + w_{ice,1}`. :math:`\rho_{liq}` is typical liquid water density (:numref:`Table Physical Constants`), and bulk density :math:`\rho_{bulk}` is given by 
 
 .. math::
    :label: 30.4
@@ -80,9 +74,9 @@ The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\
 .. math::
    :label: 30.8
 
-   F_{d} = \eta C_{tune} C_{d} f_{bare} f_{clay} \frac{ \rho_{a} (u^2_{*s} - u^2_{it} ) }{ u^2_{it} }  \left( \frac{ u^2_{*s} }{u^2_{it} } \right) ^\kappa
+   F_{d} = \eta C_{tune} C_{d} f_{bare} f_{clay} \frac{ \rho_{atm} (u^2_{*s} - u^2_{it} ) }{ u^2_{it} }  \left( \frac{ u^2_{*s} }{u^2_{it} } \right) ^\kappa
 
-where :math:`C_{tune} = 0.05` is a constant, and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{*s} \, < \, u_{*it}`. :math:`\rho_{a}` is surface air density from CAM (the atm model). 
+where :math:`C_{tune} = 0.05` is a constant, and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{*s} \, < \, u_{*it}`. :math:`\rho_{atm}` is surface air density from CAM (the atm model). 
 :math:`\kappa` is the fragmentation exponent, and :math:`C_{d}` is the dust emission coefficient (or the soil erodibility coefficient):
 
 .. math::
@@ -100,7 +94,7 @@ where :math:`C_{\kappa} = 2.7`, :math:`u_{st0} = 0.16` m s:sup:`-3`, :math:`C_{d
 .. math::
    :label: 30.11
 
-   u_{*st} = u_{*ft} \sqrt{ \rho_{a} / \rho_{0a}}
+   u_{*st} = u_{*ft} \sqrt{ \rho_{atm} / \rho_{0atm}}
 
 where :math:`\rho_{0a} = 1.225` kg m\ :sup:`-3`. As can be seen, :math:`u_{*st}` scales with :math:`u_{*ft}` and thus soil moisture :math:`w`. Therefore, moisture :math:`w` decreases soil erodibility :math:`C_{d}` but increases dust emission sensitivity :math:`\kappa` to the winds.
 
@@ -250,127 +244,21 @@ In the early CESM versions, CAM employed the Bulk Aerosol Model (BAM) as the def
 
    F_{j} = F_d \sum _{i=1}^{I}M_{i,j}
 
-where :math:`F_{j}` is the mass emission flux from the :math:`j` th aerosol bin. The bottom of this page shows how :math:`M_{i,j}` is calculated.
+where :math:`F_{j}` is the mass emission flux from the :math:`j` th aerosol bin.
 
-The current way of paritioning the emission fluxes before passing to the coupler is still being used, but the partition into the different bins is only required by BAM, not the current default MAM in CAM6 and CAM7. Therefore, for MAM, the four :math:`F_{j}` are summed up to become one total flux :math:`F_d` again. It is then redistributed to different individual modes of MAM following the Brittle Fragmentation Theory. The default CAM physics that is paired with the CLM6 physics is the CAM7 physics, which uses MAM4 (for minimal atmospheric chemistry) or MAM5 (for complex chemistry).
+The current way of paritioning the emission fluxes before passing to the coupler is still being used, but the partition into the different bins is only required by BAM, not the current default MAM in CAM6 and CAM7. Therefore, for MAM, the four :math:`F_{j}` are summed up to become one total flux :math:`F_d` again. It is then redistributed to different individual modes of MAM following the Brittle Fragmentation Theory. The default CAM physics that is paired with the CLM6 physics is the CAM7 physics, which uses MAM4 (4 modes) or MAM5 (5 modes).
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-**Zender et al. (2003) scheme (default for CLM5 physics and older):**
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-The total vertical mass flux of dust, :math:`F_{j}` (kg m\ :sup:`-2` s\ :sup:`-1`), from the ground into transport bin :math:`j` is given by
+In equation :eq:`30.29` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
 
 .. math::
    :label: 30.30
 
-   F_{j} =TSf_{m} \alpha Q_{s} \sum _{i=1}^{I}M_{i,j}
-
-where :math:`T` is a global factor that compensates for the DEAD model's sensitivity to horizontal and temporal resolution and equals 5 x 10\ :sup:`-4` in the CLM instead of 7 x 10\ :sup:`-4` in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`S` is the source erodibility factor set to 1 in the CLM and serves as a place holder at this time.
-
-The grid cell fraction of exposed bare soil suitable for dust mobilization :math:`f_{m}` is given by
-
-.. math::
-   :label: 30.31
-
-   f_{m} =\left(1-f_{lake} \right)\left(1-f_{sno} \right)\left(1-f_{v} \right)\frac{w_{liq,1} }{w_{liq,1} +w_{ice,1} }
-
-where :math:`f_{lake}` and :math:`f_{sno}` are the CLM grid cell fractions of lake (section :numref:`Surface Data`) and snow cover (section :numref:`Snow Covered Area Fraction`), all ranging from zero to one. Not mentioned by :ref:`Zender et al. (2003)<Zenderetal2003>`, :math:`w_{liq,\, 1}` and :math:`{}_{w_{ice,\, 1} }` are the CLM top soil layer liquid water and ice contents (mm) entered as a ratio expressing the decreasing ability of dust to mobilize from increasingly frozen soil. The grid cell fraction of vegetation cover,\ :math:`{}_{f_{v} }`, is defined as
-
-.. math::
-   :label: 30.32
-
-   0\le f_{v} =\frac{\mathrm{VAI}}{\mathrm{VAI_{thr}} } \le 1{\rm \; \; \; \; where\; } \mathrm{VAI_{thr}} =0.3{\rm \; m}^{2} {\rm m}^{-2}
-
-where equation :eq:`30.32` applies only for dust mobilization and is not related to the plant functional type fractions prescribed from the CLM input data or simulated by the CLM dynamic vegetation model. :math:`\mathrm{SAI}=\mathrm{LAI}+\mathrm{SAI}` is the CLM leaf and stem area index values (m:sup:`2` m\ :sup:`-2`) averaged at the land unit level (same as :eq:`30.13`) so as to include all the pfts and the bare ground present in a vegetated land unit. The main difference is that the maxmimum VAI allowed by Zender_2003 to emit dust is :math:`\mathrm{VAI}_{thr}` = 0.3 m:sup:`2` m\ :sup:`-2` instead of 0.6 m:sup:`2` m\ :sup:`-2` as in Leung_2023 above.
-
-The sandblasting mass efficiency :math:`\alpha` (m :sup:`-1`) is calculated as
-
-.. math::
-   :label: 30.33
-
-   \alpha =100e^{\left(13.4f_{clay} -6.0\right)\ln 10} {\rm \; \; }\left\{\begin{array}{l} {f_{clay} =\% clay\times 0.01{\rm \; \; \; 0}\le \% clay\le 20} \\ {f_{clay} =20\times 0.01{\rm \; \; \; \; \; \; \; \; 20<\% }clay\le 100} \end{array}\right.
-
-where :math:`f_{clay}` is the mass fraction of clay particles in the soil and %clay is determined from the surface dataset (section :numref:`Surface Data`). :math:`f_{clay} =0` corresponds to sand and :math:`f_{clay} =0.2` to sandy loam.
-
-:math:`Q_{s}` is the total horizontally saltating mass flux (kg m\ :sup:`-1` s\ :sup:`-1`) of "large" particles (:numref:`Table Dust Mass fraction`), also referred to as the vertically integrated streamwise mass flux
-
-.. math::
-   :label: 30.34
-
-   Q_{s} = \left\{
-   \begin{array}{lr}
-   \frac{c_{s} \rho _{atm} u_{*s}^{3} }{g} \left(1-\frac{u_{*t} }{u_{*s} } \right)\left(1+\frac{u_{*t} }{u_{*s} } \right)^{2} {\rm \; } & \qquad {\rm for\; }u_{*t} <u_{*s}  \\
-   0{\rm \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; } & \qquad {\rm for\; }u_{*t} \ge u_{*s}
-   \end{array}\right.
-
-where the saltation constant :math:`c_{s}` equals 2.61 and :math:`\rho _{atm}` is the atmospheric density (kg m\ :sup:`-3`) (:numref:`Table Atmospheric input to land model`), :math:`g` the acceleration of gravity (m s\ :sup:`-2`) (:numref:`Table Physical constants`). The threshold friction speed for saltation :math:`u_{*t}` (m s\ :sup:`-1`) is technically the fluid threshold :math:`u_{*ft}` referred in the Leung_2023 scheme, since Zender_2003 does not consider the impact threshold :math:`u_{*it}`. :math:`u_{*t}` is formulated the same way as in Leung_2023, but with the dry threshold :math:`u_{*ft0}(D_{p},\rho_{a})` using the Marticorena and Bergametti (1995) formulation instead of the Shao and Lu (2000) one:
-
-.. math::
-   :label: 30.35
-
-   u_{*t} = u_{*ft0}(D_{p},\rho_{a}) f_{m}(w) = \left[Re_{*t}^{f} \rho _{osp} gD_{osp} \left(1+\frac{6\times 10^{-7} }{\rho _{osp} gD_{osp}^{2.5} } \right)\right]^{\frac{1}{2} } \rho _{atm} ^{-\frac{1}{2} } f_{w}
-
-where :math:`\rho _{osp}` and :math:`D_{osp}` are the density (2650 kg m\ :sup:`-3`) and diameter (75 x 10\ :math:`{}^{-6}` m) of optimal saltation particles, and :math:`f_{w}` is a factor dependent on soil moisture. The following formulas are the same as the ones for Leung_2023 above:
-
-.. math::
-   :label: 30.36
-
-   f_{w} =\left\{\begin{array}{l} {1{\rm \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; for\; }w\le w_{t} } \\ {\sqrt{1+1.21\left[100\left(w-w_{t} \right)\right]^{0.68} } {\rm \; \; for\; }w>w_{t} } \end{array}\right.
-
-where
-
-.. math::
-   :label: 30.37
-
-   w_{t} =a\left(0.17f_{clay} +0.14f_{clay}^{2} \right){\rm \; \; \; \; \; \; 0}\le f_{clay} =\% clay\times 0.01\le 1
-
-and
-
-.. math::
-   :label: 30.38
-
-   w=\theta\frac{ \rho _{water} }{\rho_{bulk} }
-
-where :math:`a=f_{clay}^{-1}` for tuning purposes, :math:`\theta _{1}` is the volumetric soil moisture in the top soil layer (m :math:`{}^{3 }`\ m\ :sup:`-3`) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{d,\, 1}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`Re_{*t}^{f}` is the threshold friction Reynolds factor
-
-.. math::
-   :label: 30.39
-
-   Re_{*t}^{f} =\left\{\begin{array}{l} {\frac{0.1291^{2} }{-1+1.928Re_{*t} } {\rm \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; for\; 0.03}\le Re_{*t} \le 10} \\ {0.12^{2} \left(1-0.0858e^{-0.0617(Re_{*t} -10)} \right)^{2} {\rm \; for\; }Re_{*t} >10} \end{array}\right.
-
-and :math:`Re_{*t}` is the threshold friction Reynolds number approximation for optimally sized particles
-
-.. math::
-   :label: 30.40
-
-   Re_{*t} =0.38+1331\left(100D_{osp} \right)^{1.56}
-
-In :eq:`30.5`, :math:`u_{*s}` is defined as the wind friction speed (m s\ :sup:`-1`) accounting for the Owen effect (:ref:`Owen 1964<Owen1964>`)
-
-.. math::
-   :label: 30.41
-
-   u_{*s} = \left\{
-   \begin{array}{lr}
-   u_{*} & \quad {\rm \; for \;} U_{10} <U_{10,t}  \\
-   u_{*} +0.003\left(U_{10} -U_{10,t} \right)^{2} & \quad {\rm \; for\; }U_{10} \ge U_{10,t}
-   \end{array}\right.
-
-where :math:`u_{*}` is the CLM wind friction speed (m s\ :sup:`-1`), also known as friction velocity (section :numref:`Monin-Obukhov Similarity Theory`), :math:`U_{10}` \ is the 10-m wind speed (m s\ :sup:`-1`) calculated as the wind speed at the top of the canopy in section 4.3 of :ref:`Bonan (1996)<Bonan1996>` but here for 10 m above the ground, and :math:`U_{10,\, t}` is the threshold wind speed at 10 m (m s\ :sup:`-1`)
-
-.. math::
-   :label: 30.42
-
-   U_{10,t} =u_{*t} \frac{U_{10} }{u_{*} }
-
-In equation :eq:`30.30` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
-
-.. math::
-   :label: 30.43
-
    M_{i,j} =\frac{m_{i} }{2} \left[{\rm erf}\left(\frac{\ln {\textstyle\frac{D_{j,\max } }{\tilde{D}_{v,i} }} }{\sqrt{2} \ln \sigma _{g,i} } \right)-{\rm erf}\left(\frac{\ln {\textstyle\frac{D_{j,\min } }{\tilde{D}_{v,i} }} }{\sqrt{2} \ln \sigma _{g,i} } \right)\right]
 
 where :math:`m_{i}`, :math:`\tilde{D}_{v,\, i}`, and :math:`\sigma _{g,\, i}` are the mass fraction, mass median diameter, and geometric standard deviation assigned to each particle source mode :math:`i` (:numref:`Table Dust Mass fraction`), while :math:`D_{j,\, \min }` and :math:`D_{j,\, \max }` are the minimum and maximum diameters (m) in each transport bin :math:`j` (:numref:`Table Dust Minimum and maximum particle diameters`).
+
+Note that in CAM, dust emission flux will be scaled by another global dust tuning factor for matching the observed atmospheric dust constraints.
+
 
 .. _Table Dust Mass fraction:
 
