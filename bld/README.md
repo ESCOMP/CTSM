@@ -6,25 +6,23 @@ This is a lower level script called from with CESM/CIME.
 
 Important files/directories:
 
-Namelist build scripts
-======================
+# Namelist build scripts
 
 config_files/clm_phys_vers.pm ------------- Perl module to handle different CLM versions  
 config_files/config_definition_ctsm.xml --- XML file defining CTSM configuration items (mainly physics version)  
 
-Scripts to build the namelists
-==============================
-build-namelist --- Build the namelists needed  
+# Scripts to build the namelists
 
+build-namelist --- Build the namelists needed  
 
 env_run.xml --- Sample case runtime environment variables, so build-namelist can run outside of a case directory  
 
-Test scripts directory
-======================
+# Test scripts directory
+
 unit_testers --- Directory of scripts to test scipts in this directory (most notably build-namelist)  
 
-XML Files describing namelists in namelist_files
-================================================
+# XML Files describing namelists in namelist_files
+
 namelist_files/namelist_defaults_ctsm.xml --------- List of default values for the ctsm namelist  
 namelist_files/namelist_defaults_overall.xml ------ List of default values for overall settings  
 namelist_files/namelist_defaults_usr_files.xml ---- List of default values for the user-files (deprecated)  
@@ -33,8 +31,8 @@ namelist_files/namelist_definition.xsl ------------ Describes how to view the xm
 namelist_files/use_cases -------------------------- Specific configurations that build-namelist uses  
 namelist_files/use_cases/README ------------------- File explaining the naming convention for use_cases  
 
-Driver namelist files, duplicated information from cime/driver/cime_config
-==========================================================================
+# Driver namelist files, duplicated information from cime/driver/cime_config
+
 namelist_files/namelist_defaults_drv.xml ---------- List of default values for driver namelist defaults  
 namelist_files/namelist_defaults_drydep.xml ------- List of default values for dry deposition and MEGAN fields   
 namelist_files/namelist_defaults_fire_emis.xml ---- List of default values for fire emission fields  
@@ -42,9 +40,8 @@ namelist_files/namelist_defaults_dust_emis.xml ---- List of default values for t
 namelist_files/namelist_definition_drv.xml -------- Definition of all driver namelist items  
 namelist_files/namelist_definition_drv_flds.xml --- Definition of add driver fieldsnamelist items  
 
+# XML helper files
 
-XML helper files
-================
 namelist_files/LogMessages.pm  ---- Perl module to handle log output  
 namelist_files/history_fields.xsl - Style sheet for history fields as created by script that lists all of the history fields from the source files (../src/main/findHistFields.pl)  
 
