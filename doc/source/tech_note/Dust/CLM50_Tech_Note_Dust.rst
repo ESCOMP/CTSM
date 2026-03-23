@@ -17,7 +17,7 @@ Dust emission modeling is a threshold parameterization of an aeolian (wind-drive
 
    u_{*ft} = u_{*ft0}(D_{p},\rho_{atm}) f_{m}(w)
 
-where :math:`u_{*ft0}(D_{p},\rho_{a})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{atm}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{atm})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
+where :math:`u_{*ft0}(D_{p},\rho_{atm})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{atm}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{atm})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
 
 .. math::
    :label: 30.2
