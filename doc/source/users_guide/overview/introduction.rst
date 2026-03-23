@@ -78,7 +78,7 @@ README file describing |version|
 
 The README (which can be found in ``$CTSMROOT/doc``) is repeated here.
 
-.. include:: ../../../../README
+.. include:: ../../../../README.md
    :literal:
 
 .. _best-practices-for-usage:
