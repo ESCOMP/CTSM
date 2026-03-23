@@ -802,8 +802,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam7.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
 
-<!-- 2015 for CMIP6 SSP future scenario cases -->
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015" >.true.</use_init_interp>
+<!-- 2015 for CMIP6 SSP future scenario cases, with clm4_5 or clm5_0 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015" phys="clm4_5">.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2015" phys="clm5_0">.true.</use_init_interp>
 
 <!--
      clm6_0 physics with CAM7.0 grids...
@@ -1138,9 +1139,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4CONUS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_crop=.false. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
 </init_interp_attributes>
 
-<!-- 2015 IC's - used for CMIP6 SSP future scenario cases  -->
-<!-- Use both for SP and BGC, crop on/off, all grids, all tuning modes, but without excess_ice-->
-<init_interp_attributes sim_year="2015" use_cndv=".false." use_fates=".false."
+<!-- 2015 IC's - used for CMIP6 SSP future scenario cases, with clm4_5 or clm5_0 (use standard clm6_0 startup files with clm6_0 physics) -->
+<!-- Use both for SP and BGC, crop on/off, all grids, all tuning modes, and with or without excess ice -->
+<init_interp_attributes sim_year="2015" use_cndv=".false." use_fates=".false." phys="clm4_5"
+>hgrid=0.9x1.25 maxpft=78 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. use_excess_ice=.false. glc_nec=10 do_transient_pfts=.true. lnd_tuning_mode=clm5_0_cam6.0
+</init_interp_attributes>
+<init_interp_attributes sim_year="2015" use_cndv=".false." use_fates=".false." phys="clm5_0"
 >hgrid=0.9x1.25 maxpft=78 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. use_excess_ice=.false. glc_nec=10 do_transient_pfts=.true. lnd_tuning_mode=clm5_0_cam6.0
 </init_interp_attributes>
 
@@ -1627,7 +1631,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
 
-<!-- 2015 for CMIP6 SSP future scenario cases -->
+<!-- 2015 for CMIP6 SSP future scenario cases, with clm4_5 and clm6_0 -->
 <finidat hgrid="0.9x1.25"    maxpft="78"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20150101"  sim_year="2015" do_transient_pfts=".true." use_excess_ice=".false."
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
