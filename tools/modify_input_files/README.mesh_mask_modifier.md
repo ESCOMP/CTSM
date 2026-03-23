@@ -8,8 +8,8 @@ python/ctsm/modify_input_files/modify_mesh_mask.py
 tools/modify_input_files/mesh_mask_modifier
 tools/modify_input_files/modify_mesh_template.cfg
 ```
-Instructions
-------------
+# Instructions
+
 To run on various machines:
 1) (Un)load, execute, and activate the following:
 
