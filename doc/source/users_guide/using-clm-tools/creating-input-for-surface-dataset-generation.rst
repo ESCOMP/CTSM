@@ -13,35 +13,6 @@ The utility ``mkmapdata.sh`` requires SCRIP format input files to describe the i
 
 SCRIP grid files for all the standard model resolutions and the raw surface datasets have already been done and the files are in the XML database. Hence, this step doesn't need to be done -- EXCEPT WHEN YOU ARE CREATING YOUR OWN GRIDS.
 
-.. _using-mkocnmap:
-
-Using mknocnmap.pl to create grid and maps for single-point regional grids
---------------------------------------------------------------------------
-
-.. todo::
-    Update the below, as domain files aren't needed with nuopc.
-
-If you want to create a regular latitude/longitude single-point or regional grid, we suggest you use ``mknoocnmap.pl`` in ``$CTSMROOT/tools/mkmapdata`` which will create both the SCRIP grid file you need (using ``$CTSMROOT/tools/mkmapgrids/mkscripgrid.ncl``) AND an identity mapping file assuming there is NO ocean in your grid domain. If you HAVE ocean in your domain you could modify the mask in the SCRIP grid file for ocean, and then use ``ESMF_RegridWeightGen`` to create the mapping file, and ``gen_domain`` to create the domain file. Like other tools, ``./mkmapdata/mknoocnmap.pl`` has a help option with the following:
-::
-
-   SYNOPSIS
-	mknoocnmap.pl [options]	    Gets map and grid files for a single land-only point.
-   REQUIRED OPTIONS
-	-centerpoint [or -p] <lat,lon> Center latitude,longitude of the grid to create.
-	-name [-or -n] <name>	    Name to use to describe point
-
-   OPTIONS
-	-dx <number>                   Size of total grid in degrees in longitude direction
-				       (default is 0.1)
-	-dy <number>                   Size of total grid in degrees in latitude direction
-				       (default is 0.1)
-	-silent [or -s]		    Make output silent
-	-help [or -h]		    Print usage to STDOUT.
-	-verbose [or -v]		    Make output more verbose.
-	-nx <number>                   Number of longitudes (default is 1)
-	-ny <number>                   Number of latitudes  (default is 1)
-
-See :numref:`Figure mknoocnmap.pl` for a visual representation of this process.
 
 Creating mapping files for mksurfdata_esmf
 ==============================================
