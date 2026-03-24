@@ -765,7 +765,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_how_close>61</init_interp_how_close>
 
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
-<init_interp_sim_years>1850,1979,2000,2003,2013,2015</init_interp_sim_years>
+<init_interp_sim_years>1850,1979,2000,2003,2010,2013,2015</init_interp_sim_years>
 
 <!--
 
