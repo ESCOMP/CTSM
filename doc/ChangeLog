@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.027
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Tue Mar 24 01:30:26 PM MDT 2026
+Date: Tue Mar 24 10:50:35 PM MDT 2026
 One-line Summary: Some final namelist default changes needed
 
 Purpose and description of changes
@@ -41,21 +41,20 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
 Notes of particular relevance for users
 ---------------------------------------
-Caveats for users (e.g., need to interpolate initial conditions):
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
 Changes made to namelist defaults (e.g., changed parameter values):
+   n_melt_glcmec is now 1 for clm6_0 rather than 10 for everything else
+   coupled parameter file gets picked when LND_TUNING_MODE == clm6_0_cam7.0
 
 Changes to the datasets (e.g., streams, surface or initial files):
-
-Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+   finidat file for clm4_5/clm5_0 2015 start
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Limited work to make the finidat picking funciton better
 
 Changes to tests or testing:
+   Removed the need to explicitly set an finidat file for a few testmods
 
 Contributors: @slevis-lmwg
 
@@ -69,12 +68,12 @@ Testing summary: regular
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -82,7 +81,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes (for clm6_0 and some clm4_5)
+Changes answers relative to baseline: Yes (for clm6_0 and possibly some clm4_5)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: clm6_0, and some clm4_5 for finidat file picking
