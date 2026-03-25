@@ -32,6 +32,7 @@ module SurfaceWaterMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UpdateFracH2oSfc     ! Determine fraction of land surfaces which are submerged
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
+  public :: pc_hillslope         ! Calculate pc parameter for hillslope columns
   public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -70,6 +71,21 @@ contains
     call readNcdioScalar(ncid, 'mu', subname, params_inst%mu)
 
   end subroutine readParams
+
+  !-----------------------------------------------------------------------
+  real(r8) function pc_hillslope( hill_slope )
+  !------------------------------------------------------------------------------
+  !
+  ! Calculate the pc parameter using hillslope geoparameter as input
+  !
+  !------------------------------------------------------------------------------
+      real(r8), intent(in) :: hill_slope ! Hillslope column slope
+      real(r8), parameter :: pc_a = 0.6_r8
+      real(r8), parameter :: pc_b = -20._r8
+
+      pc_hillslope = pc_a*exp(pc_b*hill_slope)
+      
+    end function pc_hillslope
 
   !-----------------------------------------------------------------------
   subroutine UpdateFracH2oSfc(bounds, num_soilc, filter_soilc, &
@@ -467,7 +483,7 @@ contains
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
-    real(r8) :: pc_dist
+    real(r8) :: pc            ! column-level pc parameter
     real(r8),parameter :: min_hill_slope = 1e-3_r8! minimum value of hillslope for outflow
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
@@ -487,16 +503,15 @@ contains
        if (h2osfcflag==1) then
 
           if(col%is_hillslope_column(c)) then
-             pc_dist = 0.6_r8*exp(-20._r8*col%hill_slope(c))
-             pc_dist = max(pc_dist, 0.01_r8)
+             pc = max(pc_hillslope(col%hill_slope(c)), 0.01_r8)
           else
-             pc_dist = params_inst%pc
+             pc = params_inst%pc
           endif
           
-          if (frac_h2osfc_nosnow(c) <= pc_dist) then
+          if (frac_h2osfc_nosnow(c) <= pc) then
              frac_infclust=0.0_r8
           else
-             frac_infclust=(frac_h2osfc_nosnow(c)-pc_dist)**params_inst%mu
+             frac_infclust=(frac_h2osfc_nosnow(c)-pc)**params_inst%mu
           endif
        endif
 

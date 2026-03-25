@@ -1487,9 +1487,6 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%f_ch4=tempr
-
-     !scs
-     params_inst%f_ch4=0.04_r8
      
      tString='rootlitfrac'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1576,9 +1573,6 @@ contains
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_oxid_unsat=tempr
 
-     !scs
-     params_inst%vmax_oxid_unsat = 2.5_r8*params_inst%vmax_oxid_unsat
-     
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -1596,16 +1590,10 @@ contains
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%unsat_aere_ratio=tempr
 
-     !scs
-     params_inst%unsat_aere_ratio= 0.01_r8
-
-
      tString='porosmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%porosmin=tempr
-     !scs: must change in conjunction with unsat_aere_ratio to reduce lower limit
-     params_inst%porosmin=1e-6_r8
    
      tString='vgc_max'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -2832,12 +2820,6 @@ contains
                   ch4_prod_depth(c,j) = 0._r8 ! [mol/m3 total/s]
                endif ! anoxicmicrosites
             endif ! WT
-
-            !scs: apply time invariant o2 scalar for saturated conditions, adjust o2 below in anoxia block
-            if (1==2 .and. sat == 1 .and. o_scalar(c,j) > 0._r8) then
-               ! mino2lim = 0.2 on param file
-               ch4_prod_depth(c,j) = ch4_prod_depth(c,j) / o_scalar(c,j) * 0.2_r8
-            endif
 
          end do ! fc
       end do ! nlevsoi

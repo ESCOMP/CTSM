@@ -77,6 +77,7 @@ contains
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
     use fileutils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
+    use SurfaceWaterMod , only : pc_hillslope
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                                    
@@ -99,7 +100,7 @@ contains
     real(r8), pointer  :: sandcol    (:,:) ! column level sand fraction for calculating VIC parameters
     real(r8), pointer  :: claycol    (:,:) ! column level clay fraction for calculating VIC parameters
     real(r8), pointer  :: om_fraccol (:,:) ! column level organic matter fraction for calculating VIC parameters
-    real(r8) :: pc_dist
+    real(r8) :: pc                         ! column-level pc parameter
     !-----------------------------------------------------------------------
     ! Initialize VIC variables
 
@@ -218,18 +219,17 @@ contains
          ! set to zero for no h2osfc (w/frac_infclust =large)
 
          if(col%is_hillslope_column(c)) then
-            pc_dist = 0.6_r8*exp(-20._r8*col%hill_slope(c))
-            pc_dist = max(pc_dist, 0.01_r8)
+            pc = max(pc_hillslope(col%hill_slope(c)), 0.01_r8)
          else
             ! use standard value
-            pc_dist = params_inst%pc
+            pc = params_inst%pc
          endif
 
          soilhydrology_inst%h2osfc_thresh_col(c) = 0._r8
          if (micro_sigma(c) > 1.e-6_r8 .and. (soilhydrology_inst%h2osfcflag /= 0)) then
             d = 0.0_r8
             do p = 1,4
-               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - pc_dist
+               fd   = 0.5_r8*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0_r8)))) - pc
                dfdd = exp(-d**2/(2.0_r8*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0_r8*shr_const_pi))
                d    = d - fd/dfdd
             enddo

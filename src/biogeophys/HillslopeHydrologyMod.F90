@@ -1047,6 +1047,7 @@ cross_sectional_area_channel = lun%stream_channel_width(l)*lun%stream_channel_de
                   bankfull_flow_velocity = (lun%stream_channel_depth(l))**manning_exponent &
                        * sqrt(lun%stream_channel_slope(l)) &
                        / manning_roughness
+
                   ! check reynolds number dynamically
                   flow_velocity = (hydraulic_radius)**manning_exponent &
                           * sqrt(lun%stream_channel_slope(l)) &
