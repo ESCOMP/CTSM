@@ -768,11 +768,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!--
 
-    Find Initial condition files: The settings use_init_interp, init_interp_attributes and finidat MUST all
-    be coordinated together!
-
-    NOTE: And they need to be coordinated with clm_start_type that's in namelist_defaults_overall.xml
-
+    Find Initial condition files: The settings use_init_interp, init_interp_attributes and finidat MUST allundef;
+    be coordinated together!undef;
+undef;
+    NOTE: And they need to be coordinated with clm_start_type that's in namelist_defaults_overall.xmlundef;
+undef;
 -->
 
 <!-- Can you interpolate from an initial condition file at startup (is there a finidat file to find)? -->
