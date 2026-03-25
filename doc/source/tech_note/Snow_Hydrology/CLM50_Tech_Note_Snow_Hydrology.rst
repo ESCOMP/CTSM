@@ -121,7 +121,7 @@ The temperature dependent term is given by (:ref:`van Kampenhout et al. (2017) <
 
 .. bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
 
-where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
+where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m s\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
 
 .. math::
    :label: 8.21c
