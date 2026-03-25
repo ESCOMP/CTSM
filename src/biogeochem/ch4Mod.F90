@@ -2469,7 +2469,6 @@ contains
 
   end subroutine ch4
 
-  !##
   !-----------------------------------------------------------------------
   subroutine ch4_prod (bounds, num_methc, filter_methc, num_methp, &
        filter_methp, rr, jwt, sat, lake, &
@@ -2828,7 +2827,6 @@ contains
 
   end subroutine ch4_prod
 
-  !##
   !-----------------------------------------------------------------------
   subroutine ch4_oxid (bounds, &
        num_methc, filter_methc, &
@@ -2982,7 +2980,6 @@ contains
     end associate
   end subroutine ch4_oxid
 
-  !##
   !-----------------------------------------------------------------------
   subroutine ch4_aere (bounds, num_methc, filter_methc, num_methp, filter_methp, &
        annsum_npp, jwt, sat, lake, &
@@ -3187,7 +3184,6 @@ contains
 
   end subroutine ch4_aere
 
-  !##
   !--------------------------------------------------------------------------------------
   
   subroutine SiteOxAere(is_vegetated, & 
@@ -3356,8 +3352,6 @@ contains
     return
   end subroutine SiteOxAere
 
-  
-  !##
   !-----------------------------------------------------------------------
   subroutine ch4_ebul (bounds, &
        num_methc, filter_methc, &
@@ -4317,8 +4311,6 @@ contains
 
   end subroutine ch4_tran
 
-  !#1 add unsaturated layer to represent microtopography
-  !##
   !-----------------------------------------------------------------------
   subroutine surface_layer_oxid(watsat, sucsat, bsw, h2osoi_vol, &
        smp_l, t_soisno, conc_ch4, conc_o2, ch4_oxid, o2_oxid)
@@ -4417,7 +4409,6 @@ contains
             
   end subroutine surface_layer_oxid
 
-  !#2
   !-----------------------------------------------------------------------
   subroutine ch4_tran_surface_layers (bounds, &
        num_methc, filter_methc, &
