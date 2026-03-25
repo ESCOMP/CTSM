@@ -2265,6 +2265,7 @@ sub setup_logic_params_file {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile',
               'phys'=>$nl_flags->{'phys'},
+              'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
               'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
 }
 
@@ -2695,7 +2696,7 @@ sub setup_logic_initial_conditions {
   my $use_init_interp_default = $nl_flags->{$useinitvar};
 
   my %settings;
-  $settings{$useinitvar} = $use_init_interp_default;
+  my $use_init_interp_default = ".false.";
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
     my $st_year = $nl_flags->{'st_year'};
@@ -2734,6 +2735,9 @@ sub setup_logic_initial_conditions {
     } else {
        $settings{'ic_ymd'} = $ic_date;
     }
+    setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv, \%settings);
+    $use_init_interp_default = $nl_flags->{$useinitvar};
+    $settings{$useinitvar} = $use_init_interp_default;
     my $try = 0;
     my $done = 2;
     do {
