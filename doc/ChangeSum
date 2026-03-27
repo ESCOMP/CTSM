@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.029   slevis 03/27/2026 Merge b4b-dev to master
        ctsm5.4.028     erik 03/26/2026 Update to cmeps version with roundoff changes when running with CISM
        ctsm5.4.027     erik 03/24/2026 Some final namelist default changes needed
        ctsm5.4.026 glemieux 03/18/2026 Transfer biophysical variables for output with FATES dimensions
