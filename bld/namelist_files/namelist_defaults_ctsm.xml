@@ -2603,13 +2603,6 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <stream_meshfile_ch4finundated finundation_method="ZWT_inversion"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
-<!-- need a default for h2osfc even though not used  -->                               
-<stream_fldfilename_ch4finundated finundation_method="h2osfc" hgrid="0.9x1.25"         
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
-
-<stream_meshfile_ch4finundated finundation_method="h2osfc"                             
->lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
-
 <!-- ===========================================  -->
 <!-- Defaults for dust namelist items             -->
 <!-- Defaults for Zender's soil erodibility data  -->
