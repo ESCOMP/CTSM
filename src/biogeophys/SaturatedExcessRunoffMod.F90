@@ -273,10 +273,7 @@ contains
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           if(col%is_hillslope_column(c) .and. col%active(c)) then
-             ! Set fsat to zero for hillslope columns
              fsat(c) = 0._r8
-             ! Set fsat to zero for upland columns only
-             !if (col%cold(c) /= ispval) fsat(c) = 0._r8
           endif
        end do
     endif

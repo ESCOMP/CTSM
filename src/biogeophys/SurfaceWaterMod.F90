@@ -293,7 +293,7 @@ contains
        if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno_total(c) > 0) then
 
           if (frac_h2osfc(c) > 0.01_r8) then             
-              f_overlap = frac_sno(c) + frac_h2osfc(c) - 1._r8
+             f_overlap = frac_sno(c) + frac_h2osfc(c) - 1._r8
              ! split overlap between snow and surface water rather than reducing only surface water
              if (f_overlap > 0._r8) then
                 frac_h2osfc(c) = frac_h2osfc(c) - 0.5_r8*f_overlap
