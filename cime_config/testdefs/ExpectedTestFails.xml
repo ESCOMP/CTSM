@@ -36,31 +36,6 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld5.f09_g17.IHistClm50Sp.derecho_intel.clm-nofire">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2784</issue>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f19_g17.IHistClm50Sp.derecho_intel.clm-nofire">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2784</issue>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f09_g17.IHistClm60Sp.derecho_intel.clm-nofire">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2784</issue>
-    </phase>
-  </test>
-  <test name="SMS_Ld5.f19_g17.IHistClm60Sp.derecho_intel.clm-nofire">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2784</issue>
-    </phase>
-  </test>
-
   <!-- aux_clm test suite failures -->
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesRs.derecho_intel.clm-FatesColdAllVars">
     <phase name="COMPARE_base_rest">
@@ -81,53 +56,40 @@
       <status>FAIL</status>
       <issue>#3454</issue>
     </phase>
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
   </test>
   <test name="SUBSETDATAREGION_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
     <phase name="NLCOMP">
       <status>FAIL</status>
       <issue>#3454</issue>
     </phase>
-  </test>
-  <test name="SMS_Ld2_D_PS.f09_g17.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic_interp">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#2787</issue>
-      <comment>The issue shows how to fix it.</comment>
-    </phase>
-  </test>
-  <test name="ERS_Ly3.f10_f10_mg37.I1850Clm50BgcCropCmip6.derecho_intel.clm-basic">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2787</issue>
-      <comment>The issue shows how to fix it.</comment>
-    </phase>
-  </test>
-  <test name="SMS_Lm1.f10_f10_mg37.I1850Clm50BgcCropCmip6waccm.derecho_gnu.clm-basic">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2787</issue>
-      <comment>The issue shows how to fix it.</comment>
-    </phase>
-  </test>
-
-  <test name="ERP_D_Ld9.f10_f10_mg37.I1850Clm60BgcCrop.izumi_nag.clm-clm60cam7LndTuningModeLDust">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#3654</issue>
-      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
-    </phase>
-  </test>
-
-  <test name="ERP_D_Ld9.f10_f10_mt232.IHistClm60BgcCrop.derecho_intel.clm-clm60cam7LndTuningModeLDust--clm-nnStreamMapAlgo">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#3654</issue>
-      <comment>This is a problem with the nn mapalgo method in streams with ESMF prior to 8.9.0</comment>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
 
   <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
+      <status>FAIL</status>
+      <issue>#2619</issue>
+      <comment>This failure relates to the following REP failure.</comment>
+    </phase>
+  </test>
+  <test name="ERP_D_P64x2_Ld3.f10_f10_mg37.I2000Clm50BgcCru.derecho_intel.clm-noFUN_flexCN--clm-matrixcnOn_ignore_warnings">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2619</issue>
+      <comment>This failure relates to the following REP failure.</comment>
+    </phase>
+  </test>
+  <test name="ERP_D_P64x2_Ld3.f10_f10_mg37.I2000Clm50BgcCru.derecho_intel.clm-flexCN_FUN--clm-matrixcnOn_ignore_warnings">
+    <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the following REP failure.</comment>
@@ -148,20 +110,6 @@
     </phase>
   </test>
 
-  <test name="PEM_D_Ld9.ne30pg3_t232.I1850Clm60BgcCropG.derecho_intel.clm-clm60cam7LndTuningMode">
-    <phase name="COMPARE_base_modpes">
-      <status>FAIL</status>
-      <issue>#2542</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_D.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc.clm-crop">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#1733</issue>
-    </phase>
-  </test>
-
   <test name="FUNITCTSM_P1x1.f10_f10_mg37.I2000Clm50Sp.izumi_intel">
     <phase name="RUN">
       <status>FAIL</status>
@@ -169,14 +117,87 @@
     </phase>
   </test>
 
-  <test name="ERS_Ld60.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdST3">
+  <test name="ERP_D_P64x2_Ld10.f10_f10_mg37.I2000Clm60Bgc.derecho_intel.clm-Hillslope">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#2867</issue>
+      <issue>#3788</issue>
+    </phase>
+  </test>
+
+  <!-- mpi-serial failures on derecho_intel with the intel compiler update to intel/2025.3.2 -->
+  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+  <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.derecho_intel.clm-decStart1851_noinitial.GC.ctsm5424acl_int">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm60FatesRs.derecho_intel.clm-FatesCold.GC.ctsm5424acl_int">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+  <test name="SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.derecho_intel.clm-cropMonthOutput.GC.ctsm5424acl_int">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO.GC.ctsm5424acl_int">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro.GC.ctsm5424acl_int">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3798</issue>
+      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
+    </phase>
+  </test>
+
+  <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm60FatesRs.derecho_intel.clm-mimicsFatesCold">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2261</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESCOMP/mizuRoute#613</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
+    <phase name="MODEL_BUILD">
+      <status>FAIL</status>
+      <issue>ESCOMP/mizuRoute#614</issue>
     </phase>
   </test>
 
   <!-- fates test suite failures -->
+
+  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#3660</issue>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+    </phase>
+  </test>
 
   <!-- This is commented out because cime currently does NOT allow longnames in the XML in the XSD for this file
   <test name="ERS_D_Ld30.f45_f45_mg37.HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP.izumi_nag.clm-FatesColdLandUse">
@@ -186,34 +207,6 @@
     </phase>
   </test>
   -->
-
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2653</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestEvent">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>FATES#1216</issue>
-    </phase>
-  </test>
-
-  <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2321</issue>
-    </phase>
-  </test>
-      
-  <test name="ERP_P256x2_Ld30.f45_f45_mg37.I2000Clm60FatesRs.derecho_intel.clm-mimicsFatesCold">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#2261</issue>
-    </phase>
-  </test>
 
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdPRT2">
     <phase name="RUN">
@@ -237,24 +230,52 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLandUse">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2810</issue>
-    </phase>
-  </test>
-  
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLandUse">
-    <phase name="SHAREDLIB_BUILD">
-      <status>FAIL</status>
-      <issue>#2810</issue>
-    </phase>
-  </test>
-
   <test name="PVT_Lm3.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesLUPFT">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2919</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld180.f45_f45_mg37.I2000Clm60Fates.derecho_intel.clm-FatesColdTRS">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>FATES#1534</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2653</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Ld3.f09_g17.I2000Clm60FatesSpCruRsGs.derecho_gnu.clm-FatesColdSatPhen_prescribed">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#2321</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestArea">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestMass">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#3789</issue>
     </phase>
   </test>
 

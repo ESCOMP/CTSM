@@ -1,12 +1,4 @@
-
-! Run a transient case, with vegetation starting from bare ground, but land use starting from LUH state vector on starting date, in a nocomp configuration.
-! From Charlie's list of valid FATES configurations:
-! https://docs.google.com/spreadsheets/d/1eE3sRMYxfocZKbT8uIQhXpjjtfM2feXPRSWXJNoo4jM/edit#gid=0
-use_fates_luh = .true.
-use_fates_nocomp = .true.
-use_fates_fixed_biogeog = .true.
-use_fates_sp = .false.
-use_fates_potentialveg = .false.
+fates_regeneration_model = 'trs'
 hist_fincl1       = 'FATES_NCOHORTS', 'FATES_TRIMMING', 'FATES_AREA_PLANTS',
 'FATES_AREA_TREES', 'FATES_COLD_STATUS', 'FATES_GDD',
 'FATES_NCHILLDAYS', 'FATES_NCOLDDAYS', 'FATES_DAYSINCE_COLDLEAFOFF','FATES_DAYSINCE_COLDLEAFON',
@@ -30,8 +22,6 @@ hist_fincl1       = 'FATES_NCOHORTS', 'FATES_TRIMMING', 'FATES_AREA_PLANTS',
 'FATES_CBALANCE_ERROR', 'FATES_LEAF_ALLOC',
 'FATES_SEED_ALLOC', 'FATES_STEM_ALLOC', 'FATES_FROOT_ALLOC',
 'FATES_CROOT_ALLOC', 'FATES_STORE_ALLOC',
-'FATES_PATCHAREA_LU', 'FATES_DISTURBANCE_RATE_MATRIX_LULU',
-'FATES_TRANSITION_MATRIX_LULU',
-'FATES_VEGC_LUPF','FATES_NOCOMP_PATCHAREA_LUPF',
-'FATES_TVEG_LU','FATES_TSA_LU','FATES_SWABS_LU','FATES_NETLW_LU',
-'FATES_SHFLUX_LU','FATES_LHFLUX_LU','FATES_GPP_LU'
+'FATES_UNGERM_SEED_BANK', 'FATES_SEEDLING_POOL', 'FATES_SEEDS_IN_LOCAL',
+'FATES_SEED_BANK_PF','FATES_UNGERM_SEED_BANK_PF','FATES_SEEDLING_POOL_PF',
+'FATES_SEEDS_IN_PF','FATES_SEEDS_IN_LOCAL_PF'
