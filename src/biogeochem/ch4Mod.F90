@@ -46,8 +46,8 @@ module ch4Mod
 
   ! Non-tunable constants
   real(r8) :: rgasm  ! J/mol.K; rgas / 1000; will be set below
-  real(r8), parameter :: rgasLatm = 0.0821_r8 ! L.atm/mol.K
-  real(r8), parameter :: psi_fc = 3.4e3       ! matric potential at field capcity (mm)
+  real(r8), parameter :: rgasLatm = 0.0821_r8  ! L.atm/mol.K
+  real(r8), parameter :: psi_fc = 3.4e3_r8     ! matric potential at field capcity (mm)
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: readParams
@@ -1486,7 +1486,7 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%f_ch4=tempr
-     
+
      tString='rootlitfrac'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -3706,7 +3706,7 @@ contains
     real(r8), pointer :: surface_layer_thickness(:)
 
     integer  :: nstep                       ! time step number
-    character(len=32) :: subname='ch4_tran_surface_layers' ! subroutine name
+    character(len=32) :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -4217,7 +4217,7 @@ contains
                      end if
                      diffus(c,j) = (d_con_g(s,1) + d_con_g(s,2)*t_soisno_c) * 1.e-4_r8 * &
                           (om_frac * f_a**(10._r8/3._r8) / watsat(c,1)**2._r8 + &
-                          (1._r8-om_frac) * eps**2._r8 * f_a**(3._r8 / bsw(c,1)) ) &
+                          (1._r8-om_frac) * (eps*eps) * f_a**(3._r8 / bsw(c,1)) ) &
                           * scale_factor_gasdiff
 
                   endif
@@ -4246,7 +4246,7 @@ contains
                      end if
                      diffus (c,j) = (d_con_g(s,1) + d_con_g(s,2)*t_soisno_c) * 1.e-4_r8 * &
                           (om_frac * f_a**(10._r8/3._r8) / watsat(c,j)**2._r8 + &
-                          (1._r8-om_frac) * eps**2._r8 * f_a**(3._r8 / bsw(c,j)) ) &
+                          (1._r8-om_frac) * (eps*eps) * f_a**(3._r8 / bsw(c,j)) ) &
                           * scale_factor_gasdiff
 
                   else ! Below the WT use saturated diffusivity and only water in epsilon_t
