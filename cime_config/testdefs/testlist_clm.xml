@@ -1613,7 +1613,6 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
-      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1868,7 +1867,6 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCru" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1953,7 +1951,6 @@
   <test name="REP_P64x2_Ld13" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -1986,6 +1983,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
+      <option name="comment">The aux_cime_baselines equivalent of this is below as an f19 test</option>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1998,6 +1996,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">The pre_alpha equivalent of this is above as an f10 test</option>
     </options>
   </test>
   <test name="ERP_P64x2_Ld765" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
@@ -2151,6 +2150,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
@@ -2849,6 +2849,7 @@
   <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
@@ -3162,10 +3163,12 @@
   <test name="SMS_Ld1_PS" grid="f09_g17" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Since bias correction is in CDEPS we want to make sure CESM testing exercises this, in case a CDEPS change causes problems</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsROA">
