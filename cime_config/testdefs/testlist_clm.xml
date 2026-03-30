@@ -4391,12 +4391,15 @@
   <test name="SMS_D_Ld5" grid="5x5_amazon_rHDMA" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Parallel test of mizuRoute for the small 5x5_amazon HDMA grid</option>
+      <option name="comment">Add to CESM testing because mizuRoute can be sensitive to submodule changes</option>
     </options>
   </test>
   <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizGsNldas" testmods="mizuroute-default">
