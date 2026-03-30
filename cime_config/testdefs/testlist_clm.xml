@@ -1741,7 +1741,6 @@
   <test name="ERP_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
     </machines>
     <options>
@@ -1983,10 +1982,10 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
-      <option name="comment">The aux_cime_baselines equivalent of this is below as an f19 test</option>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">The aux_cime_baselines equivalent of this is below as an f19 test</option>
     </options>
   </test>
   <test name="SMS_P384x2_D_Ld5" grid="f19_g17" compset="I2000Clm50Sp" testmods="clm/default--clm/nofireemis">
@@ -1996,7 +1995,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">The pre_alpha equivalent of this is above as an f10 test</option>
+      <option name="comment">The prealpha equivalent of this is above as an f10 test</option>
     </options>
   </test>
   <test name="ERP_P64x2_Ld765" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
@@ -2150,7 +2149,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
@@ -2849,7 +2848,7 @@
   <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
@@ -3163,7 +3162,7 @@
   <test name="SMS_Ld1_PS" grid="f09_g17" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="pre_alpha"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
@@ -3678,6 +3677,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
