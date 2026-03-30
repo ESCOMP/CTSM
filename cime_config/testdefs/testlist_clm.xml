@@ -1704,6 +1704,8 @@
   <test name="ERP_D_P64x2_Ld5" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/irrig_spunup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2139,6 +2141,8 @@
   <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3408,11 +3412,13 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
+      <option name="comment">Add cesm tests for this since SSPMATRIX tests are sensitive to submodule changes</option>
     </options>
   </test>
   <test name="ERP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/ADspinup">
