@@ -142,35 +142,35 @@
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.derecho_intel.clm-decStart1851_noinitial.GC.ctsm5424acl_int">
+  <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.derecho_intel.clm-decStart1851_noinitial">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm60FatesRs.derecho_intel.clm-FatesCold.GC.ctsm5424acl_int">
+  <test name="ERS_D_Mmpi-serial_Ld5.5x5_amazon.I2000Clm60FatesRs.derecho_intel.clm-FatesCold">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.derecho_intel.clm-cropMonthOutput.GC.ctsm5424acl_int">
+  <test name="SMS_D_Ly6_Mmpi-serial.1x1_smallvilleIA.IHistClm45BgcCropQianRs.derecho_intel.clm-cropMonthOutput">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO.GC.ctsm5424acl_int">
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro.GC.ctsm5424acl_int">
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdHydro">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>
@@ -310,7 +310,7 @@
   <!-- interim_restart (and aux_clm) test list-->
 
   <test name="ERI_Ld41.f10_f10_mg37.I2000Clm60BgcCrop.derecho_gnu.clm-default">
-    <phase name="COMPARE_base_hybrid">
+    <phase name="COMPARE_branch_hybrid">
      <status>FAIL</status>
      <issue>#3494</issue>
     </phase>
