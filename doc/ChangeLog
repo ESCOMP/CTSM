@@ -1,4 +1,79 @@
 ===============================================================
+Tag name: ctsm5.4.029
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Mar 30 03:25:18 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Listing PR numbers, corresponding branches, and PR titles:
+- #3891 from slevis-lmwg/pasture_rangeland_doc: Technote: Explain how pasture and rangeland are assigned to PFTs
+- #3839 from slevis-lmwg/menu_lower_left: Update documentation references to the version menu to say "bottom left"
+- #3829 from huiqi-wang/fix-hydrology-doc-typos: Fix hydrology doc typos
+- #3822 from ekluzek/update_submodules_to_cesm30a08l: Update submodules to ones in cesm3_0_alpha08l
+- #3305 from ijaguirre/run_tower_more_documentation: more information regarding PLUMBER 2 simulations using the ./runtower…
+- #3818 from huiqi-wang/fix-doc-underscore-typos: Fix typos and errors in tech note documentation
+- #3814 from slevis-lmwg/rm_popdensncl: In tools/contrib remove popden.ncl and run_clmtowers; update the corresponding README
+- #3592 from mvdebolskiy/bugfix-fatessp-itype: bfb: Bugfix for FatesSp compiled with intel
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #3256
+Resolves #3234
+Resolves #3703
+Resolves #2997
+Resolves #3541
+Resolves #3507
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Much of this work involves updates to the documentation
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Updates to ExpectedTestFails.xml
+
+Contributors:
+ @huiqi-wang @ekluzek @ijaguirre @mvdebolskiy
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 tests are expected to fail)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ ccs_config_cesm1.0.77 --> ccs_config_cesm1.0.79
+ cime6.1.146 --> cime6.1.169
+ pio2_6_6 --> pio2_6_8
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3894
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.028
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu Mar 26 03:27:33 PM MDT 2026
