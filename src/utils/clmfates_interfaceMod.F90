@@ -1422,7 +1422,7 @@ module CLMFatesInterfaceMod
        nf_soil%decomp_npools_sourcesink_col(c,:,:) = 0._r8
        
        if ( .not. use_fates_sp ) then
-
+          
           ! (gC/m3/timestep)
           nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
                nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
@@ -1933,7 +1933,7 @@ module CLMFatesInterfaceMod
          do nc = 1, nclumps
             if (this%fates(nc)%nsites>0) then
                call this%fates_restart%set_restart_vectors(nc,this%fates(nc)%nsites, &
-                                                           this%fates(nc)%sites)
+                                                           this%fates(nc)%sites,this%fates(nc)%bc_in)
             end if
          end do
          !$OMP END PARALLEL DO
@@ -2016,7 +2016,7 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_out)
 
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
-                    this%fates(nc)%sites )
+                    this%fates(nc)%sites,this%fates(nc)%bc_in )
 
                ! I think ed_update_site and update_hlmfates_dyn are doing some similar
                ! update type stuff, should consolidate (rgk 11-2016)
