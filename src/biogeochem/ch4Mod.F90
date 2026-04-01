@@ -1149,38 +1149,23 @@ contains
          units='mol/m^3', readvar=readvar, &
          interpinic_flag='interp', data=this%conc_ch4_surface_layer_sat_col)
 
-    if (.not. readvar) then
-       this%conc_ch4_surface_layer_sat_col = 0._r8
-    end if
     call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_SFC_LYR_UNSAT', &
          xtype=ncd_double, dim1name='column', &
          long_name='methane concentration in surface soil layer', &
          units='mol/m^3', readvar=readvar, &
          interpinic_flag='interp', data=this%conc_ch4_surface_layer_unsat_col)
     
-    if (.not. readvar) then
-       this%conc_ch4_surface_layer_unsat_col = 0._r8
-    end if
-    
     call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SFC_LYR_SAT', &
          xtype=ncd_double, dim1name='column', &
          long_name='oxygen concentration in surface water layer', &
          units='mol/m^3', readvar=readvar, &
          interpinic_flag='interp', data=this%conc_o2_surface_layer_sat_col)
-
-    if (.not. readvar) then
-       this%conc_o2_surface_layer_sat_col = 0._r8
-    end if
     
     call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SFC_LYR_UNSAT', &
          xtype=ncd_double, dim1name='column', &
          long_name='oxygen concentration in surface soil layer', &
          units='mol/m^3', readvar=readvar, &
          interpinic_flag='interp', data=this%conc_o2_surface_layer_unsat_col)
-
-    if (.not. readvar) then
-       this%conc_o2_surface_layer_unsat_col = 0._r8
-    end if
     
     call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_UNSAT', &
          xtype=ncd_double, dim1name='column', &
@@ -1188,19 +1173,11 @@ contains
          readvar=readvar, &
          interpinic_flag='interp', data=this%surface_layer_thickness_unsat_col)
 
-    if (.not. readvar) then
-       this%surface_layer_thickness_unsat_col = 0.05_r8
-    end if
-
     call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_SAT', &
          xtype=ncd_double, dim1name='column', &
          long_name='surface water layer thickness', units='m', &
          readvar=readvar, &
          interpinic_flag='interp', data=this%surface_layer_thickness_sat_col)
-
-    if (.not. readvar) then
-       this%surface_layer_thickness_sat_col = 0.01_r8
-    end if
     
     call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
