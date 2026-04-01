@@ -1469,6 +1469,8 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/ciso">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3002,6 +3004,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
