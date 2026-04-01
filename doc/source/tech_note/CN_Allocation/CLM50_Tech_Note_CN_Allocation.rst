@@ -23,12 +23,12 @@ The total maintenance respiration demand (:math:`CF_{mr}`, gC m\ :sup:`-2` s\ :s
 .. math::
    :label: 19.2
 
-   CF_{GPP,mr} =\_ \left\{\begin{array}{l} {CF_{mr} \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
+   CF_{GPP,mr} = \left\{\begin{array}{l} {CF_{mr} \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
 
 .. math::
    :label: 19.3
 
-   CF_{xs,mr} =\_ \left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{mr} -CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
+   CF_{xs,mr} = \left\{\begin{array}{l} {0\qquad \qquad \qquad {\rm for\; }CF_{mr} \le CF_{GPP} } \\ {CF_{mr} -CF_{GPP} \qquad {\rm for\; }CF_{mr} >CF_{GPP} } \end{array}\right.
 
 The storage pool that supplies carbon for maintenance respiration in excess of current :math:`CF_{GPP}` ( :math:`CS_{xs}`, gC m\ :sup:`-2`) is permitted to run a deficit (negative state), and the magnitude of this deficit determines an allocation demand which gradually replenishes :math:`CS_{xs}`. The logic for allowing a negative state for this pool is to eliminate the need to know in advance what the total maintenance respiration demand will be for a particular combination of climate and plant type. Using the deficit approach, the allocation to alleviate the deficit increases as the deficit increases, until the supply of carbon into the pool balances the demand for carbon leaving the pool in a quasi-steady state, with variability driven by the seasonal cycle, climate variation, disturbance, and internal dynamics of the plant-litter-soil system. In cases where the combination of climate and plant type are not suitable to sustained growth, the deficit in this pool increases until the available carbon is being allocated mostly to alleviate the deficit, and new growth approaches zero. The allocation flux to :math:`CS_{xs}` (:math:`CF_{GPP,xs}`, gC m\ :sup:`-2` s\ :sup:`-1`) is given as
 
@@ -142,7 +142,7 @@ Carbon to nitrogen ratios are defined for different tissue types as follows:
 .. math::
    :label: 19.9
 
-   \begin{array}{l} {CN_{leaf} =\_ {\rm \; C:N\; for\; leaf}} \\ {CN_{fr} =\_ {\rm \; C:N\; for\; fine\; root}} \\ {CN_{lw} =\_ {\rm \; C:N\; for\; live\; wood\; (in\; stem\; and\; coarse\; root)}} \\ {CN_{dw} =\_ {\rm \; C:N\; for\; dead\; wood\; (in\; stem\; and\; coarse\; root)}} \end{array}
+   \begin{array}{l} {CN_{leaf} = {\rm \; C:N\; for\; leaf}} \\ {CN_{fr} = {\rm \; C:N\; for\; fine\; root}} \\ {CN_{lw} = {\rm \; C:N\; for\; live\; wood\; (in\; stem\; and\; coarse\; root)}} \\ {CN_{dw} = {\rm \; C:N\; for\; dead\; wood\; (in\; stem\; and\; coarse\; root)}} \end{array}
 
 where all C:N parameters are defined as constants for a given PFT (:numref:`Table Allocation and CN ratio parameters`).
 
@@ -182,62 +182,62 @@ There are two carbon pools associated with each plant tissue – one which repre
 .. math::
    :label: 19.14
 
-   CF_{alloc,leaf} \_ =CF_{alloc,leaf\_ tot} f_{cur}
+   CF_{alloc,leaf} =CF_{alloc,leaf\_ tot} f_{cur}
 
 .. math::
    :label: 19.15
 
-   CF_{alloc,leaf\_ stor} \_ =CF_{alloc,leaf\_ tot} \left(1-f_{cur} \right)
+   CF_{alloc,leaf\_ stor} =CF_{alloc,leaf\_ tot} \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.16
 
-   CF_{alloc,froot} \_ =CF_{alloc,leaf\_ tot} a_{1} f_{cur}
+   CF_{alloc,froot} =CF_{alloc,leaf\_ tot} a_{1} f_{cur}
 
 .. math::
    :label: 19.17
 
-   CF_{alloc,froot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{1} \left(1-f_{cur} \right)
+   CF_{alloc,froot\_ stor} =CF_{alloc,leaf\_ tot} a_{1} \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.18
 
-   CF_{alloc,livestem} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} f_{cur}
+   CF_{alloc,livestem} =CF_{alloc,leaf\_ tot} a_{3} a_{4} f_{cur}
 
 .. math::
    :label: 19.19
 
-   CF_{alloc,livestem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} a_{4} \left(1-f_{cur} \right)
+   CF_{alloc,livestem\_ stor} =CF_{alloc,leaf\_ tot} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.20
 
-   CF_{alloc,deadstem} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)f_{cur}
+   CF_{alloc,deadstem} =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
    :label: 19.21
 
-   CF_{alloc,deadstem\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right)
+   CF_{alloc,deadstem\_ stor} =CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right)
 
 .. math::
    :label: 19.22
 
-   CF_{alloc,livecroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} f_{cur}
+   CF_{alloc,livecroot} =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} f_{cur}
 
 .. math::
    :label: 19.23
 
-   CF_{alloc,livecroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} \left(1-f_{cur} \right)
+   CF_{alloc,livecroot\_ stor} =CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.24
 
-   CF_{alloc,deadcroot} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)f_{cur}
+   CF_{alloc,deadcroot} =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)f_{cur}
 
 .. math::
    :label: 19.25
 
-   CF_{alloc,deadcroot\_ stor} \_ =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
+   CF_{alloc,deadcroot\_ stor} =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
 
 Nitrogen allocation
 -----------------------------------------
@@ -254,62 +254,62 @@ The demand for each tissue, calculated for the tissue to remain on stoichiometry
 .. math::
    :label: 19.27
 
-   NF_{demand,leaf} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } f_{cur}
+   NF_{demand,leaf} =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } f_{cur}
 
 .. math::
    :label: 19.28
 
-   NF_{demand,leaf\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } \left(1-f_{cur} \right)
+   NF_{demand,leaf\_ stor} =\frac{CF_{alloc,leaf\_ tot} }{CN_{leaf} } \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.29
 
-   NF_{demand,froot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } f_{cur}
+   NF_{demand,froot} =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } f_{cur}
 
 .. math::
    :label: 19.30
 
-   NF_{demand,froot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } \left(1-f_{cur} \right)
+   NF_{demand,froot\_ stor} =\frac{CF_{alloc,leaf\_ tot} a_{1} }{CN_{fr} } \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.31
 
-   NF_{demand,livestem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } f_{cur}
+   NF_{demand,livestem} =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
    :label: 19.32
 
-   NF_{demand,livestem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
+   NF_{demand,livestem\_ stor} =\frac{CF_{alloc,leaf\_ tot} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.33
 
-   NF_{demand,deadstem} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
+   NF_{demand,deadstem} =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
    :label: 19.34
 
-   NF_{demand,deadstem\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right)
+   NF_{demand,deadstem\_ stor} =\frac{CF_{alloc,leaf\_ tot} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.35
 
-   NF_{demand,livecroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } f_{cur}
+   NF_{demand,livecroot} =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } f_{cur}
 
 .. math::
    :label: 19.36
 
-   NF_{demand,livecroot\_ stor} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
+   NF_{demand,livecroot\_ stor} =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} a_{4} }{CN_{lw} } \left(1-f_{cur} \right)
 
 .. math::
    :label: 19.37
 
-   NF_{demand,deadcroot} \_ =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
+   NF_{demand,deadcroot} =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } f_{cur}
 
 .. math::
    :label: 19.38
 
-   NF_{demand,deadcroot\_ stor} \_ =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
+   NF_{demand,deadcroot\_ stor} =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
 
 After each pool's demand is calculated, the total plant N demand is then the sum of each individual pool :math:`i` corresponding to each tissue:
 
