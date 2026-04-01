@@ -364,16 +364,16 @@ A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
     #PBS -N your_job_name
     #PBS -A your_project_code
     #PBS -l walltime=01:00:00
-    #PBS -q queue_name
+    #PBS -q main
     #PBS -j oe
     #PBS -k eod
     #PBS -m abe
     #PBS -M your_email_address
-    #PBS -l select=2:ncpus=36:mpiprocs=36
+    #PBS -l select=1:ncpus=128:mpiprocs=128
 
     ### Run the executable
     setenv MPI_TYPE_DEPTH 16
-    mpiexec_mpt ./wrf.exe
+    mpibind ./wrf.exe
 
 (See :numref:`runtime-environment-variables` for a description of the need to set ``MPI_TYPE_DEPTH`` on ``derecho``.)
 
