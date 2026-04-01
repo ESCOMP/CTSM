@@ -1381,7 +1381,47 @@ contains
          clump_index = clump_index, &
          var = this%finundated_lag_col(begc:endc))
 
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var = this%surface_layer_thickness_sat_col(begc:endc), &
+         fractional_area_old = this%finundated_col(begc:endc), &
+         fractional_area_new = finundated_new_col(begc:endc))
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var = this%surface_layer_thickness_unsat_col(begc:endc), &
+         fractional_area_old = f_uninundated_col(begc:endc), &
+         fractional_area_new = f_uninundated_new_col(begc:endc))
+
     this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
+
+        call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var    = this%conc_ch4_surface_layer_sat_col(begc:endc), &
+         fractional_area_old = this%finundated_col(begc:endc), &
+         fractional_area_new = finundated_new_col(begc:endc), &
+         adjustment = adjustment_one_level(begc:endc))
+    do c = bounds%begc, bounds%endc
+       this%dyn_ch4bal_adjustments_col(c) = &
+            this%dyn_ch4bal_adjustments_col(c) + &
+            adjustment_one_level(c) * this%surface_layer_thickness_sat_col(c) * catomw
+    end do
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var    = this%conc_ch4_surface_layer_unsat_col(begc:endc), &
+         fractional_area_old = f_uninundated_col(begc:endc), &
+         fractional_area_new = f_uninundated_new_col(begc:endc), &
+         adjustment = adjustment_one_level(begc:endc))
+    do c = bounds%begc, bounds%endc
+       this%dyn_ch4bal_adjustments_col(c) = &
+            this%dyn_ch4bal_adjustments_col(c) + &
+            adjustment_one_level(c) * this%surface_layer_thickness_unsat_col(c) * catomw
+    end do
 
     do j = 1, nlevsoi
        call column_state_updater%update_column_state_no_special_handling( &
