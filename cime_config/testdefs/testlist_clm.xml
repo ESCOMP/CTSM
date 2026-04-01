@@ -1921,10 +1921,13 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
       <option name="tput_tolerance">0.5</option>
+      <option name="comment">Threaded 13 month production transient test, triggering yearly transient updates</option>
+      <option name="comment">Add to prebeta to cover threaded production derecho_gnu build with full MPI</option>
     </options>
   </test>
   <test name="ERP_P64x2_Ld396" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
