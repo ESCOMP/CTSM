@@ -171,7 +171,7 @@ skip to section :numref:`wrf-set-ctsm-runtime-options`.
 
 Get WPS from this website::
 
-    https://www2.mmm.ucar.edu/wrf/users/download/wrf-regist_or_download.php
+    https://www2.mmm.ucar.edu/wrf/users/download/get_source.html
 
 New users must complete a registration form in this step.
 
