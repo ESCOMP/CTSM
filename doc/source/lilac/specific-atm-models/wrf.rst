@@ -372,10 +372,7 @@ A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
     #PBS -l select=1:ncpus=128:mpiprocs=128
 
     ### Run the executable
-    setenv MPI_TYPE_DEPTH 16
     mpibind ./wrf.exe
-
-(See :numref:`runtime-environment-variables` for a description of the need to set ``MPI_TYPE_DEPTH`` on ``derecho``.)
 
 To submit a batch job to the ``derecho`` queues, use ``qsub`` command followed
 by the PBS script name.
