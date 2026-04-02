@@ -73,6 +73,8 @@ python3 -m http.server YOUR_PORT
 
 Now you're ready to view your documentation! Just open a web browser on your computer and navigate to `http://localhost:YOUR_PORT`. You should see a rendered version of the documentation that you can browse as usual.
 
+If that doesn't work, you can download the `doc/_build/html` directory to your computer (e.g., with `scp` or `rsync`) and open `html/index.html` in a web browser.
+
 ### Local build: Mac
 
 You can open your build of the documentation in your default browser with
