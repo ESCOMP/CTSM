@@ -2953,7 +2953,6 @@ contains
                k_m_eff = k_m_unsat
                vmax_eff = vmax_oxid_unsat
             end if
-            
             porevol = max(watsat(c,j) - h2osoi_vol(c,j), 0._r8)
             h2osoi_vol_min = min(watsat(c,j), h2osoi_vol(c,j))
             if (j <= jwt(c) .and. smp_l(c,j) < 0._r8) then
