@@ -4339,7 +4339,6 @@ contains
                endif ! sat; 
             enddo ! fp; patch
          end do ! j; nlevsoi
-               
          ! Perform a second loop for the tridiagonal coefficients since need dp1_zp1 and dm1_z1 at each depth
          do j = -1,nlevsoi
             do fc = 1, num_methc
