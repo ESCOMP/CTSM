@@ -4716,7 +4716,6 @@ contains
 
          ! For history make sure that grnd_ch4_cond includes snow, for methane diffusivity
          grnd_ch4_cond(c) = spec_grnd_cond(c,1)
-         
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
          if (abs(errch4(c)) < 1.e-8_r8) then 
