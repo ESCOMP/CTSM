@@ -4416,7 +4416,6 @@ contains
          end do
 
          if (s == 1) then  ! CH4
-            
             ! Set rt, since it depends on conc
             do j = 0,nlevsoi
                do fc = 1, num_methc
