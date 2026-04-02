@@ -10,10 +10,10 @@ Working with CTSM Documentation
    :maxdepth: 1
 
    docs-intro-and-recommended.md
+   tips-for-working-with-markdown.md
+   tips-for-working-with-rst.md
    building-docs-prereqs-mac.md
    building-docs-prereqs-windows.md
    building-docs-multiple-versions.rst
-   tips-for-working-with-markdown.md
-   tips-for-working-with-rst.md
    building-docs-original-wiki.md
 
