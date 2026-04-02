@@ -3,11 +3,6 @@
 # Working with the CTSM documentation
 .. _editing-the-documentation:
 
-## One-time setup
-You will need to have some software installed on your computer in order to build and the documentation and view the results:
-- :ref:`building-docs-prereqs-mac`
-- :ref:`building-docs-prereqs-windows`
-
 ## Editing the documentation
 First, you will need a clone of CTSM to get all the documentation files and infrastructure. (If you're on Windows, you will make this clone in your :ref:`Ubuntu VM <install-wsl>`.) Note that you will clone this to your own computer, not Derecho or any cluster or anything.
 
@@ -24,6 +19,11 @@ We strongly suggest building the documentation on your personal computer before 
 
 ### Directories
 You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your CTSM clone**. (We recommend starting the name of your build directory with `_build` because CTSM knows to ignore such directories when it comes to `git`.) The instructions here assume you want to do your build in `doc/_build/`.
+
+### One-time setup
+You will need to have some software installed on your computer in order to build and the documentation and view the results:
+- :ref:`building-docs-prereqs-mac`
+- :ref:`building-docs-prereqs-windows`
 
 ### Building the docs
 All you need to do to build the docs with our recommended method is
