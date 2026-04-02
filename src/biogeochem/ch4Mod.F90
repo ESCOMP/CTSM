@@ -2985,7 +2985,6 @@ contains
 
             ch4_oxid_depth(c,j) = oxid_a
             o2_oxid_depth(c,j) = ch4_oxid_depth(c,j) * 2._r8
-            
          end do
       end do
 
