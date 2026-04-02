@@ -1,4 +1,257 @@
 ===============================================================
+Tag name: ctsm5.4.029
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Mar 30 03:25:18 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Listing PR numbers, corresponding branches, and PR titles:
+- #3891 from slevis-lmwg/pasture_rangeland_doc: Technote: Explain how pasture and rangeland are assigned to PFTs
+- #3839 from slevis-lmwg/menu_lower_left: Update documentation references to the version menu to say "bottom left"
+- #3829 from huiqi-wang/fix-hydrology-doc-typos: Fix hydrology doc typos
+- #3822 from ekluzek/update_submodules_to_cesm30a08l: Update submodules to ones in cesm3_0_alpha08l
+- #3305 from ijaguirre/run_tower_more_documentation: more information regarding PLUMBER 2 simulations using the ./runtower…
+- #3818 from huiqi-wang/fix-doc-underscore-typos: Fix typos and errors in tech note documentation
+- #3814 from slevis-lmwg/rm_popdensncl: In tools/contrib remove popden.ncl and run_clmtowers; update the corresponding README
+- #3592 from mvdebolskiy/bugfix-fatessp-itype: bfb: Bugfix for FatesSp compiled with intel
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #3256
+Resolves #3234
+Resolves #3703
+Resolves #2997
+Resolves #3541
+Resolves #3507
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Much of this work involves updates to the documentation
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Updates to ExpectedTestFails.xml
+
+Contributors:
+ @huiqi-wang @ekluzek @ijaguirre @mvdebolskiy
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 tests are expected to fail)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ ccs_config_cesm1.0.77 --> ccs_config_cesm1.0.79
+ cime6.1.146 --> cime6.1.169
+ pio2_6_6 --> pio2_6_8
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3894
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.028
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Mar 26 03:27:33 PM MDT 2026
+One-line Summary: Update to cmeps version with roundoff changes when running with CISM
+
+Purpose and description of changes
+----------------------------------
+
+Update to a cmeps tag that includes roundoff level changes when running with CISM.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+   Fixes #3823 -- Update to cmeps1.0.36/37 with roundoff answer changes
+   Some on #3840 -- Tests needing longer wallclock
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  A few tests had wallclock time extended
+
+Contributors: @billsacks
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (namelist identical to before)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, but just for longer simulations with CISM active
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: CISM active compsets
+    - what platforms/compilers: All
+    - nature of change: roundoff
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cmeps to cmeps1.0.37
+   share to share1.1.19 (needed in order for the cmeps submodule to build)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  -- #3841 Update cmeps to answer changing tag cmeps1.0.37
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.027
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Mar 24 10:50:35 PM MDT 2026
+One-line Summary: Some final namelist default changes needed
+
+Purpose and description of changes
+----------------------------------
+
+Some important final answer changes needed for the coupled model to get the right parameter file and to set n_melt_glcmec=1 for clm6_0.
+
+Also use the 2015 finidat file for SSP future scenarios. And fix some of the namelist picking for finidat files, especially for: 2003, 2010, and 2015.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Fixes #3799 -- clm6_0_cam7.0 tuning mode is NOT getting the right parameter file
+  Fixes #3824 -- Change n_melt_glcmex to 1 for clm6_0
+  Fixes #3826 -- Add an IC file for 2015 for ISSP/CMIP6 cases
+  Fixes #3835 -- 2010 finidat files not being used because not listed in init_interp_sim_years
+  Fixes #3836 -- 2003 finidat not working correctly, needs do_transient_pfts==TRUE
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+   n_melt_glcmec is now 1 for clm6_0 rather than 10 for everything else
+   coupled parameter file gets picked when LND_TUNING_MODE == clm6_0_cam7.0
+
+Changes to the datasets (e.g., streams, surface or initial files):
+   finidat file for clm4_5/clm5_0 2015 start
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Limited work to make the finidat picking funciton better
+
+Changes to tests or testing:
+   Removed the need to explicitly set an finidat file for a few testmods
+
+Contributors: @slevis-lmwg
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes (for clm6_0 and possibly some clm4_5)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6_0, and some clm4_5 for finidat file picking
+    - what platforms/compilers: All
+    - nature of change: slightly modified climate
+     clm6_0:
+       n_melt_glcmec changes answers for all simulations
+       parameter file changes answers when coupled (or using a CAM lnd_tuning_mode)
+       finidat picking changes cases affected
+     clm4_5:
+       using single precision n_melt_glcmec may have a small change to answers
+       finidat picking changes cases affected
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - CESM_dev issue number(s): 304 (turns n_melt_glcmec=1 in a coupled simulation)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  @3810 -- Important coupled model final answer changes: param file and n_melt_glcmec
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.026
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Wed Mar 18 01:12:09 AM MDT 2026
