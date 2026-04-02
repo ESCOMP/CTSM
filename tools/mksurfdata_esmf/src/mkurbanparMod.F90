@@ -302,7 +302,7 @@ contains
     ! Regrid data_i to data_o
     if (allocated(data_o)) deallocate(data_o)
     allocate(data_o(max_regions, ns_o), stat=ier)
-    if (ier/=0) call shr_sys_abort('error allocating data_i(max_regions, ns_o)')
+    if (ier/=0) call shr_sys_abort('error allocating data_o(max_regions, ns_o)')
     ! This regridding could be done either with or without fracarea normalization,
     ! because we just use it to find a dominant value. We use nonorm because we already
     ! have a nonorm mapper for the sake of PCTURB and this way we don't need to make a
