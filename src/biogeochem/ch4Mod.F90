@@ -3334,7 +3334,6 @@ contains
           aerecond = area_tiller * rootfr(j) * diffus_aere / (z(j)*params_inst%rob)
           ! Add in boundary layer resistance
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
-                    
           aere(j) = aerecond * (conc_ch4(j)/watsat(j)/k_h_cc - c_atm(1)) / dz(j) ![mol/m3-total/s]
           !ZS: Added watsat & Henry's const.
           aere(j) = max(aere(j), 0._r8) ! prevent backwards diffusion
