@@ -15,19 +15,21 @@ If you're confident in your changes, or you're _not_ confident in your ability t
 .. _building-the-documentation:
 
 ## Building the documentation
-We strongly suggest building the documentation on your personal computer before submitting a pull request, so that you can preview what your changes will look like. The recommended way to do this is using the `doc-builder` tool in conjunction with a "containerized" version of some required software.
+We strongly suggest building and previewing the documentation before submitting a pull request, so that you can check what your changes will look like. The recommended way to do this is using the `doc-builder` tool in conjunction with a "containerized" version of some required software.
 
 ### Directories
 You will need a place to build the documentation. It's fine if that doesn't exist; the build tool will make it for you. The only restriction is that, at least for the recommended method described here, **your build directory must be somewhere in your CTSM clone**. (We recommend starting the name of your build directory with `_build` because CTSM knows to ignore such directories when it comes to `git`.) The instructions here assume you want to do your build in `doc/_build/`.
 
-### One-time setup
-You will need to have some software installed on your computer in order to build and the documentation and view the results:
+### One-time setup for local builds
+**The simplest way to build the CTSM documentation is on Casper.** If you prefer to work locally on your own computer, you will need to have some software installed in order to build the documentation and view the results:
 - :ref:`building-docs-prereqs-mac`
 - :ref:`building-docs-prereqs-windows`
 
 ### Building the docs
 All you need to do to build the docs with our recommended method is
 ```shell
+module load podman  # (Only if on Casper)
+
 cd doc
 ./build_docs -b _build -c -d
 ```
@@ -44,16 +46,41 @@ The `-d` means "run using the container." If you're not using the container and 
 
 Note that there is a menu in the lower left of the webpage that lets readers switch between different versions of the documentation. The links to versions in this menu will not work when using the build command given above. If you wish to preview this version switching functionality, see :ref:`building-docs-multiple-versions`.
 
-The process for viewing your build in a web browser differs depending on what kind of computer you have.
+The process for viewing your build in a web browser differs depending on where you built the docs.
 
-### Mac
+### Remote build (e.g., Casper)
+Open a terminal on your local machine and do this:
+```shell
+# user@server e.g. samrabin@casper.hpc.ucar.edu
+ssh user@server echo $((10000 + $(id -u) % 50000))
+```
+
+This will print an integer that we will call `YOUR_PORT`.
+
+Then open a new SSH connection to the server like so, replacing `YOUR_PORT` with the integer you got above:
+```shell
+ssh -L YOUR_PORT:localhost:YOUR_PORT user@server  # e.g., samrabin@casper.hpc.ucar.edu
+```
+
+Once that's connected, we're going to spin up a web server. It's best to do this on a compute node rather than a login node. For Casper, use the `qinteractive` command to open an interactive session on a compute node. (Find more info about `qinteractive` [here](https://ncar-hpc-docs.readthedocs.io/en/latest/pbs/#qinteractive).)
+
+Once your interactive compute session is open, start the web server in it like so (again replacing `YOUR_PORT`):
+```shell
+cd /path/to/your/ctsm/repo
+cd doc/_build/html
+python3 -m http.server YOUR_PORT
+```
+
+Now you're ready to view your documentation! Just open a web browser on your computer and navigate to `http://localhost:YOUR_PORT`. You should see a rendered version of the documentation that you can browse as usual.
+
+### Local build: Mac
 
 You can open your build of the documentation in your default browser with
 ```shell
 open _build/html/index.html
 ```
 
-### Windows (Ubuntu VM)
+### Local build: Windows (Ubuntu VM)
 
 Assuming you installed the WSL Utilities in the :ref:`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
 ```shell
