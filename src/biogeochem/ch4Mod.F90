@@ -2152,7 +2152,6 @@ contains
 
             call get_jwt (bounds, num_soilc, filter_soilc, jwt(begc:endc), &
                  soilstate_inst, waterstatebulk_inst, temperature_inst)
-            
             do fc = 1, num_soilc
                c = filter_soilc(fc)
                zwt_ch4_unsat(c) = zi(c,jwt(c))
