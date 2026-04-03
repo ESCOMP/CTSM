@@ -360,11 +360,13 @@ A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
 
 .. code-block:: Tcsh
 
-    #!/bin/tcsh
+    #!/bin/bash
     #PBS -N your_job_name
     #PBS -A your_project_code
     #PBS -l walltime=01:00:00
     #PBS -q main
+    #PBS -r n
+    #PBS -S /bin/bash
     #PBS -j oe
     #PBS -k eod
     #PBS -m abe
