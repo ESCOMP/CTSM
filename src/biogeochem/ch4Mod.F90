@@ -1167,18 +1167,18 @@ contains
          units='mol/m^3', readvar=readvar, &
          interpinic_flag='interp', data=this%conc_o2_surface_layer_unsat_col)
     
-    call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_UNSAT', &
-         xtype=ncd_double, dim1name='column', &
-         long_name='surface soil layer thickness', units='m', &
-         readvar=readvar, &
-         interpinic_flag='interp', data=this%surface_layer_thickness_unsat_col)
-
     call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_SAT', &
          xtype=ncd_double, dim1name='column', &
          long_name='surface water layer thickness', units='m', &
          readvar=readvar, &
          interpinic_flag='interp', data=this%surface_layer_thickness_sat_col)
     
+    call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_UNSAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='surface soil layer thickness', units='m', &
+         readvar=readvar, &
+         interpinic_flag='interp', data=this%surface_layer_thickness_unsat_col)
+
     call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='lagged saturation status of layer in unsat. zone', units='', &
@@ -1316,6 +1316,11 @@ contains
     real(r8) :: f_uninundated_col(bounds%begc:bounds%endc)     ! 1 - finundated_col
     real(r8) :: f_uninundated_new_col(bounds%begc:bounds%endc) ! f_uninundated after column adjustments
     real(r8) :: adjustment_one_level(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_sat_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_sat_new_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_unsat_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_unsat_new_col(bounds%begc:bounds%endc)
+
     integer :: j, c
     integer :: begc, endc
 
@@ -1358,29 +1363,29 @@ contains
          clump_index = clump_index, &
          var = this%finundated_lag_col(begc:endc))
 
-    call column_state_updater%update_column_state_no_special_handling( &
-         bounds = bounds, &
-         clump_index = clump_index, &
-         var = this%surface_layer_thickness_sat_col(begc:endc), &
-         fractional_area_old = this%finundated_col(begc:endc), &
-         fractional_area_new = finundated_new_col(begc:endc))
+    ! Because surface layer thicknesses can differ between landunit types, the volume is passed rather than the fractional area.  Passing solely the fractional area is acceptable when layer thicknesses are identical for different landunits, i.e. for the soil layers.
+    surface_layer_volume_sat_col(begc:endc) = &
+         this%surface_layer_thickness_sat_col(begc:endc)*this%finundated_col(begc:endc)
 
-    call column_state_updater%update_column_state_no_special_handling( &
-         bounds = bounds, &
-         clump_index = clump_index, &
-         var = this%surface_layer_thickness_unsat_col(begc:endc), &
-         fractional_area_old = f_uninundated_col(begc:endc), &
-         fractional_area_new = f_uninundated_new_col(begc:endc))
+    surface_layer_volume_unsat_col(begc:endc) = &
+         this%surface_layer_thickness_unsat_col(begc:endc)*f_uninundated_col(begc:endc)
+
+    surface_layer_volume_sat_new_col(begc:endc) = &
+         this%surface_layer_thickness_sat_col(begc:endc)*finundated_new_col(begc:endc)
+
+surface_layer_volume_unsat_new_col(begc:endc) = &
+         this%surface_layer_thickness_unsat_col(begc:endc)*f_uninundated_new_col(begc:endc)
 
     this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
 
-        call column_state_updater%update_column_state_no_special_handling( &
+    call column_state_updater%update_column_state_no_special_handling( &
          bounds = bounds, &
          clump_index = clump_index, &
          var    = this%conc_ch4_surface_layer_sat_col(begc:endc), &
-         fractional_area_old = this%finundated_col(begc:endc), &
-         fractional_area_new = finundated_new_col(begc:endc), &
+         fractional_area_old = surface_layer_volume_sat_col(begc:endc), &
+         fractional_area_new = surface_layer_volume_sat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
+
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
@@ -1391,9 +1396,10 @@ contains
          bounds = bounds, &
          clump_index = clump_index, &
          var    = this%conc_ch4_surface_layer_unsat_col(begc:endc), &
-         fractional_area_old = f_uninundated_col(begc:endc), &
-         fractional_area_new = f_uninundated_new_col(begc:endc), &
+         fractional_area_old = surface_layer_volume_unsat_col(begc:endc), &
+         fractional_area_new = surface_layer_volume_unsat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
+
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
