@@ -1389,7 +1389,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
-            adjustment_one_level(c) * this%surface_layer_thickness_sat_col(c) * catomw
+            adjustment_one_level(c) * catomw
     end do
 
     call column_state_updater%update_column_state_no_special_handling( &
@@ -1403,7 +1403,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
-            adjustment_one_level(c) * this%surface_layer_thickness_unsat_col(c) * catomw
+            adjustment_one_level(c) * catomw
     end do
 
     do j = 1, nlevsoi
