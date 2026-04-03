@@ -2540,7 +2540,7 @@
       <option name="comment">Simple test to make sure the basic Fates-SP compset works"</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -2549,7 +2549,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist--clm/matrixcnOn">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/default--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -2557,7 +2557,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat last SMS_D_Ld1...cplhist test with matrixcnOn"</option>
+      <option name="comment">Repeat last SMS_D_Ld1...Spinup test with matrixcnOn"</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_PS" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode--clm/nofireemis">
