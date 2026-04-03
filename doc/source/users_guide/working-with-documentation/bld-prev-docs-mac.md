@@ -1,12 +1,18 @@
-.. _building-docs-prereqs-mac:
+.. _bld-prev-docs-mac:
 
-# Initial setup: Mac
+# Building and previewing the documentation on Mac
+
+.. contents::
+   :depth: 1
+   :local:
+
+## Initial Mac setup
 
 Note that you may need administrator privileges on your Mac for the installation steps detailed here.
 
 .. _building-docs-git-tools:
 
-## Python
+### Python
 To test whether you already have the required Python version, open a Terminal window and try the following:
 ```shell
 python3 --version
@@ -23,7 +29,7 @@ If instead `python3` gives "command not found," or the version is less than 3.7,
 
 .. _aliasing-python3-to-python:
 
-### Aliasing `python3` to `python`
+#### Aliasing `python3` to `python`
 Try the same command as above, but instead of `python3` just do `python` (no number). If that version is 3.7 or later, you can tell your Mac that when you say `python3` you want it to use `python`:
 ```bash
 echo alias python3="$(which python)" >> ~/.bashrc
@@ -34,7 +40,7 @@ This will make it so that bash scripts, like what we use to build our docs, know
 
 If you were able to do this, you can continue to :ref:`additional-reqs`. If not, continue to the next section.
 
-### Conda
+#### Conda
 If your `python` doesn't exist or is too old, we suggest using Python via Conda. First, check whether you already have Conda installed: :ref:`do-i-already-have-conda` If not, install Conda (:ref:`installing-conda-for-docs`), then come back here.
 
 Try this to check the Python version in the `base` Conda environment:
@@ -46,11 +52,11 @@ Repeat with all your Conda environments as needed until you find one that's Pyth
 
 .. _additional-reqs:
 
-## Additional requirements
+### Additional requirements
 
 .. _container-or-conda-mac:
 
-### Container software or Conda environment
+#### Container software or Conda environment
 We recommend building the software in what's called a container—basically a tiny little operating system with just some apps and utilities needed by the doc-building process. This is nice because, if we change the doc-building process in ways that require new versions of those apps and utilities, that will be completely invisible to you. You won't need to manually do anything to update your setup to work with the new process; it'll just happen automatically.
 
 We recommend using the container software Podman, which you can install with Homebrew. (:ref:`install-homebrew-mac`)
@@ -66,7 +72,7 @@ You may not be able to install Podman or any other containerization software, so
 
 .. _docs-git-tools:
 
-### Git tools
+#### Git tools
 Note: Do this section after handling Python, because the Python installation process might bring the Git tools with it.
 
 To test whether you have the required Git tools already, open a Terminal window and try the following:
@@ -80,22 +86,22 @@ If either of those fail with "command not found," you'll need to install them. T
 2. Use Homebrew to [install Git](https://formulae.brew.sh/formula/git#default), if needed.
 3. Use Homebrew to [install Git LFS](https://formulae.brew.sh/formula/git-lfs#default), if needed.
 
-## Frequently-asked questions
+### Frequently-asked questions
 
 .. _what-kind-of-mac-chip:
 
-### What kind of chip does my Mac have?
+#### What kind of chip does my Mac have?
 For certain steps in this installation process, you may need to know whether your Mac has an Intel (`x86_64`) or an Apple Silicon (`arm64`) chip. If you don't know, visit Apple's [Mac computers with Apple silicon](https://support.apple.com/en-us/116943) page for instructions.
 
 .. _install-homebrew-mac:
 
-### How do I install Homebrew?
+#### How do I install Homebrew?
 1. Install Homebrew using the instructions at https://brew.sh/. Make sure to follow the instructions during this process for adding Homebrew to your path.
 1. Check your installation by making sure that `brew --version` doesn't error.
 
 .. _do-i-already-have-conda:
 
-### Do I already have Conda installed?
+#### Do I already have Conda installed?
 You can check whether you have Conda installed like so:
 ```shell
 conda env list
@@ -103,8 +109,8 @@ conda env list
 
 If that shows you something like
 ```
-# conda environments:
-#
+## conda environments:
+##
 base           /Users/you/...
 another_env    /Users/you/.../...
 ...
@@ -114,10 +120,26 @@ instead of the "command not found" error, then you do have conda installed! (Not
 
 .. _installing-conda-for-docs:
 
-### How do I install Conda?
+#### How do I install Conda?
 We suggest installing Conda, if needed, via Miniforge:
 
 1. [Download Miniforge](https://conda-forge.org/download/) and install it. (:ref:`what-kind-of-mac-chip`) You can also [install Miniforge via Homebrew](https://formulae.brew.sh/cask/miniforge#default), if you already have that installed. (:ref:`install-homebrew-mac`)
 2. Activate Conda permanently in your shell by opening a new Terminal window and doing `conda init "$(basename $SHELL)"`.
 
 You should now have `conda` and an up-to-date version of `python3` available, although will need to open another new Terminal window for it to work.
+
+## Building docs on Mac
+Open a terminal window and navigate to your CTSM checkout. Then do:
+
+.. mdinclude:: embed-build-cmd.md
+
+See :ref:`container-or-conda-mac` for more information on those two methods.
+
+## Previewing docs on Mac
+
+You can open your build of the documentation in your default browser with
+```shell
+open _build/html/index.html
+```
+
+.. mdinclude:: embed-preview-menu.md

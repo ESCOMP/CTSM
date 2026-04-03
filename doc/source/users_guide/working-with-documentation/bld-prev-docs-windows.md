@@ -1,22 +1,28 @@
-.. _building-docs-prereqs-windows:
+.. _bld-prev-docs-windows:
 
-# Initial setup: Windows
+# Building and previewing the documentation on Windows
+
+.. contents::
+   :depth: 1
+   :local:
+
+## Initial Windows setup
 
 Note that you may need administrator privileges on your PC (or approval from your IT department) for various steps here.
 
 .. _install-wsl:
 
-## Install Linux subsystem
+### Install Linux subsystem
 
 We don't support building our documentation in the native Windows command-line environment. Thus, you will need to install a little version of Linux inside a virtual machine (VM) to use instead. The process for doing this varies depending on how tightly the installation process is controlled on your computer.
 
-### NCAR computers
+#### NCAR computers
 
 Please follow the [Windows Subsystem for Linux (WSL) setup instructions](https://wiki.ucar.edu/pages/viewpage.action?pageId=514032264&spaceKey=CONFIGMGMT&title=Setup) on the UCAR Wiki. In the step about installing a Linux distribution, choose Ubuntu.
 
 Feel free to peruse the [overall WSL documentation](https://wiki.ucar.edu/spaces/CONFIGMGMT/pages/514032242/Windows+Subsystem+for+Linux) on and linked from the UCAR Wiki for additional information.
 
-### Non-NCAR computers
+#### Non-NCAR computers
 
 If your computer is managed by an organization other than NCAR, please check with your IT department or equivalent for instructions on installing Windows Subsystem for Linux (WSL) and Ubuntu. Otherwise, follow these instructions:
 
@@ -30,45 +36,45 @@ Once Ubuntu is working and open, you'll be asked to create a new UNIX username a
 
 .. _windows-docs-ubuntu-utilities:
 
-## Install utilities
+### Install utilities
 Enter the following commands **into your Ubuntu terminal** to install any missing utilities we need (the `which ... ||` should make it so that no installation happens if you already have it):
 ```shell
-# Refresh the list of available software
+## Refresh the list of available software
 sudo apt-get update
 
-# make: Part of the docs-building process
+## make: Part of the docs-building process
 which make || sudo apt-get -y install make
 
-# git and git-lfs, needed for getting and contributing to the CTSM code and docs
+## git and git-lfs, needed for getting and contributing to the CTSM code and docs
 which git || sudo apt-get -y install git
 which git-lfs || sudo apt-get -y install git-lfs
 
-# WSL utilities, which will give us the wslview command for opening HTML pages in a Windows browser
+## WSL utilities, which will give us the wslview command for opening HTML pages in a Windows browser
 which wslview || sudo apt-get -y install wslu
 ```
 
 .. _container-or-conda-windows:
 
-## Install container software or Conda environment
+### Install container software or Conda environment
 
 We recommend building the software in what's called a container—basically a tiny little operating system with just some apps and utilities needed by the doc-building process. This is nice because, if we change the doc-building process in ways that require new versions of those apps and utilities, that will be completely invisible to you. You won't need to manually do anything to update your setup to work with the new process; it'll just happen automatically.
 
 For builds in WSL (Ubuntu), we recommend using the container software Docker. You can install it in Ubuntu like so:
 
 ```shell
-# If needed, download and run the Docker installation script.
-# Ignore the message saying "We recommend using Docker Desktop for Windows."
-# The script will make you wait 20 seconds to make sure this is want you want,
-# and then it should continue automatically.
+## If needed, download and run the Docker installation script.
+## Ignore the message saying "We recommend using Docker Desktop for Windows."
+## The script will make you wait 20 seconds to make sure this is want you want,
+## and then it should continue automatically.
 which docker || curl -fsSL https://get.docker.com -o get-docker.sh
 which docker || sudo sh ./get-docker.sh
 
-# Set up the docker "group," if needed, and add your username to it.
+## Set up the docker "group," if needed, and add your username to it.
 sudo groupadd docker  # Create docker group if it doesn't exist
 sudo usermod -aG docker $USER  # Add your user to the docker group
 newgrp docker  # Apply the new group membership (avoids needing to log out and back in)
 
-# Make sure it worked: This should print a "Hello from Docker!" message
+## Make sure it worked: This should print a "Hello from Docker!" message
 docker run hello-world
 ```
 
@@ -79,10 +85,10 @@ You may not be able to install Docker or any other containerization software, so
 
 .. _editing-text-files-wsl:
 
-## Editing documentation files
+### Editing documentation files
 If you prefer using an old-school text editor like `vim`, it's probably already installed in your Ubuntu VM, or can be installed with `sudo apt-get -y install EDITOR_NAME`. If you prefer a more user-friendly interface, there are several options. Note that **all commands in this section are to be run in your Ubuntu VM, not a Windows terminal**.
 
-### In a Windows app (recommended)
+#### In a Windows app (recommended)
 If you installed `wslview` in the instructions above, you can edit files by doing 
 ```shell
 wslview path/to/file_i_want_to_edit.rst
@@ -103,7 +109,7 @@ If you use [VS Code](https://code.visualstudio.com/), you can install the [WSL V
 code path/to/file-or-folder
 ```
 
-### In an Ubuntu app (not recommended)
+#### In an Ubuntu app (not recommended)
 
 You can also install a user-friendly text editor in Ubuntu. This may be slower and have unexpected differences in behavior from what you expect from Windows apps, but it does work. For example:
 - [gedit](https://gedit-text-editor.org/): `sudo apt-get install -y gedit`
@@ -112,9 +118,9 @@ You can also install a user-friendly text editor in Ubuntu. This may be slower a
 
 You can use all of those to open and edit files, but Kate and VS Code let you open entire folders, which can be convenient. In any case, you'd do `EDITOR_NAME path/to/thing/youre/editing` to open it, where `EDITOR_NAME` is `gedit`, `kate`, or `code`, respectively.
 
-## Troubleshooting
+### Troubleshooting
 
-### "Permission denied" error
+#### "Permission denied" error
 
 If you get this error, it may be a result of opening Ubuntu as an administrator (e.g., by right-clicking on its icon and choosing "Run as administrator.") Try not doing that, although this will result in you needing to get a new copy of CTSM to work in. 
 
@@ -125,6 +131,26 @@ chown -R $USER:$USER $HOME
 
 If that also gives a permission error, you may need to put `sudo` at the start of the command.
 
-### "The host 'wsl$' was not found in the list of allowed hosts"
+#### "The host 'wsl$' was not found in the list of allowed hosts"
 
 You may see this warning in a dialog box after trying to open a file with `wslview`, `explorer.exe`, or something else. Check "Permanently allow host 'wsl$'" and then press "Allow".
+
+## Building docs on Windows (Ubuntu VM)
+Open a WSL terminal window and navigate to your CTSM checkout. Then do:
+
+.. mdinclude:: embed-build-cmd.md
+
+See :ref:`container-or-conda-windows` for more information on those two methods.
+
+## Previewing docs on Windows (Ubuntu VM)
+Assuming you installed the WSL Utilities in the :ref:`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
+```shell
+wslview _build/html/index.html
+```
+If you didn't, you can do
+```shell
+explorer.exe $(wslpath -w _build/html/index.html)
+```
+These both do the same thing, but the `wslview` method is simpler. Either way, at least the first time you do this, it will open a window asking which app you'd like to view the HTML file in. Choose a browser like Microsoft Edge or Chrome. At the bottom of the window, you can then choose whether you always want to open HTML files using the selected app or just this once.
+
+.. mdinclude:: embed-preview-menu.md
