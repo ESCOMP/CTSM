@@ -2,7 +2,20 @@
 
 # Common doc build errors and how to handle them
 
+.. contents::
+   :depth: 2
+   :local:
+
+.. _common-doc-builder-errors:
+
 ## Common docs errors: doc-builder
+
+### "RuntimeError: No compatible container software found: docker, podman"
+
+You tried to build the documentation using our container (`./build_docs ... -d`) but didn't have any software running that could handle the container. Try again after starting up container software according to the instructions for your platform:
+- :ref:`bld-prev-docs-casper` **(recommended)**
+- :ref:`bld-prev-docs-mac`
+- :ref:`bld-prev-docs-windows`
 
 .. _common-rst-errors:
 
@@ -16,7 +29,100 @@ Like Python, reStructuredText is very particular about how lines are indented. I
 ```
 /path/to/file.rst:102: ERROR: Unexpected indentation. [docutils]
 ```
-indicates that line 102 is indented but not in a way that reStructuredText expects.
+indicates that line 102 is indented but not in a way that reStructuredText expects. There are lots of potential causes.
+
+#### Inconsistent indentation
+
+reStructuredText is whitespace-sensitive. Mixed tabs and spaces, or inconsistent indentation levels within the same block, will trigger this error. Use spaces only, and keep indentation consistent throughout a block (typically 3–4 spaces for directives).
+
+**Incorrect** (mixed indentation levels):
+
+```rst
+.. note::
+
+   This line uses 3 spaces.
+    This line uses 4 spaces and will cause an error.
+```
+
+**Correct:**
+
+```rst
+.. note::
+
+   This line uses 3 spaces.
+   This line also uses 3 spaces.
+```
+
+#### Indented content with no preceding context
+
+If a block appears indented but there is no list item, directive, or other block element directly above it, Sphinx has no way to interpret the indentation. Either remove the indentation or add the appropriate introducing element.
+
+**Incorrect:**
+
+```rst
+This is a normal paragraph.
+
+    This indented block has no context and will cause an error.
+```
+
+**Correct** (remove the indentation):
+
+```rst
+This is a normal paragraph.
+
+This line is at the same level and causes no error.
+```
+
+**Correct** (add a introducing element):
+
+```rst
+This is a normal paragraph::
+
+    Now this indented block is valid as a literal block, such as you might use for code.
+```
+
+#### Continuation of a list item broken by a blank line
+
+In rST, a blank line ends a list item. If you indent content after a blank line following a list item, Sphinx may misread it. To include multi-paragraph list items, indent all continuation paragraphs to match the list item content.
+
+**Incorrect:**
+
+```rst
+- First item.
+
+    This paragraph looks like it continues the list item, but the
+    indentation level doesn't match, causing an error.
+
+- Second item.
+```
+
+**Correct:**
+
+```rst
+- First item.
+
+  This paragraph correctly continues the list item using
+  consistent 2-space indentation.
+
+- Second item.
+```
+
+#### Misformatted directives
+
+Directives require a blank line between the directive header (and any options) and the directive body. Missing or extra blank lines inside a directive block are a frequent source of this error. Double-check that your directive follows this structure:
+
+```
+.. directive-name:: argument
+   :option: value
+
+   Body content starts here, indented consistently.
+```
+
+#### General Debugging Tips
+
+- **Check the line number** in the error message. Sphinx usually points to the exact line where the unexpected indentation was detected, but the *cause* is often one or two lines above it.
+- **Simplify the block** by temporarily removing content to isolate which element is triggering the error.
+- **Avoid tabs.** Configure your editor to insert spaces instead for `.rst` files, if possible.
 
 ### "WARNING: Block quote ends without a blank line; unexpected unindent"
 
