@@ -67,6 +67,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_radiation_model
    use clm_varctl        , only : fates_electron_transport_model
    use clm_varctl        , only : use_fates_inventory_init
+   use clm_varctl        , only : use_fates_dbh_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
@@ -411,6 +412,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
      integer                                        :: pass_inventory_init
+     integer                                        :: pass_dbh_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_tree_damage
@@ -654,6 +656,12 @@ module CLMFatesInterfaceMod
 
         call set_fates_ctrlparms('inventory_ctrl_file',cval=fates_inventory_ctrl_filename)
 
+        if(use_fates_dbh_init) then
+           pass_dbh_init = 1
+        else
+           pass_dbh_init = 0
+        end if
+        call set_fates_ctrlparms('use_dbh_init',ival=pass_dbh_init)
 
         ! Check through FATES parameters to see if all have been set
         call set_fates_ctrlparms('check_allset')

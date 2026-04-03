@@ -880,6 +880,14 @@ Full pathname to the inventory initialization control file.
 (Only relevant if FATES is on).
 </entry>
 
+
+<entry id="use_fates_dbh_init" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Initialize cohorts at coldstart with diameter at breast height instead of density
+(Applies only if use_fates_nocomp=.true.)
+(Only relevant if FATES is on).
+</entry>
+
 <entry id="fates_history_dimlevel" type="integer(2)" category="physics"
        group="clm_inparm" valid_values="0,1,2" >
   Setting for what types of FATES history to be allocate and

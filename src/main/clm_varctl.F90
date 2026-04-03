@@ -348,6 +348,7 @@ module clm_varctl
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
   logical, public            :: use_fates_ed_prescribed_phys = .false.  ! true => prescribed physiology
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
+  logical, public            :: use_fates_dbh_init = .false.            ! true => initialize cohorts with dbh instead of density (nocomp only)
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
   logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
