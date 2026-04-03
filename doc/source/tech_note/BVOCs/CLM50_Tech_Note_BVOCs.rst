@@ -25,14 +25,14 @@ where the LDF activity factor (:math:`\gamma _{P\_ LDF}` ) is specified as a fun
 
 The values for each emission factor :math:`\epsilon _{i,\, j}` are now available for each of the plant functional types in the CLM and each chemical compound. This information is provided in an external file, allowing for more frequent and easier updates.
 
-The impact of drought on isoprene emissions is based on the theory proposed by Potosnak et al. (2014). Specifically, isoprene emissions are expected to increase under mild to moderate drought because drought raises leaf temperature, which stimulates isoprene emissions. Under severe drought, however, isoprene emissions are inhibited because substrate supply becomes constrained. Because the effect of leaf temperature is already represented by the leaf temperature activity factor :math: `\gamma _{T}` and its influence on isoprene emissions, only the inhibitory effect of severe drought (substrate supply impact, :math: `\gamma _{sub}` ) is parameterized as:
+The impact of drought on isoprene emissions is based on the theory proposed by Potosnak et al. (2014). Specifically, isoprene emissions are expected to increase under mild to moderate drought because drought raises leaf temperature, which stimulates isoprene emissions. Under severe drought, however, isoprene emissions are inhibited because substrate supply becomes constrained. Because the effect of leaf temperature is already represented by the leaf temperature activity factor :math:`\gamma _{T}` and its influence on isoprene emissions, only the inhibitory effect of severe drought (substrate supply impact, :math:`\gamma _{sub}` ) is parameterized as:
 
 .. math::
    :label: drought factor
 
-   \gamma _{sub} = 1 / \left(1+b_{1} exp(a1 (\beta -0.2)) \right)
+   \gamma _{sub} =\frac{1}{1+b_{1} e^{a1 (\beta -0.2)}}
 
-where a1=-7.45 and b1=3.26 are empirical parameters (described in Wang et al., 2022).
+where :math:`a1=-7.45` and :math:`b1=3.26` are empirical parameters (described in Wang et al., 2022).
 
 Compared with Guenther et al. (2012), updates have been made to represent isoprene emissions from high-latitude plants, specifically boreal broadleaf deciduous shrubs (BBDS) and C3 Arctic grass (C3AG), in order to account for acclimation processes. These updates are based on leaf-enclosure and in situ measurements conducted at Toolik Field Station in Alaska, USA (Wang et al., 2024a, 2024b).
 For BBDS, the isoprene emission factor is adjusted according to the mean temperature of the previous day as:
@@ -40,26 +40,26 @@ For BBDS, the isoprene emission factor is adjusted according to the mean tempera
 .. math::
    :label: boreal shrub adjustment factor
 
-   E_{opt\_bbds} = 7.9 exp(0.22 (T_{24}-297.15) )
+   E_{opt\_bbds} = 7.9 e^{0.22 (T_{24}-297.15)}
 
-where :math: `T_{24}` denotes the mean air temperature of the preceding day (Wang et al., 2024a).
-For C3AG, the isoprene emission factor responds over a longer timescale of 10 days (Wang et al., 2024b) and is parameterized as a function of the mean air temperature over the preceding 10 days (:math: `T_{240}`):
+where :math:`T_{24}` denotes the mean air temperature of the preceding day (Wang et al., 2024a).
+For C3AG, the isoprene emission factor responds over a longer timescale of 10 days (Wang et al., 2024b) and is parameterized as a function of the mean air temperature over the preceding 10 days (:math:`T_{240}`):
 
 .. math::
    :label: C3 arctic grass adjustment factor
 
-   E_{opt\_C3AG} = exp(0.22 (T_{240}-288.15) )
+   E_{opt\_C3AG} = e^{0.22 (T_{240}-288.15)}
 
 In addition, a dynamic temperature response curve for C3AG depends on recent temperature history as:
 
 .. math::
    :label: C3 arctic grass leaf temperature factor
 
-   \gamma_{T\_C3AG} = E_{opt\_C3AG} exp((C_{C3AG}/R (1/303.15 - 1/T_{leaf})))
+   \gamma_{T\_C3AG} = E_{opt\_C3AG} e^{(C_{C3AG}/R (1/303.15 - 1/T_{leaf}))}
 
-where :math: `T_{leaf}` denotes the leaf temperature and :math: `C_{C3AG}` is the parameter controlling the isoprene temperature response of C3AG and changes varies with :math `T_{240}` as:
+where :math:`T_{leaf}` denotes the leaf temperature and :math:`C_{C3AG}` is the parameter controlling the isoprene temperature response of C3AG and changes varies with :math `T_{240}` as:
 
 .. math::
    :label: C3 arctic grass parameter
 
-   C_{C3AG} = 95 + 9.5 exp(0.53 (288.15-T_{240}))
+   C_{C3AG} = 95 + 9.5 e^{0.53 (288.15-T_{240})}
