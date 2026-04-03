@@ -1316,6 +1316,10 @@ contains
     real(r8) :: f_uninundated_col(bounds%begc:bounds%endc)     ! 1 - finundated_col
     real(r8) :: f_uninundated_new_col(bounds%begc:bounds%endc) ! f_uninundated after column adjustments
     real(r8) :: adjustment_one_level(bounds%begc:bounds%endc)
+    ! The following surface_layer_* variables explicitly account for the 
+    ! fact that surface layer thicknesses may differ across column types;
+    ! in this case, the fractional volume, rather than the fractional
+    ! area (in which the layer thicknesses are implicit) is passed to the column state updater.
     real(r8) :: surface_layer_volume_sat_col(bounds%begc:bounds%endc)
     real(r8) :: surface_layer_volume_sat_new_col(bounds%begc:bounds%endc)
     real(r8) :: surface_layer_volume_unsat_col(bounds%begc:bounds%endc)
@@ -1385,7 +1389,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          fractional_area_old = surface_layer_volume_sat_col(begc:endc), &
          fractional_area_new = surface_layer_volume_sat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
-
+    ! when fractional volume is used to redistribute mass, layer
+    ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
@@ -1399,7 +1404,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          fractional_area_old = surface_layer_volume_unsat_col(begc:endc), &
          fractional_area_new = surface_layer_volume_unsat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
-
+    ! when fractional volume is used to redistribute mass, layer
+    ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
     do c = bounds%begc, bounds%endc
        this%dyn_ch4bal_adjustments_col(c) = &
             this%dyn_ch4bal_adjustments_col(c) + &
