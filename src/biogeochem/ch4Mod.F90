@@ -1551,6 +1551,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
      params_inst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
      ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
      !params_inst%vmax_ch4_oxid=tempr
+     
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -2158,6 +2159,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
 
             call get_jwt (bounds, num_soilc, filter_soilc, jwt(begc:endc), &
                  soilstate_inst, waterstatebulk_inst, temperature_inst)
+            
             do fc = 1, num_soilc
                c = filter_soilc(fc)
                zwt_ch4_unsat(c) = zi(c,jwt(c))
@@ -2959,6 +2961,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
                k_m_eff = k_m_unsat
                vmax_eff = vmax_oxid_unsat
             end if
+            
             porevol = max(watsat(c,j) - h2osoi_vol(c,j), 0._r8)
             h2osoi_vol_min = min(watsat(c,j), h2osoi_vol(c,j))
             if (j <= jwt(c) .and. smp_l(c,j) < 0._r8) then
@@ -2991,6 +2994,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
 
             ch4_oxid_depth(c,j) = oxid_a
             o2_oxid_depth(c,j) = ch4_oxid_depth(c,j) * 2._r8
+            
          end do
       end do
 
@@ -3340,6 +3344,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
           aerecond = area_tiller * rootfr(j) * diffus_aere / (z(j)*params_inst%rob)
           ! Add in boundary layer resistance
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
+                    
           aere(j) = aerecond * (conc_ch4(j)/watsat(j)/k_h_cc - c_atm(1)) / dz(j) ![mol/m3-total/s]
           !ZS: Added watsat & Henry's const.
           aere(j) = max(aere(j), 0._r8) ! prevent backwards diffusion
@@ -4345,6 +4350,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
                endif ! sat; 
             enddo ! fp; patch
          end do ! j; nlevsoi
+               
          ! Perform a second loop for the tridiagonal coefficients since need dp1_zp1 and dm1_z1 at each depth
          do j = -1,nlevsoi
             do fc = 1, num_methc
@@ -4422,6 +4428,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          end do
 
          if (s == 1) then  ! CH4
+            
             ! Set rt, since it depends on conc
             do j = 0,nlevsoi
                do fc = 1, num_methc
@@ -4722,6 +4729,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
 
          ! For history make sure that grnd_ch4_cond includes snow, for methane diffusivity
          grnd_ch4_cond(c) = spec_grnd_cond(c,1)
+         
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
          if (abs(errch4(c)) < 1.e-8_r8) then 
