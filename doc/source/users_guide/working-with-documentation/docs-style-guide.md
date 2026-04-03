@@ -1,4 +1,4 @@
-.. _docs-style-guide:
+(docs-style-guide)=
 
 # Documentation style guide
 

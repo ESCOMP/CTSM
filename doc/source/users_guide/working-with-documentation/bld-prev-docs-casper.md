@@ -1,10 +1,11 @@
-.. _bld-prev-docs-casper:
+(bld-prev-docs-casper)=
 
 # Building and previewing the documentation on Casper (RECOMMENDED)
 
-.. contents::
-   :depth: 1
-   :local:
+```{contents}
+:depth: 1
+:local:
+```
 
 ## Initial Casper setup
 
@@ -13,9 +14,10 @@ None! This is why Casper is the recommended method for building and previewing t
 ## Building docs on Casper
 Casper uses the Podman software for running containers like the one we recommend for building the CTSM documentation. Make sure it's enabled before building: `module load podman`. Then do:
 
-.. mdinclude:: embed-build-cmd.md
+```{include} embed-build-cmd.md
+```
 
-See the "Container software or Conda environment" sections for :ref:`Mac <container-or-conda-mac>` or :ref:`Windows <container-or-conda-windows>` for more information on these two methods.
+See the "Container software or Conda environment" sections for {ref}`Mac <container-or-conda-mac>` or {ref}`Windows <container-or-conda-windows>` for more information on these two methods.
 
 ## Previewing docs on Casper
 
@@ -58,4 +60,5 @@ If neither of the above work, you can download the `doc/_build/html` directory t
 
 ### A note about previewing the docs
 
-.. mdinclude:: embed-preview-menu.md
+```{include} embed-preview-menu.md
+```

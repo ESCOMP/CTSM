@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 ```shell
 cd doc
 ./build_docs -b _build -c -d

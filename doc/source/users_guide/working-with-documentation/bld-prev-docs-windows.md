@@ -1,16 +1,17 @@
-.. _bld-prev-docs-windows:
+(bld-prev-docs-windows)=
 
 # Building and previewing the documentation on Windows
 
-.. contents::
-   :depth: 1
-   :local:
+```{contents}
+:depth: 1
+:local:
+```
 
 ## Initial Windows setup
 
 Note that you may need administrator privileges on your PC (or approval from your IT department) for various steps here.
 
-.. _install-wsl:
+(install-wsl)=
 
 ### Install Linux subsystem
 
@@ -34,7 +35,7 @@ If Ubuntu opens in that last step but you see an error, you may need to manually
 
 Once Ubuntu is working and open, you'll be asked to create a new UNIX username and password. This doesn't have to match your Windows username and password, but do make sure to save this information somewhere secure.
 
-.. _windows-docs-ubuntu-utilities:
+(windows-docs-ubuntu-utilities)=
 
 ### Install utilities
 Enter the following commands **into your Ubuntu terminal** to install any missing utilities we need (the `which ... ||` should make it so that no installation happens if you already have it):
@@ -53,7 +54,7 @@ which git-lfs || sudo apt-get -y install git-lfs
 which wslview || sudo apt-get -y install wslu
 ```
 
-.. _container-or-conda-windows:
+(container-or-conda-windows)=
 
 ### Install container software or Conda environment
 
@@ -81,9 +82,9 @@ docker run hello-world
 You may not be able to install Docker or any other containerization software, so there is an alternative method: a Conda environment.
 
 1. Check whether you already have Conda installed by doing `which conda`. If that doesn't print anything, [install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install#linux).
-1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. :numref:`using-ctsm-pylib`.
+1. Follow the instructions for setting up the `ctsm_pylib` Conda environment in Sect. {numref}`using-ctsm-pylib`.
 
-.. _editing-text-files-wsl:
+(editing-text-files-wsl)=
 
 ### Editing documentation files
 If you prefer using an old-school text editor like `vim`, it's probably already installed in your Ubuntu VM, or can be installed with `sudo apt-get -y install EDITOR_NAME`. If you prefer a more user-friendly interface, there are several options. Note that **all commands in this section are to be run in your Ubuntu VM, not a Windows terminal**.
@@ -138,12 +139,13 @@ You may see this warning in a dialog box after trying to open a file with `wslvi
 ## Building docs on Windows (Ubuntu VM)
 Open a WSL terminal window and navigate to your CTSM checkout. Then do:
 
-.. mdinclude:: embed-build-cmd.md
+```{include} embed-build-cmd.md
+```
 
-See :ref:`container-or-conda-windows` for more information on those two methods.
+See {ref}`container-or-conda-windows` for more information on those two methods.
 
 ## Previewing docs on Windows (Ubuntu VM)
-Assuming you installed the WSL Utilities in the :ref:`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
+Assuming you installed the WSL Utilities in the {ref}`windows-docs-ubuntu-utilities` setup step, you can open your build of the documentation like so:
 ```shell
 wslview _build/html/index.html
 ```
@@ -153,4 +155,5 @@ explorer.exe $(wslpath -w _build/html/index.html)
 ```
 These both do the same thing, but the `wslview` method is simpler. Either way, at least the first time you do this, it will open a window asking which app you'd like to view the HTML file in. Choose a browser like Microsoft Edge or Chrome. At the bottom of the window, you can then choose whether you always want to open HTML files using the selected app or just this once.
 
-.. mdinclude:: embed-preview-menu.md
+```{include} embed-preview-menu.md
+```

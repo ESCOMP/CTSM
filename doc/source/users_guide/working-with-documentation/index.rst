@@ -15,8 +15,7 @@ Working with CTSM Documentation
    bld-prev-docs-windows.md
    docs-style-guide.md
    tips-for-working-with-markdown.md
-   tips-for-working-with-rst.md
+   tips-for-working-with-rst.rst
    common-docs-errors.md
    building-docs-multiple-versions.rst
    building-docs-original-wiki.md
-

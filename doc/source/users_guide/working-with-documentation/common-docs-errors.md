@@ -1,27 +1,28 @@
-.. _common-docs-errors:
+(common-docs-errors)=
 
 # Common doc build errors and how to handle them
 
-.. contents::
-   :depth: 2
-   :local:
+```{contents}
+:depth: 2
+:local:
+```
 
-.. _common-doc-builder-errors:
+(common-doc-builder-errors)=
 
 ## Common docs errors: doc-builder
 
 ### "RuntimeError: No compatible container software found: docker, podman"
 
 You tried to build the documentation using our container (`./build_docs ... -d`) but didn't have any software running that could handle the container. Try again after starting up container software according to the instructions for your platform:
-- :ref:`bld-prev-docs-casper` **(recommended)**
-- :ref:`bld-prev-docs-mac`
-- :ref:`bld-prev-docs-windows`
+- {ref}`bld-prev-docs-casper` **(recommended)**
+- {ref}`bld-prev-docs-mac`
+- {ref}`bld-prev-docs-windows`
 
-.. _common-rst-errors:
+(common-rst-errors)=
 
 ## Common docs errors: reStructuredText
 
-.. _error-unexpected-unindent:
+(error-unexpected-unindent)=
 
 ### "ERROR: Unexpected indentation"
 
@@ -126,9 +127,9 @@ Directives require a blank line between the directive header (and any options) a
 
 ### "WARNING: Block quote ends without a blank line; unexpected unindent"
 
-This is essentially the inverse of :ref:`error-unexpected-unindent`: The above line was indented but this one isn't. reStructuredText tried to interpret the indented line as a [block quote](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#lists-and-quote-like-blocks), but block quotes require a blank line after them.
+This is essentially the inverse of {ref}`error-unexpected-unindent`: The above line was indented but this one isn't. reStructuredText tried to interpret the indented line as a [block quote](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#lists-and-quote-like-blocks), but block quotes require a blank line after them.
 
-.. _inline-literal-start-without-end:
+(inline-literal-start-without-end)=
 
 ### "WARNING: Inline literal start-string without end-string"
 
@@ -145,7 +146,7 @@ This might happen, for example, if you try to put a [Markdown code block](https:
 
 ### "WARNING: Inline interpreted text or phrase reference start-string without end-string"
 
-Like :ref:`inline-literal-start-without-end`, this is probably related to having one double-backtick without another on the same line. As with that other error, it could be the result of a Markdown code block in a .rst file.
+Like {ref}`inline-literal-start-without-end`, this is probably related to having one double-backtick without another on the same line. As with that other error, it could be the result of a Markdown code block in a .rst file.
 
 ### "ERROR: Error in "code" directive: maximum 1 argument(s) allowed, 19 supplied"
 
@@ -175,14 +176,14 @@ You might have forgotten the empty line after an equation label.
 
 You might have forgotten the leading spaces for every line after `.. math::`. As a reminder, you need at least one leading space on each line.
 
-You can also get this error if you forget to surround a :ref:`cross-reference label<rst-cross-references>` with blank lines. In this case, the error message might point to lines far away from the actual problem.
+You can also get this error if you forget to surround a {ref}`cross-reference label<rst-cross-references>` with blank lines. In this case, the error message might point to lines far away from the actual problem.
 
 ### "WARNING: Failed to create a cross reference: A title or caption not found"
 This probably means you tried to `:ref:` a label that's not immediately followed by (a) a table/figure with a caption or (b) a section.
 
 ### "WARNING: undefined label"
 
-If you're sure the label you referenced actually exists, this probably means you tried to ``:numref:`` a label that's not immediately followed by a table, figure, or section (see above). Alternatively, you might have tried to ``:ref:`` an :ref:`equation<rst-math>`; in that case, use ``:eq:`` instead.
+If you're sure the label you referenced actually exists, this probably means you tried to ``:numref:`` a label that's not immediately followed by a table, figure, or section (see above). Alternatively, you might have tried to ``:ref:`` an {ref}`equation<rst-math>`; in that case, use ``:eq:`` instead.
 
 ### "WARNING: malformed hyperlink target"
 
