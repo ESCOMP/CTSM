@@ -15,16 +15,7 @@ The tools produce files that can be used for CLM4.5 and |version|. They do **NOT
 
 The list of generally important scripts and programs are as follows.
 
-1. ``./mkmapgrids/mkscripgrid.ncl`` to create SCRIP grid files for regular latitude/longitude grids.
-
-#. ``./mkmapdata`` to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
-
-#. ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
-
-.. todo::
-    Update the below, as domain files aren't needed with nuopc.
-
-#. ``$CIMEROOT/tools/mapping/gen_domain_files/gen_domain`` to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
+1. ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
 
 #. ``$CIMEROOT/tools/cprnc`` to compare two NetCDF files.
 

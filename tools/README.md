@@ -11,8 +11,6 @@ I.  General directory structure:
 
         crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
 
-        mkmapgrids ------- Create regular lat/lon SCRIP grid files
-
         site_and_regional  Scripts for handling input datasets for site and regional cases.
                            These scripts both help with creation of datasets using the
                            standard process as well as subsetting existing datasets and overwriting
