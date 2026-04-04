@@ -1,4 +1,57 @@
 ===============================================================
+Tag name: ctsm5.4.030
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri Apr  3 11:54:39 PM MDT 2026
+One-line Summary: Add FATES namelist option for land use transition logic
+
+Purpose and description of changes
+----------------------------------
+
+This pull request adds a new namelist option to allow the user to select
+the logic option that controls whether or not FATES kills vegetation
+during land use transitions.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Added fates_lu_transition_logic namelist variable option
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+  fates tested against `fates-sci.1.91.4_api.43.0.0-ctsm5.4.029`
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, fates only, not including satellite phenology mode
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.91.1_api.43.1.0 -> sci.1.92.0_api.44.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3728
+https://github.com/NGEET/fates/pull/1489
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.029
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon Mar 30 03:25:18 PM MDT 2026
