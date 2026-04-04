@@ -12,7 +12,6 @@ Some especially useful bits:
 
 - `Section headers <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sections>`_
 - `Hyperlinks <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#hyperlinks>`_
-- `Callout blocks (e.g., warning, tip) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#admonitions-messages-and-warnings>`_
 
 On this page, we've compiled some supplemental information that might be helpful, including a list of common errors and their causes.
 
@@ -99,6 +98,56 @@ reStructuredText: Tables
 Tables defined with the `:table: directive <https://docutils.sourceforge.io/docs/ref/rst/directives.html#table>`_ can be annoying because they're very sensitive to the cells inside them being precisely the right widths, as defined by the first ``====`` strings. If you don't get the widths right, you'll see "Text in column margin" errors. Instead, define your tables using the `:list-table: <https://docutils.sourceforge.io/docs/ref/rst/directives.html#list-table>`_ directive.
 
 If you already have a table in some other format, like comma-separated values (CSV), you may want to check out the R package `knitr <https://cran.r-project.org/web/packages/knitr/index.html>`_. Its `kable <https://bookdown.org/yihui/rmarkdown-cookbook/kable.html>`_ command allows automatic conversion of R dataframes to tables in reStructuredText and other formats.
+
+reStructuredText: Admonitions (e.g., warning, tip)
+--------------------------------------------------
+
+`Admonitions <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#admonitions-messages-and-warnings>`_ are rendered as special "call-out" boxes. The general syntax is:
+
+.. code-block:: reStructuredText
+
+  .. admonition:: This is the title of a generic admonition
+
+    It needs a title specified. Synonyms you can put in the ``{}`` instead of ``admonition`` include ``note`` and   ``seealso``; if you use one of those, you don't need to specify a title.
+  
+
+.. admonition:: This is the title of a generic admonition
+
+  It needs a title specified. Synonyms you can put in the ``{}`` instead of ``admonition`` include ``note`` and ``seealso``; if you use one of those, you don't need to specify a title.
+
+
+There are also a number of built-in admonition types that get their own special rendering:
+
+.. code-block:: reStructuredText
+
+  .. attention::
+
+    The reader should pay special attention to this. Synonyms you can put in the ``{}`` instead of ``attention`` include ``caution`` and ``warning``.
+
+.. attention::
+
+  The reader should pay special attention to this. Synonyms you can put in the ``{}`` instead of ``attention`` include ``caution`` and ``warning``.
+
+.. code-block:: reStructuredText
+
+  .. danger::
+
+    This tells the reader about something dangerous. You can also put ``error`` in the ``{}`` instead of ``danger``.
+
+.. danger::
+
+  This tells the reader about something dangerous. You can also put ``error`` in the ``{}`` instead of ``danger``.
+
+.. code-block:: reStructuredText
+
+  .. hint::
+
+    Here's a hint. Synonyms you can put in the ``{}`` instead of ``hint`` include ``important`` and ``tip``.
+
+.. hint::
+
+  Here's a hint. Synonyms you can put in the ``{}`` instead of ``hint`` include ``important`` and ``tip``.
+
 
 
 reStructuredText: Common error messages and how to handle them

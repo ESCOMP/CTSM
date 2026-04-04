@@ -4,7 +4,12 @@
 
 Markdown is great for very simple documentation files—it's much easier to write and read Markdown source than reStructuredText source.
 
-Note that our documentation build system uses the MyST Markdown parser. MyST is a special "flavor" of Markdown that has a lot of reStructuredText-like features added to it; see the guide to MyST Markdown syntax [here](https://myst-parser.readthedocs.io/en/v5.0.0/syntax/typography.html), although note that we don't include a lot of the referenced extensions. 
+Note that our documentation build system uses the MyST Markdown parser. MyST is a special "flavor" of Markdown that has a lot of reStructuredText-like features added to it; see the guide to MyST Markdown syntax [here](https://myst-parser.readthedocs.io/en/v5.0.0/syntax/typography.html), although note that we don't include a lot of the referenced extensions.
+
+```{contents}
+:depth: 1
+:local:
+```
 
 (md-cross-references)=
 
@@ -57,3 +62,43 @@ If you want to add some text that's only visible in the documentation source fil
 ## Markdown: Tables
 
 Markdown tables are supported. See [GitHub's "Organizing information with tables"](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables) for more info.
+
+## Markdown: Admonitions
+[Admonitions](https://myst-parser.readthedocs.io/en/v5.0.0/syntax/admonitions.html) are rendered as special "call-out" boxes. The general syntax is:
+~~~
+```{admonition} This is the title of a generic admonition
+  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you don't need to specify a title.
+```
+~~~
+```{admonition} This is the title of a generic admonition
+  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you don't need to specify a title.
+```
+
+There are also a number of built-in admonition types that get their own special rendering:
+
+~~~
+```{attention}
+The reader should pay special attention to this. Synonyms you can put in the `{}` instead of `attention` include `caution` and `warning`.
+```
+~~~
+```{attention}
+The reader should pay special attention to this. Synonyms you can put in the `{}` instead of `attention` include `caution` and `warning`.
+```
+
+~~~
+```{danger}
+This tells the reader about something dangerous. You can also put `error` in the `{}` instead of `danger`.
+```
+~~~
+```{danger}
+This tells the reader about something dangerous. You can also put `error` in the `{}` instead of `danger`.
+```
+
+~~~
+```{hint}
+Here's a hint. Synonyms you can put in the `{}` instead of `hint` include `important` and `tip`.
+```
+~~~
+```{hint}
+Here's a hint. Synonyms you can put in the `{}` instead of `hint` include `important` and `tip`.
+```
