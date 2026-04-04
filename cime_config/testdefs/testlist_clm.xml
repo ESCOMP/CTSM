@@ -78,7 +78,7 @@
   <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60BgcNoAnthro" testmods="clm/decStart1851_noinitial--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -183,6 +183,7 @@
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -230,6 +231,7 @@
   <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -239,6 +241,7 @@
   <test name="ERI_D" grid="ne30pg3_t232" compset="I1850Clm60BgcCropG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -780,6 +783,7 @@
   <test name="ERI_C2_Ld9" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1393,7 +1397,6 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/fire_emis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1466,6 +1469,8 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/ciso">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1613,7 +1618,6 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
-      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1705,6 +1709,8 @@
   <test name="ERP_D_P64x2_Ld5" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/irrig_spunup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1742,7 +1748,6 @@
   <test name="ERP_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
     </machines>
     <options>
@@ -1868,7 +1873,6 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCru" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1922,10 +1926,13 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
       <option name="tput_tolerance">0.5</option>
+      <option name="comment">Threaded 13 month production transient test, triggering yearly transient updates</option>
+      <option name="comment">Add to prebeta to cover threaded production derecho_gnu build with full MPI</option>
     </options>
   </test>
   <test name="ERP_P64x2_Ld396" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
@@ -1953,7 +1960,6 @@
   <test name="REP_P64x2_Ld13" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/monthly--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -1989,6 +1995,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">The aux_cime_baselines equivalent of this is below as an f19 test</option>
     </options>
   </test>
   <test name="SMS_P384x2_D_Ld5" grid="f19_g17" compset="I2000Clm50Sp" testmods="clm/default--clm/nofireemis">
@@ -1998,11 +2005,13 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">The prealpha equivalent of this is above as an f10 test</option>
     </options>
   </test>
   <test name="ERP_P64x2_Ld765" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2039,7 +2048,6 @@
   <test name="ERP_P64x2_Ld1096" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2141,6 +2149,8 @@
   <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2151,7 +2161,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
     </machines>
@@ -2849,6 +2858,7 @@
   <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
@@ -2862,6 +2872,7 @@
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
@@ -2871,8 +2882,6 @@
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2925,8 +2934,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
-      <machine name="derecho" compiler="intel" category="prealpha"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2936,8 +2943,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
-      <machine name="derecho" compiler="intel" category="prealpha"/>
-      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
@@ -2949,7 +2954,6 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3000,6 +3004,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3162,10 +3168,12 @@
   <test name="SMS_Ld1_PS" grid="f09_g17" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Since bias correction is in CDEPS we want to make sure CESM testing exercises this, in case a CDEPS change causes problems</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsROA">
@@ -3406,11 +3414,13 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
+      <option name="comment">Add cesm tests for this since SSPMATRIX tests are sensitive to submodule changes</option>
     </options>
   </test>
   <test name="ERP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/ADspinup">
@@ -3425,6 +3435,7 @@
   <test name="SSP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/rtmColdSSP">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3440,7 +3451,6 @@
   </test>
   <test name="SSP_Ld10" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/rtmColdSSP">
     <machines>
-      <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -3675,6 +3685,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
     </machines>
@@ -4211,12 +4222,11 @@
   <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm60BgcCropCmip6waccm" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works. (This configuration is basically the same as I1850Clm50BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
+      <option name="comment">The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works. (This configuration is basically the same as I1850Clm60BgcCropCmip6, but without cmip6_glaciers_virtual_antarctica - so we don't need huge coverage of this.) Month-long so that we actually get some history output (because this test exercises a usermods directory with only monthly and yearly output).</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f19_g17" compset="I1850Clm60BgcCropCmip6waccm" testmods="clm/basic">
@@ -4382,12 +4392,15 @@
   <test name="SMS_D_Ld5" grid="5x5_amazon_rHDMA" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Parallel test of mizuRoute for the small 5x5_amazon HDMA grid</option>
+      <option name="comment">Add to CESM testing because mizuRoute can be sensitive to submodule changes</option>
     </options>
   </test>
   <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizGsNldas" testmods="mizuroute-default">
@@ -4894,6 +4907,7 @@
   <test name="ERI_Ld41" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
