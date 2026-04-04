@@ -9,7 +9,7 @@
 
 ## Initial Casper setup
 
-None! This is why Casper is the recommended method for building and previewing the docs.
+You don't need to install any software! This is why Casper is the recommended method for building and previewing the docs.
 
 ## Building docs on Casper
 Casper uses the Podman software for running containers like the one we recommend for building the CTSM documentation. Make sure it's enabled before building: `module load podman`. Then do:
@@ -24,6 +24,10 @@ See the "Container software or Conda environment" sections for {ref}`Mac <contai
 There are a few different ways to do this.
 
 ### Previewing docs on Casper with OnDemand
+
+```{attention}
+Your CTSM checkout will need to be in (or symlinked to) your home directory (`$HOME`) for this method to work.
+```
 
 The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then open the `index.html` file. That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
 
