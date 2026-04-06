@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.030
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
-Date: Fri Apr  3 11:54:39 PM MDT 2026
+Date: Fri Apr  6 04:01:00 PM MDT 2026
 One-line Summary: Add FATES namelist option for land use transition logic
 
 Purpose and description of changes
@@ -19,6 +19,10 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 
 Testing summary:
 ----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
