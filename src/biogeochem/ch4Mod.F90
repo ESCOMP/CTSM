@@ -3734,8 +3734,9 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     real(r8), pointer :: surface_layer_conc_o2(:)
     real(r8), pointer :: surface_layer_thickness(:)
 
-    integer  :: nstep                       ! time step number
-    character(len=32) :: subname='ch4_tran' ! subroutine name
+    integer  :: nstep                        ! time step number
+    character(len=128) :: err_msg='unset'    ! error message
+    character(len=32)  :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -3847,82 +3848,6 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          end do
       end do
 
-      ! call surface_layer_oxid and also set values for water layer (no oxidation, but calculate thickness and concentrations
-      ! for now, use own loop for testing, later move to an existing loop
-      ! for unsat oxidation is a sink, for sat no sinks/sources, just a diffusive resistance
-
-      do fc = 1, num_methc
-         c = filter_methc(fc)
-         g = col%gridcell(c)
-
-         ! Initialize variables
-         surface_layer_ch4_oxid(c) = 0._r8 
-         surface_layer_o2_oxid(c)  = 0._r8
-         surface_layer_thickness_old(c) = surface_layer_thickness(c)
-         
-         ! calculate ch4, o2 concentration in virtual layer
-         if (sat==0) then
-            call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
-                 h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
-                 surface_layer_conc_ch4(c), surface_layer_conc_o2(c), &
-                 surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
-
-            ! assign surface (soil) layer thickness (min 5 cm)
-            ! could calculate dynamically similar to h2osfc
-            !surface_layer_thickness(c) = max(col%micro_sigma(c),0.05_r8)
-            !surface_layer_thickness(c) = max(0.5_r8*col%micro_sigma(c),0.05_r8)
-            !surface_layer_thickness(c) = 0.05_r8
-            ! crude estimate of mean unsaturated thickness
-            surface_layer_thickness(c) = max((3._r8*col%micro_sigma(c)-1e-3_r8*h2osfc(c)),0.05_r8)
-         endif
-
-         ! assume a surface water (not soil) layer for sat=1
-         ! use instead of using resistance later (removed h2osfc resistance)
-         if (sat==1) then
-            surface_layer_ch4_oxid(c) = 0._r8
-            surface_layer_o2_oxid(c)  = 0._r8
-            ! assign surface (water) layer thickness (min 1 cm)
-            surface_layer_thickness(c) = max(1e-3_r8*h2osfc(c),0.01_r8)
-         endif
-
-         ! adjust concentration for changes in surface layer thickness
-         surface_layer_conc_ch4(c) = surface_layer_conc_ch4(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
-         surface_layer_conc_o2(c)  = surface_layer_conc_o2(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
-
-         ! calculate stress for unsaturated layer
-         o2demand = surface_layer_o2_oxid(c)
-         if (o2demand > 0._r8) then
-            if ( (surface_layer_conc_o2(c) / dtime) > o2demand )then
-                  surface_layer_o2stress = 1._r8
-               else
-                  surface_layer_o2stress = (surface_layer_conc_o2(c) / dtime) / o2demand
-               end if
-            else
-               surface_layer_o2stress= 1._r8
-            end if
-
-            ch4demand = surface_layer_ch4_oxid(c)
-            if (ch4demand > 0._r8) then
-               surface_layer_ch4stress = min((surface_layer_conc_ch4(c) / dtime ) / ch4demand, 1._r8)
-            else
-               surface_layer_ch4stress = 1._r8
-            end if
-
-            ! Resolve methane oxidation
-            if (surface_layer_o2stress < 1._r8 .or. surface_layer_ch4stress < 1._r8) then
-               if (surface_layer_ch4stress <= surface_layer_o2stress) then ! methane limited
-                  ! Reset oxidation
-                  surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_ch4stress
-                  surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_ch4stress
-               else ! oxygen limited
-                  ! Reset oxidation
-                  surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_o2stress
-                  surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_o2stress
-               end if
-            end if
-         
-      enddo
-      
       ! Perform competition for oxygen and methane in each soil layer if demands over the course of the timestep
       ! exceed that available. Assign to each process in proportion to the quantity demanded in the absense of
       ! the limitation.
@@ -3999,19 +3924,145 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          enddo
       enddo
 
-      ! recalculate oxidation based on additional ebullition input
-      ! (currently, oxidation limited to ch4 amount at beginning of timestep) 
+      ! Calculate surface layer oxidation including potential ebullition input from soil layers
+
+      ! Also set values for surface water layer (no oxidation, but calculate thickness and concentrations
+      ! In the surface layer, unsat oxidation is a sink only, for sat no sinks/sources, just a diffusive resistance
+
       do fc = 1, num_methc
          c = filter_methc(fc)
          g = col%gridcell(c)
-         if (sat==0 .and. jwt(c)==0) then
 
-            call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
-                 h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
-                 surface_layer_conc_ch4(c)+ch4_ebul_total(c)/surface_layer_thickness(c)*dtime, surface_layer_conc_o2(c), &
-                 surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
+         ! Initialize variables
+         surface_layer_ch4_oxid(c) = 0._r8
+         surface_layer_o2_oxid(c)  = 0._r8
+         surface_layer_thickness_old(c) = surface_layer_thickness(c)
 
+         ! calculate ch4, o2 concentration in virtual layer
+         if (sat==0) then
+            if (jwt(c)==0) then
+               ! if water table is at the soil surface, include ebullition flux
+               call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
+                    h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
+                    surface_layer_conc_ch4(c)+ch4_ebul_total(c)/surface_layer_thickness(c)*dtime, surface_layer_conc_o2(c), &
+                    surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
+            else
+               call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
+                    h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
+                    surface_layer_conc_ch4(c), surface_layer_conc_o2(c), &
+                    surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
+            endif
+
+            ! assign surface (soil) layer thickness (min 5 cm)
+            !surface_layer_thickness(c) = 0.05_r8 ! static value
+            ! crude estimate of mean unsaturated thickness
+            surface_layer_thickness(c) = max((3._r8*col%micro_sigma(c)-1e-3_r8*h2osfc(c)),0.05_r8)
          endif
+
+         ! assume a surface water (not soil) layer for sat=1
+         ! use instead of using resistance later (removed h2osfc resistance)
+         if (sat==1) then
+            surface_layer_ch4_oxid(c) = 0._r8
+            surface_layer_o2_oxid(c)  = 0._r8
+            ! assign surface (water) layer thickness (min 1 cm)
+            surface_layer_thickness(c) = max(1e-3_r8*h2osfc(c),0.01_r8)
+         endif
+
+         ! adjust concentration for changes in surface layer thickness
+         surface_layer_conc_ch4(c) = surface_layer_conc_ch4(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
+         surface_layer_conc_o2(c)  = surface_layer_conc_o2(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
+
+         ! calculate stress for unsaturated layer
+         o2demand = surface_layer_o2_oxid(c)
+         if (o2demand > 0._r8) then
+            if ( (surface_layer_conc_o2(c) / dtime) > o2demand )then
+               surface_layer_o2stress = 1._r8
+            else
+               surface_layer_o2stress = (surface_layer_conc_o2(c) / dtime) / o2demand
+            end if
+         else
+            surface_layer_o2stress= 1._r8
+         end if
+
+         ch4demand = surface_layer_ch4_oxid(c)
+         if (ch4demand > 0._r8) then
+            ! include ebullition flux if water table is at the soil surface
+            if (jwt(c)==0) then
+               surface_layer_ch4stress = min((surface_layer_conc_ch4(c)/dtime + ch4_ebul_total(c)/surface_layer_thickness(c)) / ch4demand, 1._r8)
+            else
+               surface_layer_ch4stress = min((surface_layer_conc_ch4(c) / dtime ) / ch4demand, 1._r8)
+            endif
+         else
+            surface_layer_ch4stress = 1._r8
+         end if
+
+         ! Resolve methane oxidation
+         if (surface_layer_o2stress < 1._r8 .or. surface_layer_ch4stress < 1._r8) then
+            if (surface_layer_ch4stress <= surface_layer_o2stress) then ! methane limited
+               ! Reset oxidation
+               surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_ch4stress
+               surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_ch4stress
+            else ! oxygen limited
+               ! Reset oxidation
+               surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_o2stress
+               surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_o2stress
+            end if
+         end if
+
+         ! Set source values in surface layer and perform error checks
+         j = 0
+         source(c,j,1) = -surface_layer_ch4_oxid(c)  ! CH4 [mol/m3-total/s]
+         source(c,j,2) = -surface_layer_o2_oxid(c)   ! O2  [mol/m3/s]
+
+         ! methane check
+         if (jwt(c)==0) then
+            ! water table at soil surface (add ebullition flux)
+            if ((source(c,j,1) + surface_layer_conc_ch4(c)/dtime + ch4_ebul_total(c)/surface_layer_thickness(c)) < -1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime &
+                    + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
+            else if (surface_layer_ch4stress < 1._r8 .and. &
+                 (source(c,j,1) + surface_layer_conc_ch4(c) / dtime &
+                 !) > 1.e-12_r8) then
+                 + ch4_ebul_total(c)/surface_layer_thickness(c)) > 1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
+            endif
+         else
+            ! water table below soil surface
+            if (source(c,j,1) + surface_layer_conc_ch4(c) / dtime < -1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime, c, j
+            else if (surface_layer_ch4stress < 1._r8 .and. source(c,j,1) + surface_layer_conc_ch4(c) / dtime > 1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime, c, j
+            end if
+         endif
+
+         ! Endrun if any CH4 errors identified
+         if (trim(err_msg) /= 'unset') then
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=err_msg//errMsg(sourcefile, __LINE__))
+         endif
+
+         ! oxygen check
+         if (source(c,j,2) + surface_layer_conc_o2(c) / dtime < -1.e-12_r8) then
+            write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
+                 source(c,j,2) + surface_layer_conc_o2(c) / dtime, c, j
+         else if (surface_layer_o2stress < 1._r8 .and. source(c,j,2) + surface_layer_conc_o2(c) / dtime > 1.e-12_r8) then
+            write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
+                 source(c,j,2) + surface_layer_conc_o2(c) / dtime, c, j
+         end if
+
+         ! Endrun if any O2 errors identified
+         if (trim(err_msg) /= 'unset') then
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=err_msg//errMsg(sourcefile, __LINE__))
+         endif
+
+         conc_ch4_bef(c,j) = surface_layer_conc_ch4(c) !For Balance Check
+
       enddo
       
       ! Set the source term for each species (no need to do j=-1, since epsilon_t and source not used there)
@@ -4020,17 +4071,6 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
       ! surface flux is adjusted to conserve. This results in some inaccuracy as compared to a shorter timestep
       ! or iterative solution.
 
-      ! surface (virtual) layer
-      j = 0
-      do fc = 1, num_methc
-         c = filter_methc (fc)
-         source(c,j,1) = -surface_layer_ch4_oxid(c)  ! [mol/m3-total/s]
-         source(c,j,2) = -surface_layer_o2_oxid(c)   ! O2 [mol/m3/s]
-         ! not adding error checks ...
-         
-         conc_ch4_bef(c,j) = surface_layer_conc_ch4(c) !For Balance Check
-      enddo
-         
       do j = 1,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
@@ -4048,40 +4088,37 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             ! ebul added to soil depth just above WT
 
             if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8)then 
-               write(iulog,*) 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Methane demands exceed methane available.'&
-                    //errMsg(sourcefile, __LINE__))
             else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then  
-               write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Methane limited, yet some left over.'//&
-                    errMsg(sourcefile, __LINE__))
             end if
+
+            ! Endrun if any CH4 errors identified
+            if (trim(err_msg) /= 'unset') then
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=err_msg//errMsg(sourcefile, __LINE__))
+            endif
 
             source(c,j,2) = -o2_oxid_depth(c,j) - o2_decomp_depth(c,j) + o2_aere_depth(c,j) ! O2 [mol/m3/s]
             if (source(c,j,2) + conc_o2(c,j) / dtime < -1.e-12_r8) then
-               write(iulog,*) 'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Oxygen demands exceed oxygen available.'//&
-                    errMsg(sourcefile, __LINE__) )
             else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
-               write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
             end if
+
+            ! Endrun if any O2 errors identified
+            if (trim(err_msg) /= 'unset') then
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=err_msg//errMsg(sourcefile, __LINE__))
+            endif
 
             conc_ch4_bef(c,j) = conc_ch4(c,j) !For Balance Check
          enddo ! fc
