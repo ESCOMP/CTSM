@@ -4990,8 +4990,10 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     ! Add surface layer ch4 and convert mol CH4 to g C
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
-       totcolch4(c) = totcolch4(c) + &
-            (finundated(c)*surface_layer_conc_ch4_sat(c)*surface_layer_thickness_sat(c) + (1._r8-finundated(c))*surface_layer_conc_ch4_unsat(c)*surface_layer_thickness_unsat(c)) *catomw
+       totcolch4(c) = totcolch4(c) &
+            + (finundated(c)*surface_layer_conc_ch4_sat(c)*surface_layer_thickness_sat(c) &
+            + (1._r8-finundated(c))*surface_layer_conc_ch4_unsat(c)*surface_layer_thickness_unsat(c)) &
+            *catomw
     end do
 
     do j = 1, nlevsoi
@@ -5002,11 +5004,13 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
           ! urban landunits.
           if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
              totcolch4(c) = totcolch4(c) + &
-                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  (finundated(c)*conc_ch4_sat(c,j) &
+                  + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
                   dzsoi_decomp(j)*catomw
           else
              totcolch4(c) = totcolch4(c) + &
-                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  (finundated(c)*conc_ch4_sat(c,j) &
+                  + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
                   dz(c,j)*catomw
           end if
           ! mol CH4 --> g C
