@@ -26,7 +26,7 @@ You can [link to Markdown section headers](#md-cross-references) by adding a lab
 
 and then referring to it like `[link to section headers](#md-cross-references)`. You can also have the display text just be the title of the relevant section—e.g., [](#md-cross-references)—by doing `[](#md-cross-references)`.
 
-That linking syntax also works for links to [section labels in reStructuredText files](#rst-cross-references): `[reStructuredText section labels](#rst-cross-references)`.
+That linking syntax also works for links to [section labels in reStructuredText files](#rst-cross-references): `[section labels in reStructuredText files](#rst-cross-references)`.
 
 (md-math)=
 
