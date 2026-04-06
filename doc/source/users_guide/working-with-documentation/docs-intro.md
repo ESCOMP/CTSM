@@ -21,7 +21,9 @@ If you've made changes that you'd like us to bring in, you can file a [pull requ
 Whenever you submit a documentation PR or commit new changes to one, automated testing will check the updated documentation for any errors. If you get failures, please try to diagnose and fix them; see {ref}`common-docs-errors` for tips. If you resolve the errors, add a comment on your PR saying so, and one of the CTSM software engineers will have a look.
 
 ## Editing the documentation
-First, you will need a clone of CTSM to get all the documentation files and infrastructure. Once you have that, editing the documentation is as simple as opening the source file for the page you want to edit, then changing text. Make sure to use either reStructuredText or Markdown syntax, depending on the file's extension (.rst or .md, respectively). You can mix some reStructuredText into Markdown files, but generally not the other way around. For more information, see:
+First, you will need a clone of CTSM to get all the documentation files and infrastructure. Once you have that, editing the documentation is as simple as editing the source file for the page you want to edit, in `doc/source/`. You can find the exact path under that directory by appending the part of the webpage URL after `https://escomp.github.io/CTSM/` and replacing `.html` with either `.rst` (most likely) or `.md`. So if I wanted to change this page (URL `https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro-and-recommended.html`), I would look in the directory `doc/source/users_guide/working-with-documentation` for `docs-intro-and-recommended.rst` or `.md`.
+
+Make sure to use either reStructuredText or Markdown syntax, depending on the file's extension (.rst or .md, respectively). You can mix some reStructuredText into Markdown files, but generally not the other way around. For more information, see:
 - {ref}`tips-for-working-with-markdown`
 - {ref}`tips-for-working-with-rst`
 
