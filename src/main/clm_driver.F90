@@ -30,6 +30,7 @@ module clm_driver
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
+  use BalanceCheckMod        , only : EnergyBalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -1181,7 +1182,8 @@ contains
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_carbonstate_inst)
+               soilbiogeochem_carbonstate_inst, &
+               solarabs_inst, energyflux_inst, temperature_inst)
 
 
           if( is_beg_curr_day() ) then
@@ -1269,6 +1271,9 @@ contains
           deallocate(agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch)
           call t_stopf('ch4')
        end if
+
+       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
+            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
 
        ! ============================================================================
        ! Determine albedos for next time step

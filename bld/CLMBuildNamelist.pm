@@ -1360,8 +1360,8 @@ sub setup_cmdl_simulation_year {
     }
     $val = "'".$defaults->get_value($var)."'";
     $nl->set_variable_value($group, $var, $val );
-    $log->verbose_message("CLM sim_year_range is $nl_flags->{'sim_year_range'}");
   }
+  $log->verbose_message("CLM sim_year_range is $nl_flags->{'sim_year_range'}");
 }
 
 #-------------------------------------------------------------------------------
@@ -1758,10 +1758,10 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_methane($opts, $nl_flags, $definition, $defaults, $nl);
 
-  ###############################
-  # namelist group: ndepdyn_nml #
-  ###############################
-  setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl);
+  ######################################################
+  # Handle Nitrogen Deposition either from CPL or CTSM #
+  ######################################################
+  setup_logic_nitrogen_deposition($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
 
   ##################################
   # namelist group: cnmresp_inparm #
@@ -1892,11 +1892,6 @@ sub process_namelist_inline_logic {
   # namelist group: clm_canopy_inparm #
   #####################################
   setup_logic_canopy($opts,  $nl_flags, $definition, $defaults, $nl);
-
-  ########################################
-  # namelist group: soilhydrology_inparm #
-  ########################################
-  setup_logic_hydrology_params($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #####################################
   # namelist group: irrigation_inparm #
@@ -3366,28 +3361,6 @@ sub setup_logic_supplemental_nitrogen {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_hydrology_params {
-  #
-  # Logic for hydrology parameters
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  my $lower = $nl->get_value( 'lower_boundary_condition'  );
-  my $var   = "baseflow_scalar";
-  if ( $lower == 1 || $lower == 2 ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
-                 $var, 'lower_boundary_condition' => $lower );
-  }
-  my $val   = $nl->get_value( $var );
-  if ( defined($val) ) {
-     if ( $lower != 1 && $lower != 2 ) {
-        $log->fatal_error("baseflow_scalar is only used for lower_boundary_condition of flux or zero-flux");
-     }
-  }
-}
-
-#-------------------------------------------------------------------------------
-
 sub setup_logic_irrigation_parameters {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -3928,12 +3901,33 @@ sub setup_logic_c14_streams {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_nitrogen_deposition {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
+
+  # Determine if we are using ndep from the CPL or internal to CTSM
+  # and if it's needed
+  $nl_flags->{'ndep_from_cpl'} = logical_to_fortran( $envxml_ref->{'CLM_NDEP_FROM_CPL'} );
+  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
+    $nl_flags->{'ndep_needed'} = ".true."
+  } else {
+    $nl_flags->{'ndep_needed'} = ".false."
+  }
+  # Handle the ndep_inparm namelist in drv_flds_in
+  if ( &value_is_true($nl_flags->{'ndep_from_cpl'}) && &value_is_true($nl_flags->{'ndep_needed'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "ndep_list", val=>"'noy','nhx'" );
+  }
+  # Handle the internal ndep-streams namelist
+  setup_logic_nitrogen_deposition_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_nitrogen_deposition_streams {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   #
-  # Nitrogen deposition for bgc=CN or fates
+  # Nitrogen deposition streams when needed to be read internally for BGC
   #
-  if ( ($nl_flags->{'bgc_mode'} =~/bgc/) ) {   # or  ($nl_flags->{'bgc_mode'} =~/fates/) ) {
+  if ( (not &value_is_true($nl_flags->{'ndep_from_cpl'})) and &value_is_true($nl_flags->{'ndep_needed'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -3955,15 +3949,17 @@ sub setup_logic_nitrogen_deposition {
                   'sim_year_range'=>$nl_flags->{'sim_year_range'});
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+                'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
+                'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'sim_year'=>$nl_flags->{'sim_year'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
         # Also check at f19 resolution
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                    'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
+                    'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'sim_year'=>$nl_flags->{'sim_year'}, 'nofail'=>1 );
         # If not found report an error
         if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+            $log->verbose_message( "lnd_tuning_mode = " . $nl_flags->{'lnd_tuning_mode'}, " ssp_rcp = " . $nl_flags->{'ssp_rcp'} );
+            $log->verbose_message( "sim_year = " . $nl_flags->{'sim_year'}, " sim_year_range = " . $nl_flags->{'sim_year_range'} );
             $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
                           "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
                           "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
@@ -3986,7 +3982,7 @@ sub setup_logic_nitrogen_deposition {
         }
     }
   } else {
-    # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
+    # If ndep is NOT required then make sure none of the ndep settings are set!
     if ( defined($nl->get_value('stream_year_first_ndep')) ||
          defined($nl->get_value('stream_year_last_ndep'))  ||
          defined($nl->get_value('model_year_align_ndep'))  ||
@@ -3994,7 +3990,7 @@ sub setup_logic_nitrogen_deposition {
          defined($nl->get_value('ndep_varlist'         ))  ||
          defined($nl->get_value('stream_fldfilename_ndep'))
        ) {
-      $log->fatal_error("When bgc is NOT CN or CNDV none of: stream_year_first_ndep," .
+      $log->fatal_error("When ndep isn't required or coming from the CPL none of: stream_year_first_ndep," .
                   "stream_year_last_ndep, model_year_align_ndep, ndep_taxmod, " .
                   "ndep_varlist, nor stream_fldfilename_ndep" .
                   " can be set!");
@@ -4855,18 +4851,6 @@ sub setup_logic_atm_forcing {
       }
    }
 
-   foreach $var ("precip_repartition_glc_all_snow_t",
-                 "precip_repartition_glc_all_rain_t",
-                 "precip_repartition_nonglc_all_snow_t",
-                 "precip_repartition_nonglc_all_rain_t") {
-      if ( &value_is_true($nl->get_value("repartition_rain_snow")) ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
-      } else {
-         if (defined($nl->get_value($var))) {
-            $log->fatal_error("$var can only be set if repartition_rain_snow is true");
-         }
-      }
-   }
 }
 
 #-------------------------------------------------------------------------------
@@ -5412,7 +5396,7 @@ sub write_output_files {
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
-               soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
+               luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
@@ -5456,7 +5440,7 @@ sub write_output_files {
   $log->verbose_message("Writing clm namelist to $outfile");
 
   # Drydep, fire-emission or MEGAN namelist for driver
-  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm);
+  @groups = qw(drydep_inparm megan_emis_nl fire_emis_nl carma_inparm dust_emis_inparm ndep_inparm);
   $outfile = "$opts->{'dir'}/drv_flds_in";
   $nl->write($outfile, 'groups'=>\@groups, 'note'=>"$note" );
   $log->verbose_message("Writing @groups namelists to $outfile");

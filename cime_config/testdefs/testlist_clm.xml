@@ -17,6 +17,10 @@
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+      ROF model test lists: (in each component model)
+        mosart: MOSART test list, run when MOSARt is updated
+        rtm: RTM test list, run when RTM is updated
+        mizu: mizuRoute test list, run when mizuRoute is updated
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
@@ -259,6 +263,15 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat CESM3 development test with Crujra while Gswp is still the default</option>
+    </options>
+  </test>
+  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mg37" compset="I1850Clm60SpGag">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">1:00:00</option>
+      <option name="comment">Mid-year exact restart test. Also covers multiple ice sheets in a multi-year I compset test.</option>
     </options>
   </test>
   <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
@@ -2125,6 +2138,15 @@
       <option name="comment">Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure</option>
     </options>
   </test>
+  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test writing all history fields</option>
+    </options>
+  </test>
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -3622,6 +3644,24 @@
       <option name="comment">No comment at this time</option>
     </options>
   </test>
+  <test name="SMS_D_Ld180" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdTRS">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">FATES tree recruitment scheme smoke test</option>
+    </options>
+  </test>
+  <test name="ERS_Ld90" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdTRSNoSeedDynamics">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">ERS FATES test covering the Tree Recruitment Scheme without seed dynamics.</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
@@ -4358,6 +4398,82 @@
     </options>
   </test>
 
+  <!-- Some tests running mizuRoute -->
+  <test name="SMS_D_Ld5" grid="5x5_amazon_rHDMA" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Parallel test of mizuRoute for the small 5x5_amazon HDMA grid</option>
+    </options>
+  </test>
+  <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizGsNldas" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Science test of mizuRoute for the USGS grid over the NLDAS contenential US region, for longer 5 months</option>
+    </options>
+  </test>
+  <test name="PET_Ld10_P256x8" grid="f19_f19_mg17" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at 2 degree with the r05 grid, changing processors with threading on</option>
+    </options>
+  </test>
+  <test name="ERS_Ld10" grid="f09_f09_mg17" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at 1 degree with the r05 grid</option>
+    </options>
+  </test>
+  <test name="ERS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at half degree with the r05 grid</option>
+    </options>
+  </test>
+  <test name="PET_P256x8_Ld10" grid="f19_f19_rHDMA_mg17" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at 2 degree with the HDMA non-lake grid, change processors with threading</option>
+    </options>
+  </test>
+  <test name="ERS_Ld10" grid="f09_f09_rHDMAlk_mg17" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at 1 degree with the HDMA lake grid</option>
+    </options>
+  </test>
+  <test name="ERS_Ld5" grid="hcru_hcru_rMERIT_mt13" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Science test of mizuRoute at half degree with the high resolution MERIT grid</option>
+    </options>
+  </test>
+
   <!-- decomp_init tests -->
   <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
     <machines>
@@ -4512,22 +4628,14 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_g17" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_t232" compset="IHistClm60BgcCropCrujra"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
     </machines>
     <options>
       <option name="wallclock">12:00:00</option>
       <option name="comment">This test is designed to test the ability to prescribe crop sowing dates and maturity requirements. It first performs a GDD-generating run, then calls Python code to generate the maturity requirement file. This is then used in a sowing+maturity forced run, which finally is tested to ensure correct behavior.</option>
-    </options>
-  </test>
-  <test name="RXCROPMATURITY_Lm61" grid="f09_t232" compset="IHistClm60BgcCropCrujra"  testmods="clm/cropMonthOutput">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">12:00:00</option>
-      <option name="comment">Repeat RXCROP test with t232 and Crujra while the defaults have not changed</option>
     </options>
   </test>
 
