@@ -2,6 +2,7 @@
 orphan: true
 ---
 
+% git-fleximod checkout of doc-builder shouldn't be necessary, as that should happen automatically.
 ```shell
 cd doc
 ./build_docs -b _build -c -d
