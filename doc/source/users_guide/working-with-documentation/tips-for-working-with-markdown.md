@@ -6,6 +6,8 @@ Markdown is great for very simple documentation files—it's much easier to writ
 
 Note that our documentation build system uses the MyST Markdown parser. MyST is a special "flavor" of Markdown that has a lot of reStructuredText-like features added to it; see the guide to MyST Markdown syntax [here](https://myst-parser.readthedocs.io/en/v5.0.0/syntax/typography.html), although note that we don't include a lot of the referenced extensions.
 
+If you use VS Code, you may want to install the [MyST-Markdown extension](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) to get syntax highlighting, auto-complete, and improved rendering in the VS Code previewer.
+
 ```{contents}
 :depth: 1
 :local:
