@@ -69,11 +69,11 @@ Markdown tables are supported. See [GitHub's "Organizing information with tables
 [Admonitions](https://myst-parser.readthedocs.io/en/v5.0.0/syntax/admonitions.html) are rendered as special "call-out" boxes. The general syntax is:
 ~~~
 ```{admonition} This is the title of a generic admonition
-  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you don't need to specify a title.
+  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you can't specify a title. In fact, `admonition` is the only type of admonition that you can specify a custom title for.
 ```
 ~~~
 ```{admonition} This is the title of a generic admonition
-  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you don't need to specify a title.
+  It needs a title specified. Synonyms you can put in the `{}` instead of `admonition` include `note` and `seealso`; if you use one of those, you can't specify a title. In fact, `admonition` is the only type of admonition that you can specify a custom title for.
 ```
 
 There are also a number of built-in admonition types that get their own special rendering:
