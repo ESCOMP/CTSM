@@ -19,6 +19,15 @@ Casper uses the Podman software for running containers like the one we recommend
 
 See the "Container software or Conda environment" sections for {ref}`Mac <container-or-conda-mac>` or {ref}`Windows <container-or-conda-windows>` for more information on these two methods.
 
+```{tip}
+[2026-04-07] If you get an error saying something like `Error: could not find a working conmon binary`, do this and retry:
+~~~
+module load ncarenv/24.12
+module load podman
+~~~
+The bug making this necessary should hopefully be resolved soon. It has to do with the installation of podman in the module `ncarenv/25.10`; see [this Slack thread](https://ncarhpcusergroup.slack.com/archives/C044MS8N3UP/p1775511217126589) for more information.
+```
+
 ## Previewing docs on Casper
 
 There are a few different ways to do this.
