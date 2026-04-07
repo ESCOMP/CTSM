@@ -34,11 +34,11 @@ There are a few different ways to do this.
 
 ### Previewing docs on Casper with OnDemand
 
-```{attention}
-Your CTSM checkout will need to be in (or symlinked to) your home directory (`$HOME`) for this method to work.
+```{tip}
+This will be somewhat easier if your CTSM checkout is in (or symlinked to) your home directory (`$HOME`).
 ```
 
-The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then open the `index.html` file. That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
+The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then open the `index.html` file. (If your checkout isn't in your home directory, you'll need to click on `Devices > /` in the sidebar of the window that opens, then navigate all the way to your checkout.) That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
 
 If you rebuild the documentation but don't see your changes updated in the webpage, and the reload button doesn't work, you may need to navigate to a different page and then come back.
 
