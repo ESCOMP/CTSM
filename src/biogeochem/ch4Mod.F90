@@ -1386,8 +1386,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          bounds = bounds, &
          clump_index = clump_index, &
          var    = this%conc_ch4_surface_layer_sat_col(begc:endc), &
-         fractional_area_old = surface_layer_volume_sat_col(begc:endc), &
-         fractional_area_new = surface_layer_volume_sat_new_col(begc:endc), &
+         volume_multiplier_old = surface_layer_volume_sat_col(begc:endc), &
+         volume_multiplier_new = surface_layer_volume_sat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
     ! when fractional volume is used to redistribute mass, layer
     ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
@@ -1401,8 +1401,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          bounds = bounds, &
          clump_index = clump_index, &
          var    = this%conc_ch4_surface_layer_unsat_col(begc:endc), &
-         fractional_area_old = surface_layer_volume_unsat_col(begc:endc), &
-         fractional_area_new = surface_layer_volume_unsat_new_col(begc:endc), &
+         volume_multiplier_old = surface_layer_volume_unsat_col(begc:endc), &
+         volume_multiplier_new = surface_layer_volume_unsat_new_col(begc:endc), &
          adjustment = adjustment_one_level(begc:endc))
     ! when fractional volume is used to redistribute mass, layer
     ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
@@ -1417,8 +1417,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_ch4_sat_col(begc:endc, j), &
-            fractional_area_old = this%finundated_col(begc:endc), &
-            fractional_area_new = finundated_new_col(begc:endc), &
+            volume_multiplier_old = this%finundated_col(begc:endc), &
+            volume_multiplier_new = finundated_new_col(begc:endc), &
             adjustment = adjustment_one_level(begc:endc))
        do c = bounds%begc, bounds%endc
           this%dyn_ch4bal_adjustments_col(c) = &
@@ -1430,8 +1430,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_ch4_unsat_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc), &
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc), &
             adjustment = adjustment_one_level(begc:endc))
        do c = bounds%begc, bounds%endc
           this%dyn_ch4bal_adjustments_col(c) = &
@@ -1444,8 +1444,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%layer_sat_lag_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc))
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc))
 
        ! We don't bother tracking the adjustment terms for the following o2 state
        ! variables, because they're not needed for balance checks and because people are
@@ -1455,15 +1455,15 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_o2_sat_col(begc:endc, j), &
-            fractional_area_old = this%finundated_col(begc:endc), &
-            fractional_area_new = finundated_new_col(begc:endc))
+            volume_multiplier_old = this%finundated_col(begc:endc), &
+            volume_multiplier_new = finundated_new_col(begc:endc))
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_o2_unsat_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc))
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc))
     end do
 
     this%finundated_col(begc:endc) = &
