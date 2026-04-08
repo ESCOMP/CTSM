@@ -54,7 +54,7 @@ The bash shell script ``$CTSMROOT/tools/mkmapgrids/mkmapdata.sh`` uses ``ESMF_Re
    ../../tools/mkmapdata/mkmapdata.sh
 
    **********************
-   usage on cheyenne:Figure mkmapdata.sh
+   usage on derecho:Figure mkmapdata.sh
    ./mkmapdata.sh
 
    valid arguments:
