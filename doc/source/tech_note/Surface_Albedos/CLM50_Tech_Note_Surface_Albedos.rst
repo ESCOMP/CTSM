@@ -439,24 +439,38 @@ The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }` and diffuse :math
 
 where :math:`f_{sno}` is the fraction of the ground covered with snow (section :numref:`Snow Covered Area Fraction`).
 
-:math:`\alpha _{soi,\, \Lambda }^{\mu }` and :math:`\alpha _{soi,\, \Lambda }` vary with glacier, lake, and soil surfaces. Glacier albedos are from :ref:`Paterson (1994) <Paterson1994>`
+:math:`\alpha _{soi,\, \Lambda }^{\mu }` and :math:`\alpha _{soi,\, \Lambda }` vary with glacier, lake, and soil surfaces. Glacier albedos were originally from :ref:`Paterson (1994) <Paterson1994>` but were adjusted to the following values agreed upon by the Land Ice Working Group leadership team
 
-.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.6
+.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.5
 
-.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.4.
+.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.3.
 
-Unfrozen lake albedos depend on the cosine of the solar zenith angle :math:`\mu`
+Note that these are read in from the ``clm_inparm`` namelist group (variable ``albice``). 
+
+Unfrozen lake direct albedos depend on the cosine of the solar zenith angle :math:`\mu`
 
 .. math::
    :label: 3.60
 
-   \alpha _{soi,\, \Lambda }^{\mu } =\alpha _{soi,\, \Lambda } =0.05\left(\mu +0.15\right)^{-1} .
+   \alpha _{soi,\, \Lambda }^{\mu } =0.05\left(\max (0.001,\mu +0.15\right))^{-1} .
 
-Frozen lake albedos are from NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`)
+For diffuse radiation the expression in equation :eq:`3.60` is integrated over the full sky to yield :math:`\alpha _{soi,\, \Lambda } =0.10`.
 
-.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.60
+For frozen lakes without resolved snow layers (:math:`snl=0`), the albedo at cold temperatures *a*\ :sub:`0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
 
-.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.40.
+.. math::
+   :label: 3.60a
+
+   \alpha _{soi,\, \Lambda }^{\mu }=a_{0} \left(1-x\right)+\max(0.10,a)x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
+
+.. math::
+   :label: 3.60b
+
+   \alpha _{soi,\, \Lambda }=a_{0} \left(1-x\right)+0.10x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
+
+where :math:`a` is calculated from :eq:`3.60` for direct radiation.
+
+For frozen lakes with resolved snow layers, the reflectance of the ice surface is fixed at *a*\ :sub:`0`, and the snow reflectance is calculated as over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`). These two reflectances are combined to obtain the snow-fraction-weighted albedo as in over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`).
 
 As in NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`), soil albedos vary with color class
 
@@ -467,7 +481,7 @@ As in NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`), soil albedos vary with color cla
 
 where :math:`\Delta` depends on the volumetric water content of the first soil layer :math:`\theta _{1}` (section :numref:`Soil Water`) as :math:`\Delta =0.11-0.40\theta _{1} >0`, and :math:`\alpha _{sat,\, \Lambda }` and :math:`\alpha _{dry,\, \Lambda }` are albedos for saturated and dry soil color classes (:numref:`Table Dry and saturated soil albedos`).
 
-CLM soil colors are prescribed so that they best reproduce observed MODIS local solar noon surface albedo values at the CLM grid cell following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. The soil colors are fitted over the range of 20 soil classes shown in :numref:`Table Dry and saturated soil albedos` and compared to the MODIS monthly local solar noon all-sky surface albedo as described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and :ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM two-stream radiation model was used to calculate the model equivalent surface albedo using climatological monthly soil moisture along with the vegetation parameters of PFT fraction, LAI, and SAI. The soil color that produced the closest all-sky albedo in the two-stream radiation model was selected as the best fit for the month. The fitted monthly soil colors were averaged over all snow-free months to specify a representative soil color for the grid cell. In cases where there was no snow-free surface albedo for the year, the soil color derived from snow-affected albedo was used to give a representative soil color that included the effects of the minimum permanent snow cover.
+Albedos associated with CLM soil colors were updated for CLM4 using the procedure described below (:ref:`Lawrence et al. (2011) <Lawrenceetal2011>`) but have not been updated since then. CLM soil colors are prescribed so that they best reproduce observed MODIS local solar noon surface albedo values at the CLM grid cell following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. The soil colors are fitted over the range of 20 soil classes shown in :numref:`Table Dry and saturated soil albedos` and compared to the MODIS monthly local solar noon all-sky surface albedo as described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and :ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM two-stream radiation model was used to calculate the model equivalent surface albedo using climatological monthly soil moisture along with the vegetation parameters of PFT fraction, LAI, and SAI. The soil color that produced the closest all-sky albedo in the two-stream radiation model was selected as the best fit for the month. The fitted monthly soil colors were averaged over all snow-free months to specify a representative soil color for the grid cell. In cases where there was no snow-free surface albedo for the year, the soil color derived from snow-affected albedo was used to give a representative soil color that included the effects of the minimum permanent snow cover.
 
 .. _Table Dry and saturated soil albedos:
 
