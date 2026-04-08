@@ -22,7 +22,7 @@ module controlMod
   use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen
-  use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
+  use histFileMod                      , only: hist_empty_htapes, hist_all_fields, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
   use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
   use histFileMod                      , only: hist_fincl9, hist_fincl10
@@ -46,7 +46,7 @@ module controlMod
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML, hillslope_hydrology_ReadNML
+  use SoilHydrologyMod                 , only: hillslope_hydrology_ReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
@@ -154,7 +154,8 @@ contains
     ! History, restart options
 
     namelist /clm_inparm/  &
-         hist_empty_htapes, hist_dov2xy, &
+         hist_empty_htapes, hist_all_fields, &
+         hist_dov2xy, &
          hist_avgflag_pertape, hist_type1d_pertape, &
          hist_nhtfrq,  hist_ndens, hist_mfilt, &
          hist_fincl1,  hist_fincl2, hist_fincl3, &
@@ -257,8 +258,9 @@ contains
           use_fates_tree_damage,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
-          fates_history_dimlevel,                       &
-          use_fates_managed_fire
+          use_fates_managed_fire,                       &
+          fates_lu_transition_logic,                    &
+          fates_history_dimlevel
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -617,7 +619,6 @@ contains
        call CNFUNReadNML( NLFilename )
     end if
 
-    call soilHydReadNML(   NLFilename )
     if ( use_hillslope ) then
        call hillslope_hydrology_ReadNML(   NLFilename )
     endif
@@ -818,6 +819,7 @@ contains
     call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_lu_transition_logic, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_harvest_mode, len(fates_harvest_mode) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_stomatal_model, len(fates_stomatal_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_stomatal_assimilation, len(fates_stomatal_assimilation) , MPI_CHARACTER, 0, mpicom, ier)
@@ -963,6 +965,7 @@ contains
 
     ! history file variables
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_all_fields, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_dov2xy, size(hist_dov2xy), MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)
@@ -1236,6 +1239,7 @@ contains
     if (use_fates) then
        write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
        write(iulog, *) '    fates_harvest_mode = ', fates_harvest_mode
+       write(iulog, *) '    fates_lu_transition_logic = ', fates_lu_transition_logic
        write(iulog, *) '    fates_stomatal_model = ', fates_stomatal_model
        write(iulog, *) '    fates_stomatal_assimilation = ', fates_stomatal_assimilation
        write(iulog, *) '    fates_leafresp_model = ', fates_leafresp_model

@@ -220,6 +220,7 @@ Index of rooting profile for soil carbon
 
 Changes rooting profile from Zeng 2001 double exponential (0) to
 Jackson 1996 single exponential (1) to Koven uniform exponential (2).
+(REMOVE, NOT in the CODE)
 </entry>
 
 <entry id="rooting_profile_varindex_water" type="integer" category="clm_physics"
@@ -412,12 +413,6 @@ Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the 
 <entry id="use_clm5_fpi" type="logical" category="clm_physics"
        group="clm_canopyhydrology_inparm" valid_values="" >
 If TRUE use clm5 equation for fraction of intercepted precipitation
-</entry>
-
-<entry id="baseflow_scalar" type="real" category="clm_physics"
-       group="soilhydrology_inparm" valid_values="" >
-Scalar multiplier for base flow rate
-(ONLY used if lower_boundary_condition is not aquifer or table)
 </entry>
 
 <entry id="soilwater_movement_method" type="integer" category="clm_physics"
@@ -944,6 +939,14 @@ which processes the raw land use data from the THEMIS tool data sets
 (https://doi.org/10.5065/29s7-7b41)
 </entry>
 
+<entry id="fates_lu_transition_logic" type="integer" category="physics"
+        group="clm_inparm" valid_values="1,2,3,4,5,6,7,8,9">
+Select the logic for land use class transitions.
+Allowed values are 1-9. See the Land Use subsection of the Namelist Options section 
+of the FATES user guide for an explanation of the options.
+(Only relevant if FATES with land use is on)
+</entry>
+
 <entry id="use_luna" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the LUNA model, to effect Photosynthesis by leaf Nitrogen
@@ -1021,7 +1024,7 @@ constants for biogeochem modules
 </entry>
 
 <entry id="fates_paramfile" type="char*512" category="datasets"
-       input_pathname="abs" group="clm_inparm" valid_values="" >
+       input_pathname="landroot" group="clm_inparm" valid_values="" >
 Full pathname datafile with fates parameters
 (Only relevant if FATES is on).
 </entry>
@@ -1076,10 +1079,16 @@ If TRUE, implies output data on a 2D latitude/longitude grid. False means
 output in 1D vector format.  One setting per history tape series.
 </entry>
 
+<entry id="hist_all_fields" type="logical" category="history"
+       group="clm_inparm" valid_values="" >
+If TRUE, indicates output ALL history fields on the primary tape.
+</entry>
+
 <entry id="hist_empty_htapes" type="logical" category="history"
        group="clm_inparm" valid_values="" >
 If TRUE, indicates do NOT output any default history fields (requires you to use
-hist_fincl* to set the exact output fields to use)..
+hist_fincl1 to set the exact output fields to use). Note only the
+primary tape has default history fields.
 </entry>
 
 <entry id="hist_fexcl1" type="char*64(1000)" category="history"
@@ -1214,6 +1223,8 @@ number of segments per clump for decomposition
 <entry id="pertlim" type="real" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Perturbation limit when doing error growth test
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
+(deprecated -- will be removed)
 </entry>
 
 <entry id="rest_flag" type="logical" category="clm_restart"
@@ -1236,7 +1247,8 @@ If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux a
 
 <entry id="urban_traffic" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
-If TRUE, urban traffic flux will be activated (Currently NOT implemented).
+If TRUE, urban traffic flux will be activated
+(Currently NOT implemented).
 </entry>
 
 <entry id="building_temp_method" type="integer" category="clm_physics"
@@ -1362,6 +1374,7 @@ CLM Biogeochemistry mode : Carbon Nitrogen model (CN)
        group="clm_inparm" valid_values="" value=".false.">
 CLM Biogeochemistry mode : Carbon Nitrogen with Dynamic Global Vegetation Model (CNDV)
 (or CLM45BGCDV if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+(deprecated -- will be removed)
 </entry>
 
 <entry id="use_fun" type="logical" category="bgc"
@@ -1403,6 +1416,7 @@ Toggle to use 25 lake layers instead of 10
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the VIC hydrologic parameterizations
 (vichydro=".true." is EXPERIMENTAL, UNSUPPORTED!)
+(deprecated -- will be removed)
 </entry>
 
 <entry id="use_crop" type="logical" category="physics"
@@ -1475,6 +1489,11 @@ Set to .true. in order to override crop harvesting logic and to instead harvest 
 <entry id="use_mxmat" type="logical" category="physics"
         group="cnphenology" valid_values="" value=".true.">
 Set to .false. in order to ignore crop PFT parameter for maximum growing season length (mxmat). Must be set to .false. when generate_crop_gdds is .true.
+</entry>
+
+<entry id="suppress_gddmaturity_warning" type="logical" category="physics"
+        group="cnphenology" valid_values="" value=".false.">
+If set to .true., suppress the warning message when a prescribed cultivar GDD requirement is below the minimum allowed value and is replaced with min_gddmaturity. Useful when using prescribed crop calendars with intentionally low GDD requirements.
 </entry>
 
 <entry id="min_critical_dayl_method" type="char*25" category="physics"
@@ -1716,30 +1735,6 @@ This parameter must be in the range [0,1]
 Only relevant if glcmec_downscale_longwave is .true.
 </entry>
 
-<entry id="precip_repartition_glc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_glc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_snow_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature below which all precipitation falls as snow, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
-<entry id="precip_repartition_nonglc_all_rain_t" type="real" category="clm_physics"
-       group="atm2lnd_inparm" valid_values="" >
-Temperature above which all precipitation falls as rain, for non-glacier columns (deg C)
-Only relevant if repartition_rain_snow is .true.
-</entry>
-
 <!-- ========================================================================================  -->
 <!-- Namelist items controlling fields sent to atmosphere                                      -->
 <!-- ========================================================================================  -->
@@ -1809,6 +1804,82 @@ Mapping method from Nitrogen deposition input file to the model resolution
     consd    = First-order conservative interpolation
     consf    = Same as consd with fraction area normalization
     none     = no interpolation
+</entry>
+
+<!-- ======================================================================================== 
+     Carbon isotope streams Namelist (only used when use_c13/use_c14 is on and bgc=cn or bgc)
+     (Atmospheric C13 and C14 ratios in terms of a delta)
+     ========================================================================================  -->
+
+<entry id="stream_year_first_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+First year to loop over for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_year_last_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Last year to loop over for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_model_year_align_atm_c14" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_atm_c14 value
+</entry>
+
+<entry id="stream_tintalgo_atm_c14" type="char*256" category="datasets"
+       group="carbon_isotope_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for atmospheric C14 delta data
+</entry>
+
+<entry id="stream_taxmode_atm_c14" type="char*80" category="datasets"
+       group="carbon_isotope_streams" valid_values="cycle,extend,limit" >
+Time interpolation mode for atmospheric C14 delta data to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
+</entry>
+
+<entry id="stream_fldfilename_atm_c14" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream data for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_meshfile_atm_c14" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream mesh for atmospheric C14 isotope delta data
+</entry>
+
+<entry id="stream_year_first_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+First year to loop over for atmospheric C13 isotope delta data
+</entry>
+
+<entry id="stream_year_last_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Last year to loop over for data atmospheric C13 isotope delta data
+</entry>
+
+<entry id="stream_model_year_align_atm_c13" type="integer" category="datasets"
+       group="carbon_isotope_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_atm_c13 value
+</entry>
+
+<entry id="stream_tintalgo_atm_c13" type="char*256" category="datasets"
+       group="carbon_isotope_streams" valid_values="linear,nearest,lower,upper" >
+Time interpolation method to use for atmospheric C13 delta data
+</entry>
+
+<entry id="stream_taxmode_atm_c13" type="char*80" category="datasets"
+       group="carbon_isotope_streams" valid_values="cycle,extend,limit" >
+Time interpolation mode for atmospheric C13 delta data to determine how to handle data before and after the times in the file
+    cycle   = Always cycle over the data
+    extend  = Use the first time before the available data, and use the last time after the available data
+    limit   = Only use the data within the times available -- abort if the model tries to go outside it
+</entry>
+
+<entry id="stream_fldfilename_atm_c13" type="char*512" category="datasets"
+       input_pathname="abs" group="carbon_isotope_streams" valid_values="" >
+Filename of input stream data for atmospheric C13 isotope delta data
 </entry>
 
 <!-- ========================================================================================  -->
@@ -2469,6 +2540,7 @@ If TRUE, add extra diagnostics for methane model to the history files
 Profile over which to distribute C and N coming from surface pools (leaves, stem, grain).
 </entry>
 
+
 <!-- some N cycle flags  -->
 <entry id="no_frozen_nitrif_denitrif" type="logical" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
@@ -2678,6 +2750,7 @@ If TRUE, turn on methane biogeochemistry model for lake columns, using a simplif
 <entry id="usephfact" type="logical" category="clm_methane"
        group="ch4par_in" valid_values="" >
 If TRUE, apply a limitation to methane production based on the soil pH dataset.
+(EXPERIMENTAL, UNSUPPORTED, and UNTESTED!)
 </entry>
 
 <entry id="vmax_oxid_unsat" type="real" category="clm_methane"

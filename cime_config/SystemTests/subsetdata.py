@@ -46,35 +46,28 @@ class SUBSETDATASHARED(SystemTestsCommon):
             "--overwrite",
         ]
 
+    def setup_phase(self, clean=False, test_mode=False, reset=False, keep=False, disable_git=False):
+        """
+        override default SMS system test setup phase
+        """
+
+        # Default SMS behavior
+        self.setup_indv(
+            clean=clean,
+            test_mode=test_mode,
+            reset=reset,
+            keep=keep,
+            disable_git=disable_git,
+        )
+
         # Run subset_data, if needed.
         # It's needed during SETUP and/or NLCOMP phases if comparing/generating a baseline because
         # the namelist comparison will require generating a namelist, and that will fail if we
         # haven't specified our custom fsurdat and other stuff. By calling self._run_subset_data()
         # only if the usermods directory doesn't yet exist, we avoid it being called every time the
         # test class is initialized (which happens, e.g., in RUN phase).
-        # if not os.path.exists(self.usermods_dir):
-        #     self._run_subset_data()
-
-    def build_phase(self, sharedlib_only=False, model_only=False):
-        """
-        Run subset_data and then build the model
-        """
-
-        # Run subset_data.
-        # build_phase gets called twice:
-        # - once with sharedlib_only = True and
-        # - once with model_only = True
-        # Because we only need subset_data run once, we only do it for the sharedlib_only call.
-        # We could also check for the existence of the subset_data outputs, but that might lead to
-        # a situation where the user expects subset_data to be called but it's not. Better to run
-        # unnecessarily (e.g., if you fixed some FORTRAN code and just need to rebuild).
-        # In that same vein, yes we did run subset_data during the first time this test case was
-        # initialized (see __init__() above), but we're doing it again here just to be safe.
-        if sharedlib_only:
+        if not os.path.exists(self.usermods_dir):
             self._run_subset_data()
-
-        # Do the build
-        self.build_indv(sharedlib_only=sharedlib_only, model_only=model_only)
 
     def _run_subset_data(self):
         """

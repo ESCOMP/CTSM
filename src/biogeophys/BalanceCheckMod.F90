@@ -48,6 +48,7 @@ module BalanceCheckMod
   public :: WaterGridcellBalance     ! Grid cell-level water balance check
   public :: BeginWaterColumnBalance  ! Initialize column-level water balance check
   public :: BalanceCheck             ! Water & energy balance checks
+  public :: EnergyBalanceCheck       ! Energy balance checks
   public :: GetBalanceCheckSkipSteps ! Get the number of steps to skip for the balance check
   public :: BalanceCheckClean        ! Clean up for BalanceCheck
 
@@ -59,6 +60,9 @@ module BalanceCheckMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: WaterGridcellBalanceSingle  ! Grid cell-level water balance check for bulk or a single tracer
   private :: BeginWaterColumnBalanceSingle  ! Initialize column-level water balance check for bulk or a single tracer
+
+  ! !PRIVATE PARAMETERS
+  real(r8), parameter :: error_thresh  = 1.e-5_r8  ! Error threshold for conservation error
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -446,13 +450,10 @@ contains
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
-     ! and energy balance calculation. It is helpful to see the performance of
-     ! the process of integration.
+     ! and then calls a different subroutine for the energy balance calculation.
+     ! It is helpful to see the performance of the process of integration.
      !
-     ! The error for energy balance:
-     !
-     ! error = abs(Net radiation - change of internal energy - Sensible heat
-     !             - Latent heat)
+     ! The error for energy balance is described in EnergyBalanceCheck.
      !
      ! The error for water balance:
      !
@@ -501,26 +502,16 @@ contains
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
-     real(r8) :: errsol_max_val                         ! Maximum value of error in solar radiation conservation error over all columns [W m-2]
-     real(r8) :: errlon_max_val                         ! Maximum value of error in longwave radiation conservation error over all columns [W m-2]
-     real(r8) :: errseb_max_val                         ! Maximum value of error in surface energy conservation error over all columns [W m-2]
-     real(r8) :: errsoi_col_max_val                     ! Maximum value of column-level soil/lake energy conservation error over all columns [W m-2]
 
-     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow 
-     real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! Warning threshhold for error in errsol, errsol, errseb, errlonv
-     real(r8), parameter :: error_thresh             = 1.e-5_r8                       ! Error threshhold for conservation error
+     real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow
 
      !-----------------------------------------------------------------------
 
      associate(                                                                   & 
-          forc_solad_col    =>    atm2lnd_inst%forc_solad_downscaled_col        , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
-          forc_solad        =>    atm2lnd_inst%forc_solad_not_downscaled_grc    , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
-          forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_rain         =>    wateratm2lnd_inst%forc_rain_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level rain rate [mm/s]
           forc_rain_grc     =>    wateratm2lnd_inst%forc_rain_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level rain rate [mm/s]
           forc_snow         =>    wateratm2lnd_inst%forc_snow_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level snow rate [mm/s]
           forc_snow_grc     =>    wateratm2lnd_inst%forc_snow_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level snow rate [mm/s]
-          forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
           h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
           frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
@@ -567,51 +558,13 @@ contains
 
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
-          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
-
-          dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
-          eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
-          eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
-          eflx_sh_tot             =>    energyflux_inst%eflx_sh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
-          eflx_lh_tot             =>    energyflux_inst%eflx_lh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total latent heat flux (W/m**2)  [+ to atm]
-          eflx_soil_grnd          =>    energyflux_inst%eflx_soil_grnd_patch    , & ! Input:  [real(r8) (:)   ]  soil heat flux (W/m**2) [+ = into soil] 
-          eflx_wasteheat_patch    =>    energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-          eflx_ventilation_patch  =>    energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
-          eflx_heat_from_ac_patch =>    energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
-          eflx_traffic_patch      =>    energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
-          eflx_dynbal             =>    energyflux_inst%eflx_dynbal_grc         , & ! Input:  [real(r8) (:)   ]  energy conversion flux due to dynamic land cover change(W/m**2) [+ to atm]
-          errsoi_col              =>    energyflux_inst%errsoi_col              , & ! Output: [real(r8) (:)   ]  column-level soil/lake energy conservation error (W/m**2)
-          errsol                  =>    energyflux_inst%errsol_patch            , & ! Output: [real(r8) (:)   ]  solar radiation conservation error (W/m**2)
-          errseb                  =>    energyflux_inst%errseb_patch            , & ! Output: [real(r8) (:)   ]  surface energy conservation error (W/m**2)
-          errlon                  =>    energyflux_inst%errlon_patch            , & ! Output: [real(r8) (:)   ]  longwave radiation conservation error (W/m**2)
-
-          sabg_soil               =>    solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
-          sabg_snow               =>    solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
-          sabg_chk                =>    solarabs_inst%sabg_chk_patch            , & ! Input:  [real(r8) (:)   ]  sum of soil/snow using current fsno, for balance check
-          fsa                     =>    solarabs_inst%fsa_patch                 , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed (total) (W/m**2)
-          fsr                     =>    solarabs_inst%fsr_patch                 , & ! Input:  [real(r8) (:)   ]  solar radiation reflected (W/m**2)      
-          sabv                    =>    solarabs_inst%sabv_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by vegetation (W/m**2)
-          sabg                    =>    solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
-          
-          elai                    =>    canopystate_inst%elai_patch             , & ! Input:  [real(r8) (:,:)]  
-          esai                    =>    canopystate_inst%esai_patch             , & ! Input:  [real(r8) (:,:)]  
-
-          fabd                    =>    surfalb_inst%fabd_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
-          fabi                    =>    surfalb_inst%fabi_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit indirect flux
-          albd                    =>    surfalb_inst%albd_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)
-          albi                    =>    surfalb_inst%albi_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)
-          ftdd                    =>    surfalb_inst%ftdd_patch                 , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
-          ftid                    =>    surfalb_inst%ftid_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
-          ftii                    =>    surfalb_inst%ftii_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
-
-          netrad                  =>    energyflux_inst%netrad_patch              & ! Output: [real(r8) (:)   ]  net radiation (positive downward) (W/m**2)
+          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col  & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
           )
 
        ! Get step size and time step
-
+       dtime = get_step_size_real()
        nstep = get_nstep()
        DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
-       dtime = get_step_size_real()
 
        ! Determine column level incoming snow and rain
        ! Assume no incident precipitation on urban wall columns (as in CanopyHydrologyMod.F90).
@@ -895,6 +848,109 @@ contains
        end if
 
        ! Energy balance checks
+       call EnergyBalanceCheck(bounds, atm2lnd_inst, solarabs_inst, &
+        surfalb_inst, energyflux_inst, canopystate_inst, waterdiagnosticbulk_inst)
+
+     end associate
+
+   end subroutine BalanceCheck
+
+   !-----------------------------------------------------------------------
+   subroutine EnergyBalanceCheck( bounds, &
+        atm2lnd_inst, solarabs_inst, &
+        surfalb_inst, energyflux_inst, canopystate_inst, &
+        waterdiagnosticbulk_inst)
+     !
+     ! !DESCRIPTION:
+     ! This subroutine accumulates the numerical truncation errors of the energy
+     ! balance calculation. It is helpful to see the performance of
+     ! the process of integration.
+     !
+     ! The error for energy balance:
+     !
+     ! error = abs(Net radiation - change of internal energy - Sensible heat
+     !             - Latent heat)
+     !
+     ! !USES:
+     use clm_varcon        , only : spval
+     use clm_time_manager  , only : get_nstep
+     use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
+     use CanopyStateType   , only : canopystate_type
+     use SurfaceAlbedoType , only : surfalb_type
+     !
+     ! !ARGUMENTS:
+     type(bounds_type)     , intent(in)    :: bounds
+     type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
+     type(solarabs_type)   , intent(in)    :: solarabs_inst
+     type(surfalb_type)    , intent(in)    :: surfalb_inst
+     type(energyflux_type) , intent(inout) :: energyflux_inst
+     type(canopystate_type), intent(inout) :: canopystate_inst
+     type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: p,c,l,g                                ! indices
+     integer  :: nstep                                  ! time step number
+     integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
+     integer  :: indexp,indexc,indexg                   ! index of first found in search loop
+
+     real(r8) :: errsol_max_val                         ! Maximum value of error in solar radiation conservation error over all columns [W m-2]
+     real(r8) :: errlon_max_val                         ! Maximum value of error in longwave radiation conservation error over all columns [W m-2]
+     real(r8) :: errseb_max_val                         ! Maximum value of error in surface energy conservation error over all columns [W m-2]
+     real(r8) :: errsoi_col_max_val                     ! Maximum value of column-level soil/lake energy conservation error over all columns [W m-2]
+
+     real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! Warning threshhold for error in errsol, errsol, errseb, errlonv
+
+     !-----------------------------------------------------------------------
+
+     associate(                                                                   &
+          forc_solad_col    =>    atm2lnd_inst%forc_solad_downscaled_col        , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solad        =>    atm2lnd_inst%forc_solad_not_downscaled_grc    , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
+          forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
+          forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
+
+          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+
+          dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
+          eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
+          eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
+          eflx_sh_tot             =>    energyflux_inst%eflx_sh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]
+          eflx_lh_tot             =>    energyflux_inst%eflx_lh_tot_patch       , & ! Input:  [real(r8) (:)   ]  total latent heat flux (W/m**2)  [+ to atm]
+          eflx_soil_grnd          =>    energyflux_inst%eflx_soil_grnd_patch    , & ! Input:  [real(r8) (:)   ]  soil heat flux (W/m**2) [+ = into soil]
+          eflx_wasteheat_patch    =>    energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
+          eflx_ventilation_patch  =>    energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
+          eflx_heat_from_ac_patch =>    energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
+          eflx_traffic_patch      =>    energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)
+          errsoi_col              =>    energyflux_inst%errsoi_col              , & ! Output: [real(r8) (:)   ]  column-level soil/lake energy conservation error (W/m**2)
+          errsol                  =>    energyflux_inst%errsol_patch            , & ! Output: [real(r8) (:)   ]  solar radiation conservation error (W/m**2)
+          errseb                  =>    energyflux_inst%errseb_patch            , & ! Output: [real(r8) (:)   ]  surface energy conservation error (W/m**2)
+          errlon                  =>    energyflux_inst%errlon_patch            , & ! Output: [real(r8) (:)   ]  longwave radiation conservation error (W/m**2)
+
+          sabg_soil               =>    solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
+          sabg_snow               =>    solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
+          sabg_chk                =>    solarabs_inst%sabg_chk_patch            , & ! Input:  [real(r8) (:)   ]  sum of soil/snow using current fsno, for balance check
+          fsa                     =>    solarabs_inst%fsa_patch                 , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed (total) (W/m**2)
+          fsr                     =>    solarabs_inst%fsr_patch                 , & ! Input:  [real(r8) (:)   ]  solar radiation reflected (W/m**2)
+          sabv                    =>    solarabs_inst%sabv_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by vegetation (W/m**2)
+          sabg                    =>    solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
+
+          elai                    =>    canopystate_inst%elai_patch             , & ! Input:  [real(r8) (:,:)]
+          esai                    =>    canopystate_inst%esai_patch             , & ! Input:  [real(r8) (:,:)]
+
+          fabd                    =>    surfalb_inst%fabd_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit direct flux
+          fabi                    =>    surfalb_inst%fabi_patch                 , & ! Input:  [real(r8) (:,:)]  flux absorbed by canopy per unit indirect flux
+          albd                    =>    surfalb_inst%albd_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (direct)
+          albi                    =>    surfalb_inst%albi_patch                 , & ! Input:  [real(r8) (:,:)]  surface albedo (diffuse)
+          ftdd                    =>    surfalb_inst%ftdd_patch                 , & ! Input:  [real(r8) (:,:)]  down direct flux below canopy per unit direct flux
+          ftid                    =>    surfalb_inst%ftid_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit direct flux
+          ftii                    =>    surfalb_inst%ftii_patch                 , & ! Input:  [real(r8) (:,:)]  down diffuse flux below canopy per unit diffuse flux
+
+          netrad                  =>    energyflux_inst%netrad_patch              & ! Output: [real(r8) (:)   ]  net radiation (positive downward) (W/m**2)
+          )
+
+       ! Get step size and time step
+
+       nstep = get_nstep()
+       DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
 
        do p = bounds%begp, bounds%endp
           if (patch%active(p)) then
@@ -1060,6 +1116,6 @@ contains
        
      end associate
 
-   end subroutine BalanceCheck
+   end subroutine EnergyBalanceCheck
 
 end module BalanceCheckMod

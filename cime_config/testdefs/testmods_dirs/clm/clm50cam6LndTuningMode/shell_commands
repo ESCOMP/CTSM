@@ -2,4 +2,5 @@
 
 ./xmlchange LND_TUNING_MODE="clm5_0_cam6.0"
 ./xmlchange ROF_NCPL='$ATM_NCPL'
+./xmlchange CLM_NDEP_FROM_CPL="TRUE"
 

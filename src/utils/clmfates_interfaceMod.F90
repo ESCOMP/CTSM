@@ -58,6 +58,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
    use clm_varctl        , only : fates_harvest_mode
+   use clm_varctl        , only : fates_lu_transition_logic
    use clm_varctl        , only : fates_stomatal_model
    use clm_varctl        , only : fates_stomatal_assimilation
    use clm_varctl        , only : fates_leafresp_model
@@ -80,6 +81,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_lch4
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
+   use clm_varctl        , only : Allocate_Carbon_only
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -127,12 +129,10 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
-   use CLMFatesParamInterfaceMod, only: fates_param_reader_ctsm_impl
-!   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
    use FatesInterfaceMod , only : fates_interface_type
-   use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+   use FatesInterfaceMod, only : FatesInterfaceInit
    use FatesInterfaceMod, only : SetFatesGlobalElements1
    use FatesInterfaceMod, only : SetFatesGlobalElements2
    use FatesInterfaceMod     , only : allocate_bcin
@@ -144,10 +144,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
    use FatesInterfaceMod     , only : InitTimeAveragingGlobals
-   
-   use FatesParametersInterface, only : fates_param_reader_type
-   use FatesParametersInterface, only : fates_parameters_type
-
+   use clm_varctl            , only : fates_paramfile
    use FatesInterfaceMod     , only : DetermineGridCellNeighbors
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
@@ -310,16 +307,15 @@ module CLMFatesInterfaceMod
      ! in CTSM
      ! --------------------------------------------------------------------------------
 
-     integer,intent(in)                             :: surf_numpft
-     integer,intent(in)                             :: surf_numcft
-     integer,intent(out)                            :: maxsoil_patches
-     integer                                        :: pass_use_fixed_biogeog
-     integer                                        :: pass_use_nocomp
-     integer                                        :: pass_use_sp
-     integer                                        :: pass_masterproc
-     integer                                        :: pass_use_luh2
-     logical                                        :: verbose_output
-     type(fates_param_reader_ctsm_impl)             :: var_reader
+     integer,intent(in)  :: surf_numpft
+     integer,intent(in)  :: surf_numcft
+     integer,intent(out) :: maxsoil_patches
+     integer             :: pass_use_fixed_biogeog
+     integer             :: pass_use_nocomp
+     integer             :: pass_use_sp
+     integer             :: pass_masterproc
+     integer             :: pass_use_luh2
+     logical             :: verbose_output
      
      call t_startf('fates_globals1')
 
@@ -368,9 +364,11 @@ module CLMFatesInterfaceMod
            pass_use_luh2 = 0
         end if
         call set_fates_ctrlparms('use_luh2',ival=pass_use_luh2)
+
+        
+        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         
      end if
-
 
      ! The following call reads in the parameter file
      ! and then uses that to determine the number of patches
@@ -380,8 +378,9 @@ module CLMFatesInterfaceMod
      ! and allocations on the FATES side, which require
      ! some allocations from CLM (like soil layering)
 
-     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,var_reader)
 
+     call SetFatesGlobalElements1(use_fates,surf_numpft,surf_numcft,fates_paramfile)
+     
      maxsoil_patches = fates_maxPatchesPerSite
      
      call t_stopf('fates_globals1')
@@ -405,7 +404,6 @@ module CLMFatesInterfaceMod
        
      integer                                        :: pass_vertsoilc
      integer                                        :: pass_ch4
-     integer                                        :: pass_spitfire
      integer                                        :: pass_ed_st3
      integer                                        :: pass_num_lu_harvest_cats
      integer                                        :: pass_lu_harvest
@@ -435,22 +433,15 @@ module CLMFatesInterfaceMod
 
      if (use_fates) then
 
-        
-
         ! Send parameters individually
         call set_fates_ctrlparms('num_sw_bbands',ival=numrad)
         call set_fates_ctrlparms('vis_sw_index',ival=ivis)
         call set_fates_ctrlparms('nir_sw_index',ival=inir)
-
         call set_fates_ctrlparms('num_lev_soil',ival=nlevsoi)
         call set_fates_ctrlparms('hlm_name',cval='CLM')
         call set_fates_ctrlparms('hio_ignore_val',rval=spval)
         call set_fates_ctrlparms('soilwater_ipedof',ival=get_ipedof(0))
-        
-        call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         call set_fates_ctrlparms('seeddisp_cadence',ival=fates_seeddisp_cadence)
-
-
         call set_fates_ctrlparms('hist_hifrq_dimlevel',ival=fates_history_dimlevel(1))
         call set_fates_ctrlparms('hist_dynam_dimlevel',ival=fates_history_dimlevel(2))
         
@@ -474,23 +465,6 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_tree_damage',ival=pass_tree_damage)
         
-        ! These may be in a non-limiting status (ie when supplements)
-        ! are added, but they are always allocated and cycled non-the less
-        ! FATES may want to interact differently with other models
-        ! that don't even have these arrays allocated.
-        ! FATES also checks that if NO3 is cycled in ELM, then
-        ! any plant affinity parameters are checked.
-
-        if(use_nitrif_denitrif) then
-           call set_fates_ctrlparms('nitrogen_spec',ival=1)
-        else
-           call set_fates_ctrlparms('nitrogen_spec',ival=2)
-        end if
-
-        ! Phosphorus is not tracked in CLM
-        call set_fates_ctrlparms('phosphorus_spec',ival=0)
-
-
         ! Pass spitfire mode values
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
@@ -663,6 +637,7 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('num_luh2_states',ival=pass_num_luh_states)
         call set_fates_ctrlparms('num_luh2_transitions',ival=pass_num_luh_transitions)
+        call set_fates_ctrlparms('fates_lu_transition_logic',ival=fates_lu_transition_logic)
 
         if ( use_fates_potentialveg ) then
            pass_use_potentialveg = 1
@@ -1052,9 +1027,6 @@ module CLMFatesInterfaceMod
 
       call this%init_history_io(bounds_proc)
 
-      ! Report Fates Parameters (debug flag in lower level routines)
-      call FatesReportParameters(masterproc)
-
       ! Fire data to send to FATES
       call create_fates_fire_data_method( this%fates_fire_data_method )
 
@@ -1161,6 +1133,12 @@ module CLMFatesInterfaceMod
       real(r8) :: s_node, smp_node         ! local for relative water content and potential
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
+      logical  :: nitr_suppl                     ! true -> CLM is supplementing Nitrogen
+      logical, parameter :: phos_dummy_suppl = .true.    ! true -> Phosphorus is NOT limited (i.e. supplemented)
+                                                         ! This argument is needed for FATES
+                                                         ! to specify if phosphorus is being
+                                                         ! supplemented, Phosphorous is not limited in CLM
+                                                         ! so we set it to TRUE
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -1342,10 +1320,16 @@ module CLMFatesInterfaceMod
 
       end do
 
+      if(Allocate_Carbon_only())then
+         nitr_suppl = .true.
+      else
+         nitr_suppl = .false.
+      end if
+      
       ! Nutrient uptake fluxes have been accumulating with each short
       ! timestep, here, we unload them from the boundary condition
       ! structures into the cohort structures.
-      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in, nitr_suppl, phos_dummy_suppl)
 
       ! Distribute any seeds from neighboring gridcells into the current gridcell
       ! Global seed availability array populated by WrapGlobalSeedDispersal call
@@ -2358,11 +2342,11 @@ module CLMFatesInterfaceMod
 
      call t_startf('fates_wrapsunfrac')
 
-      associate( forc_solad => atm2lnd_inst%forc_solad_not_downscaled_grc, &
-                 forc_solai => atm2lnd_inst%forc_solai_grc, &
-                 fsun       => canopystate_inst%fsun_patch, &
-                 laisun     => canopystate_inst%laisun_patch, &
-                 laisha     => canopystate_inst%laisha_patch )
+     associate( forc_solad_g => atm2lnd_inst%forc_solad_not_downscaled_grc, &
+                forc_solai_g => atm2lnd_inst%forc_solai_grc, &
+                fsun       => canopystate_inst%fsun_patch, &
+                laisun     => canopystate_inst%laisun_patch, &
+                laisha     => canopystate_inst%laisha_patch )
 
         ! -------------------------------------------------------------------------------
         ! Convert input BC's
@@ -2374,8 +2358,8 @@ module CLMFatesInterfaceMod
            g = col%gridcell(c)
 
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad(g,:)
-              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai(g,:)
+              this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad_g(g,:)
+              this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai_g(g,:)
            end do
         end do
 
@@ -3084,24 +3068,34 @@ module CLMFatesInterfaceMod
 
  subroutine wrap_update_hifrq_hist(this, bounds_clump, &
                                    soilbiogeochem_carbonflux_inst,     &
-                                   soilbiogeochem_carbonstate_inst)
+                                   soilbiogeochem_carbonstate_inst,    &
+                                   solarabs_inst, energyflux_inst,     &
+                                   temperature_inst)
 
     ! Arguments
     class(hlm_fates_interface_type), intent(inout)    :: this
     type(bounds_type), intent(in)                     :: bounds_clump
     type(soilbiogeochem_carbonflux_type), intent(in)  :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
+    type(solarabs_type),                   intent(in) :: solarabs_inst
+    type(energyflux_type),                 intent(in) :: energyflux_inst
+    type(temperature_type),                intent(in) :: temperature_inst
 
     ! locals
     real(r8) :: dtime
-    integer  :: s, c, nc
+    integer  :: s, c, nc, ifp, p
 
     call t_startf('fates_wrap_update_hifrq_hist')
 
     associate(&
         hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration
         totsomc       => soilbiogeochem_carbonstate_inst%totsomc_col, & ! (gC/m2) total soil organic matter carbon
-        totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col)   ! (gC/m2) total litter carbon in BGC pools
+        totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col, & ! (gC/m2) total litter carbon in BGC pools
+        eflx_lh_tot   => energyflux_inst%eflx_lh_tot_patch, &    ! (W/m2) latent heat flux
+        eflx_sh_tot   => energyflux_inst%eflx_sh_tot_patch, &    ! (W/m2) sensible heat flux
+        fsa_patch     => solarabs_inst%fsa_patch, &              ! (W/m2) absorbed solar flux
+        eflx_lwrad_net=> energyflux_inst%eflx_lwrad_net_patch, & ! (W/m2) net longwave radiative flux
+        t_ref2m       => temperature_inst%t_ref2m_patch)            ! (K) 2-m air temperature
 
       nc = bounds_clump%clump_index
 
@@ -3121,6 +3115,21 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%tot_litc     = 0.0_r8
          end do
       end if
+
+
+      ! Summarize biophysical variables that we want to output on FATES dimensions
+      ! Note that we pass in the bareground patch values here by starting the ifp
+      ! do loop from zero
+      do s = 1, this%fates(nc)%nsites
+         c = this%f2hmap(nc)%fcolumn(s)
+         do ifp = 0, this%fates(nc)%sites(s)%youngest_patch%patchno
+            p = ifp + col%patchi(c)
+            this%fates(nc)%bc_in(s)%lhflux_pa(ifp) = eflx_lh_tot(p)
+            this%fates(nc)%bc_in(s)%shflux_pa(ifp) = eflx_sh_tot(p)
+            this%fates(nc)%bc_in(s)%swabs_pa(ifp)  = fsa_patch(p)
+            this%fates(nc)%bc_in(s)%t2m_pa(ifp)    = t_ref2m(p)
+         end do
+      end do
 
       dtime = get_step_size_real()
 
@@ -3365,7 +3374,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
    use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIOVariableKindMod, only : site_cdpf_r8, site_cdsc_r8, site_clscpf_r8
-   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8
+   use FatesIOVariableKindMod, only : site_landuse_r8, site_lulu_r8, site_lupft_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -3471,7 +3480,7 @@ module CLMFatesInterfaceMod
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
              site_elcwd_r8, site_elage_r8, site_agefuel_r8, &
              site_cdsc_r8, site_cdpf_r8, &
-             site_landuse_r8, site_lulu_r8)
+             site_landuse_r8, site_lulu_r8, site_lupft_r8)
 
 
            d_index = fates_hist%dim_kinds(dk_index)%dim2_index
@@ -3825,6 +3834,9 @@ module CLMFatesInterfaceMod
 
    fates%lulu_begin = 1
    fates%lulu_end   = n_landuse_cats * n_landuse_cats
+
+   fates%lupft_begin = 1
+   fates%lupft_end = n_landuse_cats * numpft_fates
    
    call t_stopf('fates_hlm2fatesbnds')
 

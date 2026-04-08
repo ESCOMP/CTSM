@@ -130,7 +130,7 @@ def check_correct_ndims(da, new_value, throw_error=False):
     """
     expected = da.ndim
     actual = np.array(new_value).ndim
-    is_ndim_correct = expected == actual
+    is_ndim_correct = actual in (0, expected)  # If actual 0, apply it to all
     if throw_error and not is_ndim_correct:
         raise RuntimeError(f"Incorrect N dims: Expected {expected}, got {actual}")
     return is_ndim_correct
@@ -323,11 +323,12 @@ def apply_new_value_to_parameter(args, ds_out, var, new_value, var_encoding, *, 
     # Ensure that any NaNs are replaced with the fill value
     new_value = _replace_nans_with_fill(var_encoding, new_value, chg=chg)
 
-    # This can be needed if, e.g., you're selecting and changing just one PFT
+    # This can be needed if, (a) you're selecting and changing just one PFT or (b) you're changing
+    # all values in a dimensioned parameter to match one value.
     if ds_out[var].values.ndim > 0 and new_value.ndim == 0:
-        new_value = np.atleast_1d(new_value)
-
-    ds_out[var].values = new_value
+        ds_out[var].values[:] = new_value
+    else:
+        ds_out[var].values = new_value
     return ds_out
 
 

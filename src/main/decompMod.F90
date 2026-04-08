@@ -46,6 +46,7 @@ module decompMod
   public :: get_subgrid_level_from_name ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
   public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
   public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
+  public :: decompmod_clean             ! Deallocate memory used by decompMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   !
@@ -565,5 +566,48 @@ contains
     end select
 
   end subroutine get_subgrid_level_gindex
+
+  !-----------------------------------------------------------------------
+  subroutine decompmod_clean()
+    ! Deallocate the decompMod long-term variables created in decompInit_lnd
+
+    ! Set the total counts to zero
+    nclumps = 0
+    numg = 0
+    numl = 0
+    numc = 0
+    nump = 0
+    numCohort = 0
+
+    ! Deallocate and set the pointers to null
+    if ( allocated(clumps) )then
+      deallocate(clumps)
+    end if
+    if ( associated(procinfo%cid) )then
+      deallocate(procinfo%cid)
+      procinfo%cid => null()
+    end if
+    if ( associated(gindex_global) )then
+      deallocate(gindex_global)
+      gindex_global => null()
+    end if
+    if ( associated(gindex_grc) )then
+      deallocate( gindex_grc )
+      gindex_grc => null()
+    end if
+    if ( associated(gindex_lun) )then
+      deallocate( gindex_lun )
+      gindex_lun => null()
+    end if
+    if ( associated(gindex_col) )then
+      deallocate( gindex_col )
+      gindex_col => null()
+    end if
+    if ( associated(gindex_patch) )then
+      deallocate( gindex_patch )
+      gindex_patch => null()
+    end if
+  end subroutine decompMod_clean
+  !-----------------------------------------------------------------------
 
 end module decompMod
