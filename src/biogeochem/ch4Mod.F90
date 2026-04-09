@@ -1554,9 +1554,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
      tString='vmax_ch4_oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%vmax_ch4_oxid=tempr
+     params_inst%vmax_ch4_oxid=tempr
      
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1566,9 +1564,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
      tString='k_m'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m= 5.e-6_r8 * 1000._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m=tempr
+     params_inst%k_m=tempr
    
      tString='q10_ch4oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1583,23 +1579,17 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
      tString='k_m_o2'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m_o2  = 20.e-6_r8 * 1000._r8 
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m_o2=tempr
+     params_inst%k_m_o2=tempr
 
      tString='k_m_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m_unsat=tempr
+     params_inst%k_m_unsat=tempr
 
      tString='vmax_oxid_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%vmax_oxid_unsat=tempr
+     params_inst%vmax_oxid_unsat=tempr
 
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1614,9 +1604,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
      tString='unsat_aere_ratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%unsat_aere_ratio=tempr
+     params_inst%unsat_aere_ratio=tempr
 
      tString='porosmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
