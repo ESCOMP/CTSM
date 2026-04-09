@@ -638,6 +638,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_luna                use_fates=".true." >.false.</use_luna>
 <use_luna phys="clm4_5"  use_fates=".false.">.false.</use_luna>
 
+<!-- NVP (non-vascular plant: moss/lichen) ground layer -->
+<!-- [PORTED by Hui Tang: NVP control flag defaults] -->
+<use_nvp              >.false.</use_nvp>
+<use_nvp_undersnow    >.false.</use_nvp_undersnow>
+<nvp_rad_model_ground >.false.</nvp_rad_model_ground>
+
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>
 <CNratio_floating           use_flexibleCN=".true." >.true.</CNratio_floating>
