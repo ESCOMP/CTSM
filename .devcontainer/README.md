@@ -13,3 +13,14 @@ The vanilla Anthropic setup has been customized for CTSM Python development:
 - **setup-conda-env.sh**: `postCreateCommand` script that creates the `ctsm_pylib` conda environment using `py_env_create` and auto-activates it in new terminal sessions.
 - **devcontainer.json**: Configures VS Code with Python extensions (pylint, black-formatter) and settings matching the project's `make lint` and `make black` configurations.
 - **init-firewall.sh**: Whitelists conda-forge and PyPI domains so additional packages can be installed after the firewall activates.
+
+## GitHub authentication
+
+Some operations (e.g., building documentation with `cd doc && ./build_docs -b _build`) require GitHub authentication for git LFS pulls. To set this up inside the container:
+
+```bash
+gh auth login
+gh auth setup-git
+```
+
+This is a one-time setup per container creation.
