@@ -17,26 +17,25 @@
     "vscode": {
       "extensions": [
         "anthropic.claude-code",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter"
       ],
       "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/envs/ctsm_pylib/bin/python",
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": "explicit"
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
         },
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        "terminal.integrated.profiles.linux": {
-          "bash": {
-            "path": "bash",
-            "icon": "terminal-bash"
-          },
-          "zsh": {
-            "path": "zsh"
-          }
-        }
+        "pylint.args": [
+          "--rcfile=${workspaceFolder}/python/ctsm/.pylintrc"
+        ],
+        "black-formatter.args": [
+          "--config",
+          "${workspaceFolder}/python/pyproject.toml"
+        ],
+        "terminal.integrated.defaultProfile.linux": "zsh"
       }
     }
   },
@@ -52,6 +51,7 @@
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
+  "postCreateCommand": "bash .devcontainer/setup-conda-env.sh",
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
   "waitFor": "postStartCommand"
 }
