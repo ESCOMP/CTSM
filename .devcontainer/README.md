@@ -9,7 +9,7 @@ Permalinks to file versions copied:
 
 The vanilla Anthropic setup has been customized for CTSM Python development:
 
-- **Dockerfile**: Installs Miniconda (supports x86_64 and aarch64).
+- **Dockerfile**: Installs Miniconda (supports x86_64 and aarch64). Replaces zsh/powerline10k with bash as the default shell.
 - **setup-conda-env.sh**: `postCreateCommand` script that creates the `ctsm_pylib` conda environment using `py_env_create` and auto-activates it in new terminal sessions.
 - **devcontainer.json**: Configures VS Code with Python extensions (pylint, black-formatter) and settings matching the project's `make lint` and `make black` configurations.
 - **init-firewall.sh**: Whitelists conda-forge and PyPI domains so additional packages can be installed after the firewall activates.

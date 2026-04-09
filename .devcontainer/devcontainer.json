@@ -5,8 +5,7 @@
     "args": {
       "TZ": "${localEnv:TZ:America/Los_Angeles}",
       "CLAUDE_CODE_VERSION": "latest",
-      "GIT_DELTA_VERSION": "0.18.2",
-      "ZSH_IN_DOCKER_VERSION": "1.2.0"
+      "GIT_DELTA_VERSION": "0.18.2"
     }
   },
   "runArgs": [
@@ -35,7 +34,7 @@
           "--config",
           "${workspaceFolder}/python/pyproject.toml"
         ],
-        "terminal.integrated.defaultProfile.linux": "zsh"
+        "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
   },
@@ -46,8 +45,7 @@
   ],
   "containerEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
-    "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",

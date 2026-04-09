@@ -13,7 +13,6 @@ cd /workspace
 ./py_env_create -y -o
 
 # Auto-activate ctsm_pylib in new terminal sessions
-echo 'conda activate ctsm_pylib' >> ~/.zshrc
 echo 'conda activate ctsm_pylib' >> ~/.bashrc
 
 # Verify
