@@ -70,9 +70,6 @@ RUN chown -R node:node /opt/conda
 # Set up non-root user
 USER node
 
-# Initialize conda for node user's shells
-RUN conda init bash && conda init zsh
-
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
 ENV PATH=$PATH:/usr/local/share/npm-global/bin
@@ -93,6 +90,9 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "source /usr/share/doc/fzf/examples/completion.zsh" \
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
+
+# Initialize conda for node user's shells (must be after zsh-in-docker which overwrites .zshrc)
+RUN conda init bash && conda init zsh
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
