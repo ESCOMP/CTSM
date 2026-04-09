@@ -8,7 +8,7 @@ Surface Albedos
 Canopy Radiative Transfer
 -----------------------------
 
-Radiative transfer within vegetative canopies is calculated from the two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
+Radiative transfer within vegetated canopies is calculated from the two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
 
 .. math::
    :label: 3.1
@@ -82,14 +82,14 @@ For vegetation, :math:`\omega _{\Lambda }^{veg} =\alpha _{\Lambda } +\tau _{\Lam
 .. math::
    :label: 3.11
 
-   \alpha _{\Lambda } =\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem}
+   \alpha _{\Lambda } =\max(\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem},1e-6)
 
-where :math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)}` and :math:`w_{stem} ={S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)}`. :math:`\tau _{\Lambda }` is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
+where :math:`w_{leaf} =\max({L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)},1e-6)` and :math:`w_{stem} =\max({S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)},1e-6)`. :math:`\tau _{\Lambda }` is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
 
 .. math::
    :label: 3.12
 
-   \tau _{\Lambda } =\tau _{\Lambda }^{leaf} w_{leaf} +\tau _{\Lambda }^{stem} w_{stem} .
+   \tau _{\Lambda } =\max(\tau _{\Lambda }^{leaf} w_{leaf} +\tau _{\Lambda }^{stem} w_{stem},1e-6) .
 
 The upscatter for diffuse radiation is
 
@@ -138,7 +138,7 @@ The downward diffuse fluxes per unit incident direct beam and diffuse radiation,
 .. math::
    :label: 3.19
 
-   I\, \downarrow _{\Lambda }^{\mu } =\frac{h_{4} }{\sigma } e^{-K\left(L+S\right)} +h_{5} s_{1} +\frac{h_{6} }{s_{1} }
+   I\, \downarrow _{\Lambda }^{\mu } =\frac{h_{4} }{\sigma } s_{2} +h_{5} s_{1} +\frac{h_{6} }{s_{1} }
 
 .. math::
    :label: 3.20
@@ -150,7 +150,7 @@ With reference to :numref:`Figure Radiation Schematic`, the direct beam flux tra
 .. math::
    :label: 3.21
 
-   \vec{I}_{\Lambda }^{\mu } =1-I\, \uparrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda } \right)I\, \downarrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda }^{\mu } \right)e^{-K\left(L+S\right)}
+   \vec{I}_{\Lambda }^{\mu } =1-I\, \uparrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda } \right)I\, \downarrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda }^{\mu }\right) s_{2}
 
 .. math::
    :label: 3.22
@@ -781,9 +781,9 @@ The obliquity of the Earth :math:`\varepsilon` (degrees) is
 .. math::
    :label: 3.79
 
-   \varepsilon =\varepsilon *+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
+   \varepsilon =\varepsilon{*}+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
 
-where :math:`\varepsilon *` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file shr\_orb\_mod.F90.
+where :math:`\varepsilon{*}` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file ``shr_orb_mod.F90``.
 
 The true longitude of the Earth :math:`\lambda` (radians) is counted counterclockwise from the vernal equinox (:math:`\lambda =0` at the vernal equinox)
 
@@ -820,7 +820,7 @@ where
 
    \begin{array}{l} {e^{\cos } =\sum _{j=1}^{19}M_{j} \cos \left(g_{j} t+B_{j} \right) ,} \\ {e^{\sin } =\sum _{j=1}^{19}M_{j} \sin \left(g_{j} t+B_{j} \right) } \end{array}
 
-are the cosine and sine series expansions for :math:`e`, and :math:`M_{j}`, :math:`g_{j}`, and :math:`B_{j}` are amplitude, mean rate, and phase terms in the series expansions (:ref:`Berger (1978a,b) <Berger1978a>`). The longitude of the perihelion relative to the moving vernal equinox :math:`\tilde{\omega }` (degrees) is
+are the cosine and sine series expansions for :math:`e`, and :math:`M_{j}`, :math:`g_{j}`, and :math:`B_{j}` are amplitude, mean rate, and phase terms in the series expansions (:ref:`Berger (1978a,b) <Berger1978a>`) (series expansion terms not shown but can be found in the source code file ``shr_orb_mod.F90``). The longitude of the perihelion relative to the moving vernal equinox :math:`\tilde{\omega }` (degrees) is
 
 .. math::
    :label: 3.85
@@ -834,7 +834,7 @@ where :math:`\Pi` is the longitude of the perihelion measured from the reference
 
    \psi =\frac{\tilde{\psi }t}{3600} +\zeta +\sum _{i=1}^{78}F_{i}  \sin \left(f_{i} ^{{'} } t+\delta _{i} ^{{'} } \right)
 
-where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constants (:numref:`Table Orbital parameters`), and :math:`F_{i}`, :math:`f_{i} ^{{'} }`, and :math:`\delta _{i} ^{{'} }` are amplitude, mean rate, and phase terms in the sine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`)). The longitude of the perihelion :math:`\Pi` (radians) depends on the sine and cosine series expansions for the eccentricity :math:`e`\ as follows:
+where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constants (:numref:`Table Orbital parameters`), and :math:`F_{i}`, :math:`f_{i} ^{{'} }`, and :math:`\delta _{i} ^{{'} }` are amplitude, mean rate, and phase terms in the sine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`) (series expansion terms not shown but can be found in the source code file ``shr_orb_mod.F90``). The longitude of the perihelion :math:`\Pi` (radians) depends on the sine and cosine series expansions for the eccentricity :math:`e` as follows:
 
 .. math::
    :label: 3.87
@@ -848,7 +848,7 @@ where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constan
    \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right] & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0
    \end{array}\right\}.
 
-The numerical solution for the longitude of the perihelion :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees (measured from the autumn equinox). A constant 180 degrees is then added to :math:`\tilde{\omega }` because the Sun is considered as revolving around the Earth (geocentric coordinate system) (:ref:`Berger et al. 1993 <Bergeretal1993>`)).
+The numerical solution for the longitude of the perihelion :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees (measured from the autumn equinox). A constant 180 degrees is then added to :math:`\tilde{\omega }` because the Sun is considered as revolving around the Earth (geocentric coordinate system) (:ref:`Berger et al. 1993 <Bergeretal1993>`).
 
 .. _Table Orbital parameters:
 
