@@ -54,8 +54,24 @@ RUN ARCH=$(dpkg --print-architecture) && \
   sudo dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
+# Install Miniconda
+RUN ARCH=$(dpkg --print-architecture) && \
+  if [ "$ARCH" = "amd64" ]; then CONDA_ARCH="x86_64"; else CONDA_ARCH="aarch64"; fi && \
+  wget -q "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${CONDA_ARCH}.sh" -O /tmp/miniconda.sh && \
+  bash /tmp/miniconda.sh -b -p /opt/conda && \
+  rm /tmp/miniconda.sh && \
+  /opt/conda/bin/conda clean -afy
+
+ENV PATH=/opt/conda/bin:$PATH
+
+# Make conda accessible to node user
+RUN chown -R node:node /opt/conda
+
 # Set up non-root user
 USER node
+
+# Initialize conda for node user's shells
+RUN conda init bash && conda init zsh
 
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
