@@ -189,7 +189,7 @@ Byram, G.M., 1959. Combustion of forest fuels. In Forest fire: control and use.(
 
 .. _CampbellNorman1998:
 
-Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2:math:`{}^{nd}` edition). Springer-Verlag, New York.
+Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
 
 .. _Castilloetal2012:
 
