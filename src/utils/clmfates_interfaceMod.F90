@@ -1398,7 +1398,9 @@ module CLMFatesInterfaceMod
                                          waterdiagnosticbulk_inst,  &
                                          canopystate_inst, &
                                          soilbiogeochem_carbonflux_inst, &
-                                         .false.)
+                                         .false.,          &
+                                         temperature_inst, &
+                                         waterstatebulk_inst)
 
       ! ---------------------------------------------------------------------------------
       ! Part IV:
@@ -1569,7 +1571,8 @@ module CLMFatesInterfaceMod
    
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
         waterdiagnosticbulk_inst, canopystate_inst, &
-        soilbiogeochem_carbonflux_inst, is_initing_from_restart)
+        soilbiogeochem_carbonflux_inst, is_initing_from_restart, &
+        temperature_inst, waterstatebulk_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -1588,6 +1591,11 @@ module CLMFatesInterfaceMod
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
      logical                 , intent(in)           :: is_initing_from_restart
+     ! [PORTED by Hui Tang: optional args for NVP energy/mass conservation on activation/deactivation.
+     !  Pass during normal timestep calls; omit during restart/cold-start where thermo state is
+     !  initialised independently.]
+     type(temperature_type)  , optional, intent(inout) :: temperature_inst
+     type(waterstatebulk_type), optional, intent(inout) :: waterstatebulk_inst
 
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
@@ -1783,7 +1791,34 @@ module CLMFatesInterfaceMod
              z0m(p)    = this%fates(nc)%bc_out(s)%z0m_pa(ifp)
              displa(p) = this%fates(nc)%bc_out(s)%displa_pa(ifp)
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
-          end do ! veg pach
+          end do ! veg patch
+
+          ! [PORTED by Hui Tang: aggregate NVP patch geometry to column, then update layer state]
+          ! nvp_dz_pa(ifp)   = mean NVP thickness where NVP is present within patch [m]
+          ! nvp_frac_pa(ifp) = fraction of patch covered by NVP [0-1]
+          ! Weight by canopy_fraction_pa (patch area fraction of column) to get column means.
+          if (use_nvp) then
+             col%dz_nvp(c)   = 0._r8
+             col%frac_nvp(c) = 0._r8
+             do ifp = 1, npatch
+                ! [PORTED by Hui Tang: weight by both nvp_frac_pa (NVP coverage within patch)
+             !  and canopy_fraction_pa (patch area fraction of column) so col%dz_nvp is the
+             !  column-effective NVP depth (dz where present × frac), not the raw mean thickness]
+             col%dz_nvp(c)   = col%dz_nvp(c)   + &
+                     this%fates(nc)%bc_out(s)%nvp_dz_pa(ifp)   * &
+                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
+                     this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+                col%frac_nvp(c) = col%frac_nvp(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
+                     this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+             end do
+             ! [PORTED by Hui Tang: pass thermo instances only when present (normal timestep)]
+             if (present(temperature_inst) .and. present(waterstatebulk_inst)) then
+                call UpdateNVPLayer(c, temperature_inst, waterstatebulk_inst)
+             else
+                call UpdateNVPLayer(c)
+             end if
+          end if
 
           if(abs(areacheck - 1.0_r8).gt.1.e-9_r8)then
             write(iulog,*) 'area wrong in interface',areacheck - 1.0_r8
