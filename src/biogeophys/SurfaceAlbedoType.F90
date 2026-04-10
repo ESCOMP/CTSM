@@ -8,6 +8,8 @@ module SurfaceAlbedoType
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
   use clm_varctl     , only : use_SSRE, use_snicar_frc
+  ! [PORTED by Hui Tang: nvp (moss/lichen) control switch]
+  use clm_varctl     , only : use_nvp
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -33,6 +35,17 @@ module SurfaceAlbedoType
      real(r8), pointer :: albgri_dst_col       (:,:) ! col ground diffuse albedo without dust (numrad)             
      real(r8), pointer :: albgrd_col           (:,:) ! col ground albedo (direct)  (numrad)                        
      real(r8), pointer :: albgri_col           (:,:) ! col ground albedo (diffuse) (numrad)                        
+     ! [PORTED by Hui Tang: nvp (moss/lichen) surface albedo fields]
+     real(r8), pointer :: fabd_nvp_col         (:,:) ! col flux absorbed by nvp per unit direct flux  (numrad)
+     real(r8), pointer :: fabi_nvp_col         (:,:) ! col flux absorbed by nvp per unit diffuse flux (numrad)
+     ! [PORTED by Hui Tang: NVP optical properties for SNICAR layer-0 (Approach B)]
+     ! nvp_tau_col:       column-mean optical depth = k_nvp * lai_nvp * nvp_frac [-]
+     ! nvp_omega_vis_col: single-scatter albedo in VIS band = rhol(nvp_ft,1) + taul(nvp_ft,1)
+     ! nvp_omega_nir_col: single-scatter albedo in NIR band = rhol(nvp_ft,2) + taul(nvp_ft,2)
+     ! All set in wrap_canopy_radiation; read by SurfaceAlbedoMod before SNICAR_RT calls.
+     real(r8), pointer :: nvp_tau_col          (:)   ! col NVP optical depth (k*LAI*frac) [-]
+     real(r8), pointer :: nvp_omega_vis_col    (:)   ! col NVP single-scatter albedo VIS  [-]
+     real(r8), pointer :: nvp_omega_nir_col    (:)   ! col NVP single-scatter albedo NIR  [-]
      real(r8), pointer :: albsod_col           (:,:) ! col soil albedo: direct  (col,bnd) [frc]                    
      real(r8), pointer :: albsoi_col           (:,:) ! col soil albedo: diffuse (col,bnd) [frc]                    
      real(r8), pointer :: albsnd_hst_col       (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
@@ -137,6 +150,15 @@ contains
     allocate(this%coszen_col         (begc:endc))              ; this%coszen_col         (:)   = nan
     allocate(this%albgrd_col         (begc:endc,numrad))       ; this%albgrd_col         (:,:) = nan
     allocate(this%albgri_col         (begc:endc,numrad))       ; this%albgri_col         (:,:) = nan
+    ! [PORTED by Hui Tang: allocate nvp (moss/lichen) surface albedo fields]
+    if (use_nvp) then
+       allocate(this%fabd_nvp_col    (begc:endc,numrad))       ; this%fabd_nvp_col       (:,:) = 0._r8
+       allocate(this%fabi_nvp_col    (begc:endc,numrad))       ; this%fabi_nvp_col       (:,:) = 0._r8
+       ! [PORTED by Hui Tang: allocate NVP optical properties for SNICAR layer-0]
+       allocate(this%nvp_tau_col       (begc:endc))            ; this%nvp_tau_col        (:)   = 0._r8
+       allocate(this%nvp_omega_vis_col (begc:endc))            ; this%nvp_omega_vis_col  (:)   = 0._r8
+       allocate(this%nvp_omega_nir_col (begc:endc))            ; this%nvp_omega_nir_col  (:)   = 0._r8
+    end if
     allocate(this%albsnd_hst_col     (begc:endc,numrad))       ; this%albsnd_hst_col     (:,:) = spval
     allocate(this%albsni_hst_col     (begc:endc,numrad))       ; this%albsni_hst_col     (:,:) = spval
     allocate(this%albsod_col         (begc:endc,numrad))       ; this%albsod_col         (:,:) = spval
