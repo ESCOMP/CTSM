@@ -41,7 +41,7 @@ To run the script for a single point:
 To run the script for a region:
     ./subset_data.py region
 
-To remove NPL from your environment on Cheyenne/Casper:
+To remove NPL from your environment on derecho/casper:
     deactivate
 -------------------------------------------------------------------
 """
