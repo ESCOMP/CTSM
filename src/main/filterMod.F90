@@ -112,6 +112,10 @@ module filterMod
      integer, pointer :: actfirep(:)     ! soil patches with active fire filter (patches)
      integer :: num_actfirep             ! number of patches in active fire filter
 
+     ! [PORTED by Hui Tang: NVP-active column filter]
+     integer, pointer :: nvpc(:)         ! columns where NVP layer is active (nvp_layer_active=.true.)
+     integer :: num_nvpc                 ! number of NVP-active columns
+
   end type clumpfilter
   public clumpfilter
 
@@ -139,6 +143,7 @@ module filterMod
   public allocFilters         ! allocate memory for filters
   public setFilters           ! set filters
   public setExposedvegpFilter ! set the exposedvegp and noexposedvegp filters
+  public setNVPcFilter        ! [PORTED by Hui Tang: set the nvpc NVP-active column filter]
 
   private allocFiltersOneGroup  ! allocate memory for one group of filters
   private setFiltersOneGroup    ! set one group of filters
@@ -257,6 +262,10 @@ contains
 
        this_filter(nc)%num_actfirep = 1
        this_filter(nc)%num_actfirec = 1
+
+       ! [PORTED by Hui Tang: NVP column filter — starts empty, filled by setNVPcFilter]
+       allocate(this_filter(nc)%nvpc(bounds%endc-bounds%begc+1))
+       this_filter(nc)%num_nvpc = 0
        
     end do
 !$OMP END PARALLEL DO
@@ -646,6 +655,54 @@ contains
     filter(nc)%num_noexposedvegp = fn
 
   end subroutine setExposedvegpFilter
+
+
+  !-----------------------------------------------------------------------
+  subroutine setNVPcFilter(bounds)
+    !
+    ! !DESCRIPTION:
+    ! [PORTED by Hui Tang: build the NVP-active column filter]
+    !
+    ! Populates filter%nvpc with columns where col%nvp_layer_active is .true.
+    ! The filter is a sub-set of nolakec. When use_nvp is .false. or no column
+    ! has NVP active, num_nvpc = 0 and no NVP-specific loops execute.
+    !
+    ! Call from clm_driver after dynamics_driv (where UpdateNVPLayer runs).
+    !
+    ! !USES:
+    use decompMod , only : bounds_level_clump
+    use clm_varctl, only : use_nvp
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: nc   ! clump index
+    integer :: fc   ! filter index into nolakec
+    integer :: c    ! column index
+    integer :: f    ! count for nvpc filter
+
+    character(len=*), parameter :: subname = 'setNVPcFilter'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL(bounds%level == bounds_level_clump, sourcefile, __LINE__)
+
+    nc = bounds%clump_index
+    f  = 0
+
+    if (use_nvp) then
+       do fc = 1, filter(nc)%num_nolakec
+          c = filter(nc)%nolakec(fc)
+          if (col%nvp_layer_active(c)) then
+             f = f + 1
+             filter(nc)%nvpc(f) = c
+          end if
+       end do
+    end if
+
+    filter(nc)%num_nvpc = f
+
+  end subroutine setNVPcFilter
 
 
 end module filterMod
