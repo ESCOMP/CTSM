@@ -81,6 +81,12 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
    use clm_varctl        , only : Allocate_Carbon_only
+   ! [PORTED by Hui Tang: nvp (moss/lichen) control switches]
+   use clm_varctl        , only : use_nvp
+   use clm_varctl        , only : use_nvp_undersnow
+   use clm_varctl        , only : nvp_rad_model_ground
+   ! [PORTED by Hui Tang: NVP layer geometry updater]
+   use NVPLayerDynamicsMod, only : UpdateNVPLayer
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -314,6 +320,10 @@ module CLMFatesInterfaceMod
      integer             :: pass_use_sp
      integer             :: pass_masterproc
      integer             :: pass_use_luh2
+     ! [PORTED by Hui Tang: nvp (moss/lichen) control integer flags]
+     integer             :: pass_nvp
+     integer             :: pass_nvp_undersnow
+     integer             :: pass_nvp_rad_model_ground
      logical             :: verbose_output
      
      call t_startf('fates_globals1')
@@ -367,6 +377,29 @@ module CLMFatesInterfaceMod
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         
+        ! [PORTED by Hui Tang: pass nvp (moss/lichen) switches to FATES]
+        if (use_nvp) then
+           pass_nvp = 1
+        else
+           pass_nvp = 0
+        end if
+        call set_fates_ctrlparms('use_nvp', ival=pass_nvp)
+
+        if (use_nvp_undersnow) then
+           pass_nvp_undersnow = 1
+        else
+           pass_nvp_undersnow = 0
+        end if
+        call set_fates_ctrlparms('use_nvp_undersnow', ival=pass_nvp_undersnow)
+
+        ! [PORTED by Hui Tang: pass NVP radiation model choice to FATES]
+        if (nvp_rad_model_ground) then
+           pass_nvp_rad_model_ground = 1
+        else
+           pass_nvp_rad_model_ground = 0
+        end if
+        call set_fates_ctrlparms('nvp_rad_model_ground', ival=pass_nvp_rad_model_ground)
+
      end if
 
      ! The following call reads in the parameter file
