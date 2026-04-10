@@ -7,7 +7,8 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
+  ! [PORTED by Hui Tang: add use_nvp for nvp (moss/lichen) temperature field]
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage, use_nvp
   use clm_varctl      , only : flush_gdd20
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd, nlevsoi
   use clm_varcon      , only : spval, ispval
@@ -34,6 +35,8 @@ module TemperatureType
      integer,  pointer :: nnightsteps_patch        (:)   ! number of nighttime steps accumulated from mid-night, LUNA specific
      real(r8), pointer :: t_h2osfc_col             (:)   ! col surface water temperature
      real(r8), pointer :: t_h2osfc_bef_col         (:)   ! col surface water temperature from time-step before
+     ! [PORTED by Hui Tang: nvp (moss/lichen) column temperature]
+     real(r8), pointer :: t_nvp_col                (:)   ! col nvp (moss/lichen) temperature (Kelvin)
      real(r8), pointer :: t_ssbef_col              (:,:) ! col soil/snow temperature before update (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: t_soisno_col             (:,:) ! col soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
      real(r8), pointer :: tsl_col                  (:)   ! col temperature of near-surface soil layer (Kelvin)
@@ -225,6 +228,8 @@ contains
     endif
     allocate(this%t_h2osfc_col             (begc:endc))                      ; this%t_h2osfc_col             (:)   = nan
     allocate(this%t_h2osfc_bef_col         (begc:endc))                      ; this%t_h2osfc_bef_col         (:)   = nan
+    ! [PORTED by Hui Tang: allocate nvp (moss/lichen) column temperature]
+    allocate(this%t_nvp_col                (begc:endc))                      ; this%t_nvp_col                (:)   = nan
     allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_ssbef_col              (:,:) = nan
     allocate(this%t_soisno_col             (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_soisno_col             (:,:) = nan
     allocate(this%t_lake_col               (begc:endc,1:nlevlak))            ; this%t_lake_col               (:,:) = nan
@@ -665,6 +670,14 @@ contains
             ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
 
+    ! [PORTED by Hui Tang: register nvp (moss/lichen) temperature history field]
+    if (use_nvp) then
+       this%t_nvp_col(begc:endc) = spval
+       call hist_addfld1d (fname='T_NVP', units='K', &
+            avgflag='A', long_name='nvp (moss/lichen) temperature', &
+            ptr_col=this%t_nvp_col, default='active')
+    end if
+
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
@@ -841,6 +854,9 @@ contains
       ! Set t_h2osfc_col
 
       this%t_h2osfc_col(bounds%begc:bounds%endc)  = 274._r8
+
+      ! [PORTED by Hui Tang: initialize nvp (moss/lichen) column temperature to 274 K]
+      this%t_nvp_col(bounds%begc:bounds%endc) = 274._r8
 
       ! Set t_veg, t_ref2m, t_ref2m_u and tref2m_r
 
@@ -1112,6 +1128,17 @@ contains
             dim1name='pft', long_name='accumulative nighttime steps', units='steps', &
             interpinic_flag='interp', readvar=readvar, data=this%nnightsteps_patch )
     endif
+
+    ! [PORTED by Hui Tang: restart I/O for nvp (moss/lichen) column temperature]
+    if (use_nvp) then
+       call restartvar(ncid=ncid, flag=flag, varname='T_NVP', xtype=ncd_double, &
+            dim1name='column', &
+            long_name='nvp (moss/lichen) temperature', units='K', &
+            interpinic_flag='interp', readvar=readvar, data=this%t_nvp_col)
+       if (flag=='read' .and. .not. readvar) then
+          this%t_nvp_col(bounds%begc:bounds%endc) = 274.0_r8
+       end if
+    end if
 
     if ( is_prog_buildtemp )then
        ! landunit type physical state variable - t_building
