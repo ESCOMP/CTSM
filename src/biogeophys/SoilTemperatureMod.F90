@@ -13,7 +13,8 @@ module SoilTemperatureMod
   use abortutils              , only : endrun
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use perf_mod                , only : t_startf, t_stopf
-  use clm_varctl              , only : iulog
+  ! [PORTED by Hui Tang: add use_nvp for nvp (moss/lichen) surface temperature update]
+  use clm_varctl              , only : iulog, use_nvp
   use UrbanParamsType         , only : urbanparams_type
   use UrbanTimeVarType        , only : urbantv_type
   use atm2lndType             , only : atm2lnd_type
@@ -116,7 +117,8 @@ contains
     ! !USES:
     use clm_time_manager         , only : get_step_size_real
     use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb, nlevmaxurbgrnd
-    use clm_varctl               , only : iulog, use_excess_ice
+    ! [PORTED by Hui Tang: add use_nvp for nvp (moss/lichen) surface temperature update]
+    use clm_varctl               , only : iulog, use_excess_ice, use_nvp
     use clm_varcon               , only : cnfac, cpice, cpliq, denh2o, denice
     use landunit_varcon          , only : istsoil, istcrop
     use column_varcon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
@@ -130,6 +132,8 @@ contains
     integer                        ,  intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
     integer                        ,  intent(in)    :: num_nolakec       ! number of column non-lake points in column filter
     integer                        ,  intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
+    integer                        ,  intent(in)    :: num_nvpc          ! [PORTED by Hui Tang: number of NVP-active columns]
+    integer                        ,  intent(in)    :: filter_nvpc(:)    ! [PORTED by Hui Tang: NVP-active column filter]
     integer                        ,  intent(in)    :: num_urbanl        ! number of urban landunits in clump
     integer                        ,  intent(in)    :: filter_urbanl(:)  ! urban landunit filter
     integer                        ,  intent(in)    :: num_urbanc        ! number of urban columns in clump
@@ -173,8 +177,11 @@ contains
     real(r8) :: dhsdT(bounds%begc:bounds%endc)                           ! temperature derivative of "hs" [col]
     real(r8) :: hs_soil(bounds%begc:bounds%endc)                         ! heat flux on soil [W/m2]
     real(r8) :: hs_top_snow(bounds%begc:bounds%endc)                     ! heat flux on top snow layer [W/m2]
+    real(r8) :: hs_nvp(bounds%begc:bounds%endc)                     ! [PORTED by Hui Tang: surface heat flux at NVP layer 0] [W/m2]
     real(r8) :: hs_h2osfc(bounds%begc:bounds%endc)                       ! heat flux on standing water [W/m2]
     integer  :: jbot(bounds%begc:bounds%endc)                            ! bottom level at each column
+    ! [PORTED by Hui Tang: NVP effective fraction for t_grnd blend]
+    real(r8) :: frac_nvp_eff                                             ! NVP fraction not covered by snow or h2osfc [-]
     real(r8) :: dz_0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)                ! original layer thickness [m] 
     real(r8) :: z_0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)                 ! original layer depth [m]
     real(r8) :: zi_0(bounds%begc:bounds%endc,-nlevsno+0:nlevmaxurbgrnd)                ! original layer interface level bellow layer "z" [m]
@@ -237,11 +244,15 @@ contains
          eflx_urban_ac_col       => energyflux_inst%eflx_urban_ac_col       , & ! Output: [real(r8) (:)   ]  urban air conditioning flux (W/m**2)    
          eflx_urban_heat_col     => energyflux_inst%eflx_urban_heat_col     , & ! Output: [real(r8) (:)   ]  urban heating flux (W/m**2)             
 
-         emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
-         tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  temperature at previous time step [K] 
-         t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Output: [real(r8) (:)   ]  surface water temperature               
-         t_soisno                => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature [K]             
-         t_grnd                  => temperature_inst%t_grnd_col             , & ! Output: [real(r8) (:)   ]  ground surface temperature [K]          
+         emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity
+         tssbef                  => temperature_inst%t_ssbef_col            , & ! Input:  [real(r8) (:,:) ]  temperature at previous time step [K]
+         t_h2osfc                => temperature_inst%t_h2osfc_col           , & ! Output: [real(r8) (:)   ]  surface water temperature
+         t_soisno                => temperature_inst%t_soisno_col           , & ! Output: [real(r8) (:,:) ]  soil temperature [K]
+         t_grnd                  => temperature_inst%t_grnd_col             , & ! Output: [real(r8) (:)   ]  ground surface temperature [K]
+         ! [PORTED by Hui Tang: nvp (moss/lichen) surface temperature at layer 0]
+         t_nvp_col               => temperature_inst%t_nvp_col              , & ! Output: [real(r8) (:)   ]  nvp (moss/lichen) temperature [K]
+         ! [PORTED by Hui Tang: jbot_sno defines real bottom of snow (0=no NVP, -1=NVP at layer 0)]
+         jbot_sno                => col%jbot_sno                            , & ! Input:  [integer  (:)   ]  bottom snow layer index (0 or -1)          
          t_building              => temperature_inst%t_building_lun         , & ! Output: [real(r8) (:)   ]  internal building air temperature [K]       
          t_roof_inner            => temperature_inst%t_roof_inner_lun       , & ! Input:  [real(r8) (:)   ]  roof inside surface temperature [K]
          t_sunw_inner            => temperature_inst%t_sunw_inner_lun       , & ! Input:  [real(r8) (:)   ]  sunwall inside surface temperature [K]
@@ -271,6 +282,11 @@ contains
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
          jtop(c) = snl(c)
+         ! [PORTED by Hui Tang: when NVP occupies layer 0 and there is no snow, extend
+         !  jtop to -1 so the tridiagonal solver includes the NVP layer at tvector(c,-1)]
+         if (col%nvp_layer_active(c) .and. snl(c) == 0) then
+            jtop(c) = -1
+         end if
          ! compute jbot
          if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
               .or. col%itype(c) == icol_roof) ) then
@@ -322,10 +338,12 @@ contains
 
       call ComputeGroundHeatFluxAndDeriv(bounds, &
            num_nolakep, filter_nolakep, num_nolakec, filter_nolakec,          &
+           num_nvpc, filter_nvpc,                                              &  ! [PORTED by Hui Tang: NVP column filter]
            hs_h2osfc( begc:endc ),                                            &
            hs_top_snow( begc:endc ),                                          &
            hs_soil( begc:endc ),                                              &
            hs_top( begc:endc ),                                               &
+           hs_nvp( begc:endc ),                                           &
            dhsdT( begc:endc ),                                                &
            sabg_lyr_col( begc:endc, -nlevsno+1: ),                            &
            atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
@@ -365,6 +383,7 @@ contains
            hs_top_snow( begc:endc ),                      &
            hs_soil( begc:endc ),                          &
            hs_top( begc:endc ),                           &
+           hs_nvp( begc:endc ),                       &
            dhsdT( begc:endc ),                            &
            sabg_lyr_col (begc:endc, -nlevsno+1: ),        &
            tk( begc:endc, -nlevsno+1: ),                  &
@@ -400,6 +419,12 @@ contains
             tvector(c,j-1) = t_soisno(c,j)
          end do
 
+         ! [PORTED by Hui Tang: when NVP is at layer 0 and there is no snow, the snow
+         !  loop above is empty (snl=0); explicitly load NVP temperature into tvector]
+         if (col%nvp_layer_active(c) .and. snl(c) == 0) then
+            tvector(c,-1) = t_soisno(c,0)   ! NVP layer: t_soisno(c,0) -> tvector(c,-1)
+         end if
+
          ! surface water layer has two coefficients
          tvector(c,0) = t_h2osfc(c)
 
@@ -424,6 +449,13 @@ contains
          do j = snl(c)+1, 0
             t_soisno(c,j) = tvector(c,j-1) !snow layers
          end do
+
+         ! [PORTED by Hui Tang: when NVP at layer 0 and no snow, the snow loop above is
+         !  empty; explicitly extract the solved NVP temperature back to t_soisno(c,0)]
+         if (col%nvp_layer_active(c) .and. snl(c) == 0) then
+            t_soisno(c,0) = tvector(c,-1)   ! NVP layer: tvector(c,-1) -> t_soisno(c,0)
+         end if
+
          t_soisno(c,1:nlevmaxurbgrnd)   = tvector(c,1:nlevmaxurbgrnd)  !soil layers
 
          if (frac_h2osfc(c) == 0._r8) then
@@ -545,24 +577,49 @@ contains
                                   temperature_inst, energyflux_inst, urbantv_inst, atm2lnd_inst)
       end if
 
+      ! [PORTED by Hui Tang: update t_nvp_col BEFORE t_grnd so t_grnd can use it]
+      ! Default: inactive-NVP columns track soil layer 1.  Active-NVP columns track
+      ! layer 0.  Use the nvpc filter so the active override is O(NVP columns) only.
+      if (use_nvp) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            t_nvp_col(c) = t_soisno(c,1)          ! default: no NVP → layer 1
+         end do
+         do fc = 1, num_nvpc                        ! [PORTED: override for NVP-active columns]
+            c = filter_nvpc(fc)
+            t_nvp_col(c) = t_soisno(c,0)
+         end do
+      end if
+
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
+         ! [PORTED by Hui Tang: NVP fractional area for t_grnd blend (excludes snow and h2osfc)]
+         if (use_nvp) then
+            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c)))
+         else
+            frac_nvp_eff = 0._r8
+         end if
          ! this expression will (should) work whether there is snow or not
          if (snl(c) < 0) then
             if(frac_h2osfc(c) /= 0._r8) then
                t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-                    + (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) * t_soisno(c,1) &
-                    + frac_h2osfc(c) * t_h2osfc(c)
+                    + (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff) * t_soisno(c,1) &
+                    + frac_h2osfc(c) * t_h2osfc(c) &
+                    + frac_nvp_eff * t_nvp_col(c)
             else
                t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-                    + (1.0_r8 - frac_sno_eff(c)) * t_soisno(c,1)
+                    + (1.0_r8 - frac_sno_eff(c) - frac_nvp_eff) * t_soisno(c,1) &
+                    + frac_nvp_eff * t_nvp_col(c)
             end if
 
          else
             if(frac_h2osfc(c) /= 0._r8) then
-               t_grnd(c) = (1._r8 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+               t_grnd(c) = (1._r8 - frac_h2osfc(c) - frac_nvp_eff) * t_soisno(c,1) &
+                    + frac_h2osfc(c) * t_h2osfc(c) &
+                    + frac_nvp_eff * t_nvp_col(c)
             else
-               t_grnd(c) = t_soisno(c,1)
+               t_grnd(c) = (1._r8 - frac_nvp_eff) * t_soisno(c,1) &
+                    + frac_nvp_eff * t_nvp_col(c)
             end if
          endif
       end do
@@ -624,7 +681,9 @@ contains
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method
+    use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method, use_nvp
+    ! [PORTED by Hui Tang: NVP dry-matrix thermal parameters]
+    use NVPParamsMod    , only : thk_dry_nvp, csol_nvp, watsat_nvp
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -648,6 +707,10 @@ contains
     real(r8) :: dke                       ! kersten number
     real(r8) :: fl                        ! volume fraction of liquid or unfrozen water to total water
     real(r8) :: satw                      ! relative total water content of soil.
+    ! [PORTED by Hui Tang: NVP Farouki-style thermal mixing local vars]
+    real(r8) :: satw_nvp                  ! NVP saturation fraction [-]
+    real(r8) :: dke_nvp                   ! NVP Kersten number [-]
+    real(r8) :: thk_sat_nvp               ! NVP saturated thermal conductivity [W m-1 K-1]
     real(r8) :: zh2osfc
     !-----------------------------------------------------------------------
 
@@ -658,12 +721,14 @@ contains
     SHR_ASSERT_ALL_FL((ubound(tk)        == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tk_h2osfc) == (/bounds%endc/)),           sourcefile, __LINE__)
 
-    associate(                                                 & 
-         nbedrock     =>    col%nbedrock                     , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)                                 
-         snl          =>    col%snl			                 , & ! Input:  [integer  (:)   ]  number of snow layers                    
-         dz           =>    col%dz			                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                       
-         zi           =>    col%zi			                 , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m) 
-         z            =>    col%z			                 , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                   
+    associate(                                                 &
+         nbedrock     =>    col%nbedrock                     , & ! Input:  [real(r8) (:,:) ]  depth to bedrock (m)
+         snl          =>    col%snl                          , & ! Input:  [integer  (:)   ]  number of snow layers
+         ! [PORTED by Hui Tang: jbot_sno = 0 (no NVP) or -1 (NVP occupies layer 0)]
+         jbot_sno     =>    col%jbot_sno                     , & ! Input:  [integer  (:)   ]  real bottom of snow (0 or -1)
+         dz           =>    col%dz                           , & ! Input:  [real(r8) (:,:) ]  layer depth (m)
+         zi           =>    col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
+         z            =>    col%z                            , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)                   
          
          nlev_improad =>    urbanparams_inst%nlev_improad    , & ! Input:  [integer  (:)   ]  number of impervious road layers         
          tk_wall      =>    urbanparams_inst%tk_wall	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity of urban wall    
@@ -738,7 +803,9 @@ contains
 
             ! Thermal conductivity of snow
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
-            if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
+            ! [PORTED by Hui Tang: skip j=0 when NVP occupies that layer; handled below]
+            if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0) .AND. &
+                .NOT. (use_nvp .AND. jbot_sno(c) == -1 .AND. j == 0)) then
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
                l = col%landunit(c)
 
@@ -778,8 +845,32 @@ contains
                      write(iulog,*) ' ERROR: unknown snow_thermal_cond_method value: ', snow_thermal_cond_method
                      call endrun(msg=errMsg(sourcefile, __LINE__))
                   end select
-               end if ! close land unit if statement 
+               end if ! close land unit if statement
           end if
+
+            ! [PORTED by Hui Tang: NVP layer thermal conductivity at j=0]
+            ! Farouki-style mixing between dry NVP matrix and pore water/ice,
+            ! analogous to the soil Kersten-number formula above.
+            if (use_nvp .and. jbot_sno(c) == -1 .and. j == 0) then
+               if (dz(c,0) > 0._r8) then
+                  satw_nvp = min(1._r8, (h2osoi_liq(c,0)/denh2o + h2osoi_ice(c,0)/denice) &
+                                        / (dz(c,0) * watsat_nvp))
+               else
+                  satw_nvp = 0._r8
+               end if
+               if (satw_nvp > 1.e-6_r8) then
+                  if (t_soisno(c,0) >= tfrz) then
+                     dke_nvp     = max(0._r8, log10(satw_nvp) + 1.0_r8)
+                     thk_sat_nvp = thk_dry_nvp**(1._r8 - watsat_nvp) * tkwat**watsat_nvp
+                  else
+                     dke_nvp     = satw_nvp
+                     thk_sat_nvp = thk_dry_nvp**(1._r8 - watsat_nvp) * tkice**watsat_nvp
+                  end if
+                  thk(c,0) = dke_nvp * thk_sat_nvp + (1._r8 - dke_nvp) * thk_dry_nvp
+               else
+                  thk(c,0) = thk_dry_nvp
+               end if
+            end if
 
          end do
       end do
@@ -828,6 +919,17 @@ contains
             end if
          end do
       end do
+
+      ! [PORTED by Hui Tang: NVP-soil interface conductivity when NVP at layer 0 — nvpc filter]
+      ! The standard loop above uses j >= snl(c)+1; when snl=0 this starts at j=1 and
+      ! skips j=0. Compute tk(c,0) explicitly here for NVP cases with or without snow.
+      if (use_nvp) then
+         do fc = 1, num_nvpc
+            c = filter_nvpc(fc)
+            tk(c,0) = thk(c,0)*thk(c,1)*(z(c,1)-z(c,0)) &
+                 /(thk(c,0)*(z(c,1)-zi(c,0))+thk(c,1)*(zi(c,0)-z(c,0)))
+         end do
+      end if
 
       ! calculate thermal conductivity of h2osfc
       do fc = 1, num_nolakec
@@ -881,11 +983,13 @@ contains
       end do
 
       ! Snow heat capacity
+      ! [PORTED by Hui Tang: guard j=0 when NVP is there; NVP cv handled below]
 
       do j = -nlevsno+1,0
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
-            if (snl(c)+1 < 1 .and. j >= snl(c)+1) then
+            if (snl(c)+1 < 1 .and. j >= snl(c)+1 .and. &
+                .NOT. (use_nvp .and. jbot_sno(c) == -1 .and. j == 0)) then
                if (frac_sno(c) > 0._r8) then
                   cv(c,j) = max(thin_sfclayer,(cpliq*h2osoi_liq(c,j) + cpice*h2osoi_ice(c,j))/frac_sno(c))
                else
@@ -894,6 +998,19 @@ contains
             end if
          end do
       end do
+
+      ! [PORTED by Hui Tang: NVP layer heat capacity at j=0 — nvpc filter]
+      ! Soil-style formula: dry matrix + pore water/ice contributions.
+      !   cv = csol_nvp*(1-watsat_nvp)*dz  +  cpliq*h2osoi_liq  +  cpice*h2osoi_ice
+      if (use_nvp) then
+         do fc = 1, num_nvpc
+            c = filter_nvpc(fc)
+            cv(c,0) = max(thin_sfclayer, &
+                 csol_nvp*(1._r8 - watsat_nvp)*dz(c,0) &
+                 + cpliq*h2osoi_liq(c,0) + cpice*h2osoi_ice(c,0))
+         end do
+      end if
+
       call t_stopf( 'SoilThermProp' )
 
     end associate
@@ -1567,10 +1684,13 @@ contains
     integer                , intent(in)    :: filter_nolakep( : )                       ! patch filter for non-lake points
     integer                , intent(in)    :: num_nolakec                               ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec( : )                       ! column filter for non-lake points
+    integer                , intent(in)    :: num_nvpc                                  ! [PORTED by Hui Tang: number of NVP-active columns]
+    integer                , intent(in)    :: filter_nvpc( : )                          ! [PORTED by Hui Tang: NVP-active column filter]
     real(r8)               , intent(out)   :: hs_h2osfc( bounds%begc: )                 ! heat flux on standing water [W/m2]
     real(r8)               , intent(out)   :: hs_top_snow( bounds%begc: )               ! heat flux on top snow layer [W/m2]
     real(r8)               , intent(out)   :: hs_soil( bounds%begc: )                   ! heat flux on soil [W/m2]
     real(r8)               , intent(out)   :: hs_top (bounds%begc: )                    ! net energy flux into surface layer (col) [W/m2]
+    real(r8)               , intent(out)   :: hs_nvp( bounds%begc: )               ! [PORTED by Hui Tang: net surface flux at NVP layer 0] [W/m2]
     real(r8)               , intent(out)   :: dhsdT( bounds%begc: )                     ! temperature derivative of "hs" [col]
     real(r8)               , intent(out)   :: sabg_lyr_col( bounds%begc:, -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -1596,6 +1716,9 @@ contains
     real(r8) :: eflx_gnet_snow                                         !
     real(r8) :: eflx_gnet_soil                                         !
     real(r8) :: eflx_gnet_h2osfc                                       !
+    ! [PORTED by Hui Tang: NVP surface flux variables]
+    real(r8) :: lwrad_emit_nvp(bounds%begc:bounds%endc)                ! NVP LW emission [W/m2]
+    real(r8) :: eflx_gnet_nvp                                          ! net surface flux at NVP layer, patch-level [W/m2]
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -1652,7 +1775,11 @@ contains
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg_chk                => solarabs_inst%sabg_chk_patch            , & ! Output: [real(r8) (:)   ]  sum of soil/snow using current fsno, for balance check
          sabg_lyr                => solarabs_inst%sabg_lyr_patch            , & ! Output: [real(r8) (:,:) ]  absorbed solar radiation (pft,lyr) [W/m2]
-         
+         ! [PORTED by Hui Tang: NVP surface flux computation]
+         jbot_sno                => col%jbot_sno                            , & ! Input:  [integer  (:)   ]  bottom snow layer index (0 or -1 for NVP)
+         eflx_sh_nvp             => energyflux_inst%eflx_sh_nvp_patch       , & ! Input:  [real(r8) (:)   ]  sensible heat flux from NVP [W/m2]
+         qflx_ev_nvp             => waterfluxbulk_inst%qflx_ev_nvp_patch    , & ! Input:  [real(r8) (:)   ]  evaporation flux from NVP [mm/s]
+
          begc                    => bounds%begc                             , & ! Input:  [integer        ] beginning column index
          endc                    => bounds%endc                               & ! Input:  [integer        ] ending column index
          )
@@ -1670,6 +1797,12 @@ contains
          lwrad_emit_snow(c)    =    emg(c) * sb * t_soisno(c,snl(c)+1)**4
          lwrad_emit_soil(c)    =    emg(c) * sb * t_soisno(c,1)**4
          lwrad_emit_h2osfc(c)  =    emg(c) * sb * t_h2osfc(c)**4
+         ! [PORTED by Hui Tang: NVP LW emission from layer 0 temperature]
+         if (col%nvp_layer_active(c)) then
+            lwrad_emit_nvp(c) = emg(c) * sb * t_soisno(c,0)**4
+         else
+            lwrad_emit_nvp(c) = 0._r8
+         end if
       end do
 
       hs_soil(begc:endc)   = 0._r8
@@ -1756,6 +1889,7 @@ contains
       sabg_lyr_col(begc:endc,-nlevsno+1:1) = 0._r8
       hs_top(begc:endc)                    = 0._r8
       hs_top_snow(begc:endc)               = 0._r8
+      hs_nvp(begc:endc)                = 0._r8  ! [PORTED by Hui Tang: NVP surface flux]
 
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
@@ -1782,6 +1916,17 @@ contains
             do j = lyr_top,1,1
                sabg_lyr_col(c,j) = sabg_lyr_col(c,j) + sabg_lyr(p,j) * patch%wtcol(p)
             enddo
+
+            ! [PORTED by Hui Tang: accumulate NVP surface BC and layer-0 solar absorption]
+            ! NVP layer 0 is above soil layer 1 when active (jbot_sno=-1, snl=0).
+            ! Its surface BC uses sabg_lyr(p,0) and NVP-specific turbulent/LW fluxes.
+            if (col%nvp_layer_active(c)) then
+               eflx_gnet_nvp = sabg_lyr(p,0) + dlrad(p) &
+                    + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_nvp(c) &
+                    - (eflx_sh_nvp(p) + qflx_ev_nvp(p)*htvp(c))
+               hs_nvp(c)     = hs_nvp(c)     + eflx_gnet_nvp * patch%wtcol(p)
+               sabg_lyr_col(c,0) = sabg_lyr_col(c,0) + sabg_lyr(p,0) * patch%wtcol(p)
+            end if
          else
 
             hs_top(c)      = hs_top(c) + eflx_gnet(p)*patch%wtcol(p)
@@ -1911,7 +2056,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetRHSVec(bounds, num_nolakec, filter_nolakec, dtime, &
-       hs_h2osfc, hs_top_snow, hs_soil, hs_top, dhsdT, sabg_lyr_col, tk, &
+       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, tk, &
        tk_h2osfc, fact, fn, c_h2osfc, dz_h2osfc, &
        temperature_inst, waterdiagnosticbulk_inst, rvector)
 
@@ -1943,6 +2088,7 @@ contains
     real(r8) , intent(in)  :: hs_top_snow( bounds%begc: )                ! heat flux on top snow layer [W/m2]
     real(r8) , intent(in)  :: hs_soil( bounds%begc: )                    ! heat flux on soil [W/m2]
     real(r8) , intent(in)  :: hs_top( bounds%begc: )                     ! net energy flux into surface layer (col) [W/m2]
+    real(r8) , intent(in)  :: hs_nvp( bounds%begc: )                 ! [PORTED by Hui Tang: surface heat flux at NVP layer 0] [W/m2]
     real(r8) , intent(in)  :: dhsdT( bounds%begc: )                      ! temperature derivative of "hs" [col]
     real(r8) , intent(in)  :: sabg_lyr_col( bounds%begc: , -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
     real(r8) , intent(in)  :: tk( bounds%begc: , -nlevsno+1: )           ! thermal conductivity [W/(m K)]
@@ -2002,6 +2148,7 @@ contains
       call SetRHSVec_Snow(bounds, num_nolakec, filter_nolakec, &
            hs_top_snow( begc:endc ),                           &
            hs_top( begc:endc ),                                &
+           hs_nvp( begc:endc ),                            &
            dhsdT( begc:endc ),                                 &
            sabg_lyr_col (begc:endc, -nlevsno+1: ),             &
            fact( begc:endc, -nlevsno+1: ),                     &
@@ -2053,7 +2200,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetRHSVec_Snow(bounds, num_nolakec, filter_nolakec, &
-       hs_top_snow, hs_top, dhsdT, sabg_lyr_col, &
+       hs_top_snow, hs_top, hs_nvp, dhsdT, sabg_lyr_col, &
        fact, fn, t_soisno, t_h2osfc, rt)
     !
     ! !DESCRIPTION:
@@ -2064,6 +2211,7 @@ contains
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno, nlevmaxurbgrnd
+    use clm_varctl     , only : use_nvp  ! [PORTED by Hui Tang: NVP top-layer surface BC]
     !
     ! !ARGUMENTS:
     implicit none
@@ -2072,6 +2220,7 @@ contains
     integer , intent(in)  :: filter_nolakec(:)                          ! column filter for non-lake points
     real(r8), intent(in)  :: hs_top_snow( bounds%begc: )                ! heat flux on top snow layer [W/m2]
     real(r8), intent(in)  :: hs_top( bounds%begc: )                     ! net energy flux into surface layer (col) [W/m2]
+    real(r8), intent(in)  :: hs_nvp( bounds%begc: )                 ! [PORTED by Hui Tang: surface heat flux at NVP layer 0] [W/m2]
     real(r8), intent(in)  :: dhsdT( bounds%begc: )                      ! temperature derivative of "hs" [col]
     real(r8), intent(in)  :: sabg_lyr_col( bounds%begc: , -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )         ! used in computing tridiagonal matrix [col, lev]
@@ -2098,10 +2247,13 @@ contains
     SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
-    associate(                    &
-         begc =>    bounds%begc , & ! Input:  [integer        ] beginning column index
-         endc =>    bounds%endc , & ! Input:  [integer        ] ending column index
-         z    =>    col%z         & ! Input:  [real(r8) (:,:) ] layer thickness [m]
+    associate(                           &
+         begc     => bounds%begc       , & ! Input:  [integer        ] beginning column index
+         endc     => bounds%endc       , & ! Input:  [integer        ] ending column index
+         z        => col%z             , & ! Input:  [real(r8) (:,:) ] layer thickness [m]
+         ! [PORTED by Hui Tang: NVP top-layer detection]
+         snl      => col%snl           , & ! Input:  [integer  (:)   ] number of snow layers
+         jbot_sno => col%jbot_sno        & ! Input:  [integer  (:)   ] bottom snow index (-1 = NVP active)
          )
 
       ! Initialize
@@ -2139,6 +2291,13 @@ contains
 
                rt(c,j-1) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
                rt(c,j-1) = rt(c,j-1) + fact(c,j)*sabg_lyr_col(c,j)
+
+            ! [PORTED by Hui Tang: NVP layer 0 is the top surface when snl=0 and no snow]
+            ! When NVP active, jtop=-1 so layer 0 is in the TVD system but falls through
+            ! the conditions above (j=0 < snl+1=1). Apply NVP surface BC here.
+            else if (j == 0 .and. use_nvp .and. jbot_sno(c) == -1 .and. snl(c) == 0) then
+               rt(c,j-1) = t_soisno(c,0) + fact(c,0) * &
+                    (hs_nvp(c) - dhsdT(c)*t_soisno(c,0) + cnfac*fn(c,0))
             end if
          end do
       end do
@@ -2226,6 +2385,7 @@ contains
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno, nlevurb, nlevgrnd, nlevmaxurbgrnd
+    use clm_varctl     , only : use_nvp  ! [PORTED by Hui Tang: NVP interior layer treatment]
     !
     ! !ARGUMENTS:
     implicit none
@@ -2266,7 +2426,9 @@ contains
 
     associate(&
          begc     => bounds%begc  , & ! Input:  [integer ] beginning column index
-         endc     => bounds%endc    & ! Input:  [integer ] ending column index
+         endc     => bounds%endc  , & ! Input:  [integer ] ending column index
+         ! [PORTED by Hui Tang: NVP interior layer treatment]
+         jbot_sno => col%jbot_sno   & ! Input:  [integer  (:) ] bottom snow index (-1 = NVP active)
          )
 
       ! Initialize
@@ -2314,9 +2476,14 @@ contains
                (col%itype(c) == icol_road_imperv .or. &
                 col%itype(c) == icol_road_perv)) then
 
-               if (j == col%snl(c)+1) then
+               ! [PORTED by Hui Tang: exclude NVP case — when NVP active, layer 1 is interior]
+               if (j == col%snl(c)+1 .and. .not. (use_nvp .and. jbot_sno(c) == -1)) then
                   rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs_top_snow(c) &
                        - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
+               ! [PORTED by Hui Tang: layer 1 below NVP is interior: conduction + transmitted solar]
+               else if (j == 1 .and. use_nvp .and. jbot_sno(c) == -1 .and. col%snl(c) == 0) then
+                  rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
+                  rt(c,j) = rt(c,j) + fact(c,j)*sabg_lyr_col(c,j)
                else if (j == 1) then
                   ! this is the snow/soil interface layer
                   rt(c,j) = t_soisno(c,j) + fact(c,j) &
