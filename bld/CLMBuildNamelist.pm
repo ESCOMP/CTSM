@@ -3497,11 +3497,14 @@ sub setup_logic_methane {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_method',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     my $finundation_method = remove_leading_and_trailing_quotes($nl->get_value('finundation_method' ));
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated',
-             'finundation_method'=>$finundation_method);
-    if ($opts->{'driver'} eq "nuopc" ) {
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ch4finundated',
-                    'finundation_method'=>$finundation_method);
+    # prognostic inundation does not require an input stream; other methods do
+    if($finundation_method ne 'h2osfc') {
+	add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated',
+		    'finundation_method'=>$finundation_method);
+	if ($opts->{'driver'} eq "nuopc" ) {
+	    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ch4finundated',
+			'finundation_method'=>$finundation_method);
+	}
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_aereoxid_prog',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );

@@ -46,7 +46,8 @@ module ch4Mod
 
   ! Non-tunable constants
   real(r8) :: rgasm  ! J/mol.K; rgas / 1000; will be set below
-  real(r8), parameter :: rgasLatm = 0.0821_r8 ! L.atm/mol.K
+  real(r8), parameter :: rgasLatm = 0.0821_r8  ! L.atm/mol.K
+  real(r8), parameter :: psi_fc = 3.4e3_r8     ! matric potential at field capcity (mm)
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: readParams
@@ -57,6 +58,7 @@ module ch4Mod
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: ch4_prod
   private :: ch4_oxid
+  private :: surface_layer_oxid
   private :: ch4_aere
   private :: ch4_ebul
   private :: ch4_tran
@@ -204,6 +206,13 @@ module ch4Mod
      real(r8), pointer, public :: o2_decomp_depth_unsat_col  (:,:) ! col O2 consumption during decomposition in each soil layer (nlevsoi) (mol/m3/s)
      real(r8), pointer, public :: ch4_surf_flux_tot_col      (:)   ! col CH4 surface flux (to atm) (kg C/m**2/s)
 
+     real(r8), pointer, public :: conc_ch4_surface_layer_sat_col    (:) ! col O2 conc in surface water layer (mol/m3)
+     real(r8), pointer, public :: conc_ch4_surface_layer_unsat_col  (:) ! col O2 conc in surface soil layer (mol/m3)
+     real(r8), pointer, public :: conc_o2_surface_layer_sat_col     (:) ! col O2 conc in surface water layer (mol/m3)
+     real(r8), pointer, public :: conc_o2_surface_layer_unsat_col   (:) ! col O2 conc in surface soil layer (mol/m3)
+     real(r8), pointer, public :: surface_layer_thickness_sat_col   (:) ! surface water layer thickness (m)
+     real(r8), pointer, public :: surface_layer_thickness_unsat_col (:) ! surface soil layer thickness (m)
+     
      real(r8), pointer, public :: grnd_ch4_cond_patch        (:)   ! patch tracer conductance for boundary layer [m/s]
      real(r8), pointer, public :: grnd_ch4_cond_col          (:)   ! col tracer conductance for boundary layer [m/s]
      type(ch4finundatedstream_type), private :: ch4findstream      ! ch4 finundated stream data
@@ -344,6 +353,13 @@ contains
     allocate(this%conc_o2_unsat_col          (begc:endc,1:nlevgrnd)) ;  this%conc_o2_unsat_col          (:,:) = nan
     allocate(this%o2_decomp_depth_sat_col    (begc:endc,1:nlevgrnd)) ;  this%o2_decomp_depth_sat_col    (:,:) = nan          
     allocate(this%o2_decomp_depth_unsat_col  (begc:endc,1:nlevgrnd)) ;  this%o2_decomp_depth_unsat_col  (:,:) = nan
+
+    allocate(this%conc_ch4_surface_layer_sat_col        (begc:endc)) ;  this%conc_ch4_surface_layer_sat_col           (:) = nan
+    allocate(this%conc_ch4_surface_layer_unsat_col      (begc:endc)) ;  this%conc_ch4_surface_layer_unsat_col         (:) = nan
+    allocate(this%conc_o2_surface_layer_sat_col         (begc:endc)) ;  this%conc_o2_surface_layer_sat_col            (:) = nan
+    allocate(this%conc_o2_surface_layer_unsat_col       (begc:endc)) ;  this%conc_o2_surface_layer_unsat_col          (:) = nan
+    allocate(this%surface_layer_thickness_sat_col       (begc:endc)) ;  this%surface_layer_thickness_sat_col          (:) = nan
+    allocate(this%surface_layer_thickness_unsat_col     (begc:endc)) ;  this%surface_layer_thickness_unsat_col        (:) = nan
 
     allocate(this%grnd_ch4_cond_patch        (begp:endp))            ;  this%grnd_ch4_cond_patch        (:)   = nan
     allocate(this%grnd_ch4_cond_col          (begc:endc))            ;  this%grnd_ch4_cond_col          (:)   = nan
@@ -830,6 +846,13 @@ contains
        this%conc_o2_sat_col    (c,1:nlevsoi) = 0._r8
        this%conc_o2_unsat_col  (c,1:nlevsoi) = 0._r8
 
+       this%conc_ch4_surface_layer_sat_col    (c) = 0._r8
+       this%conc_ch4_surface_layer_unsat_col  (c) = 0._r8
+       this%conc_o2_surface_layer_sat_col     (c) = 0._r8
+       this%conc_o2_surface_layer_unsat_col   (c) = 0._r8
+       this%surface_layer_thickness_sat_col   (c) = 0.01_r8
+       this%surface_layer_thickness_unsat_col (c) = 0.05_r8
+
        l = col%landunit(c)
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop .or. &
             lun%itype(l) == istdlak) then
@@ -1120,6 +1143,42 @@ contains
        call set_missing_vals_to_constant(this%conc_ch4_unsat_col, 0._r8)
     end if
 
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_SFC_LYR_SAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='methane concentration in surface water layer', &
+         units='mol/m^3', readvar=readvar, &
+         interpinic_flag='interp', data=this%conc_ch4_surface_layer_sat_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_SFC_LYR_UNSAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='methane concentration in surface soil layer', &
+         units='mol/m^3', readvar=readvar, &
+         interpinic_flag='interp', data=this%conc_ch4_surface_layer_unsat_col)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SFC_LYR_SAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='oxygen concentration in surface water layer', &
+         units='mol/m^3', readvar=readvar, &
+         interpinic_flag='interp', data=this%conc_o2_surface_layer_sat_col)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SFC_LYR_UNSAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='oxygen concentration in surface soil layer', &
+         units='mol/m^3', readvar=readvar, &
+         interpinic_flag='interp', data=this%conc_o2_surface_layer_unsat_col)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_SAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='surface water layer thickness', units='m', &
+         readvar=readvar, &
+         interpinic_flag='interp', data=this%surface_layer_thickness_sat_col)
+    
+    call restartvar(ncid=ncid, flag=flag, varname='SFC_LYR_THICKNESS_UNSAT', &
+         xtype=ncd_double, dim1name='column', &
+         long_name='surface soil layer thickness', units='m', &
+         readvar=readvar, &
+         interpinic_flag='interp', data=this%surface_layer_thickness_unsat_col)
+
     call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='lagged saturation status of layer in unsat. zone', units='', &
@@ -1257,6 +1316,15 @@ contains
     real(r8) :: f_uninundated_col(bounds%begc:bounds%endc)     ! 1 - finundated_col
     real(r8) :: f_uninundated_new_col(bounds%begc:bounds%endc) ! f_uninundated after column adjustments
     real(r8) :: adjustment_one_level(bounds%begc:bounds%endc)
+    ! The following surface_layer_* variables explicitly account for the 
+    ! fact that surface layer thicknesses may differ across column types;
+    ! in this case, the fractional volume, rather than the fractional
+    ! area (in which the layer thicknesses are implicit) is passed to the column state updater.
+    real(r8) :: surface_layer_volume_sat_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_sat_new_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_unsat_col(bounds%begc:bounds%endc)
+    real(r8) :: surface_layer_volume_unsat_new_col(bounds%begc:bounds%endc)
+
     integer :: j, c
     integer :: begc, endc
 
@@ -1299,15 +1367,58 @@ contains
          clump_index = clump_index, &
          var = this%finundated_lag_col(begc:endc))
 
+    ! Because surface layer thicknesses can differ between landunit types, the volume is passed rather than the fractional area.  Passing solely the fractional area is acceptable when layer thicknesses are identical for different landunits, i.e. for the soil layers.
+    surface_layer_volume_sat_col(begc:endc) = &
+         this%surface_layer_thickness_sat_col(begc:endc)*this%finundated_col(begc:endc)
+
+    surface_layer_volume_unsat_col(begc:endc) = &
+         this%surface_layer_thickness_unsat_col(begc:endc)*f_uninundated_col(begc:endc)
+
+    surface_layer_volume_sat_new_col(begc:endc) = &
+         this%surface_layer_thickness_sat_col(begc:endc)*finundated_new_col(begc:endc)
+
+surface_layer_volume_unsat_new_col(begc:endc) = &
+         this%surface_layer_thickness_unsat_col(begc:endc)*f_uninundated_new_col(begc:endc)
+
     this%dyn_ch4bal_adjustments_col(begc:endc) = 0._r8
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var    = this%conc_ch4_surface_layer_sat_col(begc:endc), &
+         volume_multiplier_old = surface_layer_volume_sat_col(begc:endc), &
+         volume_multiplier_new = surface_layer_volume_sat_new_col(begc:endc), &
+         adjustment = adjustment_one_level(begc:endc))
+    ! when fractional volume is used to redistribute mass, layer
+    ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
+    do c = bounds%begc, bounds%endc
+       this%dyn_ch4bal_adjustments_col(c) = &
+            this%dyn_ch4bal_adjustments_col(c) + &
+            adjustment_one_level(c) * catomw
+    end do
+
+    call column_state_updater%update_column_state_no_special_handling( &
+         bounds = bounds, &
+         clump_index = clump_index, &
+         var    = this%conc_ch4_surface_layer_unsat_col(begc:endc), &
+         volume_multiplier_old = surface_layer_volume_unsat_col(begc:endc), &
+         volume_multiplier_new = surface_layer_volume_unsat_new_col(begc:endc), &
+         adjustment = adjustment_one_level(begc:endc))
+    ! when fractional volume is used to redistribute mass, layer
+    ! thickness is not needed in the dyn_ch4bal_adjustments_col calculation
+    do c = bounds%begc, bounds%endc
+       this%dyn_ch4bal_adjustments_col(c) = &
+            this%dyn_ch4bal_adjustments_col(c) + &
+            adjustment_one_level(c) * catomw
+    end do
 
     do j = 1, nlevsoi
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_ch4_sat_col(begc:endc, j), &
-            fractional_area_old = this%finundated_col(begc:endc), &
-            fractional_area_new = finundated_new_col(begc:endc), &
+            volume_multiplier_old = this%finundated_col(begc:endc), &
+            volume_multiplier_new = finundated_new_col(begc:endc), &
             adjustment = adjustment_one_level(begc:endc))
        do c = bounds%begc, bounds%endc
           this%dyn_ch4bal_adjustments_col(c) = &
@@ -1319,8 +1430,8 @@ contains
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_ch4_unsat_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc), &
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc), &
             adjustment = adjustment_one_level(begc:endc))
        do c = bounds%begc, bounds%endc
           this%dyn_ch4bal_adjustments_col(c) = &
@@ -1333,8 +1444,8 @@ contains
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%layer_sat_lag_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc))
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc))
 
        ! We don't bother tracking the adjustment terms for the following o2 state
        ! variables, because they're not needed for balance checks and because people are
@@ -1344,15 +1455,15 @@ contains
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_o2_sat_col(begc:endc, j), &
-            fractional_area_old = this%finundated_col(begc:endc), &
-            fractional_area_new = finundated_new_col(begc:endc))
+            volume_multiplier_old = this%finundated_col(begc:endc), &
+            volume_multiplier_new = finundated_new_col(begc:endc))
 
        call column_state_updater%update_column_state_no_special_handling( &
             bounds = bounds, &
             clump_index = clump_index, &
             var    = this%conc_o2_unsat_col(begc:endc, j), &
-            fractional_area_old = f_uninundated_col(begc:endc), &
-            fractional_area_new = f_uninundated_new_col(begc:endc))
+            volume_multiplier_old = f_uninundated_col(begc:endc), &
+            volume_multiplier_new = f_uninundated_new_col(begc:endc))
     end do
 
     this%finundated_col(begc:endc) = &
@@ -1443,10 +1554,8 @@ contains
      tString='vmax_ch4_oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%vmax_ch4_oxid=45.e-6_r8 * 1000._r8 / 3600._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%vmax_ch4_oxid=tempr
-
+     params_inst%vmax_ch4_oxid=tempr
+     
      tString='oxinhib'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -1455,9 +1564,7 @@ contains
      tString='k_m'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m= 5.e-6_r8 * 1000._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m=tempr
+     params_inst%k_m=tempr
    
      tString='q10_ch4oxid'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1472,23 +1579,17 @@ contains
      tString='k_m_o2'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m_o2  = 20.e-6_r8 * 1000._r8 
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m_o2=tempr
+     params_inst%k_m_o2=tempr
 
      tString='k_m_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%k_m_unsat= 5.e-6_r8 * 1000._r8 / 10._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%k_m_unsat=tempr
+     params_inst%k_m_unsat=tempr
 
      tString='vmax_oxid_unsat'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%vmax_oxid_unsat = 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%vmax_oxid_unsat=tempr
+     params_inst%vmax_oxid_unsat=tempr
 
      tString='scale_factor_aere'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1503,9 +1604,7 @@ contains
      tString='unsat_aere_ratio'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-     params_inst%unsat_aere_ratio= 0.05_r8 / 0.3_r8 
-     ! FIX(FIX(SPM,032414),032414) can't be read off of param file.  not bfb since it is a divide
-     !params_inst%unsat_aere_ratio=tempr
+     params_inst%unsat_aere_ratio=tempr
 
      tString='porosmin'
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -1801,6 +1900,12 @@ contains
          lake_soilc           =>   ch4_inst%lake_soilc_col                   , & ! Output: [real(r8) (:,:) ]  total soil organic matter found in level (g C / m^3) (nlevsoi)
          conc_ch4_sat         =>   ch4_inst%conc_ch4_sat_col                 , & ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
          conc_ch4_unsat       =>   ch4_inst%conc_ch4_unsat_col               , & ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
+
+         surface_layer_conc_ch4_sat    => ch4_inst%conc_ch4_surface_layer_sat_col    , &   ! Input: [real(r8) (:) ]  CH4 conc surface water layer (mol/m3)
+         surface_layer_conc_ch4_unsat  => ch4_inst%conc_ch4_surface_layer_unsat_col  , &   ! Input: [real(r8) (:) ]  CH4 conc surface soil layer (mol/m3)
+         surface_layer_thickness_sat   => ch4_inst%surface_layer_thickness_sat_col   , &   ! Input: [real(r8) (:) ]  surface water layer thickness (m)
+         surface_layer_thickness_unsat => ch4_inst%surface_layer_thickness_unsat_col , &   ! Input: [real(r8) (:) ]  surface soil layer thickness (m)
+         
          conc_ch4_lake        =>   ch4_inst%conc_ch4_lake_col                , & ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
          conc_o2_lake         =>   ch4_inst%conc_o2_lake_col                 , & ! Output: [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
          ch4_dfsat_flux       =>   ch4_inst%ch4_dfsat_flux_col               , & ! Output: [real(r8) (:)   ]  CH4 flux to atm due to decreasing finundated (kg C/m^2/s) [+]
@@ -1921,9 +2026,7 @@ contains
 
       end do
 
-      ! Check to see if finundated changed since the last timestep.  If it increased, then reduce conc_ch4_sat
-      ! proportionally.  If it decreased, then add flux to atm.
-
+      ! Check to see if finundated changed since the last timestep and adjust concentrations to conserve vertically integrated methane
       do j=1,nlevsoi
          do fc = 1, num_soilc
             c = filter_soilc(fc)
@@ -1934,18 +2037,39 @@ contains
 
             g = col%gridcell(c)
             if (.not. ch4_first_time_grc(g)) then
-               if (finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
-                  dfsat = finundated(c) - fsat_bef(c)
+               dfsat = finundated(c) - fsat_bef(c)
+               if (dfsat > 0._r8) then      ! adjust conc_ch4_sat
                   conc_ch4_sat(c,j) = (fsat_bef(c)*conc_ch4_sat(c,j) + dfsat*conc_ch4_unsat(c,j)) / finundated(c)
-               else if (finundated(c) < fsat_bef(c)) then
-                  ch4_dfsat_flux(c) = ch4_dfsat_flux(c) + &
-                       (fsat_bef(c) - finundated(c))*(conc_ch4_sat(c,j) - conc_ch4_unsat(c,j)) * &
-                       dz(c,j) / dtime * catomw / 1000._r8 ! mol --> kg
+               else if (dfsat < 0._r8) then ! adjust conc_ch4_unsat
+                  if (finundated(c) < 1._r8) then
+                     conc_ch4_unsat(c,j) = ((1._r8-fsat_bef(c))*conc_ch4_unsat(c,j) - dfsat*conc_ch4_sat(c,j)) / (1._r8 - finundated(c))
+                  endif
                end if
             end if
          end do
       end do
-
+      ! Account for surface layer
+      do fc = 1, num_soilc
+         c = filter_soilc(fc)
+         g = col%gridcell(c)
+         if (.not. ch4_first_time_grc(g)) then
+            dfsat = finundated(c) - fsat_bef(c)
+            if (dfsat > 0._r8) then      ! adjust conc_ch4_sat
+               surface_layer_conc_ch4_sat(c) = &
+                    (fsat_bef(c)*surface_layer_conc_ch4_sat(c) &
+                    + dfsat*surface_layer_conc_ch4_unsat(c)*(surface_layer_thickness_unsat(c)/surface_layer_thickness_sat(c))) &
+                    / finundated(c)
+            else if (dfsat < 0._r8) then ! adjust conc_ch4_unsat
+               if (finundated(c) < 1._r8) then
+                  surface_layer_conc_ch4_unsat(c) = &
+                       ((1._r8-fsat_bef(c))*surface_layer_conc_ch4_unsat(c) &
+                       - dfsat*surface_layer_conc_ch4_sat(c)*(surface_layer_thickness_sat(c)/surface_layer_thickness_unsat(c))) &
+                       / (1._r8 - finundated(c))
+               endif
+            end if
+         end if
+      end do
+      
       !!!! Begin biochemistry
 
       ! First for soil
@@ -2029,7 +2153,7 @@ contains
 
             call get_jwt (bounds, num_soilc, filter_soilc, jwt(begc:endc), &
                  soilstate_inst, waterstatebulk_inst, temperature_inst)
-
+            
             do fc = 1, num_soilc
                c = filter_soilc(fc)
                zwt_ch4_unsat(c) = zi(c,jwt(c))
@@ -2598,6 +2722,7 @@ contains
                else
                   if ( (somhr(c) + lithr(c)) > 0._r8) then
                      partition_z = hr_vr(c,j) * dz(c,j) / (somhr(c) + lithr(c))
+
                   else
                      partition_z = 1._r8
                   end if
@@ -2668,6 +2793,7 @@ contains
             ! Competition will be done in ch4_oxid
 
             o2_decomp_depth(c,j) = base_decomp * partition_z / dz (c,j)
+            
             if (anoxia) then
                ! Divide off o_scalar to use potential O2-unlimited HR to represent aerobe demand for oxygen competition
                if (.not. lake .and. j > nlevdecomp) then
@@ -2680,6 +2806,7 @@ contains
                   end if
                end if
             end if ! anoxia
+
 
             ! Add root respiration
             if (.not. lake) then
@@ -2828,7 +2955,7 @@ contains
                k_m_eff = k_m_unsat
                vmax_eff = vmax_oxid_unsat
             end if
-
+            
             porevol = max(watsat(c,j) - h2osoi_vol(c,j), 0._r8)
             h2osoi_vol_min = min(watsat(c,j), h2osoi_vol(c,j))
             if (j <= jwt(c) .and. smp_l(c,j) < 0._r8) then
@@ -2861,7 +2988,7 @@ contains
 
             ch4_oxid_depth(c,j) = oxid_a
             o2_oxid_depth(c,j) = ch4_oxid_depth(c,j) * 2._r8
-
+            
          end do
       end do
 
@@ -3157,6 +3284,7 @@ contains
        if (transpirationloss .and. is_vegetated) then
           ! Calculate water concentration
           h2osoi_vol_min = min(watsat(j), h2osoi_vol(j))
+          
           k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno(j) - 1._r8 / kh_tbase) + log (kh_theta(1)))
           k_h_cc = t_soisno(j) / k_h_inv * rgasLatm
           conc_ch4_wat = conc_ch4(j) / ( (watsat(j)-h2osoi_vol_min)/k_h_cc + h2osoi_vol_min)
@@ -3210,7 +3338,7 @@ contains
           aerecond = area_tiller * rootfr(j) * diffus_aere / (z(j)*params_inst%rob)
           ! Add in boundary layer resistance
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
-
+                    
           aere(j) = aerecond * (conc_ch4(j)/watsat(j)/k_h_cc - c_atm(1)) / dz(j) ![mol/m3-total/s]
           !ZS: Added watsat & Henry's const.
           aere(j) = max(aere(j), 0._r8) ! prevent backwards diffusion
@@ -3222,7 +3350,9 @@ contains
           aerecond = area_tiller * rootfr(j) * oxdiffus / (z(j)*params_inst%rob)
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
           oxaere(j) = -aerecond *(conc_o2(j)/watsat(j)/k_h_cc - c_atm(2)) / dz(j) ![mol/m3-total/s]
+          
           oxaere(j) = max(oxaere(j), 0._r8)
+
           ! Diffusion in is positive; prevent backwards diffusion
           if ( .not. use_aereoxid_prog ) then ! fixed aere oxid proportion; will be done in ch4_tran
              oxaere(j) = 0._r8
@@ -3237,7 +3367,6 @@ contains
     return
   end subroutine SiteOxAere
 
-  
   !-----------------------------------------------------------------------
   subroutine ch4_ebul (bounds, &
        num_methc, filter_methc, &
@@ -3382,6 +3511,104 @@ contains
   end subroutine ch4_ebul
 
   !-----------------------------------------------------------------------
+  subroutine surface_layer_oxid(watsat, sucsat, bsw, h2osoi_vol, &
+       smp_l, t_soisno, conc_ch4, conc_o2, ch4_oxid, o2_oxid)
+    !
+    ! !DESCRIPTION:
+    ! Calculate oxidation in virtual unsaturated layer
+    ! Oxidation is based on double Michaelis-Mentin kinetics, and is adjusted for low soil moisture.
+    ! Oxidation will be limited by available oxygen in ch4_tran.
+    ! 
+    
+    ! !USES:
+
+    !
+    ! Arguments (in)
+    real(r8), intent(in) :: watsat     ! volumetric soil water at saturation (porosity)
+    real(r8), intent(in) :: sucsat     ! minimum soil suction (mm)
+    real(r8), intent(in) :: bsw        ! Clapp and Hornberger "b"
+    real(r8), intent(in) :: h2osoi_vol ! volumetric soil water (m3/m3)
+    real(r8), intent(in) :: smp_l      ! soil matric potential (mm)
+    real(r8), intent(in) :: t_soisno   ! soil temperature (Kelvin) 
+    real(r8), intent(in) :: conc_ch4   ! CH4 conc in layer (mol/m3)
+    real(r8), intent(in) :: conc_o2    ! O2 conc in layer (mol/m3)
+
+    ! Arguments (out)
+    real(r8), intent(out) :: ch4_oxid  ! Oxidation predicted by method A (temperature & enzyme limited) (mol CH4/m3/s)
+    real(r8), intent(out) :: o2_oxid   ! Oxidation predicted by method A (temperature & enzyme limited) (mol O2/m3/s)
+
+    !
+    ! !LOCAL VARIABLES:
+    real(r8):: t0                             ! Base temperature for Q10
+    real(r8):: porevol                        ! air-filled volume ratio to total soil volume
+    real(r8):: h2osoi_vol_min                 ! h2osoi_vol restricted to be below watsat
+    real(r8):: conc_ch4_rel                   ! concentration with respect to water volume (mol/m^3 water)
+    real(r8):: conc_o2_rel                    ! concentration with respect to water volume (mol/m^3 water)
+    real(r8):: smp_fact                       ! factor for reduction based on soil moisture (unitless)
+    real(r8):: k_h_cc, k_h_inv                ! see functions below for description
+    real(r8):: k_m_eff                        ! effective k_m
+    real(r8):: vmax_eff                       ! effective vmax
+                                              ! ch4 oxidation parameters
+    real(r8) :: vmax_ch4_oxid                 ! oxidation rate constant (= 45.e-6_r8 * 1000._r8 / 3600._r8) [mol/m3-w/s];
+    real(r8) :: k_m 			      ! Michaelis-Menten oxidation rate constant for CH4 concentration 
+    real(r8) :: q10_ch4oxid                   ! Q10 oxidation constant
+    real(r8) :: smp_crit                      ! Critical soil moisture potential
+    real(r8) :: k_m_o2                        ! Michaelis-Menten oxidation rate constant for O2 concentration
+    real(r8) :: k_m_unsat                     ! Michaelis-Menten oxidation rate constant for CH4 concentration
+    real(r8) :: vmax_oxid_unsat               ! (= 45.e-6_r8 * 1000._r8 / 3600._r8 / 10._r8) [mol/m3-w/s]   
+    !
+    !-----------------------------------------------------------------------
+
+
+    ! Set oxidation parameters
+    vmax_ch4_oxid   = params_inst%vmax_ch4_oxid
+    k_m             = params_inst%k_m
+    q10_ch4oxid     = params_inst%q10_ch4oxid
+    smp_crit        = params_inst%smp_crit
+    k_m_o2          = params_inst%k_m_o2
+    k_m_unsat       = params_inst%k_m_unsat
+    vmax_oxid_unsat = params_inst%vmax_oxid_unsat
+
+    t0 = tfrz + 12._r8 ! Walter, for Michigan site where the 45 M/h comes from
+
+    ! only unsaturated layer considered here 
+    k_m_eff = k_m_unsat
+    vmax_eff = vmax_oxid_unsat
+
+    ! maximum water content in unsaturated layer is field capacity
+    h2osoi_vol_min = min(watsat*(sucsat/psi_fc)**(1._r8/bsw), h2osoi_vol)
+
+    porevol = max(watsat - h2osoi_vol_min, 0._r8)
+
+    ! moisture limitation
+    if (smp_l < 0._r8) then
+       ! Schnell & King, 1996, Figure 3
+       smp_fact = exp(-min(smp_l,psi_fc)/smp_crit)
+    else
+       smp_fact = 1._r8
+    end if
+
+    k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno - 1._r8 / kh_tbase) + log (kh_theta(1)))
+    k_h_cc = t_soisno / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+    conc_ch4_rel = conc_ch4 / (h2osoi_vol_min + porevol/k_h_cc)
+
+    k_h_inv = exp(-c_h_inv(2) * (1._r8 / t_soisno - 1._r8 / kh_tbase) + log (kh_theta(2)))
+    k_h_cc = t_soisno / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+    conc_o2_rel  = conc_o2 / (h2osoi_vol_min + porevol/k_h_cc)
+
+    ch4_oxid = vmax_eff * h2osoi_vol_min* conc_ch4_rel / (k_m_eff + conc_ch4_rel) &
+         ![mol/m3-t/s]         [mol/m3-w/s]    [m3-w/m3-t]     [mol/m3-w]    [mol/m3-w]  [mol/m3-w]
+         * conc_o2_rel / (k_m_o2 + conc_o2_rel) &
+         * q10_ch4oxid ** ((t_soisno - t0) / 10._r8) * smp_fact
+
+    ! For all landunits / levels, prevent oxidation if at or below freezing
+    if (t_soisno <= tfrz) ch4_oxid = 0._r8
+
+    o2_oxid = ch4_oxid * 2._r8
+            
+  end subroutine surface_layer_oxid
+
+  !-----------------------------------------------------------------------
   subroutine ch4_tran (bounds, &
        num_methc, filter_methc, &
        jwt, dtime_ch4, sat, lake, &
@@ -3395,6 +3622,7 @@ contains
     ! are not tracked and oxidation is not allowed inside snow and lake water.
     ! Diffusivity is set based on soil texture and organic matter fraction. A Crank-Nicholson solution is used.
     ! Then CH4 diffusive flux is calculated and consistency is checked.
+    ! 3.27.2026: Surface layer added above resolved soil layers
 
     ! !USES:
     use clm_time_manager   , only : get_step_size_real, get_nstep
@@ -3423,27 +3651,27 @@ contains
     integer  :: jtop(bounds%begc:bounds%endc)                              ! top level at each column
     integer :: iter                                                        ! iteration counter when dtime_ch4 < dtime
     real(r8) :: dtime                                                      ! land model time step (sec)
-    real(r8) :: at (bounds%begc:bounds%endc,0:nlevsoi)                     ! "a" vector for tridiagonal matrix
-    real(r8) :: bt (bounds%begc:bounds%endc,0:nlevsoi)                     ! "b" vector for tridiagonal matrix
-    real(r8) :: ct (bounds%begc:bounds%endc,0:nlevsoi)                     ! "c" vector for tridiagonal matrix
-    real(r8) :: rt (bounds%begc:bounds%endc,0:nlevsoi)                     ! "r" vector for tridiagonal solution
+    real(r8) :: at (bounds%begc:bounds%endc,-1:nlevsoi)                     ! "a" vector for tridiagonal matrix
+    real(r8) :: bt (bounds%begc:bounds%endc,-1:nlevsoi)                     ! "b" vector for tridiagonal matrix
+    real(r8) :: ct (bounds%begc:bounds%endc,-1:nlevsoi)                     ! "c" vector for tridiagonal matrix
+    real(r8) :: rt (bounds%begc:bounds%endc,-1:nlevsoi)                     ! "r" vector for tridiagonal solution
     real(r8) :: f_a                                                        ! air-filled fraction of available pore space
-    real(r8) :: diffus (bounds%begc:bounds%endc,0:nlevsoi)                 ! diffusivity (m2/s)
+    real(r8) :: diffus (bounds%begc:bounds%endc,-1:nlevsoi)                 ! diffusivity (m2/s)
     real(r8) :: k_h_inv                                                    ! 1/Henry's Law Constant in Latm/mol
-    real(r8) :: k_h_cc(bounds%begc:bounds%endc,0:nlevsoi,ngases)           ! ratio of mol/m3 in liquid to mol/m3 in gas
+    real(r8) :: k_h_cc(bounds%begc:bounds%endc,-1:nlevsoi,ngases)           ! ratio of mol/m3 in liquid to mol/m3 in gas
     real(r8) :: dzj                                                        ! 
-    real(r8) :: dp1_zp1 (bounds%begc:bounds%endc,0:nlevsoi)                ! diffusivity/delta_z for next j
-    real(r8) :: dm1_zm1 (bounds%begc:bounds%endc,0:nlevsoi)                ! diffusivity/delta_z for previous j
+    real(r8) :: dp1_zp1 (bounds%begc:bounds%endc,-1:nlevsoi)                ! diffusivity/delta_z for next j
+    real(r8) :: dm1_zm1 (bounds%begc:bounds%endc,-1:nlevsoi)                ! diffusivity/delta_z for previous j
     real(r8) :: t_soisno_c                                                 ! soil temperature (C)  (-nlevsno+1:nlevsoi)
     real(r8) :: eps                                                        ! either epsilon_a or epsilon_w, depending on where in soil, wrt WT
     real(r8) :: deficit                                                    ! mol CH4 /m^2 that must be subtracted from diffusive flux to atm. to make up
     ! for keeping concentrations always above zero
-    real(r8) :: conc_ch4_bef(bounds%begc:bounds%endc,1:nlevsoi)            ! concentration at the beginning of the timestep
+    real(r8) :: conc_ch4_bef(bounds%begc:bounds%endc,0:nlevsoi)            ! concentration at the beginning of the timestep
     real(r8) :: errch4(bounds%begc:bounds%endc)                            ! Error (Mol CH4 /m^2) [+ = too much CH4]
-    real(r8) :: conc_ch4_rel(bounds%begc:bounds%endc,0:nlevsoi)            ! Concentration per volume of air or water
-    real(r8) :: conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi)             ! Concentration per volume of air or water
-    real(r8) :: conc_ch4_rel_old(bounds%begc:bounds%endc,0:nlevsoi)        ! Concentration during last Crank-Nich. loop
-    real(r8) :: h2osoi_vol_min(bounds%begc:bounds%endc,1:nlevsoi)          ! h2osoi_vol restricted to be <= watsat
+    real(r8) :: conc_ch4_rel(bounds%begc:bounds%endc,-1:nlevsoi)            ! Concentration per volume of air or water
+    real(r8) :: conc_o2_rel(bounds%begc:bounds%endc,-1:nlevsoi)             ! Concentration per volume of air or water
+    real(r8) :: conc_ch4_rel_old(bounds%begc:bounds%endc,-1:nlevsoi)        ! Concentration during last Crank-Nich. loop
+    real(r8) :: h2osoi_vol_min(bounds%begc:bounds%endc,0:nlevsoi)          ! h2osoi_vol restricted to be <= watsat
     real(r8), parameter :: smallnumber = 1.e-12_r8
     real(r8) :: snowdiff                                                   ! snow diffusivity (m^2/s)
     real(r8) :: snowres(bounds%begc:bounds%endc)                           ! Cumulative Snow resistance (s/m). Also includes
@@ -3454,13 +3682,13 @@ contains
     real(r8) :: airfrac                                                    ! air fraction in snow
     real(r8) :: waterfrac                                                  ! water fraction in snow
     real(r8) :: icefrac                                                    ! ice fraction in snow
-    real(r8) :: epsilon_t (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)     !
-    real(r8) :: epsilon_t_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases) ! epsilon_t from last time step !Currently deprecated
-    real(r8) :: source (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)        ! source
-    real(r8) :: source_old (bounds%begc:bounds%endc,1:nlevsoi,1:ngases)    ! source from last time step !Currently deprecated
+    real(r8) :: epsilon_t (bounds%begc:bounds%endc,0:nlevsoi,1:ngases)     !
+    real(r8) :: epsilon_t_old (bounds%begc:bounds%endc,0:nlevsoi,1:ngases) ! epsilon_t from last time step !Currently deprecated
+    real(r8) :: source (bounds%begc:bounds%endc,0:nlevsoi,1:ngases)        ! source
+    real(r8) :: source_old (bounds%begc:bounds%endc,0:nlevsoi,1:ngases)    ! source from last time step !Currently deprecated
     real(r8) :: om_frac                                                    ! organic matter fraction
     real(r8) :: o2demand, ch4demand                                        ! mol/m^3/s
-    real(r8) :: liqfrac(bounds%begc:bounds%endc, 1:nlevsoi)
+    real(r8) :: liqfrac(bounds%begc:bounds%endc, 0:nlevsoi)
     real(r8) :: capthick                                                   ! (mm) min thickness before assuming h2osfc is impermeable
     real(r8) :: satpow                                                     ! exponent on watsat for saturated soil solute diffusion
     real(r8) :: scale_factor_gasdiff                                       ! For sensitivity tests; convection would allow this to be > 1
@@ -3468,6 +3696,12 @@ contains
     real(r8) :: organic_max                                                ! organic matter content (kg/m3) where soil is assumed to act like peat
     real(r8) :: aereoxid                                                   ! fraction of methane flux entering aerenchyma rhizosphere 
 
+    real(r8) :: surface_layer_thickness_old(bounds%begc:bounds%endc)  !
+    real(r8) :: surface_layer_ch4_oxid(bounds%begc:bounds%endc) ! 
+    real(r8) :: surface_layer_o2_oxid(bounds%begc:bounds%endc)  !
+    real(r8) :: surface_layer_ch4stress
+    real(r8) :: surface_layer_o2stress
+    real(r8) :: dzm1
     real(r8), pointer :: ch4_prod_depth   (:,:)  
     real(r8), pointer :: ch4_oxid_depth   (:,:)  
     real(r8), pointer :: ch4_aere_depth   (:,:)  
@@ -3484,9 +3718,13 @@ contains
     real(r8), pointer :: co2_decomp_depth (:,:)
     real(r8), pointer :: conc_o2          (:,:)         
     real(r8), pointer :: conc_ch4         (:,:)        
+    real(r8), pointer :: surface_layer_conc_ch4(:)
+    real(r8), pointer :: surface_layer_conc_o2(:)
+    real(r8), pointer :: surface_layer_thickness(:)
 
-    integer  :: nstep                       ! time step number
-    character(len=32) :: subname='ch4_tran' ! subroutine name
+    integer  :: nstep                        ! time step number
+    character(len=128) :: err_msg='unset'    ! error message
+    character(len=32)  :: subname='ch4_tran' ! subroutine name
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(jwt) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -3499,6 +3737,8 @@ contains
 
          bsw           =>    soilstate_inst%bsw_col          , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b" (nlevgrnd)             
          watsat        =>    soilstate_inst%watsat_col       , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)  
+         smp_l         =>    soilstate_inst%smp_l_col        , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
+         sucsat        =>    soilstate_inst%sucsat_col       , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
          cellorg       =>    soilstate_inst%cellorg_col      , & ! Input:  [real(r8) (:,:) ]  column 3D org (kg/m^3 organic matter) (nlevgrnd)
 
          t_soisno      =>    temperature_inst%t_soisno_col   , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevsoi) 
@@ -3534,6 +3774,9 @@ contains
          co2_decomp_depth => ch4_inst%co2_decomp_depth_unsat_col ! Output: [real(r8) (:,:) ]  CO2 production during decomposition in each soil layer (nlevsoi) (mol/m3/s)
          conc_ch4         => ch4_inst%conc_ch4_unsat_col         ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
          conc_o2          => ch4_inst%conc_o2_unsat_col          ! Output: [real(r8) (:,:) ]  O2 conc in each soil layer (mol/m3) (nlevsoi)   
+         surface_layer_conc_ch4  => ch4_inst%conc_ch4_surface_layer_unsat_col    ! Output: [real(r8) (:) ]  CH4 conc surface soil layer (mol/m3) 
+         surface_layer_conc_o2   => ch4_inst%conc_o2_surface_layer_unsat_col     ! Output: [real(r8) (:) ]  O2 conc surface soil layer (mol/m3) 
+         surface_layer_thickness => ch4_inst%surface_layer_thickness_unsat_col   ! Output: [real(r8) (:) ]  surface soil layer thickness (m)   
       else                                                  ! saturated
          o2_decomp_depth  => ch4_inst%o2_decomp_depth_sat_col    ! Output: [real(r8) (:,:) ]  O2 consumption during decomposition in each soil layer (nlevsoi) (mol/m3/s)
          o2stress         => ch4_inst%o2stress_sat_col           ! Output: [real(r8) (:,:) ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
@@ -3551,6 +3794,9 @@ contains
          co2_decomp_depth => ch4_inst%co2_decomp_depth_sat_col   ! Output: [real(r8) (:,:) ]  CO2 production during decomposition in each soil layer (nlevsoi) (mol/m3/s)
          conc_ch4         => ch4_inst%conc_ch4_sat_col           ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
          conc_o2          => ch4_inst%conc_o2_sat_col            ! Output: [real(r8) (:,:) ]  O2 conc in each soil layer (mol/m3) (nlevsoi)   
+         surface_layer_conc_ch4  => ch4_inst%conc_ch4_surface_layer_sat_col         ! Output: [real(r8) (:) ]  CH4 conc surface water layer (mol/m3) (nlevsoi)  
+         surface_layer_conc_o2   => ch4_inst%conc_o2_surface_layer_sat_col          ! Output: [real(r8) (:) ]  O2 conc surface water layer (mol/m3) (nlevsoi)   
+         surface_layer_thickness => ch4_inst%surface_layer_thickness_sat_col        ! Output: [real(r8) (:) ]  surface water layer thickness (m)   
       endif
 
       ! Get land model time step
@@ -3566,6 +3812,29 @@ contains
 
       ! Set shared constant
       organic_max = CNParamsShareInst%organic_max
+
+      ! Set the Henry's Law coefficients
+      do j = -1,nlevsoi
+         do fc = 1, num_methc
+            c = filter_methc (fc)
+
+            do s=1,2         
+               if (j == -1) then
+                  k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_grnd(c) - 1._r8 / kh_tbase) + log (kh_theta(s)))
+                  ! (4.12) Wania (L atm/mol)
+                  k_h_cc(c,j,s) = t_grnd(c) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+               elseif (j == 0) then ! use j=1 temperature for surface layer 
+                  k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_soisno(c,1) - 1._r8 / kh_tbase) + log (kh_theta(s)))
+                  ! (4.12) Wania (L atm/mol)
+                  k_h_cc(c,j,s) = t_soisno(c,1) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+               else
+                  k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_soisno(c,j) - 1._r8 / kh_tbase) + log (kh_theta(s)))
+                  ! (4.12) Wania (L atm/mol)
+                  k_h_cc(c,j,s) = t_soisno(c,j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+               end if
+            end do
+         end do
+      end do
 
       ! Perform competition for oxygen and methane in each soil layer if demands over the course of the timestep
       ! exceed that available. Assign to each process in proportion to the quantity demanded in the absense of
@@ -3608,7 +3877,7 @@ contains
                   ! Reset oxidation
                   ch4_oxid_depth(c,j) = ch4_oxid_depth(c,j) * ch4stress(c,j)
                   o2_oxid_depth(c,j) = o2_oxid_depth(c,j) * ch4stress(c,j)
-               else                                      ! oxygen limited
+               else ! oxygen limited
                   if (ch4stress(c,j) < 1._r8) then
                      ! Recalculate methane limitation
                      ch4demand = ch4_aere_depth(c,j) + ch4_ebul_depth(c,j)
@@ -3643,32 +3912,153 @@ contains
          enddo
       enddo
 
+      ! Calculate surface layer oxidation including potential ebullition input from soil layers
 
-      ! Set the Henry's Law coefficients
-      do j = 0,nlevsoi
-         do fc = 1, num_methc
-            c = filter_methc (fc)
+      ! Also set values for surface water layer (no oxidation, but calculate thickness and concentrations
+      ! In the surface layer, unsat oxidation is a sink only, for sat no sinks/sources, just a diffusive resistance
 
-            do s=1,2         
-               if (j == 0) then
-                  k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_grnd(c) - 1._r8 / kh_tbase) + log (kh_theta(s)))
-                  ! (4.12) Wania (L atm/mol)
-                  k_h_cc(c,j,s) = t_grnd(c) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
-               else
-                  k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_soisno(c,j) - 1._r8 / kh_tbase) + log (kh_theta(s)))
-                  ! (4.12) Wania (L atm/mol)
-                  k_h_cc(c,j,s) = t_soisno(c,j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
-               end if
-            end do
-         end do
-      end do
+      do fc = 1, num_methc
+         c = filter_methc(fc)
+         g = col%gridcell(c)
 
+         ! Initialize variables
+         surface_layer_ch4_oxid(c) = 0._r8
+         surface_layer_o2_oxid(c)  = 0._r8
+         surface_layer_thickness_old(c) = surface_layer_thickness(c)
 
-      ! Set the source term for each species (no need to do j=0, since epsilon_t and source not used there)
+         ! calculate ch4, o2 concentration in virtual layer
+         if (sat==0) then
+            if (jwt(c)==0) then
+               ! if water table is at the soil surface, include ebullition flux
+               call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
+                    h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
+                    surface_layer_conc_ch4(c)+ch4_ebul_total(c)/surface_layer_thickness(c)*dtime, surface_layer_conc_o2(c), &
+                    surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
+            else
+               call surface_layer_oxid(watsat(c,1), sucsat(c,1), bsw(c,1), &
+                    h2osoi_vol(c,1), smp_l(c,1), t_soisno(c,1), &
+                    surface_layer_conc_ch4(c), surface_layer_conc_o2(c), &
+                    surface_layer_ch4_oxid(c), surface_layer_o2_oxid(c))
+            endif
+
+            ! assign surface (soil) layer thickness (min 5 cm)
+            !surface_layer_thickness(c) = 0.05_r8 ! static value
+            ! crude estimate of mean unsaturated thickness
+            surface_layer_thickness(c) = max((3._r8*col%micro_sigma(c)-1e-3_r8*h2osfc(c)),0.05_r8)
+         endif
+
+         ! assume a surface water (not soil) layer for sat=1
+         ! use instead of using resistance later (removed h2osfc resistance)
+         if (sat==1) then
+            surface_layer_ch4_oxid(c) = 0._r8
+            surface_layer_o2_oxid(c)  = 0._r8
+            ! assign surface (water) layer thickness (min 1 cm)
+            surface_layer_thickness(c) = max(1e-3_r8*h2osfc(c),0.01_r8)
+         endif
+
+         ! adjust concentration for changes in surface layer thickness
+         surface_layer_conc_ch4(c) = surface_layer_conc_ch4(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
+         surface_layer_conc_o2(c)  = surface_layer_conc_o2(c)*(surface_layer_thickness_old(c)/surface_layer_thickness(c))
+
+         ! calculate stress for unsaturated layer
+         o2demand = surface_layer_o2_oxid(c)
+         if (o2demand > 0._r8) then
+            if ( (surface_layer_conc_o2(c) / dtime) > o2demand )then
+               surface_layer_o2stress = 1._r8
+            else
+               surface_layer_o2stress = (surface_layer_conc_o2(c) / dtime) / o2demand
+            end if
+         else
+            surface_layer_o2stress= 1._r8
+         end if
+
+         ch4demand = surface_layer_ch4_oxid(c)
+         if (ch4demand > 0._r8) then
+            ! include ebullition flux if water table is at the soil surface
+            if (jwt(c)==0) then
+               surface_layer_ch4stress = min((surface_layer_conc_ch4(c)/dtime + ch4_ebul_total(c)/surface_layer_thickness(c)) / ch4demand, 1._r8)
+            else
+               surface_layer_ch4stress = min((surface_layer_conc_ch4(c) / dtime ) / ch4demand, 1._r8)
+            endif
+         else
+            surface_layer_ch4stress = 1._r8
+         end if
+
+         ! Resolve methane oxidation
+         if (surface_layer_o2stress < 1._r8 .or. surface_layer_ch4stress < 1._r8) then
+            if (surface_layer_ch4stress <= surface_layer_o2stress) then ! methane limited
+               ! Reset oxidation
+               surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_ch4stress
+               surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_ch4stress
+            else ! oxygen limited
+               ! Reset oxidation
+               surface_layer_ch4_oxid(c) = surface_layer_ch4_oxid(c) * surface_layer_o2stress
+               surface_layer_o2_oxid(c)  = surface_layer_o2_oxid(c) * surface_layer_o2stress
+            end if
+         end if
+
+         ! Set source values in surface layer and perform error checks
+         j = 0
+         source(c,j,1) = -surface_layer_ch4_oxid(c)  ! CH4 [mol/m3-total/s]
+         source(c,j,2) = -surface_layer_o2_oxid(c)   ! O2  [mol/m3/s]
+
+         ! methane check
+         if (jwt(c)==0) then
+            ! water table at soil surface (add ebullition flux)
+            if ((source(c,j,1) + surface_layer_conc_ch4(c)/dtime + ch4_ebul_total(c)/surface_layer_thickness(c)) < -1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime &
+                    + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
+            else if (surface_layer_ch4stress < 1._r8 .and. &
+                 (source(c,j,1) + surface_layer_conc_ch4(c) / dtime &
+                 !) > 1.e-12_r8) then
+                 + ch4_ebul_total(c)/surface_layer_thickness(c)) > 1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
+            endif
+         else
+            ! water table below soil surface
+            if (source(c,j,1) + surface_layer_conc_ch4(c) / dtime < -1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime, c, j
+            else if (surface_layer_ch4stress < 1._r8 .and. source(c,j,1) + surface_layer_conc_ch4(c) / dtime > 1.e-12_r8) then
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+                    source(c,j,1) + surface_layer_conc_ch4(c) / dtime, c, j
+            end if
+         endif
+
+         ! Endrun if any CH4 errors identified
+         if (trim(err_msg) /= 'unset') then
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=err_msg//errMsg(sourcefile, __LINE__))
+         endif
+
+         ! oxygen check
+         if (source(c,j,2) + surface_layer_conc_o2(c) / dtime < -1.e-12_r8) then
+            write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
+                 source(c,j,2) + surface_layer_conc_o2(c) / dtime, c, j
+         else if (surface_layer_o2stress < 1._r8 .and. source(c,j,2) + surface_layer_conc_o2(c) / dtime > 1.e-12_r8) then
+            write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
+                 source(c,j,2) + surface_layer_conc_o2(c) / dtime, c, j
+         end if
+
+         ! Endrun if any O2 errors identified
+         if (trim(err_msg) /= 'unset') then
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=err_msg//errMsg(sourcefile, __LINE__))
+         endif
+
+         conc_ch4_bef(c,j) = surface_layer_conc_ch4(c) !For Balance Check
+
+      enddo
+      
+      ! Set the source term for each species (no need to do j=-1, since epsilon_t and source not used there)
       ! Note that because of the semi-implicit diffusion and the 30 min timestep combined with explicit
       ! sources, occasionally negative concentration will result. In this case it is brought to zero and the
       ! surface flux is adjusted to conserve. This results in some inaccuracy as compared to a shorter timestep
       ! or iterative solution.
+
       do j = 1,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
@@ -3681,43 +4071,42 @@ contains
 
             source(c,j,1) = ch4_prod_depth(c,j) - ch4_oxid_depth(c,j) - &
                  ch4_aere_depth(c,j) - ch4_ebul_depth(c,j) ! [mol/m3-total/s]
+
             ! aerenchyma added to surface flux below
             ! ebul added to soil depth just above WT
+
             if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8)then 
-               write(iulog,*) 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Methane demands exceed methane available.'&
-                    //errMsg(sourcefile, __LINE__))
             else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then  
-               write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Methane limited, yet some left over.'//&
-                    errMsg(sourcefile, __LINE__))
             end if
+
+            ! Endrun if any CH4 errors identified
+            if (trim(err_msg) /= 'unset') then
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=err_msg//errMsg(sourcefile, __LINE__))
+            endif
 
             source(c,j,2) = -o2_oxid_depth(c,j) - o2_decomp_depth(c,j) + o2_aere_depth(c,j) ! O2 [mol/m3/s]
             if (source(c,j,2) + conc_o2(c,j) / dtime < -1.e-12_r8) then
-               write(iulog,*) 'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Oxygen demands exceed oxygen available. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Oxygen demands exceed oxygen available.'//&
-                    errMsg(sourcefile, __LINE__) )
             else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
-               write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
+               write(unit=err_msg,fmt='(a,e14.8,i8,i8)') &
+                    'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
-               g = col%gridcell(c)
-               write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
-                    msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
             end if
+
+            ! Endrun if any O2 errors identified
+            if (trim(err_msg) /= 'unset') then
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=err_msg//errMsg(sourcefile, __LINE__))
+            endif
 
             conc_ch4_bef(c,j) = conc_ch4(c,j) !For Balance Check
          enddo ! fc
@@ -3737,19 +4126,45 @@ contains
          c = filter_methc(fc)
          if (jwt(c) /= 0) then
             source(c,jwt(c),1) = source(c,jwt(c),1) + ch4_ebul_total(c)/dz(c,jwt(c))
+         elseif (jwt(c) == 0 .and. sat==0) then
+            source(c,jwt(c),1) = source(c,jwt(c),1) + ch4_ebul_total(c)/surface_layer_thickness(c)
          endif
       enddo ! fc
 
       ! Calculate concentration relative to m^3 of air or water: needed for the diffusion
-      do j = 0,nlevsoi
+      do j = -1,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
             g = col%gridcell(c)
 
-            if (j == 0) then
+            if (j == -1) then
                conc_ch4_rel(c,j) = c_atm(g,1)
                conc_o2_rel(c,j)  = c_atm(g,2)
-            else
+
+            else if (j == 0) then
+               if (ch4frzout) then
+                  liqfrac(c,j) = max(0.05_r8, (h2osoi_liq(c,1)/denh2o+smallnumber)/ &
+                       (h2osoi_liq(c,1)/denh2o+h2osoi_ice(c,1)/denice+smallnumber))
+               else
+                  liqfrac(c,j) = 1._r8
+               end if
+
+               if (sat == 0) then
+                  ! maximum water content in unsaturated layer is field capacity; use j=1  h2osoi liq/ice values to describe surface layer conditions
+                  h2osoi_vol_min(c,j) = min(watsat(c,1)*(sucsat(c,1)/psi_fc)**(1._r8/bsw(c,1)), h2osoi_vol(c,1))
+                  
+                  do s=1,2
+                     epsilon_t(c,j,s) = watsat(c,1)-(1._r8-k_h_cc(c,j,s))*h2osoi_vol_min(c,j)*liqfrac(c,j)
+                  end do
+               else ! sat=1; surface water layer (no soil media)
+                  do s=1,2
+                     epsilon_t(c,j,s) = liqfrac(c,j)
+                  end do
+               endif                  
+               conc_ch4_rel(c,j) = surface_layer_conc_ch4(c)/epsilon_t(c,j,1)
+               conc_o2_rel(c,j)  = surface_layer_conc_o2(c)/epsilon_t(c,j,2)
+               
+            else ! resolved soil layers (1:nlevsoi)
                h2osoi_vol_min(c,j) = min(watsat(c,j), h2osoi_vol(c,j))
                if (ch4frzout) then
                   liqfrac(c,j) = max(0.05_r8, (h2osoi_liq(c,j)/denh2o+smallnumber)/ &
@@ -3759,7 +4174,7 @@ contains
                end if
                if (j <= jwt(c)) then  ! Above the WT
                   do s=1,2
-                     epsilon_t(c,j,s) = watsat(c,j)- (1._r8-k_h_cc(c,j,s))*h2osoi_vol_min(c,j)*liqfrac(c,j)
+                     epsilon_t(c,j,s) = watsat(c,j)-(1._r8-k_h_cc(c,j,s))*h2osoi_vol_min(c,j)*liqfrac(c,j)
                   end do
                   ! Partition between the liquid and gas phases. The gas phase will drive the diffusion.
                else ! Below the WT
@@ -3773,10 +4188,8 @@ contains
          end do
       end do
 
-
       ! Loop over species
       do s = 1, 2 ! 1=CH4; 2=O2; 3=CO2
-
 
          ! Adjust the grnd_ch4_cond to keep it positive, and add the snow resistance & pond resistance
          do j = -nlevsno + 1,0
@@ -3832,123 +4245,195 @@ contains
                      pondres = pondz / ponddiff
                   end if
 
-                  ! Now add new h2osfc form
-                  if (.not. lake .and. sat == 1 .and. frac_h2osfc(c) > 0._r8) then
-                     if (t_h2osfc(c) >= tfrz) then
-                        t_soisno_c = t_h2osfc(c) - tfrz
-                        ponddiff = (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
-                             * scale_factor_liqdiff
-                        pondz = h2osfc(c) / 1000._r8 / frac_h2osfc(c) ! Assume all h2osfc corresponds to sat area
-                        ! mm      /  mm/m
-                        pondres = pondres + pondz / ponddiff
-                     else if (h2osfc(c)/frac_h2osfc(c) > capthick) then
-                        ! assume surface ice is impermeable
-                        pondres = 1/smallnumber
-                     end if
-                  end if
-
                   spec_grnd_cond(c,s) = 1._r8/(1._r8/grnd_ch4_cond(c) + snowres(c) + pondres)
-               end if
-
+               end if               
             end do ! fc
          end do ! j
 
          ! Determine gas diffusion and fraction of open pore (f_a)
-         do j = 1,nlevsoi
+         do j = 0,nlevsoi
             do fc = 1, num_methc
                c = filter_methc (fc)
                g = col%gridcell(c)
 
-               t_soisno_c = t_soisno(c,j) - tfrz
+               if (j == 0) then ! surface layer, use j=1 values for soil properties
+                  t_soisno_c = t_soisno(c,1) - tfrz
+                  if (sat == 0) then
+                     f_a = 1._r8 - h2osoi_vol_min(c,j) / watsat(c,1)
+                     ! Provisionally calculate diffusivity as linear combination of the Millington-Quirk 
+                     ! expression in Wania (for peat) & Moldrup (for mineral soil)
+                     eps =  watsat(c,1)-h2osoi_vol_min(c,j) ! Air-filled fraction of total soil volume
+                     if (organic_max > 0._r8) then
+                        om_frac = min(params_inst%om_frac_sf*cellorg(c,1)/organic_max, 1._r8)
+                        ! Use first power, not square as in iniTimeConst
+                     else
+                        om_frac = 1._r8
+                     end if
+                     diffus(c,j) = (d_con_g(s,1) + d_con_g(s,2)*t_soisno_c) * 1.e-4_r8 * &
+                          (om_frac * f_a**(10._r8/3._r8) / watsat(c,1)**2._r8 + &
+                          (1._r8-om_frac) * (eps*eps) * f_a**(3._r8 / bsw(c,1)) ) &
+                          * scale_factor_gasdiff
 
-               if (j <= jwt(c)) then  ! Above the WT
-                  f_a = 1._r8 - h2osoi_vol_min(c,j) / watsat(c,j)
-                  ! Provisionally calculate diffusivity as linear combination of the Millington-Quirk 
-                  ! expression in Wania (for peat) & Moldrup (for mineral soil)
-                  eps =  watsat(c,j)-h2osoi_vol_min(c,j) ! Air-filled fraction of total soil volume
-                  if (organic_max > 0._r8) then
-                     om_frac = min(params_inst%om_frac_sf*cellorg(c,j)/organic_max, 1._r8)
-                     ! Use first power, not square as in iniTimeConst
-                  else
-                     om_frac = 1._r8
-                  end if
-                  diffus (c,j) = (d_con_g(s,1) + d_con_g(s,2)*t_soisno_c) * 1.e-4_r8 * &
-                       (om_frac * f_a**(10._r8/3._r8) / watsat(c,j)**2._r8 + &
-                       (1._r8-om_frac) * eps**2._r8 * f_a**(3._r8 / bsw(c,j)) ) &
-                       * scale_factor_gasdiff
-               else ! Below the WT use saturated diffusivity and only water in epsilon_t
-                  ! Note the following is not currently corrected for the effect on diffusivity of excess ice in soil under
-                  ! lakes (which is currently experimental only).
-                  eps = watsat(c,j)  ! Water-filled fraction of total soil volume
-                  diffus (c,j) = eps**satpow * (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
-                       * scale_factor_liqdiff
-                  if (t_soisno(c,j)<=tfrz) then
-                     diffus(c,j) = diffus(c,j)*(h2osoi_liq(c,j)/denh2o+smallnumber)/ &
-                          (h2osoi_liq(c,j)/denh2o+h2osoi_ice(c,j)/denice+smallnumber)
-                  end if
-               endif ! Above/below the WT
+                  endif
+                  if (sat == 1) then
+                     eps = watsat(c,1)  ! Water-filled fraction of total soil volume
+                     diffus (c,j) = eps**satpow * (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
+                          * scale_factor_liqdiff
+                     if (t_soisno(c,1)<=tfrz) then
+                        diffus(c,j) = diffus(c,j)*liqfrac(c,j)
+                     end if
+
+                  endif                  
+               else ! resolved soil layers
+                  t_soisno_c = t_soisno(c,j) - tfrz
+                  
+                  if (j <= jwt(c)) then  ! Above the WT
+                     f_a = 1._r8 - h2osoi_vol_min(c,j) / watsat(c,j)
+                     ! Provisionally calculate diffusivity as linear combination of the Millington-Quirk 
+                     ! expression in Wania (for peat) & Moldrup (for mineral soil)
+                     eps =  watsat(c,j)-h2osoi_vol_min(c,j) ! Air-filled fraction of total soil volume
+                     if (organic_max > 0._r8) then
+                        om_frac = min(params_inst%om_frac_sf*cellorg(c,j)/organic_max, 1._r8)
+                        ! Use first power, not square as in iniTimeConst
+                     else
+                        om_frac = 1._r8
+                     end if
+                     diffus (c,j) = (d_con_g(s,1) + d_con_g(s,2)*t_soisno_c) * 1.e-4_r8 * &
+                          (om_frac * f_a**(10._r8/3._r8) / watsat(c,j)**2._r8 + &
+                          (1._r8-om_frac) * (eps*eps) * f_a**(3._r8 / bsw(c,j)) ) &
+                          * scale_factor_gasdiff
+
+                  else ! Below the WT use saturated diffusivity and only water in epsilon_t
+                     ! Note the following is not currently corrected for the effect on diffusivity of excess ice in soil under
+                     ! lakes (which is currently experimental only).
+                     eps = watsat(c,j)  ! Water-filled fraction of total soil volume
+                     diffus (c,j) = eps**satpow * (d_con_w(s,1) + d_con_w(s,2)*t_soisno_c + d_con_w(s,3)*t_soisno_c**2) * 1.e-9_r8 &
+                          * scale_factor_liqdiff
+                     if (t_soisno(c,j)<=tfrz) then
+                        diffus(c,j) = diffus(c,j)*(h2osoi_liq(c,j)/denh2o+smallnumber)/ &
+                             (h2osoi_liq(c,j)/denh2o+h2osoi_ice(c,j)/denice+smallnumber)
+                     end if
+                  endif ! Above/below the WT
+               endif    ! j=0
                diffus(c,j) = max(diffus(c,j), smallnumber) ! Prevent overflow
 
             enddo ! fp
          enddo ! j
 
-         do j = 1,nlevsoi
+         ! Set up coefficients for tridiagonal solver
+         do j = 0,nlevsoi
             do fc = 1, num_methc
                c = filter_methc (fc)
 
-               ! Set up coefficients for tridiagonal solver.
-               if (j == 1 .and. j /= jwt(c) .and. j /= jwt(c)+1) then
-                  dm1_zm1(c,j) = 1._r8/(1._r8/spec_grnd_cond(c,s)+dz(c,j)/(diffus(c,j)*2._r8))
-                  ! replace Diffusivity / Delta_z by conductance (grnd_ch4_cond) for top layer
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-               else if (j == 1 .and. j == jwt(c)) then
-                  dm1_zm1(c,j) = 1._r8/(1._r8/spec_grnd_cond(c,s)+dz(c,j)/(diffus(c,j)*2._r8))
-                  ! layer resistance mult. by k_h_cc for dp1_zp1 term
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)*k_h_cc(c,j,s)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-               else if (j == 1) then ! water table at surface: multiply ground resistance by k_h_cc
-                  dm1_zm1(c,j) = 1._r8/(k_h_cc(c,j-1,s)/spec_grnd_cond(c,s)+dz(c,j)/(diffus(c,j)*2._r8))
-                  ! air concentration will be mult. by k_h_cc below
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-               else if (j <= nlevsoi-1 .and. j /= jwt(c) .and. j /= jwt(c)+1) then
-                  dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j-1)/diffus(c,j-1))
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-               else if (j <= nlevsoi-1 .and. j == jwt(c)) then ! layer resistance mult. by k_h_cc for dp1_zp1 term
-                  dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j-1)/diffus(c,j-1))
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)*k_h_cc(c,j,s)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-                  ! Concentration in layer will be mult. by k_h_cc below
-               else if (j <= nlevsoi-1) then ! j==jwt+1: layer above resistance mult. by k_h_cc for dm1_zm1 term
-                  dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j-1)*k_h_cc(c,j-1,s)/diffus(c,j-1))
-                  ! Concentration in layer above will be mult. by k_h_cc below
-                  dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
-               else if (j /= jwt(c)+1) then ! j ==nlevsoi
-                  dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j-1)/diffus(c,j-1))
-               else                    ! jwt == nlevsoi-1: layer above resistance mult. by k_h_cc for dm1_zm1 term
-                  dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j-1)*k_h_cc(c,j-1,s)/diffus(c,j-1))
-               end if
+               ! set dz(j-1)
+               if (j==1) then
+                  dzm1 = surface_layer_thickness(c)
+               elseif (j > 1) then
+                  dzm1 = dz(c,j-1)
+               endif
+
+               if (sat==0) then ! non-inundated conditions
+
+                  if (j == 0) then
+                     ! for sat=0, there is an unsaturated surface soil layer,
+                     ! even if all soil layers are saturated
+                     
+                     ! replace Diffusivity by conductance (grnd_ch4_cond) in dm1_zm1
+                     dm1_zm1(c,j) = 1._r8/(1._r8/spec_grnd_cond(c,s)+surface_layer_thickness(c)/(diffus(c,j)*2._r8))
+                     if (jwt(c) > 0) then
+                        dp1_zp1(c,j) = 2._r8/(surface_layer_thickness(c)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                     else ! jwt=0 (top soil layer saturated)
+                        ! layer resistance mult. by k_h_cc for dp1_zp1 term
+                        dp1_zp1(c,j) = 2._r8/(surface_layer_thickness(c)*k_h_cc(c,j,s)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                     endif
+                  else if (j <= nlevsoi-1 .and. j /= jwt(c) .and. j /= jwt(c)+1) then
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1/diffus(c,j-1))
+                     dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                  else if (j <= nlevsoi-1 .and. j == jwt(c)) then ! layer resistance mult. by k_h_cc for dp1_zp1 term
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1/diffus(c,j-1))
+                     dp1_zp1(c,j) = 2._r8/(dz(c,j)*k_h_cc(c,j,s)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                     ! Concentration in layer will be mult. by k_h_cc below
+                  else if (j <= nlevsoi-1) then ! j==jwt+1: layer above resistance mult. by k_h_cc for dm1_zm1 term
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1*k_h_cc(c,j-1,s)/diffus(c,j-1))
+                     ! Concentration in layer above will be mult. by k_h_cc below
+                     dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                  else if (j /= jwt(c)+1) then ! j ==nlevsoi
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1/diffus(c,j-1))
+                  else ! jwt == nlevsoi-1: layer above resistance mult. by k_h_cc for dm1_zm1 term
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1*k_h_cc(c,j-1,s)/diffus(c,j-1))
+                  end if
+
+               else ! sat=1, jwt=0 by definition
+
+                  if (j == 0) then
+                     ! soil layers saturated and overlain by a layer of water 
+
+                     ! replace Diffusivity by conductance (grnd_ch4_cond) in dm1_zm1, and multiply ground resistance by k_h_cc (water table at surface)
+                     dm1_zm1(c,j) = 1._r8/(k_h_cc(c,j-1,s)/spec_grnd_cond(c,s)+surface_layer_thickness(c)/(diffus(c,j)*2._r8))
+                     dp1_zp1(c,j) = 2._r8/(surface_layer_thickness(c)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                  else if (j <= nlevsoi-1) then 
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1/diffus(c,j-1))
+                     dp1_zp1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dz(c,j+1)/diffus(c,j+1))
+                  else if (j == nlevsoi) then ! j=nlevsoi
+                     dm1_zm1(c,j) = 2._r8/(dz(c,j)/diffus(c,j)+dzm1/diffus(c,j-1))
+                  end if
+
+               endif ! sat; 
             enddo ! fp; patch
          end do ! j; nlevsoi
-
+               
          ! Perform a second loop for the tridiagonal coefficients since need dp1_zp1 and dm1_z1 at each depth
-         do j = 0,nlevsoi
+         do j = -1,nlevsoi
             do fc = 1, num_methc
                c = filter_methc (fc)
                g = col%gridcell(c)
 
                conc_ch4_rel_old(c,j) = conc_ch4_rel(c,j)
 
-               if (j > 0) dzj = dz(c,j)
-               if (j == 0) then ! top layer (atmosphere) doesn't change regardless of where WT is
+               ! assign layer thickness (ignore j = -1)
+               if (j == 0) dzj = surface_layer_thickness(c)
+               if (j > 0)  dzj = dz(c,j)
+               
+               if (j == -1) then ! top layer (atmosphere) doesn't change regardless of where WT is
                   at(c,j) = 0._r8
                   bt(c,j) = 1._r8
                   ct(c,j) = 0._r8
-                  rt(c,j) = c_atm(g,s) ! 0th level stays at constant atmospheric conc
+                  rt(c,j) = c_atm(g,s) ! top level stays at constant atmospheric conc
+
+               elseif (j == 0) then
+                  if (sat == 0) then ! non-inundated conditions
+                     ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+                     at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j)
+                     if (jwt(c) == j) then
+                        bt(c,j) = epsilon_t(c,j,s) / dtime_ch4 + 0.5_r8 / dzj * (dp1_zp1(c,j)*k_h_cc(c,j,s) + dm1_zm1(c,j))
+                     else
+                        bt(c,j) = epsilon_t(c,j,s) / dtime_ch4 + 0.5_r8 / dzj * (dp1_zp1(c,j) + dm1_zm1(c,j))
+                     endif
+                     ct(c,j) = -0.5_r8 / dzj * dp1_zp1(c,j)
+                  endif
+                  if (sat == 1) then ! inundated conditions
+                     ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
+                     !at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j) * k_h_cc(c,j-1,s)
+                     at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j) * k_h_cc(c,j,s)
+                     bt(c,j) = epsilon_t(c,j,s) / dtime_ch4 + 0.5_r8 / dzj * (dp1_zp1(c,j) + dm1_zm1(c,j))
+                     ct(c,j) = -0.5_r8 / dzj * dp1_zp1(c,j)
+                  endif
+                  
                elseif (j < nlevsoi .and. j == jwt(c)) then ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
                   at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j)
+                  ! no if-block needed; jwt always 0 for sat=1
                   bt(c,j) = epsilon_t(c,j,s) / dtime_ch4 + 0.5_r8 / dzj * (dp1_zp1(c,j)*k_h_cc(c,j,s) + dm1_zm1(c,j))
                   ct(c,j) = -0.5_r8 / dzj * dp1_zp1(c,j)
                elseif (j < nlevsoi .and. j == jwt(c)+1) then
                   ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
-                  at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j) * k_h_cc(c,j-1,s)
+                  !                  at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j) * k_h_cc(c,j-1,s)
+
+                  if (sat==0) then
+                     at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j) * k_h_cc(c,j-1,s)
+                  else ! j=1, jwt=0 -> j=0 also saturated so no k_h applied
+                     at(c,j) = -0.5_r8 / dzj * dm1_zm1(c,j)
+                  endif
+                  
                   bt(c,j) = epsilon_t(c,j,s) / dtime_ch4 + 0.5_r8 / dzj * (dp1_zp1(c,j) + dm1_zm1(c,j))
                   ct(c,j) = -0.5_r8 / dzj * dp1_zp1(c,j)
                elseif (j < nlevsoi) then
@@ -3970,13 +4455,13 @@ contains
 
          do fc = 1, num_methc
             c = filter_methc (fc)
-            jtop(c) = 0
+            jtop(c) = -1
          end do
 
          if (s == 1) then  ! CH4
-
+            
             ! Set rt, since it depends on conc
-            do j = 1,nlevsoi
+            do j = 0,nlevsoi
                do fc = 1, num_methc
                   c = filter_methc (fc)
 
@@ -3986,18 +4471,56 @@ contains
                   ! source_old could be removed later
                   epsilon_t_old(c,j,s) = epsilon_t(c,j,s)
                   ! epsilon_t acts like source also
-                  dzj = dz(c,j)
-                  if (j < nlevsoi .and. j == jwt(c)) then ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+
+                  ! assign layer thickness
+                  if (j == 0) then
+                     dzj = surface_layer_thickness(c)
+                  else
+                     dzj = dz(c,j)
+                  endif
+
+                  if (j == 0) then
+                     if (sat == 0) then ! non-inundated conditions
+                        if (jwt(c) > 0) then
+                           rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
+                                0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
+                                dm1_zm1(c,j) * (conc_ch4_rel(c,j)  -conc_ch4_rel(c,j-1))) + &
+                                0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                        else ! jwt=0 (top soil layer saturated)
+                           ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+                           rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
+                                0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)*k_h_cc(c,j,s)) - &
+                                dm1_zm1(c,j) * (conc_ch4_rel(c,j)-conc_ch4_rel(c,j-1))) + &
+                                0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                        endif
+                     endif
+                     if (sat == 1) then ! inundated conditions
+                        ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_ch4_rel(c,j)-conc_ch4_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     endif
+                  
+                  elseif (j < nlevsoi .and. j == jwt(c)) then ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
                      rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
                           0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)*k_h_cc(c,j,s)) - &
                           dm1_zm1(c,j) * (conc_ch4_rel(c,j)  -conc_ch4_rel(c,j-1))) + &
                           0.5_r8 * (source(c,j,s) + source_old(c,j,s))
                   elseif (j < nlevsoi .and. j == jwt(c)+1) then
                      ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
-                     rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
-                          0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
-                          dm1_zm1(c,j) * (conc_ch4_rel(c,j) -conc_ch4_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
-                          0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     if (sat==0) then
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_ch4_rel(c,j) -conc_ch4_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     else !j=1/jwt=0 -> no k_h applied
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_ch4_rel(c,j) -conc_ch4_rel(c,j-1))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     endif
+                     
                   elseif (j < nlevsoi) then
                      rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_ch4_rel(c,j) +           &
                           0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_ch4_rel(c,j+1)-conc_ch4_rel(c,j)) - &
@@ -4019,41 +4542,58 @@ contains
                enddo ! fc; column
             enddo ! j; nlevsoi
 
-            call Tridiagonal(bounds, 0, nlevsoi, &
+            call Tridiagonal(bounds, -1, nlevsoi, &
                  jtop(bounds%begc:bounds%endc), &
                  num_methc, filter_methc, &
                  at(bounds%begc:bounds%endc, :), &
                  bt(bounds%begc:bounds%endc, :), &
                  ct(bounds%begc:bounds%endc, :), &
                  rt(bounds%begc:bounds%endc, :), &
-                 conc_ch4_rel(bounds%begc:bounds%endc, 0:nlevsoi))
+                 conc_ch4_rel(bounds%begc:bounds%endc, :))
 
             ! Calculate net ch4 flux to the atmosphere from the surface (+ to atm)
             do fc = 1, num_methc
                c = filter_methc (fc)
                g = col%gridcell(c)
                if (jwt(c) /= 0) then ! WT not at the surface
-                  ch4_surf_diff(c) = dm1_zm1(c,1) * ( (conc_ch4_rel(c,1)+conc_ch4_rel_old(c,1))/2._r8 &
+                  ch4_surf_diff(c) = dm1_zm1(c,0) &
+                       * ( (conc_ch4_rel(c,0)+conc_ch4_rel_old(c,0))/2._r8 &
                        - c_atm(g,s)) ! [mol/m2/s]
                   ch4_surf_ebul(c) = 0._r8 ! all the ebullition has already come out in the soil column (added to source)
+
                   ! Try adding directly to atm. to prevent destabilization of diffusion
                   !ch4_surf_ebul(c) = ch4_ebul_total(c) ! [mol/m2/s]
                else ! WT at the surface; i.e., jwt(c)==0
-                  ch4_surf_diff(c) = dm1_zm1(c,1) * ( (conc_ch4_rel(c,1)+conc_ch4_rel_old(c,1))/2._r8 &
-                       - c_atm(g,s)*k_h_cc(c,0,s)) ! [mol/m2/s]
-                  ! atmospheric concentration gets mult. by k_h_cc as above
-                  ch4_surf_ebul(c) = ch4_ebul_total(c) ! [mol/m2/s]
+                  if (sat==0) then
+                     ch4_surf_diff(c) = dm1_zm1(c,0) &
+                          * ( (conc_ch4_rel(c,0)+conc_ch4_rel_old(c,0))/2._r8 &
+                       - c_atm(g,s)) ! [mol/m2/s]
+                     ch4_surf_ebul(c) = 0._r8 ! all the ebullition has already come out in the soil column (added to source)
+
+                  endif
+                  if (sat==1) then
+                     ch4_surf_diff(c) = dm1_zm1(c,0) &
+                          * ( (conc_ch4_rel(c,0)+conc_ch4_rel_old(c,0))/2._r8 &
+                          - c_atm(g,s)*k_h_cc(c,-1,s)) ! [mol/m2/s]
+
+                     ! atmospheric concentration gets mult. by k_h_cc as above
+                     ch4_surf_ebul(c) = ch4_ebul_total(c) ! [mol/m2/s]
+                  endif
                endif
             enddo
 
             ! Ensure that concentrations stay above 0
             ! This should be done after the flux, so that the flux calculation is consistent.
-            do j = 1,nlevsoi
+            do j = 0,nlevsoi
                do fc = 1, num_methc
                   c = filter_methc (fc)
 
                   if (conc_ch4_rel(c,j) < 0._r8) then
-                     deficit = - conc_ch4_rel(c,j)*epsilon_t(c,j,1)*dz(c,j)  ! Mol/m^2 added
+                     if (j == 0) then
+                        deficit = - conc_ch4_rel(c,j)*epsilon_t(c,j,1)*surface_layer_thickness(c)  ! Mol/m^2 added
+                     else
+                        deficit = - conc_ch4_rel(c,j)*epsilon_t(c,j,1)*dz(c,j)  ! Mol/m^2 added
+                     endif
                      if (deficit > 1.e-3_r8 * scale_factor_gasdiff) then
                         if (deficit > 1.e-2_r8) then
                            write(iulog,*)'Note: sink > source in ch4_tran, sources are changing '// &
@@ -4078,7 +4618,7 @@ contains
          elseif (s == 2) then  ! O2
 
             ! Set rt, since it depends on conc
-            do j = 1,nlevsoi
+            do j = 0,nlevsoi
                do fc = 1, num_methc
                   c = filter_methc (fc)
 
@@ -4087,18 +4627,56 @@ contains
                   ! source_old could be removed later
                   epsilon_t_old(c,j,s) = epsilon_t(c,j,s)
                   ! epsilon_t acts like source also
-                  dzj     = dz(c,j)
-                  if (j < nlevsoi .and. j == jwt(c)) then ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+
+                  ! assign layer thickness
+                  if (j == 0) then
+                     dzj = surface_layer_thickness(c)
+                  else
+                     dzj = dz(c,j)
+                  endif
+                  
+                  if (j == 0) then
+                     if (sat == 0) then ! non-inundated conditions
+                        if (jwt(c) > 0) then
+                           ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+                           rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
+                                0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
+                                dm1_zm1(c,j) * (conc_o2_rel(c,j)  -conc_o2_rel(c,j-1))) + &
+                                0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                        else ! jwt=0 (top soil layer saturated)
+                           ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
+                           rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
+                                0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)*k_h_cc(c,j,s)) - &
+                             dm1_zm1(c,j) * (conc_o2_rel(c,j)  -conc_o2_rel(c,j-1))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                        endif
+                     endif
+                     if (sat == 1) then ! inundated conditions
+                        ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_o2_rel(c,j) -conc_o2_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     endif
+                  
+                  elseif (j < nlevsoi .and. j == jwt(c)) then ! concentration inside needs to be mult. by k_h_cc for dp1_zp1 term
                      rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
                           0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)*k_h_cc(c,j,s)) - &
                           dm1_zm1(c,j) * (conc_o2_rel(c,j)  -conc_o2_rel(c,j-1))) + &
                           0.5_r8 * (source(c,j,s) + source_old(c,j,s))
                   elseif (j < nlevsoi .and. j == jwt(c)+1) then
                      ! concentration above needs to be mult. by k_h_cc for dm1_zm1 term
-                     rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
-                          0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
-                          dm1_zm1(c,j) * (conc_o2_rel(c,j) -conc_o2_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
-                          0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     if (sat==0) then
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_o2_rel(c,j) -conc_o2_rel(c,j-1)*k_h_cc(c,j-1,s))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     else !j=1/jwt=0 -> no k_h applied
+                        rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
+                             0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
+                             dm1_zm1(c,j) * (conc_o2_rel(c,j) -conc_o2_rel(c,j-1))) + &
+                             0.5_r8 * (source(c,j,s) + source_old(c,j,s))
+                     endif
                   elseif (j < nlevsoi) then
                      rt(c,j) = epsilon_t_old(c,j,s) / dtime_ch4 * conc_o2_rel(c,j) +           &
                           0.5_r8 / dzj * (dp1_zp1(c,j) * (conc_o2_rel(c,j+1)-conc_o2_rel(c,j)) - &
@@ -4120,16 +4698,16 @@ contains
                enddo ! fc; column
             enddo ! j; nlevsoi
 
-            call Tridiagonal(bounds, 0, nlevsoi, jtop(bounds%begc:bounds%endc), &
+            call Tridiagonal(bounds, -1, nlevsoi, jtop(bounds%begc:bounds%endc), &
                  num_methc, filter_methc, &
                  at(bounds%begc:bounds%endc, :), &
                  bt(bounds%begc:bounds%endc, :), &
                  ct(bounds%begc:bounds%endc, :), &
                  rt(bounds%begc:bounds%endc, :), &
-                 conc_o2_rel(bounds%begc:bounds%endc,0:nlevsoi))
+                 conc_o2_rel(bounds%begc:bounds%endc,:))
 
             ! Ensure that concentrations stay above 0
-            do j = 1,nlevsoi
+            do j = 0,nlevsoi
                do fc = 1, num_methc
                   c = filter_methc (fc)
                   g = col%gridcell(c)
@@ -4146,25 +4724,34 @@ contains
       enddo  ! species
 
       ! Update absolute concentrations per unit volume
-      do j = 1,nlevsoi ! No need to update the atm. level concentrations
+      do j = 0,nlevsoi ! No need to update the atm. level concentrations
          do fc = 1, num_methc
             c = filter_methc (fc)
-
-            conc_ch4(c,j) = conc_ch4_rel(c,j)*epsilon_t(c,j,1)
-            conc_o2(c,j)  = conc_o2_rel(c,j) *epsilon_t(c,j,2)
+            if (j==0) then
+               surface_layer_conc_ch4(c) = conc_ch4_rel(c,j)*epsilon_t(c,j,1)
+               surface_layer_conc_o2(c)  = conc_o2_rel(c,j)*epsilon_t(c,j,2)
+            else
+               conc_ch4(c,j) = conc_ch4_rel(c,j)*epsilon_t(c,j,1)
+               conc_o2(c,j)  = conc_o2_rel(c,j) *epsilon_t(c,j,2)
+            endif
          end do
       end do
 
       ! Do Balance Check and absorb small
       !    discrepancy into surface flux.
-      do j = 1,nlevsoi
+      do j = 0,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
 
-            if (j == 1) errch4(c) = 0._r8
-            errch4(c) = errch4(c) + (conc_ch4(c,j) - conc_ch4_bef(c,j))*dz(c,j)
-            errch4(c) = errch4(c) - ch4_prod_depth(c,j)*dz(c,j)*dtime
-            errch4(c) = errch4(c) + ch4_oxid_depth(c,j)*dz(c,j)*dtime
+            if (j == 0) then
+               errch4(c) = 0._r8
+               errch4(c) = errch4(c) + (surface_layer_conc_ch4(c) - conc_ch4_bef(c,j))*surface_layer_thickness(c)
+               errch4(c) = errch4(c) + surface_layer_ch4_oxid(c)*surface_layer_thickness(c)*dtime               
+            else
+               errch4(c) = errch4(c) + (conc_ch4(c,j) - conc_ch4_bef(c,j))*dz(c,j)
+               errch4(c) = errch4(c) - ch4_prod_depth(c,j)*dz(c,j)*dtime
+               errch4(c) = errch4(c) + ch4_oxid_depth(c,j)*dz(c,j)*dtime
+            endif
          end do
       end do
 
@@ -4173,14 +4760,19 @@ contains
 
          ! For history make sure that grnd_ch4_cond includes snow, for methane diffusivity
          grnd_ch4_cond(c) = spec_grnd_cond(c,1)
-
+         
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
          if (abs(errch4(c)) < 1.e-8_r8) then 
             ch4_surf_diff(c) = ch4_surf_diff(c) - errch4(c)/dtime
+
+            ! add surface layer oxidation to top soil layer for ch4 conservation checking
+            ch4_oxid_depth(c,1) = ch4_oxid_depth(c,1) + surface_layer_ch4_oxid(c)*surface_layer_thickness(c)/dz(c,1) ! normalize by layer 1 thickness
+            
          else ! errch4 > 1e-8 mol / m^2 / timestep
             write(iulog,*)'CH4 Conservation Error in CH4Mod during diffusion, nstep, c, errch4 (mol /m^2.timestep)', &
                  nstep,c,errch4(c)
+            
             g = col%gridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
@@ -4252,6 +4844,7 @@ contains
          if (jwt(c) == perch .and. h2osoi_vol(c,1) > f_sat * watsat(c,1)) then ! missed that the top layer is saturated
             jwt(c) = 0
          endif
+
       end do
 
     end associate
@@ -4402,7 +4995,11 @@ contains
          dz             =>   col%dz                      , & ! Input:  [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevsoi)       
          finundated     =>   ch4_inst%finundated_col     , & ! Input: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
          conc_ch4_sat   =>   ch4_inst%conc_ch4_sat_col   , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
-         conc_ch4_unsat =>   ch4_inst%conc_ch4_unsat_col   & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
+         conc_ch4_unsat =>   ch4_inst%conc_ch4_unsat_col , & ! Input: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
+         surface_layer_conc_ch4_sat    => ch4_inst%conc_ch4_surface_layer_sat_col    ,  &       ! Input: [real(r8) (:) ]  CH4 conc surface water layer (mol/m3)   
+         surface_layer_conc_ch4_unsat  => ch4_inst%conc_ch4_surface_layer_unsat_col  , &        ! Input: [real(r8) (:) ]  CH4 conc surface soil layer (mol/m3) 
+         surface_layer_thickness_sat   => ch4_inst%surface_layer_thickness_sat_col   , &        ! Input: [real(r8) (:) ]  surface water layer thickness (m)   
+         surface_layer_thickness_unsat => ch4_inst%surface_layer_thickness_unsat_col   &        ! Input: [real(r8) (:) ]  surface soil layer thickness (m)   
          )
 
     do fc = 1, num_nolakec
@@ -4415,6 +5012,15 @@ contains
        totcolch4(c) = 0._r8
     end do
 
+    ! Add surface layer ch4 and convert mol CH4 to g C
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       totcolch4(c) = totcolch4(c) &
+            + (finundated(c)*surface_layer_conc_ch4_sat(c)*surface_layer_thickness_sat(c) &
+            + (1._r8-finundated(c))*surface_layer_conc_ch4_unsat(c)*surface_layer_thickness_unsat(c)) &
+            *catomw
+    end do
+
     do j = 1, nlevsoi
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
@@ -4423,11 +5029,13 @@ contains
           ! urban landunits.
           if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
              totcolch4(c) = totcolch4(c) + &
-                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  (finundated(c)*conc_ch4_sat(c,j) &
+                  + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
                   dzsoi_decomp(j)*catomw
           else
              totcolch4(c) = totcolch4(c) + &
-                  (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
+                  (finundated(c)*conc_ch4_sat(c,j) &
+                  + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
                   dz(c,j)*catomw
           end if
           ! mol CH4 --> g C
