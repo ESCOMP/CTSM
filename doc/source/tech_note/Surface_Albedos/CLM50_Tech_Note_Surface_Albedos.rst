@@ -1,6 +1,6 @@
 .. _rst_Surface Albedos:
 
-Srface Albedos
+Surface Albedos
 ==================
 
 .. _Canopy Radiative Transfer:
