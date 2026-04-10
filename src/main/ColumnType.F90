@@ -60,9 +60,20 @@ module ColumnType
 
      ! vertical levels
      integer , pointer :: snl                  (:)   ! number of snow layers
-     real(r8), pointer :: dz                   (:,:) ! layer thickness (m)  (-nlevsno+1:nlevgrnd) 
-     real(r8), pointer :: z                    (:,:) ! layer depth (m) (-nlevsno+1:nlevgrnd) 
-     real(r8), pointer :: zi                   (:,:) ! interface level below a "z" level (m) (-nlevsno+0:nlevgrnd) 
+     ! [PORTED by Hui Tang: bottom index of active snow layers for NVP layer-0 design]
+     ! jbot_sno = 0  when no NVP layer (standard CLM: snow loops run snl(c)+1 .. 0)
+     ! jbot_sno = -1 when NVP layer is present at index 0 (snow loops stop at -1)
+     integer , pointer :: jbot_sno             (:)   ! bottom index of active snow layers (0 or -1)
+     ! [PORTED by Hui Tang: NVP (moss/lichen) layer presence flag at vertical index 0]
+     logical , pointer :: nvp_layer_active      (:)   ! .true. when NVP layer occupies index 0
+     ! [PORTED by Hui Tang: column-effective NVP layer geometry, aggregated from FATES bc_out]
+     ! Updated each FATES dynamics timestep in clmfates_interfaceMod%wrap_update_hlmfates_dyn.
+     ! Consumed by NVPLayerDynamicsMod%UpdateNVPLayer to drive col%dz(c,0) and jbot_sno.
+     real(r8), pointer :: dz_nvp               (:)   ! column-effective NVP layer thickness [m]
+     real(r8), pointer :: frac_nvp             (:)   ! column-effective NVP fractional coverage [0-1]
+     real(r8), pointer :: dz                   (:,:) ! layer thickness (m)  (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: z                    (:,:) ! layer depth (m) (-nlevsno+1:nlevgrnd)
+     real(r8), pointer :: zi                   (:,:) ! interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
      real(r8), pointer :: zii                  (:)   ! convective boundary height [m]
      real(r8), pointer :: dz_lake              (:,:) ! lake layer thickness (m)  (1:nlevlak)
      real(r8), pointer :: z_lake               (:,:) ! layer depth for lake (m)
@@ -135,6 +146,12 @@ contains
     
     ! The following is set in initVerticalMod
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
+    ! [PORTED by Hui Tang: allocate NVP layer-0 control arrays]
+    allocate(this%jbot_sno    (begc:endc))                     ; this%jbot_sno    (:)   = 0       ! default: no NVP, snow to index 0
+    allocate(this%nvp_layer_active(begc:endc))                 ; this%nvp_layer_active(:) = .false.
+    ! [PORTED by Hui Tang: column-effective NVP geometry; zero until FATES dynamics provides values]
+    allocate(this%dz_nvp  (begc:endc))                         ; this%dz_nvp  (:)   = 0._r8
+    allocate(this%frac_nvp(begc:endc))                         ; this%frac_nvp(:)   = 0._r8
     allocate(this%dz          (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%dz          (:,:) = nan
     allocate(this%z           (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%z           (:,:) = nan
     allocate(this%zi          (begc:endc,-nlevsno+0:nlevmaxurbgrnd)) ; this%zi          (:,:) = nan
@@ -183,6 +200,10 @@ contains
     deallocate(this%is_fates   )
     deallocate(this%type_is_dynamic)
     deallocate(this%snl        )
+    deallocate(this%jbot_sno   )
+    deallocate(this%nvp_layer_active)
+    deallocate(this%dz_nvp  )
+    deallocate(this%frac_nvp)
     deallocate(this%dz         )
     deallocate(this%z          )
     deallocate(this%zi         )
