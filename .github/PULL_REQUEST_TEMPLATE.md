@@ -22,3 +22,5 @@ Testing performed, if any:
 (https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines) and review
 the list of common problems to watch out for
 (https://github.com/ESCOMP/CTSM/wiki/List-of-common-problems).**
+
+**If this PR changes the CTSM web documentation, please see our [contribution guidelines for documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines).**
