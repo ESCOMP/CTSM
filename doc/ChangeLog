@@ -23,7 +23,8 @@ List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
 - doc-builder updated from v3.0.1 to v3.1.0.
 
 Pull Requests that document the changes (include PR ids):
-- https://github.com/ESCOMP/CTSM/pull/3920
+- [ESCOMP/CTSM Pull Request #3920: ctsm5.4.032: Simplify messaging during docs build by samsrabin](https://github.com/ESCOMP/CTSM/pull/3920)
+- [ESCOMP/CTSM Pull Request #3921: ctsm5.4.032: Simplify messaging during docs build [update Changelog/Changesum] by samsrabin](https://github.com/ESCOMP/CTSM/pull/3921)
 
 ===============================================================
 ===============================================================
