@@ -242,6 +242,13 @@ contains
     real(r8)          , intent(out) :: albout         ( bounds%begc: , 1: )               ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
     real(r8)          , intent(out) :: flx_abs        ( bounds%begc: , -nlevsno+1: , 1: ) ! absorbed flux in each layer per unit flux incident (col, lyr, bnd)
     type(waterdiagnosticbulk_type) , intent(in)  :: waterdiagnosticbulk_inst
+    ! [PORTED by Hui Tang: optional NVP layer-0 inputs for SNICAR Approach B]
+    ! When present and nvp_tau_col(c)>0 with explicit snow layers, NVP is inserted as layer 0
+    ! below all snow layers. SNICAR then computes SNOW→NVP→SOIL radiative transfer in one pass.
+    ! snl_btm is shifted from 0 to -1 so that real snow occupies -1..snl_top and NVP sits at 0.
+    real(r8), optional, intent(in) :: nvp_tau_col       ( bounds%begc: ) ! col-mean NVP optical depth (k*LAI*frac) [-]
+    real(r8), optional, intent(in) :: nvp_omega_vis_col ( bounds%begc: ) ! col NVP single-scatter albedo, VIS [-]
+    real(r8), optional, intent(in) :: nvp_omega_nir_col ( bounds%begc: ) ! col NVP single-scatter albedo, NIR [-]
     !
     ! !LOCAL VARIABLES:
     !
@@ -302,8 +309,12 @@ contains
     integer :: bnd_idx                            ! spectral band index (1 <= bnd_idx <= snicar_numrad_snw) [idx]
     integer :: rds_idx                            ! snow effective radius index for retrieving
                                                   ! Mie parameters from lookup table [idx]
-    integer :: snl_btm                            ! index of bottom snow layer (0) [idx]
+    integer :: snl_btm                            ! index of bottom snow layer (0, or -1 when NVP present) [idx]
     integer :: snl_top                            ! index of top snow layer (-4 to 0) [idx]
+    ! [PORTED by Hui Tang: NVP layer-0 SNICAR locals]
+    logical  :: nvp_active                        ! .true. if NVP optional args present and tau>0
+    real(r8) :: nvp_tau_lcl                       ! local NVP optical depth for current column
+    real(r8) :: nvp_omega_lcl                     ! local NVP single-scatter albedo for current band
     integer :: fc                                 ! column filter index
     integer :: i                                  ! layer index [idx]
     integer :: j                                  ! aerosol number index [idx]
@@ -690,6 +701,26 @@ contains
             snl_btm   = 0
             snl_top   = snl_lcl+1
 
+            ! [PORTED by Hui Tang: NVP layer-0 SNICAR Approach B]
+            ! When NVP optional args are supplied, NVP tau > 0, and real snow layers exist
+            ! (flg_nosnl==0), insert NVP as layer 0 by shifting snl_btm to -1.
+            ! Snow occupies snl_top..-1; NVP occupies layer 0; soil remains at interface 1.
+            nvp_active = .false.
+            nvp_tau_lcl = 0._r8
+            if (present(nvp_tau_col) .and. flg_nosnl == 0) then
+               if (nvp_tau_col(c_idx) > 0._r8) then
+                  nvp_active  = .true.
+                  nvp_tau_lcl = nvp_tau_col(c_idx)
+                  snl_btm     = -1
+                  ! Populate layer-0 local arrays for NVP (bypass snow grain-radius path):
+                  ! Unit effective mass so tau_snw(0) = ext_cff_mss_snw_lcl(0) = nvp_tau_lcl
+                  h2osno_ice_lcl(0) = 1._r8
+                  h2osno_liq_lcl(0) = 0._r8
+                  ! Zero aerosols in NVP layer (no snow impurities)
+                  mss_cnc_aer_lcl(0,:) = 0._r8
+               end if
+            end if
+
             ! for debugging only
             l_idx     = col%landunit(c_idx)
             g_idx     = col%gridcell(c_idx)
@@ -698,19 +729,22 @@ contains
             lon_coord = grc%londeg(g_idx)
 
 
-            ! Set local aerosol array
+            ! Set local aerosol array (snow layers only; NVP layer 0 already zeroed above)
             do j=1,sno_nbr_aer
-               mss_cnc_aer_lcl(:,j) = mss_cnc_aer_in(c_idx,:,j)
+               mss_cnc_aer_lcl(snl_top:min(snl_btm,0)-1,j) = mss_cnc_aer_in(c_idx,snl_top:min(snl_btm,0)-1,j)
+               if (.not. nvp_active) then
+                  mss_cnc_aer_lcl(0,j) = mss_cnc_aer_in(c_idx,0,j)
+               end if
             enddo
 
 
             ! Set spectral underlying surface albedos to their corresponding VIS or NIR albedos
             albsfc_lcl(1:(nir_bnd_bgn-1))       = albsfc(c_idx,ivis)
             albsfc_lcl(nir_bnd_bgn:nir_bnd_end) = albsfc(c_idx,inir)
-            
 
-            ! Error check for snow grain size:
-            do i=snl_top,snl_btm,1
+
+            ! Error check for snow grain size (skip layer 0 when NVP is active there):
+            do i=snl_top, merge(-1, snl_btm, nvp_active), 1
                if ((snw_rds_lcl(i) < snw_rds_min_tbl) .or. (snw_rds_lcl(i) > snw_rds_max_tbl)) then
                   write (iulog,*) "SNICAR ERROR: snow grain radius of ", snw_rds_lcl(i), " out of bounds."
                   write (iulog,*) "NSTEP= ", nstep
@@ -788,9 +822,25 @@ contains
                   !--------------------------- Start snow & aerosol optics --------------------------------
                   ! Define local Mie parameters based on snow grain size and aerosol species retrieved from a lookup table.
 
+                  ! [PORTED by Hui Tang: NVP layer-0 SNICAR Approach B - set omega for current band]
+                  ! NVP properties bypass the grain-radius Mie tables entirely.
+                  if (nvp_active) then
+                     if (bnd_idx < nir_bnd_bgn) then
+                        nvp_omega_lcl = nvp_omega_vis_col(c_idx)
+                     else
+                        nvp_omega_lcl = nvp_omega_nir_col(c_idx)
+                     end if
+                     ! Layer 0: NVP pseudo-layer optical properties
+                     ! ext_cff_mss = tau_nvp (since h2osno_ice_lcl(0)=1, so L_snw*ext=tau_nvp)
+                     ss_alb_snw_lcl(0)      = nvp_omega_lcl
+                     ext_cff_mss_snw_lcl(0) = nvp_tau_lcl
+                     asm_prm_snw_lcl(0)     = 0._r8   ! isotropic scattering (flat mat, no preferred direction)
+                  end if
+
                   ! Spherical snow: single-scatter albedo, mass extinction coefficient, asymmetry factor
+                  ! (snow layers only; layer 0 handled above when NVP active)
                   if (flg_slr_in == 1) then
-                     do i=snl_top,snl_btm,1
+                     do i=snl_top, merge(-1, snl_btm, nvp_active), 1
                         rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                         ! snow optical properties (direct radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_drc(rds_idx,bnd_idx)
@@ -798,7 +848,7 @@ contains
                         if (sno_shp(i) == 'sphere') asm_prm_snw_lcl(i) = asm_prm_snw_drc(rds_idx,bnd_idx)
                      enddo
                   elseif (flg_slr_in == 2) then
-                     do i=snl_top,snl_btm,1
+                     do i=snl_top, merge(-1, snl_btm, nvp_active), 1
                         rds_idx = snw_rds_lcl(i) - snw_rds_min_tbl + 1
                         ! snow optical properties (diffuse radiation)
                         ss_alb_snw_lcl(i)      = ss_alb_snw_dfs(rds_idx,bnd_idx)
@@ -807,8 +857,8 @@ contains
                      enddo
                   endif
 
-                  ! Nonspherical snow: shape-dependent asymmetry factors
-                  do i=snl_top,snl_btm,1
+                  ! Nonspherical snow: shape-dependent asymmetry factors (snow layers only)
+                  do i=snl_top, merge(-1, snl_btm, nvp_active), 1
 
                      select case (sno_shp(i))
                      case ('spheroid')
