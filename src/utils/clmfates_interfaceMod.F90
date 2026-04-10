@@ -137,6 +137,7 @@ module CLMFatesInterfaceMod
 
    ! Used FATES Modules
    use FatesInterfaceMod , only : fates_interface_type
+   use EDParamsMod       , only : nvp_extinction_coeff  ! [PORTED by Hui Tang: NVP Beer's law k from parameter file]
    use FatesInterfaceMod, only : FatesInterfaceInit
    use FatesInterfaceMod, only : SetFatesGlobalElements1
    use FatesInterfaceMod, only : SetFatesGlobalElements2
@@ -2340,7 +2341,8 @@ module CLMFatesInterfaceMod
 
    ! ======================================================================================
 
-   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst)
+   ! [PORTED by Hui Tang: add surfalb_inst to wrap_sunfrac for nvp radiation]
+   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst,surfalb_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This interface function is a wrapper call on ED_SunShadeFracs. The only
@@ -2358,6 +2360,9 @@ module CLMFatesInterfaceMod
 
       ! Input/Output Arguments to CLM
       type(canopystate_type),intent(inout) :: canopystate_inst
+
+      ! [PORTED by Hui Tang: surface albedo for absorbed flux bc_in - needed by nvp radiation]
+      type(surfalb_type),intent(in)        :: surfalb_inst
 
       ! Local Variables
       integer  :: p                           ! global index of the host patch
@@ -2392,6 +2397,13 @@ module CLMFatesInterfaceMod
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
               this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad_g(g,:)
               this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai_g(g,:)
+              ! [PORTED by Hui Tang: pass VIS canopy transmittances for NVP photosynthesis PAR]
+              ! flx_absdv_col(c,0) holds ftdd(p,1) (?) and flx_absiv_col(c,0) holds ftii(p,1) (?),
+              ! stored in SurfaceRadiationMod at the previous timestep (one-timestep lag).
+              if (use_nvp) then
+                 this%fates(nc)%bc_in(s)%flx_absdv(ifp) = surfalb_inst%flx_absdv_col(c,0)
+                 this%fates(nc)%bc_in(s)%flx_absiv(ifp) = surfalb_inst%flx_absiv_col(c,0)
+              end if
            end do
         end do
 
@@ -2884,6 +2896,10 @@ module CLMFatesInterfaceMod
     
     ! locals
     integer                                    :: s,c,p,ifp,g
+    ! [PORTED by Hui Tang: NVP absorptance patch→col aggregation]
+    integer                                    :: ib            ! band index
+    integer                                    :: npatches_site ! patch count in site
+    ! [PORTED by Hui Tang: NVP Beer's law k now read from fates_params_default.json via nvp_extinction_coeff]
 
     call t_startf('fates_wrapcanopyradiation')
 
@@ -2956,6 +2972,51 @@ module CLMFatesInterfaceMod
           ftii(p,:) = this%fates(nc)%bc_out(s)%ftii_parb(ifp,:)
           
        end do
+
+       ! [PORTED by Hui Tang: transfer NVP Beer's law absorptance from bc_out to surfalb_inst]
+       ! fabd_nvp_col/fabi_nvp_col are col-level; average equally over all patches in the site.
+       ! These are used by SurfaceRadiationMod to compute sabg_lyr(p,0) for the NVP layer.
+       if (use_nvp) then
+          npatches_site = this%fates(nc)%sites(s)%youngest_patch%patchno
+          surfalb_inst%fabd_nvp_col(c,:) = 0._r8
+          surfalb_inst%fabi_nvp_col(c,:) = 0._r8
+          do ifp = 1, npatches_site
+             do ib = 1, numrad
+                surfalb_inst%fabd_nvp_col(c,ib) = surfalb_inst%fabd_nvp_col(c,ib) + &
+                     this%fates(nc)%bc_out(s)%fabd_nvp_pa(ifp,ib)
+                surfalb_inst%fabi_nvp_col(c,ib) = surfalb_inst%fabi_nvp_col(c,ib) + &
+                     this%fates(nc)%bc_out(s)%fabi_nvp_pa(ifp,ib)
+             end do
+          end do
+          if (npatches_site > 0) then
+             surfalb_inst%fabd_nvp_col(c,:) = &
+                  surfalb_inst%fabd_nvp_col(c,:) / real(npatches_site, r8)
+             surfalb_inst%fabi_nvp_col(c,:) = &
+                  surfalb_inst%fabi_nvp_col(c,:) / real(npatches_site, r8)
+          end if
+          ! [PORTED by Hui Tang: compute NVP optical properties for SNICAR layer-0 ]
+          ! nvp_tau_col = column-mean optical depth = k_nvp * lai_nvp_pa * nvp_frac_pa averaged over patches.
+          ! nvp_omega_*_col = NVP single-scatter albedo (rhol+taul); average over patches (intensive property).
+          ! Stored here for use by SurfaceAlbedoMod before SNICAR_RT calls (one-timestep lag, consistent).
+          surfalb_inst%nvp_tau_col(c)       = 0._r8
+          surfalb_inst%nvp_omega_vis_col(c) = 0._r8
+          surfalb_inst%nvp_omega_nir_col(c) = 0._r8
+          if (npatches_site > 0) then
+             do ifp = 1, npatches_site
+                surfalb_inst%nvp_tau_col(c) = surfalb_inst%nvp_tau_col(c) + &
+                     nvp_extinction_coeff * this%fates(nc)%bc_out(s)%lai_nvp_pa(ifp) * &
+                             this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp)
+                surfalb_inst%nvp_omega_vis_col(c) = surfalb_inst%nvp_omega_vis_col(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_omega_pa(ifp, ivis)
+                surfalb_inst%nvp_omega_nir_col(c) = surfalb_inst%nvp_omega_nir_col(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_omega_pa(ifp, inir)
+             end do
+             surfalb_inst%nvp_tau_col(c)       = surfalb_inst%nvp_tau_col(c)       / real(npatches_site, r8)
+             surfalb_inst%nvp_omega_vis_col(c) = surfalb_inst%nvp_omega_vis_col(c) / real(npatches_site, r8)
+             surfalb_inst%nvp_omega_nir_col(c) = surfalb_inst%nvp_omega_nir_col(c) / real(npatches_site, r8)
+          end if
+       end if
+
     end do
           
   end associate
