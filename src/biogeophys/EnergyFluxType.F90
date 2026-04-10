@@ -29,6 +29,8 @@ module EnergyFluxType
      real(r8), pointer :: eflx_sh_snow_patch      (:)   ! patch sensible heat flux from snow (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_soil_patch      (:)   ! patch sensible heat flux from soil  (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_h2osfc_patch    (:)   ! patch sensible heat flux from surface water (W/m**2) [+ to atm]
+     ! [PORTED by Hui Tang: NVP (moss/lichen) individual sensible heat flux]
+     real(r8), pointer :: eflx_sh_nvp_patch       (:)   ! patch sensible heat flux from NVP (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_tot_patch       (:)   ! patch total sensible heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_tot_u_patch     (:)   ! patch urban total sensible heat flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_tot_r_patch     (:)   ! patch rural total sensible heat flux (W/m**2) [+ to atm]
@@ -193,6 +195,8 @@ contains
     allocate( this%eflx_sh_snow_patch      (begp:endp))             ; this%eflx_sh_snow_patch      (:)   = nan
     allocate( this%eflx_sh_soil_patch      (begp:endp))             ; this%eflx_sh_soil_patch      (:)   = nan
     allocate( this%eflx_sh_h2osfc_patch    (begp:endp))             ; this%eflx_sh_h2osfc_patch    (:)   = nan
+    ! [PORTED by Hui Tang: allocate NVP sensible heat flux array]
+    allocate( this%eflx_sh_nvp_patch       (begp:endp))             ; this%eflx_sh_nvp_patch       (:)   = nan
     allocate( this%eflx_sh_tot_patch       (begp:endp))             ; this%eflx_sh_tot_patch       (:)   = nan
     allocate( this%eflx_sh_tot_u_patch     (begp:endp))             ; this%eflx_sh_tot_u_patch     (:)   = nan
     allocate( this%eflx_sh_tot_r_patch     (begp:endp))             ; this%eflx_sh_tot_r_patch     (:)   = nan
@@ -288,7 +292,7 @@ contains
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use clm_varpar     , only : nlevgrnd
-    use clm_varctl     , only : use_cn, use_hydrstress
+    use clm_varctl     , only : use_cn, use_hydrstress, use_nvp  ! [PORTED by Hui Tang: NVP history]
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use ncdio_pio      , only : ncd_inqvdlen
     implicit none
@@ -689,6 +693,14 @@ contains
     call hist_addfld1d (fname='ERRSOL',  units='W/m^2',  &
          avgflag='A', long_name='solar radiation conservation error', &
          ptr_patch=this%errsol_patch, set_urb=spval)
+
+    ! [PORTED by Hui Tang: history field for NVP (moss/lichen) sensible heat flux]
+    if (use_nvp) then
+       this%eflx_sh_nvp_patch(begp:endp) = spval
+       call hist_addfld1d (fname='EFLX_SH_NVP', units='W/m^2', &
+            avgflag='A', long_name='sensible heat flux from nvp (moss/lichen)', &
+            ptr_patch=this%eflx_sh_nvp_patch, c2l_scale_type='urbanf', default='inactive')
+    end if
 
   end subroutine InitHistory
 
