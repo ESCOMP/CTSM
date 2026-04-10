@@ -33,8 +33,8 @@ module SurfaceAlbedoType
      real(r8), pointer :: albgri_oc_col        (:,:) ! col ground diffuse albedo without OC   (numrad)             
      real(r8), pointer :: albgrd_dst_col       (:,:) ! col ground direct  albedo without dust (numrad)             
      real(r8), pointer :: albgri_dst_col       (:,:) ! col ground diffuse albedo without dust (numrad)             
-     real(r8), pointer :: albgrd_col           (:,:) ! col ground albedo (direct)  (numrad)                        
-     real(r8), pointer :: albgri_col           (:,:) ! col ground albedo (diffuse) (numrad)                        
+     real(r8), pointer :: albgrd_col           (:,:) ! col ground albedo (direct)  (numrad)
+     real(r8), pointer :: albgri_col           (:,:) ! col ground albedo (diffuse) (numrad)
      ! [PORTED by Hui Tang: nvp (moss/lichen) surface albedo fields]
      real(r8), pointer :: fabd_nvp_col         (:,:) ! col flux absorbed by nvp per unit direct flux  (numrad)
      real(r8), pointer :: fabi_nvp_col         (:,:) ! col flux absorbed by nvp per unit diffuse flux (numrad)
@@ -230,6 +230,7 @@ contains
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
     use clm_varcon    , only: spval
     use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ColumnType    , only: col  ! [PORTED by Hui Tang: NVP structural history fields]
     !
     ! !ARGUMENTS:
     class(surfalb_type) :: this
@@ -270,6 +271,44 @@ contains
     call hist_addfld2d (fname='ALBGRI', units='proportion', type2d='numrad', &
          avgflag='A', long_name='ground albedo (indirect)', &
          ptr_col=this%albgri_col, default='active')
+
+    ! [PORTED by Hui Tang: history fields for nvp (moss/lichen) surface absorbed flux]
+    if (use_nvp) then
+       this%fabd_nvp_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='FABD_NVP', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='flux absorbed by nvp per unit direct flux', &
+            ptr_col=this%fabd_nvp_col, default='active')
+
+       this%fabi_nvp_col(begc:endc,:) = spval
+       call hist_addfld2d (fname='FABI_NVP', units='proportion', type2d='numrad', &
+            avgflag='A', long_name='flux absorbed by nvp per unit diffuse flux', &
+            ptr_col=this%fabi_nvp_col, default='active')
+
+       ! [PORTED by Hui Tang: history fields for NVP optical properties and geometry]
+       this%nvp_tau_col(begc:endc) = spval
+       call hist_addfld1d (fname='NVP_TAU', units='none', &
+            avgflag='A', long_name='nvp (moss/lichen) optical depth (k*LAI*frac)', &
+            ptr_col=this%nvp_tau_col, default='inactive')
+
+       this%nvp_omega_vis_col(begc:endc) = spval
+       call hist_addfld1d (fname='NVP_OMEGA_VIS', units='none', &
+            avgflag='A', long_name='nvp (moss/lichen) single-scatter albedo VIS band', &
+            ptr_col=this%nvp_omega_vis_col, default='inactive')
+
+       this%nvp_omega_nir_col(begc:endc) = spval
+       call hist_addfld1d (fname='NVP_OMEGA_NIR', units='none', &
+            avgflag='A', long_name='nvp (moss/lichen) single-scatter albedo NIR band', &
+            ptr_col=this%nvp_omega_nir_col, default='inactive')
+
+       ! Note: col%dz_nvp and col%frac_nvp initialized to 0._r8 in ColumnType; no spval pre-set needed
+       call hist_addfld1d (fname='DZ_NVP', units='m', &
+            avgflag='A', long_name='nvp (moss/lichen) column-effective layer thickness', &
+            ptr_col=col%dz_nvp, default='inactive')
+
+       call hist_addfld1d (fname='FRAC_NVP', units='1', &
+            avgflag='A', long_name='nvp (moss/lichen) column fractional coverage', &
+            ptr_col=col%frac_nvp, default='inactive')
+    end if
 
     if (use_SSRE) then
        this%albdSF_patch(begp:endp,:) = spval
