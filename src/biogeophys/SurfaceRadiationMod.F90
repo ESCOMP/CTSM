@@ -8,6 +8,8 @@ module SurfaceRadiationMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use clm_varctl        , only : use_snicar_frc, use_fates
+  ! [PORTED by Hui Tang: nvp (moss/lichen) control switches for radiation]
+  use clm_varctl        , only : use_nvp
   use decompMod         , only : bounds_type, subgrid_level_column
   use atm2lndType       , only : atm2lnd_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -758,6 +760,29 @@ contains
              sabg_lyr(p,:) = 0._r8
              sabg_lyr(p,1) = sabg(p)
              sabg_snl_sum  = sabg_lyr(p,1)
+             ! [PORTED by Hui Tang: no-snow - NVP layer (index 0) absorbs before soil]
+             ! fabd_nvp_col/fabi_nvp_col are Beer's law absorptance fractions (dimensionless,
+             ! per unit flux incident on NVP). trd/tri are below-canopy direct/diffuse fluxes.
+             ! sabg(p) is unchanged (ground total = NVP + soil via modified albedo).
+             ! sabg_soil is corrected because it was computed using soil-only albedo (albsod).
+             if (use_nvp) then
+                sabg_lyr(p,0) = 0._r8
+                do ib = 1, nband
+                   sabg_lyr(p,0) = sabg_lyr(p,0) + &
+                        surfalb_inst%fabd_nvp_col(c,ib) * trd(p,ib) + &
+                        surfalb_inst%fabi_nvp_col(c,ib) * tri(p,ib)
+                end do
+                sabg_lyr(p,0) = max(0._r8, min(sabg_lyr(p,0), sabg_lyr(p,1)))
+                sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_lyr(p,0)
+                sabg_soil(p)  = sabg_soil(p)  - sabg_lyr(p,0)
+                ! [PORTED by Hui Tang: no-snow - store VIS canopy transmittances for NVP photosynthesis PAR]
+                ! ftdd(p,1) and ftii(p,1) are dimensionless fractions of direct/diffuse VIS
+                ! reaching the ground (below vascular canopy). Stored in layer 0 of the SNICAR
+                ! flx_abs arrays (unused by SNICAR when snl==0). Retrieved in wrap_sunfrac
+                ! at the next timestep for bc_in%flx_absdv/flx_absiv (one-timestep lag).
+                flx_absdv(c,:) = surfalb_inst%fabd_nvp_col(c,:)
+                flx_absiv(c,:) = surfalb_inst%fabi_nvp_col(c,:)
+             end if
 
              ! CASE 2: Snow layers present: absorbed radiation is scaled according to
              ! flux factors computed by SNICAR
@@ -774,6 +799,14 @@ contains
                    sub_surf_abs_SW(p) = sub_surf_abs_SW(p) + sabg_lyr(p,i)
                 endif
              enddo
+             ! [PORTED by Hui Tang: snow - NVP layer-0 SNICAR]
+             ! When use_nvp and SNICAR NVP layer-0 is active, flx_absdv(c,0)/flx_absiv(c,0)
+             ! already hold NVP absorption (set by SNICAR_RT above), so sabg_lyr(p,0) is
+             ! correct from the SNICAR loop above. Correct sabg_soil to use SNICAR soil layer.
+             if (use_nvp .and. surfalb_inst%nvp_tau_col(c) > 0._r8) then
+                ! sabg_lyr(p,1) = SNICAR soil-layer absorption (excludes NVP); use it directly.
+                sabg_soil(p) = sabg_lyr(p,1)
+             end if
 
              ! Divide absorbed by total, to get fraction absorbed in subsurface
              if (sabg_snl_sum /= 0._r8) then
