@@ -45,7 +45,7 @@ module NVPLayerDynamicsMod
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   ! [PORTED by Hui Tang: soilstate for bidirectional NVP-soil Darcy flux]
   use SoilStateType          , only : soilstate_type
-  use clm_varcon             , only : cpliq, cpice, denh2o, roverg
+  use clm_varcon             , only : cpliq, cpice, denh2o, roverg, tfrz, denice
   ! [PORTED by Hui Tang: use_nvp_undersnow flag to deactivate NVP when snow present]
   use clm_varctl             , only : use_nvp_undersnow
   use QSatMod                , only : QSat
@@ -194,7 +194,7 @@ contains
 
   ! ===========================================================================
 
-  subroutine NVPWaterRetentionCurve(vol_liq, n_van, alpha_van, watsat, watres, smp)
+  subroutine NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van, alpha_van, watsat, watres, smp)
     ! -------------------------------------------------------------------------
     ! Convert NVP volumetric liquid water content to soil water potential [mm]
     ! using the van Genuchten (1980) retention curve formulation.
@@ -203,6 +203,7 @@ contains
     !
     ! Arguments:
     !   vol_liq   — volumetric liquid water content [m3 m-3]
+    !   eff_porosity — effective porosity [m3 m-3]
     !   n_van     — van Genuchten shape parameter n [-] (> 1)
     !   alpha_van — van Genuchten inverse air-entry pressure [cm-1 * 10]
     !   watsat    — saturated volumetric water content (= theta_nvp_max) [m3 m-3]
@@ -210,6 +211,7 @@ contains
     !   smp       — soil/NVP matric potential [mm]  (negative; more negative = drier)
     ! -------------------------------------------------------------------------
     real(r8), intent(in)  :: vol_liq
+    real(r8), intent(in)  :: eff_porosity
     real(r8), intent(in)  :: n_van
     real(r8), intent(in)  :: alpha_van
     real(r8), intent(in)  :: watsat
@@ -217,12 +219,9 @@ contains
     real(r8), intent(out) :: smp
 
     real(r8) :: m_van         ! van Genuchten m = 1 - 1/n
-    real(r8) :: eff_porosity  ! effective porosity [m3 m-3]
     real(r8) :: satfrac       ! effective saturation fraction [-]
 
     m_van        = 1.0_r8 - 1.0_r8 / n_van
-    ! NVP is assumed to have no ice fraction (layer-0 is always above 0 C in practice)
-    eff_porosity = max(0.01_r8, watsat)
 
     satfrac = (vol_liq - watres) / (eff_porosity - watres)
     satfrac = max(0.0_r8, min(1.0_r8, satfrac))   ! clamp to [0, 1]
@@ -236,7 +235,7 @@ contains
 
   ! ===========================================================================
 
-  subroutine NVPHydraulicConductivity(vol_liq, n_van, watsat, watres, ksat, khydr)
+  subroutine NVPHydraulicConductivity(vol_liq, eff_porosity, n_van, watsat, watres, ksat, khydr)
     ! -------------------------------------------------------------------------
     ! Compute NVP hydraulic conductivity [m s-1] using the Mualem-van Genuchten
     ! (1976/1980) formulation.
@@ -245,6 +244,7 @@ contains
     !
     ! Arguments:
     !   vol_liq   — volumetric liquid water content [m3 m-3]
+    !   eff_porosity — effective porosity [m3 m-3]
     !   n_van     — van Genuchten shape parameter n [-]
     !   watsat    — saturated volumetric water content [m3 m-3]
     !   watres    — residual volumetric water content [m3 m-3]
@@ -252,6 +252,7 @@ contains
     !   khydr     — unsaturated hydraulic conductivity [m s-1]
     ! -------------------------------------------------------------------------
     real(r8), intent(in)  :: vol_liq
+    real(r8), intent(in)  :: eff_porosity
     real(r8), intent(in)  :: n_van
     real(r8), intent(in)  :: watsat
     real(r8), intent(in)  :: watres
@@ -259,12 +260,9 @@ contains
     real(r8), intent(out) :: khydr
 
     real(r8) :: m_van         ! van Genuchten m = 1 - 1/n
-    real(r8) :: eff_porosity  ! effective porosity [m3 m-3]
     real(r8) :: satfrac       ! effective saturation fraction [-]
 
     m_van        = 1.0_r8 - 1.0_r8 / n_van
-    ! NVP is assumed to have no ice
-    eff_porosity = max(0.01_r8, watsat)
 
     satfrac = (vol_liq - watres) / (eff_porosity - watres)
     satfrac = max(0.0_r8, min(1.0_r8, satfrac))   ! clamp to [0, 1]
@@ -367,7 +365,7 @@ contains
   ! [PORTED by Hui Tang: NVP column water balance — gravity drainage from layer 0 to soil layer 1]
   ! [PORTED by Hui Tang: bidirectional Darcy flux between NVP layer 0 and soil layer 1]
   subroutine NVPWaterBalance_Column(bounds, dtime, waterfluxbulk_inst, waterstate_inst, &
-       waterdiagnosticbulk_inst, soilstate_inst)
+       waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
     ! -------------------------------------------------------------------------
     ! Update h2osoi_liq(c,0) for the NVP layer and compute the net water
     ! exchange with soil layer 1 via a bidirectional Darcy flux.
@@ -438,6 +436,7 @@ contains
          frac_h2osfc_col        => waterdiagnosticbulk_inst%frac_h2osfc_col,      &
          fwet_nvp_col           => waterdiagnosticbulk_inst%fwet_nvp_col,         &
          vwc_nvp_col            => waterdiagnosticbulk_inst%vwc_nvp_col           &  ! [PORTED by Hui Tang: volumetric water content]
+         t_nvp_col              => temperature_inst%t_nvp_col                     &  ! Input:  [real(r8) (:)   ] NVP (moss/lichen) temperature (Kelvin)
          )
 
       do c = bounds%begc, bounds%endc
@@ -457,16 +456,23 @@ contains
 
         ! --- NVP volumetric water content (clamped to valid range) ---
         if (col%dz(c,0) > 0._r8) then
-           vol_liq = h2osoi_liq(c,0) / (denh2o * col%dz(c,0))             ! [m3 m-3]
-           vol_liq = max(0._r8, min(watsat_nvp, vol_liq))
+           if (t_nvp_col(c) >= tfrz) then
+             ! For unfrozen soil
+              vol_ice = min(watsat_nvp, h2osoi_ice(c,0)/(col%dz(c,0)*denice))
+              eff_porosity = watsat_nvp-vol_ice
+              vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(col%dz(c,0)*denh2o))
+           else
+              ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
+              vol_liq = watres_nvp            
+           end if
         else
            vol_liq = 0._r8
         end if
 
         ! --- NVP van Genuchten matric potential and hydraulic conductivity ---
-        call NVPWaterRetentionCurve(vol_liq, n_van_nvp, alpha_van_nvp, &
+        call NVPWaterRetentionCurve(vol_liq, eff_porosity, alpha_van_nvp, &
              watsat_nvp, watres_nvp, psi_nvp)
-        call NVPHydraulicConductivity(vol_liq, n_van_nvp, watsat_nvp, watres_nvp, &
+        call NVPHydraulicConductivity(vol_liq, eff_porosity, watsat_nvp, watres_nvp, &
              ksat_nvp, khydr_nvp)
         K_nvp_mms = khydr_nvp * 1000._r8                                   ! m/s → mm/s
 

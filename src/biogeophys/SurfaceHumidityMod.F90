@@ -156,12 +156,21 @@ contains
                   ! Compute NVP surface humidity as a function of NVP water retention curve
                   ! --- NVP volumetric water content (clamped to valid range) ---
                   if (dz(c,0) > 0._r8) then
-                     vol_ice = min(watsat_nvp, h2osoi_ice(c,0)/(dz(c,0)*denice))
-                     eff_porosity = watsat_nvp-vol_ice
-                     vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(dz(c,0)*denh2o))
-                     psit_nvp = NVPWaterRetentionCurve(vol_liq, n_van_nvp, alpha_van_nvp, &
+                     if (t_soisno(c,0) >= tfrz) then
+                        ! For unfrozen soil
+                        vol_ice = min(watsat_nvp, h2osoi_ice(c,0)/(dz(c,0)*denice))
+                        eff_porosity = watsat_nvp-vol_ice
+                        vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(dz(c,0)*denh2o))
+                     else
+                        ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
+                        vol_liq = watres_nvp            
+                     end if
+                     psit_nvp = NVPWaterRetentionCurve(vol_liq, eff_porosity, alpha_van_nvp, &
                               watsat_nvp, watres_nvp, psi_nvp)
                      hr_nvp = exp(psit_nvp/roverg/t_nvp_col(c))
+                  else
+                     ! If dz(c,0) is not positive, set hr_nvp to 0
+                     hr_nvp = 0._r8
                   end if
                else
                   hr_nvp = 0._r8
