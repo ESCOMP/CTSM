@@ -48,7 +48,7 @@ CLM includes a detailed representation of nitrification and denitrification base
 
    f_{nitr,p} =\left[NH_{4} \right]k_{nitr} f\left(T\right)f\left(H_{2} O\right)f\left(pH\right)
 
-where :math:`{f}_{nitr,p}` is the potential nitrification rate (prior to competition for NH\ :sub:`4`\ :sup:`+` by plant uptake and N immobilization), :math:`{k}_{nitr}` is the maximum nitrification rate (10 % day\ :math:`\mathrm{-}`\ 1, (:ref:`Parton et al. 2001 <Partonetal2001>`), and *f(T)* and *f(H\)*\ :sub:`2`\ O) are rate modifiers for temperature and moisture content. CLM uses the same rate modifiers as are used in the decomposition routine. *f(pH)* is a rate modifier for pH; however, because CLM does not calculate pH, instead a fixed pH value of 6.5 is used in the pH function of :ref:`Parton et al. (1996) <Partonetal1996>`.
+where :math:`{f}_{nitr,p}` is the potential nitrification rate (prior to competition for NH\ :sub:`4`\ :sup:`+` by plant uptake and N immobilization), :math:`{k}_{nitr}` is the maximum nitrification rate (10 % day\ :math:`\mathrm{-}`\ 1, (:ref:`Parton et al. 2001 <Partonetal2001>`), and *f(T)* and *f(H\)*\ :sub:`2`\ O) are rate modifiers for temperature and moisture content. CLM uses the same rate modifiers as are used in the decomposition routine. *f(pH)* is a rate modifier for pH. Although new surface datasets in CLM6.0 provide gridded estimates for soil pH, this information is not currently being used in the model. Instead, a fixed pH value of 6.5 is used in the pH function of :ref:`Parton et al. (1996) <Partonetal1996>`.
 
 The potential denitrification rate is co-limited by NO\ :sup:`-3` concentration and C consumption rates, and occurs only in the anoxic fraction of soils:
 
