@@ -134,7 +134,9 @@ contains
          qflx_soliddew_to_top_layer    => waterfluxbulk_inst%qflx_soliddew_to_top_layer_patch   , & ! Output: [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
          qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
-         qflx_ev_h2osfc          => waterfluxbulk_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_ev_h2osfc          => waterfluxbulk_inst%qflx_ev_h2osfc_patch     , & ! In/Out: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
+         ! [PORTED by Hui Tang: NVP evaporation flux linearization correction]
+         qflx_ev_nvp             => waterfluxbulk_inst%qflx_ev_nvp_patch        , & ! In/Out: [real(r8) (:)   ]  evaporation flux from NVP (mm H2O/s) [+ to atm]
          
          eflx_sh_grnd            => energyflux_inst%eflx_sh_grnd_patch      , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
          eflx_sh_veg             => energyflux_inst%eflx_sh_veg_patch       , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -197,11 +199,14 @@ contains
          if (lun%urbpoi(l)) then
             qflx_ev_soil(p) = 0._r8
             qflx_ev_h2osfc(p) = 0._r8
+            qflx_ev_nvp(p) = 0._r8
             qflx_ev_snow(p) = qflx_evap_soi(p)
          else
             qflx_ev_snow(p) = qflx_ev_snow(p) + tinc(c)*cgrndl(p)
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) + tinc(c)*cgrndl(p)
+            ! [PORTED by Hui Tang: apply linearization correction to NVP evaporation diagnostic]
+            qflx_ev_nvp(p) = qflx_ev_nvp(p) + tinc(c)*cgrndl(p)
          endif
       end do
 
