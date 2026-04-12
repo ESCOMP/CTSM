@@ -68,7 +68,7 @@ module clm_driver
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use VOCEmissionMod         , only : VOCEmission
   !
-  use filterMod              , only : setFilters
+  use filterMod              , only : setFilters, setNVPcFilter  ! [PORTED by Hui Tang: NVP column filter]
   !
   use atm2lndMod             , only : downscale_forcings, set_atm2lnd_water_tracers
   use lnd2atmMod             , only : lnd2atm
@@ -906,6 +906,7 @@ contains
             filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
             filter(nc)%num_nolakep , filter(nc)%nolakep,                                       &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
+            filter(nc)%num_nvpc    , filter(nc)%nvpc,                  &  ! [PORTED by Hui Tang: NVP column filter]
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
             solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
@@ -1212,6 +1213,10 @@ contains
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
              call setFilters( bounds_clump, glc_behavior )
+
+             ! [PORTED by Hui Tang: rebuild NVP column filter after FATES dynamics
+             ! updates col%nvp_layer_active / jbot_sno via UpdateNVPLayer]
+             if (use_nvp) call setNVPcFilter(bounds_clump)
 
           end if
 
