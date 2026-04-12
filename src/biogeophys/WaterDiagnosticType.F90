@@ -47,6 +47,8 @@ module WaterDiagnosticType
      real(r8), pointer :: qg_snow_col            (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qg_soil_col            (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qg_h2osfc_col          (:)   ! col ground specific humidity [kg/kg]
+     ! [PORTED by Hui Tang: NVP surface specific humidity, used in ground evap blending]
+     real(r8), pointer :: qg_nvp_col             (:)   ! col NVP surface specific humidity [kg/kg]
      real(r8), pointer :: qg_col                 (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qaf_lun                (:)   ! lun urban canopy air specific humidity (kg/kg)
 
@@ -127,6 +129,10 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qg_h2osfc_col, name = 'qg_h2osfc_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column)
+    ! [PORTED by Hui Tang: NVP surface specific humidity, used in ground evap blending]
+    call AllocateVar1d(var = this%qg_nvp_col, name = 'qg_nvp_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%qg_col, name = 'qg_col', &
