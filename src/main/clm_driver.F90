@@ -14,6 +14,7 @@ module clm_driver
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_nvp  ! [PORTED by Hui Tang: NVP photosynthesis flag]
   use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -778,6 +779,16 @@ contains
             croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
+
+       ! [PORTED by Hui Tang: NVP (moss/lichen) photosynthesis — separate from CanopyFluxes.
+       !  NVP lacks stomata so it must not go through the CanopyFluxes iterative solver.
+       !  Called after CanopyFluxes convergence so that post-convergence t_veg and t_nvp_col
+       !  are available, and waterdiagnosticbulk_inst (needed for fwet_nvp_col) is in scope.]
+       if (use_fates .and. use_nvp) then
+          call clm_fates%wrap_nvp_photosynthesis(nc, bounds_clump, &
+               atm2lnd_inst, temperature_inst, &
+               water_inst%waterdiagnosticbulk_inst)
+       end if
 
        ! Fluxes for all urban landunits
 
