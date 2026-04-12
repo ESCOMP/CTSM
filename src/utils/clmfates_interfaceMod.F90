@@ -256,6 +256,8 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_sunfrac
       procedure, public :: wrap_btran
       procedure, public :: wrap_photosynthesis
+      ! [PORTED by Hui Tang: separate NVP photosynthesis call for clm_driver]
+      procedure, public :: wrap_nvp_photosynthesis
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
@@ -377,7 +379,7 @@ module CLMFatesInterfaceMod
 
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
-        
+
         ! [PORTED by Hui Tang: pass nvp (moss/lichen) switches to FATES]
         if (use_nvp) then
            pass_nvp = 1
@@ -1286,7 +1288,7 @@ module CLMFatesInterfaceMod
 
             this%fates(nc)%bc_in(s)%wind24_pa(ifp) = &
                   atm2lnd_inst%wind24_patch(p)
-
+ 
          end do
 
          ! Here we use the same logic as the pft_areafrac initialization to get an array with values for each pft
@@ -1586,7 +1588,7 @@ module CLMFatesInterfaceMod
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-                   
+
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
@@ -2817,6 +2819,89 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
+ subroutine wrap_nvp_photosynthesis(this, nc, bounds, &
+       atm2lnd_inst, temperature_inst, waterdiagnosticbulk_inst)
+
+   ! [PORTED by Hui Tang: separate NVP (moss/lichen) photosynthesis call.
+   !
+   !  NVP lacks stomata so its photosynthesis must NOT go through the CanopyFluxes
+   !  iterative solver (which is designed for stomata-bearing vegetation and maps outputs
+   !  to rssun/rssha).  Instead this routine is called once from clm_driver after
+   !  CanopyFluxes has converged.
+   !
+   !  Role: re-run FatesPlantRespPhotosynthDrive with the correct NVP surface temperature
+   !  (t_nvp_pa) and wetness (fwet_nvp_pa) so that FATES accumulates accurate NVP carbon
+   !  fluxes (GPP, maintenance respiration) in bc_out.  No CLM-side output is mapped back
+   !  (NVP has no stomatal resistance to write to rssun/rssha).
+   !
+   !  waterdiagnosticbulk_inst (needed for fwet_nvp_col) is NOT available inside
+   !  wrap_photosynthesis / CanopyFluxes, which is the compile-time reason for this split.]
+
+   use decompMod                   , only : bounds_type
+   use FatesPlantRespPhotosynthMod , only : FatesPlantRespPhotosynthDrive
+   use FatesSynchronizedParsMod    , only : get_step_size_real
+
+   ! !ARGUMENTS:
+   class(hlm_fates_interface_type),  intent(inout) :: this
+   integer,                          intent(in)    :: nc
+   type(bounds_type),                intent(in)    :: bounds
+   type(atm2lnd_type),               intent(in)    :: atm2lnd_inst
+   type(temperature_type),           intent(in)    :: temperature_inst
+   type(waterdiagnosticbulk_type),   intent(in)    :: waterdiagnosticbulk_inst
+
+   integer  :: s, c, p, ifp
+   real(r8) :: dtime
+
+   call t_startf('fates_nvp_psn')
+
+   associate( &
+         t_veg     => temperature_inst%t_veg_patch          , &
+         tgcm      => temperature_inst%thm_patch             , &
+         forc_pbot => atm2lnd_inst%forc_pbot_downscaled_col )
+
+      do s = 1, this%fates(nc)%nsites
+
+         c = this%f2hmap(nc)%fcolumn(s)
+
+         this%fates(nc)%bc_in(s)%forc_pbot = forc_pbot(c)
+
+         do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+            p = ifp + col%patchi(c)
+
+            ! Re-enable processing for all patches (reset from 3 → 2)
+            this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 2
+
+            ! Update t_veg / tgcm with post-convergence values from CanopyFluxes
+            this%fates(nc)%bc_in(s)%t_veg_pa(ifp)  = t_veg(p)
+            this%fates(nc)%bc_in(s)%tgcm_pa(ifp)   = tgcm(p)
+
+            ! [PORTED by Hui Tang: NVP-specific inputs — column quantities broadcast to patch]
+            this%fates(nc)%bc_in(s)%t_nvp_pa(ifp)    = temperature_inst%t_nvp_col(c)
+            this%fates(nc)%bc_in(s)%fwet_nvp_pa(ifp) = waterdiagnosticbulk_inst%fwet_nvp_col(c)
+
+         end do
+      end do
+
+      dtime = get_step_size_real()
+
+      ! Re-run FATES photosynthesis: this overwrites bc_out carbon fluxes with
+      ! values computed using correct post-convergence NVP temperature/wetness.
+      ! rssun/rssha are NOT mapped back — NVP has no stomata.
+      call FatesPlantRespPhotosynthDrive( &
+           this%fates(nc)%nsites, &
+           this%fates(nc)%sites,  &
+           this%fates(nc)%bc_in,  &
+           this%fates(nc)%bc_out, &
+           dtime)
+
+   end associate
+
+   call t_stopf('fates_nvp_psn')
+
+ end subroutine wrap_nvp_photosynthesis
+
+ ! ======================================================================================
+
  subroutine wrap_accumulatefluxes(this, nc, fn, filterp)
 
    ! !ARGUMENTS:
@@ -3005,7 +3090,7 @@ module CLMFatesInterfaceMod
           ftdd(p,:) = this%fates(nc)%bc_out(s)%ftdd_parb(ifp,:)
           ftid(p,:) = this%fates(nc)%bc_out(s)%ftid_parb(ifp,:)
           ftii(p,:) = this%fates(nc)%bc_out(s)%ftii_parb(ifp,:)
-          
+
        end do
 
        ! [PORTED by Hui Tang: transfer NVP Beer's law absorptance from bc_out to surfalb_inst]
@@ -4134,7 +4219,6 @@ module CLMFatesInterfaceMod
    call ncd_pio_closefile(ncid)
 
  end subroutine GetLandusePFTData
-
 
  !-----------------------------------------------------------------------
 
