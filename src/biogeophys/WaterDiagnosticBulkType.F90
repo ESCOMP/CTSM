@@ -16,7 +16,8 @@ module WaterDiagnosticBulkType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
-  use clm_varctl     , only : use_cn, iulog, use_luna, use_hillslope
+  ! [PORTED by Hui Tang: add use_nvp for nvp (moss/lichen) wet fraction field]
+  use clm_varctl     , only : use_cn, iulog, use_luna, use_hillslope, use_nvp
   use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan, nlevsoi
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
@@ -76,6 +77,9 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: wf_col                 (:)   ! col soil water as frac. of whc for top 0.05 m (0-1) 
      real(r8), pointer :: wf2_col                (:)   ! col soil water as frac. of whc for top 0.17 m (0-1) 
      real(r8), pointer :: fwet_patch             (:)   ! patch canopy fraction that is wet (0 to 1)
+     ! [PORTED by Hui Tang: nvp (moss/lichen) column wet fraction and volumetric water content]
+     real(r8), pointer :: fwet_nvp_col           (:)   ! col nvp (moss/lichen) wet fraction (0 to 1)
+     real(r8), pointer :: vwc_nvp_col            (:)   ! col nvp (moss/lichen) volumetric liquid water content (m3 m-3)
      real(r8), pointer :: fcansno_patch          (:)   ! patch canopy fraction that is snow covered (0 to 1)
      real(r8), pointer :: fdry_patch             (:)   ! patch canopy fraction of foliage that is green and dry [-] (new)
 
@@ -230,6 +234,9 @@ contains
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
     allocate(this%wf2_col                (begc:endc))                     ; this%wf2_col                (:)   = nan
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
+    ! [PORTED by Hui Tang: allocate nvp (moss/lichen) column wet fraction and VWC, initialized to 0]
+    allocate(this%fwet_nvp_col           (begc:endc))                     ; this%fwet_nvp_col           (:)   = 0.0_r8
+    allocate(this%vwc_nvp_col            (begc:endc))                     ; this%vwc_nvp_col            (:)   = 0.0_r8
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
     allocate(this%qflx_prec_intr_patch   (begp:endp))                     ; this%qflx_prec_intr_patch   (:)   = nan
@@ -247,7 +254,7 @@ contains
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
-    use clm_varctl     , only : use_excess_ice
+    use clm_varctl     , only : use_excess_ice, use_nvp
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(in) :: this
@@ -373,6 +380,25 @@ contains
             long_name=this%info%lname('10 day running mean of fractional humidity of canopy air'), &
             ptr_patch=this%rh10_af_patch, set_spec=spval, default='inactive')
     endif
+
+    ! [PORTED by Hui Tang: register nvp (moss/lichen) wet fraction and VWC history fields]
+    if (use_nvp) then
+       this%fwet_nvp_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('FWET_NVP'), &
+            units='proportion', &
+            avgflag='A', &
+            long_name=this%info%lname('nvp (moss/lichen) wet fraction'), &
+            ptr_col=this%fwet_nvp_col, default='active')
+
+       this%vwc_nvp_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('VWC_NVP'), &
+            units='m3 m-3', &
+            avgflag='A', &
+            long_name=this%info%lname('nvp (moss/lichen) volumetric liquid water content'), &
+            ptr_col=this%vwc_nvp_col, default='active')
+    end if
 
     ! Fractions
 
@@ -794,7 +820,7 @@ contains
     use spmdMod          , only : masterproc
     use clm_varcon       , only : pondmx, watmin, spval, nameg
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl       , only : bound_h2osoi, use_excess_ice, nsrest, nsrContinue
+    use clm_varctl       , only : bound_h2osoi, use_excess_ice, nsrest, nsrContinue, use_nvp
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
     use ExcessIceStreamType, only : UseExcessIceStreams
@@ -988,6 +1014,18 @@ contains
           end if
        end if
     endif
+
+    ! [PORTED by Hui Tang: restart I/O for nvp (moss/lichen) wet fraction]
+    if (use_nvp) then
+       call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('FWET_NVP'), &
+            xtype=ncd_double, dim1name='column', &
+            long_name=this%info%lname('nvp (moss/lichen) wet fraction'), &
+            units='proportion', &
+            interpinic_flag='interp', readvar=readvar, data=this%fwet_nvp_col)
+       if (flag == 'read' .and. .not. readvar) then
+          this%fwet_nvp_col(bounds%begc:bounds%endc) = 0.0_r8
+       end if
+    end if
 
   end subroutine RestartBulk
 
