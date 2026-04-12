@@ -1711,6 +1711,11 @@ contains
          waterfluxbulk_inst%qflx_ev_h2osfc_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_ev_h2osfc_col(bounds%begc:bounds%endc))
 
+    ! [PORTED by Hui Tang: aggregate NVP evaporation flux from patches to column]
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         waterfluxbulk_inst%qflx_ev_nvp_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_ev_nvp_col(bounds%begc:bounds%endc))
+
     ! Averaging for patch water flux variables
 
     call p2c (bounds, num_nolakec, filter_nolakec, &
