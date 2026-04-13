@@ -3342,7 +3342,7 @@ sub setup_logic_supplemental_nitrogen {
 
     if ( $suplnitro =~ /ALL/i ) {
       if ( $nl_flags->{'bgc_spinup'} eq "on" && $nl_flags->{'bgc_mode'} ne "fates" ) {
-        $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFT's, as these modes spinup Nitrogen" );
+        $log->warning("There is no need to use a bgc_spinup mode when supplemental Nitrogen is on for all PFTs, as these modes spinup Nitrogen" );
       }
     }
 
