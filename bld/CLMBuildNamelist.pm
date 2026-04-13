@@ -3323,8 +3323,8 @@ sub setup_logic_supplemental_nitrogen {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                  'suplnitro', 'use_cn'=>$nl_flags->{'use_cn'}, 'use_crop'=>$nl_flags->{'use_crop'});
 
-  } elsif ( $nl_flags->{'bgc_mode'} eq "fates" && not &value_is_true( $nl_flags->{'use_fates_sp'})  ) {
-      # Or... if its fates but not fates-sp
+  } elsif ( $nl_flags->{'bgc_mode'} eq "fates" ) {
+      # Or... if its fates
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                  'suplnitro', 'fates_parteh_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_parteh_mode')));
   }
