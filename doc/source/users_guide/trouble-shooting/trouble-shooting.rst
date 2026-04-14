@@ -15,7 +15,7 @@ In general you may run into one of four types of problems:
 #. *build-time*
 #. *run-time*
 
-Start with the `CIME Trouble Shooting Guide <http://esmci.github.io/cime/versions/master/html/users_guide/troubleshooting.html>`_ , especially if you encounter one of the first three types of problems. The CIME troubleshooting guide also provides some useful tips regarding run-time errors. If this doesn't identify and solve your problem, then try some of the suggestions below for run-time errors.
+Start with the `CIME Trouble Shooting Guide <https://esmci.github.io/cime/versions/master/html/ccs/troubleshooting.html>`_ , especially if you encounter one of the first three types of problems. The CIME troubleshooting guide also provides some useful tips regarding run-time errors. If this doesn't identify and solve your problem, then try some of the suggestions below for run-time errors.
 
 General Advice on Debugging Run time Problems
 =============================================
