@@ -202,17 +202,6 @@ contains
     if ( present(ni) .and. present(nj) ) then
        gi = ni * nj
     end if
-    ! If landunits, or columns, or patches not set, set it to the lower subgrid level
-    ! So assume there's one higher level subgrid element per lower level
-    if ( li == 0 )then
-      li = gi
-    end if
-    if ( ci == 0 )then
-      ci = li
-    end if
-    if ( pi == 0 )then
-      pi = ci
-    end if
     procinfo%begg = begg
     procinfo%endg = gi
     procinfo%begl = begl
