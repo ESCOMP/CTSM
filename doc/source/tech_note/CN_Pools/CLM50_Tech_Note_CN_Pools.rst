@@ -23,61 +23,76 @@ In addition to the vegetation pools, CLM includes a series of decomposing carbon
 Tissue Stoichiometry
 -----------------------
 
-As of CLM5, vegetation tissues have a flexible stoichiometry, as described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each tissue has a target C\:N ratio, with the target leaf C\:N varying by plant functional type (see :numref:`Table Plant functional type (PFT) target CN parameters`), and nitrogen is allocated at each timestep in order to allow the plant to best match the target stoichiometry. Nitrogen downregulation of productivity acts by increasing the C\:N ratio of leaves when insufficient nitrogen is available to meet stoichiometric demands of leaf growth, thereby reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and :math:`J_{\text{max25}}` terms, as described in Chapter :numref:`rst_Photosynthetic Capacity`. Details of the flexible tissue stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
+As of CLM5, vegetation tissues have a flexible stoichiometry, as described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each tissue has a target C\:N ratio, with the target leaf C\:N, :math:`\text{C:N}_{\text{target}}^\text{pft}`, varying by plant functional type (PFT). Nitrogen is allocated at each timestep to allow the plant to best match the target stoichiometry. Nitrogen downregulation of productivity acts by increasing the actual C\:N ratio of leaves when insufficient nitrogen is available to meet stoichiometric demands of leaf growth, thereby reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and :math:`J_{\text{max25}}` terms, as described in Chapter :numref:`rst_Photosynthetic Capacity`. Details of the flexible tissue stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
 
-.. _Table Plant functional type (PFT) target CN parameters:
+As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\text{target}}^{\text{pft,CO2}}`, as a logarithmic function of atmospheric CO\ :sub:`2` that we denote :math:`\text{C:N}_{\text{perturb}}^{\text{CO2}}`:
 
-.. table:: Plant functional type (PFT) target C:N parameters.
+.. math::
+  :label: time-evolving target leaf C\:N
 
- +----------------------------------+-------------------+
- | PFT                              |  target leaf C:N  |
- +==================================+===================+
- | NET Temperate                    |        58.00      |
- +----------------------------------+-------------------+
- | NET Boreal                       |        58.00      |
- +----------------------------------+-------------------+
- | NDT Boreal                       |        25.81      |
- +----------------------------------+-------------------+
- | BET Tropical                     |        29.60      |
- +----------------------------------+-------------------+
- | BET temperate                    |        29.60      |
- +----------------------------------+-------------------+
- | BDT tropical                     |        23.45      |
- +----------------------------------+-------------------+
- | BDT temperate                    |        23.45      |
- +----------------------------------+-------------------+
- | BDT boreal                       |        23.45      |
- +----------------------------------+-------------------+
- | BES temperate                    |        36.42      |
- +----------------------------------+-------------------+
- | BDS temperate                    |        23.26      |
- +----------------------------------+-------------------+
- | BDS boreal                       |        23.26      |
- +----------------------------------+-------------------+
- | C\ :sub:`3` arctic grass         |        28.03      |
- +----------------------------------+-------------------+
- | C\ :sub:`3` grass                |        28.03      |
- +----------------------------------+-------------------+
- | C\ :sub:`4` grass                |        35.36      |
- +----------------------------------+-------------------+
- | Temperate Corn                   |        25.00      |
- +----------------------------------+-------------------+
- | Spring Wheat                     |        20.00      |
- +----------------------------------+-------------------+
- | Temperate Soybean                |        20.00      |
- +----------------------------------+-------------------+
- | Cotton                           |        20.00      |
- +----------------------------------+-------------------+
- | Rice                             |        20.00      |
- +----------------------------------+-------------------+
- | Sugarcane                        |        25.00      |
- +----------------------------------+-------------------+
- | Tropical Corn                    |        25.00      |
- +----------------------------------+-------------------+
- | Tropical Soybean                 |        20.00      |
- +----------------------------------+-------------------+
- | Miscanthus                       |        25.00      |
- +----------------------------------+-------------------+
- | Switchgrass                      |        25.00      |
- +----------------------------------+-------------------+
+  \begin{split}
+  \text{C:N}_{\text{perturb}}^{\text{CO2}} &= \text{C:N}_{\text{slope}}^{\text{CO2}} \cdot \ln\left(\frac{\text{CO2}_{\text{atm}}}{\text{CO2}_{\text{atm}}^{\text{base}}}\right) \\
+  \text{C:N}_{\text{perturb}}^{\text{CO2}} &\ge 0 \\
+  \text{C:N}_{\text{target}}^{\text{pft,CO2}} &= \text{C:N}_{\text{target}}^\text{pft} + \text{C:N}_{\text{perturb}}^{\text{CO2}}
+  \end{split}
+
+where :math:`\text{C:N}_{\text{target}}^\text{pft}` is the time-invarying base target leaf C\:N that depends on PFT, :math:`\text{C:N}_{\text{slope}}^{\text{CO2}}` (unitless) is the slope of the function, :math:`\text{CO2}_{\text{atm}}` is atmospheric CO\ :sub:`2` in parts per million by volume (ppmv), and :math:`\text{CO2}_{\text{atm}}^{\text{base}}` is the base CO\ :sub:`2` (ppmv) above which atmospheric CO\ :sub:`2` begins to scale the target leaf C\:N (see :numref:`Table PFT target leaf CN parameters`).
+
+The optional time-evolving target leaf C\:N was documented in :ref:`Hauser et al. (2023) <Hauseretal2023>`.
+
+.. _Table PFT target leaf CN parameters:
+
+.. table:: Plant functional type (PFT) target leaf C:N parameters, :math:`\text{C:N}_{\text{target}}^\text{pft}`, :math:`\text{C:N}_{\text{slope}}^{\text{CO2}}`, and :math:`\text{CO2}_{\text{atm}}^{\text{base}}`. The latter two do not vary by PFT currently.
+
+ +--------------------------+-----------------+--------------------+-------------------+
+ | PFT                      | target leaf C:N | leaf C:N CO2 slope |  CO2 base (ppmv)  |
+ +==========================+=================+====================+===================+
+ | NET Temperate            |       58.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | NET Boreal               |       60.24     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | NDT Boreal               |       28.92     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BET Tropical             |       36.03     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BET temperate            |       34.59     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BDT tropical             |       18.63     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BDT temperate            |       21.64     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BDT boreal               |       17.09     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BES temperate            |       36.42     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BDS temperate            |       23.26     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | BDS boreal               |       21.40     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | C\ :sub:`3` arctic grass |       20.70     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | C\ :sub:`3` grass        |       29.39     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | C\ :sub:`4` grass        |       35.36     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Temperate Corn           |       25.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Spring Wheat             |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Temperate Soybean        |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Cotton                   |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Rice                     |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Sugarcane                |       25.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Tropical Corn            |       25.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Tropical Soybean         |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Miscanthus               |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
+ | Switchgrass              |       20.00     |        0.0         |        310        |
+ +--------------------------+-----------------+--------------------+-------------------+
 

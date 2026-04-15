@@ -507,6 +507,10 @@ Hansen, M., DeFries, R.S., Townshend, J.R.G., Carroll, M., Dimiceli, C., and Soh
 
 Hastings, D.A., Dunbar, P.K., Elphingstone, G.M., Bootz, M., Murakami, H., Maruyama, H., Masaharu, H., Holland, P., Payne, J., Bryant, N.A., Logan, T.L., Muller, J.-P., Schreier, G., and MacDonald, J.S., eds., 1999. The Global Land One-kilometer Base Elevation (GLOBE) Digital Elevation Model, Version 1.0. National Oceanic and Atmospheric Administration, National Geophysical Data Center, 325 Broadway, Boulder, Colorado 80305-3328, U.S.A.
 
+.. _Hauseretal2023:
+
+Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.
+
 .. _Healdetal2008:
 
 Heald, C.L., Henze, D.K., Horowitz, L.W., Feddema, J., Lamarque, J.-F., Guenther, A., Hess, P.G., Vitt, F., Seinfeld, J.H., Goldstein, A.H., and Fung, I. 2008. Predicted change in global secondary organic aerosol concentrations in response to future climate, emissions, and land use change. J. Geophys. Res. 113:D05211. DOI:10.1029/2007JD009092.
