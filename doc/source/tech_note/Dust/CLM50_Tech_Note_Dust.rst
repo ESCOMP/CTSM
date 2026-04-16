@@ -248,7 +248,7 @@ where :math:`F_{j}` is the mass emission flux from the :math:`j` th aerosol bin.
 
 The current way of paritioning the emission fluxes before passing to the coupler is still being used, but the partition into the different bins is only required by BAM, not the current default MAM in CAM6 and CAM7. Therefore, for MAM, the four :math:`F_{j}` are summed up to become one total flux :math:`F_d` again. It is then redistributed to different individual modes of MAM following the Brittle Fragmentation Theory. The default CAM physics that is paired with the CLM6 physics is the CAM7 physics, which uses MAM4 (4 modes) or MAM5 (5 modes).
 
-In equation :eq:`30.29` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of *:math:`J=4`* transport bins :math:`j`
+In equation :eq:`30.29` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of :math:`J=4` transport bins :math:`j`
 
 .. math::
    :label: 30.30
