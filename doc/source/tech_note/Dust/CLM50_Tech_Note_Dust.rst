@@ -180,7 +180,7 @@ The fraction of time :math:`\eta` is parameterized using the surface winds and t
    u_{it} =  \frac{u_{*it}}{k} \ln(z_{sal}/z_{0a})
 
 
-With saltation-height variables defined, the instantaneous wind :math:`\tilde{u}_s` is assumed by Comola to follow a Gaussian distribution with a mean equal to the mean wind speed and the spread :math:`\sigma_{u_{s}}`  parameterized by the Similarity Theory (:ref:`Panofsky et al., 1977<Panofskyetal1977>`):
+where :math:`z_{0a}`, the aeolian roughness length, is set to be 10 :sup:`-4` m here for simplicity. With saltation-height variables defined, the instantaneous wind :math:`\tilde{u}_s` is assumed by Comola to follow a Gaussian distribution with a mean equal to the mean wind speed and the spread :math:`\sigma_{u_{s}}`  parameterized by the Similarity Theory (:ref:`Panofsky et al., 1977<Panofskyetal1977>`):
 
 .. math::
    :label: 30.23
