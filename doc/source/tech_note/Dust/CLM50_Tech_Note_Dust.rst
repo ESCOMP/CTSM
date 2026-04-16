@@ -69,7 +69,7 @@ Another essential dust emission threshold is the impact/dynamic threshold :math:
 
 where :math:`B_{*it}` is a constant on Earth following :ref:`Kok et al. (2012)<Koketal2012>`. The above equations imply that :math:`u_{*it} \, < \, u_{*ft0} \le \, u_{*ft}`. This means that the winds need a bigger momentum to initiate saltation and dust emission but can reduce below :math:`u_{*ft}` and still maintain a weak dust emission flux. The emission flux goes to zero when :math:`u_{*s}` drops below :math:`u_{*it}`.
 
-The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\ :sup:`-1`), from the ground into a transport mode/bin :math:`j` of aerosol is given by :ref:`Kok et al. (2014a)<Koketal2014a>`:
+The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\ :sup:`-1`), from the ground into a transport mode/bin :math:`j` of aerosol is based on :ref:`Kok et al. (2014a)<Koketal2014a>`:
 
 .. math::
    :label: 30.8
