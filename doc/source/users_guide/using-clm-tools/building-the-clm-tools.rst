@@ -1,8 +1,10 @@
+.. include:: ../substitutions.rst
+
+.. _building-the-clm-tools:
+
 ========================
  Building the CLM tools
 ========================
-
-.. include:: ../substitutions.rst
 
 The tool **cprnc** uses the CIME configure/build system which is described in the next section.
 

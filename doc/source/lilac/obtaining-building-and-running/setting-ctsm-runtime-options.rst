@@ -106,7 +106,7 @@ The first set of options in this file specifies key file names:
 
 - ``lnd_domain_file`` must be specified. This file specifies CTSM's grid and land
   mask. The general process for creating this file is described in section
-  creating-domain-files (deprecated).
+  :numref:`building-the-clm-tools`.
 
 - ``fsurdat`` also must be specified. This file specifies a variety of spatially-varying
   properties. This file is grid-specific, but can be created from grid-independent files
