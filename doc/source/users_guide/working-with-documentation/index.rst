@@ -9,11 +9,13 @@ Working with CTSM Documentation
 .. toctree::
    :maxdepth: 1
 
-   docs-intro-and-recommended.md
-   building-docs-prereqs-mac.md
-   building-docs-prereqs-windows.md
-   building-docs-multiple-versions.rst
+   docs-intro.md
+   bld-prev-docs-casper.md
+   bld-prev-docs-mac.md
+   bld-prev-docs-windows.md
+   docs-style-guide.md
    tips-for-working-with-markdown.md
-   tips-for-working-with-rst.md
+   tips-for-working-with-rst.rst
+   common-docs-errors.md
+   building-docs-multiple-versions.rst
    building-docs-original-wiki.md
-
