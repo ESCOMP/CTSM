@@ -459,12 +459,12 @@ For diffuse radiation the expression in equation :eq:`3.60` is integrated over t
 For frozen lakes without resolved snow layers (:math:`snl=0`), the albedo at cold temperatures *a*\ :sub:`0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
 
 .. math::
-   :label: 3.60a
+   :label: FrozenLakeSnl0Dir
 
    \alpha _{soi,\, \Lambda }^{\mu }=a_{0} \left(1-x\right)+\max(0.10,a)x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
 
 .. math::
-   :label: 3.60b
+   :label: FrozenLakeSnl0Dif
 
    \alpha _{soi,\, \Lambda }=a_{0} \left(1-x\right)+0.10x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
 
