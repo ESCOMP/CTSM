@@ -33,7 +33,7 @@ The soil moisture effect :math:`f_{m}(w)` is a function of gravimetric soil mois
 .. math::
    :label: 30.3
 
-   w=\theta\frac{ \rho _{water} }{\rho_{bulk} }
+   w=\theta\frac{ \rho _{liq} }{\rho_{bulk} }
 
 Note that :math:`w` in CTSM is conventionally (since CLM3; :ref:`Mahowald et al. 2006<Mahowaldetal2006>`) treated as a sum of both liquid and ice/frozen soil moisture at the topmost soil layer, i.e., :math:`w = w_{liq,1} + w_{ice,1}`. :math:`\rho_{liq}` is typical liquid water density (:numref:`Table Physical Constants`), and bulk density :math:`\rho_{bulk}` is given by 
 
