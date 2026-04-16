@@ -193,7 +193,7 @@ And the fluctuation strength is parameterized by the similarity theory:
    :label: 30.24
 
    \sigma_{u_s} = u_{*s} \left( 12 - 0.5 \frac{z_i}{L} \right)^{1/3}
-   \quad \text{for } \left( 12 - 0.5 \frac{z_i}{L} \right) \ge 0
+   \quad \text{for } \left 12 - 0.5 \frac{z_i}{L} \right \ge 0
 
 where :math:`z_i = 1000` m is the planetary boundary-layer height set as a constant for now, and :math:`L` is the Obukhov length. This means the instantaneous wind's fluctuation comes from both a shear contribution and a buoyancy contribution. 
 
