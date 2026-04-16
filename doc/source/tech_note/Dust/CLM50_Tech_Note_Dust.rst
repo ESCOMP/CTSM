@@ -6,7 +6,7 @@ Dust Model
 Atmospheric dust is mobilized from the land by wind in the CLM. The most important factors determining soil erodibility and dust emission include the wind friction velocity, the vegetation cover, and the soil moisture. The latest CTSM allows users to choose between two dust emission schemes: One is Leung_2023 (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) which is the current default for the CLM6 physics, and the other is Zender_2003 (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) based on the DEAD (Dust Entrainment and Deposition model of :ref:`Zender et al. (2003)<Zenderetal2003>`, which is the default for the CLM5 or older physics.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Leung et al. (2023) scheme (default for CLM6 physics or later):
+Leung et al. (2023) scheme (default for CLM6 physics or later)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
