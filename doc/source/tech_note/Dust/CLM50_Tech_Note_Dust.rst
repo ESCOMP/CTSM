@@ -144,7 +144,7 @@ The rock drag partition factor scales with the surface roughness density of rock
 
    f_{rock} = 1 - \frac{\ln(\frac{z_{0a}}{z_{0s}})}{\ln[b_{1}(\frac{X}{z_{0s}})^{b_{2}}]}
 
-where :math:`X = 10 m` is the distance downstream the point of discontinuity in surface obstacle, :math:`b_{1} = 0.7` and :math:`b_{2} = 0.8` are coefficients (:ref:`Darmenova et al., 2009<Darmenovaetal2009>`), :math:`z_{0s}` is the soil roughness length. :math:`z_{0a}` is from :ref:`Prigent et al. (2005)<Prigentetal2005>` and should not be confused with the aerodynamic roughness length :math:`Z_{0}` from the model. This equation only applies for gridcells with LAI smaller than the LAI threshold for dust emission.
+where :math:`X = 10` m is the distance downstream the point of discontinuity in surface obstacle, :math:`b_{1} = 0.7` and :math:`b_{2} = 0.8` are coefficients (:ref:`Darmenova et al., 2009<Darmenovaetal2009>`), :math:`z_{0s}` is the soil roughness length. :math:`z_{0a}` is from :ref:`Prigent et al. (2005)<Prigentetal2005>` and should not be confused with the aerodynamic roughness length :math:`Z_{0}` from the model. This equation only applies for gridcells with VAI smaller than the VAI threshold for dust emission.
 
 The vegetation drag partition factor scales with vegetation density as captured by LAI following :ref:`Okin (2008)<Okin2008>` and :ref:`Pierre et al. (2014)<Pierreetal2014>`:
 
