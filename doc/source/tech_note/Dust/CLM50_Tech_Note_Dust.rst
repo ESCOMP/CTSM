@@ -89,7 +89,7 @@ where :math:`C_{tune} = 0.05` is a constant, and :math:`F_{d}` is the total emis
 
    \kappa = C_{\kappa} \frac{ u_{*st} - u_{st0} }{ u_{st0} }
 
-where :math:`C_{\kappa} = 2.7`, :math:`u_{st0} = 0.16` m s:sup:`-3`, :math:`C_{d0} = 4.4 \times 10^{-5}`, and :math:`C_{e} = 2.0`. :math:`F_{d}` thus roughly scales with :math:`u^{2+\kappa}_{*s}`, where :math:`\kappa \sim 1` over major deserts and :math:`\sim 3` or higher over semiarid and nonarid regions. Since :ref:`Kok et al. (2014a)<Koketal2014a>` has not measured :math:`\kappa > 3` in their measurements, we cap :math:`\kappa` at a maximum value (currently set as 2.5). :math:`u_{*st}` is the standardized wet fluid threshold at a typical atmospheric surface air density (Kok et al., 2014):
+where :math:`C_{\kappa} = 2.7`, :math:`u_{st0} = 0.16` m s :sup:`-3`, :math:`C_{d0} = 4.4 \times 10^{-5}`, and :math:`C_{e} = 2.0`. :math:`F_{d}` thus roughly scales with :math:`u^{2+\kappa}_{*s}`, where :math:`\kappa \sim 1` over major deserts and :math:`\sim 3` or higher over semiarid and nonarid regions. Since :ref:`Kok et al. (2014a)<Koketal2014a>` has not measured :math:`\kappa > 3` in their measurements, we cap :math:`\kappa` at a maximum value (currently set as 2.5). :math:`u_{*st}` is the standardized wet fluid threshold at a typical atmospheric surface air density (Kok et al., 2014):
 
 .. math::
    :label: 30.11
