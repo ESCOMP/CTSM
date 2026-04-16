@@ -8,7 +8,10 @@ Purpose and description of changes
 ----------------------------------
 
 This update brings in fates-side changes which allow for checking of
-fates land use data that uses either NaN or non-nan fill values.
+fates land use data that uses either NaN or non-nan fill values.  This
+also updates the fates land use data tool tag which captures the
+associated netcdf write encoding changes to ensure that the land use
+data will use non-nan values consistent with the latest default datasets.
 
 
 Bugs fixed
@@ -67,10 +70,10 @@ Changes answers relative to baseline:
 
 Other details
 -------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
-  fates: sci.1.92.0_api.44.0.0 -> sci.1.92.1_api.44.1.0
+  fates: sci.1.92.0_api.44.0.0 --> sci.1.92.1_api.44.1.0
+  fates/tools/landusedata: v0.1.1 --> v0.4.1
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
