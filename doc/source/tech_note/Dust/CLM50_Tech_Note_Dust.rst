@@ -96,7 +96,7 @@ where :math:`C_{\kappa} = 2.7`, :math:`u_{st0} = 0.16` m s :sup:`-3`, :math:`C_{
 
    u_{*st} = u_{*ft} \sqrt{ \rho_{atm} / \rho_{0atm}}
 
-where :math:`\rho_{0a} = 1.225` kg m\ :sup:`-3`. As can be seen, :math:`u_{*st}` scales with :math:`u_{*ft}` and thus soil moisture :math:`w`. Therefore, moisture :math:`w` decreases soil erodibility :math:`C_{d}` but increases dust emission sensitivity :math:`\kappa` to the winds.
+where :math:`\rho_{0atm} = 1.225` kg m\ :sup:`-3`. As can be seen, :math:`u_{*st}` scales with :math:`u_{*ft}` and thus soil moisture :math:`w`. Therefore, moisture :math:`w` decreases soil erodibility :math:`C_{d}` but increases dust emission sensitivity :math:`\kappa` to the winds.
 
 :ref:`Kok et al. (2014a)<Koketal2014a>` is different from many other dust emission parameterizations in the way that the soil erodibility :math:`C_{d}` is not a time-invariant input data but is a transient function, with erodibility increasing with reducing :math:`u^2_{*ft}` (and thus implicitly soil moisture). Similarly, the fragmentation exponent :math:`\kappa` is also transient but increases with enhancing soil moisture.
 
