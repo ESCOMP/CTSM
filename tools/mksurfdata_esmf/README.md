@@ -1,8 +1,6 @@
 # Instructions for Using mksurfdata_esmf to Create Surface Datasets
 #### $CTSMROOT/tools/mksurfdata_esmf/README
 
-Testing
-
 ## Table of contents
 1. [Purpose](#purpose)
 1. [Building](#building)
