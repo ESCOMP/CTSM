@@ -60,7 +60,7 @@ where :math:`w_{t}` increases with clay fraction :math:`f_{clay}`:
 
 where :math:`a=f_{clay}^{-1}` for tuning purposes. Note that this is different from the paper in which a = 1 was chosen. The coefficient 0.01 is used for converting :math:`w_{t}` from % to fraction  (kg water / kg soil), :math:`\theta` is the volumetric soil moisture (water+ice) in the topmost soil layer (m\ :sup:`-3`\ water \ m\ :sup:`-3` soil) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{bulk}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`f_{clay}` is the mass fraction of clay particles in the topmost soil layer and %clay comes from the surface dataset (section :numref:`Surface Data`).
 
-Another essential dust emission threshold is the impact / dynamic threshold :math:`u_{*it}`, which is the lowest friction velocity or wind stress to matintain saltation:
+Another essential dust emission threshold is the impact/dynamic threshold :math:`u_{*it}`, which is the lowest friction velocity or wind stress to matintain saltation:
 
 .. math::
    :label: 30.7
