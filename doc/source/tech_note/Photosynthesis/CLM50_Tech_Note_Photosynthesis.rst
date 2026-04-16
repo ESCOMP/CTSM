@@ -35,7 +35,7 @@ CLM5 calculates stomatal conductance using the Medlyn stomatal conductance model
 
    \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right.} P_{atm} } }
 
-where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2` :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance (:math:`\mu` mol m :sup:`-2` s\ :sup:`-1`), :math:`A_{n}` is leaf net photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa) where :math:`e_{i}` is the saturation vapor pressure (Pa) evaluated at the leaf temperature :math:`T_{v}`, and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa). :math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`) and are the same as those used in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`).
+where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2` :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance (:math:`\mu` mol m :sup:`-2` s\ :sup:`-1`), :math:`A_{n}` is leaf net photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa) where :math:`e_{i}` is the saturation vapor pressure (Pa) evaluated at the leaf temperature :math:`T_{v}`, and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa). :math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`) and is the same as those used in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`).
 
 The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for C\ :sub:`3` and C\ :sub:`4` plants. Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded (:math:`A^{sha}`) leaves to give :math:`r_{s}^{sun}` and :math:`r_{s}^{sha}`. Additionally, soil water influences stomatal resistance through plant hydraulic stress, detailed in the :ref:`rst_Plant Hydraulics` chapter.
 
@@ -266,7 +266,7 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
    :label: 9.17
 
    \begin{array}{rcl}
-   {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sha} \frac{i_{v,sha}}{i_{v,sun}}}  \\
+   {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sun} \frac{i_{v,sha}}{i_{v,sun}}}  \\
    {J_{\max 25 sha}}  & {=} & {J_{\max 25 sun}  \frac{i_{v,sha}}{i_{v,sun}}}  \\
    {T_{p sha}}        & {=} & {T_{p sun}        \frac{i_{v,sha}}{i_{v,sun}}}  \end{array}
 
@@ -275,8 +275,8 @@ Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coe
 .. math::
    :label: 9.18
 
-   i_{v,sun} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{f_{sun}*lai_e}\\
-   i_{v,sha} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{(1 - f_{sun})*lai_e}
+   i_{v,sun} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e}) / (k_{n,ext}+k_{b,ext})}{f_{sun}*lai_e}\\
+   i_{v,sha} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e}) / (k_{n,ext}+k_{b,ext})}{(1 - f_{sun})*lai_e}
 
 k_{n,ext} is the extinction coefficient for N through the canopy (0.3).  k_{b,ext} is the direct beam extinction coefficient calculated in the surface albedo routine, and :math:`f_{sun}` is the fraction of sunlit leaves, both derived from Chapter :numref:`rst_Surface Albedos`.
 
@@ -352,7 +352,7 @@ and
 
    D_{l} = \frac {max(e_{i} - e_{a},50)} {1000}
 
-Stomatal conductance, as solved by equation :eq:`9.36` (mol m :sup:`-2` s :sup:`-1`), is the larger of the two roots that satisfy the quadratic equation. Values for :math:`c_{i}` are given by
+Stomatal conductance, as solved by equation :eq:`9.37` (mol m :sup:`-2` s :sup:`-1`), is the larger of the two roots that satisfy the quadratic equation. Values for :math:`c_{i}` are given by
 
 .. math::
    :label: 9.40

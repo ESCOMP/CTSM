@@ -38,9 +38,7 @@ def _machine_from_hostname(hostname):
     be extended if there are other machines with special translation
     rules from hostname to machine name.
     """
-    if re.match(r"cheyenne\d+", hostname):
-        machine = "cheyenne"
-    elif re.match(r"derecho\d+", hostname):
+    if re.match(r"derecho\d+", hostname):
         machine = "derecho"
     else:
         machine = hostname
