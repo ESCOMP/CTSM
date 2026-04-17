@@ -544,6 +544,7 @@ contains
      do fc = 1, num_soilc
         c = filter_soilc(fc)
         g= col%gridcell(c)
+        tgswt(g) = max(0._r8, min(1._r8, tgswt(g)))
         if(grc%latdeg(g) < cnfire_const%borealat )then
             if ((trotr1_col(c)+trotr2_col(c))*tgswt(g)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
                baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
