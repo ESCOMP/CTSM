@@ -49,6 +49,7 @@ module decompMod
   public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
   public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
   public :: decompmod_allocate_clumps   ! Allocate clumps array
+  public :: decompmod_allocate_gindex   ! Allocate the global index arrays based on the input endg for this processor
   public :: decompmod_clean             ! Deallocate memory used by decompMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -803,6 +804,25 @@ contains
      end if
 
   end subroutine decompmod_allocate_clumps
+
+  !-----------------------------------------------------------------------
+  subroutine decompmod_allocate_gindex( endg )
+      ! Allocate the gindex_global array based on input endg
+      integer, intent(in) :: endg
+      integer :: ier ! error code
+
+      if ( endg < 1 )then
+         ier = 1
+         call shr_abort_abort(string="endg is NOT set before allocation", file=sourcefile, line=__LINE__)
+         return
+      end if
+      allocate(gindex_global(1:endg), stat=ier)
+      if (ier /= 0) then
+         call shr_abort_abort(string="allocation error for gindex_global", file=sourcefile, line=__LINE__)
+         return
+      end if
+
+  end subroutine decompmod_allocate_gindex
 
   !-----------------------------------------------------------------------
   subroutine decompmod_clean()

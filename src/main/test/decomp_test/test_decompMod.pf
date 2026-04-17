@@ -43,6 +43,7 @@ contains
     class(TestDecompMod), intent(inout) :: this
 
     call set_decomp_info( ni=ni, nj=nj )
+    call decompmod_allocate_gindex( ni*nj )
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================

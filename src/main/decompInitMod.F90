@@ -354,16 +354,7 @@ contains
          type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
 
          ier = 0
-         if ( bounds%endg < 1 )then
-            ier = 1
-            call endrun(msg="endg is NOT set before allocation", file=sourcefile, line=__LINE__)
-            return
-         end if
-         allocate(gindex_global(1:bounds%endg), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg="allocation error for gindex_global", file=sourcefile, line=__LINE__)
-            return
-         end if
+         call decompmod_allocate_gindex( bounds%endg )
          ! TODO: Remove the data, and only use the subroutine to calculate when needed
          allocate(procinfo%ggidx(procinfo%begg:procinfo%endg), stat=ier)
          if (ier /= 0) then
