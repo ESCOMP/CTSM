@@ -312,8 +312,6 @@ contains
          !
          ! Long-term allocation:
          ! Arrays from decompMod are allocated here
-         ! TODO: This should move to a method in decompMod
-         ! as should the deallocates
          !
          ! Temporary allocation:
          ! Allocate some temporaries used only in decompInit_lnd
@@ -327,17 +325,7 @@ contains
          !------------------------------------------------------------------------------
          call procinfo%InitAllocate( clump_pproc )
 
-         if ( nclumps < 1 )then
-            call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
-            return
-         end if
-         ! TODO: This will be moved to the other allocate and for a smaller size ----
-         allocate(clumps(nclumps), stat=ier)
-         if (ier /= 0) then
-            write(iulog,*) 'allocation error for clumps: nclumps, ier=', nclumps, ier
-            call endrun(msg='allocation error for clumps', file=sourcefile, line=__LINE__)
-            return
-         end if
+         call decompmod_allocate_clumps( )
 
          !-------------------------------------------------------------
          ! Temporary arrays that are just used in decompInit_lnd

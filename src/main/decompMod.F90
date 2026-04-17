@@ -48,6 +48,7 @@ module decompMod
   public :: get_subgrid_level_from_name ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
   public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
   public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
+  public :: decompmod_allocate_clumps   ! Allocate clumps array
   public :: decompmod_clean             ! Deallocate memory used by decompMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -783,6 +784,25 @@ contains
     end select
 
   end subroutine get_subgrid_level_gindex
+
+  !-----------------------------------------------------------------------
+  subroutine decompmod_allocate_clumps()
+     ! Allocate the clumps array based on nclumps
+     integer :: ier ! error code
+
+     if ( nclumps < 1 )then
+        call shr_abort_abort(string="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
+        return
+     end if
+     ! TODO: Allocate only a smaller size (clump_pproc)
+     allocate(clumps(nclumps), stat=ier)
+     if (ier /= 0) then
+        write(iulog,*) 'allocation error for clumps: nclumps, ier=', nclumps, ier
+        call shr_abort_abort(string='allocation error for clumps', file=sourcefile, line=__LINE__)
+        return
+     end if
+
+  end subroutine decompmod_allocate_clumps
 
   !-----------------------------------------------------------------------
   subroutine decompmod_clean()

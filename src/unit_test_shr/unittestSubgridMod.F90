@@ -180,7 +180,7 @@ contains
     !
     ! USES:
     use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, nglob_x, nglob_y
-    use decompMod    , only : clumps, nclumps
+    use decompMod    , only : clumps, nclumps, decompmod_allocate_clumps
     use spmdMod      , only : iam
     ! !ARGUMENTS:
     integer, intent(in), optional :: ni ! number of grid cells in the x direction;
@@ -197,7 +197,7 @@ contains
     procinfo%nclumps = nclumps
     call procinfo%InitAllocate( nclumps )
     procinfo%cid(:) = 1
-    allocate(clumps(procinfo%nclumps))
+    call decompmod_allocate_clumps()
     clumps(:)%owner = iam
 
     if ( present(ni) .and. present(nj) ) then
