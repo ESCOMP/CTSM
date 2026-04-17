@@ -84,6 +84,7 @@ module decompMod
      integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   contains
+     procedure, public :: InitAllocate              ! Allocate memory for processor_type arrays based on nclumps and proc totals
      procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
      procedure, public :: calc_globalxy_indices     ! Get the global i/j indices from the global vector grid index
   end type processor_type
@@ -132,6 +133,21 @@ module decompMod
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine InitAllocate( this, clump_pproc )
+      ! Allocate memory for processor_type arrays based on nclumps and proc totals
+      class(processor_type), intent(inout) :: this
+      integer, intent(in) :: clump_pproc ! number of clumps per processor
+
+      integer :: ier ! error code
+
+      allocate(this%cid(clump_pproc), stat=ier)
+      if (ier /= 0) then
+         call shr_abort_abort(string='allocation error for this%cid', file=sourcefile, line=__LINE__)
+         return
+      endif
+   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
   pure function calc_global_index_fromij( this, g ) result(global_index)

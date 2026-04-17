@@ -180,7 +180,7 @@ contains
     !
     ! USES:
     use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, nglob_x, nglob_y
-    use decompMod    , only : clumps
+    use decompMod    , only : clumps, nclumps
     use spmdMod      , only : iam
     ! !ARGUMENTS:
     integer, intent(in), optional :: ni ! number of grid cells in the x direction;
@@ -193,8 +193,9 @@ contains
 
     ! For now, not setting up clump info, because it isn't needed in any unit tests. We
     ! may have to fix this in the future.
-    procinfo%nclumps = 1
-    allocate(procinfo%cid(procinfo%nclumps))
+    nclumps = 1
+    procinfo%nclumps = nclumps
+    call procinfo%InitAllocate( nclumps )
     procinfo%cid(:) = 1
     allocate(clumps(procinfo%nclumps))
     clumps(:)%owner = iam

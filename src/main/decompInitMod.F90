@@ -325,11 +325,7 @@ contains
          !------------------------------------------------------------------------------
          ! Allocate the longer term decompMod data
          !------------------------------------------------------------------------------
-         allocate(procinfo%cid(clump_pproc), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%cid', file=sourcefile, line=__LINE__)
-            return
-         endif
+         call procinfo%InitAllocate( clump_pproc )
 
          if ( nclumps < 1 )then
             call endrun(msg="nclumps is NOT set before allocation", file=sourcefile, line=__LINE__)
