@@ -87,6 +87,7 @@ module decompMod
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   contains
      procedure, public :: InitAllocate              ! Allocate memory for processor_type arrays based on nclumps and proc totals
+     procedure, public :: AllocateAfterGCellSet     ! Allocate memory for rest of the processor_type arrays after the gridcell bounds are figured out
      procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
      procedure, public :: calc_globalxy_indices     ! Get the global i/j indices from the global vector grid index
   end type processor_type
@@ -149,7 +150,35 @@ contains
          call shr_abort_abort(string='allocation error for this%cid', file=sourcefile, line=__LINE__)
          return
       endif
-   end subroutine InitAllocate
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine AllocateAfterGCellSet( this )
+      ! Allocate memory for processor_type arrays after teh gridcell sizes are set
+      class(processor_type), intent(inout) :: this
+
+      integer :: ier ! error code
+      ! TODO: Remove the data, and only use the subroutine to calculate when needed
+      allocate(this%ggidx(this%begg:this%endg), stat=ier)
+      if (ier /= 0) then
+         call shr_abort_abort(string='allocation error for this%ggidx', file=sourcefile, line=__LINE__)
+         return
+      endif
+      this%ggidx(:) = -1
+      allocate(this%gi(this%begg:this%endg), stat=ier)
+      if (ier /= 0) then
+         call shr_abort_abort(string='allocation error for this%gi', file=sourcefile, line=__LINE__)
+         return
+      endif
+      this%gi(:) = -1
+      allocate(this%gj(this%begg:this%endg), stat=ier)
+      if (ier /= 0) then
+         call shr_abort_abort(string='allocation error for this%gj', file=sourcefile, line=__LINE__)
+         return
+      endif
+      this%gj(:) = -1
+
+  end subroutine AllocateAfterGCellSet
 
   !-----------------------------------------------------------------------
   pure function calc_global_index_fromij( this, g ) result(global_index)

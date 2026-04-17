@@ -355,25 +355,7 @@ contains
 
          ier = 0
          call decompmod_allocate_gindex( bounds%endg )
-         ! TODO: Remove the data, and only use the subroutine to calculate when needed
-         allocate(procinfo%ggidx(procinfo%begg:procinfo%endg), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%ggidx', file=sourcefile, line=__LINE__)
-            return
-         endif
-         procinfo%ggidx(:) = -1
-         allocate(procinfo%gi(procinfo%begg:procinfo%endg), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%gi', file=sourcefile, line=__LINE__)
-            return
-         endif
-         procinfo%gi(:) = -1
-         allocate(procinfo%gj(procinfo%begg:procinfo%endg), stat=ier)
-         if (ier /= 0) then
-            call endrun(msg='allocation error for procinfo%gj', file=sourcefile, line=__LINE__)
-            return
-         endif
-         procinfo%gj(:) = -1
+         call procinfo%AllocateAfterGCellSet()
       end subroutine decompInit_lnd_gindex_global_allocate
 
       !------------------------------------------------------------------------------
