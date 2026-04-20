@@ -195,6 +195,13 @@
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
     <phase name="MODEL_BUILD">
       <status>FAIL</status>
+      <issue>ESCOMP/mizuRoute#615</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_P64x18.f19_f19_rMERIT_mg17.I2000Clm60SpMizGs.derecho_intel.mizuroute-default">
+    <phase name="RUN">
+      <status>FAIL</status>
       <issue>ESCOMP/mizuRoute#614</issue>
     </phase>
   </test>
@@ -254,13 +261,6 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3789</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdLUH2">
     <phase name="RUN">
       <status>FAIL</status>
@@ -272,20 +272,6 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2321</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestArea">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3789</issue>
-    </phase>
-  </test>
-
-  <test name="ERS_D_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdLUH2HarvestMass">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3789</issue>
     </phase>
   </test>
 

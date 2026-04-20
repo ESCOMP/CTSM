@@ -1,4 +1,153 @@
 ===============================================================
+Tag name: ctsm5.4.033
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Fri Apr 17 10:39:02 AM MDT 2026
+One-line Summary: Update fates tag with missing land use data check fix
+
+Purpose and description of changes
+----------------------------------
+
+This update brings in fates-side changes which allow for checking of
+fates land use data that uses either NaN or non-nan fill values.  This
+also updates the fates land use data tool tag which captures the
+associated netcdf write encoding changes to ensure that the land use
+data will use non-nan values consistent with the latest default datasets.
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #3789
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+- Removes the FatesColdLUH testmods from the expected failures list
+
+Contributors:
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: B4B, except for FATES
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.92.0_api.44.0.0 --> sci.1.92.1_api.44.1.0
+  fates/tools/landusedata: v0.1.1 --> v0.4.1
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+https://github.com/ESCOMP/CTSM/pull/3926
+https://github.com/NGEET/fates/pull/1555
+https://github.com/NGEET/tools-fates-landusedata/pull/41
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.032
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Apr 10 11:19:34 MDT 2026
+One-line Summary: Simplify doc build messaging.
+
+Purpose and description of changes
+----------------------------------
+
+Updates doc-builder and related scripts to reduce noise during documentation build. Adds --verbose|-V option to print complete output.
+
+
+Testing summary:
+----------------
+
+Only documentation tests were needed. Baselines for this tag are just softlinks to ctsm5.4.031.
+
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- doc-builder updated from v3.0.1 to v3.1.0.
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #3920: ctsm5.4.032: Simplify messaging during docs build by samsrabin](https://github.com/ESCOMP/CTSM/pull/3920)
+- [ESCOMP/CTSM Pull Request #3921: ctsm5.4.032: Simplify messaging during docs build [update Changelog/Changesum] by samsrabin](https://github.com/ESCOMP/CTSM/pull/3921)
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.031
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu Apr  9 13:30:18 MDT 2026
+One-line Summary: b4b-dev merge 2026-04-09
+
+Purpose and description of changes
+----------------------------------
+
+Includes the following PRs:
+- [ESCOMP/CTSM Pull Request #3833: Fix typos and RST issues in Surface Characterization tech note by huiqi-wang](https://github.com/ESCOMP/CTSM/pull/3833)
+- [ESCOMP/CTSM Pull Request #3834: Fix grammar, equation 9.17/9.18 LaTeX, and eq. ref in Photosynthesis … by huiqi-wang](https://github.com/ESCOMP/CTSM/pull/3834)
+- [ESCOMP/CTSM Pull Request #3837: Documentation updates: New hist time handling by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/3837)
+- [ESCOMP/CTSM Pull Request #3896: Testlist review and update for aux_cime_baselines and prealpha by ekluzek](https://github.com/ESCOMP/CTSM/pull/3896)
+- [ESCOMP/CTSM Pull Request #3903: Fix allocate error message typo in mkurbanparMod by olyson](https://github.com/ESCOMP/CTSM/pull/3903)
+- [ESCOMP/CTSM Pull Request #3838: Replace cheyenne references with derecho throughout by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/3838)
+- [ESCOMP/CTSM Pull Request #3908: Update documentation documentation by samsrabin](https://github.com/ESCOMP/CTSM/pull/3908)
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [ESCOMP/CTSM Issue #3171: Docs needed: New history time handling](https://github.com/ESCOMP/CTSM/issues/3171)
+- [ESCOMP/CTSM Issue #3784: Review tests in aux_cime_baselines and reconcile this test list with prealpha](https://github.com/ESCOMP/CTSM/issues/3784)
+- [ESCOMP/CTSM Issue #3898: A typo in the mkurbanparMod.F90 code](https://github.com/ESCOMP/CTSM/issues/3898)
+- [ESCOMP/CTSM Issue #2223: Docs: Change Cheyenne references to Derecho](https://github.com/ESCOMP/CTSM/issues/2223)
+- [ESCOMP/CTSM Issue #3892: User's Guide: Add "Contributing to documentation" documentation](https://github.com/ESCOMP/CTSM/issues/3892)
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Adjusts some of the prealpha and aux_cime_baseline tests.
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- doc-builder updated from v2.2.6 to v3.0.1
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #3917: Merge b4b-dev to master 2026-04-09 by samsrabin](https://github.com/ESCOMP/CTSM/pull/3917)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.030
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Fri Apr  6 04:01:00 PM MDT 2026

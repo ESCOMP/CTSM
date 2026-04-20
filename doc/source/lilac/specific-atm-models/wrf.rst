@@ -27,7 +27,7 @@ and :numref:`wrf-set-ctsm-runtime-options`.
   If CIME is not ported to your machine, please see `instructions on porting CIME
   <https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html#porting>`_.
 
-  In this example we assume NCAR's ``Cheyenne`` HPC system in particular.
+  In this example we assume NCAR's ``derecho`` HPC system in particular.
 
 .. _clone-WRF-CTSM-repositories:
 
@@ -56,9 +56,9 @@ instructions from section :numref:`obtaining-and-building-ctsm`::
 
     ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
 
-For example on ``Cheyenne`` and for ``Intel`` compiler::
+For example on ``derecho`` and for ``Intel`` compiler::
 
-    ./lilac/build_ctsm ctsm_build_dir --compiler intel --machine cheyenne
+    ./lilac/build_ctsm ctsm_build_dir --compiler intel --machine derecho
 
 .. warning::
 
@@ -352,32 +352,31 @@ the following files to your WRF run directory::
     cp /glade/scratch/negins/wrf_ctsm_files/wrfinput_d01 .
     cp /glade/scratch/negins/wrf_ctsm_files/wrfbdy_d01 .
 
-Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
-Please check NCAR CISL's `instructions on running a batch job on Cheyenne.
-<https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs>`__
+Now run WRF-CTSM. On derecho this means submitting a batch job to PBS (Pro workload management system).
+Please check NCAR CISL's `instructions on running a batch job on derecho.
+<https://www2.cisl.ucar.edu/resources/computational-systems/derecho/running-jobs/submitting-jobs-pbs>`__
 
-A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
+A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
 
 .. code-block:: Tcsh
 
-    #!/bin/tcsh
+    #!/bin/bash
     #PBS -N your_job_name
     #PBS -A your_project_code
     #PBS -l walltime=01:00:00
-    #PBS -q queue_name
+    #PBS -q main
+    #PBS -r n
+    #PBS -S /bin/bash
     #PBS -j oe
     #PBS -k eod
     #PBS -m abe
     #PBS -M your_email_address
-    #PBS -l select=2:ncpus=36:mpiprocs=36
+    #PBS -l select=1:ncpus=128:mpiprocs=128
 
     ### Run the executable
-    setenv MPI_TYPE_DEPTH 16
-    mpiexec_mpt ./wrf.exe
+    mpibind ./wrf.exe
 
-(See :numref:`runtime-environment-variables` for a description of the need to set ``MPI_TYPE_DEPTH`` on ``Cheyenne``.)
-
-To submit a batch job to the ``Cheyenne`` queues, use ``qsub`` command followed
+To submit a batch job to the ``derecho`` queues, use ``qsub`` command followed
 by the PBS script name.
 For example, if you named this script ``run_wrf_ctsm.csh``, submit the job like this::
 

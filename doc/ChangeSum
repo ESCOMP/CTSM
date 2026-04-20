@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.033 glemieux 04/17/2026 Update fates tag with missing land use data check fix
+       ctsm5.4.032 samrabin 04/10/2026 Simplify doc build messaging.
+       ctsm5.4.031 samrabin 04/09/2026 b4b-dev merge 2026-04-09
        ctsm5.4.030 glemieux 04/03/2026 Add FATES namelist option for land use transition logic
        ctsm5.4.029   slevis 03/30/2026 Merge b4b-dev to master
        ctsm5.4.028     erik 03/26/2026 Update to cmeps version with roundoff changes when running with CISM
