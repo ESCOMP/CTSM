@@ -711,24 +711,29 @@ In the case of a vegetated surface, the sensible heat :math:`H` and water vapor 
 Theory
 ^^^^^^^^^^^^
 
-The air within the canopy is assumed to have negligible capacity to store heat so that the sensible heat flux :math:`H` between the surface at height :math:`z_{0h} +d` and the atmosphere at height :math:`z_{atm,\, h}` must be balanced by the sum of the sensible heat from the vegetation :math:`H_{v}` and the ground :math:`H_{g}`
+The air within the canopy is assumed to have negligible capacity to store heat so that the sensible heat flux :math:`H` between the surface at height :math:`z_{0h} +d` and the atmosphere at height :math:`z_{atm,\, h}` must be balanced by the sum of the sensible heat from the vegetation (:math:`H_{leaf}` and :math:`H_{stem}`) and the ground (:math:`H_{g}`)
 
 .. math::
    :label: 5.86
 
-   H=H_{v} +H_{g}
+   H=H_{leaf}+H_{stem}+H_{g}
 
 where, with reference to :numref:`Figure Schematic diagram of sensible heat fluxes`,
 
 .. math::
    :label: 5.87
 
-   H=-\rho _{atm} C_{p} \frac{\left(\theta _{atm} -T_{s} \right)}{r_{ah} }
+   H=-\rho _{atm} C_{p} \frac{\left(\theta _{atm}-T_{s} \right)}{r_{ah} }
 
 .. math::
    :label: 5.88
 
-   H_{v} =-\rho _{atm} C_{p} \left(T_{s} -T_{v} \right)\frac{\left(L+S\right)}{r_{b} }
+   H_{leaf} =-\rho _{atm} C_{p} \frac{\left(T_{s}-T_{leaf} \right)}{r_{leaf} }
+
+.. math::
+   :label: 5.88b
+
+   H_{stem} =-\rho _{atm} C_{p} \frac{\left(T_{s}-T_{stem} \right)}{r_{stem} }
 
 .. math::
    :label: 5.89
@@ -740,12 +745,12 @@ where
 .. math::
    :label: 5.90
 
-   H_{soil} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{1} \right)}{r_{ah} ^{{'} } }
+   H_{soil} =-\rho _{atm} C_{p} \frac{\left(T_{s}-T_{1} \right)}{r_{ah} ^{{'} } }
 
 .. math::
    :label: 5.91
 
-   H_{sno} =-\rho _{atm} C_{p} \frac{\left(T_{s} -T_{snl+1} \right)}{r_{ah} ^{{'} } }
+   H_{sno} =-\rho _{atm} C_{p} \frac{\left(T_{s}-T_{snl+1} \right)}{r_{ah} ^{{'} } }
 
 .. math::
    :label: 5.92
@@ -754,7 +759,34 @@ where
 
 where :math:`\rho _{atm}` is the density of atmospheric air (kg m\ :sup:`-3`), :math:`C_{p}` is the specific heat capacity of air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`Table Physical constants`), :math:`\theta _{atm}` is the atmospheric potential temperature (K), and :math:`r_{ah}` is the aerodynamic resistance to sensible heat transfer (s m\ :sup:`-1`).
 
-Here, :math:`T_{s}` is the surface temperature at height :math:`z_{0h} +d`, also referred to as the canopy air temperature. :math:`L` and :math:`S` are the exposed leaf and stem area indices (section :numref:`Phenology and vegetation burial by snow`), :math:`r_{b}` is the leaf boundary layer resistance (s m\ :sup:`-1`), and :math:`r_{ah} ^{{'} }` is the aerodynamic resistance (s m\ :sup:`-1`) to heat transfer between the ground at height :math:`z_{0h} ^{{'} }` and the canopy air at height :math:`z_{0h} +d`.
+Here, :math:`T_{s}` is the surface temperature at height :math:`z_{0h} +d`, also referred to as the canopy air temperature. :math:`T_{leaf}` and :math:`T_{stem}` are the leaf and stem temperatures, :math:`r_{leaf}` and :math:`r_{stem}` are the  resistances to sensible heat transfer (s m\ :sup:`-1`), and :math:`r_{ah} ^{{'} }` is the aerodynamic resistance (s m\ :sup:`-1`) to heat transfer between the ground at height :math:`z_{0h} ^{{'} }` and the canopy air at height :math:`z_{0h} +d`.
+
+The leaf resistance is
+
+.. math::
+   :label: 5.92b
+
+   r_{leaf} =\frac{r_{b}}{A_{leaf} }
+
+where :math:`r_{b}` is the leaf boundary layer resistance (s m\ :sup:`-1`), :math:`A_{leaf} = 2 L` is the (two-sided) surface area of leaves per unit ground area and :math:`L` is the exposed leaf area index (section :numref:`Phenology and vegetation burial by snow`).
+
+The stem resistance is
+
+.. math::
+   :label: 5.92c
+
+   r_{stem} =\frac{\left(r_{b} + r_{bole}\right)}{A_{stem} }
+
+where :math:`r_{bole}` is the resistance to heat transfer between the interior of the tree and the tree surface (s m\ :sup:`-1`), and :math:`A_{stem}` is the surface area of stems per unit ground area.
+
+The stem surface area is
+
+.. math::
+   :label: 5.92d
+
+   A_{stem} =N_{tree} k_{A} \left(\pi D_{bh}\right) h_{tree}
+
+where :math:`N_{tree}` is the number of trees per m\ :sup:`2`, :math:`k_{A}` is an adjustable parameter to account for the departure of tree area from a cylinder, :math:`D_{bh}` is the mean tree breast-height diameter (m), and :math:`h_{tree}` is the mean tree height (m).
 
 .. _Figure Schematic diagram of sensible heat fluxes:
 
@@ -775,7 +807,7 @@ Equations :eq:`5.86` - :eq:`5.89` can be solved for the canopy air temperature :
 .. math::
    :label: 5.93
 
-   T_{s} =\frac{c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} +c_{v}^{h} T_{v} }{c_{a}^{h} +c_{g}^{h} +c_{v}^{h} }
+   T_{s} =\frac{c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} +c_{leaf}^{h} T_{leaf} +c_{stem}^{h} T_{stem}  }{c_{a}^{h} +c_{g}^{h} +c_{leaf}^{h} +c_{stem}^{h} }
 
 where
 
@@ -792,24 +824,36 @@ where
 .. math::
    :label: 5.96
 
-   c_{v}^{h} =\frac{\left(L+S\right)}{r_{b} }
+   c_{leaf}^{h} =\frac{1}{r_{leaf} }
 
-are the sensible heat conductances from the canopy air to the atmosphere, the ground to canopy air, and leaf surface to canopy air, respectively (m s\ :sup:`-1`).
+.. math::
+   :label: 5.96b
 
-When the expression for :math:`T_{s}` is substituted into equation :eq:`5.88`, the sensible heat flux from vegetation :math:`H_{v}` is a function of :math:`\theta _{atm}`, :math:`T_{g}`, and :math:`T_{v}`
+   c_{stem}^{h} =\frac{1}{r_{stem} }
+
+are the sensible heat conductances from the canopy air to the atmosphere, the ground to canopy air, the leaf surface to canopy air, and the stem surface to canopy air, respectively (m s\ :sup:`-1`).
+
+When the expression for :math:`T_{s}` is substituted into equation :eq:`5.88`, the sensible heat flux from leaves :math:`H_{leaf}` is a function of :math:`\theta _{atm}`, :math:`T_{g}`, :math:`T_{leaf}`, and :math:`T_{stem}`
 
 .. math::
    :label: 5.97
 
-   H_{v} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)T_{v} \right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
+   H_{leaf} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} +c_{stem}^{h} T_{stem} -\left(c_{a}^{h} +c_{g}^{h}  +c_{stem}^{h} \right)T_{leaf} \right]\frac{c_{leaf}^{h} }{c_{a}^{h} +c_{leaf}^{h}  +c_{stem}^{h} +c_{g}^{h} } .
 
-Similarly, the expression for :math:`T_{s}` can be substituted into equations :eq:`5.89`, :eq:`5.90`, :eq:`5.91`, and :eq:`5.92` to obtain the sensible heat flux from ground :math:`H_{g}`
+Similarly, :math:`T_{s}` can be substituted into equation :eq:`5.88b` to obtain the sensible heat flux from stems :math:`H_{stem}`
+
+.. math::
+   :label: 5.97b
+
+   H_{stem} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} +c_{leaf}^{h} T_{leaf} -\left(c_{a}^{h} +c_{g}^{h}  +c_{leaf}^{h} \right)T_{stem} \right]\frac{c_{stem}^{h} }{c_{a}^{h} +c_{leaf}^{h} +c_{stem}^{h} +c_{g}^{h} } ,
+
+and :math:`T_{s}` can be substituted into equations :eq:`5.89`, :eq:`5.90`, :eq:`5.91`, and :eq:`5.92` to obtain the sensible heat flux from ground :math:`H_{g}`
 
 .. math::
    :label: 5.98
 
-   H_{g} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{v}^{h} T_{v} -\left(c_{a}^{h} +c_{v}^{h} \right)T_{g} \right]\frac{c_{g}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
-
+   H_{g} = -\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{leaf}^{h} T_{leaf} +c_{stem}^{h} T_{stem}-\left(c_{a}^{h} +c_{leaf}^{h} +c_{stem}^{h} \right)T_{g} \right]\frac{c_{g}^{h} }{c_{a}^{h} +c_{leaf}^{h} +c_{stem}^{h} +c_{g}^{h} } .
+   
 The air within the canopy is assumed to have negligible capacity to store water vapor so that the water vapor flux :math:`E` between the surface at height :math:`z_{0w} +d` and the atmosphere at height :math:`z_{atm,\, w}` must be balanced by the sum of the water vapor flux from the vegetation :math:`E_{v}` and the ground :math:`E_{g}`
 
 .. math::
@@ -1014,7 +1058,7 @@ The ratio of wind speed at canopy height to friction velocity, :math:`\frac{U_{h
 .. math::
    :label: 5.125b
 
-   \frac{U_{h}} {u_{*} } =(C_{S} + \lambda C_{R})^{0.5} \exp(\frac{\min \left(\lambda, \lambda_{\max}\right) c U_{h}} {2 u_{*}})
+   \frac{U_{h}} {u_{*} } =(C_{S} + \lambda C_{R})^{0.5} \exp(\frac{\min \left(\lambda, \lambda_{\max}\right) c U_{h}} {2 u_{*} })
 
 where :math:`C_{S}` represents the drag coefficient of the ground in the absence of vegetation, :math:`C_{R}` is the drag coefficient of an isolated roughness element (plant), and :math:`c` is an empirical constant. These three are pft-dependent parameters (:numref:`Table Plant functional type aerodynamic parameters`). :math:`\lambda_{max}` is the maximum :math:`\lambda` above which :math:`\frac{U_{h}} {u_{*}}` becomes constant. :math:`\lambda_{max}` is set to the value of :math:`\lambda` for which :eq:`5.125b`, in the absence of :math:`\lambda_{max}`, would have its minimum. :math:`\lambda_{max}` is also a pft-dependent parameter (:numref:`Table Plant functional type aerodynamic parameters`). :eq:`5.125b` can be written as
 
@@ -1131,57 +1175,141 @@ where :math:`c_{d1} =7.5`.
 Numerical Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Canopy energy conservation gives
+Canopy energy conservation gives the temperature change of the leaves within the canopy 
 
 .. math::
    :label: 5.128
 
-   -\overrightarrow{S}_{v} +\overrightarrow{L}_{v} \left(T_{v} \right)+H_{v} \left(T_{v} \right)+\lambda E_{v} \left(T_{v} \right)=0
+   \overrightarrow{S}_{leaf} + \overrightarrow{L}_{leaf} \left(T_{leaf} \right)
+   - H_{leaf} \left(T_{leaf} \right) - \lambda E_{leaf} 
+   \left(T_{leaf} \right) = C_{leaf} \frac{dT_{leaf}}{dt}
 
-where :math:`\overrightarrow{S}_{v}` is the solar radiation absorbed by the vegetation (section :numref:`Solar Fluxes`), :math:`\overrightarrow{L}_{v}` is the net longwave radiation absorbed by vegetation (section :numref:`Longwave Fluxes`), and :math:`H_{v}` and :math:`\lambda E_{v}` are the sensible and latent heat fluxes from vegetation, respectively. The term :math:`\lambda` is taken to be the latent heat of vaporization :math:`\lambda _{vap}` (:numref:`Table Physical constants`).
+where :math:`\overrightarrow{S}_{leaf}` is the solar radiation absorbed by the leaves (section :numref:`Solar Fluxes`), :math:`\overrightarrow{L}_{leaf}` is the net longwave radiation absorbed by the leaves (section :numref:`Longwave Fluxes`), and :math:`H_{leaf}` and :math:`\lambda E_{leaf}` are the sensible and latent heat fluxes from the leaves, respectively. :math:`C_{leaf}` is the areametric heat capacity of the leaves, and :math:`\lambda` is the latent heat of vaporization :math:`\lambda _{vap}` (:numref:`Table Physical constants`).
 
-:math:`\overrightarrow{L}_{v}`, :math:`H_{v}`, and :math:`\lambda E_{v}` depend on the vegetation temperature :math:`T_{v}`. The Newton-Raphson method for finding roots of non-linear systems of equations can be applied to iteratively solve for :math:`T_{v}` as
+:math:`C_{leaf}` (J m\ :sup:`-2` K\ :sup:`-1`) is the sum of the heat capacities of the dry leaves and of the water contained in the leaves multiplied by the dry leaf mass per area
+
+.. math::
+   :label: 5.128b
+
+   C_{leaf} = \left(c_{dry} + \frac{f_{w}}{1-f_{w}} c_{water}\right) M_{leaf}
+   
+where :math:`M_{leaf} = M_{a} \ L` and :math:`M_{a}` (kg m\ :sup:`-2`) is the leaf mass per leaf area.
+   
+The stem energy balance is described by
+
+.. math::
+   :label: 5.128c
+      
+   \begin{array}{lr}
+   \overrightarrow{S}_{stem} + \overrightarrow{L}_{stem} \left(T_{stem} \right) 
+   - H_{stem} \left(T_{stem} \right) 
+   = C_{stem} \frac{dT_{stem}}{dt}
+   \end{array}
+
+where :math:`\overrightarrow{S}_{stem}` is the solar radiation absorbed by the stems, :math:`\overrightarrow{L}_{stem}`  is the net longwave radiation  absorbed by the stems, :math:`H_{stem}`  is the sensible flux from the stems to the canopy air space, and :math:`C_{stem}` is the areametric heat capacity of the stems.
+
+:math:`C_{stem}` (J m\ :sup:`-2` K\ :sup:`-1`) is the sum of the heat capacities of the dry wood and of the water contained in the stems multiplied by the mass of biomass per area
+
+.. math::
+   :label: 5.128d
+   
+      C_{stem} = \left(c_{dry} + \frac{f_{w}}{1-f_{w}} c_{water}\right)  M_{tree} 
+
+where :math:`c_{dry}` (J kg\ :sup:`-1` K\ :sup:`-1`) is the heat capacity of the dry wood, :math:`c_{water}` (J kg\ :sup:`-1` K\ :sup:`-1`) is the heat capacity of water, and :math:`f_{w}` is the assumed fraction of fresh biomass that is water.  The tree dry mass per area is calculated as
+
+.. math::
+   :label: 5.128e
+   
+      M_{tree} = N_{tree} \ \rho_{wood} \ V_{tree} 
+
+where :math:`\rho_{wood}` (kg m\ :sup:`-3`) is the density of dry wood, :math:`N_{tree}` (m\ :sup:`-2`) is the number of trees per square meter, and  :math:`V_{tree}` (m\ :sup:`3`), the individual tree volume, is calculated by assuming that trees are cylindrical
+
+.. math::
+   :label: 5.128f
+      
+      V_{tree} = k_{V} \ \pi \left( \frac{D_{bh}}{2} \right)^{2} h_{tree}
+
+where :math:`D_{bh}` is the mean breast-height diameter and :math:`h_{tree}` is the mean tree height.  :math:`k_{V}` is an adjustable parameter to account for the departure of tree volume from a cylinder.  
+
+The radiation absorbed by leaves and stems is assumed to be a constant fraction of the radiation absorbed by the canopy
+
+.. math::
+   :label: 5.128g
+
+   \begin{array}{lr}
+   \overrightarrow{S}_{leaf} & = & f_{leaf} \ \overrightarrow{S}_{canopy} \\
+   \overrightarrow{L}_{leaf} & = & f_{leaf} \ \overrightarrow{L}_{canopy} \\ 
+   \overrightarrow{S}_{stem} & = & f_{stem} \ \overrightarrow{S}_{canopy} \\
+   \overrightarrow{L}_{stem} & = & f_{stem} \ \overrightarrow{L}_{canopy} , 
+   \end{array}
+   
+where the stem fraction is
+
+.. math::
+   :label: 5.128h
+	   
+   f_{stem}  = k_{vert} \frac{S}{L + S} ,
+
+where :math:`k_{vert}` is an adjustable parameter to account for the vertical distribution of stem area through the canopy. The leaf fraction is :math:`f_{leaf}  =  1 - f_{stem}`.
+
+
+:math:`\overrightarrow{L}_{leaf}`, :math:`H_{leaf}`, and :math:`\lambda E_{leaf}` depend on the vegetation temperature :math:`T_{leaf}`. The Newton-Raphson method for finding roots of non-linear systems of equations can be applied to iteratively solve for :math:`T_{leaf}` as
 
 .. math::
    :label: 5.129
 
-   \Delta T_{v} =\frac{\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -H_{v} -\lambda E_{v} }{\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } +\frac{\partial H_{v} }{\partial T_{v} } +\frac{\partial \lambda E_{v} }{\partial T_{v} } }
-
-where :math:`\Delta T_{v} =T_{v}^{n+1} -T_{v}^{n}` and the subscript "n" indicates the iteration.
+   \Delta T_{leaf} =\frac{\overrightarrow{S}_{leaf} -\overrightarrow{L}_{leaf} -H_{leaf} -\lambda E_{leaf} - \frac{C_{leaf}}{dt} (T_{leaf}^{n} - T_{leaf}^{0}) }{\frac{\partial \overrightarrow{L}_{leaf} }{\partial T_{leaf} } +\frac{\partial H_{leaf} }{\partial T_{leaf} } +\frac{\partial \lambda E_{leaf} }{\partial T_{leaf} } +\frac{C_{leaf}}{dt}}
+   
+where :math:`\Delta T_{leaf} =T_{leaf}^{n+1} -T_{leaf}^{n}` and the subscript "n" indicates the iteration.
 
 The partial derivatives are
 
 .. math::
    :label: 5.130
 
-   \frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } =4\varepsilon _{v} \sigma \left[2-\varepsilon _{v} \left(1-\varepsilon _{g} \right)\right]T_{v}^{3}
+   \frac{\partial \overrightarrow{L}_{leaf} }{\partial T_{leaf} } =4\varepsilon _{leaf} \sigma \left[2-\varepsilon _{leaf} \left(1-\varepsilon _{g} \right)\right]T_{leaf}^{3}
 
 .. math::
    :label: 5.131
 
-   \frac{\partial H_{v} }{\partial T_{v} } =\rho _{atm} C_{p} \left(c_{a}^{h} +c_{g}^{h} \right)\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} }
+   \frac{\partial H_{leaf} }{\partial T_{leaf} } =\rho _{atm} C_{p} \left(c_{a}^{h} +c_{stem}^{h} +c_{g}^{h} \right)\frac{c_{leaf}^{h} }{c_{a}^{h} +c_{leaf}^{h}  +c_{stem}^{h} +c_{g}^{h} }
 
 .. math::
    :label: 5.132
 
-   \frac{\partial \lambda E_{v} }{\partial T_{v} } =\lambda \rho _{atm} \left(c_{a}^{w} +c_{g}^{w} \right)\frac{c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} } \frac{dq_{sat}^{T_{v} } }{dT_{v} } .
+   \frac{\partial \lambda E_{leaf} }{\partial T_{leaf} } =\lambda \rho _{atm} \left(c_{a}^{w} +c_{g}^{w} \right)\frac{c_{leaf}^{w} }{c_{a}^{w} +c_{leaf}^{w} +c_{g}^{w} } \frac{dq_{sat}^{T_{leaf} } }{dT_{leaf} } .
 
-The partial derivatives :math:`\frac{\partial r_{ah} }{\partial T_{v} }` and :math:`\frac{\partial r_{aw} }{\partial T_{v} }`, which cannot be determined analytically, are ignored for :math:`\frac{\partial H_{v} }{\partial T_{v} }` and :math:`\frac{\partial \lambda E_{v} }{\partial T_{v} }`. However, if :math:`\zeta` changes sign more than four times during the temperature iteration, :math:`\zeta =-0.01`. This helps prevent "flip-flopping" between stable and unstable conditions. The total water vapor flux :math:`E_{v}`, transpiration flux :math:`E_{v}^{t}`, and sensible heat flux :math:`H_{v}` are updated for changes in leaf temperature as
+The partial derivatives :math:`\frac{\partial r_{ah} }{\partial T_{leaf} }` and :math:`\frac{\partial r_{aw} }{\partial T_{leaf} }`, which cannot be determined analytically, are ignored for :math:`\frac{\partial H_{leaf} }{\partial T_{leaf} }` and :math:`\frac{\partial \lambda E_{leaf} }{\partial T_{leaf} }`. However, if :math:`\zeta` changes sign more than four times during the temperature iteration, :math:`\zeta =-0.01`. This helps prevent "flip-flopping" between stable and unstable conditions. The total water vapor flux :math:`E_{leaf}`, transpiration flux :math:`E_{leaf}^{t}`, and sensible heat flux :math:`H_{leaf}` are updated for changes in leaf temperature as
 
 .. math::
    :label: 5.133
 
-   E_{v} =-\rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{v} } +\frac{dq_{sat}^{T_{v} } }{dT_{v} } \Delta T_{v} \right)\right]\frac{c_{v}^{w} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} }
+   E_{leaf} =-\rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{leaf} } +\frac{dq_{sat}^{T_{leaf} } }{dT_{leaf} } \Delta T_{leaf} \right)\right]\frac{c_{leaf}^{w} }{c_{a}^{w} +c_{leaf}^{w} +c_{g}^{w} }
 
 .. math::
    :label: 5.134
 
-   E_{v}^{t} =-r_{dry} ^{{'} {'} } \rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{v} } +\frac{dq_{sat}^{T_{v} } }{dT_{v} } \Delta T_{v} \right)\right]\frac{c_{v}^{h} }{c_{a}^{w} +c_{v}^{w} +c_{g}^{w} }
+   E_{leaf}^{t} =-r_{dry} ^{{'} {'} } \rho _{atm} \left[c_{a}^{w} q_{atm} +c_{g}^{w} q_{g} -\left(c_{a}^{w} +c_{g}^{w} \right)\left(q_{sat}^{T_{leaf} } +\frac{dq_{sat}^{T_{leaf} } }{dT_{leaf} } \Delta T_{leaf} \right)\right]\frac{c_{leaf}^{h} }{c_{a}^{w} +c_{leaf}^{w} +c_{g}^{w} }
 
 .. math::
    :label: 5.135
 
-   H_{v} =-\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)\left(T_{v} +\Delta T_{v} \right)\right]\frac{c_{v}^{h} }{c_{a}^{h} +c_{v}^{h} +c_{g}^{h} } .
+   H_{leaf} =-\rho _{atm} C_{p} \left[c_{a}^{h} \theta _{atm} +c_{g}^{h} T_{g} -\left(c_{a}^{h} +c_{g}^{h} \right)\left(T_{leaf} +\Delta T_{leaf} \right)\right]\frac{c_{leaf}^{h} }{c_{a}^{h} +c_{leaf}^{h} +c_{g}^{h} } .
+
+Stem temperature is updated using
+
+.. math::
+   :label: 5.135b
+
+   \Delta T_{stem} =\frac{\overrightarrow{S}_{stem} -\overrightarrow{L}_{stem} -H_{stem} }{\frac{\partial \overrightarrow{L}_{stem} }{\partial T_{stem} } +\frac{C_{stem}}{dt}} .
+
+The change in biomass heat storage from leaves and stems is
+
+.. math::
+   :label: 5.135c
+
+   H_{canopy} =  \frac{C_{leaf} \Delta T_{leaf} + C_{stem}  \Delta T_{stem}}{dt} .
+
 
 The numerical solution for vegetation temperature and the fluxes of momentum, sensible heat, and water vapor flux from vegetated surfaces proceeds as follows:
 

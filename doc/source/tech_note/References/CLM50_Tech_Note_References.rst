@@ -1356,6 +1356,18 @@ Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface layer-based soi
 
 Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. WRR, 51, doi:10.1002/2015WR017582.
 
+.. _Swensonetal2019:
+
+Swenson, S.C., M. Clark, Y. Fan, D.M. Lawrence, and J. Perket. 2019. Representing intra-hillslope lateral subsurface flow in the community land model. JAMES, 11, doi:10.1002/2015WR017582.
+
+.. _Swensonetal2019b:
+
+Swenson, S.C., S.P. Burns, and D. M. Lawrence. 2019. The impact of biomass heat storage on the canopy energy balance and atmospheric stability in the community land model. JAMES, 11, https://doi.org/10.1029/2018MS001476.
+
+.. _SwensonLawrence2025:
+
+Swenson, S.C., and D. M. Lawrence. 2025. Development of a global representative hillslope data set for use in Earth system modelsA GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. JAMES, 17, https://doi.org/10.1029/2024MS004410.
+
 .. _TaWeiland1992:
 
 Ta, C.T. and Weiland, R.T. 1992. Nitrogen partitioning in maize during ear development. Crop Sci. 32:443-451.

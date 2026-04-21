@@ -46,6 +46,7 @@ CLM Technical Note
    DGVM/CLM50_Tech_Note_DGVM.rst
    BVOCs/CLM50_Tech_Note_BVOCs.rst
    Dust/CLM50_Tech_Note_Dust.rst
+   Hillslope_Hydrology/CLM50_Tech_Note_Hillslope_Hydrology.rst
    Isotopes/CLM50_Tech_Note_Isotopes.rst
    Land-Only_Mode/CLM50_Tech_Note_Land-Only_Mode.rst
    References/CLM50_Tech_Note_References.rst
