@@ -603,6 +603,10 @@ Jenkinson, D. and Coleman, K. 2008. The turnover of organic carbon in subsoils. 
 
 Jordan, R. 1991. A One-dimensional Temperature Model for a Snow Cover: Technical Documentation for SNTHERM.89. U.S. Army Cold Regions Research and Engineering Laboratory, Special Report 91-16.
 
+.. _Kou-Giesbrechtetal2025: 
+
+Kou-Giesbrecht, C.R. Reis Ely, S.S. Perakis, C.C. Cleveland, D.N.L. Menge, S.C. Reed, B.N. Taylor, S.A. Batterman, T.E. Crews, K.A. Dynarski, M. Gei, M.J. Gundale, D.F. Herridge, S.E. Jovan, M.B. Peoples, J. Piipponen, E. Rodríguez-Caballero, V.G. Salmon, F.M. Soper, A.P. Staccone, B. Weber, C.A. Williams, & N. Wurzburger, 2025. Overestimated natural biological nitrogen fixation translates to an exaggerated CO2 fertilization effect in Earth system models, Proc. Natl. Acad. Sci. U.S.A. 122 (48) e2514628122, https://doi.org/10.1073/pnas.2514628122.
+
 .. _KattgeKnorr2007:
 
 Kattge, J., and Knorr, W. 2007. Temperature acclimation in a biochemical model of photosynthesis: a reanalysis of data from 36 species. Plant Cell Environ. 30:1176-1190. DOI:10.1111/j.1365-3040.2007.01690.x.
@@ -1543,6 +1547,10 @@ White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000. Parameterizat
 .. _Wiederetal2015:
 
 Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects of model structural uncertainty on carbon cycle projections: biological nitrogen fixation as a case study. Environmental Research Letters, 10(4), 044016.
+
+.. _Wiederetal2019:
+
+Wieder, W.R., Lawrence, D.M., Fisher, R.A., Bonan, G.B., Cheng, S.J., Goodale, C.L., Grandy, A.S., Koven, C.D., Lombardozzi, D.L., Oleson, K.W. and Thomas, R.Q., 2019. Beyond static benchmarking: Using experimental manipulations to evaluate land model assumptions. Global Biogeochemical Cycles, 33(10), 1289-1309. https://doi.org/10.1029/2018GB006141
 
 .. _Williamsetal1996:
 
