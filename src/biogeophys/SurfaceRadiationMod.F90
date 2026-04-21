@@ -765,7 +765,7 @@ contains
              ! per unit flux incident on NVP). trd/tri are below-canopy direct/diffuse fluxes.
              ! sabg(p) is unchanged (ground total = NVP + soil via modified albedo).
              ! sabg_soil is corrected because it was computed using soil-only albedo (albsod).
-             if (use_nvp) then
+             if (use_nvp .and. col%nvp_layer_active(patch%column(p))) then
                 sabg_lyr(p,0) = 0._r8
                 do ib = 1, nband
                    sabg_lyr(p,0) = sabg_lyr(p,0) + &
@@ -775,13 +775,6 @@ contains
                 sabg_lyr(p,0) = max(0._r8, min(sabg_lyr(p,0), sabg_lyr(p,1)))
                 sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_lyr(p,0)
                 sabg_soil(p)  = sabg_soil(p)  - sabg_lyr(p,0)
-                ! [PORTED by Hui Tang: no-snow - store VIS canopy transmittances for NVP photosynthesis PAR]
-                ! ftdd(p,1) and ftii(p,1) are dimensionless fractions of direct/diffuse VIS
-                ! reaching the ground (below vascular canopy). Stored in layer 0 of the SNICAR
-                ! flx_abs arrays (unused by SNICAR when snl==0). Retrieved in wrap_sunfrac
-                ! at the next timestep for bc_in%flx_absdv/flx_absiv (one-timestep lag).
-                flx_absdv(c,:) = surfalb_inst%fabd_nvp_col(c,:)
-                flx_absiv(c,:) = surfalb_inst%fabi_nvp_col(c,:)
              end if
 
              ! CASE 2: Snow layers present: absorbed radiation is scaled according to
