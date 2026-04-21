@@ -216,7 +216,7 @@ contains
          lgdp_col           => cnveg_state_inst%lgdp_col                       , & ! Output: [real(r8) (:)     ]  gdp limitation factor for nfire
          lgdp1_col          => cnveg_state_inst%lgdp1_col                      , & ! Output: [real(r8) (:)     ]  gdp limitation factor for baf per fire
          lpop_col           => cnveg_state_inst%lpop_col                       , & ! Output: [real(r8) (:)     ]  pop limitation factor for baf per fire
-         lfwt               => cnveg_state_inst%lfwt_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop and non-bare-soil Patches
+         tgswt              => cnveg_state_inst%tgswt_grc                      , & ! Output: [real(r8) (:)     ]  gridcell fractional coverage of tree, grass and shrub PFTs (0-1)
          trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the column (0-1)
          trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the column (0-1)
          dtrotr_col         => cnveg_state_inst%dtrotr_col                     , & ! Output: [real(r8) (:)     ]  decreased frac. coverage of BET+BDT on grid for dt
@@ -287,24 +287,26 @@ contains
         return
      end if
      !
-     ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil
-     ! vegetation (lfwt) in vegetated column
+     ! Calculate fraction of crop in vegetation column (cropf_col)
+     ! and fraction of tree, grass, and shrub in grid cell (tgswt)
      !
      do fc = 1,num_soilc
         c = filter_soilc(fc)
+        g = col%gridcell(c)
         cropf_col(c) = 0._r8
-        lfwt(c)      = 0._r8
+        tgswt(g)     = 0._r8
      end do
      do fp = 1, num_soilp
         p = filter_soilp(fp)
         c = patch%column(p)
+        g = col%gridcell(c)
         ! For crop veg types
         if( patch%itype(p) > nc4_grass )then
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
-        ! Exclude crops and bare soil
+        ! For tree, grass, and shrub
         if (patch%itype(p) <= nc4_grass .and. patch%itype(p) >= ndllf_evr_tmp_tree) then
-           lfwt(c) = lfwt(c) + patch%wtgcell(p)
+           tgswt(g) = tgswt(g) + patch%wtgcell(p)
         end if
      end do
      !
@@ -542,8 +544,9 @@ contains
      do fc = 1, num_soilc
         c = filter_soilc(fc)
         g= col%gridcell(c)
+        tgswt(g) = max(0._r8, min(1._r8, tgswt(g)))
         if(grc%latdeg(g) < cnfire_const%borealat )then
-            if ((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
+            if ((trotr1_col(c)+trotr2_col(c))*tgswt(g)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
                baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
                      min(1._r8,(1._r8-prec30_col(c)*secspday/nonborpeat_fire_precip_denom)))*peatf_lf(c)
             else
@@ -608,12 +611,12 @@ contains
               ig = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
                    cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
                    cnfire_params%ignition_efficiency)*(1._r8-fs)* &
-                   (lfwt(c)**0.5)
+                   (tgswt(g)**0.5)
            else
               ig = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
                    cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
                    cnfire_params%ignition_efficiency*(1._r8-fs)*  &
-                   (lfwt(c)**0.5)
+                   (tgswt(g)**0.5)
            end if
 
            ! Reduce burnability at high elevations
@@ -626,7 +629,7 @@ contains
            nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) * topoi  !fire counts/km2/sec
            Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
            spread_m = fire_m**0.5_r8
-           fd_col(c) = (lfwt(c)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
+           fd_col(c) = (tgswt(g)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
            farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
                 fd_col(c)/1000._r8)**2*nfire(c)*SHR_CONST_PI*Lb_lf+ &
                 baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
