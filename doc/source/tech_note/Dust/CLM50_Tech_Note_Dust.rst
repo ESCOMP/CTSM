@@ -1,98 +1,136 @@
 .. _rst_Dust Model:
 
-Dust Model
+Dust Emission
 ==============
 
-Atmospheric dust is mobilized from the land by wind in the CLM. The most important factors determining soil erodibility and dust emission include the wind friction velocity, the vegetation cover, and the soil moisture. The latest CTSM allows users to choose between two dust emission schemes: One is Leung_2023 (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) which is the current default for the CLM6 physics, and the other is Zender_2003 (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) based on the DEAD (Dust Entrainment and Deposition model of :ref:`Zender et al. (2003)<Zenderetal2003>`, which is the default for the CLM5 or older physics.
+Atmospheric dust is mobilized from the land by wind in the CLM. The most important factors determining soil erodibility and dust emission include the wind friction velocity, the vegetation cover, and the soil moisture. The latest CTSM allows users to choose between two dust emission schemes: One is Leung_2023 (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) which is the current default for the CLM6 physics or later, and the other is Zender_2003 (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) based on the DEAD (Dust Entrainment and Deposition model of :ref:`Zender et al. (2003)<Zenderetal2003>`, which is the default for the CLM5 or older physics.
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Leung et al. (2023) scheme (default for CLM6 physics or later)
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+We here describe the Leung_2023 scheme based on :ref:`Leung et al. 2023<Leungetal2023>` and :ref:`Leung et al. (2024)<Leungetal2024>` and document some differences in tuning in the latest CTSM. CTSM users can look for the previous documentation for CLM5 physics for a description of the Zender_2003 scheme.
 
+
+.. _Dust Emission Thresholds:
+
+Dust Emission Thresholds
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _Fluid Threshold:
+
+Fluid Threshold
+---------------------
 
 Dust emission modeling is a threshold parameterization of an aeolian (wind-driven) process for both Leung_2023 and Zender_2003. For Leung_2023, in any given timestep the soil surface wind velocity :math:`u_{*s}` has to be greater than the fluid threshold friction velocity :math:`u_{*ft}` to generate saltation and dust emission:
 
 .. math::
-   :label: 30.1
+   :label: wet_fluid_threshold
 
    u_{*ft} = u_{*ft0}(D_{p},\rho_{atm}) f_{m}(w)
 
-where :math:`u_{*ft0}(D_{p},\rho_{atm})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{atm}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{atm})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
+where :math:`u_{*ft0}(D_{p},\rho_{a})` is the dry fluid threshold without the soil moisture effect :math:`f_{m}`, as a function of median soil diameter :math:`D_{p}` and air density :math:`\rho_{atm}`. In CTSM for Leung_2023, :math:`D_{p}` is a globally uniform number of 130 :math:`\mu` m. :math:`u_{*ft0}(D_{p},\rho_{atm})` is given by :ref:`Shao and Lu (2000)<ShaoLu2000>`:
 
 .. math::
-   :label: 30.2
+   :label: dry_fluid_threshold
 
    u_{*ft0}(D_{p},\rho_{atm}) = \sqrt{\frac{A(\rho_{p} g D_{p} + \gamma / D_{p}) }{\rho_{atm}} } 
 
 
 where *g* is the acceleration of gravity (:numref:`Table Physical Constants`), :math:`\rho_{p} = 2650` kg m\ :sup:`-3` is typical soil particle density, and :math:`A = 0.0123` and :math:`\gamma = 1.65 \times 10^{-4}` kg s\ :sup:`-2` are empirical constants. 
+
+.. _Impact of Soil Moisture:
+
+Impact of Soil Moisture
+-------------------------
+
 The soil moisture effect :math:`f_{m}(w)` is a function of gravimetric soil moisture :math:`w` (kg water / kg soil) at the topmost soil layer. 
 
 :math:`w` is converted from the CLM volumetric soil moisture :math:`\theta` and porosity (saturation moisture :math:`\theta_{sat}`) at the topmost soil layer:
 
 .. math::
-   :label: 30.3
+   :label: volumetric_moisture_to_gravimetric_moisture
 
    w=\theta\frac{ \rho _{liq} }{\rho_{bulk} }
 
-Note that :math:`w` in CTSM is conventionally (since CLM3; :ref:`Mahowald et al. 2006<Mahowaldetal2006>`) treated as a sum of both liquid and ice/frozen soil moisture at the topmost soil layer, i.e., :math:`w = w_{liq,1} + w_{ice,1}`. :math:`\rho_{liq}` is typical liquid water density (:numref:`Table Physical Constants`), and bulk density :math:`\rho_{bulk}` is given by 
+Note that :math:`w` or :math:`\theta` in CTSM is conventionally (:ref:`Mahowald et al. 2006<Mahowaldetal2006>`) treated as a sum of both liquid and ice/frozen soil moisture at the topmost soil layer, i.e., :math:`w_{1} = w_{liq,1} + w_{ice,1}`. We skip :math:`w_{1}` and use :math:`w` for simplicity. :math:`\theta` is the volumetric soil moisture (water+ice) in the topmost soil layer (m\ :sup:`-3`\ water \ m\ :sup:`-3` soil) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{bulk}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`\rho_{bulk}` is given by 
 
 .. math::
-   :label: 30.4
+   :label: soil_bulk_density
 
    \rho_{bulk} = (1 - \theta_{sat} ) \rho_{p}
 
 Then, the soil moisture effect :math:`f_{m}(w)` on increasing the fluid threshold is given by :ref:`Fecan et al. (1999)<Fecanetal1999>`:
 
 .. math::
-   :label: 30.5
+   :label: moisture_factor_on_fluid_threshold
 
    f_{m}(w) =\left\{\begin{array}{l} {1{\rm \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; \; for\; }w\le w_{t} } \\ {\sqrt{1+1.21\left[100\left(w-w_{t} \right)\right]^{0.68} } {\rm \; \; for\; }w>w_{t} } \end{array}\right.
 
 
-where :math:`w_{t}` increases with clay fraction :math:`f_{clay}`:
+where :math:`w_{t}` is the minimum gravimetric moisture threshold required to increase the interparticle force and :math:`u_{*ft}`. :math:`w_{t}` increases with clay fraction :math:`f_{clay}`:
 
 .. math::
-   :label: 30.6
+   :label: minimum_moisture
 
    w_{t} =0.01a\left(17f_{clay} +14f_{clay}^{2} \right){\rm \; \; \; \; \; \; 0}\le f_{clay} =\% clay\times 0.01\le 1
 
 
-where :math:`a=f_{clay}^{-1}` for tuning purposes. Note that this is different from the paper in which a = 1 was chosen. The coefficient 0.01 is used for converting :math:`w_{t}` from % to fraction  (kg water / kg soil), :math:`\theta` is the volumetric soil moisture (water+ice) in the topmost soil layer (m\ :sup:`-3`\ water \ m\ :sup:`-3` soil) (section :numref:`Soil Water`), :math:`\rho _{liq}` is the density of liquid water (kg m\ :sup:`-3`) (:numref:`Table Physical constants`), and :math:`\rho _{bulk}` is the bulk density of soil in the top soil layer (kg m\ :sup:`-3`) defined as in section :numref:`Soil and Snow Thermal Properties` rather than as in :ref:`Zender et al. (2003)<Zenderetal2003>`. :math:`f_{clay}` is the mass fraction of clay particles in the topmost soil layer and %clay comes from the surface dataset (section :numref:`Surface Data`).
+where :math:`a=f_{clay}^{-1}` for tuning purposes. Note that this is different from the paper (:ref:`Leung et al. 2023<Leungetal2023>`; :ref:`Leung et al. 2024<Leungetal2024>`) in which :math:`a=1` was chosen. The coefficient 0.01 is used for converting :math:`w_{t}` from % to fraction  (kg water / kg soil). :math:`f_{clay}` is the mass fraction of clay particles in the topmost soil layer and %clay comes from the surface dataset (section :numref:`Surface Data`).
+
+.. _Impact Threshold:
+
+Impact Threshold
+----------------------
 
 Another essential dust emission threshold is the impact/dynamic threshold :math:`u_{*it}`, which is the lowest friction velocity or wind stress to matintain saltation:
 
 .. math::
-   :label: 30.7
+   :label: impact_threshold
 
    u_{*it} = B_{*it} u_{*ft0}
 
-where :math:`B_{*it}` is a constant on Earth following :ref:`Kok et al. (2012)<Koketal2012>`. The above equations imply that :math:`u_{*it} \, < \, u_{*ft0} \le \, u_{*ft}`. This means that the winds need a bigger momentum to initiate saltation and dust emission but can reduce below :math:`u_{*ft}` and still maintain a weak dust emission flux. The emission flux goes to zero when :math:`u_{*s}` drops below :math:`u_{*it}`.
+where :math:`B_{*it}` is a constant on Earth following :ref:`Kok et al. (2012)<Koketal2012>`. In Leung_2023, :math:`u_{*it}` does not depend on and increase with soil moisture. The above equations imply that :math:`u_{*it} \, < \, u_{*ft0} \le \, u_{*ft}`. This means that the winds need a bigger momentum to initiate saltation and dust emission but can reduce below :math:`u_{*ft}` and still maintain a weak dust emission flux. The emission flux goes to zero when :math:`u_{*s}` drops below :math:`u_{*it}`.
+
+.. _Dust Emission Flux:
+
+Dust Emission Flux
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\ :sup:`-1`), from the ground into a transport mode/bin :math:`j` of aerosol is based on :ref:`Kok et al. (2014a)<Koketal2014a>`:
 
 .. math::
-   :label: 30.8
+   :label: dust_emiss_flux
 
-   F_{d} = \eta C_{tune} C_{d} f_{bare} f_{clay} \frac{ \rho_{atm} (u^2_{*s} - u^2_{it} ) }{ u^2_{it} }  \left( \frac{ u^2_{*s} }{u^2_{it} } \right) ^\kappa
+   F_{d} = \eta C_{tune} C_{d} f_{bare} f_{clay'} \frac{ \rho_{atm} (u^2_{*s} - u^2_{it} ) }{ u^2_{it} }  \left( \frac{ u^2_{*s} }{u^2_{it} } \right) ^\kappa
 
-where :math:`C_{tune} = 0.05` is a constant, and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{*s} \, < \, u_{*it}`. :math:`\rho_{atm}` is surface air density from CAM (the atm model). 
-:math:`\kappa` is the fragmentation exponent, and :math:`C_{d}` is the dust emission coefficient (or the soil erodibility coefficient):
+where :math:`C_{tune} = 0.05` is a constant, :math:`\eta` is the intermittency factor (we will derive it in section :numref:`Emission Intermittency Due To Turbulent Wind Fluctuations`), and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{*s} \, < \, u_{*it}`. :math:`\rho_{atm}` is surface air density from CAM (the atm model). 
+:math:`f_{clay'}` is a modified clay fraction term appeared earlier in :ref:`Zender et al. (2003)<Zenderetal2003>`. In Zender_2003 it is used to indicate the sandblasting efficiency. Zender limited this term to be capped at 0.2:
 
 .. math::
-   :label: 30.9
+   :label: clay_sandblast_fact_zender
+
+   f_{clay'} = \textnormal{max}(f_{clay}, 0.2)
+
+:math:`f_{clay'}` is later adopted by :ref:`Kok et al. (2014a)<Koketal2014a>` to indicate the amount of fine dust particles for sandblasting. The same :math:`f_{clay'}` is used in :ref:`Leung et al. (2024)<Leungetal2024>`. But we later further limit :math:`f_{clay'}` to be within 0.1 and 0.2 to further reduce the impact of how the abundance of fine dust particles can scale the total dust emission flux, as part of the CESM tuning:
+
+.. math::
+   :label: clay_sandblast_fact_leung
+
+   f_{clay'} = \textnormal{max}(0.1+0.5f_{clay}, 0.2)
+
+Then, :math:`\kappa` is the fragmentation exponent, and :math:`C_{d}` is the dust emission coefficient (or the soil erodibility coefficient):
+
+.. math::
+   :label: dust_emiss_coefficient
 
    C_{d} = C_{d0} \exp{ (-C_{e} \frac{ u_{*st} - u_{st0} }{ u_{st0} } ) }
 
 .. math::
-   :label: 30.10
+   :label: fragment_exponent
 
    \kappa = C_{\kappa} \frac{ u_{*st} - u_{st0} }{ u_{st0} }
 
 where :math:`C_{\kappa} = 2.7`, :math:`u_{st0} = 0.16` m s :sup:`-3`, :math:`C_{d0} = 4.4 \times 10^{-5}`, and :math:`C_{e} = 2.0`. :math:`F_{d}` thus roughly scales with :math:`u^{2+\kappa}_{*s}`, where :math:`\kappa \sim 1` over major deserts and :math:`\sim 3` or higher over semiarid and nonarid regions. Since :ref:`Kok et al. (2014a)<Koketal2014a>` has not measured :math:`\kappa > 3` in their measurements, we cap :math:`\kappa` at a maximum value (currently set as 2.5). :math:`u_{*st}` is the standardized wet fluid threshold at a typical atmospheric surface air density (Kok et al., 2014):
 
 .. math::
-   :label: 30.11
+   :label: standard_fluid_threshold
 
    u_{*st} = u_{*ft} \sqrt{ \rho_{atm} / \rho_{0atm}}
 
@@ -103,44 +141,49 @@ where :math:`\rho_{0atm} = 1.225` kg m\ :sup:`-3`. As can be seen, :math:`u_{*st
 The grid cell fraction of exposed bare soil suitable for dust mobilization :math:`f_{bare}` is given by
 
 .. math::
-   :label: 30.12
+   :label: grid_bare_land_frac
 
    f_{bare} =\left(1-f_{lake} \right)\left(1-f_{sno} \right)\left(1-f_{v} \right)\frac{w_{liq,1} }{w_{liq,1} +w_{ice,1} }
 
 where :math:`f_{lake}` and :math:`f_{sno}` are the CLM grid cell fractions of lake (section :numref:`Surface Data`) and snow cover (section :numref:`Snow Covered Area Fraction`), all ranging from zero to one. Not mentioned by :ref:`Zender et al. (2003)<Zenderetal2003>`, :math:`w_{liq,\, 1}` and :math:`w_{ice,\, 1}` are the CLM top soil layer liquid water and ice contents (mm) entered as a ratio expressing the decreasing ability of dust to mobilize from increasingly frozen soil. The grid cell fraction of vegetation cover,\ :math:`f_{v}`, is defined as
 
 .. math::
-   :label: 30.13
+   :label: grid_vegetated_frac
 
    0\le f_{v} =\frac{\mathrm{VAI}}{\mathrm{VAI_{thr}} } \le 1{\rm \; \; \; \; where\; } \mathrm{VAI_{thr}} =0.6{\rm \; m}^{2} {\rm m}^{-2}
 
 where :math:`\mathrm{VAI}=\mathrm{LAI}+\mathrm{SAI}` is the vegetation area index as a sum of the CLM leaf and stem area index values (m :sup:`2` leaf m\ :sup:`-2` grid) averaged at the land unit level so as to include all the pfts and the bare ground present in a vegetated land unit. Currently, Leung_2023 in CTSM sets the areas with :math:`\mathrm{VAI_{thr}}` smaller than or equal to 0.6 m :sup:`2` m\ :sup:`-2` to be dust-emitting grids, different from the :ref:`Leung et al. (2024)<Leungetal2024>` paper that set :math:`\mathrm{VAI_{thr}}` to be 1 m :sup:`2` m\ :sup:`-2`. :math:`\mathrm{LAI}` and :math:`\mathrm{SAI}` may be prescribed from the CLM input data (section :numref:`Phenology and vegetation burial by snow`) or simulated by the CLM biogeochemistry model (section :numref:`rst_Vegetation Phenology and Turnover`).
 
+.. _Drag Partition Effect On Reducing Wind Stress:
+
+Drag Partition Effect On Reducing Wind Stress
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 On top of :ref:`Kok et al. (2014a)<Koketal2014a>`, Leung_2023 introduced the soil surface friction velocity :math:`u_{*s}` as the friction velocity :math:`u_{*}` from CLM corrected by the surface roughness due to the presented rocks and vegetation on the soil surface, encapsulated by the so-called drag partition factor :math:`F_{eff}`.
 
 .. math::
-   :label: 30.14
+   :label: soil_surface_ustar
 
    u_{*s} = u_{*} F_{eff}
 
 The :ref:`Leung et al. (2023)<Leungetal2023>` paper uses an area-weighted averaging method to determine the mean drag partitioning for a grid cell: :math:`F_{eff}^3 = A_{rock} f_{rock}^3 + A_{veg} f_{veg}^3`. :math:`A_{rock}` and :math:`A_{veg}` are fractional area cover (in fraction) from the CLM-prescribed land use from the Land Use Harmonization 2 (LUH2; section :numref:`rst_Transient Landcover Change`). :math:`F_{eff}` is thus a weighted mean of the rock drag partitioning and the vegetation drag partitioning in :ref:`Leung et al. (2023)<Leungetal2023>`. However, since CTSM has the privilege of supporting sub-grid patch-level simulations of dust emissions, we simply separate the calculations of dust emissions into the areas of bare soils and areas of the short vegetation. For a bare soil patch/PFT we use:
 
 .. math::
-   :label: 30.15
+   :label: rock_drag_partition
 
     F_{eff} = f_{rock}
 
 And for a patch/PFT with short vegetation (shrub, grass, crop) we use:
 
 .. math::
-   :label: 30.16
+   :label: veg_drag_partition
 
     F_{eff} = f_{veg} 
 
 The rock drag partition factor scales with the surface roughness density of rocks, captured by the aeolian roughness length :math:`z_{0a}` from the satellite-derived dataset from :ref:`Prigent et al. (2005)<Prigentetal2005>`. The expression was first developed by :ref:`Marticorena and Bergametti (1995)<MarticorenaBergametti1995>`, which is more valid for the low-roughness surfaces:
 
 .. math::
-   :label: 30.17
+   :label: rock_drag_partition_fact
 
    f_{rock} = 1 - \frac{\ln(\frac{z_{0a}}{z_{0s}})}{\ln[b_{1}(\frac{X}{z_{0s}})^{b_{2}}]}
 
@@ -149,51 +192,55 @@ where :math:`X = 10` m is the distance downstream the point of discontinuity in 
 The vegetation drag partition factor scales with vegetation density as captured by VAI following :ref:`Okin (2008)<Okin2008>` and :ref:`Pierre et al. (2014)<Pierreetal2014>`:
 
 .. math::
-   :label: 30.18
+   :label: veg_drag_partition_effect
 
    f_{veg} = \frac{K + f_{0} c }{K + c}
 
 .. math::
-   :label: 30.19
+   :label: normalized_plant_gap_length
 
    K = 2 (\frac{1}{f_{v}} - 1) = 2 (\frac{1}{\mathrm{VAI}/\mathrm{VAI_{thr}}} - 1)
 
 where :math:`f_{0} = 0.33` is the wind dissipation right behind the obstacle, :math:`c = 4.8` m is the average e-folding distance for wind momentum to recover after dissipated by the plant, and :math:`K` is defined as the average normalized gap length between two obstacles given the vegetation density quantified by VAI. This equation assumes that the gap length K goes to zero as VAI increases and approaches :math:`\mathrm{VAI_{thr}}`.
+
+.. _Emission Intermittency Due To Turbulent Wind Fluctuations:
+
+Emission Intermittency Due To Turbulent Wind Fluctuations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Then, the fraction of time within a timestep :math:`\Delta t` (typically of 30 minutes for a ~1° horizontal grid) when dust emission is active is accounted for by Leung_2023, known as the intermittency factor :math:`\eta`. The fraction of time :math:`\eta \in [0,1]` is due to the boundary-layer turbulence that causes sub-timestep turbulent wind fluctuations that cross the dust emission thresholds multiple times within a timestep, in turn initiating and shutting off emission at time within :math:`\Delta t`. The parameterization of :math:`\eta` comes from :ref:`Comola et al. (2019)<Comolaetal2019>`, in which a statistical substepping method was proposed to account for the temporary shutoff of dust emission fluxes. 
 
 The fraction of time :math:`\eta` is parameterized using the surface winds and thresholds at the saltation height. Therefore, the friction velocities are translated using the log law of the wall to the saltation height, which was defined as :math:`z_{sal}` = 0.1 m by :ref:`Comola et al. (2019)<Comolaetal2019>`:
 
 .. math::
-   :label: 30.20
+   :label: mean_wind_sal_height
 
    u_{s} =  \frac{u_{*s}}{k} \ln(z_{sal}/z_{0a})
 
 .. math::
-   :label: 30.21
+   :label: fluid_threshold_sal_height
 
    u_{ft} =  \frac{u_{*ft}}{k} \ln(z_{sal}/z_{0a})
 
 .. math::
-   :label: 30.22
+   :label: imapct_threshold_sal_height
 
    u_{it} =  \frac{u_{*it}}{k} \ln(z_{sal}/z_{0a})
 
-
-where :math:`z_{0a}`, the aeolian roughness length, is set to be 10 :sup:`-4` m here for simplicity. With saltation-height variables defined, the instantaneous wind :math:`\tilde{u}_s` is assumed by Comola to follow a Gaussian distribution with a mean equal to the mean wind speed and the spread :math:`\sigma_{u_{s}}`  parameterized by the Similarity Theory (:ref:`Panofsky et al., 1977<Panofskyetal1977>`):
+where *k* is the von Karman constant (:numref:`Table Physical Constants`), and :math:`z_{0a}`, the aeolian roughness length, is set to be 10 :sup:`-4` m here for simplicity. With saltation-height variables defined, the instantaneous wind :math:`\tilde{u}_s` is assumed by Comola to follow a Gaussian distribution with a mean equal to the mean wind speed and the spread :math:`\sigma_{u_{s}}`  parameterized by the Similarity Theory (:ref:`Panofsky et al., 1977<Panofskyetal1977>`):
 
 .. math::
-   :label: 30.23
+   :label: instant_wind_sal_height
 
    \tilde{u}_s \sim N(u_s, \sigma_{u_s}) 
 
 And the fluctuation strength is parameterized by the similarity theory:
 
 .. math::
-   :label: 30.24
+   :label: fluctuation_sal_height
 
    \sigma_{u_s} = u_{*s} \left( 12 - 0.5 \frac{z_i}{L} \right)^{1/3}
-   \quad \text{for } \left 12 - 0.5 \frac{z_i}{L} \right \ge 0
+   \quad \text{for }  12 - 0.5 \frac{z_i}{L}  \ge 0
 
 where :math:`z_i = 1000` m is the planetary boundary-layer height set as a constant for now, and :math:`L` is the Obukhov length scale. This means the instantaneous wind's fluctuation comes from both a shear contribution and a buoyancy contribution. 
 
@@ -201,7 +248,7 @@ where :math:`z_i = 1000` m is the planetary boundary-layer height set as a const
 Then, the total fraction of time :math:`\eta` when saltation is active within a model timestep is then formulated as
 
 .. math::
-   :label: 30.25
+   :label: intermittency_fact
 
    \eta = 1 - P_{ft} + \alpha \left( P_{ft} - P_{it} \right)
 
@@ -210,7 +257,7 @@ where :math:`P_{it}` is the cumulative probability that the instantaneous wind :
 .. For instance, if :math:`\tilde{u}_s` sweeps across :math:`u_{ft}` often and does not sweep across :math:`u_{it}` much, it means that :math:`\tilde{u}_s` (and thus the timestep-mean :math:`u_s`) should be closer to :math:`u_{ft}` and generally higher than :math:`u_{it}`. Then, :math:`\alpha` is close to 1, and the fraction of time :math:`\eta` (with active emission within a timestep) should also be close to 1. :math:`\alpha` can be represented as
 
 .. math::
-   :label: 30.26
+   :label: threshold_crossing_fraction
 
    \alpha \approx \left\{ \exp\left[ 
       \frac{u_{ft}^2 - u_{it}^2 - 2u_s(u_{ft}-u_{it})}{2 \sigma^2_{u_s} }
@@ -219,7 +266,7 @@ where :math:`P_{it}` is the cumulative probability that the instantaneous wind :
 Then, the fraction of time in :math:`\Delta t` when :math:`\tilde{u}_s` is above :math:`u_{ft}` is given by :math:`1 - P_{ft}`, where
 
 .. math::
-   :label: 30.27
+   :label: probability_cross_fluid_threshold
 
    P_{ft} = \frac{1}{2} \left[ 1 + \operatorname{erf}
    \left( \frac{u_{ft} - u_s}{\sqrt{2} \sigma_{u_s}} \right) \right]
@@ -227,31 +274,45 @@ Then, the fraction of time in :math:`\Delta t` when :math:`\tilde{u}_s` is above
 And, the fraction of time in :math:`\Delta t` when :math:`\tilde{u}_s` is dropping from above :math:`u_{ft}` to within the hysteresis zone between :math:`u_{it}` and :math:`u_{it}` is given by :math:`\alpha \left( P_{ft} - P_{it} \right)`, where
  
 .. math::
-   :label: 30.28
+   :label: probability_cross_impact_threshold
 
    P_{it} = \frac{1}{2} \left[ 1 + \operatorname{erf}
    \left( \frac{u_{it} - u_s}{\sqrt{2} \sigma_{u_s}} \right) \right]
 
-And so the fraction of time :math:`\eta` within :math:`\Delta t` with active emission is determined for :eq:`30.8`.
+And so the fraction of time :math:`\eta` within :math:`\Delta t` with active emission is determined for :eq:`dust_emiss_flux`.
 
+.. _Emitted Dust Size Distribution And Dust Transport In Atmosphere:
 
-The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\ :sup:`-1`) is then computed with all the above equations and terms. The emission flux is then passed through the coupler to the atmospheric model (CAM) to simulate dust aerosol transport and deposition. The default aerosol model supported in the CAM6 and CAM7 physics is the Modal Aerosol Model (MAM). CAM7 uses the 5-mode MAM (MAM5), in which three modes (Aitken, accumulation, and coarse modes) by default contain dust. The total mass emission flux per grid is partitioned into the three modes following the Brittle Fragmentation Theory (BFT) by Kok et al. (2014) and later modified by Meng et al. (2022). In the current model version, the fractions of dust emission flux partitioned in the three modes are 1.65E-05, 0.021, and 0.979 for the Aitken (0.01–0.1 um), accumulation (0.1–1 um), and coarse (1–10 um) modes, respectively. These values are prescribed in the MAM code inside CAM.
+Emitted Dust Size Distribution And Dust Transport In Atmosphere
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\ :sup:`-1`) is then computed with all the above equations and terms. The emission flux is then passed through the coupler to the atmospheric model (CAM) to simulate dust aerosol transport and deposition. The default aerosol model supported in the CAM6 and CAM7 physics is the Modal Aerosol Model (MAM). CAM7 uses the 5-mode MAM (MAM5), in which three modes (Aitken, accumulation, and coarse modes) by default contain dust. 
+
+.. _Brittle Fragmentation Theory For Modal Aerosol Model:
+
+Brittle Fragmentation Theory For Modal Aerosol Model
+-----------------------------------------------------
+
+The total mass emission flux per grid is partitioned into the three modes following the Brittle Fragmentation Theory (BFT) in :ref:`Kok et al. (2014b)<Koketal2014b>` and later modified by :ref:`Meng et al. (2022)<Mengetal2022>`. In the current model version, the fractions of dust emission flux partitioned in the three modes are 1.65 :math:`\times` 10 :sup:`-5`, 0.021, and 0.979 for the Aitken (0.01–0.1 um), accumulation (0.1–1 um), and coarse (1–10 um) modes, respectively, following :ref:`Meng et al. (2022)<Mengetal2022>`. These values are prescribed in the MAM code inside CAM.
+
+.. _Conventional Bin Partition:
+
+Conventional Bin Partition
+------------------------------
 
 In the early CESM versions, CAM employed the Bulk Aerosol Model (BAM) as the default aerosol model. Thus, the emission fluxes in CTSM is by default partitioned into 4 bins before passing to the coupler:
 
 .. math::
-   :label: 30.29
+   :label: bin_partition_convention
 
    F_{j} = F_d \sum _{i=1}^{I}M_{i,j}
 
-where :math:`F_{j}` is the mass emission flux from the :math:`j` th aerosol bin.
+where :math:`F_{j}` is the mass emission flux from the :math:`j` th aerosol bin. The current way of paritioning the emission fluxes before passing to the coupler is still being used, but the partition into the different bins is only required by BAM, not the current default MAM in CAM6 and CAM7. Therefore, for MAM, the four :math:`F_{j}` are summed up to become one total flux :math:`F_d` again inside MAM. It is then redistributed inside MAM to different individual MAM modes following the BFT. So, the following details are inherited from previous versions of the code and still works fine, but we may clean up the code in the future.
 
-The current way of paritioning the emission fluxes before passing to the coupler is still being used, but the partition into the different bins is only required by BAM, not the current default MAM in CAM6 and CAM7. Therefore, for MAM, the four :math:`F_{j}` are summed up to become one total flux :math:`F_d` again inside MAM. It is then redistributed to different individual modes of MAM following the three values mentioned above from the BFT. 
-
-In equation :eq:`30.29` we sum :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of :math:`J=4` transport bins :math:`j`
+Equation :eq:`bin_partition_convention` comes from :ref:`Zender et al. (2003)<Zenderetal2003>` and used by :ref:`Mahowald et al. (2006)<Mahowaldetal2006>`. It sums :math:`M_{i,\, j}` over :math:`I=3` source modes :math:`i` where :math:`M_{i,\, j}` is the mass fraction of each source mode :math:`i` carried in each of :math:`J=4` transport bins :math:`j`
 
 .. math::
-   :label: 30.30
+   :label: bin_partition_fraction
 
    M_{i,j} =\frac{m_{i} }{2} \left[{\rm erf}\left(\frac{\ln {\textstyle\frac{D_{j,\max } }{\tilde{D}_{v,i} }} }{\sqrt{2} \ln \sigma _{g,i} } \right)-{\rm erf}\left(\frac{\ln {\textstyle\frac{D_{j,\min } }{\tilde{D}_{v,i} }} }{\sqrt{2} \ln \sigma _{g,i} } \right)\right]
 
