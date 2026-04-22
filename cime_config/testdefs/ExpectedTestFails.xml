@@ -191,6 +191,20 @@
       <issue>ESCOMP/mizuRoute#613</issue>
     </phase>
   </test>
+  
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#4966</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_intel.mizuroute-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#4966</issue>
+    </phase>
+  </test>
 
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
     <phase name="MODEL_BUILD">
