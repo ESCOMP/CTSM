@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.034  afoster 04/22/2026 bug fix to the FATES land use driver input code
        ctsm5.4.033 glemieux 04/17/2026 Update fates tag with missing land use data check fix
        ctsm5.4.032 samrabin 04/10/2026 Simplify doc build messaging.
        ctsm5.4.031 samrabin 04/09/2026 b4b-dev merge 2026-04-09

@@ -1,4 +1,47 @@
 ===============================================================
+Tag name: ctsm5.4.034
+Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
+Date: Wed Apr 22 11:02:13 AM MDT 2026
+One-line Summary: bug fix to the FATES land use driver input code
+
+Purpose and description of changes
+----------------------------------
+
+This PR includes a cherry-picked fix from NorESMhub/CTSM#209 to address swap in the 
+order of rangeland and pasture in the reading of the landuse drivers
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+Resolves FATES https://github.com/NGEET/fates/issues/1551
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+    
+  Added 2 new expected fails for mizuroute NLCOMP DIFFs.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+Landuse tests are not B4B, otherwise B4B
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.033
 Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
 Date: Fri Apr 17 10:39:02 AM MDT 2026
