@@ -137,6 +137,8 @@ module ch4Mod
      real(r8), pointer, private :: ch4_surf_aere_unsat_col    (:)   ! col CH4 aerenchyma flux to atmosphere (after oxidation) (mol/m2/s)
      real(r8), pointer, private :: ch4_surf_ebul_sat_col      (:)   ! col CH4 ebullition flux to atmosphere (after oxidation) (mol/m2/s)
      real(r8), pointer, private :: ch4_surf_ebul_unsat_col    (:)   ! col CH4 ebullition flux to atmosphere (after oxidation) (mol/m2/s)
+     real(r8), pointer, private :: ch4_prod_tot_col           (:)   ! col CH4 production flux (mol/m2/s)
+     real(r8), pointer, private :: ch4_oxid_tot_col           (:)   ! col CH4 oxidation flux (mol/m2/s)
      real(r8), pointer, private :: ch4_surf_ebul_lake_col     (:)   ! col CH4 ebullition flux to atmosphere (after oxidation) (mol/m2/s)
      real(r8), pointer, private :: co2_aere_depth_sat_col     (:,:) ! col CO2 loss rate via aerenchyma in each soil layer (mol/m3/s) (nlevsoi)
      real(r8), pointer, private :: co2_aere_depth_unsat_col   (:,:) ! col CO2 loss rate via aerenchyma in each soil layer (mol/m3/s) (nlevsoi)
@@ -304,6 +306,8 @@ contains
     allocate(this%ch4_ebul_total_unsat_col   (begc:endc))            ;  this%ch4_ebul_total_unsat_col   (:)   = nan
     allocate(this%ch4_surf_ebul_sat_col      (begc:endc))            ;  this%ch4_surf_ebul_sat_col      (:)   = nan
     allocate(this%ch4_surf_ebul_unsat_col    (begc:endc))            ;  this%ch4_surf_ebul_unsat_col    (:)   = nan
+    allocate(this%ch4_prod_tot_col           (begc:endc))            ;  this%ch4_prod_tot_col           (:)   = nan
+    allocate(this%ch4_oxid_tot_col           (begc:endc))            ;  this%ch4_oxid_tot_col           (:)   = nan
     allocate(this%ch4_surf_ebul_lake_col     (begc:endc))            ;  this%ch4_surf_ebul_lake_col     (:)   = nan
     allocate(this%conc_ch4_sat_col           (begc:endc,1:nlevgrnd)) ;  this%conc_ch4_sat_col           (:,:) = spval ! detect file input
     allocate(this%conc_ch4_unsat_col         (begc:endc,1:nlevgrnd)) ;  this%conc_ch4_unsat_col         (:,:) = spval ! detect file input
@@ -606,6 +610,20 @@ contains
             avgflag='A', long_name='Ratio of methane available to total potential sink for non-inundated area', &
             ptr_col=this%ch4stress_sat_col)
     end if
+
+    if (hist_wrtch4diag) then
+       this%ch4_prod_tot_col(begc:endc) = spval
+       call hist_addfld1d (fname='CH4_PROD_COL', units='gC/m2/s', &
+            avgflag='A', long_name='Column total production of CH4', &
+            ptr_col=this%ch4_prod_tot_col)
+    endif
+
+    if (hist_wrtch4diag) then
+       this%ch4_oxid_tot_col(begc:endc) = spval
+       call hist_addfld1d (fname='CH4_OXID_COL', units='gC/m2/s', &
+            avgflag='A', long_name='Column oxidation of CH4 to CO2', &
+            ptr_col=this%ch4_oxid_tot_col)
+    endif
 
     if (hist_wrtch4diag .and. allowlakeprod) then
        this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
@@ -1825,8 +1843,6 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     real(r8) :: dtime_ch4                              ! ch4 model time step (sec)
     integer  :: nstep
     integer  :: jwt(bounds%begc:bounds%endc)           ! index of the soil layer right above the water table (-)
-    real(r8) :: ch4_prod_tot(bounds%begc:bounds%endc)  ! CH4 production for column (g C/m**2/s)
-    real(r8) :: ch4_oxid_tot(bounds%begc:bounds%endc)  ! CH4 oxidation for column (g C/m**2/s)
     real(r8) :: nem_col(bounds%begc:bounds%endc)       ! net adjustment to atm. C flux from methane production (g C/m**2/s)
     real(r8) :: totalsat
     real(r8) :: totalunsat
@@ -1896,6 +1912,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
          ch4_oxid_depth_lake  =>   ch4_inst%ch4_oxid_depth_lake_col          , & ! Output: [real(r8) (:,:) ]  CH4 consumption rate via oxidation in each soil layer (mol/m3/s) (nlevsoi)
          ch4_prod_depth_sat   =>   ch4_inst%ch4_prod_depth_sat_col           , & ! Output: [real(r8) (:,:) ]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
          ch4_prod_depth_unsat =>   ch4_inst%ch4_prod_depth_unsat_col         , & ! Output: [real(r8) (:,:) ]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
+         ch4_prod_tot         =>   ch4_inst%ch4_prod_tot_col                 , & ! Output: [real(r8) (:,:) ] col CH4 production flux (mol/m2/s)
+         ch4_oxid_tot        =>   ch4_inst%ch4_oxid_tot_col                  , & ! Output: [real(r8) (:,:) ] col CH4 oxidation flux (mol/m2/s)
          ch4_prod_depth_lake  =>   ch4_inst%ch4_prod_depth_lake_col          , & ! Output: [real(r8) (:,:) ]  production of CH4 in each soil layer (nlevsoi) (mol/m3/s)
          lake_soilc           =>   ch4_inst%lake_soilc_col                   , & ! Output: [real(r8) (:,:) ]  total soil organic matter found in level (g C / m^3) (nlevsoi)
          conc_ch4_sat         =>   ch4_inst%conc_ch4_sat_col                 , & ! Output: [real(r8) (:,:) ]  CH4 conc in each soil layer (mol/m3) (nlevsoi)  
@@ -3814,6 +3832,8 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
       organic_max = CNParamsShareInst%organic_max
 
       ! Set the Henry's Law coefficients
+      ! k_h_inv uses (4.12) Wania (L atm/mol)
+      ! k_h_cc uses  (4.21) Wania [(mol/m3w) / (mol/m3g)]
       do j = -1,nlevsoi
          do fc = 1, num_methc
             c = filter_methc (fc)
@@ -3821,16 +3841,13 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
             do s=1,2         
                if (j == -1) then
                   k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_grnd(c) - 1._r8 / kh_tbase) + log (kh_theta(s)))
-                  ! (4.12) Wania (L atm/mol)
-                  k_h_cc(c,j,s) = t_grnd(c) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+                  k_h_cc(c,j,s) = t_grnd(c) / k_h_inv * rgasLatm
                elseif (j == 0) then ! use j=1 temperature for surface layer 
                   k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_soisno(c,1) - 1._r8 / kh_tbase) + log (kh_theta(s)))
-                  ! (4.12) Wania (L atm/mol)
-                  k_h_cc(c,j,s) = t_soisno(c,1) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+                  k_h_cc(c,j,s) = t_soisno(c,1) / k_h_inv * rgasLatm 
                else
                   k_h_inv = exp(-c_h_inv(s) * (1._r8 / t_soisno(c,j) - 1._r8 / kh_tbase) + log (kh_theta(s)))
-                  ! (4.12) Wania (L atm/mol)
-                  k_h_cc(c,j,s) = t_soisno(c,j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
+                  k_h_cc(c,j,s) = t_soisno(c,j) / k_h_inv * rgasLatm
                end if
             end do
          end do
@@ -4012,7 +4029,6 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
                     + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
             else if (surface_layer_ch4stress < 1._r8 .and. &
                  (source(c,j,1) + surface_layer_conc_ch4(c) / dtime &
-                 !) > 1.e-12_r8) then
                  + ch4_ebul_total(c)/surface_layer_thickness(c)) > 1.e-12_r8) then
                write(unit=err_msg,fmt='(a,e14.8,i8,i8)') 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + surface_layer_conc_ch4(c) / dtime + ch4_ebul_total(c)/surface_layer_thickness(c), c, j
