@@ -12,7 +12,7 @@ We describe here the complete crop and irrigation parameterizations that appear 
 
 CLM5.0 includes the following new updates to the CROP option, where CROP refers to the interactive crop management model and is included as an option with the BGC configuration:
 
-- Additional crop functional types
+- New crop functional types
 
 - All crop areas are actively managed
 
