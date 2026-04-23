@@ -61,6 +61,7 @@ jobs:
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs
         run: |
+          set -o pipefail
           mkdir -p build-logs
           cd doc && ./build_docs -b ${PWD}/_build -c -d 2>&1 | tee "${GITHUB_WORKSPACE}/build-logs/build.log"
 
