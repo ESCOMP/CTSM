@@ -51,9 +51,9 @@ jobs:
           PR_NUMBER=$(cat "${DOCS_FAILURE_ARTIFACT}/pr_number.txt")
 
           {
-            echo "## ❌ Docs build failed"
+            echo "### ❌ Docs build failed"
             echo
-            echo "<details>"
+            echo "<details open>"
             echo "<summary>Build logs</summary>"
             echo
             echo '```'
