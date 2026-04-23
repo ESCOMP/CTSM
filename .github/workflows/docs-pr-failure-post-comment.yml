@@ -10,7 +10,9 @@ on:
 
 jobs:
   comment:
-    if: github.event.workflow_run.event == 'pull_request'
+    if: >-
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
