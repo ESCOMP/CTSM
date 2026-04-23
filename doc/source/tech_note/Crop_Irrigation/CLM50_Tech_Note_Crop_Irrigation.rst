@@ -6,7 +6,7 @@ Crops and Irrigation
 .. _Summary of CLM5.0 updates relative to the CLM4.5:
 
 Summary of CLM5.0 updates relative to the CLM4.5
------------------------------------------
+----------------------------------------
 
 We describe here the complete crop and irrigation parameterizations that appear in CLM5.0. Corresponding information for CLM4.5 appeared in the CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`).
 
