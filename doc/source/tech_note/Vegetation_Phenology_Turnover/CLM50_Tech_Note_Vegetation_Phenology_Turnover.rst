@@ -94,7 +94,7 @@ where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is
 
 and *t*\ :sub:`onset` (s) is the number of seconds remaining in the current phenology onset growth period (Figure 14.1). The form of Eq. :eq:`ZEqnNum852972` produces a flux from the transfer pool which declines linearly over the onset growth period, approaching zero flux in the final timestep.
 
-14.1.2 Offset Periods
+Offset Periods
 ^^^^^^^^^^^^^^^^^^^^^
 
 The deciduous phenology algorithms also specify the occurrence of litterfall during offset periods. In contrast to the onset periods, only leaf and fine root state variables are subject to litterfall fluxes. Carbon fluxes from display pools into litter are calculated during these periods as:
