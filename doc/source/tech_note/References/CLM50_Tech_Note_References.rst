@@ -11,6 +11,10 @@ Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting long-term pat
 
 Aber, J.D., Goodale, C.L., Ollinger, S.V., Smith, M.-L., Magill, A.H., Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen deposition altering the nitrogen status of northeastern forests? BioScience 53:375-389.
 
+.. _AinsworthRogers2007:
+
+Ainsworth, E. A. and Rogers, A. 2007. The response of photosynthesis and stomatal conductance to rising (CO2): mechanisms and environmental interactions, Plant Cell Environ. 30:258-270.
+
 .. _AlduchovandEskridge1996:
 
 Alduchov, O.A., and Eskridge, R.E. 1996. Improved Magnus form approximation of saturation vapor pressure. J. Appl. Meteor. 35:601-609.
@@ -83,6 +87,10 @@ Baird, A.J., Beckwith, C.W., Waldron, S. and Waddington, J.M., 2004. Ebullition 
 
 Baldocchi, D., et al. 2001. FLUXNET: A new tool to study the temporal and spatial variability of ecosystem-scale carbon dioxide, water vapor, and energy flux densities. Bull. Amer. Meteor. Soc. 82:2415-2433.
 
+.. _Balletal1987:
+
+Ball, J.T., Woodrow, I.E., and Berry, J.A. 1987. A model predicting stomatal conductance and its contribution to the control of photosynthesis under different environmental conditions. Dordrecht, The Netherlands, 221-224.
+
 .. _Barbottinetal2005:
 
 Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen remobilization during grain filling in wheat: Genotypic and environmental effects. Crop Sci. 45:1141-1150.
@@ -90,6 +98,11 @@ Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen rem
 .. _Batjes2006:
 
 Batjes, N.H., 2006. ISRIC-WISE derived soil properties on a 5 by 5 arc-minutes global grid. Report 2006/02 (available through : http://www.isric.org)
+
+.. _Bauerleetal2012:
+
+Bauerle, W.L., Oren, R., Way, D.A., Qian, S.S., Stoy, P.C., Thornton, P.E., Bowden, J.D., Hoffman, F.M., and Reynolds, R.F. 2012. Photoperiodic regulation of the seasonal pattern of photosynthetic capacity and the implications for carbon cycling. Proc. Natl. Acad. Sci. USA, 109:8612-8617.
+
 
 .. _Berger1978a:
 
@@ -238,6 +251,10 @@ Collatz, G.J., Ribas-Carbo, M., and Berry, J.A. 1992. Coupled photosynthesis-sto
 .. _Colmer2003:
 
 Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on internal aeration and radial oxygen loss from roots. Plant Cell and Environment 26:17-36.
+
+.. _ComstockEhleringer1986:
+
+Comstock, J. and Ehleringer, J.R. 1986. Photoperiod and photosynthetic capacity in *Lotus scoparius*. Plant Cell Environ. 9:609-612.
 
 .. _Conwayetal1996:
 
@@ -863,6 +880,10 @@ Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simul
 
 Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M., Zender, C.S., and Luo, C. 2006. Change in atmospheric mineral aerosols in response to climate: last glacial period, pre-industrial, modern and doubled CO\ :sub:`2` climates. J. Geophys. Res\ *.* 111:D10202. DOI:10.1029/2005JD006653.
 
+.. _Maireetal2012:
+
+Maire, V., Martre, P., Kattge, J., Gastal, F., Esser, G., Fontaine, S., and Soussana, F. 2012. The coordination of leaf photosynthesis links C and N fluxes in C3 plant species, PLos ONE, 7:e38245. doi:38310.31371/journal.pone.0038345.
+
 .. _Makela2002:
 
 Makela, A. 2002. Derivation of stem taper from the pipe model theory in a carbon balance framework. Tree Phys. 22:891-905.
@@ -954,7 +975,11 @@ Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical global ve
 
 .. _Niinemetstal1998:
 
-Niinemets, U., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
+Niinemets, Ü., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
+
+.. _NiinetmetsTenhunen1997:
+
+Niinemets, Ü. and Tenhunen, J.D. 1997. A model separating leaf structural and biphysiological effects on carbon gain along light gradients for the shade-tolerant species *Acer saccharum*. Plant Cell Environ., 20:845-86.
 
 .. _Niuetal2005:
 
@@ -1300,6 +1325,10 @@ Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. 
 
 Sollins, P., 1982. Input and decay of coarse woody debris in coniferous stands in western Oregon and Washington. Canadian Journal of Forest Research, 12: 18-28.
 
+.. _Songetal2013:
+
+Song, Y.H., Ito, S., and Imaizumi, T. 2013. Flowering time regulation: photoperiod- and temperature-sensing in leaves. Trends Plant Sci. 18:575–583.
+
 .. _SonGower1991:
 
 Son, Y. and Gower, S.T., 1991. Aboveground nitrogen and phosphorus use by five plantation-grown trees with different leaf longevities. Biogeochemistry, 14: 167-191.
@@ -1355,6 +1384,10 @@ Subin, Z.M., Murphy, L.N., Li, F., Bonfils, C. and Riley, W.J., 2012b. Boreal la
 .. _Sunetal2012:
 
 Sun, Y., Gu, L., and Dickinson, R. E. 2012. A numerical issue in calculating the coupled carbon and water fluxes in a climate model, J. Geophys. Res., 117, D22103. DOI:10.1029/2012JD018059.
+
+.. _Suzukietal2001:
+
+Suzuki, Y., Makino, A. and Mae, T. 2001. Changes in the turnover of Rubisco and levels of mRNAs of rbcL and rbcS in rice leaves from emergence to senescence. Plant, Cell & Environment, 24:1353-1360. DOI:10.1046/j.0016-8025.2001.00789.x
 
 .. _Swensonetal2012:
 
@@ -1504,6 +1537,10 @@ Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea
 
 Vitousek, P.M., and Howarth, R.W. 1991. Nitrogen limitation on land and in the sea: How can it occur? Biogeochem. 13:87-115.
 
+.. _Walkeretal2014:
+
+Walker, A. P., Beckerman, A. P., Gu, L., Kattge, J., Cernusak, L. A., Domingues, T. F., Scales, J. C., Wohlfahrt, G., Wullschleger, S. D., and Woodward, F. I. 2014. The relationship of leaf photosynthetic traits - Vcmax and Jmax - to leaf nitrogen, leaf phosphorus, and specific leaf area: a meta-analysis and modeling study. Ecology and Evolution, 4:3218-3235.
+
 .. _Walteretal2001:
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
@@ -1559,6 +1596,10 @@ Wu, H., J. S. Kimball, N. Mantua, and J. Stanford, 2011: Automated upscaling of 
 .. _Wuetal2012:
 
 Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler, 2012. A New Global River Network Database for Macroscale Hydrologic modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
+
+.. _Wullschleger1993:
+
+Wullschleger, S.D. 1993.  Biochemical limitations to carbon assimilation in C3 plants: a retrospective analysis of A/Ci curves from 109 species. J. Exp Bot. 44:907-920.
 
 .. _xiaodong2005:
 
