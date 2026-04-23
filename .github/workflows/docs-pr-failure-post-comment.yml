@@ -1,0 +1,56 @@
+name: Post PR comment with doc-build failure log
+
+env:
+  DOCS_FAILURE_ARTIFACT: docs-build-failed
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Check for failure artifact
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api repos/$REPO/actions/runs/${{ github.event.workflow_run.id }}/artifacts \
+            --jq '.artifacts[] | select(.name == "${{ env.DOCS_FAILURE_ARTIFACT }}") | .id' > artifact_id.txt
+          
+          if [ -s artifact_id.txt ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download logs
+        if: steps.check.outputs.found == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.DOCS_FAILURE_ARTIFACT }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post comment
+        if: steps.check.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          PR_NUMBER=$(gh api \
+            repos/$REPO/actions/runs/${{ github.event.workflow_run.id }}/pull_requests \
+            --jq '.[0].number')
+
+          gh pr comment $PR_NUMBER --repo $REPO --body "## ❌ Docs build failed
+
+          <details>
+          <summary>Build logs</summary>
+
+          \`\`\`
+          $(cat ${{ env.DOCS_FAILURE_ARTIFACT }}/build.log)
+          \`\`\`
+
+          </details>"
