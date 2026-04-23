@@ -53,7 +53,7 @@ jobs:
           {
             echo "### ❌ Docs build failed"
             echo
-            echo "<details open>"
+            echo '<details open="true">'
             echo "<summary>Build logs</summary>"
             echo
             echo '```'
