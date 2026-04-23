@@ -1,7 +1,7 @@
 name: Post PR comment with doc-build failure log
 
 env:
-  DOCS_FAILURE_ARTIFACT: docs-build-failed
+  DOCS_FAILURE_ARTIFACT: test-build-docs-container_failed
 
 on:
   workflow_run:
