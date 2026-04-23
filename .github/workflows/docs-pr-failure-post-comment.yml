@@ -51,13 +51,17 @@ jobs:
             repos/$REPO/actions/runs/${{ github.event.workflow_run.id }}/pull_requests \
             --jq '.[0].number')
 
-          gh pr comment $PR_NUMBER --repo $REPO --body "## ❌ Docs build failed
+          {
+            echo "## ❌ Docs build failed"
+            echo
+            echo "<details>"
+            echo "<summary>Build logs</summary>"
+            echo
+            echo '```'
+            cat "${DOCS_FAILURE_ARTIFACT}/build.log"
+            echo '```'
+            echo
+            echo "</details>"
+          } > comment-body.md
 
-          <details>
-          <summary>Build logs</summary>
-
-          \`\`\`
-          $(cat ${{ env.DOCS_FAILURE_ARTIFACT }}/build.log)
-          \`\`\`
-
-          </details>"
+          gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file comment-body.md
