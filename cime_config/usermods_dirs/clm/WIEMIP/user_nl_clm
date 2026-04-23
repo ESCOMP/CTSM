@@ -1,0 +1,25 @@
+fsurdat = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_WIEMIP_c260408.nc'
+!paramfile = '/glade/work/wwieder/modified_inputs/ctsm60_params.genericCropFix.ch4cal_e.c260410.nc'
+
+! suggested fire chagnes from Fang
+borpeat_fire_soilmoist_denom=0.35d00
+paramfile = '/glade/u/home/fangli/ctsm60_params.genericCropFix.ch4cal_e.fire.c260422.nc'
+
+use_c13 = .false.
+use_c14 = .false.
+
+! 16 column hillslope and vegetation data
+!hillslope_file = '/glade/derecho/scratch/swensosc/WIEMIP/hillslope_geo_params_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+
+! 9 column hillslope file
+hillslope_file = '/glade/work/swensosc/HillslopeHydrology/InputData/Global/hillslope_geo_params_3_col_3_aspect_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+use_hillslope = .true.
+use_hillslope_routing = .true.
+
+! with bgc active
+finundation_method = 'h2osfc'
+
+hillslope_fsat_equals_zero = .true.
+n_dom_pfts = 2
+
+
