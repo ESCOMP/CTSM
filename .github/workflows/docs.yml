@@ -63,7 +63,10 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build-logs
-          cd doc && PYTHONUNBUFFERED=1 ./build_docs -b ${PWD}/_build -c -d 2>&1 | tee "${GITHUB_WORKSPACE}/build-logs/build.log"
+          cd doc && NO_COLOR=1 PYTHONUNBUFFERED=1 ./build_docs -b ${PWD}/_build -c -d 2>&1 | tee "${GITHUB_WORKSPACE}/build-logs/build.log"
+        # 2>&1 | tee "${GITHUB_WORKSPACE}/build-logs/build.log" to produce a log file that will get posted in the PR comment from docs-pr-failure-post-comment.yml
+        # NO_COLOR=1 because otherwise the log will get rendered weird in the PR comment
+        # PYTHONUNBUFFERED=1 because otherwise the teed log will be out of order
 
       - name: Record PR number
         if: failure() && steps.build-docs.outcome == 'failure' && github.event_name == 'pull_request'
