@@ -63,9 +63,15 @@ jobs:
         run: |
           cd doc && ./build_docs -b ${PWD}/_build -c -d
 
+      - name: Record PR number
+        if: failure() && steps.build-docs.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          mkdir -p build-logs
+          echo "${{ github.event.pull_request.number }}" > build-logs/pr_number.txt
+
       - name: Upload logs on failure
         if: failure() && steps.build-docs.outcome == 'failure'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: test-build-docs-container_failed
-          path: build-logs/build.log
+          path: build-logs/

@@ -48,9 +48,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          PR_NUMBER=$(gh api \
-            repos/$REPO/actions/runs/${{ github.event.workflow_run.id }}/pull_requests \
-            --jq '.[0].number')
+          PR_NUMBER=$(cat "${DOCS_FAILURE_ARTIFACT}/pr_number.txt")
 
           {
             echo "## ❌ Docs build failed"
