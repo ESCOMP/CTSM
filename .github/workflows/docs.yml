@@ -68,7 +68,10 @@ jobs:
         # NO_COLOR=1 because otherwise the log will get rendered weird in the PR comment
         # PYTHONUNBUFFERED=1 because otherwise the teed log will be out of order
 
-      - name: Record PR number
+      # The rest of the steps only trigger on failure of above build-docs step.
+      # They upload logs that will be used by the docs-pr-failure-post-comment.yml workflow.
+
+      - name: Record PR number on failure
         if: failure() && steps.build-docs.outcome == 'failure' && github.event_name == 'pull_request'
         run: |
           mkdir -p build-logs
