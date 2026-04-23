@@ -3720,7 +3720,7 @@
       <option name="comment">Fates with clm6_0</option>
     </options>
   </test>
-  <test name="PFS_Ld5" grid="f45_f45_mt232" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesCold">
+  <test name="PFS_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
@@ -3731,7 +3731,7 @@
       <option name="comment">Performance test for Fates with clm6_0</option>
     </options>
   </test>
-  <test name="PFS_Ld5" grid="f45_f45_mt232" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
+  <test name="PFS_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
