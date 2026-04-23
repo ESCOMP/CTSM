@@ -3,7 +3,7 @@
 Photosynthetic Capacity
 =======================
 
-The photosynthetic capacity is represented by two key parameters: 1) the maximum rate of carboxylation at 25 °C, :math:`V_{\text{c,max25}}`; and 2) the maximum rate of electron transport at 25 °C, :math:`J_{\text{max25}}`. They are predicted by a mechanistic model of leaf utilization of nitrogen for assimilation (LUNA V1.0) (:ref:`Ali et al. 2016<Alietal2016>`) based on an optimality hypothesis to nitrogen allocation among light capture, electron transport, carboxylation, respiration and storage. Specifically, the model allocates the nitrogen by maximizing the daily net photosynthetic carbon gain under following two key assumptions:
+The photosynthetic capacity is represented by two key parameters: 1) the maximum rate of carboxylation at 25°C, :math:`V_{\text{c,max25}}`; and 2) the maximum rate of electron transport at 25 °C, :math:`J_{\text{max25}}`. They are predicted by a mechanistic model of leaf utilization of nitrogen for assimilation (LUNA V1.0) (:ref:`Ali et al. 2016<Alietal2016>`) based on an optimality hypothesis to nitrogen allocation among light capture, electron transport, carboxylation, respiration and storage. Specifically, the model allocates the nitrogen by maximizing the daily net photosynthetic carbon gain under following two key assumptions:
 
 - nitrogen allocated for light capture, electron transport and carboxylation are co-limiting;
 
