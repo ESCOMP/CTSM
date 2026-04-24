@@ -1270,7 +1270,7 @@ sub setup_cmdl_spinup {
        $nl_flags->{'bgc_spinup'} = "off";
     }
     # For AD spinup mode by default reseed dead plants
-    if ( $nl_flags->{$var} ne "off" ) {
+    if ( $nl_flags->{$var} ne "off" && &value_is_true($nl_flags->{'use_cn'}) ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
                     $defaults, $nl, "reseed_dead_plants", clm_accelerated_spinup=>$nl_flags->{$var},
                     use_cn=>$nl_flags->{'use_cn'} );
