@@ -22,6 +22,7 @@ branch="$(echo $branch_url | cut -d/ -f7)"
 clone_dir="preview_docs_pr.${owner}.${fork}.${branch}"
 set +u
 if [[ "$SCRATCH" != "" ]]; then
+    set -u
     clone_dir="$SCRATCH/${clone_dir}"
 fi
 set -u
