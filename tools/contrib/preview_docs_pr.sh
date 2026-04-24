@@ -19,8 +19,12 @@ ssh_url="git@github.com:${owner}/${fork}.git"
 branch="$(echo $branch_url | cut -d/ -f7)"
 
 # TODO: May not be within an existing git repo; would cause problems with git-fleximod
-# TODO: Default to a subdir of $SCRATCH, if available
 clone_dir="preview_docs_pr.${owner}.${fork}.${branch}"
+set +u
+if [[ "$SCRATCH" != "" ]]; then
+    clone_dir="$SCRATCH/${clone_dir}"
+fi
+set -u
 
 # Clone
 cmd="git clone -b ${branch} -o ${owner} ${ssh_url} ${clone_dir}"
