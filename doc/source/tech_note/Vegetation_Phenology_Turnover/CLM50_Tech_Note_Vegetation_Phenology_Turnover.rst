@@ -318,16 +318,16 @@ The onset trigger for the seasonal-deciduous phenology algorithm is based on an 
 
    GDD_{sum}^{n} =\left\{\begin{array}{l} {GDD_{sum}^{n-1} +\left(T_{s,l} -TKFRZ\right)f_{day} \qquad {\rm for\; }T_{s,l} >TKFRZ} \\ {GDD_{sum}^{n-1} \qquad \qquad \qquad {\rm for\; }T_{s,l} \le TKFRZ} \end{array}\right.
 
-where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by the :math:`{phenology\_soil\_depth}`` parameter (default is layer 3), and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
+where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by the *phenology_soil_depth* parameter (default is layer 3), and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
 
 .. math::
    :label: ZEqnNum598907
 
    GDD_{sum\_ crit} =sf\cdot \exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
 
-and where :math:`{sf}` is a tunable scaling parameter (:math:`{crit\_onset\_gdd\_sf=1`), :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K).  
+and where *sf* is a tunable scaling parameter (*crit\_onset\_gdd\_sf=1*), :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K).  
 
-For boreal and arctic seasonal-deciduous plants, the spring onset environmental criteria is modified based on :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is initiated when all three of the following criteria are met: the 10-day average soil temperature at :math:`{phenology\_soil\_depth}` exceeds :math:`0^\circ C`, the 5-day average 2 m air temperature exceeds :math:`0^\circ C`, and the 5-day snow depth falls below a threshold (:math:`{snow5d\_thresh\_for\_onset = 0.2 m}`). 
+For boreal and arctic seasonal-deciduous plants, the spring onset environmental criteria is modified based on :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is initiated when all three of the following criteria are met: the 10-day average soil temperature at *phenology_soil_depth* exceeds :math:`0^\circ C`, the 5-day average 2 m air temperature exceeds :math:`0^\circ C`, and the 5-day snow depth falls below a threshold (*snow5d_thresh_for_onset = 0.2 m*). 
 
 The following control variables are set when a new onset growth period is initiated:
 
