@@ -18,7 +18,7 @@ Fluxes of carbon and nitrogen from storage pools and into displayed tissue pools
 
  Example of annual phenology cycle for seasonal deciduous.
 
-14.1.1 Onset Periods
+Onset Periods
 ^^^^^^^^^^^^^^^^^^^^
 
 The deciduous phenology algorithms specify the occurrence of onset growth periods (Figure 14.1). Carbon fluxes from the transfer pools into displayed growth are calculated during these periods as:
@@ -139,7 +139,7 @@ Corresponding nitrogen fluxes during litterfall take into account retranslocatio
 
 where CN is C:N.
 
-14.1.3 Background Onset Growth
+Background Onset Growth
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The stress-deciduous phenology algorithm includes a provision for the case when stress signals are absent, and the vegetation shifts from a deciduous habit to an evergreen habit, until the next occurrence of an offset stress trigger. In that case, the regular onset flux mechanism is switched off and a background onset growth algorithm is invoked (:math:`{r}_{bgtr} > 0`). During this period, small fluxes of carbon and nitrogen from the storage pools into the associated transfer pools are calculated on each time step, and the entire contents of the transfer pool are added to the associated displayed growth pool on each time step. The carbon fluxes from transfer to display pools under these conditions are:
@@ -206,7 +206,7 @@ and the corresponding nitrogen fluxes are:
 
    NF_{deadcroot\_ xfer,deadcroot} ={NS_{deadcroot\_ xfer} \mathord{\left/ {\vphantom {NS_{deadcroot\_ xfer}  \Delta t}} \right.} \Delta t} .
 
-14.1.4 Background Litterfall
+Background Litterfall
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Both evergreen and stress-deciduous phenology algorithms can specify a litterfall flux that is not associated with a specific offset period, but which occurs instead at a slow rate over an extended period of time, referred to as background litterfall. For evergreen types the background litterfall is the only litterfall flux. For stress-deciduous types either the offset period litterfall or the background litterfall mechanism may be active, but not both at once. Given a specification of the background litterfall rate (:math:`{r}_{bglf}`, s\ :sup:`-1`), litterfall carbon fluxes are calculated as
@@ -238,7 +238,7 @@ with corresponding nitrogen litterfall and retranslocation fluxes:
 
    NF_{leaf,retrans} =\left({CF_{leaf,litter} \mathord{\left/ {\vphantom {CF_{leaf,litter}  CN_{leaf} }} \right.} CN_{leaf} } \right)-NF_{leaf,litter} .
 
-14.1.5 Livewood Turnover
+Livewood Turnover
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The conceptualization of live wood vs. dead wood fractions for stem and coarse root pools is intended to capture the difference in maintenance respiration rates between these two physiologically distinct tissue types. Unlike displayed pools for leaf and fine root, which are lost to litterfall, live wood cells reaching the end of their lifespan are retained as a part of the dead woody structure of stems and coarse roots. A mechanism is therefore included in the phenology routine to effect the transfer of live wood to dead wood pools, which also takes into account the different nitrogen concentrations typical of these tissue types.
@@ -297,7 +297,7 @@ The evergreen phenology algorithm is by far the simplest of the three possible t
 Seasonal-Deciduous Phenology
 ---------------------------------
 
-The seasonal-deciduous phenology algorithm derives directly from the treatment used in the offline model Biome-BGC v. 4.1.2, (Thornton et al., 2002), which in turn is based on the parameterizations for leaf onset and offset for temperate deciduous broadleaf forest from White et al. (1997). Initiation of leaf onset is triggered when a common degree-day summation exceeds a critical value, and leaf litterfall is initiated when daylength is shorter than a critical value. Because of the dependence on daylength, the seasonal deciduous phenology algorithm is only valid for latitudes outside of the tropical zone, defined here as :math:`\left|{\rm latitude}\right|>19.5{\rm {}^\circ }`. Neither the background onset nor background litterfall mechanism is invoked for the seasonal-deciduous phenology algorithm. The algorithm allows a maximum of one onset period and one offset period each year.
+The seasonal-deciduous phenology algorithm derives directly from the treatment used in the offline model Biome-BGC v. 4.1.2, (Thornton et al., 2002), which in turn is based on the parameterizations for leaf onset and offset for temperate deciduous broadleaf forest from White et al. (1997). Initiation of leaf onset is triggered when a common degree-day summation exceeds a critical value, and leaf litterfall is initiated when daylength is shorter than a critical value. Because of the dependence on daylength, the seasonal deciduous phenology algorithm is only valid for latitudes outside of the tropical zone, defined here as :math:`\left|{\rm latitude}\right|>19.5{\rm {}^\circ }`. For arctic and boreal zones, onset and offset are modified following :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is governed by more mechanistic environmental thresholds (soil temperature, air temperature, and snowpack) while the photoperiod threshold for offset scales linearly along a latitudinal gradient at high latitudes. Neither the background onset nor background litterfall mechanism is invoked for the seasonal-deciduous phenology algorithm. The algorithm allows a maximum of one onset period and one offset period each year.
 
 The algorithms for initiation of onset and offset periods use the winter and summer solstices as coordination signals. The period between winter and summer solstice is identified as :math:`{dayl}_{n} > {dayl}_{n-1}`, and the period between summer and winter solstice is identified as :math:`{dayl}_{n} < {dayl}_{n-1}`, where :math:`{dayl}_{n}` and :math:`{dayl}_{n-1}` are the day length(s) calculated for the current and previous timesteps, respectively, using
 
@@ -308,24 +308,28 @@ The algorithms for initiation of onset and offset periods use the winter and sum
 
 where *lat* and *decl* are the latitude and solar declination (radians), respectively, and the factor 13750.9871 is the number of seconds per radian of hour-angle.
 
-14.3.1 Seasonal-Deciduous Onset Trigger
+Seasonal-Deciduous Onset Trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The onset trigger for the seasonal-deciduous phenology algorithm is based on an accumulated growing-degree-day approach (White et al., 1997). The growing-degree-day summation (:math:`{GDD}_{sum}`) is initiated ( :math:`{GDD}_{sum} = 0`) when the phenological state is dormant and the model timestep crosses the winter solstice. Once these conditions are met, :math:`{GDD}_{sum}` is updated on each timestep as
+The onset trigger for the seasonal-deciduous phenology algorithm is based on an accumulated growing-degree-day approach (White et al., 1997) with modifications for boreal and arctic plants from :ref:`Birch et al. (2021)<Birchetal2021>`. The growing-degree-day summation (:math:`{GDD}_{sum}`) is initiated ( :math:`{GDD}_{sum} = 0`) when the phenological state is dormant and the model timestep crosses the winter solstice. Once these conditions are met, :math:`{GDD}_{sum}` is updated on each timestep as
 
 .. math::
    :label: ZEqnNum510730
 
-   GDD_{sum}^{n} =\left\{\begin{array}{l} {GDD_{sum}^{n-1} +\left(T_{s,3} -TKFRZ\right)f_{day} \qquad {\rm for\; }T_{s,3} >TKFRZ} \\ {GDD_{sum}^{n-1} \qquad \qquad \qquad {\rm for\; }T_{s,3} \le TKFRZ} \end{array}\right.
+   GDD_{sum}^{n} =\left\{\begin{array}{l} {GDD_{sum}^{n-1} +\left(T_{s,l} -TKFRZ\right)f_{day} \qquad {\rm for\; }T_{s,l} >TKFRZ} \\ {GDD_{sum}^{n-1} \qquad \qquad \qquad {\rm for\; }T_{s,l} \le TKFRZ} \end{array}\right.
 
-where :math:`{T}_{s,3}` (K) is the temperature of the third soil layer, and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
+where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by the phenology_soil_depth parameter (defaults is third layer), and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
 
 .. math::
    :label: ZEqnNum598907
 
-   GDD_{sum\_ crit} =\exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
+   GDD_{sum\_ crit} =crit_onset_gdd_sf\cdot \exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
 
-and where :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K). The following control variables are set when a new onset growth period is initiated:
+and where :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K), and crit_onset_gdd_sf is a tunable scaling parameter set to 1 by default.  
+
+For boreal and arctic plants, :ref:`Birch et al. (2021)<Birchetal2021>` modified the spring onset environmental criteria, such that the onset period is initiated when the 10 day average of soil temperature is above zero :math:`{T}_{s,l} > 0^\circ C` and the 5 day average of 2m air temperature is above zero :math:`{T}_{2m} > 0^\circ C` and only 10cm of snow water equivalent remains :math:`{SWE} < 0.1 mm`.
+
+The following control variables are set when a new onset growth period is initiated:
 
 .. math::
    :label: 20.48)
@@ -337,7 +341,7 @@ and where :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temp
 
    t_{onset} =86400\cdot n_{days\_ on} ,
 
-where :math:`{n}_{days\_on}` is set to a constant value of 30 days. Fluxes from storage into transfer pools occur in the timestep when a new onset growth period is initiated. Carbon fluxes are:
+where :math:`{n}_{days\_on}` is a parameter with default value of 30 days. Fluxes from storage into transfer pools occur in the timestep when a new onset growth period is initiated. Carbon fluxes are:
 
 .. math::
    :label: ZEqnNum904388
@@ -415,22 +419,24 @@ If the onset criterion (:math:`{GDD}_{sum} > {GDD}_{sum\_crit}`) is not met befo
 
    t_{onfset}^{n} =t_{onfset}^{n-1} -\Delta t
 
-14.3.2 Seasonal-Deciduous Offset Trigger
+Seasonal-Deciduous Offset Trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After the completion of an onset period, and once past the summer solstice, the offset (litterfall) period is triggered when daylength is shorter than 39300 s. The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is set to a constant value of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
+After the completion of an onset period, and once past the summer solstice, the offset (litterfall) period is triggered when daylength is shorter than 39300 s. The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is a constant parameter with default value of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
 
 .. math::
    :label: 20.64)
 
    t_{offset}^{n} =t_{offset}^{n-1} -\Delta t
 
+At high latitudes, a more accurate timing for senescence is a daylength of 15 h :ref:`Eitel et al., (2019)<Eiteletal2019>`. As in :ref:`Birch et al., (2021)<Birchetal2021>`, the daylength threshold is scaled linearly along a latitudinal gradient from 15h at 65N to 11h at 45N.
+
 Stress-Deciduous Phenology
 -------------------------------
 
 The stress-deciduous phenology algorithm was developed specifically for the CLM based in part on the grass phenology model proposed by White et al. (1997). The algorithm handles phenology for vegetation types such as grasses and tropical drought-deciduous trees that respond to both cold and drought-stress signals, and that can have multiple growing seasons per year. The algorithm also allows for the possibility that leaves might persist year-round in the absence of a suitable stress trigger. In that case the phenology switches to an evergreen habit, maintaining a marginally-deciduous leaf longevity (one year) until the occurrence of the next stress trigger.
 
-14.4.1 Stress-Deciduous Onset Triggers
+Stress-Deciduous Onset Triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In climates that are warm year-round, onset triggering depends on soil water availability. At the beginning of a dormant period (end of previous offset period), an accumulated soil water index (:math:`{SWI}_{sum}`, d) is initialized (:math:`{SWI}_{sum} = 0`), with subsequent accumulation calculated as:
@@ -458,7 +464,7 @@ The following control variables are set when a new onset growth period is initia
 
    t_{onfset}^{n} =t_{onfset}^{n-1} -\Delta t
 
-14.4.2 Stress-Deciduous Offset Triggers
+Stress-Deciduous Offset Triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Any one of the following three conditions is sufficient to initiate an offset period for the stress-deciduous phenology algorithm: sustained period of dry soil, sustained period of cold temperature, or daylength shorter than 6 hours. Offset triggering due to dry soil or cold temperature conditions is only allowed once the most recent onset period is complete. Dry soil condition is evaluated with an offset soil water index accumulator (:math:`{OSWI}_{sum}`, d). To test for a sustained period of dry soils, this control variable can increase or decrease, as follows:
@@ -486,7 +492,7 @@ The offset counter is set at the initiation of the offset period: :math:`t_{offs
 
    t_{offset}^{n} =t_{offset}^{n-1} -\Delta t
 
-14.4.3 Stress-Deciduous: Long Growing Season
+Stress-Deciduous: Long Growing Season
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Under conditions when the stress-deciduous conditions triggering offset are not met for one year or longer, the stress-deciduous algorithm shifts toward the evergreen behavior. This can happen in cases where a stress-deciduous vegetation type is assigned in a climate where suitably strong stresses occur less frequently than once per year. This condition is evaluated by tracking the number of days since the beginning of the most recent onset period (:math:`{n}_{days\_active}`, d). At the end of an offset period :math:`{n}_{days\_active}` is reset to 0. A long growing season control variable (*LGS*, range 0 to 1) is calculated as:
@@ -576,7 +582,7 @@ with corresponding nitrogen fluxes:
 
    NF_{deadcroot\_ stor,deadcroot\_ xfer} =NS_{deadcroot\_ stor} r_{bgtr} .
 
-The result, in conjunction with the treatment of background onset growth, is a shift to continuous transfer from storage to display pools at a rate that would result in complete turnover of the storage pools in one year at steady state, once *LGS* reaches 1 (i.e. after two years without stress-deciduous offset conditions). If and when conditions cause stress-deciduous triggering again, :math:`{r}_{bgtr}` is rest to 0.
+The result, in conjunction with the treatment of background onset growth, is a shift to continuous transfer from storage to display pools at a rate that would result in complete turnover of the storage pools in one year at steady state, once *LGS* reaches 1 (i.e. after two years without stress-deciduous offset conditions). If and when conditions cause stress-deciduous triggering again, :math:`{r}_{bgtr}` is reset to 0.
 
 Litterfall Fluxes Merged to the Column Level
 -------------------------------------------------
