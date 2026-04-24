@@ -268,7 +268,7 @@ program mksurfdata
 
   ! Some checking
    if (root_task) then
-     write(ndiag,'(2(a,I))') ' npes = ', npes, ' grid size = ', grid_size
+     write(ndiag,'(2(a,I0))') ' npes = ', npes, ' grid size = ', grid_size
      flush(ndiag)
   end if
   if (petcount >  grid_size ) then
@@ -292,7 +292,7 @@ program mksurfdata
         call shr_sys_abort(subname//" failed to open file pio_iotype.txt")
      end if
      read(nfpio,*)  ! skip file header
-     read(nfpio, '(i)', iostat=ier) pio_iotype
+     read(nfpio, '(I6)', iostat=ier) pio_iotype
      if (ier /= 0) then
         call shr_sys_abort(subname//" failed to read file pio_iotype.txt")
      end if
@@ -325,7 +325,7 @@ program mksurfdata
   node_count = total_nodes(1)
   if (node_count /=  grid_size) then
      if (root_task) then
-        write (ndiag,'(a, I, a, I)') ' node_count = ', node_count, ' grid_size = ', grid_size
+        write (ndiag,'(a, I0, a, I0)') ' node_count = ', node_count, ' grid_size = ', grid_size
         flush(ndiag)
      end if
      call shr_sys_abort(' ERROR: size of input mesh file does not agree with expected size of nx*ny' )

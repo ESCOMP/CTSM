@@ -14,8 +14,8 @@ The Fixation and Uptake of Nitrogen model is based on work by :ref:`Fisher et al
 4. Active uptake of NH4 by ectomycorrhizal plants (:math:`_{active,nh4}`)
 5. Active uptake of NO3 by arbuscular mycorrhizal plants (:math:`_{active,no3}`)
 6. Active uptake of NO3 by ectomycorrhizal plants (:math:`_{active,no3}`)
-7. Nonmycorrhizal uptake of NH4 (:math:`_{nonmyc,no3}`)
-8. Nonmycorrhizal uptake of NO3 (:math:`_{nonmyc,nh4}`)
+7. Nonmycorrhizal uptake of NH4 (:math:`_{nonmyc,nh4}`)
+8. Nonmycorrhizal uptake of NO3 (:math:`_{nonmyc,no3}`)
 
 The notation suffix for each pathway is given in parentheses here. At each timestep, each of these pathways is associated with a cost term (:math:`N_{cost,x}`), a payment in carbon (:math:`C_{nuptake,x}`), and an influx of Nitrogen (:math:`N_{uptake,x}`) where :math:`x` is one of the eight uptake streams listed above.
 

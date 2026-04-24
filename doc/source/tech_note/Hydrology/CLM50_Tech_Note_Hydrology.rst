@@ -87,7 +87,7 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-are the the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
+are the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
 
 .. math::
    :label: 7.10
@@ -196,7 +196,7 @@ while the fraction of the canopy that is dry and transpiring is
    0 &\qquad L+S = 0
    \end{array}\right\}.
 
-Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
+Similarly, the snow-covered fraction of the canopy is used for surface albedo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
 
 .. math::
    :label: 7.23
@@ -598,7 +598,7 @@ where :math:`\left(r_{e,\, i} \right)_{j}` is the effective root fraction for th
 
 and :math:`\left(r_{i} \right)_{j}` is the fraction of roots in layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), :math:`\left(w_{i} \right)_{j}` is a soil dryness or plant wilting factor for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta_{t} \right)_{j}` is a wetness factor for the total soil column for the :math:`j^{th}` PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-The soil water fluxes in :eq:`7.103`,, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
+The soil water fluxes in :eq:`7.103`, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
 
 .. math::
    :label: 7.108
