@@ -6,7 +6,7 @@ Fixation and Uptake of Nitrogen (FUN)
 Introduction
 -----------------
 
-The Fixation and Uptake of Nitrogen model is based on work by :ref:`Fisher et al. (2010)<Fisheretal2010>`, :ref:`Brzostek et al. (2014)<Brzosteketal2014>`, and :ref:`Shi et al. (2016)<Shietal2016>`.  The concept of FUN is that in most cases, Nitrogen uptake requires the expenditure of energy in the form of carbon, and further, that there are numerous potential sources of Nitrogen in the environment which a plant may exchange for carbon. The ratio of carbon expended to Nitrogen acquired is referred to here as the cost, or exchange rate,  of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
+The Fixation and Uptake of Nitrogen model (FUN) is based on work by :ref:`Fisher et al. (2010)<Fisheretal2010>`, :ref:`Brzostek et al. (2014)<Brzosteketal2014>`, and :ref:`Shi et al. (2016)<Shietal2016>`, as described :ref:`Fisher et al. (2019)<Fisheretal2019>`.The concept of FUN is that in most cases, nitrogen (N) uptake requires the expenditure of energy in the form of carbon (C), and further, that there are numerous potential sources of N in the environment which a plant may exchange for C. The ratio of carbon expended to nitrogen acquired is referred to here as the cost, or exchange rate, of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
 
 1. Fixation by symbiotic bacteria in root nodules (for N fixing plants) (:math:`_{fix}`)
 2. Retranslocation of N from senescing tissues (:math:`_{ret}`)
@@ -17,11 +17,13 @@ The Fixation and Uptake of Nitrogen model is based on work by :ref:`Fisher et al
 7. Nonmycorrhizal uptake of NH4 (:math:`_{nonmyc,nh4}`)
 8. Nonmycorrhizal uptake of NO3 (:math:`_{nonmyc,no3}`)
 
-The notation suffix for each pathway is given in parentheses here. At each timestep, each of these pathways is associated with a cost term (:math:`N_{cost,x}`), a payment in carbon (:math:`C_{nuptake,x}`), and an influx of Nitrogen (:math:`N_{uptake,x}`) where :math:`x` is one of the eight uptake streams listed above.
+The notation suffix for each pathway is given in parentheses here. At each timestep, each of these pathways is associated with a cost term (:math:`N_{cost,x}`), a payment in carbon (:math:`C_{nuptake,x}`), and an influx of nitrogen (:math:`N_{uptake,x}`) where :math:`x` is one of the eight uptake streams listed above.
 
 For each PFT, we define a fraction of the total C acquisition that can be used for N fixation (:math:`f_{fixers}`), which is broadly equivalent to the fraction of a given PFT that is capable of fixing Nitrogen, and thus represents an upper limit on the amount to which fixation can be increased in low n conditions.  For each PFT, the cost calculation is conducted twice. Once where fixation is possible and once where it is not. (:math:`f_{fixers}`)
 
 For all of the active uptake pathways, whose cost depends on varying concentrations of N through the soil profile, the costs and fluxes are also determined by soil layer :math:`j`.
+
+Notable changes to FUN in CLM6 inlcude: Updated the emperical function describing the temperature sensitivity of nitrogen fixation (:ref:`Bytnerowicz et al. 2022<Bytnerowiczetal2022>`); Corrected an error in the parameter values for nonmycorrhizal uptake of inorganic N that was published in :ref:`Brzostek et al. (2014)<Brzosteketal2014>`; and Introduction an emperical function that forces target leaf C:N ratios to adjust with atmospheric concentrations of CO\ :sub:`2` (:ref:`Hauser et al 2023<Hauseretal2023>`, this is turned off by default in CLM6). We also acknowledge that previously identified limitations of the implimentation of FUN in CLM remain. These inlclude a reduction in interannual variability of net ecosystem productivity (:ref:`Wieder et al. 2021<Wiederetal2021>`) and strong increases in rates of symbiotic nitrogen fixation under elevated CO\ :sub:`2` (:ref:`Wieder et al. 2019 <Wiederetal2019>`; :ref:`Kou-Giesbrecht et al. 2025 <Kou-Giesbrechtetal2025>`). Future work should address these issues.
 
 Boundary conditions of FUN
 --------------------------------------------------------
@@ -36,17 +38,44 @@ The carbon available for FUN, :math:`C_{avail}` (gC m\ :sup:`-2`) is the total c
 
 Growth respiration is thus only calculated on the part of the carbon uptake that remains after expenditure of C by the FUN module.
 
-Available Soil Nitrogen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 Cost of Nitrogen Fixation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The cost of fixation is derived from :ref:`Houlton et al. (2008)<Houltonetal2008>`.
+Nitrogen fixation rates are demperature dependent. In CLM6 the carbon cost of nitrogen fixation was derived from emperical function fit to data from a greenhouse experiment measuring nitrogen fixation by woody plants from :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`.  CLM5 used a different emperical function to describe the temperature dependence of nitrogenase activity from :ref:`Houlton et al. (2008)<Houltonetal2008>`. 
+
+This Bytnerowicz formulation (:math:`F_B`) defines a temperature dependent N fixation rate function as: 
+
  .. math::
 
-   N_{cost,fix} = -s_{fix}/(1.25 e^{a_{fix} + b_{fix} . t_{soil}  (1 - 0.5 t_{soil}/ c_{fix}) })
+   F_{B} = \left(\frac{T_{max} - T_{soil}}{T_{max} - T_{opt}}\right) \left(\frac{T_{soil} - T_{min}}{T_{opt} - T_{min}}\right)^{\frac{T_{opt}-T_{min}}{T_{max}-T_{opt}}}
 
-Herein, :math:`a_{fix}`, :math:`b_{fix}` and :math:`c_{fix}` are all parameters of the temperature response function of fixation reported by Houlton et al. (2008) (:math:`exp[a+bT_s(1-0.5T_s/c)`).   t_{soil} is the soil temperature in C. The values of these parameters are fitted to empirical data as a=-3.62 :math:`\pm` 0.52, b=0.27:math:`\pm` 0.04 and c=25.15 :math:`\pm` 0.66. 1.25 converts from the temperature response function to a 0-1 limitation factor (as specifically employed by Houlton et al.).  This function is a 'rate' of uptake for a given temperature. Here we assimilated the rate of fixation into the cost term by assuming that the rate is analagous to a conductance for N, and inverting the term to produce a cost/resistance analagoue. We then multiply this temperature term by the minimum cost at optimal temperature (:math:`s_{fix}`) to give a temperature limited cost in terms of C to N ratios.
+where :math:`T_{soil}` is soil temperature (°C), and :math:`T_{min}`, :math:`T_{opt}` , and :math:`T_{max}` define the lower bound, optimum, and upper bound of the biome-specific temperature response. The function is unitless and bounded between 0 and 1. The function is calculated separately for each soil layer and weighted by the fraction of roots present in that layer. The rate function is interpreted as a conductance like term for N acquisition, and its inverse is used to represent a temperature-limited carbon cost of nitrogen fixation (:math:`N_{cost,fix}`) to give a temperature limited cost in terms of C to N ratios: 
+
+.. math::
+
+    N_{cost,\ fix} = \frac{S_{fix}}{F_{B}}
+
+The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and is set as 6 gC :math:`\mathrm{gN}^{-1}`. When soil temperature falls outside the range of :math:`T_{min}` and :math:`T_{max}`, the cost of fixation is set to an arbitrarily large value (10\ :sup:`9`) to effectively suppress N fixation. Parameters for :math:`T_{min}`, :math:`T_{opt}` :math:`T_{max}` differ between tropical and extra tropical plant functional types (PFTs), following the biome specific estimates reported by :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`. Parameter values for tropical and extra-tropical PFTs are as follows:
+
+\ Tropical: :math:`T_{min}` =7.04, :math:`T_{opt}` =33.22, and :math:`T_{max}` =45.35.
+
+\ Extra-tropical: :math:`T_{min}` =−2.04, :math:`T_{opt}` =32.10, and :math:`T_{max}` =43.98. 
+
+
+The Houlton function used in CLM5 the cost of fixation (:math:`N_{cost,fix}`) is calculated as:
+
+ .. math::
+
+   N_{cost,fix} = -S_{fix}/(1.25 e^{a_{fix} + b_{fix} . T_{soil}  (1 - 0.5 T_{soil}/ c_{fix}) })
+
+Herein, :math:`a_{fix}`, :math:`b_{fix}` and :math:`c_{fix}` are all parameters of the temperature response function of fixation reported by Houlton et al. (2008) (:math:`exp[a+bT_{soil}(1-0.5T_{soil}/c)]`).   :math:`T_{soil}` is the soil temperature in C. The values of these parameters are fitted to empirical data as a=-3.62 :math:`\pm` 0.52, b=0.27 :math:`\pm` 0.04 and c=25.15 :math:`\pm` 0.66. 1.25 converts from the temperature response function to a 0-1 limitation factor (as specifically employed by Houlton et al.).  This function is a 'rate' of uptake for a given temperature. Here we assimilated the rate of fixation into the cost term by assuming that the rate is analagous to a conductance for N, and inverting the term to produce a cost/resistance analagoue. We then multiply this temperature term by the minimum cost at optimal temperature (:math:`S_{fix}`) to give a temperature limited cost in terms of C to N ratios.
+
+.. _Figure Carbon costs of N fixation as a function of soil temperature:
+
+.. figure:: image1.png
+
+ Figure Carbon costs of N fixation as a function of soil temperature. Bytnerowicz et al(2022) function for tropical and extra-tropical PFTs (red and blue lines, respectively) that are used in CLM6; and the Houlton et al (2008) function (black line) that was used in CLM5.
+
+
 
 Cost of Active Uptake
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,9 +107,11 @@ where :math:`k_{n,active}` varies according to whether we are considering ecto o
 
 where m=1 pertains to the fraction of the PFT that is ecotmycorrhizal, as opposed to arbuscular mycorrhizal.
 
+CLM6 corrects an error in the calculation of non-mycorrhizal uptake in CLM5, which had swapped parameter values for   :math:`k_{c,nonmyc}` and :math:`k_{n,nonmyc}` that were interited from original publication of :ref:`Brzostek et al. (2014)<Brzosteketal2014>`. 
+
 Resolving N cost across simultaneous uptake streams
 --------------------------------------------------------
-The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN :ref:`(Fisher et al., 2010)<Fisheretal2010>`) utilized a scheme whereby plants only took up N from the cheapest pathway. :ref:`Brzostek et al. (2014)<Brzosteketal2014>` introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` ( gN/gC) as:
+The total cost of N uptake is calculated based on the assumption that carbon is partitioned to each stream in proportion to the inverse of the cost of uptake. So, more expensive pathways receive less carbon. Earlier versions of FUN :ref:`(Fisher et al. 2010<Fisheretal2010>`) utilized a scheme whereby plants only took up N from the cheapest pathway. :ref:`Brzostek et al. (2014)<Brzosteketal2014>` introduced a scheme for the simultaneous uptake from different pathways. Here we calcualate a 'conductance' to N uptake (analagous to the inverse of the cost function conceptualized as a resistance term) :math:`N_{conductance}` (gN/gC) as:
 
  .. math::
 
@@ -162,9 +193,11 @@ First we calculate the cost of extraction (:math:`cost_{retrans}`, gC/gN) for th
 
   cost_{retrans}= k_{retrans} / (1/CN_{fallingleaf})^{1.3}
 
-where :math:`k_{retrans}`  is a parameter controlling the overall cost of resorption, which also increases exponentially as the C:N ratio increases
+where :math:`k_{retrans}`  is a parameter controlling the overall cost of resorption, which also increases exponentially as the C:N ratio increases.
 
-Next, we calculate the amount of C needed to be spent to increase the falling leaf C:N ratio by 1.0 in this iteration :math:`i` (:math:`C_{retrans_spent,i}`,  gC m\ :sup:`-2`) as:
+Next, we calculate the amount of C needed to be spent to increase the falling leaf C:N ratio by 1.0 in this iteration
+:math:`i` (:math:`C_{retrans_spent,i}`,  gC m\ :sup:`-2`) as:
+
  .. math::
 
   C_{retrans,spent,i}   = cost_{retrans}.(N_{fallingleaf} - C_{fallingleaf}/
@@ -194,7 +227,7 @@ Then the falling leaf N is updated:
 
   N_{fallingleaf}    = N_{fallingleaf} - N_{ret,i}
 
-and the :math:`CN_{fallingleaf}` and cost_{retrans} are updated. The amount of available carbon that is either unspent on N acquisition nor accounted for by N uptake is updated:
+and the :math:`CN_{fallingleaf}` and :math:`cost_{retrans}` are updated. The amount of available carbon that is either unspent on N acquisition nor accounted for by N uptake is updated:
 
  .. math::
 
@@ -258,14 +291,19 @@ and the other C and N fluxes can be determined following the logic above.
 
 Modifications to allow variation in C:N ratios
 --------------------------------------------------------
-The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010>` and :ref:`Brzostek et al. (2014)<Brzosteketal2014>` assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. However, the degree to which the C:N ratio varies with N availability is poorly documented, and existing global nitrogen models use a variety of heuristic methods by which to incorporate changing C:N ratios (Zaehle and Friend 2010; Ghimire et al. 2016). This algorithm exists as a placeholder to allow variable C:N ratios to occur, and to allow exploration of how much the parameters controlling their flexibility has on model outcomes. Incorporation of emerging understanding of the controls on tissue stoichiometry should ultimately replace this scheme.
+The original FUN model as developed by :ref:`Fisher et al. (2010)<Fisheretal2010>` and :ref:`Brzostek et al. (2014)<Brzosteketal2014>` assumes a fixed plant tissue C:N ratio. This means that in the case where N is especially limiting, all excess carbon will be utilized in an attempt to take up more Nitrogen. It has been repeatedly observed, however, that in these circumstances in real life, plants have some flexibility in the C:N stoichiometry of their tissues, and therefore, this assumption may not be realistic. However, the degree to which the C:N ratio varies with N availability is poorly documented, and existing global nitrogen models use a variety of heuristic methods by which to incorporate changing C:N ratios (:ref:`Zaehle and Friend 2010<ZaehleandFriend2010>`; :ref:`Ghimire et al. 2016<Ghimireetal2016>`). This algorithm exists as a placeholder to allow variable C:N ratios to occur, and to allow exploration of how much the parameters controlling their flexibility has on model outcomes. Incorporation of emerging understanding of the controls on tissue stoichiometry should ultimately replace this scheme.
 
-Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic, rather than static. Overall N and C availability (:math:`N_{uptake}` and :math:`C_{growth}`) and hence tissue C:N ratios, are both determined by FUN.  Allocation to individual tissues is discussed in the allocation chapter
-
-Here we introduce an algorithm which adjusts the C expenditure on uptake to allow varying tissue C:N ratios. Increasing C spent on uptake will directly reduce the C:N ratio, and reducing C spent on uptake (retaining more for tissue growth) will increase it. C spent on uptake is impacted by both the N cost in the environment, and the existing tissue C:N ratio of the plant. The output of this algorithm is :math:`\gamma_{FUN}`, the fraction of the ideal :math:`C_{nuptake}` calculated from the FUN equation above
+Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic, rather than static. Overall N and C availability (:math:`N_{uptake}` and :math:`C_{growth}`) and hence tissue C:N ratios, are both determined by FUN.  Allocation to individual tissues is discussed in the allocation chapter. CLM5 introduced an algorithm which adjusts the C expenditure on uptake to allow varying tissue C:N ratios. Increasing C spent on uptake will directly reduce the C:N ratio, and reducing C spent on uptake (retaining more for tissue growth) will increase it. C spent on uptake is impacted by both the N cost in the environment, and the existing tissue C:N ratio of the plant. The output of this algorithm is :math:`\gamma_{FUN}`, the fraction of the ideal :math:`C_{nuptake}` calculated from the FUN equation above
 
  .. math::
    C_{nuptake} = C_{nuptake}.\gamma_{FUN}
+
+Subsequent sensitivity tests found relatively low flexibility in the target C:N ratios resulting from this approach (:ref:`Fisher et al. 2019<Fisheretal2019>`). Thus, :ref:`Hauser et al. (2023)<Hauseretal2023>` introduced an additional function to force time evolving foliar C:N ratios to vary with atmospheric CO\ :sub:`2` concentrations as follows:
+
+ .. math::
+   target_{CN} = target_{CN,ref} + max[(CN_{CO_2,slope} . log(CO_{2} / CO_{2,ref})), 0]
+
+where :math:`target_{CN,ref}` is the target C:N ratio for a PFT at the reference CO\ :sub:`2` concentration (:math:`CO_{2,ref}`), and :math:`CN_{CO_2,slope}` is a parameter which controls the sensitivity of foliar C:N ratios to atmospheric CO\ :sub:`2` concentrations. In CLM6 we set :math:`CN_{CO_2,slope} = 0` to turn off this feature in default simulations.
 
 Response of C expenditure to Nitrogen uptake cost
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
