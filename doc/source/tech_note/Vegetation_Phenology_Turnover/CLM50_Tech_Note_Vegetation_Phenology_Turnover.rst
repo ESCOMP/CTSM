@@ -118,7 +118,7 @@ The deciduous phenology algorithms also specify the occurrence of litterfall dur
 
    r_{xfer\_ off} =\frac{2\Delta t}{t_{offset} ^{2} }
 
-where superscripts *n* and *n-1* refer to fluxes on the current and previous timesteps, respectively. The rate coefficient :math:`{r}_{xfer\_off}` varies with time to produce a linearly increasing litterfall rate throughout the offset period. The :math:`biofuel\_harvfrac` (:numref:`Harvest to food and seed`) is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops. The special case for fluxes in the final litterfall timestep (:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that all of the displayed growth is sent to the litter pools or biofuel feedstock pools. The fraction (:math:`biofuel\_harvfrac`) of leaf biomass going to the biofuel feedstock pools (Equation :eq:`25.9`) is defined in Table 26.3 and is only non-zero for prognostic crops. The remaining fraction of leaf biomass (:math:`1-biofuel\_harvfrac`) for deciduous plant types is sent to the litter pools. Similar modifications made for livestem carbon pools for prognostic crops can be found in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
+where superscripts *n* and *n-1* refer to fluxes on the current and previous timesteps, respectively. The rate coefficient :math:`{r}_{xfer\_off}` varies with time to produce a linearly increasing litterfall rate throughout the offset period. The :math:`biofuel\_harvfrac` (:numref:`Harvest to food and seed`) is the harvested fraction of aboveground biomass (leaf & livestem) for bioenergy crops. The special case for fluxes in the final litterfall timestep (:math:`{t}_{offset}` = :math:`\Delta t`\ ) ensures that all of the displayed growth is sent to the litter pools or biofuel feedstock pools. The fraction (*biofuel_harvfrac*) of leaf biomass going to the biofuel feedstock pools (Equation :eq:`25.9`) is defined in Table 26.3 and is only non-zero for prognostic crops. The remaining fraction of leaf biomass (*1-biofuel_harvfrac*) for deciduous plant types is sent to the litter pools. Similar modifications made for livestem carbon pools for prognostic crops can be found in section :numref:`Harvest to food and seed` in Equations :eq:`25.9`-:eq:`25.14`.
 
 Corresponding nitrogen fluxes during litterfall take into account retranslocation of nitrogen out of the displayed leaf pool prior to litterfall (:math:`{NF}_{leaf,retrans}`, gN m\ :sup:`-2` s\ :sup:`-1`). Retranslocation of nitrogen out of fine roots is assumed to be negligible. The fluxes are:
 
@@ -325,7 +325,7 @@ where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by t
 
    GDD_{sum\_ crit} =sf\cdot \exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
 
-and where *sf* is a tunable scaling parameter (*crit\_onset\_gdd\_sf=1*), :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K).  
+and where *sf* is a tunable scaling parameter (*crit_onset_gdd_sf=1*), :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K).  
 
 For boreal and arctic seasonal-deciduous plants, the spring onset environmental criteria is modified based on :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is initiated when all three of the following criteria are met: the 10-day average soil temperature at *phenology_soil_depth* exceeds :math:`0^\circ C`, the 5-day average 2 m air temperature exceeds :math:`0^\circ C`, and the 5-day snow depth falls below a threshold (*snow5d_thresh_for_onset = 0.2 m*). 
 
@@ -429,7 +429,7 @@ After the completion of an onset period, and once past the summer solstice, the 
 
    t_{offset}^{n} =t_{offset}^{n-1} -\Delta t
 
-At high latitudes, :math:`\left|{\rm latitude}\right|>65{\rm {}^\circ }`, a more accurate timing for senescence is a daylength of 15 h :ref:`Eitel et al., (2019)<Eiteletal2019>`. As in :ref:`Birch et al., (2021)<Birchetal2021>`, the daylength threshold is set to 15 h above :math:`65{\rm {}^\circ }` and scaled linearly along a latitudinal gradient to :math:`45{\rm {}^\circ }`
+At high latitudes, :math:`\left|{\rm latitude}\right|>65{\rm {}^\circ }`, a more accurate timing for senescence is a daylength of 15 h :ref:`Eitel et al., (2019)<Eiteletal2019>`. As in :ref:`Birch et al., (2021)<Birchetal2021>`, the daylength threshold is set to 15 h above :math:`65{\rm {}^\circ }` and scaled linearly along a latitudinal gradient to :math:`45{\rm {}^\circ }`.
 
 Stress-Deciduous Phenology
 -------------------------------
@@ -457,7 +457,7 @@ In climates with a cold season, onset triggering depends on both accumulated soi
 
 If :math:`{FD}_{sum} > 15` during the dormant period, then a cold-climate onset triggering criterion is introduced, following exactly the growing degree-day summation (:math:`{GDD}_{sum}`) logic of Eqs. :eq:`ZEqnNum510730` and :eq:`ZEqnNum598907`. At that time :math:`{SWI}_{sum}` is reset (:math:`{SWI}_{sum} = 0`). Onset triggering under these conditions depends on meeting all three of the following criteria: :math:`{SWI}_{sum} > 15`, :math:`{GDD}_{sum} > {GDD}_{sum\_crit}`, and daylength greater than 6 hrs.
 
-The following control variables are set when a new onset growth period is initiated: :math:`{SWI}_{sum} = 0`, :math:`{FD}_{sum} = 0`, :math:`{GDD}_{sum} = 0`, :math:`{n}_{days\_active} = 0`, and :math:`t_{onset} = 86400\cdot n_{days\_ on}`, where :math:`{n}_{days\_on}` is set to a constant value of 30 days. Fluxes from storage into transfer pools occur in the timestep when a new onset growth period is initiated, and are handled identically to Eqs. :eq:`ZEqnNum904388` -:eq:`ZEqnNum195642` for carbon fluxes, and to Eqs. :eq:`ZEqnNum812152` - :eq:`ZEqnNum605338` for nitrogen fluxes. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
+The following control variables are set when a new onset growth period is initiated: :math:`{SWI}_{sum} = 0`, :math:`{FD}_{sum} = 0`, :math:`{GDD}_{sum} = 0`, :math:`{n}_{days\_active} = 0`, and :math:`t_{onset} = 86400\cdot n_{days\_ on}`, where :math:`{n}_{days\_on}` is a constant parameter with default setting of 30 days. Fluxes from storage into transfer pools occur in the timestep when a new onset growth period is initiated, and are handled identically to Eqs. :eq:`ZEqnNum904388` -:eq:`ZEqnNum195642` for carbon fluxes, and to Eqs. :eq:`ZEqnNum812152` - :eq:`ZEqnNum605338` for nitrogen fluxes. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
 
 .. math::
    :label: 20.67)
@@ -485,7 +485,7 @@ The cold temperature trigger is calculated with an offset freezing day accumulat
 
 An offset period is triggered if the previous onset period is complete and :math:`{OFD}_{sum} > {OFD}_{sum\_crit}`, where :math:`{OFD}_{sum\_crit} = 15`.
 
-The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is set to a constant value of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
+The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is a constant parameter with default setting of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
 
 .. math::
    :label: 20.70)
