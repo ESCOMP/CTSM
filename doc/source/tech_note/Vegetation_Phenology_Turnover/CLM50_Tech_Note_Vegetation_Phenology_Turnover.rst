@@ -297,7 +297,7 @@ The evergreen phenology algorithm is by far the simplest of the three possible t
 Seasonal-Deciduous Phenology
 ---------------------------------
 
-The seasonal-deciduous phenology algorithm derives directly from the treatment used in the offline model Biome-BGC v. 4.1.2, (Thornton et al., 2002), which in turn is based on the parameterizations for leaf onset and offset for temperate deciduous broadleaf forest from White et al. (1997). Initiation of leaf onset is triggered when a common degree-day summation exceeds a critical value, and leaf litterfall is initiated when daylength is shorter than a critical value. Because of the dependence on daylength, the seasonal deciduous phenology algorithm is only valid for latitudes outside of the tropical zone, defined here as :math:`\left|{\rm latitude}\right|>19.5{\rm {}^\circ }`. For arctic and boreal zones, onset and offset are modified following :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is governed by more mechanistic environmental thresholds (soil temperature, air temperature, and snowpack) while the photoperiod threshold for offset scales linearly along a latitudinal gradient at high latitudes. Neither the background onset nor background litterfall mechanism is invoked for the seasonal-deciduous phenology algorithm. The algorithm allows a maximum of one onset period and one offset period each year.
+The seasonal-deciduous phenology algorithm derives directly from the treatment used in Biome-BGC v. 4.1.2, (Thornton et al., 2002), which in turn is based on the parameterizations for leaf onset and offset for temperate deciduous broadleaf forest from White et al. (1997). Initiation of leaf onset is triggered when a common degree-day summation exceeds a critical value, and leaf litterfall is initiated when daylength is shorter than a critical value. Because of the dependence on daylength, the seasonal deciduous phenology algorithm is only valid for latitudes outside of the tropical zone, defined here as :math:`\left|{\rm latitude}\right|>19.5{\rm {}^\circ }`. For high latitudes, onset and offset are modified following :ref:`Birch et al. (2021)<Birchetal2021>` where onset is governed by more mechanistic environmental thresholds (soil temperature, air temperature, and snowpack) and the photoperiod threshold for offset is increased. Neither the background onset nor background litterfall mechanism is invoked for the seasonal-deciduous phenology algorithm. The algorithm allows a maximum of one onset period and one offset period each year.
 
 The algorithms for initiation of onset and offset periods use the winter and summer solstices as coordination signals. The period between winter and summer solstice is identified as :math:`{dayl}_{n} > {dayl}_{n-1}`, and the period between summer and winter solstice is identified as :math:`{dayl}_{n} < {dayl}_{n-1}`, where :math:`{dayl}_{n}` and :math:`{dayl}_{n-1}` are the day length(s) calculated for the current and previous timesteps, respectively, using
 
@@ -311,23 +311,23 @@ where *lat* and *decl* are the latitude and solar declination (radians), respect
 Seasonal-Deciduous Onset Trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The onset trigger for the seasonal-deciduous phenology algorithm is based on an accumulated growing-degree-day approach (White et al., 1997) with modifications for boreal and arctic plants from :ref:`Birch et al. (2021)<Birchetal2021>`. The growing-degree-day summation (:math:`{GDD}_{sum}`) is initiated ( :math:`{GDD}_{sum} = 0`) when the phenological state is dormant and the model timestep crosses the winter solstice. Once these conditions are met, :math:`{GDD}_{sum}` is updated on each timestep as
+The onset trigger for the seasonal-deciduous phenology algorithm is based on an accumulated growing-degree-day approach (White et al., 1997) with modifications for boreal and arctic plants :ref:`(Birch et al. 2021)<Birchetal2021>`. The growing-degree-day summation (:math:`{GDD}_{sum}`) is initiated ( :math:`{GDD}_{sum} = 0`) when the phenological state is dormant and the model timestep crosses the winter solstice. Once these conditions are met, :math:`{GDD}_{sum}` is updated on each timestep as
 
 .. math::
    :label: ZEqnNum510730
 
    GDD_{sum}^{n} =\left\{\begin{array}{l} {GDD_{sum}^{n-1} +\left(T_{s,l} -TKFRZ\right)f_{day} \qquad {\rm for\; }T_{s,l} >TKFRZ} \\ {GDD_{sum}^{n-1} \qquad \qquad \qquad {\rm for\; }T_{s,l} \le TKFRZ} \end{array}\right.
 
-where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by the phenology_soil_depth parameter (defaults is third layer), and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
+where :math:`{T}_{s,l}` (K) is the temperature of the soil layer prescribed by the :math:`{phenology\_soil\_depth}`` parameter (default is layer 3), and :math:`f_{day} ={\Delta t\mathord{\left/ {\vphantom {\Delta t 86400}} \right.} 86400}`. The onset period is initiated if :math:`GDD_{sum} >GDD_{sum\_ crit}`, where
 
 .. math::
    :label: ZEqnNum598907
 
-   GDD_{sum\_ crit} =crit_onset_gdd_sf\cdot \exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
+   GDD_{sum\_ crit} =sf\cdot \exp \left(4.8+0.13{\kern 1pt} \left(T_{2m,ann\_ avg} -TKFRZ\right)\right)
 
-and where :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K), and crit_onset_gdd_sf is a tunable scaling parameter set to 1 by default.  
+and where :math:`{sf}` is a tunable scaling parameter (:math:`{crit\_onset\_gdd\_sf=1`), :math:`{T}_{2m,ann\_avg}` (K) is the annual average of the 2m air temperature, and TKFRZ is the freezing point of water (273.15 K).  
 
-For boreal and arctic plants, :ref:`Birch et al. (2021)<Birchetal2021>` modified the spring onset environmental criteria, such that the onset period is initiated when the 10 day average of soil temperature is above zero :math:`{T}_{s,l} > 0^\circ C` and the 5 day average of 2m air temperature is above zero :math:`{T}_{2m} > 0^\circ C` and only 10cm of snow water equivalent remains :math:`{SWE} < 0.1 mm`.
+For boreal and arctic seasonal-deciduous plants, the spring onset environmental criteria is modified based on :ref:`Birch et al. (2021)<Birchetal2021>`. Onset is initiated when all three of the following criteria are met: the 10-day average soil temperature at :math:`{phenology\_soil\_depth}` exceeds :math:`0^\circ C`, the 5-day average 2 m air temperature exceeds :math:`0^\circ C`, and the 5-day snow depth falls below a threshold (:math:`{snow5d\_thresh\_for\_onset = 0.2 m}`). 
 
 The following control variables are set when a new onset growth period is initiated:
 
@@ -412,7 +412,7 @@ and the associated nitrogen fluxes are:
 
 where :math:`{f}_{stor,xfer}` is the fraction of current storage pool moved into the transfer pool for display over the incipient onset period. This fraction is set to 0.5, based on the observation that seasonal deciduous trees are capable of replacing their canopies from storage reserves in the event of a severe early-season disturbance such as frost damage or defoliation due to insect herbivory.
 
-If the onset criterion (:math:`{GDD}_{sum} > {GDD}_{sum\_crit}`) is not met before the summer solstice, then :math:`{GDD}_{sum}` is set to 0.0 and the growing-degree-day accumulation will not start again until the following winter solstice. This mechanism prevents the initiation of very short growing seasons late in the summer in cold climates. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
+If the onset criterion is not met before the summer solstice, then :math:`{GDD}_{sum}` is set to 0.0 and the growing-degree-day accumulation will not start again until the following winter solstice. This mechanism prevents the initiation of very short growing seasons late in the summer in cold climates. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
 
 .. math::
    :label: 20.63)
@@ -422,14 +422,14 @@ If the onset criterion (:math:`{GDD}_{sum} > {GDD}_{sum\_crit}`) is not met befo
 Seasonal-Deciduous Offset Trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After the completion of an onset period, and once past the summer solstice, the offset (litterfall) period is triggered when daylength is shorter than 39300 s. The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is a constant parameter with default value of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
+After the completion of an onset period, and once past the summer solstice, the offset (litterfall) period is triggered when daylength is shorter than 11 h. The offset counter is set at the initiation of the offset period: :math:`t_{offset} =86400\cdot n_{days\_ off}`, where :math:`{n}_{days\_off}` is a constant parameter with default value of 15 days. The offset counter is decremented on each time step after initiation of the offset period, until it reaches zero, signaling the end of the offset period:
 
 .. math::
    :label: 20.64)
 
    t_{offset}^{n} =t_{offset}^{n-1} -\Delta t
 
-At high latitudes, a more accurate timing for senescence is a daylength of 15 h :ref:`Eitel et al., (2019)<Eiteletal2019>`. As in :ref:`Birch et al., (2021)<Birchetal2021>`, the daylength threshold is scaled linearly along a latitudinal gradient from 15h at 65N to 11h at 45N.
+At high latitudes, :math:`\left|{\rm latitude}\right|>65{\rm {}^\circ }`, a more accurate timing for senescence is a daylength of 15 h :ref:`Eitel et al., (2019)<Eiteletal2019>`. As in :ref:`Birch et al., (2021)<Birchetal2021>`, the daylength threshold is set to 15 h above :math:`65{\rm {}^\circ }` and scaled linearly along a latitudinal gradient to :math:`45{\rm {}^\circ }`
 
 Stress-Deciduous Phenology
 -------------------------------
