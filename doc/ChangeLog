@@ -1,4 +1,82 @@
 ===============================================================
+Tag name: ctsm5.4.035
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Apr 24 02:00:21 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Update submodules, enforce irrigate to off for FATES transient cases, and several documentation updates. Including a github action that will trigger when a PR has a build failure for the documentation. It will then add a comment to the PR summarizing the error. Hopefully, this will be easier for doc editors to understand what broke in the build for their PR.
+
+When a PR has the "build docs" tests fail, it's hard to figure out why. This PR will make it so that the doc build log is posted in a PR comment after the test failure. Example samsrabin#17 (comment).
+
+Since ctsm5.3.046: patch%itype is set to -999, which produces out-of-bounds error, when running HIST with fates, since the defaults point to irrigate=.true..
+
+Though there is irrigate=.true. in use_cases, all the statements with .true. value have use_crop=.true. which can not be true when fates is on.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+Fixes #3170
+Most of #3861 except #3968
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   For FATES ensure that irrigate is off for transient cases
+
+Changes to documentation: Updates to the mizuRoute and dust emission chapters
+
+Contributors:  @dmleung @nmizukami @samsrabin @olyson @mvdebolskiy Claude Sonnet 4.6 and Opus 4.7 1M
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit for bit
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): ccs_config, cime, cmeps
+   Update to the latest submodules for the time. This is beyond the versions in cesm3_0_beta08
+
+   ccs_config to ccs_config_cesm1.0.83 (includes grids for the new t233 ocean mask for MOM)
+   cime to cime6.1.176  
+   cmeps to cmeps1.1.44
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+#3624 -- dust emission chapter in Tech Note
+#3925 -- mizuRoute chapter in Tech Note
+#3955 -- New workflow to add comments to PR about a failure in the doc-build action
+#3938 -- Update submodules
+#3812 -- Ensure irrigate is FALSE for FATES for transient cases
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.034
 Originator(s): afoster (Adrianna Foster,UCAR/TSS,303-497-1728)
 Date: Wed Apr 22 11:02:13 AM MDT 2026
