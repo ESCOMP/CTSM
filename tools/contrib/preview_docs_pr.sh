@@ -32,7 +32,12 @@ $cmd
 
 # TODO: Merge PR branch into target branch before building
 
-# TODO: If on Casper: module load podman
+# If on Casper, make sure podman is available
+set +u
+if [[ "$NCAR_HOST" == "casper" ]]; then
+    module load podman
+fi
+set -u
 
 # Build docs
 cd "${clone_dir}"
