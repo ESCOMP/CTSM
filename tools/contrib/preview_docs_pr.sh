@@ -18,13 +18,28 @@ ssh_url="git@github.com:${owner}/${fork}.git"
 
 branch="$(echo $branch_url | cut -d/ -f7)"
 
-# TODO: May not be within an existing git repo; would cause problems with git-fleximod
+# Get clone directory
 clone_dir="preview_docs_pr.${owner}.${fork}.${branch}"
 set +u
 if [[ "$SCRATCH" != "" ]]; then
     clone_dir="$SCRATCH/${clone_dir}"
 fi
 set -u
+
+# Clone may not be within an existing git repo; would cause problems with git-fleximod
+clone_parent="${clone_dir}/.."
+if [[ ! -d "${clone_parent}" ]]; then
+    echo "Clone parent directory does not exist: '${clone_parent}'" >&2
+    exit 1
+fi
+set +e
+git -C "${clone_parent}" rev-parse --is-inside-work-tree 1>/dev/null 2>&1
+is_in_git_repo=$?
+set -e
+if [[ ${is_in_git_repo} -eq 0 ]]; then
+    echo "Trying to clone to '${clone_dir}', which is inside a git repo. Not allowed." >&2
+    exit 2
+fi
 
 # Clone
 cmd="git clone -b ${branch} -o ${owner} ${ssh_url} ${clone_dir}"
