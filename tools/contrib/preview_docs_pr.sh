@@ -20,7 +20,7 @@ branch="$(echo $branch_url | cut -d/ -f7)"
 
 # TODO: May not be within an existing git repo; would cause problems with git-fleximod
 # TODO: Default to a subdir of $SCRATCH, if available
-clone_dir="${owner}.${fork}.${branch}"
+clone_dir="preview_docs_pr.${owner}.${fork}.${branch}"
 
 # Clone
 cmd="git clone -b ${branch} -o ${owner} ${ssh_url} ${clone_dir}"
