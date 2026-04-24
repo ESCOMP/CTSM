@@ -723,38 +723,56 @@ where
 
    S_{r,\, i} =\left(\frac{w_{liq,\, i} }{\rho _{liq} \Delta z_{i} } +\frac{w_{ice,\, i} }{\rho _{ice} \Delta z_{i} } \right)\frac{1}{\theta _{sat,\, i} } =\frac{\theta _{liq,\, i} +\theta _{ice,\, i} }{\theta _{sat,\, i} } \le 1.
 
-Thermal conductivity :math:`\lambda _{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow is from :ref:`Jordan (1991) <Jordan1991>`
+
+
+Thermal conductivity :math:`\lambda _{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow in CLM6.0 is modified from :ref:`Sturm et al. (1997)<Sturmetal1997>`, as applied by :ref:`Dutch et al. (2022)<Dutchetal2022>` and :ref:`Damseaux et al. (2025)<Damseauxetal2025>`. The Sturm function uses of the bulk density of snow to determine the thermal conductivity of snow layer (:math:`_{i}`) as:
 
 .. math::
    :label: 6.87
 
-   \lambda _{i} =\lambda _{air} +\left(7.75\times 10^{-5} \rho _{sno,\, i} +1.105\times 10^{-6} \rho _{sno,\, i}^{2} \right)\left(\lambda _{ice} -\lambda _{air} \right)
+   \lambda _{i} = \left\{
+   \begin{array}{lr}
+   0.023 + 0.234(\rho _{sno,\, i} /1000) &\qquad \rho _{sno,\, i} <= 156 \\
+   0.138 - 1.01(\rho _{sno,\, i} /1000) + 3.233((\rho _{sno,\, i} /1000)^2) &\qquad \rho _{sno,\, i} > 156
+   \end{array}\right\} 
 
-where :math:`\lambda _{air}` is the thermal conductivity of air (:numref:`Table Physical Constants`) and :math:`\rho _{sno,\, i}` is the bulk density of snow (kg m\ :sup:`-3`)
+
+With the bulk density of snow :math:`\rho _{sno,\, i}` (kg m\ :sup:`-3`) calculated as the mass of ice and liquid water per unit volume of snow layer 
 
 .. math::
    :label: 6.88
 
    \rho _{sno,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{\Delta z_{i} } .
+   
+Previou versions of CLM used the :ref:`Jordan (1991) <Jordan1991>` parameterization for snow thermal conductivity, which uses the thermal conductivity of air and the bulk density of snow as: 
+
+.. math::
+   :label: 6.89
+
+   \lambda _{i} =\lambda _{air} +\left(7.75\times 10^{-5} \rho _{sno,\, i} +1.105\times 10^{-6} \rho _{sno,\, i}^{2} \right)\left(\lambda _{ice} -\lambda _{air} \right)
+
+where :math:`\lambda _{air}` is the thermal conductivity of air (:numref:`Table Physical Constants`) and :math:`\rho _{sno,\, i}` calculated, as in :eq:`6.88`.
+
+The Sturm (1997) parameterization is used in CLM6 over vegetated, glacier, and lake land units, but users can choose to use the Jordan (1991) parameterization over any of these land units if desired.
 
 The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from :ref:`de Vries (1963) <deVries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
 
 .. math::
-   :label: 6.89
+   :label: 6.90
 
    c_{i} =c_{s,\, i} \left(1-\theta _{sat,\, i} \right)+\frac{w_{ice,\, i} }{\Delta z_{i} } C_{ice} +\frac{w_{liq,\, i} }{\Delta z_{i} } C_{liq}
 
 where :math:`C_{liq}` and :math:`C_{ice}` are the specific heat capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of liquid water and ice, respectively (:numref:`Table Physical Constants`). The heat capacity of soil solids :math:`c_{s,i}` \ (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 .. math::
-   :label: 6.90
+   :label: 6.91
 
    c_{s,i} =(1-f_{om,i} )c_{s,\min ,i} +f_{om,i} c_{s,om}
 
 where the heat capacity of mineral soil solids :math:`c_{s,\min,\, i}` (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 .. math::
-   :label: 6.91
+   :label: 6.92
 
    \begin{array}{lr}
    c_{s,\min ,\, i} =\left(\frac{2.128{\rm \; }\left(\% sand\right)_{i} +{\rm 2.385\; }\left(\% clay\right)_{i} }{\left(\% sand\right)_{i} +\left(\% clay\right)_{i} } \right)\times 10^{6} &\qquad i=1,\ldots ,N_{levsoi}  \\
@@ -764,14 +782,14 @@ where the heat capacity of mineral soil solids :math:`c_{s,\min,\, i}` (J m\ :su
 where :math:`c_{s,bedrock} =2\times 10^{6}` J m\ :sup:`-3` K\ :sup:`-1` is the heat capacity of bedrock and :math:`c_{s,om} =2.5\times 10^{6}` \ J m\ :sup:`-3` K\ :sup:`-1` (:ref:`Farouki 1981 <Farouki1981>`) is the heat capacity of organic matter. For glaciers and snow
 
 .. math::
-   :label: 6.92
+   :label: 6.93
 
    c_{i} =\frac{w_{ice,\, i} }{\Delta z_{i} } C_{ice} +\frac{w_{liq,\, i} }{\Delta z_{i} } C_{liq} .
 
 For the special case when snow is present (:math:`W_{sno} >0`) but there are no explicit snow layers (:math:`snl=0`), the heat capacity of the top layer is a blend of ice and soil heat capacity
 
 .. math::
-   :label: 6.93
+   :label: 6.94
 
    c_{1} =c_{1}^{*} +\frac{C_{ice} W_{sno} }{\Delta z_{1} }
 
@@ -785,14 +803,14 @@ Excess Ground Ice
 An optional parameterization of excess ground ice melt and respective subsidence based on (:ref:`Lee et al., (2014) <Leeetal2014>`). Initial excess ground ice concentrations for soil columns are derived from (:ref:`Brown et al., (1997) <Brownetal1997>`). When the excess ground ice is present in the soil column, soil depth for a given layer (:math:`z_{i}`) is adjusted by the amount of excess ice in the column:
 
 .. math::
-   :label: 6.94
+   :label: 6.95
 
    z_{i}^{'}=\Sigma_{j=1}^{i} \ z_{j}^{'}+\frac{w_{exice,\, j}}{\rho_{ice} }
 
 where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in layer :math:`j` and :math:`\rho_{ice}` is the density of ice (kg m :sup:`-3`). After adjustment of layer depths have been made, all of the soil temperature equations (from :eq:`6.80` to :eq:`6.89`) are calculted based on the adjusted depths. Thermal properties are additionally adjusted (:eq:`6.8` and :eq:`6.8`) in the following way:
 
 .. math::
-   :label: 6.95
+   :label: 6.96
 
    \begin{array}{lr}
     \theta_{sat}^{'} =\frac{\theta _{liq} }{\theta _{liq} +\theta _{ice} +\theta_{exice}}{\theta_{sat}} \\
@@ -803,7 +821,7 @@ where :math:`w_{exice,\,j}` is excess ground ice amount (kg m :sup:`-2`) in laye
 Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then calculated as:
 
 .. math::
-   :label: 6.96
+   :label: 6.97
 
    z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n }
 

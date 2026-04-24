@@ -279,6 +279,10 @@ Dai, Y., Dickinson, R.E., and Wang, Y.-P. 2004. A two-big-leaf model for canopy 
 
 Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from continents: Latitudinal and seasonal variations. J. Hydrometeor. 3:660-687.
 
+.. _Damseauxetal2025:
+
+Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025
+
 .. _Darmenovaetal2009:
 
 Darmenova, K., Sokolik, I.N., Shao, Y., Marticorena, B. and Bergametti, G., 2009. Development of a physically based dust emission module within the Weather Research and Forecasting (WRF) model: Assessment of dust emission parameterizations and input parameters for source regions in Central and East Asia. Journal of Geophysical Research: Atmospheres, 114(D14). DOI:10.1029/2008JD011236.
@@ -338,6 +342,10 @@ Drewniak, B., Song, J., Prell, J., Kotamarthi, V.R., and Jacob, R. 2013. Modelin
 .. _Dunfieldetal1993:
 
 Dunfield, P., Knowles, R., Dumont, R. and Moore, T.R., 1993. Methane Production and Consumption in Temperate and Sub-Arctic Peat Soils - Response to Temperature and Ph. Soil Biology & Biochemistry 25:321-326.
+
+.. _Dutchetal2022:
+
+Dutch, V.R., Rutter, N., Wake, L., Sandells, M., Derksen, C., Walker, B., Hould Gosselin, G., Sonnentag, O., Essery, R., Kelly, R., Marsh, P., King, J.,  Boike, J. 2022. Impact of measured and simulated tundra snowpack properties on heat transfer, The Cryosphere, 16, 4201–4222, doi:10.5194/tc-16-4201-2022.
 
 .. _EntekhabiEagleson1989:
 
@@ -1403,6 +1411,10 @@ Strahler, A.H., Muchoney, D., Borak, J., Friedl, M., Gopal, S., Lambin, E., and 
 .. _Stull1988:
 
 Stull, R.B. 1988. An Introduction to Boundary Layer Meteorology. Kluwer Academic Publishers, Dordrecht.
+
+.. _Sturmetal1997:
+
+Sturm, M., Holmgren, J., Konig, M., and Morris, K. 1997. The thermal conductivity of seasonal snow. Journal of Glaciology 43:26-41.
 
 .. _Subinetal2012a:
 
