@@ -22,7 +22,7 @@ MizuRoute is a significant advancement beyond the MOSART model used in CLM50. A 
 
 #. MizuRoute like MOSART can also be run connected to the Hillslope option in CTSM.
 
-Furhter reading
+Further reading
 -------------------------
 
 For more information about mizuRoute, please read `mizuRoute Technical note`_.
