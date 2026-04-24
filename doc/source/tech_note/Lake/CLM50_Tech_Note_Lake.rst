@@ -485,7 +485,7 @@ The overall thermal conductivity :math:`\tau _{i}` for layer *i* with ice mass-f
 
    \tau _{i} =\frac{\tau _{ice,eff} \tau _{liq,i} }{\tau _{liq,i} I_{i} +\tau _{ice} \left(1-I_{i} \right)}  .
 
-The thermal conductivity of snow, soil, and bedrock layers above and below the lake, respectively, are computed identically to those for vegetated land units (Chapter :numref:`rst_Soil and Snow Temperatures`), except for the adjustment of thermal conductivity for frost heave or excess ice (:ref:`Subin et al., 2012a, Supporting Information<Subinetal2012a>`).
+The thermal conductivity of snow, soil, and bedrock layers above and below the lake, respectively, are computed identically to those for vegetated land units (Chapter :numref:`rst_Soil and Snow Temperatures`), except for the adjustment of thermal conductivity for frost heave or excess ice (:ref:`Subin et al., 2012a, Supporting Information<Subinetal2012a>`). In CLM6 users can optionally specify using :ref:`Sturm et al. (1997)<Sturmetal1997>` or :ref:`Jordan (1991)<Jordan1991>` parameterizations for snow thermal conductivity over lakes (see Chapter :numref:`rst_Soil and Snow Temperatures`), with Sturm (1997) set as the default.
 
 .. _Radiation Penetration:
 
