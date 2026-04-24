@@ -23,11 +23,8 @@ branch="$(echo $branch_url | cut -d/ -f7)"
 clone_dir="${owner}.${fork}.${branch}"
 
 # Clone
-# TODO: Name remote after owner during clone
-cmd="git clone -b ${branch} ${ssh_url} ${clone_dir}"
+cmd="git clone -b ${branch} -o ${owner} ${ssh_url} ${clone_dir}"
 echo $cmd
-echo $cmd
-echo "..."
 $cmd
 
 # TODO: Merge PR branch into target branch before building
