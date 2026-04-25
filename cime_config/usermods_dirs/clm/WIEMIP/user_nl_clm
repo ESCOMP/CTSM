@@ -2,8 +2,8 @@ fsurdat = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.
 !paramfile = '/glade/work/wwieder/modified_inputs/ctsm60_params.genericCropFix.ch4cal_e.c260410.nc'
 
 ! suggested fire chagnes from Fang
-borpeat_fire_soilmoist_denom=0.35d00
-paramfile = '/glade/u/home/fangli/ctsm60_params.genericCropFix.ch4cal_e.fire.c260422.nc'
+! borpeat_fire_soilmoist_denom=0.35d00
+paramfile = '/glade/u/home/fangli/ctsm60_params.genericCropFix.ch4cal_e.fire.c260424.nc'
 
 use_c13 = .false.
 use_c14 = .false.
@@ -22,4 +22,8 @@ finundation_method = 'h2osfc'
 hillslope_fsat_equals_zero = .true.
 n_dom_pfts = 2
 
+stream_fldfilename_ndep = '/glade/derecho/scratch/slevis/temp_work/WIEMIP/ndep/fndep_clm_hist_from_input4MIPs_surfaceFluxes_C4MIP_MPI-B-1pctNdep-1-0_gn_1850-2000.nc'
+stream_meshfile_ndep = '/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc'
+stream_year_first_ndep = 1850
+stream_year_last_ndep = 1869
 
