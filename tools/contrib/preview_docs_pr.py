@@ -234,9 +234,9 @@ def print_files_msg(code_dir, files):
             continue
 
         # Get string to print
-        f_print = "/".join("/".split(f)[2:])  # Remove leading doc/source/
+        f_print = "/".join(f.split("/")[2:])  # Remove leading doc/source/
         root, extension = os.path.splitext(f_print)
-        basename = "/".split(f)[-1]  # pylint: disable=use-maxsplit-arg
+        basename = f.split("/")[-1]  # pylint: disable=use-maxsplit-arg
         if extension in [".rst", ".md"]:
             # These types get converted to HTML
             f_print = root + ".html"
@@ -244,7 +244,6 @@ def print_files_msg(code_dir, files):
         elif os.path.exists(os.path.join(html_dir, "_images", basename)):
             # Image files get put in _build/html/_images/
             f_print = os.path.join("_images", basename)
-            assert os.path.exists(os.path.join(html_dir, f_print))
         else:
             f_print = "[NOT SURE WHERE THIS IS BUILT TO] " + f_print
         print(INDENT + f_print)
