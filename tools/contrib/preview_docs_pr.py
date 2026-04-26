@@ -198,12 +198,21 @@ def build_docs(code_dir, files):
     print("Building docs...")
     os.chdir("doc")
     os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
-    result = subprocess.run(
+    output = []
+    with subprocess.Popen(
         [path, "-b", "_build", "-d", "-c"],
         cwd=os.path.join(code_dir, "doc"),
-        check=False,
-    )
-    if result.stdout and "The HTML pages are in" in result.stdout:
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,  # Merge stderr into stdout
+        text=True,
+        bufsize=1,  # Line buffering
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},  # Force unbuffered output
+    ) as process:
+        for line in process.stdout:
+            print(line, end="")  # Print to screen
+            output.append(line)  # Save for later
+    output = "".join(output)
+    if output and "The HTML pages are in" in output:
         print_files_msg(code_dir, files)
 
 
