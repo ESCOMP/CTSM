@@ -203,7 +203,7 @@ def build_docs(code_dir, files):
         cwd=os.path.join(code_dir, "doc"),
         check=False,
     )
-    if "The HTML pages are in" in result.stdout:
+    if result.stdout and "The HTML pages are in" in result.stdout:
         build_dir = os.path.join(code_dir, "doc", "_build")
         html_dir = os.path.join(build_dir, "html")
         print(f"\nThe updated files are in {build_dir}")
