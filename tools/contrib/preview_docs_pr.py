@@ -219,7 +219,7 @@ def build_docs(code_dir, files):
 def print_files_msg(code_dir, files):
     build_dir = os.path.join(code_dir, "doc", "_build")
     html_dir = os.path.join(build_dir, "html")
-    print(f"\nThe updated files are in {build_dir}")
+    print(f"\nThe updated files are in {html_dir}")
     print("Doc source files directly touched (not deleted) by PR:")
     for f_dict in files:
         f = f_dict["filename"]
