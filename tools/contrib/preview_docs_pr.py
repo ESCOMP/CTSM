@@ -200,8 +200,6 @@ def build_docs(code_dir, files):
     load_podman = []
     # if os.getenv("NCAR_HOST") == "casper":
     #     load_podman = ["module", "load", "podman", "&&"]
-    print(f"{os.getcwd()=}")
-    print(os.listdir())
     os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
     result = subprocess.run(
         [path, "-b", "_build", "-d", "-c"],
