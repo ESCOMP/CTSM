@@ -221,18 +221,19 @@ def print_files_msg(code_dir, files):
     html_dir = os.path.join(build_dir, "html")
     print(f"\nThe updated files are in {build_dir}")
     print("Doc source files directly touched (not deleted) by PR:")
-    for f in files:
+    for f_dict in files:
+        f = f_dict["filename"]
         # Slashes here are platform-independent, because f is returned from GitHub API call
         # Skip deleted or otherwise nonexistent files
         full_path = os.path.join(code_dir, f)
-        if f["status"] == "removed" or not os.path.exists(full_path):
+        if f_dict["status"] == "removed" or not os.path.exists(full_path):
             continue
 
-            # Skip files not in doc source
+        # Skip files not in doc source
         if not f.startswith("doc/source/"):
             continue
 
-            # Get string to print
+        # Get string to print
         f_print = "/".join("/".split(f)[2:])  # Remove leading doc/source/
         root, extension = os.path.splitext(f_print)
         basename = "/".split(f)[-1]  # pylint: disable=use-maxsplit-arg
