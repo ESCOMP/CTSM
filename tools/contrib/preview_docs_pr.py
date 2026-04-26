@@ -204,44 +204,47 @@ def build_docs(code_dir, files):
         check=False,
     )
     if result.stdout and "The HTML pages are in" in result.stdout:
-        build_dir = os.path.join(code_dir, "doc", "_build")
-        html_dir = os.path.join(build_dir, "html")
-        print(f"\nThe updated files are in {build_dir}")
-        print("Doc source files directly touched (not deleted) by PR:")
-        for f in files:
-            # Slashes here are platform-independent, because f is returned from GitHub API call
+        print_files_msg(code_dir, files)
 
-            # Skip deleted or otherwise nonexistent files
-            full_path = os.path.join(code_dir, f)
-            if f["status"] == "removed" or not os.path.exists(full_path):
-                continue
+
+def print_files_msg(code_dir, files):
+    build_dir = os.path.join(code_dir, "doc", "_build")
+    html_dir = os.path.join(build_dir, "html")
+    print(f"\nThe updated files are in {build_dir}")
+    print("Doc source files directly touched (not deleted) by PR:")
+    for f in files:
+        # Slashes here are platform-independent, because f is returned from GitHub API call
+        # Skip deleted or otherwise nonexistent files
+        full_path = os.path.join(code_dir, f)
+        if f["status"] == "removed" or not os.path.exists(full_path):
+            continue
 
             # Skip files not in doc source
-            if not f.startswith("doc/source/"):
-                continue
+        if not f.startswith("doc/source/"):
+            continue
 
             # Get string to print
-            f_print = "/".join("/".split(f)[2:])  # Remove leading doc/source/
-            root, extension = os.path.splitext(f_print)
-            basename = "/".split(f)[-1]  # pylint: disable=use-maxsplit-arg
-            if extension in [".rst", ".md"]:
-                # These types get converted to HTML
-                f_print = root + ".html"
-                assert os.path.exists(os.path.join(html_dir, f_print))
-            elif os.path.exists(os.path.join(html_dir, "_images", basename)):
-                # Image files get put in _build/html/_images/
-                f_print = os.path.join("_images", basename)
-                assert os.path.exists(os.path.join(html_dir, f_print))
-            else:
-                f_print = "[NOT SURE WHERE THIS IS BUILT TO] " + f_print
-            print(INDENT + f_print)
-        print(
-            "Note that changes to these or other files may indirectly affect other doc files!"
-            " For example, if one of these files is a new/changed image, or a new/changed text"
-            " file that's `include`d somewhere, or a text file with an updated label that's cross-"
-            "referenced elsewhere. Or if a file outside doc/source/ that's `include`d in a doc file"
-            " got changed."
-        )
+        f_print = "/".join("/".split(f)[2:])  # Remove leading doc/source/
+        root, extension = os.path.splitext(f_print)
+        basename = "/".split(f)[-1]  # pylint: disable=use-maxsplit-arg
+        if extension in [".rst", ".md"]:
+            # These types get converted to HTML
+            f_print = root + ".html"
+            assert os.path.exists(os.path.join(html_dir, f_print))
+        elif os.path.exists(os.path.join(html_dir, "_images", basename)):
+            # Image files get put in _build/html/_images/
+            f_print = os.path.join("_images", basename)
+            assert os.path.exists(os.path.join(html_dir, f_print))
+        else:
+            f_print = "[NOT SURE WHERE THIS IS BUILT TO] " + f_print
+        print(INDENT + f_print)
+    print(
+        "Note that changes to these or other files may indirectly affect other doc files!"
+        " For example, if one of these files is a new/changed image, or a new/changed text"
+        " file that's `include`d somewhere, or a text file with an updated label that's cross-"
+        "referenced elsewhere. Or if a file outside doc/source/ that's `include`d in a doc file"
+        " got changed."
+    )
 
 
 def parse_args():
