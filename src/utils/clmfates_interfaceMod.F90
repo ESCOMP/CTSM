@@ -82,6 +82,10 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : fates_history_dimlevel
    use clm_varctl        , only : nsrest, nsrBranch
    use clm_varctl        , only : Allocate_Carbon_only
+   ! [PORTED by Hui Tang: nvp (moss/lichen) control switches]
+   use clm_varctl        , only : use_nvp
+   use clm_varctl        , only : use_nvp_undersnow
+   use clm_varctl        , only : nvp_rad_model_ground
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -132,6 +136,7 @@ module CLMFatesInterfaceMod
 
    ! Used FATES Modules
    use FatesInterfaceMod , only : fates_interface_type
+   use EDParamsMod       , only : nvp_extinction_coeff  ! [PORTED by Hui Tang: NVP Beer's law k from parameter file]
    use FatesInterfaceMod, only : FatesInterfaceInit
    use FatesInterfaceMod, only : SetFatesGlobalElements1
    use FatesInterfaceMod, only : SetFatesGlobalElements2
@@ -250,6 +255,8 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_sunfrac
       procedure, public :: wrap_btran
       procedure, public :: wrap_photosynthesis
+      ! [PORTED by Hui Tang: separate NVP photosynthesis call for clm_driver]
+      procedure, public :: wrap_nvp_photosynthesis
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
@@ -315,6 +322,10 @@ module CLMFatesInterfaceMod
      integer             :: pass_use_sp
      integer             :: pass_masterproc
      integer             :: pass_use_luh2
+     ! [PORTED by Hui Tang: nvp (moss/lichen) control integer flags]
+     integer             :: pass_nvp
+     integer             :: pass_nvp_undersnow
+     integer             :: pass_nvp_rad_model_ground
      logical             :: verbose_output
      
      call t_startf('fates_globals1')
@@ -367,7 +378,30 @@ module CLMFatesInterfaceMod
 
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
-        
+
+        ! [PORTED by Hui Tang: pass nvp (moss/lichen) switches to FATES]
+        if (use_nvp) then
+           pass_nvp = 1
+        else
+           pass_nvp = 0
+        end if
+        call set_fates_ctrlparms('use_nvp', ival=pass_nvp)
+
+        if (use_nvp_undersnow) then
+           pass_nvp_undersnow = 1
+        else
+           pass_nvp_undersnow = 0
+        end if
+        call set_fates_ctrlparms('use_nvp_undersnow', ival=pass_nvp_undersnow)
+
+        ! [PORTED by Hui Tang: pass NVP radiation model choice to FATES]
+        if (nvp_rad_model_ground) then
+           pass_nvp_rad_model_ground = 1
+        else
+           pass_nvp_rad_model_ground = 0
+        end if
+        call set_fates_ctrlparms('nvp_rad_model_ground', ival=pass_nvp_rad_model_ground)
+
      end if
 
      ! The following call reads in the parameter file
@@ -1104,7 +1138,9 @@ module CLMFatesInterfaceMod
       type(bounds_type),intent(in)                   :: bounds_clump
       type(atm2lnd_type)      , intent(in)           :: atm2lnd_inst
       type(soilstate_type)    , intent(in)           :: soilstate_inst
-      type(temperature_type)  , intent(in)           :: temperature_inst
+      ! [PORTED by Hui Tang: intent(inout) — passed down to wrap_update_hlmfates_dyn → UpdateNVPLayer,
+      !  which writes temperature_inst%t_soisno_col(c,0) on NVP layer activation/deactivation]
+      type(temperature_type)  , intent(inout)        :: temperature_inst
       type(active_layer_type) , intent(in)           :: active_layer_inst
       integer                 , intent(in)           :: nc
       type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
@@ -1253,7 +1289,7 @@ module CLMFatesInterfaceMod
 
             this%fates(nc)%bc_in(s)%wind24_pa(ifp) = &
                   atm2lnd_inst%wind24_patch(p)
-
+ 
          end do
 
          ! Here we use the same logic as the pft_areafrac initialization to get an array with values for each pft
@@ -1365,7 +1401,9 @@ module CLMFatesInterfaceMod
                                          waterdiagnosticbulk_inst,  &
                                          canopystate_inst, &
                                          soilbiogeochem_carbonflux_inst, &
-                                         .false.)
+                                         .false.,          &
+                                         temperature_inst, &
+                                         waterstatebulk_inst)
 
       ! ---------------------------------------------------------------------------------
       ! Part IV:
@@ -1536,7 +1574,8 @@ module CLMFatesInterfaceMod
    
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
         waterdiagnosticbulk_inst, canopystate_inst, &
-        soilbiogeochem_carbonflux_inst, is_initing_from_restart)
+        soilbiogeochem_carbonflux_inst, is_initing_from_restart, &
+        temperature_inst, waterstatebulk_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -1544,17 +1583,25 @@ module CLMFatesInterfaceMod
       ! provides boundary conditions (such as vegetation fractional coverage)
       ! ---------------------------------------------------------------------------------
 
+     ! [PORTED by Hui Tang: moved from module level to break clmfatesinterfacemod compilation delay]
+     use NVPLayerDynamicsMod, only : UpdateNVPLayer
+
      class(hlm_fates_interface_type), intent(inout) :: this
      type(bounds_type),intent(in)                   :: bounds_clump
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-                   
+
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
      logical                 , intent(in)           :: is_initing_from_restart
+     ! [PORTED by Hui Tang: optional args for NVP energy/mass conservation on activation/deactivation.
+     !  Pass during normal timestep calls; omit during restart/cold-start where thermo state is
+     !  initialised independently.]
+     type(temperature_type)  , optional, intent(inout) :: temperature_inst
+     type(waterstatebulk_type), optional, intent(inout) :: waterstatebulk_inst
 
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch
@@ -1750,7 +1797,34 @@ module CLMFatesInterfaceMod
              z0m(p)    = this%fates(nc)%bc_out(s)%z0m_pa(ifp)
              displa(p) = this%fates(nc)%bc_out(s)%displa_pa(ifp)
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
-          end do ! veg pach
+          end do ! veg patch
+
+          ! [PORTED by Hui Tang: aggregate NVP patch geometry to column, then update layer state]
+          ! nvp_dz_pa(ifp)   = mean NVP thickness where NVP is present within patch [m]
+          ! nvp_frac_pa(ifp) = fraction of patch covered by NVP [0-1]
+          ! Weight by canopy_fraction_pa (patch area fraction of column) to get column means.
+          if (use_nvp) then
+             col%dz_nvp(c)   = 0._r8
+             col%frac_nvp(c) = 0._r8
+             do ifp = 1, npatch
+                ! [PORTED by Hui Tang: weight by both nvp_frac_pa (NVP coverage within patch)
+             !  and canopy_fraction_pa (patch area fraction of column) so col%dz_nvp is the
+             !  column-effective NVP depth (dz where present × frac), not the raw mean thickness]
+             col%dz_nvp(c)   = col%dz_nvp(c)   + &
+                     this%fates(nc)%bc_out(s)%nvp_dz_pa(ifp)   * &
+                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
+                     this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+                col%frac_nvp(c) = col%frac_nvp(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
+                     this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+             end do
+             ! [PORTED by Hui Tang: pass thermo instances only when present (normal timestep)]
+             if (present(temperature_inst) .and. present(waterstatebulk_inst)) then
+                call UpdateNVPLayer(c, temperature_inst, waterstatebulk_inst)
+             else
+                call UpdateNVPLayer(c)
+             end if
+          end if
 
           if(abs(areacheck - 1.0_r8).gt.1.e-9_r8)then
             write(iulog,*) 'area wrong in interface',areacheck - 1.0_r8
@@ -2308,7 +2382,8 @@ module CLMFatesInterfaceMod
 
    ! ======================================================================================
 
-   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst)
+   ! [PORTED by Hui Tang: add surfalb_inst to wrap_sunfrac for nvp radiation]
+   subroutine wrap_sunfrac(this,nc,atm2lnd_inst,canopystate_inst,surfalb_inst)
 
       ! ---------------------------------------------------------------------------------
       ! This interface function is a wrapper call on ED_SunShadeFracs. The only
@@ -2326,6 +2401,9 @@ module CLMFatesInterfaceMod
 
       ! Input/Output Arguments to CLM
       type(canopystate_type),intent(inout) :: canopystate_inst
+
+      ! [PORTED by Hui Tang: surface albedo for absorbed flux bc_in - needed by nvp radiation]
+      type(surfalb_type),intent(in)        :: surfalb_inst
 
       ! Local Variables
       integer  :: p                           ! global index of the host patch
@@ -2360,6 +2438,13 @@ module CLMFatesInterfaceMod
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
               this%fates(nc)%bc_in(s)%solad_parb(ifp,:) = forc_solad_g(g,:)
               this%fates(nc)%bc_in(s)%solai_parb(ifp,:) = forc_solai_g(g,:)
+              ! [PORTED by Hui Tang: pass VIS canopy transmittances for NVP photosynthesis PAR]
+              ! flx_absdv_col(c,0) holds ftdd(p,1) (?) and flx_absiv_col(c,0) holds ftii(p,1) (?),
+              ! stored in SurfaceRadiationMod at the previous timestep (one-timestep lag).
+              if (use_nvp) then
+                 this%fates(nc)%bc_in(s)%flx_absdv(ifp) = surfalb_inst%flx_absdv_col(c,0)
+                 this%fates(nc)%bc_in(s)%flx_absiv(ifp) = surfalb_inst%flx_absiv_col(c,0)
+              end if
            end do
         end do
 
@@ -2738,6 +2823,88 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
+ subroutine wrap_nvp_photosynthesis(this, nc, bounds, &
+       atm2lnd_inst, temperature_inst, waterdiagnosticbulk_inst)
+
+   ! [PORTED by Hui Tang: separate NVP (moss/lichen) photosynthesis call.
+   !
+   !  NVP lacks stomata so its photosynthesis must NOT go through the CanopyFluxes
+   !  iterative solver (which is designed for stomata-bearing vegetation and maps outputs
+   !  to rssun/rssha).  Instead this routine is called once from clm_driver after
+   !  CanopyFluxes has converged.
+   !
+   !  Role: re-run FatesPlantRespPhotosynthDrive with the correct NVP surface temperature
+   !  (t_nvp_pa) and wetness (fwet_nvp_pa) so that FATES accumulates accurate NVP carbon
+   !  fluxes (GPP, maintenance respiration) in bc_out.  No CLM-side output is mapped back
+   !  (NVP has no stomatal resistance to write to rssun/rssha).
+   !
+   !  waterdiagnosticbulk_inst (needed for fwet_nvp_col) is NOT available inside
+   !  wrap_photosynthesis / CanopyFluxes, which is the compile-time reason for this split.]
+
+   use decompMod                   , only : bounds_type
+   use FatesPlantRespPhotosynthMod , only : FatesPlantRespPhotosynthDrive
+
+   ! !ARGUMENTS:
+   class(hlm_fates_interface_type),  intent(inout) :: this
+   integer,                          intent(in)    :: nc
+   type(bounds_type),                intent(in)    :: bounds
+   type(atm2lnd_type),               intent(in)    :: atm2lnd_inst
+   type(temperature_type),           intent(in)    :: temperature_inst
+   type(waterdiagnosticbulk_type),   intent(in)    :: waterdiagnosticbulk_inst
+
+   integer  :: s, c, p, ifp
+   real(r8) :: dtime
+
+   call t_startf('fates_nvp_psn')
+
+   associate( &
+         t_veg     => temperature_inst%t_veg_patch          , &
+         tgcm      => temperature_inst%thm_patch             , &
+         forc_pbot => atm2lnd_inst%forc_pbot_downscaled_col )
+
+      do s = 1, this%fates(nc)%nsites
+
+         c = this%f2hmap(nc)%fcolumn(s)
+
+         this%fates(nc)%bc_in(s)%forc_pbot = forc_pbot(c)
+
+         do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+            p = ifp + col%patchi(c)
+
+            ! Re-enable processing for all patches (reset from 3 → 2)
+            this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 2
+
+            ! Update t_veg / tgcm with post-convergence values from CanopyFluxes
+            this%fates(nc)%bc_in(s)%t_veg_pa(ifp)  = t_veg(p)
+            this%fates(nc)%bc_in(s)%tgcm_pa(ifp)   = tgcm(p)
+
+            ! [PORTED by Hui Tang: NVP-specific inputs — column quantities broadcast to patch]
+            this%fates(nc)%bc_in(s)%t_nvp_pa(ifp)    = temperature_inst%t_nvp_col(c)
+            this%fates(nc)%bc_in(s)%fwet_nvp_pa(ifp) = waterdiagnosticbulk_inst%fwet_nvp_col(c)
+
+         end do
+      end do
+
+      dtime = get_step_size_real()
+
+      ! Re-run FATES photosynthesis: this overwrites bc_out carbon fluxes with
+      ! values computed using correct post-convergence NVP temperature/wetness.
+      ! rssun/rssha are NOT mapped back — NVP has no stomata.
+      call FatesPlantRespPhotosynthDrive( &
+           this%fates(nc)%nsites, &
+           this%fates(nc)%sites,  &
+           this%fates(nc)%bc_in,  &
+           this%fates(nc)%bc_out, &
+           dtime)
+
+   end associate
+
+   call t_stopf('fates_nvp_psn')
+
+ end subroutine wrap_nvp_photosynthesis
+
+ ! ======================================================================================
+
  subroutine wrap_accumulatefluxes(this, nc, fn, filterp)
 
    ! !ARGUMENTS:
@@ -2852,6 +3019,10 @@ module CLMFatesInterfaceMod
     
     ! locals
     integer                                    :: s,c,p,ifp,g
+    ! [PORTED by Hui Tang: NVP absorptance patch→col aggregation]
+    integer                                    :: ib            ! band index
+    integer                                    :: npatches_site ! patch count in site
+    ! [PORTED by Hui Tang: NVP Beer's law k now read from fates_params_default.json via nvp_extinction_coeff]
 
     call t_startf('fates_wrapcanopyradiation')
 
@@ -2922,8 +3093,53 @@ module CLMFatesInterfaceMod
           ftdd(p,:) = this%fates(nc)%bc_out(s)%ftdd_parb(ifp,:)
           ftid(p,:) = this%fates(nc)%bc_out(s)%ftid_parb(ifp,:)
           ftii(p,:) = this%fates(nc)%bc_out(s)%ftii_parb(ifp,:)
-          
+
        end do
+
+       ! [PORTED by Hui Tang: transfer NVP Beer's law absorptance from bc_out to surfalb_inst]
+       ! fabd_nvp_col/fabi_nvp_col are col-level; average equally over all patches in the site.
+       ! These are used by SurfaceRadiationMod to compute sabg_lyr(p,0) for the NVP layer.
+       if (use_nvp) then
+          npatches_site = this%fates(nc)%sites(s)%youngest_patch%patchno
+          surfalb_inst%fabd_nvp_col(c,:) = 0._r8
+          surfalb_inst%fabi_nvp_col(c,:) = 0._r8
+          do ifp = 1, npatches_site
+             do ib = 1, numrad
+                surfalb_inst%fabd_nvp_col(c,ib) = surfalb_inst%fabd_nvp_col(c,ib) + &
+                     this%fates(nc)%bc_out(s)%fabd_nvp_pa(ifp,ib)
+                surfalb_inst%fabi_nvp_col(c,ib) = surfalb_inst%fabi_nvp_col(c,ib) + &
+                     this%fates(nc)%bc_out(s)%fabi_nvp_pa(ifp,ib)
+             end do
+          end do
+          if (npatches_site > 0) then
+             surfalb_inst%fabd_nvp_col(c,:) = &
+                  surfalb_inst%fabd_nvp_col(c,:) / real(npatches_site, r8)
+             surfalb_inst%fabi_nvp_col(c,:) = &
+                  surfalb_inst%fabi_nvp_col(c,:) / real(npatches_site, r8)
+          end if
+          ! [PORTED by Hui Tang: compute NVP optical properties for SNICAR layer-0 ]
+          ! nvp_tau_col = column-mean optical depth = k_nvp * lai_nvp_pa * nvp_frac_pa averaged over patches.
+          ! nvp_omega_*_col = NVP single-scatter albedo (rhol+taul); average over patches (intensive property).
+          ! Stored here for use by SurfaceAlbedoMod before SNICAR_RT calls (one-timestep lag, consistent).
+          surfalb_inst%nvp_tau_col(c)       = 0._r8
+          surfalb_inst%nvp_omega_vis_col(c) = 0._r8
+          surfalb_inst%nvp_omega_nir_col(c) = 0._r8
+          if (npatches_site > 0) then
+             do ifp = 1, npatches_site
+                surfalb_inst%nvp_tau_col(c) = surfalb_inst%nvp_tau_col(c) + &
+                     nvp_extinction_coeff * this%fates(nc)%bc_out(s)%lai_nvp_pa(ifp) * &
+                             this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp)
+                surfalb_inst%nvp_omega_vis_col(c) = surfalb_inst%nvp_omega_vis_col(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_omega_pa(ifp, ivis)
+                surfalb_inst%nvp_omega_nir_col(c) = surfalb_inst%nvp_omega_nir_col(c) + &
+                     this%fates(nc)%bc_out(s)%nvp_omega_pa(ifp, inir)
+             end do
+             surfalb_inst%nvp_tau_col(c)       = surfalb_inst%nvp_tau_col(c)       / real(npatches_site, r8)
+             surfalb_inst%nvp_omega_vis_col(c) = surfalb_inst%nvp_omega_vis_col(c) / real(npatches_site, r8)
+             surfalb_inst%nvp_omega_nir_col(c) = surfalb_inst%nvp_omega_nir_col(c) / real(npatches_site, r8)
+          end if
+       end if
+
     end do
           
   end associate
@@ -4006,7 +4222,6 @@ module CLMFatesInterfaceMod
    call ncd_pio_closefile(ncid)
 
  end subroutine GetLandusePFTData
-
 
  !-----------------------------------------------------------------------
 

@@ -7,7 +7,9 @@ Module HydrologyNoDrainageMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro, use_fates
+  ! [PORTED by Hui Tang: add use_nvp and NVPWaterBalance_Column for NVP water infiltration]
+  use clm_varctl        , only : iulog, use_vichydro, use_fates, use_nvp
+  use NVPLayerDynamicsMod, only : NVPWaterBalance_Column
   use clm_varcon        , only : denh2o, denice, rpi, spval
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
@@ -308,6 +310,15 @@ contains
       call saturated_excess_runoff_inst%SaturatedExcessRunoff(&
            bounds, num_hydrologyc, filter_hydrologyc, lun, col, &
            soilhydrology_inst, soilstate_inst, b_waterflux_inst)
+
+      ! [PORTED by Hui Tang: NVP water balance — gravity drainage from NVP layer 0 to soil]
+      ! Must be after SnowWater (qflx_rain_plus_snomelt finalised) and after column
+      ! aggregation of qflx_ev_nvp_col (done in clm_driver p2c).  Must be before
+      ! SetQflxInputs so qflx_nvp_drain_col is available for qflx_infl.
+      if (use_nvp) then
+         call NVPWaterBalance_Column(bounds, dtime, b_waterflux_inst, &
+              b_waterstate_inst, b_waterdiagnostic_inst, soilstate_inst, temperature_inst)
+      end if
 
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
            b_waterflux_inst, b_waterdiagnostic_inst)

@@ -380,7 +380,23 @@ module clm_varctl
   logical, public            :: use_fates_bgc = .false.                 ! true => use FATES along with CLM soil biogeochemistry
   
   !----------------------------------------------------------
-  !  LUNA switches		
+  ! [PORTED by Hui Tang: moss/lichen (nvp) control variables]
+  ! NVP (moss/lichen) switches
+  !----------------------------------------------------------
+
+  ! true => activate nvp model
+  logical, public :: use_nvp           = .true.
+
+  ! true => nvp can photosynthesize under snow
+  logical, public :: use_nvp_undersnow = .true.
+
+  ! [PORTED by Hui Tang: NVP radiation model switch]
+  ! true  => Approach A: NVP as ground boundary contribute to ground albedo, Beer's law PAR,
+  ! false => Approach B: NVP as leaf layer in Norman solver, soil albedo as ground albedo
+  logical, public :: nvp_rad_model_ground = .true.
+
+  !----------------------------------------------------------
+  !  LUNA switches
   !----------------------------------------------------------
 
   logical, public :: use_luna = .false.            ! true => use  LUNA

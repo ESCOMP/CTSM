@@ -9,7 +9,8 @@ module SoilHydrologyMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type, subgrid_level_column
-  use clm_varctl        , only : iulog, use_vichydro
+  ! [PORTED by Hui Tang: add use_nvp for NVP water infiltration]
+  use clm_varctl        , only : iulog, use_vichydro, use_nvp
   use clm_varcon        , only : ispval
   use clm_varcon        , only : denh2o, denice, rpi
   use clm_varcon        , only : pondmx_urban
@@ -310,8 +311,10 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
-     real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno
+     real(r8) :: qflx_evap    ! evaporation for this column
+     real(r8) :: fsno         ! copy of frac_sno
+     ! [PORTED by Hui Tang: NVP water infiltration]
+     real(r8) :: frac_nvp_eff ! effective NVP area fraction (not covered by h2osfc) [-]
 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
@@ -341,6 +344,7 @@ contains
 
         ! ------------------------------------------------------------------------
         ! Partition surface inputs between soil and h2osfc
+        ! [PORTED by Hui Tang: also partition out the NVP fraction]
         ! ------------------------------------------------------------------------
 
         if (snl(c) >= 0) then
@@ -352,11 +356,21 @@ contains
            qflx_evap=qflx_ev_soil(c)
         endif
 
-        qflx_in_soil(c) = (1._r8 - frac_h2osfc(c)) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
+        ! [PORTED by Hui Tang: compute effective NVP area (not blocked by surface water,
+        !  but snow does not block — water percolates through to NVP layer beneath snow)]
+        if (use_nvp) then
+           frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)))
+        else
+           frac_nvp_eff = 0._r8
+        end if
+
+        ! Soil receives the non-h2osfc, non-NVP fraction; NVP handled by NVPWaterBalance_Column
+        qflx_in_soil(c) = (1._r8 - frac_h2osfc(c) - frac_nvp_eff) * &
+             (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
-        ! remove evaporation (snow treated in SnowHydrology)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap
+        ! remove evaporation from bare-soil fraction only (snow and NVP evap handled separately)
+        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c) - frac_nvp_eff)*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do
@@ -444,12 +458,15 @@ contains
      associate( &
           qflx_infl            => waterfluxbulk_inst%qflx_infl_col            , & ! Output: [real(r8) (:)   ] infiltration (mm H2O /s)
           qflx_in_soil_limited => waterfluxbulk_inst%qflx_in_soil_limited_col , & ! Input:  [real(r8) (:)   ] surface input to soil, limited by max infiltration rate (mm H2O /s)
-          qflx_h2osfc_drain    => waterfluxbulk_inst%qflx_h2osfc_drain_col      & ! Input:  [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
+          qflx_h2osfc_drain    => waterfluxbulk_inst%qflx_h2osfc_drain_col    , & ! Input:  [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
+          ! [PORTED by Hui Tang: NVP drainage to soil layer 1 enters total infiltration]
+          qflx_nvp_drain_col   => waterfluxbulk_inst%qflx_nvp_drain_col         & ! Input:  [real(r8) (:)   ]  drainage from NVP layer 0 to soil layer 1 (mm H2O /s)
           )
 
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
-        qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c)
+        ! [PORTED by Hui Tang: add NVP drainage to total infiltration into soil layer 1]
+        qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c) + qflx_nvp_drain_col(c)
      end do
 
      end associate

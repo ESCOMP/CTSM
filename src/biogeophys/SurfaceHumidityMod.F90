@@ -11,11 +11,16 @@ module SurfaceHumidityMod
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use decompMod               , only : bounds_type
   use abortutils              , only : endrun
-  use clm_varcon              , only : denh2o, denice, roverg, tfrz, spval 
+  use clm_varcon              , only : denh2o, denice, roverg, tfrz, spval
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon           , only : icol_road_imperv, icol_road_perv
   use landunit_varcon         , only : istice, istwet, istsoil, istcrop
   use clm_varpar              , only : nlevgrnd
+  ! [PORTED by Hui Tang: use_nvp flag for NVP ground evaporation blending]
+  use clm_varctl              , only : use_nvp
+  use NVPLayerDynamicsMod     , only : NVPWaterRetentionCurve
+    ! [PORTED by Hui Tang: runtime-tunable NVP physics parameters]
+  use NVPParamsMod            , only : n_van_nvp, alpha_van_nvp, watsat_nvp, watres_nvp
   use atm2lndType             , only : atm2lnd_type
   use SoilStateType           , only : soilstate_type
   use TemperatureType         , only : temperature_type
@@ -70,6 +75,11 @@ contains
     real(r8) :: qsatgdT_snow ! d(qsatg)/dT, for snow
     real(r8) :: qsatgdT_soil ! d(qsatg)/dT, for soil
     real(r8) :: qsatgdT_h2osfc ! d(qsatg)/dT, for h2osfc
+    ! [PORTED by Hui Tang: NVP ground humidity variables]
+    real(r8) :: qsatgdT_nvp  ! d(qsatg)/dT, for NVP surface
+    real(r8) :: frac_nvp_eff ! effective NVP fraction for ground humidity blend
+    real(r8) :: hr_nvp       ! alpha NVP
+    real(r8) :: psit_nvp     ! negative potential of NVP
     real(r8) :: fac          ! soil wetness of surface layer
     real(r8) :: psit         ! negative potential of soil
     real(r8) :: hr           ! alpha soil
@@ -98,7 +108,8 @@ contains
          qg               =>    waterdiagnosticbulk_inst%qg_col             , & ! Output: [real(r8) (:)   ] ground specific humidity [kg/kg]
          qg_h2osfc        =>    waterdiagnosticbulk_inst%qg_h2osfc_col      , & ! Output: [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]
          dqgdT            =>    waterdiagnosticbulk_inst%dqgdT_col          , & ! Output: [real(r8) (:)   ] d(qg)/dT
-
+         ! [PORTED by Hui Tang: NVP ground humidity fields for ground evap blending]
+         qg_nvp           =>    waterdiagnosticbulk_inst%qg_nvp_col         , & ! Output: [real(r8) (:)   ] NVP surface specific humidity [kg/kg]
          smpmin           =>    soilstate_inst%smpmin_col                   , & ! Input:  [real(r8) (:)   ] restriction for min of soil potential (mm)
          sucsat           =>    soilstate_inst%sucsat_col                   , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)
          watsat           =>    soilstate_inst%watsat_col                   , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
@@ -112,7 +123,9 @@ contains
 
          t_h2osfc         =>    temperature_inst%t_h2osfc_col               , & ! Input:  [real(r8) (:)   ] surface water temperature
          t_soisno         =>    temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)
-         t_grnd           =>    temperature_inst%t_grnd_col                   & ! Input:  [real(r8) (:)   ] ground temperature (Kelvin)
+         t_grnd           =>    temperature_inst%t_grnd_col                 , & ! Input:  [real(r8) (:)   ] ground temperature (Kelvin)
+         ! [PORTED by Hui Tang: NVP layer temperature for NVP surface humidity]
+         t_nvp_col        =>    temperature_inst%t_nvp_col                    & ! Input:  [real(r8) (:)   ] NVP (moss/lichen) temperature (Kelvin)
          )
 
       do fc = 1,num_nolakec
@@ -136,8 +149,44 @@ contains
                psit = max(smpmin(c), psit)
                ! modify qred to account for h2osfc
                hr   = exp(psit/roverg/t_soisno(c,1))
-               qred = (1._r8 - frac_sno_eff(c) - frac_h2osfc(c))*hr &
-                    + frac_sno_eff(c) + frac_h2osfc(c)
+
+               ! [PORTED by Hui Tang: NVP effective fraction for ground humidity blend]
+               ! NVP occupies area not covered by snow or surface water
+               if (use_nvp) then
+                  ! Compute NVP surface humidity as a function of NVP water retention curve
+                  ! --- NVP volumetric water content (clamped to valid range) ---
+                  if (dz(c,0) > 0._r8) then
+                     if (t_soisno(c,0) >= tfrz) then
+                        ! For unfrozen soil
+                        vol_ice = min(watsat_nvp, h2osoi_ice(c,0)/(dz(c,0)*denice))
+                        eff_porosity = watsat_nvp-vol_ice
+                        vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(dz(c,0)*denh2o))
+                     else
+                        ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
+                        vol_liq = watres_nvp            
+                     end if
+                     call NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van_nvp, alpha_van_nvp, &
+                              watsat_nvp, watres_nvp, psit_nvp)
+                     hr_nvp = exp(psit_nvp/roverg/t_nvp_col(c))
+                  else
+                     ! If dz(c,0) is not positive, set hr_nvp to 0
+                     hr_nvp = 0._r8
+                  end if
+               else
+                  hr_nvp = 0._r8
+               end if       
+
+               ! [PORTED by Hui Tang: NVP effective fraction for ground humidity blend]
+               ! NVP occupies area not covered by snow or surface water
+               if (use_nvp) then
+                  frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c)))
+                  qred = (1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)*hr &
+                       + frac_sno_eff(c) + frac_h2osfc(c) + frac_nvp_eff*hr_nvp
+               else
+                  frac_nvp_eff = 0._r8
+                  qred = (1._r8 - frac_sno_eff(c) - frac_h2osfc(c))*hr &
+                       + frac_sno_eff(c) + frac_h2osfc(c)
+               end if
                soilalpha(c) = qred
 
             else if (col%itype(c) == icol_road_perv) then
@@ -214,6 +263,25 @@ contains
 
             qg(c) = frac_sno_eff(c)*qg_snow(c) + (1._r8 - frac_sno_eff(c) - frac_h2osfc(c))*qg_soil(c) &
                  + frac_h2osfc(c) * qg_h2osfc(c)
+
+            ! [PORTED by Hui Tang: NVP ground evaporation blending]
+            ! When NVP is active, include NVP surface humidity in qg blend.
+            ! NVP occupies area not covered by snow or surface water.
+            ! qg_nvp = hr_nvp * qsat(t_nvp): hr_nvp acts as surface RH.
+            if (use_nvp) then
+               qg_nvp(c) = qg_soil(c)  ! default when no NVP coverage; recomputed below if frac_nvp_eff > 0
+               if (frac_nvp_eff > 0._r8) then
+                  call QSat(t_nvp_col(c), forc_pbot(c), qsatg, &
+                       qsdT = qsatgdT_nvp)
+                  qg_nvp(c) = hr_nvp * qsatg
+                  ! Adjust qg and dqgdT: reduce bare-soil contribution by frac_nvp_eff, add NVP term
+                  qg(c) = qg(c) - frac_nvp_eff * qg_soil(c) + frac_nvp_eff * qg_nvp(c)
+                  dqgdT(c) = dqgdT(c) - frac_nvp_eff * hr * qsatgdT_soil &
+                             + frac_nvp_eff * hr_nvp * qsatgdT_nvp
+               end if
+            else
+               qg_nvp(c) = qg_soil(c)
+            end if
 
          else
             call QSat(t_grnd(c), forc_pbot(c), qsatg, &

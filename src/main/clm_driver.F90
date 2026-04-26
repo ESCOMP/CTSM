@@ -14,6 +14,7 @@ module clm_driver
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_nvp  ! [PORTED by Hui Tang: NVP photosynthesis flag]
   use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
@@ -67,7 +68,7 @@ module clm_driver
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use VOCEmissionMod         , only : VOCEmission
   !
-  use filterMod              , only : setFilters
+  use filterMod              , only : setFilters, setNVPcFilter  ! [PORTED by Hui Tang: NVP column filter]
   !
   use atm2lndMod             , only : downscale_forcings, set_atm2lnd_water_tracers
   use lnd2atmMod             , only : lnd2atm
@@ -639,7 +640,7 @@ contains
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
        if(use_fates) then
-          call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
+          call clm_fates%wrap_sunfrac(nc, atm2lnd_inst, canopystate_inst, surfalb_inst)
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
                                    atm2lnd_inst, surfalb_inst, canopystate_inst,    &
@@ -779,6 +780,16 @@ contains
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
 
+       ! [PORTED by Hui Tang: NVP (moss/lichen) photosynthesis — separate from CanopyFluxes.
+       !  NVP lacks stomata so it must not go through the CanopyFluxes iterative solver.
+       !  Called after CanopyFluxes convergence so that post-convergence t_veg and t_nvp_col
+       !  are available, and waterdiagnosticbulk_inst (needed for fwet_nvp_col) is in scope.]
+       if (use_fates .and. use_nvp) then
+          call clm_fates%wrap_nvp_photosynthesis(nc, bounds_clump, &
+               atm2lnd_inst, temperature_inst, &
+               water_inst%waterdiagnosticbulk_inst)
+       end if
+
        ! Fluxes for all urban landunits
 
        call t_startf('uflux')
@@ -895,6 +906,7 @@ contains
             filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
             filter(nc)%num_nolakep , filter(nc)%nolakep,                                       &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
+            filter(nc)%num_nvpc    , filter(nc)%nvpc,                  &  ! [PORTED by Hui Tang: NVP column filter]
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &
             solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
@@ -1201,6 +1213,10 @@ contains
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
              call setFilters( bounds_clump, glc_behavior )
+
+             ! [PORTED by Hui Tang: rebuild NVP column filter after FATES dynamics
+             ! updates col%nvp_layer_active / jbot_sno via UpdateNVPLayer]
+             if (use_nvp) call setNVPcFilter(bounds_clump)
 
           end if
 
@@ -1694,6 +1710,11 @@ contains
     call p2c (bounds, num_nolakec, filter_nolakec, &
          waterfluxbulk_inst%qflx_ev_h2osfc_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_ev_h2osfc_col(bounds%begc:bounds%endc))
+
+    ! [PORTED by Hui Tang: aggregate NVP evaporation flux from patches to column]
+    call p2c (bounds, num_nolakec, filter_nolakec, &
+         waterfluxbulk_inst%qflx_ev_nvp_patch(bounds%begp:bounds%endp), &
+         waterfluxbulk_inst%qflx_ev_nvp_col(bounds%begc:bounds%endc))
 
     ! Averaging for patch water flux variables
 

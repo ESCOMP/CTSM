@@ -9,6 +9,8 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates, use_fates_bgc
+  ! [PORTED by Hui Tang: NVP column geometry restart]
+  use clm_varctl      , only : use_nvp
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
   use clm_varctl      , only : use_excess_ice
@@ -519,6 +521,7 @@ contains
     use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
     use decompMod       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
     use clm_varpar      , only : nlevsno
+    use NVPLayerDynamicsMod, only : NVPLayerRestart
 
     !
     ! !DESCRIPTION:
@@ -626,6 +629,12 @@ contains
             soilbiogeochem_carbonflux_inst=soilbiogeochem_carbonflux_inst, &
             soilbiogeochem_nitrogenflux_inst=soilbiogeochem_nitrogenflux_inst)
 
+    end if
+
+    ! [PORTED by Hui Tang: restart NVP column geometry — must follow FATES restart
+    !  so that FATES cohort state is already restored when NVP layer is reactivated]
+    if (use_nvp) then
+       call NVPLayerRestart(bounds, ncid, flag=flag)
     end if
 
  end subroutine clm_instRest

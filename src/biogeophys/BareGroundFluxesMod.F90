@@ -83,7 +83,7 @@ contains
     use clm_varpar           , only : nlevgrnd
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o, tfrz
     use clm_varcon           , only : beta_param, nu_param, meier_param3
-    use clm_varctl           , only : use_lch4, z0param_method
+    use clm_varctl           , only : use_lch4, z0param_method, use_nvp
     use landunit_varcon      , only : istsoil, istcrop
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
@@ -217,21 +217,27 @@ contains
          t_grnd                 => temperature_inst%t_grnd_col                  , & ! Input:  [real(r8) (:)   ]  ground surface temperature [K]                                        
          thv                    => temperature_inst%thv_col                     , & ! Input:  [real(r8) (:)   ]  virtual potential temperature (kelvin)                                
          thm                    => temperature_inst%thm_patch                   , & ! Input:  [real(r8) (:)   ]  intermediate variable (forc_t+0.0098*forc_hgt_t_patch)                  
-         t_h2osfc               => temperature_inst%t_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  surface water temperature                                             
-         beta                   => temperature_inst%beta_col                    , & ! Input:  [real(r8) (:)   ]  coefficient of conective velocity [-]                                 
+         t_h2osfc               => temperature_inst%t_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  surface water temperature
+         ! [PORTED by Hui Tang: NVP layer temperature for bare-ground NVP flux]
+         t_nvp_col              => temperature_inst%t_nvp_col                   , & ! Input:  [real(r8) (:)   ]  NVP layer temperature [K]
+         beta                   => temperature_inst%beta_col                    , & ! Input:  [real(r8) (:)   ]  coefficient of conective velocity [-]
 
          qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]
-         qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
-         qg_h2osfc              => waterdiagnosticbulk_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]                           
+         qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]
+         qg_h2osfc              => waterdiagnosticbulk_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]
+         ! [PORTED by Hui Tang: NVP surface specific humidity for bare-ground NVP flux]
+         qg_nvp                 => waterdiagnosticbulk_inst%qg_nvp_col                   , & ! Input:  [real(r8) (:)   ]  NVP surface specific humidity [kg/kg]                           
          qg                     => waterdiagnosticbulk_inst%qg_col                       , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface [kg/kg]                           
          dqgdT                  => waterdiagnosticbulk_inst%dqgdT_col                    , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                                        
          h2osoi_ice             => waterstatebulk_inst%h2osoi_ice_col               , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                                    
          h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col               , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                                                
          grnd_ch4_cond          => ch4_inst%grnd_ch4_cond_patch                 , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]
 
-         eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
-         eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
-         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
+         eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]
+         eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]
+         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from surface water (W/m**2) [+ to atm]
+         ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground]
+         eflx_sh_nvp            => energyflux_inst%eflx_sh_nvp_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from NVP (W/m**2) [+ to atm]                      
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
          eflx_sh_tot            => energyflux_inst%eflx_sh_tot_patch            , & ! Output: [real(r8) (:)   ]  total sensible heat flux (W/m**2) [+ to atm]                          
          taux                   => energyflux_inst%taux_patch                   , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)                                  
@@ -274,6 +280,8 @@ contains
          qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch        , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch        , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
          qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch      , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
+         ! [PORTED by Hui Tang: NVP evaporation flux for bare ground]
+         qflx_ev_nvp            => waterfluxbulk_inst%qflx_ev_nvp_patch         , & ! Output: [real(r8) (:)   ]  evaporation flux from NVP (mm H2O/s) [+ to atm]
          qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch       , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
          qflx_evap_tot          => waterfluxbulk_inst%qflx_evap_tot_patch       , & ! Output: [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
          qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch       , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
@@ -478,6 +486,12 @@ contains
          eflx_sh_snow(p)   = -raih*(thm(p)-t_soisno(c,snl(c)+1))
          eflx_sh_soil(p)   = -raih*(thm(p)-t_soisno(c,1))
          eflx_sh_h2osfc(p) = -raih*(thm(p)-t_h2osfc(c))
+         ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground, analogous to snow/h2osfc]
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+         else
+            eflx_sh_nvp(p) = 0._r8
+         end if
 
          ! water fluxes from soil
          qflx_tran_veg(p)  = 0._r8
@@ -489,6 +503,12 @@ contains
          qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
          qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
          qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
+         ! [PORTED by Hui Tang: NVP evaporation flux for bare ground, analogous to snow/h2osfc]
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+         else
+            qflx_ev_nvp(p) = 0._r8
+         end if
 
          ! 2 m height air temperature
          t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))

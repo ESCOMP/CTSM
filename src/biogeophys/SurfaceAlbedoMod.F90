@@ -15,6 +15,8 @@ module SurfaceAlbedoMod
   use clm_varcon        , only : grlnd, spval
   use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
   use clm_varctl        , only : fsurdat, iulog, use_SSRE, do_sno_oc
+  ! [PORTED by Hui Tang: nvp (moss/lichen) control switch]
+  use clm_varctl        , only : use_nvp
   use pftconMod         , only : pftcon
   use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER
   use AerosolMod        , only : aerosol_type
@@ -778,32 +780,71 @@ contains
 
     ! CLIMATE FEEDBACK CALCULATIONS, ALL AEROSOLS:
        flg_slr = 1; ! direct-beam
-    call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
-                   coszen_col(bounds%begc:bounds%endc), &
-                   flg_slr, &
-                   h2osno_liq(bounds%begc:bounds%endc, :), &
-                   h2osno_ice(bounds%begc:bounds%endc, :), &
-                   h2osno_total(bounds%begc:bounds%endc), &
-                   snw_rds_in(bounds%begc:bounds%endc, :), &
-                   mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
-                   albsfc(bounds%begc:bounds%endc, :), &
-                   albsnd(bounds%begc:bounds%endc, :), &
-            flx_absd_snw(bounds%begc:bounds%endc, :, :), &
-            waterdiagnosticbulk_inst)
+    ! [PORTED by Hui Tang: SNICAR Approach B - pass NVP layer-0 optical properties to feedback calls]
+    ! nvp_tau_col/omega_*_col are from the previous timestep (one-timestep lag, consistent with
+    ! other doalb quantities). Non-feedback forcing calls omit these args (NVP not in diagnostics).
+    if (use_nvp) then
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsnd(bounds%begc:bounds%endc, :), &
+               flx_absd_snw(bounds%begc:bounds%endc, :, :), &
+               waterdiagnosticbulk_inst, &
+               nvp_tau_col       = surfalb_inst%nvp_tau_col(bounds%begc:bounds%endc), &
+               nvp_omega_vis_col = surfalb_inst%nvp_omega_vis_col(bounds%begc:bounds%endc), &
+               nvp_omega_nir_col = surfalb_inst%nvp_omega_nir_col(bounds%begc:bounds%endc))
+    else
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsnd(bounds%begc:bounds%endc, :), &
+               flx_absd_snw(bounds%begc:bounds%endc, :, :), &
+               waterdiagnosticbulk_inst)
+    end if
 
        flg_slr = 2; ! diffuse
-    call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
-                   coszen_col(bounds%begc:bounds%endc), &
-                   flg_slr, &
-                   h2osno_liq(bounds%begc:bounds%endc, :), &
-                   h2osno_ice(bounds%begc:bounds%endc, :), &
-                   h2osno_total(bounds%begc:bounds%endc), &
-                   snw_rds_in(bounds%begc:bounds%endc, :), &
-                   mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
-                   albsfc(bounds%begc:bounds%endc, :), &
-                   albsni(bounds%begc:bounds%endc, :), &
-            flx_absi_snw(bounds%begc:bounds%endc, :, :), &
-            waterdiagnosticbulk_inst)
+    if (use_nvp) then
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsni(bounds%begc:bounds%endc, :), &
+               flx_absi_snw(bounds%begc:bounds%endc, :, :), &
+               waterdiagnosticbulk_inst, &
+               nvp_tau_col       = surfalb_inst%nvp_tau_col(bounds%begc:bounds%endc), &
+               nvp_omega_vis_col = surfalb_inst%nvp_omega_vis_col(bounds%begc:bounds%endc), &
+               nvp_omega_nir_col = surfalb_inst%nvp_omega_nir_col(bounds%begc:bounds%endc))
+    else
+       call SNICAR_RT(bounds, num_nourbanc, filter_nourbanc,    &
+                      coszen_col(bounds%begc:bounds%endc), &
+                      flg_slr, &
+                      h2osno_liq(bounds%begc:bounds%endc, :), &
+                      h2osno_ice(bounds%begc:bounds%endc, :), &
+                      h2osno_total(bounds%begc:bounds%endc), &
+                      snw_rds_in(bounds%begc:bounds%endc, :), &
+                      mss_cnc_aer_in_fdb(bounds%begc:bounds%endc, :, :), &
+                      albsfc(bounds%begc:bounds%endc, :), &
+                      albsni(bounds%begc:bounds%endc, :), &
+               flx_absi_snw(bounds%begc:bounds%endc, :, :), &
+               waterdiagnosticbulk_inst)
+    end if
 
     ! ground albedos and snow-fraction weighting of snow absorption factors
     do ib = 1, nband
@@ -1065,7 +1106,7 @@ contains
     ! Only perform on vegetated pfts where coszen > 0
 
     if (use_fates) then
-          
+
        call clm_fates%wrap_canopy_radiation(bounds, nc, fcansno(bounds%begp:bounds%endp), surfalb_inst)
 
     else

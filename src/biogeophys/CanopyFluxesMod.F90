@@ -14,7 +14,8 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
+                                     use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method, &
+                                     use_nvp
   use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan, mxpft
   use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type, subgrid_level_patch
@@ -399,10 +400,14 @@ contains
     real(r8) :: delt_snow
     real(r8) :: delt_soil
     real(r8) :: delt_h2osfc
+    ! [PORTED by Hui Tang: NVP individual ground flux temporaries]
+    real(r8) :: delt_nvp
+    real(r8) :: frac_nvp_eff                            ! NVP effective fraction (excludes snow and h2osfc)
     real(r8) :: lw_grnd
     real(r8) :: delq_snow
     real(r8) :: delq_soil
     real(r8) :: delq_h2osfc
+    real(r8) :: delq_nvp
     real(r8) :: dt_veg(bounds%begp:bounds%endp)          ! change in t_veg, last iteration (Kelvin)                              
     integer  :: jtop(bounds%begc:bounds%endc)            ! lbning
     integer  :: filterc_tmp(bounds%endp-bounds%begp+1)   ! temporary variable
@@ -548,9 +553,11 @@ contains
          z0qv                   => frictionvel_inst%z0qv_patch                  , & ! Output: [real(r8) (:)   ]  roughness length over vegetation, latent heat [m]                     
          rb1                    => frictionvel_inst%rb1_patch                   , & ! Output: [real(r8) (:)   ]  boundary layer resistance (s/m)                                       
 
-         t_h2osfc               => temperature_inst%t_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  surface water temperature                                             
-         t_soisno               => temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                                           
-         t_grnd                 => temperature_inst%t_grnd_col                  , & ! Input:  [real(r8) (:)   ]  ground surface temperature [K]                                        
+         t_h2osfc               => temperature_inst%t_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  surface water temperature
+         t_soisno               => temperature_inst%t_soisno_col                , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
+         t_grnd                 => temperature_inst%t_grnd_col                  , & ! Input:  [real(r8) (:)   ]  ground surface temperature [K]
+         ! [PORTED by Hui Tang: NVP layer temperature for NVP ground flux diagnostics]
+         t_nvp_col              => temperature_inst%t_nvp_col                   , & ! Input:  [real(r8) (:)   ]  NVP (moss/lichen) layer temperature [K]                                        
          thv                    => temperature_inst%thv_col                     , & ! Input:  [real(r8) (:)   ]  virtual potential temperature (kelvin)                                
          thm                    => temperature_inst%thm_patch                   , & ! Input:  [real(r8) (:)   ]  intermediate variable (forc_t+0.0098*forc_hgt_t_patch)                  
          emv                    => temperature_inst%emv_patch                   , & ! Input:  [real(r8) (:)   ]  vegetation emissivity                                                     
@@ -565,10 +572,12 @@ contains
          fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
          frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
          snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
-         qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
-         qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
-         qg_h2osfc              => waterdiagnosticbulk_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]                           
-         qg                     => waterdiagnosticbulk_inst%qg_col                       , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface [kg/kg]                           
+         qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]
+         qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]
+         qg_h2osfc              => waterdiagnosticbulk_inst%qg_h2osfc_col                , & ! Input:  [real(r8) (:)   ]  specific humidity at h2osfc surface [kg/kg]
+         ! [PORTED by Hui Tang: NVP surface specific humidity for ground evap diagnostic]
+         qg_nvp                 => waterdiagnosticbulk_inst%qg_nvp_col                   , & ! Input:  [real(r8) (:)   ]  specific humidity at NVP surface [kg/kg]
+         qg                     => waterdiagnosticbulk_inst%qg_col                       , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface [kg/kg]
          dqgdT                  => waterdiagnosticbulk_inst%dqgdT_col                    , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                                        
 
          h2osoi_ice             => waterstatebulk_inst%h2osoi_ice_col               , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                                    
@@ -587,10 +596,12 @@ contains
 
          qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
          qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
-         qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)                              
-         qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
-         qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
-         qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
+         qflx_evap_soi          => waterfluxbulk_inst%qflx_evap_soi_patch           , & ! Output: [real(r8) (:)   ]  soil evaporation (mm H2O/s) (+ = to atm)
+         qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
+         qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
+         qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]
+         ! [PORTED by Hui Tang: NVP evaporation flux diagnostic]
+         qflx_ev_nvp            => waterfluxbulk_inst%qflx_ev_nvp_patch             , & ! Output: [real(r8) (:)   ]  evaporation flux from NVP (mm H2O/s) [+ to atm]                      
          gs_mol_sun             => photosyns_inst%gs_mol_sun_patch              , & ! Input: [real(r8) (:)   ]  patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
          gs_mol_sha             => photosyns_inst%gs_mol_sha_patch              , & ! Input: [real(r8) (:)   ]  patch shaded leaf stomatal conductance (umol H2O/m**2/s)
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
@@ -610,9 +621,11 @@ contains
          dlrad                  => energyflux_inst%dlrad_patch                  , & ! Output: [real(r8) (:)   ]  downward longwave radiation below the canopy [W/m2]                   
          ulrad                  => energyflux_inst%ulrad_patch                  , & ! Output: [real(r8) (:)   ]  upward longwave radiation above the canopy [W/m2]                     
          cgrnd                  => energyflux_inst%cgrnd_patch                  , & ! Output: [real(r8) (:)   ]  deriv. of soil energy flux wrt to soil temp [w/m2/k]                  
-         eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
-         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
-         eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
+         eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]
+         eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from surface water (W/m**2) [+ to atm]
+         eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]
+         ! [PORTED by Hui Tang: NVP sensible heat flux diagnostic]
+         eflx_sh_nvp            => energyflux_inst%eflx_sh_nvp_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from NVP (W/m**2) [+ to atm]
          eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
@@ -1298,9 +1311,16 @@ bioms:   do f = 1, fn
                erre = efe(p) - efeold
             end if
             ! fractionate ground emitted longwave
+            ! [PORTED by Hui Tang: include NVP layer in lw_grnd blend]
+            if (use_nvp) then
+               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno(c) - frac_h2osfc(c)))
+            else
+               frac_nvp_eff = 0._r8
+            end if
             lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-                 +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
-                 +frac_h2osfc(c)*t_h2osfc(c)**4)
+                 +(1._r8-frac_sno(c)-frac_h2osfc(c)-frac_nvp_eff)*t_soisno(c,1)**4 &
+                 +frac_h2osfc(c)*t_h2osfc(c)**4 &
+                 +frac_nvp_eff*t_nvp_col(c)**4)
 
             dt_veg(p) = ((1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
                   + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
@@ -1467,10 +1487,16 @@ bioms:   do f = 1, fn
          g = patch%gridcell(p)
 
          ! Energy balance check in canopy
-
+         ! [PORTED by Hui Tang: include NVP in lw_grnd for energy balance check]
+         if (use_nvp) then
+            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno(c) - frac_h2osfc(c)))
+         else
+            frac_nvp_eff = 0._r8
+         end if
          lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-              +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
-              +frac_h2osfc(c)*t_h2osfc(c)**4)
+              +(1._r8-frac_sno(c)-frac_h2osfc(c)-frac_nvp_eff)*t_soisno(c,1)**4 &
+              +frac_h2osfc(c)*t_h2osfc(c)**4 &
+              +frac_nvp_eff*t_nvp_col(c)**4)
 
          err(p) = (1.0_r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
               *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
@@ -1515,6 +1541,13 @@ bioms:   do f = 1, fn
          eflx_sh_snow(p) = cpair*forc_rho(c)*wtg(p)*delt_snow
          eflx_sh_soil(p) = cpair*forc_rho(c)*wtg(p)*delt_soil
          eflx_sh_h2osfc(p) = cpair*forc_rho(c)*wtg(p)*delt_h2osfc
+         ! [PORTED by Hui Tang: NVP individual sensible heat flux, analogous to snow/h2osfc]
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            delt_nvp  = wtal(p)*t_nvp_col(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)-wtstem0(p)*t_stem(p)
+            eflx_sh_nvp(p) = cpair*forc_rho(c)*wtg(p)*delt_nvp
+         else
+            eflx_sh_nvp(p) = 0._r8
+         end if
          qflx_evap_soi(p) = forc_rho(c)*wtgq(p)*delq(p)
 
          ! compute individual latent heat fluxes
@@ -1526,6 +1559,16 @@ bioms:   do f = 1, fn
 
          delq_h2osfc = wtalq(p)*qg_h2osfc(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
          qflx_ev_h2osfc(p) = forc_rho(c)*wtgq(p)*delq_h2osfc
+
+         ! [PORTED by Hui Tang: NVP individual latent heat flux, analogous to snow/h2osfc]
+         ! qflx_evap_soi already includes NVP because qg(c) blends NVP in SurfaceHumidityMod.
+         ! This is the diagnostic breakdown of the NVP contribution.
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            delq_nvp = wtalq(p)*qg_nvp(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
+            qflx_ev_nvp(p) = forc_rho(c)*wtgq(p)*delq_nvp
+         else
+            qflx_ev_nvp(p) = 0._r8
+         end if
 
          ! 2 m height air temperature
 

@@ -954,6 +954,27 @@ LUNA operates on C3 and non-crop vegetation (see vcmax_opt for how other veg is 
 LUNA: Leaf Utilization of Nitrogen for Assimilation
 </entry>
 
+<!-- NVP (non-vascular plant: moss/lichen) ground layer -->
+<!-- [PORTED by Hui Tang: NVP control flags] -->
+<entry id="use_nvp" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to activate the NVP (non-vascular plant: moss/lichen) ground layer.
+Requires use_fates=".true.".
+</entry>
+
+<entry id="use_nvp_undersnow" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Allow the NVP layer to remain active and exchange fluxes when covered by snow.
+Only relevant when use_nvp=".true.".
+</entry>
+
+<entry id="nvp_rad_model_ground" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Use FATES Beer's law radiation model for the NVP ground layer instead of
+the CLM bare-ground scheme.
+Only relevant when use_nvp=".true.".
+</entry>
+
 <entry id="use_hillslope" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the hillslope model
