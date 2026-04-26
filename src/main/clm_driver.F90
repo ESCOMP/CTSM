@@ -640,7 +640,7 @@ contains
        ! over the patch index range defined by bounds_clump%begp:bounds_proc%endp
 
        if(use_fates) then
-          call clm_fates%wrap_sunfrac(nc,atm2lnd_inst, canopystate_inst)
+          call clm_fates%wrap_sunfrac(nc, atm2lnd_inst, canopystate_inst, surfalb_inst)
        else
           call CanopySunShadeFracs(filter(nc)%nourbanp,filter(nc)%num_nourbanp,     &
                                    atm2lnd_inst, surfalb_inst, canopystate_inst,    &

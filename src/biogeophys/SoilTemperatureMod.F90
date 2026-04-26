@@ -90,8 +90,10 @@ module SoilTemperatureMod
 contains
 
   !-----------------------------------------------------------------------
+  ! [PORTED by Hui Tang: added num_nvpc/filter_nvpc args for NVP-active column processing]
   subroutine SoilTemperature(bounds, num_urbanl, filter_urbanl, num_urbanc, filter_urbanc, &
        num_nolakep, filter_nolakep, num_nolakec, filter_nolakec, &
+       num_nvpc, filter_nvpc, &
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,&
        solarabs_inst, soilstate_inst, energyflux_inst,  temperature_inst, urbantv_inst)
     !
@@ -327,6 +329,7 @@ contains
 
       tk_h2osfc(begc:endc) = nan
       call SoilThermProp(bounds, num_urbanc, filter_urbanc, num_nolakec, filter_nolakec, &
+           num_nvpc, filter_nvpc, &
            tk(begc:endc, :), &
            cv(begc:endc, :), &
            tk_h2osfc(begc:endc), &
@@ -656,7 +659,9 @@ contains
   end subroutine SoilTemperature
 
   !-----------------------------------------------------------------------
+  ! [PORTED by Hui Tang: added num_nvpc/filter_nvpc args for NVP thermal property override]
   subroutine SoilThermProp (bounds, num_urbanc, filter_urbanc, num_nolakec, filter_nolakec, &
+       num_nvpc, filter_nvpc, &
        tk, cv, tk_h2osfc, &
        urbanparams_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, soilstate_inst)
 
@@ -691,6 +696,8 @@ contains
     integer                , intent(in)    :: filter_urbanc(:)  ! urban column filter
     integer                , intent(in)    :: num_nolakec                      ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)                ! column filter for non-lake points
+    integer                , intent(in)    :: num_nvpc                         ! [PORTED by Hui Tang: number of NVP-active columns]
+    integer                , intent(in)    :: filter_nvpc(:)                   ! [PORTED by Hui Tang: NVP-active column filter]
     real(r8)               , intent(out)   :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)                              ] [col, lev]
     real(r8)               , intent(out)   :: tk( bounds%begc: , -nlevsno+1: ) ! thermal conductivity at the layer interface [W/(m K) ] [col, lev]
     real(r8)               , intent(out)   :: tk_h2osfc( bounds%begc: )        ! thermal conductivity of h2osfc [W/(m K)              ] [col]
@@ -1657,9 +1664,11 @@ contains
   end subroutine Phasechange
 
   !-----------------------------------------------------------------------
+  ! [PORTED by Hui Tang: added num_nvpc/filter_nvpc/hs_nvp args for NVP layer 0 heat flux]
   subroutine ComputeGroundHeatFluxAndDeriv(bounds, &
        num_nolakep, filter_nolakep, num_nolakec, filter_nolakec, &
-       hs_h2osfc, hs_top_snow, hs_soil, hs_top, dhsdT, sabg_lyr_col, &
+       num_nvpc, filter_nvpc, &
+       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, &
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
        waterfluxbulk_inst, solarabs_inst, energyflux_inst, temperature_inst)
     !

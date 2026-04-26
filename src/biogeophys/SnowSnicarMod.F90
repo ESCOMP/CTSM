@@ -187,9 +187,11 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
+  ! [PORTED by Hui Tang: optional NVP layer-0 inputs (nvp_tau_col, nvp_omega_*_col) for SNICAR Approach B]
   subroutine SNICAR_RT (bounds, num_nourbanc, filter_nourbanc,  &
                         coszen, flg_slr_in, h2osno_liq, h2osno_ice, h2osno_total, snw_rds,   &
-                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterdiagnosticbulk_inst)
+                        mss_cnc_aer_in, albsfc, albout, flx_abs, waterdiagnosticbulk_inst,   &
+                        nvp_tau_col, nvp_omega_vis_col, nvp_omega_nir_col)
     !
     ! !DESCRIPTION:
     ! Determine reflectance of, and vertically-resolved solar absorption in, 

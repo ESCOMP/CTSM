@@ -341,7 +341,7 @@ contains
     rnvp = rnvp_min + rnvp_amp * (1.0_r8 - satfrac)**rnvp_exp
 
     ! --- 3. Van Genuchten matric potential [mm] ---
-    call NVPWaterRetentionCurve(theta_nvp, n_van, alpha_van, watsat, watres, psi_nvp)
+    call NVPWaterRetentionCurve(theta_nvp, eff_porosity, n_van, alpha_van, watsat, watres, psi_nvp)
 
     ! --- 4. Kelvin activity correction: alpha = exp(psi / (roverg * T)) ---
     ! roverg = R_w/g * 1000 [mm K] so that psi [mm] / (roverg [mm K] * T [K]) is
@@ -408,11 +408,16 @@ contains
     class(waterstate_type),         intent(inout) :: waterstate_inst
     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst
     type(soilstate_type),           intent(in)    :: soilstate_inst
+    ! [PORTED by Hui Tang: temperature_inst needed for ice/liquid partitioning of NVP layer]
+    type(temperature_type),         intent(in)    :: temperature_inst
 
     integer  :: c
     real(r8) :: frac_h2osfc    ! fractional area with surface water [-]
     real(r8) :: frac_nvp_eff   ! effective NVP area fraction (not covered by h2osfc) [-]
     real(r8) :: vol_liq        ! NVP volumetric liquid water content [m3 m-3]
+    ! [PORTED by Hui Tang: locals for ice partitioning of NVP layer water]
+    real(r8) :: vol_ice        ! NVP volumetric ice content [m3 m-3]
+    real(r8) :: eff_porosity   ! effective porosity (watsat - vol_ice) [m3 m-3]
     real(r8) :: khydr_nvp      ! NVP unsaturated hydraulic conductivity [m s-1]
     real(r8) :: K_nvp_mms      ! khydr_nvp converted to mm/s
     real(r8) :: K_soil1        ! soil layer 1 hydraulic conductivity [mm/s]
@@ -430,12 +435,13 @@ contains
          qflx_nvp_infl_col      => waterfluxbulk_inst%qflx_nvp_infl_col,          &
          qflx_nvp_drain_col     => waterfluxbulk_inst%qflx_nvp_drain_col,         &
          h2osoi_liq             => waterstate_inst%h2osoi_liq_col,                &
+         h2osoi_ice             => waterstate_inst%h2osoi_ice_col,                &  ! [PORTED by Hui Tang: ice content for porosity reduction]
          h2onvp_col             => waterstate_inst%h2onvp_col,                    &  ! [PORTED by Hui Tang: sync diagnostic copy]
          smp_l                  => soilstate_inst%smp_l_col,                      &
          hk_l                   => soilstate_inst%hk_l_col,                       &
          frac_h2osfc_col        => waterdiagnosticbulk_inst%frac_h2osfc_col,      &
          fwet_nvp_col           => waterdiagnosticbulk_inst%fwet_nvp_col,         &
-         vwc_nvp_col            => waterdiagnosticbulk_inst%vwc_nvp_col           &  ! [PORTED by Hui Tang: volumetric water content]
+         vwc_nvp_col            => waterdiagnosticbulk_inst%vwc_nvp_col,          &  ! [PORTED by Hui Tang: volumetric water content]
          t_nvp_col              => temperature_inst%t_nvp_col                     &  ! Input:  [real(r8) (:)   ] NVP (moss/lichen) temperature (Kelvin)
          )
 
@@ -470,9 +476,9 @@ contains
         end if
 
         ! --- NVP van Genuchten matric potential and hydraulic conductivity ---
-        call NVPWaterRetentionCurve(vol_liq, eff_porosity, alpha_van_nvp, &
+        call NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van_nvp, alpha_van_nvp, &
              watsat_nvp, watres_nvp, psi_nvp)
-        call NVPHydraulicConductivity(vol_liq, eff_porosity, watsat_nvp, watres_nvp, &
+        call NVPHydraulicConductivity(vol_liq, eff_porosity, n_van_nvp, watsat_nvp, watres_nvp, &
              ksat_nvp, khydr_nvp)
         K_nvp_mms = khydr_nvp * 1000._r8                                   ! m/s → mm/s
 
@@ -561,8 +567,10 @@ contains
     !       h2onvp_col and t_nvp_col are restarted in WaterStateType and
     !       TemperatureType respectively.
     ! -------------------------------------------------------------------------
-    use ncdio_pio   , only : file_desc_t, ncd_double, ncd_int, ncd_log
-    use restFileMod , only : restartvar
+    use ncdio_pio   , only : file_desc_t, ncd_double, ncd_int
+    ! [PORTED by Hui Tang: use restUtilMod (not restFileMod) for restartvar — restFileMod
+    !  uses clm_instMod, creating clm_instMod ↔ NVPLayerDynamicsMod cycle in build deps]
+    use restUtilMod , only : restartvar
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds
@@ -591,14 +599,8 @@ contains
        col%frac_nvp(bounds%begc:bounds%endc) = 0._r8
     end if
 
-    ! Logical flag: .true. when NVP occupies layer index 0
-    call restartvar(ncid=ncid, flag=flag, varname='NVP_LAYER_ACTIVE', xtype=ncd_log, &
-         dim1name='column', &
-         long_name='flag: NVP layer occupies vertical index 0', units='', &
-         interpinic_flag='interp', readvar=readvar, data=col%nvp_layer_active)
-    if (flag == 'read' .and. .not. readvar) then
-       col%nvp_layer_active(bounds%begc:bounds%endc) = .false.
-    end if
+    ! [PORTED by Hui Tang: nvp_layer_active is fully redundant with jbot_sno (active iff jbot_sno == -1).
+    !  restartvar has no logical-array overload, so we restart only JBOT_SNO and derive the flag below.]
 
     ! Bottom index of active snow: 0 = no NVP, -1 = NVP present at layer 0
     call restartvar(ncid=ncid, flag=flag, varname='JBOT_SNO', xtype=ncd_int, &
@@ -607,6 +609,12 @@ contains
          interpinic_flag='interp', readvar=readvar, data=col%jbot_sno)
     if (flag == 'read' .and. .not. readvar) then
        col%jbot_sno(bounds%begc:bounds%endc) = 0
+    end if
+
+    ! Derive nvp_layer_active from jbot_sno on read (covers both restart and cold-start paths)
+    if (flag == 'read') then
+       col%nvp_layer_active(bounds%begc:bounds%endc) = &
+            (col%jbot_sno(bounds%begc:bounds%endc) == -1)
     end if
 
   end subroutine NVPLayerRestart

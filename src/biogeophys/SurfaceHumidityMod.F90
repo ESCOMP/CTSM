@@ -165,8 +165,8 @@ contains
                         ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
                         vol_liq = watres_nvp            
                      end if
-                     psit_nvp = NVPWaterRetentionCurve(vol_liq, eff_porosity, alpha_van_nvp, &
-                              watsat_nvp, watres_nvp, psi_nvp)
+                     call NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van_nvp, alpha_van_nvp, &
+                              watsat_nvp, watres_nvp, psit_nvp)
                      hr_nvp = exp(psit_nvp/roverg/t_nvp_col(c))
                   else
                      ! If dz(c,0) is not positive, set hr_nvp to 0
@@ -273,11 +273,11 @@ contains
                if (frac_nvp_eff > 0._r8) then
                   call QSat(t_nvp_col(c), forc_pbot(c), qsatg, &
                        qsdT = qsatgdT_nvp)
-                  qg_nvp(c) = hr_nvp(c) * qsatg
+                  qg_nvp(c) = hr_nvp * qsatg
                   ! Adjust qg and dqgdT: reduce bare-soil contribution by frac_nvp_eff, add NVP term
                   qg(c) = qg(c) - frac_nvp_eff * qg_soil(c) + frac_nvp_eff * qg_nvp(c)
                   dqgdT(c) = dqgdT(c) - frac_nvp_eff * hr * qsatgdT_soil &
-                             + frac_nvp_eff * hr_nvp(c) * qsatgdT_nvp
+                             + frac_nvp_eff * hr_nvp * qsatgdT_nvp
                end if
             else
                qg_nvp(c) = qg_soil(c)

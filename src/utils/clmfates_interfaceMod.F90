@@ -85,8 +85,6 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_nvp
    use clm_varctl        , only : use_nvp_undersnow
    use clm_varctl        , only : nvp_rad_model_ground
-   ! [PORTED by Hui Tang: NVP layer geometry updater]
-   use NVPLayerDynamicsMod, only : UpdateNVPLayer
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -1139,7 +1137,9 @@ module CLMFatesInterfaceMod
       type(bounds_type),intent(in)                   :: bounds_clump
       type(atm2lnd_type)      , intent(in)           :: atm2lnd_inst
       type(soilstate_type)    , intent(in)           :: soilstate_inst
-      type(temperature_type)  , intent(in)           :: temperature_inst
+      ! [PORTED by Hui Tang: intent(inout) — passed down to wrap_update_hlmfates_dyn → UpdateNVPLayer,
+      !  which writes temperature_inst%t_soisno_col(c,0) on NVP layer activation/deactivation]
+      type(temperature_type)  , intent(inout)        :: temperature_inst
       type(active_layer_type) , intent(in)           :: active_layer_inst
       integer                 , intent(in)           :: nc
       type(waterstatebulk_type)   , intent(inout)        :: waterstatebulk_inst
@@ -1581,6 +1581,9 @@ module CLMFatesInterfaceMod
       ! that either requires HLM boundary conditions (like snow accumulation) or
       ! provides boundary conditions (such as vegetation fractional coverage)
       ! ---------------------------------------------------------------------------------
+
+     ! [PORTED by Hui Tang: moved from module level to break clmfatesinterfacemod compilation delay]
+     use NVPLayerDynamicsMod, only : UpdateNVPLayer
 
      class(hlm_fates_interface_type), intent(inout) :: this
      type(bounds_type),intent(in)                   :: bounds_clump
@@ -2839,7 +2842,6 @@ module CLMFatesInterfaceMod
 
    use decompMod                   , only : bounds_type
    use FatesPlantRespPhotosynthMod , only : FatesPlantRespPhotosynthDrive
-   use FatesSynchronizedParsMod    , only : get_step_size_real
 
    ! !ARGUMENTS:
    class(hlm_fates_interface_type),  intent(inout) :: this
