@@ -183,6 +183,18 @@ def build_docs(code_dir, files):
     # subprocess.run([path, "update"], check=True)
     # subprocess.run([path, "update", "doc-builder"], check=True)
 
+    # Do an empty commit to avoid possible errors on git lfs fetch
+    subprocess.check_call(["git", "init"])
+    subprocess.check_call(
+        [
+            "git",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "Empty commit to avoid git lfs problems",
+        ]
+    )
+
     print("Building docs...")
     os.chdir("doc")
     load_podman = []
