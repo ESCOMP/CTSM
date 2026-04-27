@@ -19,7 +19,7 @@ SCRATCH = os.getenv("SCRATCH")
 DEFAULT_EXTRACTION_DIR_BASENAME = (
     "preview_docs_pr.{}.{}.pr-{}"  # repo owner, repo name, PR number
 )
-DEFAULT_extraction_dir = os.path.join(
+DEFAULT_EXTRACTION_DIR = os.path.join(
     SCRATCH if SCRATCH else "",
     DEFAULT_EXTRACTION_DIR_BASENAME,
 )
@@ -277,7 +277,7 @@ def parse_args():
         type=str,
     )
 
-    extraction_dir_help_default = DEFAULT_extraction_dir.format(
+    extraction_dir_help_default = DEFAULT_EXTRACTION_DIR.format(
         "REPO_OWNER", "REPO", "PR_NUM"
     )
     parser.add_argument(
@@ -304,7 +304,7 @@ def parse_args():
     # Get clone dir, if not provided
     pr_info = parse_pr_url(args.pr_url)
     if not args.extraction_dir:
-        args.extraction_dir = DEFAULT_extraction_dir.format(*pr_info)
+        args.extraction_dir = DEFAULT_EXTRACTION_DIR.format(*pr_info)
     elif os.path.abspath(args.extraction_dir) == os.getcwd():
         args.extraction_dir = os.path.join(
             os.getcwd(), DEFAULT_EXTRACTION_DIR_BASENAME.format(*pr_info)
