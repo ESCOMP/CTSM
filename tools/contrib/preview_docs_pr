@@ -213,7 +213,7 @@ def build_docs(code_dir, files, verbose, pr_info):
             print(line, end="")  # Print to screen
             output.append(line)  # Save for later
     output = "".join(output)
-    if output and "The HTML pages are in" in output:
+    if output and os.path.exists(os.path.join("_build", "html", "index.html")):
         print_files_msg(code_dir, files)
 
 def set_up_git(pr_info, verbose):
