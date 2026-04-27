@@ -328,6 +328,8 @@ contains
             end do
          end do
 
+         ! This loop repeats here in the ".not. use_nitrif_denitrif"
+         ! section of the if-statement and later in the else section
          bgc_soilc_loop1: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
@@ -595,6 +597,9 @@ contains
             end do
          end do
 
+         ! This loop repeats here in the "use_nitrif_denitrif" section
+         ! of the if-statement and earlier in the
+         ! ".not. use_nitrif_denitrif" section
          bgc_soilc_loop2: do fc = 1, num_bgc_soilc
             c = filter_bgc_soilc(fc)
 
