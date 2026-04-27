@@ -6,6 +6,7 @@ module clm_varctl
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CX
+  use shr_kind_mod, only: CS => SHR_KIND_CS
   use shr_sys_mod , only: shr_sys_abort ! cannot use endrun here due to circular dependency
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -324,7 +325,7 @@ module clm_varctl
 
   integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
-  character(len=256), public :: fates_parteh_mode = ''                  ! FATES Plant Allocation Reactions and Transport Hypotheses
+  character(len=CS), public  :: fates_parteh_mode = ''                  ! FATES Plant Allocation Reactions and Transport Hypotheses
                                                                         ! = carbon_only : Cycle carbon in FATES only
                                                                         ! = carbon_nitrogen: Cycle both carbon and nitrogen
                                                                         ! in FATES. FATES will cycle phosphorus as well,

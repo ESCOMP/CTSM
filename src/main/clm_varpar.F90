@@ -6,6 +6,7 @@ module clm_varpar
   !
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
+  use shr_kind_mod , only: CS => SHR_KIND_CS
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers
@@ -60,8 +61,8 @@ module clm_varpar
   ! These strings define the clm-fates coupling, i.e. which chemical species
   ! are cycled between the two, see corresponding values for fates_parteh_mode:
   ! bld/namelist_files/namelist_definition_ctsm.xml
-  character(len=256), public, parameter :: clmfates_carbon_only = 'carbon_only'
-  character(len=256), public, parameter :: clmfates_carbon_nitrogen = 'carbon_nitrogen'
+  character(len=CS), public, parameter :: clmfates_carbon_only = 'carbon_only'
+  character(len=CS), public, parameter :: clmfates_carbon_nitrogen = 'carbon_nitrogen'
 
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
