@@ -20,14 +20,6 @@ Separate state variables for C and N are tracked for leaf, live stem, dead stem,
 
 In addition to the vegetation pools, CLM includes a series of decomposing carbon and nitrogen pools as vegetation successively breaks down to CWD, and/or litter, and subsequently to soil organic matter. Discussion of the decomposition model, alternate specifications of decomposition rates, and methods to rapidly equilibrate the decomposition model, is in Chapter :numref:`rst_Decomposition`.
 
-.. _Figure New test figure:
-
-.. figure:: screenshot_5718.png
-    :width: 462px
-    :height: 298px
-
-    Just a test figure. Remove before merging!!!
-
 Tissue Stoichiometry
 -----------------------
 
