@@ -190,15 +190,42 @@ def build_docs(code_dir, files, verbose, pr_info):
     os.chdir(code_dir)
     os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
 
+    # Set up so that git lfs works
+    set_up_git(pr_info, verbose)
+
+    print("Building docs...")
+    os.chdir("doc")
+    os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
+    output = []
+    cmd = [path, "-b", "_build", "-d", "-c"]
+    if verbose:
+        cmd.append("--verbose")
+    with subprocess.Popen(
+        cmd,
+        cwd=os.path.join(code_dir, "doc"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,  # Merge stderr into stdout
+        text=True,
+        bufsize=1,  # Line buffering
+        env={**os.environ, "PYTHONUNBUFFERED": "1"},  # Force unbuffered output
+    ) as process:
+        for line in process.stdout:
+            print(line, end="")  # Print to screen
+            output.append(line)  # Save for later
+    output = "".join(output)
+    if output and "The HTML pages are in" in output:
+        print_files_msg(code_dir, files)
+
+def set_up_git(pr_info, verbose):
+    """Initialize a git repo in the downloaded code so that git lfs works right"""
+
     # Handle verbosity for git commands
     if verbose:
         stdout = None
     else:
         stdout = subprocess.DEVNULL
 
-    # Set up so that git lfs works
     owner, repo, _ = pr_info
-
     result = subprocess.run(
         [
             "ssh",
@@ -232,29 +259,6 @@ def build_docs(code_dir, files, verbose, pr_info):
         ],
         stdout=stdout,
     )
-
-    print("Building docs...")
-    os.chdir("doc")
-    os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
-    output = []
-    cmd = [path, "-b", "_build", "-d", "-c"]
-    if verbose:
-        cmd.append("--verbose")
-    with subprocess.Popen(
-        cmd,
-        cwd=os.path.join(code_dir, "doc"),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,  # Merge stderr into stdout
-        text=True,
-        bufsize=1,  # Line buffering
-        env={**os.environ, "PYTHONUNBUFFERED": "1"},  # Force unbuffered output
-    ) as process:
-        for line in process.stdout:
-            print(line, end="")  # Print to screen
-            output.append(line)  # Save for later
-    output = "".join(output)
-    if output and "The HTML pages are in" in output:
-        print_files_msg(code_dir, files)
 
 
 def print_files_msg(code_dir, files):
