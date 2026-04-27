@@ -184,7 +184,7 @@ def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
     return code_dir, files
 
 
-def build_docs(code_dir, files):
+def build_docs(code_dir, files, verbose):
     """Build the documentation"""
     print("Getting submodules...")
     os.chdir(code_dir)
@@ -207,8 +207,11 @@ def build_docs(code_dir, files):
     os.chdir("doc")
     os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
     output = []
+    cmd = [path, "-b", "_build", "-d", "-c"]
+    if verbose:
+        cmd.append("--verbose")
     with subprocess.Popen(
-        [path, "-b", "_build", "-d", "-c"],
+        cmd,
         cwd=os.path.join(code_dir, "doc"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,  # Merge stderr into stdout
@@ -299,6 +302,13 @@ def parse_args():
         action="store_true",
     )
 
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose output for build_docs command.",
+        action="store_true",
+    )
+
     args = parser.parse_args(sys.argv[1:])
 
     # Get clone dir, if not provided
@@ -341,7 +351,7 @@ def main():
     # need to think about how to implement them in a way that will prevent people from putting their
     # secrets into their shell history.
     code_dir, files = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite, token=None)
-    build_docs(code_dir, files)
+    build_docs(code_dir, files, args.verbose)
 
 
 if __name__ == "__main__":
