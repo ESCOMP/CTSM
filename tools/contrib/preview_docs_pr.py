@@ -188,7 +188,7 @@ def build_docs(code_dir, files):
     # subprocess.run([path, "update", "doc-builder"], check=True)
 
     # Do an empty commit to avoid possible errors on git lfs fetch
-    subprocess.check_call(["git", "init"])
+    subprocess.check_call(["git", "init"], stdout=subprocess.DEVNULL)
     subprocess.check_call(
         [
             "git",
@@ -196,7 +196,8 @@ def build_docs(code_dir, files):
             "--allow-empty",
             "-m",
             "Empty commit to avoid git lfs problems",
-        ]
+        ],
+        stdout=subprocess.DEVNULL,
     )
 
     print("Building docs...")
