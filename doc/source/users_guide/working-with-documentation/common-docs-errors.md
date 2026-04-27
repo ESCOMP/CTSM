@@ -18,6 +18,10 @@ You tried to build the documentation using our container (`./build_docs ... -d`)
 - {ref}`bld-prev-docs-mac`
 - {ref}`bld-prev-docs-windows`
 
+### "Failed to fetch object"
+
+This can happen if you are trying to build from within a git worktree. The simplest solution is to clone a fresh copy of your working branch somewhere else and try from there.
+
 (common-rst-errors)=
 
 ## Common docs errors: reStructuredText
