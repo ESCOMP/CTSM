@@ -64,12 +64,16 @@ def fetch_pr_info(owner, repo, pr_number, token=None):
 
 
 def fetch_pr_info_with_mergeability(owner, repo, pr_number, token=None, retries=5):
+    wait_time = 10  # seconds
     for attempt in range(retries):
         pr, files = fetch_pr_info(owner, repo, pr_number, token)
         if pr["state"] != "open" or pr.get("mergeable") is not None:
             return pr, files
-        print(f"  Mergeability not yet computed, retrying ({attempt + 1}/{retries})...")
-        time.sleep(2)
+        print(
+            f"  Mergeability not yet computed, waiting {wait_time} seconds and retrying"
+            f"({attempt + 1}/{retries})..."
+        )
+        time.sleep(wait_time)
     raise RuntimeError(f"Mergeability still unknown after {retries} retries.")
 
 
