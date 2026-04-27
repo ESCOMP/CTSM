@@ -191,7 +191,7 @@ def build_docs(code_dir, files):
     os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
 
     # Do an empty commit to avoid possible errors on git lfs fetch
-    subprocess.check_call(["git", "init"], stdout=subprocess.DEVNULL)
+    subprocess.check_call(["git", "init", "-b", "preview-docs"], stdout=subprocess.DEVNULL)
     subprocess.check_call(
         [
             "git",
