@@ -2734,6 +2734,8 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_history_dimlevel         use_fates=".true.">2,2</fates_history_dimlevel>
 
 <!-- Supplmental Nitrogen mode -->
+<!-- FATES carbon_only needs suplnitro set to ALL. -->
+<!-- In previous versions, all FATES cases needed suplnitro set to ALL. -->
 <suplnitro >NONE</suplnitro>
 <suplnitro fates_parteh_mode="carbon_only" >ALL</suplnitro>
 
