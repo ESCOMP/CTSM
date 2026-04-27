@@ -229,27 +229,7 @@ def set_up_git(pr_info, stdout):
     """Initialize a git repo in the downloaded code so that git lfs works right"""
 
     owner, repo, _ = pr_info
-    result = subprocess.run(
-        [
-            "ssh",
-            "-o",
-            "StrictHostKeyChecking=no",
-            "-o",
-            "UserKnownHostsFile=/dev/null",
-            "-T",
-            "git@github.com",
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode == 1 and "You've successfully authenticated" in result.stderr:
-        remote_url = f"git@github.com:{owner}/{repo}.git"
-    elif result.returncode == 255:
-        # Fall back to HTTPS method
-        remote_url = f"https://github.com/{owner}/{repo}.git"
-    else:
-        raise RuntimeError(f"GitHub SSH check failed:\n{result.stderr}")
+    remote_url = f"https://github.com/{owner}/{repo}.git"
     subprocess.check_call(["git", "init", "-b", "preview-docs"], stdout=stdout)
     subprocess.check_call(["git", "remote", "add", "origin", remote_url], stdout=stdout)
     subprocess.check_call(["git", "add", "-A"], stdout=stdout)
