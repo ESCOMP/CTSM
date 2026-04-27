@@ -289,7 +289,7 @@ def parse_args():
         dest="extraction_dir",
         help=(
             "Directory to download and extract code versions to."
-            f"Default: {extraction_dir_help_default}"
+            f" Default: {extraction_dir_help_default}"
         ),
         type=str,
         default=None,
