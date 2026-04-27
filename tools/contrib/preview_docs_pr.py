@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Given a GitHub PR URL, download the code as if it had been merged and then build the docs"""
 
 import urllib.request
 import urllib.error
@@ -15,12 +16,12 @@ import shutil
 
 # Get default location in which to clone the code
 SCRATCH = os.getenv("SCRATCH")
-DEFAULT_extraction_dir_BASENAME = (
+DEFAULT_EXTRACTION_DIR_BASENAME = (
     "preview_docs_pr.{}.{}.pr-{}"  # repo owner, repo name, PR number
 )
 DEFAULT_extraction_dir = os.path.join(
     SCRATCH if SCRATCH else "",
-    DEFAULT_extraction_dir_BASENAME,
+    DEFAULT_EXTRACTION_DIR_BASENAME,
 )
 
 INDENT = 4 * " "
@@ -37,6 +38,7 @@ def parse_pr_url(url):
 
 
 def make_api_call(url, token):
+    """Helper function to make a GitHub API call"""
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -64,6 +66,7 @@ def fetch_pr_info(owner, repo, pr_number, token=None):
 
 
 def fetch_pr_info_with_mergeability(owner, repo, pr_number, token=None, retries=5):
+    """Fetch the PR info, retrying as needed if mergeability hasn't yet been computed"""
     wait_time = 10  # seconds
     for attempt in range(retries):
         pr, files = fetch_pr_info(owner, repo, pr_number, token)
@@ -106,6 +109,7 @@ def pick_ref(pr):
 
 
 def download_zip(extraction_dir, token, pr_info, merge_commit_sha):
+    """Download the code as of the merge commit from GitHub"""
     print("Downloading zip from GitHub...")
     owner, repo, pr_number = pr_info
     zip_url = f"https://api.github.com/repos/{owner}/{repo}/zipball/{merge_commit_sha}"
@@ -127,7 +131,7 @@ def download_zip(extraction_dir, token, pr_info, merge_commit_sha):
 
 
 def extract_zip(extraction_dir, zip_path, overwrite):
-
+    """Unzip the code"""
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
             # GitHub zips have a single top-level folder like "owner-repo-<sha>/"
@@ -181,11 +185,10 @@ def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
 
 
 def build_docs(code_dir, files):
+    """Build the documentation"""
     print("Getting submodules...")
     os.chdir(code_dir)
     os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
-    # subprocess.run([path, "update"], check=True)
-    # subprocess.run([path, "update", "doc-builder"], check=True)
 
     # Do an empty commit to avoid possible errors on git lfs fetch
     subprocess.check_call(["git", "init"], stdout=subprocess.DEVNULL)
@@ -222,6 +225,7 @@ def build_docs(code_dir, files):
 
 
 def print_files_msg(code_dir, files):
+    """Print a message about the directly-affected files"""
     build_dir = os.path.join(code_dir, "doc", "_build")
     html_dir = os.path.join(build_dir, "html")
     print(f"\nThe updated files are in {html_dir}")
@@ -303,7 +307,7 @@ def parse_args():
         args.extraction_dir = DEFAULT_extraction_dir.format(*pr_info)
     elif os.path.abspath(args.extraction_dir) == os.getcwd():
         args.extraction_dir = os.path.join(
-            os.getcwd(), DEFAULT_extraction_dir_BASENAME.format(*pr_info)
+            os.getcwd(), DEFAULT_EXTRACTION_DIR_BASENAME.format(*pr_info)
         )
     print(f"Will clone to '{args.extraction_dir}'")
 
@@ -331,6 +335,7 @@ def parse_args():
 
 
 def main():
+    """Main function"""
     args = parse_args()
     code_dir, files = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite)
     build_docs(code_dir, files)
