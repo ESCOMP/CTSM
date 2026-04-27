@@ -190,8 +190,14 @@ def build_docs(code_dir, files, verbose):
     os.chdir(code_dir)
     os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
 
+    # Handle verbosity for git commands
+    if verbose:
+        stdout = None
+    else:
+        stdout = subprocess.DEVNULL
+
     # Do an empty commit to avoid possible errors on git lfs fetch
-    subprocess.check_call(["git", "init", "-b", "preview-docs"], stdout=subprocess.DEVNULL)
+    subprocess.check_call(["git", "init", "-b", "preview-docs"], stdout=stdout)
     subprocess.check_call(
         [
             "git",
@@ -200,7 +206,7 @@ def build_docs(code_dir, files, verbose):
             "-m",
             "Empty commit to avoid git lfs problems",
         ],
-        stdout=subprocess.DEVNULL,
+        stdout=stdout,
     )
 
     print("Building docs...")
@@ -305,7 +311,7 @@ def parse_args():
     parser.add_argument(
         "-v",
         "--verbose",
-        help="Verbose output for build_docs command.",
+        help="Verbose output, including for build_docs command.",
         action="store_true",
     )
 
