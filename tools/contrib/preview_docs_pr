@@ -181,10 +181,10 @@ def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
     # Unzip
     code_dir = extract_zip(extraction_dir, zip_path, overwrite)
 
-    return code_dir, files
+    return code_dir, files, pr_info
 
 
-def build_docs(code_dir, files, verbose):
+def build_docs(code_dir, files, verbose, pr_info):
     """Build the documentation"""
     print("Getting submodules...")
     os.chdir(code_dir)
@@ -196,15 +196,39 @@ def build_docs(code_dir, files, verbose):
     else:
         stdout = subprocess.DEVNULL
 
-    # Do an empty commit to avoid possible errors on git lfs fetch
+    # Set up so that git lfs works
+    owner, repo, _ = pr_info
+
+    result = subprocess.run(
+        [
+            "ssh",
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-T",
+            "git@github.com",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 1 and "You've successfully authenticated" in result.stderr:
+        remote_url = f"git@github.com:{owner}/{repo}.git"
+    elif result.returncode == 255:
+        # Fall back to HTTPS method
+        remote_url = f"https://github.com/{owner}/{repo}.git"
+    else:
+        raise RuntimeError(f"GitHub SSH check failed:\n{result.stderr}")
     subprocess.check_call(["git", "init", "-b", "preview-docs"], stdout=stdout)
+    subprocess.check_call(["git", "remote", "add", "origin", remote_url], stdout=stdout)
+    subprocess.check_call(["git", "add", "-A"], stdout=stdout)
     subprocess.check_call(
         [
             "git",
             "commit",
-            "--allow-empty",
             "-m",
-            "Empty commit to avoid git lfs problems",
+            "PR snapshot for docs preview",
         ],
         stdout=stdout,
     )
@@ -356,8 +380,10 @@ def main():
     # GitHub personal access tokens are currently not supported, but the code is all there. Just
     # need to think about how to implement them in a way that will prevent people from putting their
     # secrets into their shell history.
-    code_dir, files = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite, token=None)
-    build_docs(code_dir, files, args.verbose)
+    code_dir, files, pr_info = download_pr_code(
+        args.pr_url, args.extraction_dir, args.overwrite, token=None
+    )
+    build_docs(code_dir, files, args.verbose, pr_info)
 
 
 if __name__ == "__main__":
