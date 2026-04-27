@@ -186,12 +186,20 @@ def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
 
 def build_docs(code_dir, files, verbose, pr_info):
     """Build the documentation"""
-    print("Getting submodules...")
     os.chdir(code_dir)
-    os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
+
+    # Handle verbosity for subprocess calls
+    if verbose:
+        stdout = None
+    else:
+        stdout = subprocess.DEVNULL
 
     # Set up so that git lfs works
-    set_up_git(pr_info, verbose)
+    set_up_git(pr_info, stdout)
+
+    print("Getting submodules...")
+    os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
+    subprocess.check_call([path, "update"], stdout=stdout)
 
     print("Building docs...")
     os.chdir("doc")
@@ -216,14 +224,9 @@ def build_docs(code_dir, files, verbose, pr_info):
     if output and os.path.exists(os.path.join("_build", "html", "index.html")):
         print_files_msg(code_dir, files)
 
-def set_up_git(pr_info, verbose):
-    """Initialize a git repo in the downloaded code so that git lfs works right"""
 
-    # Handle verbosity for git commands
-    if verbose:
-        stdout = None
-    else:
-        stdout = subprocess.DEVNULL
+def set_up_git(pr_info, stdout):
+    """Initialize a git repo in the downloaded code so that git lfs works right"""
 
     owner, repo, _ = pr_info
     result = subprocess.run(
