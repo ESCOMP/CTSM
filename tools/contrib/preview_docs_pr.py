@@ -337,7 +337,10 @@ def parse_args():
 def main():
     """Main function"""
     args = parse_args()
-    code_dir, files = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite)
+    # GitHub personal access tokens are currently not supported, but the code is all there. Just
+    # need to think about how to implement them in a way that will prevent people from putting their
+    # secrets into their shell history.
+    code_dir, files = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite, token=None)
     build_docs(code_dir, files)
 
 
