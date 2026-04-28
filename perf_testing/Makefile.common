@@ -12,7 +12,7 @@
 .DEFAULT_GOAL := driver
 
 FC      ?= nvfortran
-FFLAGS  ?= -O3 -g
+FFLAGS  ?= -O2 -g -Minfo=vect -Mneginfo=vect
 LDFLAGS ?=
 
 TIMING  ?= 1
