@@ -40,6 +40,21 @@ make clean && make FC=gfortran FFLAGS="-O2 -g -fopenmp"
 make clean && make FFLAGS="-O3 -g -gpu=cc80 -acc"   # for OpenACC variants
 ```
 
+### Disabling the built-in timing
+
+The driver's internal `system_clock` instrumentation (and the `elapsed (s)`
+/ `per call (s)` lines) is gated by the cpp macro `PERF_TIMING`. The
+Makefile defines it by default. To leave wall-clock measurement to an
+external profiler, build with:
+
+```bash
+make clean && make TIMING=0
+```
+
+The `TIMING=0` binary still allocates inputs, runs the call loop, computes
+the checksum, and writes `last_run.txt` / compares against the baseline —
+just nothing in the call loop's surrounding region except the loop itself.
+
 ## Output
 
 Each run prints config + elapsed time + per-call time + checksum, e.g.:

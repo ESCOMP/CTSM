@@ -4,10 +4,16 @@ program p2c_2d_filter_driver
   ! Standalone timing harness for p2c_2d_filter.
   !
   ! Allocates synthetic patch- and column-level arrays, calls the routine
-  ! niters times under a system_clock wrapper, prints config + timings +
-  ! checksum, and writes the result to last_run.txt. If baseline_checksum.txt
-  ! is present and its parameter set matches the current run, compares the
-  ! checksum and prints MATCH or MISMATCH.
+  ! niters times, computes a checksum, and writes the result to
+  ! last_run.txt. If baseline_checksum.txt is present and its parameter set
+  ! matches the current run, compares the checksum and prints MATCH or
+  ! MISMATCH.
+  !
+  ! Built-in timing (system_clock around the call loop, plus printed
+  ! 'elapsed (s)' / 'per call (s)' lines) is gated by the cpp macro
+  ! PERF_TIMING. Build with -DPERF_TIMING (the Makefile default) to keep
+  ! it; build without (e.g. 'make TIMING=0') to leave timing to an
+  ! external profiler.
   !
   ! Usage:
   !   ./driver [ncol [npatch_per_col [nlev [numfc [niters]]]]]
@@ -37,8 +43,11 @@ program p2c_2d_filter_driver
 
   integer  :: npatch_total
   integer  :: c, p, j, iter
+  real(r8) :: checksum
+#ifdef PERF_TIMING
   integer(kind=8) :: t_start, t_end, t_rate
-  real(r8) :: elapsed_s, per_call_s, checksum
+  real(r8) :: elapsed_s, per_call_s
+#endif
 
   call parse_args()
   if (numfc < 0) numfc = ncol
@@ -48,22 +57,25 @@ program p2c_2d_filter_driver
   call allocate_arrays()
   call fill_inputs()
 
-  ! Time niters calls
+#ifdef PERF_TIMING
   call system_clock(count_rate=t_rate)
   call system_clock(t_start)
+#endif
   do iter = 1, niters
      call p2c_2d_filter(nlev, numfc, filterc, &
                         patchi, patchf,       &
                         active, wtcol,        &
                         patcharr, colarr)
   end do
+#ifdef PERF_TIMING
   call system_clock(t_end)
-
   elapsed_s  = real(t_end - t_start, r8) / real(t_rate, r8)
   per_call_s = elapsed_s / real(niters, r8)
-  checksum   = sum(colarr)
+#endif
 
-  call report(elapsed_s, per_call_s, checksum)
+  checksum = sum(colarr)
+
+  call report(checksum)
   call write_last_run(checksum)
   call compare_to_baseline(checksum)
 
@@ -124,8 +136,8 @@ contains
   end subroutine fill_inputs
 
   !---------------------------------------------------------------------
-  subroutine report(elapsed_s, per_call_s, checksum)
-    real(r8), intent(in) :: elapsed_s, per_call_s, checksum
+  subroutine report(checksum)
+    real(r8), intent(in) :: checksum
 
     write(*,'(a)') '=== p2c_2d_filter standalone driver ==='
     write(*,'(a,i0)')      '  ncol            = ', ncol
@@ -134,8 +146,10 @@ contains
     write(*,'(a,i0)')      '  numfc           = ', numfc
     write(*,'(a,i0)')      '  niters          = ', niters
     write(*,'(a,i0)')      '  npatch_total    = ', npatch_total
+#ifdef PERF_TIMING
     write(*,'(a,es14.6)')  '  elapsed (s)     = ', elapsed_s
     write(*,'(a,es14.6)')  '  per call (s)    = ', per_call_s
+#endif
     write(*,'(a,es24.16)') '  checksum        = ', checksum
   end subroutine report
 
