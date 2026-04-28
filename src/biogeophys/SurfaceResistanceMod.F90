@@ -26,6 +26,8 @@ module SurfaceResistanceMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: calc_soilevap_resis
+  ! [PORTED by Hui Tang: NVP surface resistance calculation, analogous to calc_soilevap_resis]
+  public :: calc_nvp_resis
   public :: do_soilevap_beta, do_soil_resistance_sl14
 !  public :: init_soil_resistance
   public :: soil_resistance_readNL
@@ -236,8 +238,67 @@ contains
      end associate
 
    end subroutine calc_soilevap_resis
-   
-   !------------------------------------------------------------------------------   
+
+   !------------------------------------------------------------------------------
+   ! [PORTED by Hui Tang: compute NVP (moss/lichen) surface resistance, parallel to
+   !  calc_soilevap_resis. Uses fwet_nvp_col (NVP wet fraction = effective saturation)
+   !  as satfrac in the van de Griend & Owe / Daamen & Simmonds formula. When the NVP
+   !  layer is frozen, the empirical formula is replaced by the runtime-tunable rnvp_ice
+   !  to represent ice-surface resistance. When NVP is inactive (frac_nvp == 0 or
+   !  layer not active), rnvp_col is set to spval — callers must guard with use_nvp.]
+   subroutine calc_nvp_resis(bounds, num_nolakec, filter_nolakec, &
+        soilstate_inst, waterdiagnosticbulk_inst, temperature_inst)
+     !
+     ! !USES:
+     use clm_varcon       , only : tfrz, spval
+     use clm_varctl       , only : use_nvp
+     use ColumnType       , only : col
+     use NVPParamsMod     , only : rnvp_min, rnvp_amp, rnvp_exp, rnvp_ice
+     use decompMod        , only : bounds_type
+     !
+     ! !ARGUMENTS:
+     implicit none
+     type(bounds_type)              , intent(in)    :: bounds
+     integer                        , intent(in)    :: num_nolakec
+     integer                        , intent(in)    :: filter_nolakec(:)
+     type(soilstate_type)           , intent(inout) :: soilstate_inst
+     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
+     type(temperature_type)         , intent(in)    :: temperature_inst
+     !
+     ! !LOCAL VARIABLES:
+     integer  :: c, fc
+     real(r8) :: satfrac
+
+     if (.not. use_nvp) return
+
+     associate( &
+          fwet_nvp_col => waterdiagnosticbulk_inst%fwet_nvp_col , &  ! Input: NVP wet fraction [-]
+          t_soisno     => temperature_inst%t_soisno_col         , &  ! Input: layer-0 temperature [K]
+          rnvp_col     => soilstate_inst%rnvp_col                  &  ! Output: NVP surface resistance [s/m]
+          )
+
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+
+          if (col%frac_nvp(c) > 0._r8 .and. col%nvp_layer_active(c)) then
+             if (t_soisno(c,0) >= tfrz) then
+                ! Unfrozen: van de Griend & Owe / Daamen & Simmonds dryness curve
+                satfrac = max(0._r8, min(1._r8, fwet_nvp_col(c)))
+                rnvp_col(c) = rnvp_min + rnvp_amp * (1._r8 - satfrac)**rnvp_exp
+             else
+                ! Frozen: literature ice/snow resistance, suppresses but doesn't zero sublimation
+                rnvp_col(c) = rnvp_ice
+             end if
+          else
+             rnvp_col(c) = spval
+          end if
+       end do
+
+     end associate
+
+   end subroutine calc_nvp_resis
+
+   !------------------------------------------------------------------------------
    subroutine calc_beta_leepielke1992(bounds, num_nolakec, filter_nolakec, &
         soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, soilbeta)
      !

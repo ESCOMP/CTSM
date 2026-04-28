@@ -35,6 +35,10 @@ module NVPParamsMod
   real(r8) :: rnvp_min        = 10.0_r8    ! minimum surface resistance when saturated [s m-1]
   real(r8) :: rnvp_amp        = 500.0_r8   ! amplitude of resistance increase when dry  [s m-1]
   real(r8) :: rnvp_exp        = 3.0_r8     ! exponent of dryness function               [-]
+  ! [PORTED by Hui Tang: surface resistance applied when NVP is frozen — typical literature
+  !  range for ice/snow surfaces is ~1000-3000 s/m; default 1500 s/m suppresses but does
+  !  not zero sublimation. Set to a very large value (e.g. 1e6) to disable evap when frozen.]
+  real(r8) :: rnvp_ice        = 1500.0_r8  ! NVP resistance when frozen [s m-1]
 
   ! Hydraulic properties (Mualem-van Genuchten)
   real(r8) :: ksat_nvp        = 1.0e-4_r8  ! saturated hydraulic conductivity [m s-1]

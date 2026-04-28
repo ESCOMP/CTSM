@@ -140,6 +140,7 @@ contains
     real(r8) :: raw                              ! moisture resistance [s/m]
     real(r8) :: raih                             ! temporary variable [kg/m2/s]
     real(r8) :: raiw                             ! temporary variable [kg/m2/s]
+    real(r8) :: r_surf_eff                       ! [PORTED by Hui Tang: area-weighted soil+NVP surface resistance [s/m]]
     real(r8) :: fm(bounds%begp:bounds%endp)      ! needed for BGC only to diagnose 10m wind speed
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
@@ -162,7 +163,8 @@ contains
     associate(                                                                    & 
          dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]
          eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]
-         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)                                                     
+         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)
+         rnvp_col               => soilstate_inst%rnvp_col                      , & ! [PORTED by Hui Tang: NVP surface evaporative resistance (s/m)]
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
          dz                     => col%dz                                       , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
          zii                    => col%zii                                      , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]                                        
@@ -459,8 +461,21 @@ contains
                end if 
             endif
             if(do_soil_resistance_sl14())then
-               ! Swenson & Lawrence 2014 soil resistance is applied
-               raiw    = forc_rho(c)/(raw+soilresis(c))
+               ! [PORTED by Hui Tang: Swenson & Lawrence 2014 soil resistance, blended with NVP
+               !  surface resistance by area fraction. Linear (Kirchhoff series-on-each-fraction)
+               !  blend: r_eff = (1-f_nvp)*soilresis + f_nvp*rnvp. The qg(c) blend in
+               !  SurfaceHumidityMod already weights humidities by the same fractions, so this
+               !  matches the area weighting consistently. When f_nvp=0, r_eff=soilresis exactly.]
+               if (use_nvp) then
+                  if (col%frac_nvp(c) > 0._r8) then 
+                     ! If there is some NVP fraction, blend soil resistance and NVP resistance in series
+                     r_surf_eff = (1._r8 - col%frac_nvp(c)) * soilresis(c) &
+                             +         col%frac_nvp(c)  * rnvp_col(c)
+                  end if
+               else
+                  r_surf_eff = soilresis(c)
+               end if
+               raiw    = forc_rho(c)/(raw + r_surf_eff)
             endif
          end if
 
@@ -487,8 +502,10 @@ contains
          eflx_sh_soil(p)   = -raih*(thm(p)-t_soisno(c,1))
          eflx_sh_h2osfc(p) = -raih*(thm(p)-t_h2osfc(c))
          ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground, analogous to snow/h2osfc]
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
-            eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+         if (use_nvp) then
+            if (col%frac_nvp(c) > 0._r8) then      
+               eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+            end if   
          else
             eflx_sh_nvp(p) = 0._r8
          end if
@@ -503,9 +520,14 @@ contains
          qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
          qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
          qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
-         ! [PORTED by Hui Tang: NVP evaporation flux for bare ground, analogous to snow/h2osfc]
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
-            qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+         ! [PORTED by Hui Tang: NVP evaporation flux for bare ground.
+         !  Apply NVP surface resistance rnvp_col in series with the aerodynamic resistance raw,
+         !  mirroring the soilresis treatment at the raiw line above. The effective conductance
+         !  for NVP is forc_rho/(raw + rnvp), so qflx_ev_nvp = -conductance * (q_atm - qg_nvp).]
+         if (use_nvp) then
+            if (col%frac_nvp(c) > 0._r8) then
+               qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+            end if
          else
             qflx_ev_nvp(p) = 0._r8
          end if
