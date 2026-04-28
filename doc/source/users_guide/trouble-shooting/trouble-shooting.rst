@@ -77,7 +77,7 @@ Variables need to be written to and read from the restart file if their value pe
 
 Some good rules of thumb to use are:
 
-- If a variable's value at time `t` directly depends on its value at time `t-1`, often through evolution equations of the form `x = x + flux*dtime`, then it likely needs to be on the restart file.
+- If a variable's value at time ``t`` directly depends on its value at time ``t-1``, often through evolution equations of the form ``x = x + flux*dtime``, then it likely needs to be on the restart file.
 
 - Imagine setting a variable to 0 at the start of each time step. Would this cause incorrect results? If so, it likely needs to be on the restart file.
 
@@ -94,7 +94,7 @@ There are also some cases where a variable is needed on the restart file because
 
 In reality, these lines will be in subroutines called from the main driver loop, so an understanding is needed of the calling order of the model's subroutines.
 
-An ideal solution in this case is to reorder the code so that `bar` is calculated before it is used. The next most ideal solution is to recalculate `bar` from other variables in initialization after the restart file is read. However, if neither of these are possible, then `bar` needs to be added to the restart file.
+An ideal solution in this case is to reorder the code so that ``bar`` is calculated before it is used. The next most ideal solution is to recalculate ``bar`` from other variables in initialization after the restart file is read. However, if neither of these are possible, then ``bar`` needs to be added to the restart file.
 
 We have many restart tests in the automated test suite; these catch many problems with variables being absent from the restart file that should be there. However, these tests cannot catch all problems - particularly if a variable's value only needs to persist between time steps in certain circumstances (such as if the restart is done mid-day). In addition, these tests cannot catch problems with variables being added to the restart file unnecessarily.
 
@@ -112,7 +112,7 @@ Example:
 
    bar = bar + 1._r8
 
-In this case, it's possible that the foo assignment should really have happened after the increment to bar.
+In this case, it's possible that the ``foo`` assignment should really have happened after the increment to ``bar``.
 
 Solution: Check code carefully for assignments to variables that are used on the right-hand side of equations. Ideally, this search would only need to be done within the current subroutine. But in practice, variables in CTSM are sometimes updated in multiple subroutines, so you should extend this search to make sure your new code happens in the correct place in the driver loop. (i.e., make sure that there aren't subroutines called later in the driver that update the quantity that you're using on the right-hand side of the equation.)
 
@@ -180,12 +180,12 @@ Whole-array assignment
 
   foo(:) = 0._r8
 
-should be replaced by the following, assuming foo is a column-level array:
+should be replaced by the following, assuming ``foo`` is a column-level array:
 ::
 
   foo(bounds%begc:bounds%endc) = 0._r8
 
-or, better, initialize foo within a loop over the appropriate filter, or a loop over bounds%begc to bounds%endc, ideally subset by active points.
+or, better, initialize ``foo`` within a loop over the appropriate filter, or a loop over bounds%begc to bounds%endc, ideally subset by active points.
 
 Forgetting to index into a variable for assignment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
